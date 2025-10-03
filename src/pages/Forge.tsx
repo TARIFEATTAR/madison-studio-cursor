@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Sparkles, Copy, Check, Loader2, Archive } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +11,43 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import QualityRating from "@/components/QualityRating";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ChevronsUpDown } from "lucide-react";
+
+// Product catalogue with collection and scent family mappings
+const PRODUCTS = [
+  { name: "Honey Oudh", collection: "Cadence Collection", scentFamily: "Warm" },
+  { name: "Silk Cedar", collection: "Reserve Collection", scentFamily: "Woody" },
+  { name: "Rose Amber", collection: "Purity Collection", scentFamily: "Floral" },
+  { name: "Frankincense Myrrh", collection: "Sacred Space", scentFamily: "Woody" },
+  { name: "Jasmine Night", collection: "Cadence Collection", scentFamily: "Floral" },
+  { name: "Sandalwood Mist", collection: "Reserve Collection", scentFamily: "Woody" },
+  { name: "Bergamot Dawn", collection: "Purity Collection", scentFamily: "Fresh" },
+  { name: "Sacred Amber", collection: "Sacred Space", scentFamily: "Warm" },
+  { name: "Patchouli Earth", collection: "Cadence Collection", scentFamily: "Woody" },
+  { name: "Lotus Bloom", collection: "Reserve Collection", scentFamily: "Floral" },
+  { name: "Citrus Grove", collection: "Purity Collection", scentFamily: "Fresh" },
+  { name: "Temple Incense", collection: "Sacred Space", scentFamily: "Warm" },
+  { name: "Vanilla Spice", collection: "Cadence Collection", scentFamily: "Warm" },
+  { name: "White Musk", collection: "Reserve Collection", scentFamily: "Fresh" },
+  { name: "Wild Rose", collection: "Purity Collection", scentFamily: "Floral" },
+  { name: "Ceremonial Oudh", collection: "Sacred Space", scentFamily: "Woody" },
+].sort((a, b) => a.name.localeCompare(b.name));
+
+const stripMarkdown = (text: string): string => {
+  return text
+    .replace(/(\*\*|__)(.*?)\1/g, '$2')
+    .replace(/(\*|_)(.*?)\1/g, '$2')
+    .replace(/#{1,6}\s?/g, '')
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+    .replace(/^[\s-]*[-*+]\s/gm, '')
+    .replace(/^\d+\.\s/gm, '')
+    .replace(/^\>\s/gm, '')
+    .trim();
+};
 
 const Forge = () => {
   const { toast } = useToast();
@@ -21,6 +58,8 @@ const Forge = () => {
   const [saving, setSaving] = useState(false);
   const [generatedOutput, setGeneratedOutput] = useState("");
   const [qualityRating, setQualityRating] = useState(0);
+  const [productSearchOpen, setProductSearchOpen] = useState(false);
+  const [productSearchValue, setProductSearchValue] = useState("");
   const [formData, setFormData] = useState({
     title: "",
     contentType: "",
@@ -32,34 +71,55 @@ const Forge = () => {
     customInstructions: "",
   });
 
+  const filteredProducts = useMemo(() => {
+    if (!productSearchValue) return PRODUCTS;
+    return PRODUCTS.filter(product =>
+      product.name.toLowerCase().includes(productSearchValue.toLowerCase())
+    );
+  }, [productSearchValue]);
+
   const generatePrompt = () => {
     const parts = [];
+    
+    if (formData.title) {
+      parts.push(`Product: ${formData.title}`);
+    }
+    
+    if (formData.contentType) {
+      const contentTypes: Record<string, string> = {
+        product: "Product Description",
+        email: "Email Campaign",
+        social: "Social Media",
+        visual: "Visual Asset",
+      };
+      parts.push(`Content Type: ${contentTypes[formData.contentType] || formData.contentType}`);
+    }
+    
+    if (formData.collection) {
+      parts.push(`Collection: ${formData.collection}`);
+    }
     
     if (formData.pillar) {
       parts.push(`Focus on the ${formData.pillar} pillar.`);
     }
-    
-    if (formData.dipWeek) {
-      const worlds: Record<string, string> = {
-        "1": "Silk Road - Emphasize identity, anchoring, grounding language",
-        "2": "Maritime Voyage - Weave journey, gathering, companion imagery",
-        "3": "Imperial Garden - Invoke ritual, remembrance, preservation themes",
-        "4": "Royal Court - Highlight cadence, rhythm, measured presence",
-      };
-      parts.push(worlds[formData.dipWeek]);
-    }
-
-    if (formData.scentFamily) {
-      parts.push(`Scent profile: ${formData.scentFamily} family.`);
-    }
 
     if (formData.transparencyStatement) {
-      parts.push(`\n\nTransparency: ${formData.transparencyStatement}`);
+      const statements: Record<string, string> = {
+        cadence: "From the Cadence Collection—blended with natural ingredients and modern aromachemicals for balanced complexity.",
+        reserve: "From the Reserve Collection—crafted with 90-98% natural essences, minimal aromachemicals for refinement.",
+        purity: "From the Purity Collection—100% natural, no aromachemicals. Traditional attar art in its purest form.",
+        sacred: "From Sacred Space—ceremonial blends honoring ritual and reverence.",
+      };
+      if (statements[formData.transparencyStatement]) {
+        parts.push(`\n\n${statements[formData.transparencyStatement]}`);
+      }
     }
 
     if (formData.customInstructions) {
       parts.push(`\n\n${formData.customInstructions}`);
     }
+
+    parts.push(`\n\nIMPORTANT: Return output as plain text only. Do not use any Markdown formatting (no asterisks, bold, italics, headers, etc.). Output should be clean copy-paste ready text.`);
 
     return parts.join(" ");
   };
@@ -98,7 +158,8 @@ const Forge = () => {
       if (error) throw error;
 
       if (data?.generatedContent) {
-        setGeneratedOutput(data.generatedContent);
+        const cleanContent = stripMarkdown(data.generatedContent);
+        setGeneratedOutput(cleanContent);
         toast({
           title: "Content crafted",
           description: "Claude has generated your content successfully.",
@@ -212,7 +273,7 @@ const Forge = () => {
         <div className="fade-enter mb-12">
           <h1 className="text-foreground mb-3">The Forge</h1>
           <p className="text-muted-foreground text-lg max-w-2xl">
-            Craft new prompts with brand guardrails, or refine existing vessels of the Confident Whisper.
+            Select a product from your catalogue and craft content with brand guardrails.
           </p>
         </div>
 
@@ -224,14 +285,56 @@ const Forge = () => {
 
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="title">Prompt Title *</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="e.g., Product Description - Honey Oudh"
-                    className="bg-background/50"
-                  />
+                  <Label htmlFor="productName">Product Name *</Label>
+                  <Popover open={productSearchOpen} onOpenChange={setProductSearchOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="productName"
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={productSearchOpen}
+                        className="w-full justify-between bg-background/50"
+                      >
+                        {formData.title || "Select product..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <Command>
+                        <CommandInput 
+                          placeholder="Search products..." 
+                          value={productSearchValue}
+                          onValueChange={setProductSearchValue}
+                        />
+                        <CommandList>
+                          <CommandEmpty>No product found.</CommandEmpty>
+                          <CommandGroup>
+                            {filteredProducts.map((product) => (
+                              <CommandItem
+                                key={product.name}
+                                value={product.name}
+                                onSelect={() => {
+                                  setFormData({
+                                    ...formData,
+                                    title: product.name,
+                                    collection: product.collection,
+                                    scentFamily: product.scentFamily,
+                                  });
+                                  setProductSearchOpen(false);
+                                  setProductSearchValue("");
+                                }}
+                              >
+                                {product.name}
+                                <span className="ml-auto text-xs text-muted-foreground">
+                                  {product.collection}
+                                </span>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <div className="space-y-2">
@@ -253,69 +356,30 @@ const Forge = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="collection">Collection</Label>
-                  <Select
+                  <Label htmlFor="collection">Collection (Auto-filled)</Label>
+                  <Input
+                    id="collection"
                     value={formData.collection}
-                    onValueChange={(value) => {
-                      const transparencyStatements: Record<string, string> = {
-                        cadence: "From the Cadence Collection—blended with natural ingredients and modern aromachemicals for balanced complexity.",
-                        reserve: "From the Reserve Collection—crafted with 90-98% natural essences, minimal aromachemicals for refinement.",
-                        purity: "From the Purity Collection—100% natural, no aromachemicals. Traditional attar art in its purest form.",
-                        sacred: "From Sacred Space—ceremonial blends honoring ritual and reverence.",
-                      };
-                      setFormData({ 
-                        ...formData, 
-                        collection: value,
-                        transparencyStatement: transparencyStatements[value] || ""
-                      });
-                    }}
-                  >
-                    <SelectTrigger id="collection" className="bg-background/50">
-                      <SelectValue placeholder="Select collection..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="cadence">Cadence Collection</SelectItem>
-                      <SelectItem value="reserve">Reserve Collection</SelectItem>
-                      <SelectItem value="purity">Purity Collection</SelectItem>
-                      <SelectItem value="sacred">Sacred Space</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    readOnly
+                    disabled
+                    placeholder="Auto-filled from product selection..."
+                    className="bg-background/30"
+                  />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="dipWeek">DIP Week Assignment</Label>
-                  <Select
-                    value={formData.dipWeek}
-                    onValueChange={(value) => setFormData({ ...formData, dipWeek: value })}
-                  >
-                    <SelectTrigger id="dipWeek" className="bg-background/50">
-                      <SelectValue placeholder="Select week..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">Week 1: Identity / Silk Road</SelectItem>
-                      <SelectItem value="2">Week 2: Memory / Maritime Voyage</SelectItem>
-                      <SelectItem value="3">Week 3: Remembrance / Imperial Garden</SelectItem>
-                      <SelectItem value="4">Week 4: Cadence / Royal Court</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="scentFamily">Scent Family (Optional)</Label>
-                  <Select
+                  <Label htmlFor="scentFamily">Scent Family (Internal Tracking)</Label>
+                  <Input
+                    id="scentFamily"
                     value={formData.scentFamily}
-                    onValueChange={(value) => setFormData({ ...formData, scentFamily: value })}
-                  >
-                    <SelectTrigger id="scentFamily" className="bg-background/50">
-                      <SelectValue placeholder="Select scent family..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Warm">🔥 Warm</SelectItem>
-                      <SelectItem value="Floral">🌸 Floral</SelectItem>
-                      <SelectItem value="Fresh">🍃 Fresh</SelectItem>
-                      <SelectItem value="Woody">🌲 Woody</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    readOnly
+                    disabled
+                    placeholder="Auto-filled from product selection..."
+                    className="bg-background/30"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    For database categorization only - not included in generated prompt
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -337,14 +401,22 @@ const Forge = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="transparency">Transparency Statement</Label>
-                  <Textarea
-                    id="transparency"
+                  <Label htmlFor="transparency">Transparency Statement (Optional)</Label>
+                  <Select
                     value={formData.transparencyStatement}
-                    onChange={(e) => setFormData({ ...formData, transparencyStatement: e.target.value })}
-                    placeholder="Auto-populated based on collection..."
-                    className="bg-background/50 min-h-[80px]"
-                  />
+                    onValueChange={(value) => setFormData({ ...formData, transparencyStatement: value })}
+                  >
+                    <SelectTrigger id="transparency" className="bg-background/50">
+                      <SelectValue placeholder="None (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="cadence">Cadence Collection Statement</SelectItem>
+                      <SelectItem value="reserve">Reserve Collection Statement</SelectItem>
+                      <SelectItem value="purity">Purity Collection Statement</SelectItem>
+                      <SelectItem value="sacred">Sacred Space Statement</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">

@@ -34,6 +34,10 @@ serve(async (req) => {
         max_tokens: 4096,
         messages: [
           {
+            role: 'system',
+            content: 'You are a professional copywriter. Always return plain text responses with no Markdown formatting. Do not use asterisks, bold, italics, headers, or any special formatting characters. Output must be clean, copy-paste ready text.'
+          },
+          {
             role: 'user',
             content: prompt
           }
