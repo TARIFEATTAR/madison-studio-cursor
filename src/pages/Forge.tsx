@@ -103,7 +103,7 @@ const Forge = () => {
       parts.push(`Focus on the ${formData.pillar} pillar.`);
     }
 
-    if (formData.transparencyStatement) {
+    if (formData.transparencyStatement && formData.transparencyStatement !== "none") {
       const statements: Record<string, string> = {
         cadence: "From the Cadence Collection—blended with natural ingredients and modern aromachemicals for balanced complexity.",
         reserve: "From the Reserve Collection—crafted with 90-98% natural essences, minimal aromachemicals for refinement.",
@@ -403,14 +403,14 @@ const Forge = () => {
                 <div className="space-y-2">
                   <Label htmlFor="transparency">Transparency Statement (Optional)</Label>
                   <Select
-                    value={formData.transparencyStatement}
+                    value={formData.transparencyStatement || "none"}
                     onValueChange={(value) => setFormData({ ...formData, transparencyStatement: value })}
                   >
                     <SelectTrigger id="transparency" className="bg-background/50">
                       <SelectValue placeholder="None (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       <SelectItem value="cadence">Cadence Collection Statement</SelectItem>
                       <SelectItem value="reserve">Reserve Collection Statement</SelectItem>
                       <SelectItem value="purity">Purity Collection Statement</SelectItem>
