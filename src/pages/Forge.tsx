@@ -108,6 +108,10 @@ const Forge = () => {
       parts.push(`Collection: ${formData.collection}`);
     }
     
+    if (formData.scentFamily) {
+      parts.push(`Scent Family: ${formData.scentFamily}`);
+    }
+    
     if (formData.pillar) {
       parts.push(`Focus on the ${formData.pillar} pillar.`);
     }
