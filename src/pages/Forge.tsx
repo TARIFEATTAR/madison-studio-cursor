@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Sparkles, Copy, Check, Loader2 } from "lucide-react";
+import { Sparkles, Copy, Check, Loader2, Archive } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,13 +10,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import QualityRating from "@/components/QualityRating";
 
 const Forge = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [generatedOutput, setGeneratedOutput] = useState("");
+  const [qualityRating, setQualityRating] = useState(0);
   const [formData, setFormData] = useState({
+    title: "",
     contentType: "",
     collection: "",
     dipWeek: "",
@@ -80,6 +88,7 @@ const Forge = () => {
 
     setGenerating(true);
     setGeneratedOutput("");
+    setQualityRating(0); // Reset rating when generating new content
 
     try {
       const { data, error } = await supabase.functions.invoke('generate-with-claude', {
@@ -107,6 +116,96 @@ const Forge = () => {
     }
   };
 
+  const archiveVessel = async () => {
+    if (!user) return;
+    
+    if (!formData.title) {
+      toast({
+        title: "This vessel requires refinement",
+        description: "Please provide a title for your prompt.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      // First, insert the prompt
+      const { data: promptData, error: promptError } = await supabase
+        .from('prompts')
+        .insert({
+          title: formData.title,
+          content_type: formData.contentType as any,
+          collection: formData.collection as any,
+          scent_family: formData.scentFamily ? (formData.scentFamily as any) : null,
+          dip_week: formData.dipWeek ? parseInt(formData.dipWeek) : null,
+          pillar_focus: formData.pillar ? (formData.pillar as any) : null,
+          prompt_text: generatedPrompt,
+          transparency_statement: formData.transparencyStatement,
+          meta_instructions: {
+            customInstructions: formData.customInstructions,
+          },
+          created_by: user.id,
+        })
+        .select()
+        .single();
+
+      if (promptError) throw promptError;
+
+      // Then, insert the output
+      const { error: outputError } = await supabase
+        .from('outputs')
+        .insert({
+          prompt_id: promptData.id,
+          generated_content: generatedOutput,
+          quality_rating: qualityRating,
+          usage_context: `${formData.contentType} - ${formData.collection}`,
+          created_by: user.id,
+        });
+
+      if (outputError) throw outputError;
+
+      toast({
+        title: "Vessel archived successfully",
+        description: "Your prompt and output have been saved to the Archive.",
+        action: (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/archive')}
+          >
+            View in Archive
+          </Button>
+        ),
+      });
+
+      // Reset form
+      setFormData({
+        title: "",
+        contentType: "",
+        collection: "",
+        dipWeek: "",
+        scentFamily: "",
+        pillar: "",
+        transparencyStatement: "",
+        customInstructions: "",
+      });
+      setGeneratedOutput("");
+      setQualityRating(0);
+
+    } catch (error) {
+      console.error('Error archiving vessel:', error);
+      toast({
+        title: "This vessel requires refinement",
+        description: error instanceof Error ? error.message : "Failed to archive the vessel.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="min-h-screen py-12 px-6 md:px-12">
       <div className="max-w-7xl mx-auto codex-spacing">
@@ -124,6 +223,17 @@ const Forge = () => {
               <h2 className="mb-6 text-2xl">Prompt Elements</h2>
 
               <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Prompt Title *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="e.g., Product Description - Honey Oudh"
+                    className="bg-background/50"
+                  />
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="contentType">Content Type</Label>
                   <Select
@@ -309,10 +419,14 @@ const Forge = () => {
               </div>
 
               {generatedOutput && (
-                <div className="mt-6">
+                <div className="mt-6 space-y-4">
                   <h3 className="text-lg font-serif mb-3">Generated Output</h3>
                   <div className="bg-background/50 rounded-md p-6 min-h-[200px] leading-relaxed border border-border/30">
                     <p className="text-foreground whitespace-pre-wrap">{generatedOutput}</p>
+                  </div>
+                  
+                  <div className="pt-4 border-t border-border/40">
+                    <QualityRating rating={qualityRating} onRatingChange={setQualityRating} />
                   </div>
                 </div>
               )}
@@ -335,9 +449,27 @@ const Forge = () => {
                     </>
                   )}
                 </Button>
-                <Button variant="outline" className="flex-1">
-                  Save to Reservoir
-                </Button>
+                
+                {generatedOutput && qualityRating > 0 && (
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 gap-2"
+                    onClick={archiveVessel}
+                    disabled={saving}
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Archiving...
+                      </>
+                    ) : (
+                      <>
+                        <Archive className="w-4 h-4" />
+                        Archive This Vessel
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           </div>

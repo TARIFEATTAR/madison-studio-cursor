@@ -1,111 +1,255 @@
-import { Star, Calendar } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Star, Calendar, Bookmark } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
-const mockArchives = [
-  {
-    id: "1",
-    promptTitle: "Product Description - Honey Oudh",
-    generatedOutput: "In the gathering of sweet honey and sacred oudh lies a companion for quiet moments. This warm embrace speaks of journeys taken and stories yet to unfold, each note a memory keeper in liquid form. Honey's golden sweetness opens with familiar warmth, while oudh's depth anchors the experience in timeless tradition.",
-    quality: 5,
-    usageContext: "Cadence Collection Launch",
-    performanceMetrics: { engagement: "24%", conversion: "3.2%" },
-    createdAt: "Oct 1, 2024",
-  },
-  {
-    id: "2",
-    promptTitle: "Email - Welcome Sequence",
-    generatedOutput: "Welcome to the art of self-anchoring. In a world of noise, we offer the quiet confidence of attar—fragrance oils that don't announce, they accompany. Each vessel is crafted to be your grounding ritual, your moment of intentional presence.",
-    quality: 4,
-    usageContext: "Q4 Nurture Campaign",
-    performanceMetrics: { openRate: "42%", clickRate: "8.1%" },
-    createdAt: "Sep 28, 2024",
-  },
-];
+interface ArchivedPrompt {
+  id: string;
+  title: string;
+  collection: string;
+  content_type: string;
+  scent_family: string | null;
+  dip_week: number | null;
+  prompt_text: string;
+  created_at: string;
+  output: {
+    generated_content: string;
+    quality_rating: number | null;
+    usage_context: string | null;
+  } | null;
+}
 
 const Archive = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [archives, setArchives] = useState<ArchivedPrompt[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      fetchArchives();
+    }
+  }, [user]);
+
+  const fetchArchives = async () => {
+    try {
+      const { data: prompts, error: promptsError } = await supabase
+        .from('prompts')
+        .select(`
+          id,
+          title,
+          collection,
+          content_type,
+          scent_family,
+          dip_week,
+          prompt_text,
+          created_at
+        `)
+        .eq('created_by', user?.id)
+        .order('created_at', { ascending: false });
+
+      if (promptsError) throw promptsError;
+
+      // Fetch outputs for each prompt
+      const archivesWithOutputs = await Promise.all(
+        (prompts || []).map(async (prompt) => {
+          const { data: output } = await supabase
+            .from('outputs')
+            .select('generated_content, quality_rating, usage_context')
+            .eq('prompt_id', prompt.id)
+            .single();
+
+          return {
+            ...prompt,
+            output: output || null,
+          };
+        })
+      );
+
+      setArchives(archivesWithOutputs);
+    } catch (error) {
+      console.error('Error fetching archives:', error);
+      toast({
+        title: "This vessel requires refinement",
+        description: "Failed to fetch archived prompts.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredArchives = archives.filter((archive) => {
+    const matchesSearch = searchQuery === "" || 
+      archive.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      archive.prompt_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (archive.output?.generated_content || "").toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesRating = !selectedRating || archive.output?.quality_rating === selectedRating;
+    
+    return matchesSearch && matchesRating;
+  });
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen py-12 px-6 md:px-12">
+        <div className="max-w-7xl mx-auto">
+          <p className="text-center text-muted-foreground text-lg">Loading archives...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen py-12 px-6 md:px-12">
       <div className="max-w-7xl mx-auto codex-spacing">
+        {/* Header */}
         <div className="fade-enter">
           <h1 className="text-foreground mb-3">The Archive</h1>
           <p className="text-muted-foreground text-lg max-w-2xl">
-            A curated repository of prompts paired with their outputs, each entry a testament to the Confident Whisper in practice.
+            Your curated collection of crafted prompts and generated outputs, each a testament to the Confident Whisper.
           </p>
         </div>
 
-        <div className="space-y-6 fade-enter">
-          {mockArchives.map((archive) => (
-            <div
-              key={archive.id}
-              className="card-matte p-8 rounded-lg border border-border/40 hover:shadow-elegant transition-all"
-            >
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Left: Prompt Used */}
-                <div className="space-y-4">
-                  <div>
-                    <Badge className="mb-3">Prompt</Badge>
-                    <h3 className="text-xl">{archive.promptTitle}</h3>
-                  </div>
-                  
-                  <div className="space-y-3 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      <span>{archive.createdAt}</span>
-                    </div>
-                    
-                    <div>
-                      <span className="font-medium text-foreground">Usage Context:</span>
-                      <p className="mt-1">{archive.usageContext}</p>
-                    </div>
+        {/* Search and Filters */}
+        <div className="fade-enter space-y-6">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+            <Input
+              type="text"
+              placeholder="Search archived vessels..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-12 h-14 bg-card/50 backdrop-blur-sm border-border focus:border-primary transition-colors text-base"
+            />
+          </div>
 
-                    <div>
-                      <span className="font-medium text-foreground">Performance:</span>
-                      <div className="mt-1 space-y-1">
-                        {Object.entries(archive.performanceMetrics).map(([key, value]) => (
-                          <div key={key} className="flex justify-between">
-                            <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
-                            <span className="font-medium text-saffron-gold">{value}</span>
-                          </div>
-                        ))}
+          <div className="flex items-center gap-2">
+            <Star className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground font-medium">Quality:</span>
+            {[1, 2, 3, 4, 5].map((rating) => (
+              <Badge
+                key={rating}
+                variant={selectedRating === rating ? "default" : "outline"}
+                className="cursor-pointer transition-all hover:scale-105"
+                onClick={() => setSelectedRating(selectedRating === rating ? null : rating)}
+              >
+                {rating} {rating === 1 ? "Star" : "Stars"}
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+        {/* Archive Grid */}
+        {filteredArchives.length > 0 ? (
+          <div className="grid grid-cols-1 gap-6 fade-enter">
+            {filteredArchives.map((archive) => (
+              <div
+                key={archive.id}
+                className="card-matte p-8 rounded-lg border border-border/40 hover:border-primary/30 transition-all"
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Left: Prompt */}
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="text-xl font-serif text-foreground mb-2">
+                          {archive.title}
+                        </h3>
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          <Badge variant="outline" className="bg-saffron-gold/10 border-saffron-gold/30">
+                            {archive.collection}
+                          </Badge>
+                          <Badge variant="outline">
+                            {archive.content_type}
+                          </Badge>
+                          {archive.dip_week && (
+                            <Badge variant="outline">
+                              Week {archive.dip_week}
+                            </Badge>
+                          )}
+                          {archive.scent_family && (
+                            <Badge variant="outline">
+                              {archive.scent_family}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">
+                          {formatDate(archive.created_at)}
+                        </span>
                       </div>
                     </div>
-                  </div>
-                </div>
 
-                {/* Right: Generated Output */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Badge variant="outline">Output</Badge>
-                    <div className="flex items-center gap-0.5">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-4 h-4 ${
-                            i < archive.quality
-                              ? "fill-saffron-gold text-saffron-gold"
-                              : "text-border"
-                          }`}
-                        />
-                      ))}
+                    <div className="bg-background/50 rounded-md p-4 border border-border/30">
+                      <p className="text-sm font-mono text-foreground leading-relaxed whitespace-pre-wrap">
+                        {archive.prompt_text}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="bg-background/50 rounded-md p-6 border border-border/30">
-                    <p className="leading-relaxed text-foreground/90">
-                      {archive.generatedOutput}
-                    </p>
+                  {/* Right: Output */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-lg font-serif">Generated Output</h4>
+                      {archive.output?.quality_rating && (
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${
+                                i < archive.output!.quality_rating!
+                                  ? "fill-saffron-gold text-saffron-gold"
+                                  : "text-muted-foreground"
+                              }`}
+                            />
+                          ))}
+                          {archive.output.quality_rating === 5 && (
+                            <Badge variant="outline" className="ml-2 bg-saffron-gold/10 border-saffron-gold/30">
+                              Master Vessel
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="bg-background/50 rounded-md p-4 border border-border/30 min-h-[200px]">
+                      <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                        {archive.output?.generated_content || "No output generated"}
+                      </p>
+                    </div>
+
+                    {archive.output?.usage_context && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Bookmark className="w-3 h-3" />
+                        <span>{archive.output.usage_context}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Empty State */}
-        {mockArchives.length === 0 && (
+            ))}
+          </div>
+        ) : (
           <div className="text-center py-16 fade-enter">
             <p className="text-2xl font-serif text-muted-foreground">The Archive awaits</p>
-            <p className="text-muted-foreground mt-2">No archived outputs yet</p>
+            <p className="text-muted-foreground mt-2">
+              {searchQuery || selectedRating
+                ? "No vessels match your refined criteria"
+                : "Craft and archive your first prompt in The Forge"}
+            </p>
           </div>
         )}
       </div>
