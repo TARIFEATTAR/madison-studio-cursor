@@ -219,6 +219,32 @@ const PRODUCTS = [
   },
 ].sort((a, b) => a.name.localeCompare(b.name));
 
+// Helpers to map display labels to database enum values
+const toEnum = (v?: string | null) => (v ? v.toLowerCase().replace(/\s+/g, '_') : null);
+
+const mapCollectionToEnum = (label?: string | null) => {
+  if (!label) return null;
+  if (label.includes('Cadence')) return 'cadence';
+  if (label.includes('Reserve')) return 'reserve';
+  if (label.includes('Purity')) return 'purity';
+  if (label.includes('Sacred')) return 'sacred_space';
+  return toEnum(label);
+};
+
+const mapScentFamilyToEnum = (label?: string | null) => {
+  if (!label) return null;
+  const v = label.toLowerCase();
+  if (['warm', 'fresh', 'woody', 'floral'].includes(v)) return v as 'warm' | 'fresh' | 'woody' | 'floral';
+  return toEnum(label) as any;
+};
+
+const mapPillarToEnum = (label?: string | null) => {
+  if (!label) return null;
+  const v = label.toLowerCase();
+  if (['identity', 'memory', 'remembrance', 'cadence'].includes(v)) return v as any;
+  return toEnum(label) as any;
+};
+
 const stripMarkdown = (text: string): string => {
   return text
     .replace(/(\*\*|__)(.*?)\1/g, '$2')
@@ -389,10 +415,10 @@ const Forge = () => {
         .insert({
           title: formData.title,
           content_type: formData.contentType as any,
-          collection: formData.collection as any,
-          scent_family: formData.scentFamily ? (formData.scentFamily as any) : null,
+          collection: mapCollectionToEnum(formData.collection) as any,
+          scent_family: formData.scentFamily ? (mapScentFamilyToEnum(formData.scentFamily) as any) : null,
           dip_week: formData.dipWeek ? parseInt(formData.dipWeek) : null,
-          pillar_focus: formData.pillar ? (formData.pillar as any) : null,
+          pillar_focus: formData.pillar ? (mapPillarToEnum(formData.pillar) as any) : null,
           prompt_text: generatedPrompt,
           transparency_statement: formData.transparencyStatement,
           top_notes: formData.topNotes || null,
