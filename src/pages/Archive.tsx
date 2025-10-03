@@ -28,6 +28,8 @@ const Archive = () => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [selectedContentType, setSelectedContentType] = useState<string | null>(null);
+  const [selectedCollection, setSelectedCollection] = useState<string | null>(null);
   const [archives, setArchives] = useState<ArchivedPrompt[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -95,8 +97,10 @@ const Archive = () => {
       (archive.output?.generated_content || "").toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesRating = !selectedRating || archive.output?.quality_rating === selectedRating;
+    const matchesContentType = !selectedContentType || archive.content_type === selectedContentType;
+    const matchesCollection = !selectedCollection || archive.collection === selectedCollection;
     
-    return matchesSearch && matchesRating;
+    return matchesSearch && matchesRating && matchesContentType && matchesCollection;
   });
 
   const formatDate = (dateString: string) => {
@@ -138,7 +142,50 @@ const Archive = () => {
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Content Type Filter */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Bookmark className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground font-medium">Type:</span>
+            {[
+              { value: 'product', label: 'Product' },
+              { value: 'email', label: 'Email' },
+              { value: 'social', label: 'Social' },
+              { value: 'visual', label: 'Visual' }
+            ].map((type) => (
+              <Badge
+                key={type.value}
+                variant={selectedContentType === type.value ? "default" : "outline"}
+                className="cursor-pointer transition-all hover:scale-105"
+                onClick={() => setSelectedContentType(selectedContentType === type.value ? null : type.value)}
+              >
+                {type.label}
+              </Badge>
+            ))}
+          </div>
+
+          {/* Collection Filter */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Calendar className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground font-medium">Collection:</span>
+            {[
+              { value: 'cadence', label: 'Cadence' },
+              { value: 'reserve', label: 'Reserve' },
+              { value: 'purity', label: 'Purity' },
+              { value: 'sacred_space', label: 'Sacred Space' }
+            ].map((collection) => (
+              <Badge
+                key={collection.value}
+                variant={selectedCollection === collection.value ? "default" : "outline"}
+                className="cursor-pointer transition-all hover:scale-105"
+                onClick={() => setSelectedCollection(selectedCollection === collection.value ? null : collection.value)}
+              >
+                {collection.label}
+              </Badge>
+            ))}
+          </div>
+
+          {/* Quality Filter */}
+          <div className="flex items-center gap-2 flex-wrap">
             <Star className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground font-medium">Quality:</span>
             {[1, 2, 3, 4, 5].map((rating) => (
@@ -282,7 +329,7 @@ const Archive = () => {
           <div className="text-center py-16 fade-enter">
             <p className="text-2xl font-serif text-muted-foreground">The Archive awaits</p>
             <p className="text-muted-foreground mt-2">
-              {searchQuery || selectedRating
+              {searchQuery || selectedRating || selectedContentType || selectedCollection
                 ? "No vessels match your refined criteria"
                 : "Craft and archive your first prompt in The Forge"}
             </p>
