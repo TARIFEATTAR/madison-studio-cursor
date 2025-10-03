@@ -2,68 +2,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-const dipWeeks = [
-  {
-    week: 1,
-    pillar: "Identity",
-    world: "Silk Road",
-    dateRange: "Oct 1-7",
-    lexicon: ["anchor", "self-anchoring", "grounding", "core presence"],
-    imagery: ["spices", "caravans", "ancient trade routes"],
-    scheduled: [
-      { day: "Mon", content: "Email (Welcome)" },
-      { day: "Wed", content: "Social (Allegorical)" },
-      { day: "Fri", content: "Product (2 descriptions)" },
-    ],
-    completed: 3,
-    total: 5,
-  },
-  {
-    week: 2,
-    pillar: "Memory",
-    world: "Maritime Voyage",
-    dateRange: "Oct 8-14",
-    lexicon: ["story", "journey", "companion", "gathering"],
-    imagery: ["salt air", "brass instruments", "driftwood", "nautical"],
-    scheduled: [
-      { day: "Mon", content: "Email (Nurture)" },
-      { day: "Wed", content: "Social (Allegorical)" },
-      { day: "Fri", content: "Product (2 descriptions)" },
-    ],
-    completed: 4,
-    total: 5,
-  },
-  {
-    week: 3,
-    pillar: "Remembrance",
-    world: "Imperial Garden",
-    dateRange: "Oct 15-21",
-    lexicon: ["ritual", "preservation", "ceremony", "reverence"],
-    imagery: ["gardens", "water features", "pavilions", "stone paths"],
-    scheduled: [
-      { day: "Mon", content: "Email (Journey)" },
-      { day: "Thu", content: "Visual (Imperial scene)" },
-      { day: "Fri", content: "Product (3 descriptions)" },
-    ],
-    completed: 2,
-    total: 6,
-  },
-  {
-    week: 4,
-    pillar: "Cadence",
-    world: "Royal Court",
-    dateRange: "Oct 22-28",
-    lexicon: ["rhythm", "measured", "presence", "intentional"],
-    imagery: ["architecture", "textiles", "formal ceremonies"],
-    scheduled: [
-      { day: "Tue", content: "Email (Cadence launch)" },
-      { day: "Wed", content: "Social (Collection)" },
-      { day: "Fri", content: "Product (4 descriptions)" },
-    ],
-    completed: 0,
-    total: 7,
-  },
-];
+const dipWeeks: any[] = [];
 
 const Calendar = () => {
   return (

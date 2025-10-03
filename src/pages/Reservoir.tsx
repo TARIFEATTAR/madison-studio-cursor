@@ -5,60 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import PromptCard from "@/components/PromptCard";
 
-const mockPrompts = [
-  {
-    id: "1",
-    title: "Product Description - Honey Oudh",
-    collection: "Cadence",
-    scentFamily: "Warm",
-    dipWeek: 2,
-    dipWorld: "Maritime Voyage",
-    contentType: "Product",
-    preview: "Begin with the Memory/Journey pillar. Emphasize gathering story, companion lexicon. Integrate notes as Narrative Core. Sweet honey opens...",
-    lastUsed: "Oct 1",
-    version: "2.3",
-    rating: 5,
-  },
-  {
-    id: "2",
-    title: "Email - Welcome Sequence",
-    collection: "Reserve",
-    scentFamily: null,
-    dipWeek: 1,
-    dipWorld: "Silk Road",
-    contentType: "Email",
-    preview: "Lead with Identity/Anchor pillar. Open with self-anchoring language. Reference the heritage of gathering, the tradition of companion...",
-    lastUsed: "Sep 28",
-    version: "1.8",
-    rating: 4,
-  },
-  {
-    id: "3",
-    title: "Social - Allegorical Post",
-    collection: "Purity",
-    scentFamily: "Fresh",
-    dipWeek: 3,
-    dipWorld: "Imperial Garden",
-    contentType: "Social",
-    preview: "Focus on Remembrance pillar. Weave garden imagery, ritual language. Natural essence as memory keeper, not mere fragrance...",
-    lastUsed: "Oct 3",
-    version: "3.1",
-    rating: 5,
-  },
-  {
-    id: "4",
-    title: "Visual Asset - Maritime Scene",
-    collection: "Cadence",
-    scentFamily: null,
-    dipWeek: 2,
-    dipWorld: "Maritime Voyage",
-    contentType: "Visual",
-    preview: "Aesthetic: Muted elegance, tactile warmth. World: Salt air, brass instruments, driftwood. Subject: Single attar bottle on weathered dock...",
-    lastUsed: "Oct 2",
-    version: "1.2",
-    rating: 4,
-  },
-];
+const mockPrompts: any[] = [];
 
 const Reservoir = () => {
   const [searchQuery, setSearchQuery] = useState("");
