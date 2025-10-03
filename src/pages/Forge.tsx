@@ -430,7 +430,12 @@ const Forge = () => {
   };
 
   const generateImageWithNano = async () => {
+    console.log('🎨 Generate Image button clicked');
+    console.log('Generated prompt available:', !!generatedPrompt);
+    console.log('Content type:', formData.contentType);
+    
     if (!generatedPrompt) {
+      console.warn('⚠️ No prompt available');
       toast({
         title: "This vessel requires refinement",
         description: "Please craft a prompt first before generating an image.",
@@ -441,23 +446,54 @@ const Forge = () => {
 
     setGeneratingImage(true);
     setGeneratedImage("");
+    console.log('📤 Calling generate-image-with-nano function with prompt length:', generatedPrompt.length);
 
     try {
       const { data, error } = await supabase.functions.invoke('generate-image-with-nano', {
         body: { prompt: generatedPrompt }
       });
 
-      if (error) throw error;
+      console.log('📥 Response received:', { hasData: !!data, hasError: !!error });
+
+      if (error) {
+        console.error('❌ Edge function error:', error);
+        
+        // Handle specific error cases
+        if (error.message?.includes('429') || error.message?.includes('rate limit')) {
+          toast({
+            title: "Rate Limit Exceeded",
+            description: "Too many requests. Please wait a moment and try again.",
+            variant: "destructive",
+          });
+        } else if (error.message?.includes('402') || error.message?.includes('payment')) {
+          toast({
+            title: "Payment Required",
+            description: "Please add credits to your Lovable AI workspace.",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+        return;
+      }
 
       if (data?.imageUrl) {
+        console.log('✅ Image URL received, length:', data.imageUrl.length);
         setGeneratedImage(data.imageUrl);
         toast({
           title: "Image generated",
           description: "Nano Banana has created your visual asset successfully.",
         });
+      } else {
+        console.error('❌ No image URL in response:', data);
+        toast({
+          title: "This vessel requires refinement",
+          description: "No image was returned from the service.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      console.error('Error generating image:', error);
+      console.error('❌ Error generating image:', error);
       toast({
         title: "This vessel requires refinement",
         description: error instanceof Error ? error.message : "Failed to generate image with Nano Banana.",
@@ -465,6 +501,7 @@ const Forge = () => {
       });
     } finally {
       setGeneratingImage(false);
+      console.log('🏁 Image generation completed');
     }
   };
 
@@ -882,23 +919,30 @@ const Forge = () => {
                     )}
                   </Button>
                 ) : (
-                  <Button 
-                    className="btn-craft flex-1" 
-                    onClick={generateImageWithNano}
-                    disabled={generatingImage || !generatedPrompt}
-                  >
-                    {generatingImage ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Generating Image...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Generate Image with Nano Banana
-                      </>
+                  <>
+                    {!generatedPrompt && (
+                      <p className="text-sm text-muted-foreground w-full text-center mb-2">
+                        ℹ️ Click "Craft Prompt" above to enable image generation
+                      </p>
                     )}
-                  </Button>
+                    <Button 
+                      className="btn-craft flex-1" 
+                      onClick={generateImageWithNano}
+                      disabled={generatingImage || !generatedPrompt}
+                    >
+                      {generatingImage ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Generating Image...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Generate Image with Nano Banana
+                        </>
+                      )}
+                    </Button>
+                  </>
                 )}
                 
                 {((generatedOutput && qualityRating > 0) || (generatedImage && qualityRating > 0)) && (
