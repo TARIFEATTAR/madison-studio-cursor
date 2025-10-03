@@ -265,8 +265,10 @@ const Forge = () => {
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
   const [saving, setSaving] = useState(false);
   const [generatedOutput, setGeneratedOutput] = useState("");
+  const [generatedImage, setGeneratedImage] = useState("");
   const [qualityRating, setQualityRating] = useState(0);
   const [productSearchOpen, setProductSearchOpen] = useState(false);
   const [productSearchValue, setProductSearchValue] = useState("");
@@ -294,6 +296,39 @@ const Forge = () => {
   const generatePrompt = () => {
     const parts = [];
     
+    // For visual assets, create image-focused prompts
+    if (formData.contentType === 'visual') {
+      parts.push('Create a detailed image generation prompt for:');
+      
+      if (formData.title) {
+        parts.push(`Product: ${formData.title}`);
+      }
+      
+      if (formData.collection) {
+        parts.push(`Collection: ${formData.collection}`);
+      }
+      
+      if (formData.scentFamily) {
+        parts.push(`Mood/Aesthetic: ${formData.scentFamily} scent family`);
+      }
+      
+      if (formData.topNotes || formData.middleNotes || formData.baseNotes) {
+        parts.push('\nFragrance Profile:');
+        if (formData.topNotes) parts.push(`- Top: ${formData.topNotes}`);
+        if (formData.middleNotes) parts.push(`- Middle: ${formData.middleNotes}`);
+        if (formData.baseNotes) parts.push(`- Base: ${formData.baseNotes}`);
+      }
+      
+      if (formData.customInstructions) {
+        parts.push(`\nVisual Direction: ${formData.customInstructions}`);
+      }
+      
+      parts.push('\n\nGenerate a photorealistic product image that captures the essence and mood of this fragrance. Include elegant lighting, sophisticated composition, and visual elements that reflect the scent notes.');
+      
+      return parts.join('\n');
+    }
+    
+    // Standard prompt generation for other content types
     if (formData.title) {
       parts.push(`Product: ${formData.title}`);
     }
@@ -394,6 +429,45 @@ const Forge = () => {
     }
   };
 
+  const generateImageWithNano = async () => {
+    if (!generatedPrompt) {
+      toast({
+        title: "This vessel requires refinement",
+        description: "Please craft a prompt first before generating an image.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setGeneratingImage(true);
+    setGeneratedImage("");
+
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-image-with-nano', {
+        body: { prompt: generatedPrompt }
+      });
+
+      if (error) throw error;
+
+      if (data?.imageUrl) {
+        setGeneratedImage(data.imageUrl);
+        toast({
+          title: "Image generated",
+          description: "Nano Banana has created your visual asset successfully.",
+        });
+      }
+    } catch (error) {
+      console.error('Error generating image:', error);
+      toast({
+        title: "This vessel requires refinement",
+        description: error instanceof Error ? error.message : "Failed to generate image with Nano Banana.",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingImage(false);
+    }
+  };
+
   const archiveVessel = async () => {
     if (!user) return;
     
@@ -476,6 +550,7 @@ const Forge = () => {
         baseNotes: "",
       });
       setGeneratedOutput("");
+      setGeneratedImage("");
       setQualityRating(0);
 
     } catch (error) {
@@ -770,26 +845,63 @@ const Forge = () => {
                 </div>
               )}
 
-              <div className="mt-6 flex gap-3">
-                <Button 
-                  className="btn-craft flex-1" 
-                  onClick={testWithClaude}
-                  disabled={generating || !generatedPrompt}
-                >
-                  {generating ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Crafting...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Test with Claude
-                    </>
-                  )}
-                </Button>
+              {generatedImage && (
+                <div className="mt-6 space-y-4">
+                  <h3 className="text-lg font-serif mb-3">Generated Visual Asset</h3>
+                  <div className="bg-background/50 rounded-md p-4 border border-border/30">
+                    <img 
+                      src={generatedImage} 
+                      alt="Generated visual asset" 
+                      className="w-full rounded-md"
+                    />
+                  </div>
+                  
+                  <div className="pt-4 border-t border-border/40">
+                    <QualityRating rating={qualityRating} onRatingChange={setQualityRating} />
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-6 flex gap-3 flex-wrap">
+                {formData.contentType !== 'visual' ? (
+                  <Button 
+                    className="btn-craft flex-1" 
+                    onClick={testWithClaude}
+                    disabled={generating || !generatedPrompt}
+                  >
+                    {generating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Crafting...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Test with Claude
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <Button 
+                    className="btn-craft flex-1" 
+                    onClick={generateImageWithNano}
+                    disabled={generatingImage || !generatedPrompt}
+                  >
+                    {generatingImage ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Generating Image...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Generate Image with Nano Banana
+                      </>
+                    )}
+                  </Button>
+                )}
                 
-                {generatedOutput && qualityRating > 0 && (
+                {((generatedOutput && qualityRating > 0) || (generatedImage && qualityRating > 0)) && (
                   <Button 
                     variant="outline" 
                     className="flex-1 gap-2"

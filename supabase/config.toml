@@ -2,3 +2,6 @@ project_id = "iflwjiwkbxuvmiviqdxv"
 
 [functions.generate-with-claude]
 verify_jwt = true
+
+[functions.generate-image-with-nano]
+verify_jwt = true
