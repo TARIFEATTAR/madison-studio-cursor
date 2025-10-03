@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Sparkles, Copy, Check } from "lucide-react";
+import { Sparkles, Copy, Check, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 const Forge = () => {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [generatedOutput, setGeneratedOutput] = useState("");
   const [formData, setFormData] = useState({
     contentType: "",
     collection: "",
@@ -63,6 +66,45 @@ const Forge = () => {
       description: "The crafted prompt has been copied to your clipboard.",
     });
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const testWithClaude = async () => {
+    if (!generatedPrompt) {
+      toast({
+        title: "This vessel requires refinement",
+        description: "Please craft a prompt first before testing with Claude.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setGenerating(true);
+    setGeneratedOutput("");
+
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-with-claude', {
+        body: { prompt: generatedPrompt }
+      });
+
+      if (error) throw error;
+
+      if (data?.generatedContent) {
+        setGeneratedOutput(data.generatedContent);
+        toast({
+          title: "Content crafted",
+          description: "Claude has generated your content successfully.",
+        });
+      }
+    } catch (error) {
+      console.error('Error generating with Claude:', error);
+      toast({
+        title: "This vessel requires refinement",
+        description: error instanceof Error ? error.message : "Failed to generate content with Claude.",
+        variant: "destructive",
+      });
+    } finally {
+      setGenerating(false);
+    }
   };
 
   return (
@@ -266,10 +308,32 @@ const Forge = () => {
                 )}
               </div>
 
+              {generatedOutput && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-serif mb-3">Generated Output</h3>
+                  <div className="bg-background/50 rounded-md p-6 min-h-[200px] leading-relaxed border border-border/30">
+                    <p className="text-foreground whitespace-pre-wrap">{generatedOutput}</p>
+                  </div>
+                </div>
+              )}
+
               <div className="mt-6 flex gap-3">
-                <Button className="btn-craft flex-1">
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Test with Claude
+                <Button 
+                  className="btn-craft flex-1" 
+                  onClick={testWithClaude}
+                  disabled={generating || !generatedPrompt}
+                >
+                  {generating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Crafting...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Test with Claude
+                    </>
+                  )}
                 </Button>
                 <Button variant="outline" className="flex-1">
                   Save to Reservoir
