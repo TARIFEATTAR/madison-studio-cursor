@@ -138,7 +138,7 @@ const Archive = () => {
               placeholder="Search archived vessels..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-14 bg-card/50 backdrop-blur-sm border-border focus:border-primary transition-colors text-base"
+              className="pl-12 h-14 bg-card/50 backdrop-blur-sm border-border focus:border-primary transition-all duration-300 text-base focus:shadow-lg focus:-translate-y-0.5"
             />
           </div>
 
@@ -155,7 +155,7 @@ const Archive = () => {
               <Badge
                 key={type.value}
                 variant={selectedContentType === type.value ? "default" : "outline"}
-                className="cursor-pointer transition-all hover:scale-105"
+                className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-sm active:scale-95"
                 onClick={() => setSelectedContentType(selectedContentType === type.value ? null : type.value)}
               >
                 {type.label}
@@ -176,7 +176,7 @@ const Archive = () => {
               <Badge
                 key={collection.value}
                 variant={selectedCollection === collection.value ? "default" : "outline"}
-                className="cursor-pointer transition-all hover:scale-105"
+                className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-sm active:scale-95"
                 onClick={() => setSelectedCollection(selectedCollection === collection.value ? null : collection.value)}
               >
                 {collection.label}
@@ -192,7 +192,7 @@ const Archive = () => {
               <Badge
                 key={rating}
                 variant={selectedRating === rating ? "default" : "outline"}
-                className="cursor-pointer transition-all hover:scale-105"
+                className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-sm active:scale-95"
                 onClick={() => setSelectedRating(selectedRating === rating ? null : rating)}
               >
                 {rating} {rating === 1 ? "Star" : "Stars"}

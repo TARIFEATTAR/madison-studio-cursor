@@ -35,7 +35,7 @@ const Reservoir = () => {
               placeholder="Search prompts, lexicon, or allegorical terms..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-14 bg-card/50 backdrop-blur-sm border-border focus:border-primary transition-colors text-base"
+              className="pl-12 h-14 bg-card/50 backdrop-blur-sm border-border focus:border-primary transition-all duration-300 text-base focus:shadow-lg focus:-translate-y-0.5"
             />
           </div>
 
@@ -47,7 +47,7 @@ const Reservoir = () => {
                 <Badge
                   key={collection}
                   variant={selectedCollection === collection ? "default" : "outline"}
-                  className="cursor-pointer transition-all hover:scale-105"
+                  className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-sm active:scale-95"
                   onClick={() => setSelectedCollection(selectedCollection === collection ? null : collection)}
                 >
                   {collection}
@@ -62,7 +62,7 @@ const Reservoir = () => {
                 <Badge
                   key={type}
                   variant={selectedContentType === type ? "default" : "outline"}
-                  className="cursor-pointer transition-all hover:scale-105"
+                  className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-sm active:scale-95"
                   onClick={() => setSelectedContentType(selectedContentType === type ? null : type)}
                 >
                   {type}

@@ -16,7 +16,7 @@ const QualityRating = ({ rating, onRatingChange }: QualityRatingProps) => {
           <button
             key={star}
             onClick={() => onRatingChange(star)}
-            className="transition-all hover:scale-110"
+            className="transition-all duration-300 hover:scale-110 active:scale-95"
             type="button"
           >
             <Star
