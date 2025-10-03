@@ -1124,11 +1124,11 @@ const Forge = () => {
                         <SelectValue placeholder="Select type..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="blog">Blog Post (1000-2000 words)</SelectItem>
-                        <SelectItem value="newsletter">Email Newsletter (500-800 words)</SelectItem>
-                        <SelectItem value="announcement">Brand Announcement</SelectItem>
-                        <SelectItem value="guide">Educational Guide</SelectItem>
-                        <SelectItem value="story">Product Story</SelectItem>
+                        <SelectItem value="blog_post">Blog Post (1000-2000 words)</SelectItem>
+                        <SelectItem value="email_newsletter">Email Newsletter (500-800 words)</SelectItem>
+                        <SelectItem value="brand_announcement">Brand Announcement</SelectItem>
+                        <SelectItem value="educational_guide">Educational Guide</SelectItem>
+                        <SelectItem value="product_story">Product Story</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
