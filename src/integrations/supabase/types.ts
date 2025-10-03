@@ -53,6 +53,107 @@ export type Database = {
         }
         Relationships: []
       }
+      derivative_assets: {
+        Row: {
+          approval_status: string | null
+          asset_type: string
+          created_at: string | null
+          created_by: string | null
+          generated_content: string | null
+          id: string
+          master_content_id: string | null
+          platform_specs: Json | null
+          published_at: string | null
+          quality_rating: number | null
+        }
+        Insert: {
+          approval_status?: string | null
+          asset_type: string
+          created_at?: string | null
+          created_by?: string | null
+          generated_content?: string | null
+          id?: string
+          master_content_id?: string | null
+          platform_specs?: Json | null
+          published_at?: string | null
+          quality_rating?: number | null
+        }
+        Update: {
+          approval_status?: string | null
+          asset_type?: string
+          created_at?: string | null
+          created_by?: string | null
+          generated_content?: string | null
+          id?: string
+          master_content_id?: string | null
+          platform_specs?: Json | null
+          published_at?: string | null
+          quality_rating?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "derivative_assets_master_content_id_fkey"
+            columns: ["master_content_id"]
+            isOneToOne: false
+            referencedRelation: "master_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      master_content: {
+        Row: {
+          collection: Database["public"]["Enums"]["collection_type"] | null
+          content_type: string
+          created_at: string | null
+          created_by: string | null
+          dip_week: number | null
+          full_content: string
+          id: string
+          pillar_focus: Database["public"]["Enums"]["pillar_type"] | null
+          title: string
+          updated_at: string | null
+          word_count: number | null
+        }
+        Insert: {
+          collection?: Database["public"]["Enums"]["collection_type"] | null
+          content_type: string
+          created_at?: string | null
+          created_by?: string | null
+          dip_week?: number | null
+          full_content: string
+          id?: string
+          pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
+          title: string
+          updated_at?: string | null
+          word_count?: number | null
+        }
+        Update: {
+          collection?: Database["public"]["Enums"]["collection_type"] | null
+          content_type?: string
+          created_at?: string | null
+          created_by?: string | null
+          dip_week?: number | null
+          full_content?: string
+          id?: string
+          pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
+          title?: string
+          updated_at?: string | null
+          word_count?: number | null
+        }
+        Relationships: []
+      }
+      master_content_with_updated: {
+        Row: {
+          updated_at: string | null
+        }
+        Insert: {
+          updated_at?: string | null
+        }
+        Update: {
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       outputs: {
         Row: {
           created_at: string | null
@@ -170,6 +271,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      repurposing_rules: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          platform_constraints: Json | null
+          source_type: string
+          target_type: string
+          transformation_prompt: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          platform_constraints?: Json | null
+          source_type: string
+          target_type: string
+          transformation_prompt: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          platform_constraints?: Json | null
+          source_type?: string
+          target_type?: string
+          transformation_prompt?: string
+        }
+        Relationships: []
       }
       vocabulary_library: {
         Row: {
