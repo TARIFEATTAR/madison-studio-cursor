@@ -266,10 +266,9 @@ const Forge = () => {
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [generatingImage, setGeneratingImage] = useState(false);
   const [saving, setSaving] = useState(false);
   const [generatedOutput, setGeneratedOutput] = useState("");
-  const [generatedImage, setGeneratedImage] = useState("");
+  const [imageUrls, setImageUrls] = useState("");
   const [qualityRating, setQualityRating] = useState(0);
   const [productSearchOpen, setProductSearchOpen] = useState(false);
   const [productSearchValue, setProductSearchValue] = useState("");
@@ -435,81 +434,6 @@ const Forge = () => {
     }
   };
 
-  const generateImageWithNano = async () => {
-    console.log('🎨 Generate Image button clicked');
-    console.log('Generated prompt available:', !!generatedPrompt);
-    console.log('Content type:', formData.contentType);
-    
-    if (!generatedPrompt) {
-      console.warn('⚠️ No prompt available');
-      toast({
-        title: "This vessel requires refinement",
-        description: "Please craft a prompt first before generating an image.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setGeneratingImage(true);
-    setGeneratedImage("");
-    console.log('📤 Calling generate-image-with-nano function with prompt length:', generatedPrompt.length);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-image-with-nano', {
-        body: { prompt: generatedPrompt }
-      });
-
-      console.log('📥 Response received:', { hasData: !!data, hasError: !!error });
-
-      if (error) {
-        console.error('❌ Edge function error:', error);
-        
-        // Handle specific error cases
-        if (error.message?.includes('429') || error.message?.includes('rate limit')) {
-          toast({
-            title: "Rate Limit Exceeded",
-            description: "Too many requests. Please wait a moment and try again.",
-            variant: "destructive",
-          });
-        } else if (error.message?.includes('402') || error.message?.includes('payment')) {
-          toast({
-            title: "Payment Required",
-            description: "Please add credits to your Lovable AI workspace.",
-            variant: "destructive",
-          });
-        } else {
-          throw error;
-        }
-        return;
-      }
-
-      if (data?.imageUrl) {
-        console.log('✅ Image URL received, length:', data.imageUrl.length);
-        setGeneratedImage(data.imageUrl);
-        toast({
-          title: "Image generated",
-          description: "Nano Banana has created your visual asset successfully.",
-        });
-      } else {
-        console.error('❌ No image URL in response:', data);
-        toast({
-          title: "This vessel requires refinement",
-          description: "No image was returned from the service.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('❌ Error generating image:', error);
-      toast({
-        title: "This vessel requires refinement",
-        description: error instanceof Error ? error.message : "Failed to generate image with Nano Banana.",
-        variant: "destructive",
-      });
-    } finally {
-      setGeneratingImage(false);
-      console.log('🏁 Image generation completed');
-    }
-  };
 
   const archiveVessel = async () => {
     if (!user) return;
@@ -551,12 +475,19 @@ const Forge = () => {
 
       if (promptError) throw promptError;
 
+      // Parse image URLs (one per line)
+      const imageUrlsArray = imageUrls
+        .split('\n')
+        .map(url => url.trim())
+        .filter(url => url.length > 0);
+
       // Then, insert the output
       const { error: outputError } = await supabase
         .from('outputs')
         .insert({
           prompt_id: promptData.id,
           generated_content: generatedOutput,
+          image_urls: imageUrlsArray,
           quality_rating: qualityRating,
           usage_context: `${formData.contentType} - ${formData.collection}`,
           created_by: user.id,
@@ -594,7 +525,7 @@ const Forge = () => {
         imageTemplate: "product-page",
       });
       setGeneratedOutput("");
-      setGeneratedImage("");
+      setImageUrls("");
       setQualityRating(0);
 
     } catch (error) {
@@ -920,25 +851,32 @@ const Forge = () => {
                 </div>
               )}
 
-              {generatedImage && (
+              {formData.contentType === 'visual' && (
                 <div className="mt-6 space-y-4">
-                  <h3 className="text-lg font-serif mb-3">Generated Visual Asset</h3>
-                  <div className="bg-background/50 rounded-md p-4 border border-border/30">
-                    <img 
-                      src={generatedImage} 
-                      alt="Generated visual asset" 
-                      className="w-full rounded-md"
-                    />
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 className="text-lg font-serif">Generated Image URLs</h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        After generating images in Google AI Studio with Nano Banana, paste the image URLs here (one per line)
+                      </p>
+                    </div>
                   </div>
-                  
-                  <div className="pt-4 border-t border-border/40">
-                    <QualityRating rating={qualityRating} onRatingChange={setQualityRating} />
-                  </div>
+                  <Textarea
+                    value={imageUrls}
+                    onChange={(e) => setImageUrls(e.target.value)}
+                    placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"
+                    className="bg-background/50 min-h-[120px] font-mono text-sm"
+                  />
+                  {imageUrls && (
+                    <div className="pt-4 border-t border-border/40">
+                      <QualityRating rating={qualityRating} onRatingChange={setQualityRating} />
+                    </div>
+                  )}
                 </div>
               )}
 
               <div className="mt-6 flex gap-3 flex-wrap">
-                {formData.contentType !== 'visual' ? (
+                {formData.contentType !== 'visual' && (
                   <Button 
                     className="btn-craft flex-1" 
                     onClick={testWithClaude}
@@ -956,34 +894,24 @@ const Forge = () => {
                       </>
                     )}
                   </Button>
-                ) : (
-                  <>
-                    {!generatedPrompt && (
-                      <p className="text-sm text-muted-foreground w-full text-center mb-2">
-                        ℹ️ Click "Craft Prompt" above to enable image generation
-                      </p>
-                    )}
-                    <Button 
-                      className="btn-craft flex-1" 
-                      onClick={generateImageWithNano}
-                      disabled={generatingImage || !generatedPrompt}
-                    >
-                      {generatingImage ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Generating Image...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4 mr-2" />
-                          Generate Image with Nano Banana
-                        </>
-                      )}
-                    </Button>
-                  </>
+                )}
+
+                {formData.contentType === 'visual' && generatedPrompt && (
+                  <div className="w-full p-4 bg-primary/5 border border-primary/20 rounded-md">
+                    <p className="text-sm text-foreground mb-2">
+                      <strong>Next Steps:</strong>
+                    </p>
+                    <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                      <li>Copy the prompt above using the "Copy" button</li>
+                      <li>Open <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google AI Studio</a></li>
+                      <li>Use Nano Banana model with your bottle reference images</li>
+                      <li>Paste the generated image URLs in the field above</li>
+                      <li>Rate the quality and archive</li>
+                    </ol>
+                  </div>
                 )}
                 
-                {((generatedOutput && qualityRating > 0) || (generatedImage && qualityRating > 0)) && (
+                {((generatedOutput && qualityRating > 0) || (imageUrls && qualityRating > 0)) && (
                   <Button 
                     variant="outline" 
                     className="flex-1 gap-2"

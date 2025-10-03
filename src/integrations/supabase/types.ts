@@ -59,6 +59,7 @@ export type Database = {
           created_by: string | null
           generated_content: string
           id: string
+          image_urls: Json | null
           iteration_notes: string | null
           performance_metrics: Json | null
           prompt_id: string | null
@@ -70,6 +71,7 @@ export type Database = {
           created_by?: string | null
           generated_content: string
           id?: string
+          image_urls?: Json | null
           iteration_notes?: string | null
           performance_metrics?: Json | null
           prompt_id?: string | null
@@ -81,6 +83,7 @@ export type Database = {
           created_by?: string | null
           generated_content?: string
           id?: string
+          image_urls?: Json | null
           iteration_notes?: string | null
           performance_metrics?: Json | null
           prompt_id?: string | null

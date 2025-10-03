@@ -17,6 +17,7 @@ interface ArchivedPrompt {
   created_at: string;
   output: {
     generated_content: string;
+    image_urls: string[] | null;
     quality_rating: number | null;
     usage_context: string | null;
   } | null;
@@ -60,13 +61,16 @@ const Archive = () => {
         (prompts || []).map(async (prompt) => {
           const { data: output } = await supabase
             .from('outputs')
-            .select('generated_content, quality_rating, usage_context')
+            .select('generated_content, image_urls, quality_rating, usage_context')
             .eq('prompt_id', prompt.id)
             .single();
 
           return {
             ...prompt,
-            output: output || null,
+            output: output ? {
+              ...output,
+              image_urls: (output.image_urls as string[]) || null,
+            } : null,
           };
         })
       );
@@ -225,11 +229,43 @@ const Archive = () => {
                       )}
                     </div>
 
-                    <div className="bg-background/50 rounded-md p-4 border border-border/30 min-h-[200px]">
-                      <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                        {archive.output?.generated_content || "No output generated"}
-                      </p>
-                    </div>
+                    {/* Image Gallery */}
+                    {archive.output?.image_urls && archive.output.image_urls.length > 0 ? (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 gap-3">
+                          {archive.output.image_urls.map((url, idx) => (
+                            <div key={idx} className="bg-background/50 rounded-md p-2 border border-border/30">
+                              <a href={url} target="_blank" rel="noopener noreferrer">
+                                <img 
+                                  src={url} 
+                                  alt={`Generated image ${idx + 1}`}
+                                  className="w-full rounded-md hover:opacity-90 transition-opacity"
+                                  onError={(e) => {
+                                    // If image fails to load, show the URL as text
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                    const parent = target.parentElement;
+                                    if (parent) {
+                                      const textDiv = document.createElement('div');
+                                      textDiv.className = 'text-sm text-muted-foreground p-2';
+                                      textDiv.textContent = url;
+                                      parent.appendChild(textDiv);
+                                    }
+                                  }}
+                                />
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      /* Text Content */
+                      <div className="bg-background/50 rounded-md p-4 border border-border/30 min-h-[200px]">
+                        <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                          {archive.output?.generated_content || "No output generated"}
+                        </p>
+                      </div>
+                    )}
 
                     {archive.output?.usage_context && (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
