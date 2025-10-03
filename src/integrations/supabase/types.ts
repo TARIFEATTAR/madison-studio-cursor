@@ -99,6 +99,7 @@ export type Database = {
       }
       prompts: {
         Row: {
+          base_notes: string | null
           collection: Database["public"]["Enums"]["collection_type"]
           content_type: Database["public"]["Enums"]["content_type"]
           created_at: string | null
@@ -106,16 +107,19 @@ export type Database = {
           dip_week: number | null
           id: string
           meta_instructions: Json | null
+          middle_notes: string | null
           parent_prompt_id: string | null
           pillar_focus: Database["public"]["Enums"]["pillar_type"] | null
           prompt_text: string
           scent_family: Database["public"]["Enums"]["scent_family"] | null
           title: string
+          top_notes: string | null
           transparency_statement: string | null
           updated_at: string | null
           version: number | null
         }
         Insert: {
+          base_notes?: string | null
           collection: Database["public"]["Enums"]["collection_type"]
           content_type: Database["public"]["Enums"]["content_type"]
           created_at?: string | null
@@ -123,16 +127,19 @@ export type Database = {
           dip_week?: number | null
           id?: string
           meta_instructions?: Json | null
+          middle_notes?: string | null
           parent_prompt_id?: string | null
           pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
           prompt_text: string
           scent_family?: Database["public"]["Enums"]["scent_family"] | null
           title: string
+          top_notes?: string | null
           transparency_statement?: string | null
           updated_at?: string | null
           version?: number | null
         }
         Update: {
+          base_notes?: string | null
           collection?: Database["public"]["Enums"]["collection_type"]
           content_type?: Database["public"]["Enums"]["content_type"]
           created_at?: string | null
@@ -140,11 +147,13 @@ export type Database = {
           dip_week?: number | null
           id?: string
           meta_instructions?: Json | null
+          middle_notes?: string | null
           parent_prompt_id?: string | null
           pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
           prompt_text?: string
           scent_family?: Database["public"]["Enums"]["scent_family"] | null
           title?: string
+          top_notes?: string | null
           transparency_statement?: string | null
           updated_at?: string | null
           version?: number | null

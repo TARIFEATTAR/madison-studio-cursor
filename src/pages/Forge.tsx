@@ -78,6 +78,9 @@ const Forge = () => {
     pillar: "",
     transparencyStatement: "",
     customInstructions: "",
+    topNotes: "",
+    middleNotes: "",
+    baseNotes: "",
   });
 
   const filteredProducts = useMemo(() => {
@@ -217,6 +220,9 @@ const Forge = () => {
           pillar_focus: formData.pillar ? (formData.pillar as any) : null,
           prompt_text: generatedPrompt,
           transparency_statement: formData.transparencyStatement,
+          top_notes: formData.topNotes || null,
+          middle_notes: formData.middleNotes || null,
+          base_notes: formData.baseNotes || null,
           meta_instructions: {
             customInstructions: formData.customInstructions,
           },
@@ -264,6 +270,9 @@ const Forge = () => {
         pillar: "",
         transparencyStatement: "",
         customInstructions: "",
+        topNotes: "",
+        middleNotes: "",
+        baseNotes: "",
       });
       setGeneratedOutput("");
       setQualityRating(0);
@@ -441,6 +450,42 @@ const Forge = () => {
                     placeholder="Add specific requirements or creative direction..."
                     className="bg-background/50 min-h-[120px]"
                   />
+                </div>
+
+                <div className="space-y-4 pt-4 border-t border-border/40">
+                  <Label className="text-base">Fragrance Notes (Optional)</Label>
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="topNotes" className="text-sm text-muted-foreground">Top Notes</Label>
+                      <Input
+                        id="topNotes"
+                        value={formData.topNotes}
+                        onChange={(e) => setFormData({ ...formData, topNotes: e.target.value })}
+                        placeholder="e.g., Bergamot, Lemon, Fresh Citrus"
+                        className="bg-background/50"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="middleNotes" className="text-sm text-muted-foreground">Middle Notes</Label>
+                      <Input
+                        id="middleNotes"
+                        value={formData.middleNotes}
+                        onChange={(e) => setFormData({ ...formData, middleNotes: e.target.value })}
+                        placeholder="e.g., Rose, Jasmine, Floral Bouquet"
+                        className="bg-background/50"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="baseNotes" className="text-sm text-muted-foreground">Base Notes</Label>
+                      <Input
+                        id="baseNotes"
+                        value={formData.baseNotes}
+                        onChange={(e) => setFormData({ ...formData, baseNotes: e.target.value })}
+                        placeholder="e.g., Sandalwood, Musk, Woody Accord"
+                        className="bg-background/50"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-border/40">
