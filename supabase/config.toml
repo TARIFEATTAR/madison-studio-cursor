@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.generate-image-with-nano]
 verify_jwt = true
+
+[functions.repurpose-content]
+verify_jwt = true

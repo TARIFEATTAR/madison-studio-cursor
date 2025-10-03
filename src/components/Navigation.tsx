@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { BookOpen, Sparkles, Archive, Calendar as CalendarIcon, LogOut } from "lucide-react";
+import { BookOpen, Sparkles, Archive, Calendar as CalendarIcon, LogOut, Repeat } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 
@@ -10,6 +10,7 @@ const Navigation = () => {
   const navItems = [
     { path: "/", label: "The Reservoir", icon: BookOpen },
     { path: "/forge", label: "The Forge", icon: Sparkles },
+    { path: "/repurpose", label: "Repurpose", icon: Repeat },
     { path: "/archive", label: "The Archive", icon: Archive },
     { path: "/calendar", label: "The Calendar", icon: CalendarIcon },
   ];

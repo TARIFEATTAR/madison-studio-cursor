@@ -1,0 +1,462 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Check, X, Edit, FileText, Mail, Instagram, Twitter, Package, MessageSquare } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+interface MasterContent {
+  id: string;
+  title: string;
+  content_type: string;
+  full_content: string;
+  word_count: number;
+  collection: string | null;
+  dip_week: number | null;
+  pillar_focus: string | null;
+  created_at: string;
+}
+
+interface DerivativeAsset {
+  id: string;
+  master_content_id: string;
+  asset_type: string;
+  generated_content: string;
+  platform_specs: any;
+  approval_status: string;
+  created_at: string;
+}
+
+const DERIVATIVE_ICONS = {
+  email: Mail,
+  instagram: Instagram,
+  twitter: Twitter,
+  product: Package,
+  sms: MessageSquare,
+};
+
+const DERIVATIVE_LABELS = {
+  email: "Email Newsletter",
+  instagram: "Instagram Carousel",
+  twitter: "Twitter Thread",
+  product: "Product Description",
+  sms: "SMS Message",
+};
+
+const Repurpose = () => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [masterContents, setMasterContents] = useState<MasterContent[]>([]);
+  const [selectedMaster, setSelectedMaster] = useState<MasterContent | null>(null);
+  const [derivatives, setDerivatives] = useState<DerivativeAsset[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewContent, setPreviewContent] = useState<DerivativeAsset | null>(null);
+  const [editingDerivative, setEditingDerivative] = useState<string | null>(null);
+  const [editedContent, setEditedContent] = useState("");
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    fetchMasterContents();
+  }, [user, navigate]);
+
+  const fetchMasterContents = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('master_content')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setMasterContents(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error loading content",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDerivatives = async (masterContentId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('derivative_assets')
+        .select('*')
+        .eq('master_content_id', masterContentId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setDerivatives(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error loading derivatives",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSelectMaster = (master: MasterContent) => {
+    setSelectedMaster(master);
+    fetchDerivatives(master.id);
+  };
+
+  const handleApprove = async (derivativeId: string) => {
+    try {
+      const { error } = await supabase
+        .from('derivative_assets')
+        .update({ approval_status: 'approved' })
+        .eq('id', derivativeId);
+
+      if (error) throw error;
+
+      setDerivatives(prev =>
+        prev.map(d => d.id === derivativeId ? { ...d, approval_status: 'approved' } : d)
+      );
+
+      toast({
+        title: "Asset approved",
+        description: "This derivative has been approved.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error approving asset",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleReject = async (derivativeId: string) => {
+    try {
+      const { error } = await supabase
+        .from('derivative_assets')
+        .update({ approval_status: 'rejected' })
+        .eq('id', derivativeId);
+
+      if (error) throw error;
+
+      setDerivatives(prev =>
+        prev.map(d => d.id === derivativeId ? { ...d, approval_status: 'rejected' } : d)
+      );
+
+      toast({
+        title: "Asset rejected",
+        description: "This derivative has been rejected.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error rejecting asset",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEdit = (derivative: DerivativeAsset) => {
+    setEditingDerivative(derivative.id);
+    setEditedContent(derivative.generated_content);
+  };
+
+  const handleSaveEdit = async (derivativeId: string) => {
+    try {
+      const { error } = await supabase
+        .from('derivative_assets')
+        .update({ generated_content: editedContent })
+        .eq('id', derivativeId);
+
+      if (error) throw error;
+
+      setDerivatives(prev =>
+        prev.map(d => d.id === derivativeId ? { ...d, generated_content: editedContent } : d)
+      );
+
+      setEditingDerivative(null);
+
+      toast({
+        title: "Changes saved",
+        description: "Your edits have been saved.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error saving changes",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePreview = (derivative: DerivativeAsset) => {
+    setPreviewContent(derivative);
+    setPreviewOpen(true);
+  };
+
+  const approvedCount = derivatives.filter(d => d.approval_status === 'approved').length;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8 space-y-8">
+      <div className="space-y-2">
+        <h1 className="text-4xl font-serif text-foreground">Content Repurposing</h1>
+        <p className="text-muted-foreground">
+          Transform master content into multi-channel derivative assets
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Master Content List */}
+        <div className="lg:col-span-1 space-y-4">
+          <h2 className="text-xl font-serif text-foreground">Master Content</h2>
+          {masterContents.length === 0 ? (
+            <Card className="p-6 text-center space-y-4">
+              <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
+              <p className="text-muted-foreground">No master content yet</p>
+              <Button onClick={() => navigate('/forge')}>Create in Forge</Button>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {masterContents.map((master) => (
+                <Card
+                  key={master.id}
+                  className={`p-4 cursor-pointer transition-all hover:shadow-glow ${
+                    selectedMaster?.id === master.id ? 'border-primary shadow-glow' : ''
+                  }`}
+                  onClick={() => handleSelectMaster(master)}
+                >
+                  <div className="space-y-2">
+                    <h3 className="font-medium text-foreground">{master.title}</h3>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="outline">{master.content_type}</Badge>
+                      {master.dip_week && (
+                        <Badge variant="secondary">Week {master.dip_week}</Badge>
+                      )}
+                      {master.word_count && (
+                        <Badge variant="outline">{master.word_count} words</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(master.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Derivatives Section */}
+        <div className="lg:col-span-2 space-y-4">
+          {selectedMaster ? (
+            <>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-serif text-foreground">Derivative Assets</h2>
+                {derivatives.length > 0 && (
+                  <Badge variant="secondary">
+                    {approvedCount}/{derivatives.length} approved
+                  </Badge>
+                )}
+              </div>
+
+              <Card className="p-6 bg-muted/20">
+                <div className="space-y-2">
+                  <h3 className="font-serif text-lg text-foreground">{selectedMaster.title}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-3">
+                    {selectedMaster.full_content}
+                  </p>
+                  <div className="flex gap-2 pt-2">
+                    {selectedMaster.collection && (
+                      <Badge variant="outline">{selectedMaster.collection}</Badge>
+                    )}
+                    {selectedMaster.pillar_focus && (
+                      <Badge variant="outline">{selectedMaster.pillar_focus}</Badge>
+                    )}
+                  </div>
+                </div>
+              </Card>
+
+              {derivatives.length === 0 ? (
+                <Card className="p-8 text-center space-y-4">
+                  <p className="text-muted-foreground">
+                    No derivatives generated for this content yet.
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Generate derivatives from the Forge using Master Content mode.
+                  </p>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {derivatives.map((derivative) => {
+                    const Icon = DERIVATIVE_ICONS[derivative.asset_type as keyof typeof DERIVATIVE_ICONS] || FileText;
+                    const isEditing = editingDerivative === derivative.id;
+
+                    return (
+                      <Card key={derivative.id} className="p-6 space-y-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-3">
+                            <Icon className="h-5 w-5 text-primary" />
+                            <div>
+                              <h3 className="font-medium text-foreground">
+                                {DERIVATIVE_LABELS[derivative.asset_type as keyof typeof DERIVATIVE_LABELS]}
+                              </h3>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(derivative.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <Badge
+                            variant={
+                              derivative.approval_status === 'approved'
+                                ? 'default'
+                                : derivative.approval_status === 'rejected'
+                                ? 'destructive'
+                                : 'secondary'
+                            }
+                          >
+                            {derivative.approval_status}
+                          </Badge>
+                        </div>
+
+                        {isEditing ? (
+                          <div className="space-y-3">
+                            <Textarea
+                              value={editedContent}
+                              onChange={(e) => setEditedContent(e.target.value)}
+                              rows={8}
+                              className="font-mono text-sm"
+                            />
+                            <div className="flex gap-2">
+                              <Button size="sm" onClick={() => handleSaveEdit(derivative.id)}>
+                                Save Changes
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setEditingDerivative(null)}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="bg-muted/50 p-4 rounded-md">
+                              <p className="text-sm text-muted-foreground line-clamp-4 whitespace-pre-wrap">
+                                {derivative.generated_content}
+                              </p>
+                            </div>
+
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handlePreview(derivative)}
+                              >
+                                Preview
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEdit(derivative)}
+                              >
+                                <Edit className="h-4 w-4 mr-1" />
+                                Edit
+                              </Button>
+                              {derivative.approval_status !== 'approved' && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleApprove(derivative.id)}
+                                >
+                                  <Check className="h-4 w-4 mr-1" />
+                                  Approve
+                                </Button>
+                              )}
+                              {derivative.approval_status !== 'rejected' && (
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleReject(derivative.id)}
+                                >
+                                  <X className="h-4 w-4 mr-1" />
+                                  Reject
+                                </Button>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          ) : (
+            <Card className="p-8 text-center">
+              <p className="text-muted-foreground">
+                Select master content from the left to view its derivatives
+              </p>
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {/* Preview Dialog */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {previewContent && DERIVATIVE_LABELS[previewContent.asset_type as keyof typeof DERIVATIVE_LABELS]}
+            </DialogTitle>
+            <DialogDescription>Full preview of generated content</DialogDescription>
+          </DialogHeader>
+          {previewContent && (
+            <div className="space-y-4">
+              <div className="bg-muted/50 p-6 rounded-md">
+                <pre className="text-sm whitespace-pre-wrap font-sans">
+                  {previewContent.generated_content}
+                </pre>
+              </div>
+              {previewContent.platform_specs && Object.keys(previewContent.platform_specs).length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Platform Details</h4>
+                  <div className="bg-muted/50 p-4 rounded-md">
+                    <pre className="text-xs text-muted-foreground">
+                      {JSON.stringify(previewContent.platform_specs, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default Repurpose;

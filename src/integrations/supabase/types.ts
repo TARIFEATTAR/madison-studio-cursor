@@ -142,18 +142,6 @@ export type Database = {
         }
         Relationships: []
       }
-      master_content_with_updated: {
-        Row: {
-          updated_at: string | null
-        }
-        Insert: {
-          updated_at?: string | null
-        }
-        Update: {
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       outputs: {
         Row: {
           created_at: string | null

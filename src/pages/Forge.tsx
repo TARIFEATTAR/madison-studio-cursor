@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import QualityRating from "@/components/QualityRating";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -272,6 +273,14 @@ const Forge = () => {
   const [qualityRating, setQualityRating] = useState(0);
   const [productSearchOpen, setProductSearchOpen] = useState(false);
   const [productSearchValue, setProductSearchValue] = useState("");
+  
+  // Master Content Mode state
+  const [contentMode, setContentMode] = useState<"single" | "master">("single");
+  const [masterContentType, setMasterContentType] = useState("");
+  const [masterContentText, setMasterContentText] = useState("");
+  const [selectedDerivatives, setSelectedDerivatives] = useState<string[]>([]);
+  const [repurposing, setRepurposing] = useState(false);
+  
   const [formData, setFormData] = useState({
     title: "",
     contentType: "",
@@ -540,25 +549,178 @@ const Forge = () => {
     }
   };
 
+  const createMasterContent = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to create master content.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!masterContentText.trim()) {
+      toast({
+        title: "Content required",
+        description: "Please enter your master content.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!masterContentType) {
+      toast({
+        title: "Content type required",
+        description: "Please select a content type.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedDerivatives.length === 0) {
+      toast({
+        title: "No derivatives selected",
+        description: "Please select at least one derivative type.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setRepurposing(true);
+
+      // Calculate word count
+      const wordCount = masterContentText.trim().split(/\s+/).length;
+
+      // Save master content
+      const { data: masterData, error: masterError } = await supabase
+        .from('master_content')
+        .insert({
+          title: formData.title || `${masterContentType} - ${new Date().toLocaleDateString()}`,
+          content_type: masterContentType,
+          full_content: masterContentText,
+          word_count: wordCount,
+          collection: formData.collection ? mapCollectionToEnum(formData.collection) as any : null,
+          dip_week: formData.dipWeek ? parseInt(formData.dipWeek) : null,
+          pillar_focus: formData.pillar ? (mapPillarToEnum(formData.pillar) as any) : null,
+          created_by: user.id,
+        })
+        .select()
+        .single();
+
+      if (masterError) throw masterError;
+
+      // Generate derivatives via edge function
+      const { data: repurposeData, error: repurposeError } = await supabase.functions.invoke(
+        'repurpose-content',
+        {
+          body: {
+            masterContentId: masterData.id,
+            derivativeTypes: selectedDerivatives,
+            masterContent: {
+              full_content: masterContentText,
+              collection: formData.collection,
+              dip_week: formData.dipWeek ? parseInt(formData.dipWeek) : null,
+              pillar_focus: formData.pillar,
+            },
+          },
+        }
+      );
+
+      if (repurposeError) throw repurposeError;
+
+      toast({
+        title: "Content repurposed successfully",
+        description: `Generated ${selectedDerivatives.length} derivative assets. View them in Repurpose.`,
+        action: (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/repurpose')}
+          >
+            View Derivatives
+          </Button>
+        ),
+      });
+
+      // Reset master content form
+      setMasterContentText("");
+      setMasterContentType("");
+      setSelectedDerivatives([]);
+      setFormData({
+        title: "",
+        contentType: "",
+        collection: "",
+        dipWeek: "",
+        scentFamily: "",
+        pillar: "",
+        transparencyStatement: "",
+        customInstructions: "",
+        topNotes: "",
+        middleNotes: "",
+        baseNotes: "",
+        imageTemplate: "product-page",
+      });
+
+    } catch (error) {
+      console.error('Error repurposing content:', error);
+      toast({
+        title: "Repurposing failed",
+        description: error instanceof Error ? error.message : "Failed to repurpose content.",
+        variant: "destructive",
+      });
+    } finally {
+      setRepurposing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen py-12 px-6 md:px-12">
       <div className="max-w-7xl mx-auto codex-spacing">
         <div className="fade-enter mb-12">
           <h1 className="text-foreground mb-3">The Forge</h1>
           <p className="text-muted-foreground text-lg max-w-2xl">
-            Select a product from your catalogue and craft content with brand guardrails.
+            {contentMode === "single" 
+              ? "Select a product from your catalogue and craft content with brand guardrails."
+              : "Create master content and repurpose it into multi-channel derivative assets."
+            }
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left: Form Builder */}
-          <div className="fade-enter space-y-6">
-            <div className="card-matte p-8 rounded-lg border border-border/40">
-              <h2 className="mb-6 text-2xl">Prompt Elements</h2>
+        {/* Content Mode Toggle */}
+        <div className="fade-enter mb-8">
+          <div className="card-matte p-6 rounded-lg border border-border/40 inline-block">
+            <Label className="text-sm text-muted-foreground mb-3 block">Content Mode</Label>
+            <div className="flex gap-2">
+              <Button
+                variant={contentMode === "single" ? "default" : "outline"}
+                onClick={() => setContentMode("single")}
+                className="transition-all"
+              >
+                Single Asset
+              </Button>
+              <Button
+                variant={contentMode === "master" ? "default" : "outline"}
+                onClick={() => setContentMode("master")}
+                className="transition-all"
+              >
+                Master Content (Multi-Channel)
+              </Button>
+            </div>
+          </div>
+        </div>
 
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="productName">Product Name *</Label>
+        {contentMode === "single" ? (
+          /* EXISTING SINGLE ASSET MODE */
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left: Form Builder */}
+            <div className="fade-enter space-y-6">
+              <div className="card-matte p-8 rounded-lg border border-border/40">
+                <h2 className="mb-6 text-2xl">Prompt Elements</h2>
+
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="productName">Product Name *</Label>
                   <Popover open={productSearchOpen} onOpenChange={setProductSearchOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -935,6 +1097,210 @@ const Forge = () => {
             </div>
           </div>
         </div>
+        ) : (
+          /* MASTER CONTENT MODE */
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left: Master Content Editor */}
+            <div className="fade-enter space-y-6">
+              <div className="card-matte p-8 rounded-lg border border-border/40">
+                <h2 className="mb-6 text-2xl">Master Content</h2>
+
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="masterTitle">Title *</Label>
+                    <Input
+                      id="masterTitle"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="e.g., 'The Quiet Rebellion'"
+                      className="bg-background/50"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="masterContentType">Primary Content Type *</Label>
+                    <Select value={masterContentType} onValueChange={setMasterContentType}>
+                      <SelectTrigger id="masterContentType" className="bg-background/50">
+                        <SelectValue placeholder="Select type..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="blog">Blog Post (1000-2000 words)</SelectItem>
+                        <SelectItem value="newsletter">Email Newsletter (500-800 words)</SelectItem>
+                        <SelectItem value="announcement">Brand Announcement</SelectItem>
+                        <SelectItem value="guide">Educational Guide</SelectItem>
+                        <SelectItem value="story">Product Story</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="dipWeek">DIP Week</Label>
+                    <Select value={formData.dipWeek} onValueChange={(value) => setFormData({ ...formData, dipWeek: value })}>
+                      <SelectTrigger id="dipWeek" className="bg-background/50">
+                        <SelectValue placeholder="Select week..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">Week 1: Identity / Silk Road</SelectItem>
+                        <SelectItem value="2">Week 2: Memory / Maritime Voyage</SelectItem>
+                        <SelectItem value="3">Week 3: Remembrance / Imperial Court</SelectItem>
+                        <SelectItem value="4">Week 4: Cadence / Royal Court</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="collection">Collection (Optional)</Label>
+                    <Select value={formData.collection} onValueChange={(value) => setFormData({ ...formData, collection: value })}>
+                      <SelectTrigger id="collection" className="bg-background/50">
+                        <SelectValue placeholder="Select collection..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Cadence Collection">Cadence Collection</SelectItem>
+                        <SelectItem value="Reserve Collection">Reserve Collection</SelectItem>
+                        <SelectItem value="Purity Collection">Purity Collection</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="pillarMaster">Pillar Focus (Optional)</Label>
+                    <Select value={formData.pillar} onValueChange={(value) => setFormData({ ...formData, pillar: value })}>
+                      <SelectTrigger id="pillarMaster" className="bg-background/50">
+                        <SelectValue placeholder="Select pillar..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Identity">Identity / The Anchor</SelectItem>
+                        <SelectItem value="Memory">Memory / The Journey</SelectItem>
+                        <SelectItem value="Remembrance">Remembrance / The Craft</SelectItem>
+                        <SelectItem value="Cadence">Cadence / The Practice</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="masterContent">Master Content *</Label>
+                    <Textarea
+                      id="masterContent"
+                      value={masterContentText}
+                      onChange={(e) => setMasterContentText(e.target.value)}
+                      placeholder="Write your master content here..."
+                      rows={12}
+                      className="bg-background/50 font-serif leading-relaxed"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {masterContentText.trim().split(/\s+/).filter(w => w.length > 0).length} words
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label>Target Derivative Assets *</Label>
+                    <div className="space-y-2">
+                      {[
+                        { value: 'email', label: 'Email Newsletter Version' },
+                        { value: 'instagram', label: 'Instagram Carousel (5 slides)' },
+                        { value: 'twitter', label: 'Twitter/X Thread (8-12 tweets)' },
+                        { value: 'product', label: 'Product Description' },
+                        { value: 'sms', label: 'SMS/Short Message (160 chars)' },
+                      ].map((derivative) => (
+                        <div key={derivative.value} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`derivative-${derivative.value}`}
+                            checked={selectedDerivatives.includes(derivative.value)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedDerivatives([...selectedDerivatives, derivative.value]);
+                              } else {
+                                setSelectedDerivatives(selectedDerivatives.filter(d => d !== derivative.value));
+                              }
+                            }}
+                          />
+                          <Label htmlFor={`derivative-${derivative.value}`} className="cursor-pointer font-normal">
+                            {derivative.label}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Preview & Actions */}
+            <div className="fade-enter space-y-6">
+              <div className="card-matte p-8 rounded-lg border border-border/40">
+                <h2 className="mb-6 text-2xl">Content Preview</h2>
+                <div className="space-y-4">
+                  {masterContentText ? (
+                    <div className="bg-muted/20 p-6 rounded-md border border-border/20">
+                      <div className="space-y-2 mb-4">
+                        <p className="font-medium text-foreground">{formData.title || "Untitled"}</p>
+                        <div className="flex gap-2">
+                          {masterContentType && <Badge variant="outline">{masterContentType}</Badge>}
+                          {formData.dipWeek && <Badge variant="secondary">Week {formData.dipWeek}</Badge>}
+                          {formData.collection && <Badge variant="outline">{formData.collection}</Badge>}
+                        </div>
+                      </div>
+                      <div className="max-h-96 overflow-y-auto">
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap font-serif leading-relaxed">
+                          {masterContentText}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-muted/20 p-12 rounded-md text-center border border-border/20">
+                      <p className="text-muted-foreground">
+                        Your master content will appear here as you write...
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedDerivatives.length > 0 && (
+                    <div className="bg-muted/20 p-4 rounded-md border border-border/20">
+                      <Label className="text-sm text-muted-foreground mb-2 block">
+                        Selected Derivatives ({selectedDerivatives.length})
+                      </Label>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedDerivatives.map((type) => (
+                          <Badge key={type} variant="secondary">
+                            {type === 'email' && 'Email'}
+                            {type === 'instagram' && 'Instagram'}
+                            {type === 'twitter' && 'Twitter'}
+                            {type === 'product' && 'Product'}
+                            {type === 'sms' && 'SMS'}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="pt-4">
+                    <Button
+                      onClick={createMasterContent}
+                      disabled={!masterContentText || !masterContentType || selectedDerivatives.length === 0 || repurposing}
+                      className="w-full gap-2"
+                      size="lg"
+                    >
+                      {repurposing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Repurposing Content...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="h-4 w-4" />
+                          Generate All Derivatives
+                        </>
+                      )}
+                    </Button>
+                    <p className="text-xs text-muted-foreground text-center mt-2">
+                      This will create master content and generate {selectedDerivatives.length} derivative asset(s)
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

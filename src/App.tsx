@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Navigation from "./components/Navigation";
 import Index from "./pages/Index";
 import Forge from "./pages/Forge";
+import Repurpose from "./pages/Repurpose";
 import Archive from "./pages/Archive";
 import Calendar from "./pages/Calendar";
 import NotFound from "./pages/NotFound";
@@ -54,6 +55,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <Forge />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/repurpose"
+            element={
+              <ProtectedRoute>
+                <Repurpose />
               </ProtectedRoute>
             }
           />
