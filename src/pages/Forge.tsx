@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Sparkles, Copy, Check, Loader2, Archive } from "lucide-react";
+import { Sparkles, Copy, Check, Loader2, Archive, Wand2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,6 +14,7 @@ import QualityRating from "@/components/QualityRating";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronsUpDown } from "lucide-react";
+import { IMAGE_PROMPT_TEMPLATES, type ImagePromptType } from "@/config/imagePromptGuidelines";
 
 // Product catalogue with collection and scent family mappings
 const PRODUCTS = [
@@ -284,6 +285,7 @@ const Forge = () => {
     topNotes: "",
     middleNotes: "",
     baseNotes: "",
+    imageTemplate: "product-page" as ImagePromptType,
   });
 
   const filteredProducts = useMemo(() => {
@@ -296,34 +298,38 @@ const Forge = () => {
   const generatePrompt = () => {
     const parts = [];
     
-    // For visual assets, create image-focused prompts
+    // For visual assets, use standardized image prompt templates
     if (formData.contentType === 'visual') {
-      parts.push('Create a detailed image generation prompt for:');
+      const template = IMAGE_PROMPT_TEMPLATES[formData.imageTemplate];
       
+      // Start with the base template prompt
+      let visualPrompt = template.prompt;
+      
+      // Replace generic "attar bottle" with specific product name
       if (formData.title) {
-        parts.push(`Product: ${formData.title}`);
+        visualPrompt = visualPrompt.replace(/attar bottle/gi, `${formData.title} attar bottle`);
       }
       
-      if (formData.collection) {
-        parts.push(`Collection: ${formData.collection}`);
-      }
+      // Add product context
+      parts.push(visualPrompt);
       
+      // Add technical specifications
+      parts.push(`\n--- Technical Specifications ---`);
+      parts.push(`Aspect Ratio: ${template.aspectRatio}`);
+      parts.push(`Use Case: ${template.useCase}`);
+      parts.push(`Lighting: ${template.lighting}`);
+      parts.push(`Composition: ${template.composition}`);
+      parts.push(`Style: ${template.style}`);
+      
+      // Add fragrance context to enhance image generation
       if (formData.scentFamily) {
-        parts.push(`Mood/Aesthetic: ${formData.scentFamily} scent family`);
+        parts.push(`\nScent Family Context: ${formData.scentFamily}`);
       }
       
-      if (formData.topNotes || formData.middleNotes || formData.baseNotes) {
-        parts.push('\nFragrance Profile:');
-        if (formData.topNotes) parts.push(`- Top: ${formData.topNotes}`);
-        if (formData.middleNotes) parts.push(`- Middle: ${formData.middleNotes}`);
-        if (formData.baseNotes) parts.push(`- Base: ${formData.baseNotes}`);
-      }
-      
+      // Add custom visual instructions if provided
       if (formData.customInstructions) {
-        parts.push(`\nVisual Direction: ${formData.customInstructions}`);
+        parts.push(`\nAdditional Direction: ${formData.customInstructions}`);
       }
-      
-      parts.push('\n\nGenerate a photorealistic product image that captures the essence and mood of this fragrance. Include elegant lighting, sophisticated composition, and visual elements that reflect the scent notes.');
       
       return parts.join('\n');
     }
@@ -585,6 +591,7 @@ const Forge = () => {
         topNotes: "",
         middleNotes: "",
         baseNotes: "",
+        imageTemplate: "product-page",
       });
       setGeneratedOutput("");
       setGeneratedImage("");
@@ -692,6 +699,37 @@ const Forge = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {formData.contentType === 'visual' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="imageTemplate">Image Template</Label>
+                    <Select
+                      value={formData.imageTemplate}
+                      onValueChange={(value: ImagePromptType) => setFormData({ ...formData, imageTemplate: value })}
+                    >
+                      <SelectTrigger id="imageTemplate" className="bg-background/50">
+                        <SelectValue placeholder="Select image template..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="homepage-hero">Homepage Hero (21:9) - Wide banner</SelectItem>
+                        <SelectItem value="product-page">Product Page (4:5/1:1) - Clean focus</SelectItem>
+                        <SelectItem value="email-header">Email Header (3:1) - Newsletter</SelectItem>
+                        <SelectItem value="instagram-stories">Instagram Stories (9:16) - Vertical</SelectItem>
+                        <SelectItem value="ritual-process">Ritual/Process (4:5/1:1) - Educational</SelectItem>
+                        <SelectItem value="seasonal-limited">Seasonal/Limited (4:5) - Campaign</SelectItem>
+                        <SelectItem value="collection-overview">Collection Overview (16:9/4:3)</SelectItem>
+                        <SelectItem value="social-square">Social Square (1:1) - Instagram</SelectItem>
+                        <SelectItem value="behind-scenes">Behind Scenes (4:5) - Artisan</SelectItem>
+                        <SelectItem value="gift-set">Gift Set (4:5) - Holiday</SelectItem>
+                        <SelectItem value="macro-detail">Macro Detail (1:1/4:5) - Quality</SelectItem>
+                        <SelectItem value="lifestyle-sanctuary">Lifestyle/Sanctuary (4:5)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {IMAGE_PROMPT_TEMPLATES[formData.imageTemplate].useCase}
+                    </p>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="collection">Collection (Auto-filled)</Label>
