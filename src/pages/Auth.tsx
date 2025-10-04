@@ -19,15 +19,7 @@ const Auth = () => {
   const [magicLinkSent, setMagicLinkSent] = useState(false);
 
   useEffect(() => {
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user);
-        navigate("/");
-      }
-    });
-
-    // Listen for auth changes
+    // Listen for auth changes FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser(session.user);
@@ -37,8 +29,58 @@ const Auth = () => {
       }
     });
 
+    // Handle auth callbacks in URL (magic link, recovery, OAuth PKCE)
+    const params = new URLSearchParams(window.location.search);
+    const token_hash = params.get("token_hash");
+    const type = params.get("type") as "magiclink" | "recovery" | "signup" | "email_change" | null;
+    const code = params.get("code");
+    const error_description = params.get("error_description");
+
+    if (error_description) {
+      toast({
+        title: "Authentication error",
+        description: decodeURIComponent(error_description),
+        variant: "destructive",
+      });
+    }
+
+    if (token_hash && type) {
+      supabase.auth.verifyOtp({ token_hash, type }).then(({ error }) => {
+        if (error) {
+          toast({
+            title: "Link invalid or expired",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({ title: "Signed in", description: "Welcome back." });
+          navigate("/");
+        }
+      });
+    } else if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) {
+          toast({
+            title: "Authentication error",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          navigate("/");
+        }
+      });
+    } else {
+      // THEN check for existing session
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          setUser(session.user);
+          navigate("/");
+        }
+      });
+    }
+
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +90,7 @@ const Auth = () => {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: `${window.location.origin}/auth`,
       },
     });
 
@@ -93,7 +135,7 @@ const Auth = () => {
     setLoading(true);
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/`,
+      redirectTo: `${window.location.origin}/auth`,
     });
 
     setLoading(false);
@@ -120,7 +162,7 @@ const Auth = () => {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: `${window.location.origin}/auth`,
       },
     });
 
