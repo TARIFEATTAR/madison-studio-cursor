@@ -213,9 +213,9 @@ serve(async (req) => {
     console.log(`Repurposing content for user ${user.id}, master: ${masterContentId}`);
     console.log(`Derivative types requested:`, derivativeTypes);
 
-    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-    if (!ANTHROPIC_API_KEY) {
-      throw new Error('ANTHROPIC_API_KEY not configured');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
     const results: any[] = [];
@@ -251,34 +251,33 @@ ${masterContent.full_content}
 
 Generate the ${derivativeType} version now.`;
 
-      // Call Claude API
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      // Call Lovable AI Gateway (default to Gemini 2.5 Flash)
+      const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
           'Content-Type': 'application/json',
-          'x-api-key': ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 2000,
+          // During promo period, Gemini models are free
+          model: 'google/gemini-2.5-flash',
           messages: [
-            {
-              role: 'user',
-              content: fullPrompt,
-            },
-          ],
+            { role: 'system', content: 'You are a precise editorial assistant. Follow instructions exactly. Keep the brand voice "Confident Whisper" and return clean text.' },
+            { role: 'user', content: fullPrompt }
+          ]
         }),
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Claude API error for ${derivativeType}:`, response.status, errorText);
-        throw new Error(`Claude API error: ${response.status}`);
+      if (!aiResponse.ok) {
+        const t = await aiResponse.text();
+        console.error(`AI gateway error for ${derivativeType}:`, aiResponse.status, t);
+        if (aiResponse.status === 429) throw new Error('Rate limits exceeded. Please wait a moment and retry.');
+        if (aiResponse.status === 402) throw new Error('Payment required: please add credits to Lovable AI workspace.');
+        throw new Error(`AI gateway error: ${aiResponse.status}`);
       }
 
-      const data = await response.json();
-      const generatedContent = data.content[0].text;
+      const aiData = await aiResponse.json();
+      const generatedContent = aiData.choices?.[0]?.message?.content ?? '';
 
       // Parse platform-specific specs
       let platformSpecs: any = {};
