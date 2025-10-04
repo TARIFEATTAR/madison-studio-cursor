@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Check, X, Edit, FileText, Mail, Instagram, Twitter, Package, MessageSquare } from "lucide-react";
+import { Loader2, Check, X, Edit, FileText, Mail, Instagram, Twitter, Package, MessageSquare, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -205,6 +205,14 @@ const Repurpose = () => {
     }
   };
 
+  const handleCopyContent = (content: string, assetType: string) => {
+    navigator.clipboard.writeText(content);
+    toast({
+      title: "Content copied",
+      description: `${DERIVATIVE_LABELS[assetType as keyof typeof DERIVATIVE_LABELS]} copied to clipboard.`,
+    });
+  };
+
   const handlePreview = (derivative: DerivativeAsset) => {
     setPreviewContent(derivative);
     setPreviewOpen(true);
@@ -371,7 +379,15 @@ const Repurpose = () => {
                               </p>
                             </div>
 
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 flex-wrap">
+                              <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => handleCopyContent(derivative.generated_content, derivative.asset_type)}
+                              >
+                                <Copy className="h-4 w-4 mr-1" />
+                                Copy Content
+                              </Button>
                               <Button
                                 size="sm"
                                 variant="outline"
