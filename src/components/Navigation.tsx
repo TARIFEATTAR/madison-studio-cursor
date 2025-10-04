@@ -39,17 +39,13 @@ const Navigation = () => {
                   const isActive = location.pathname === item.path;
 
                   return (
-                    <Link
+                    <button
                       key={item.path}
-                      to={item.path}
+                      type="button"
                       aria-label={item.label}
-                      role="link"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        navigate(item.path);
-                      }}
+                      onClick={() => navigate(item.path)}
                       className={`
-                        flex items-center gap-2 px-4 py-3 rounded-md transition-all duration-300
+                        inline-flex items-center gap-2 px-5 py-4 rounded-md transition-all duration-300
                         ${
                           isActive
                             ? "bg-saffron-gold/20 text-saffron-gold font-medium shadow-sm"
@@ -59,7 +55,7 @@ const Navigation = () => {
                     >
                       <Icon className="w-5 h-5" />
                       <span className="hidden md:inline">{item.label}</span>
-                    </Link>
+                    </button>
                   );
                 })}
               </div>
