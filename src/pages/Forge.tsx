@@ -611,9 +611,13 @@ const Forge = () => {
       if (masterError) throw masterError;
 
       // Generate derivatives via edge function
+      const { data: { session } } = await supabase.auth.getSession();
       const { data: repurposeData, error: repurposeError } = await supabase.functions.invoke(
         'repurpose-content',
         {
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+          },
           body: {
             masterContentId: masterData.id,
             derivativeTypes: selectedDerivatives,
