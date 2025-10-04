@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -57,6 +57,7 @@ const DERIVATIVE_LABELS = {
 const Repurpose = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [masterContents, setMasterContents] = useState<MasterContent[]>([]);
   const [selectedMaster, setSelectedMaster] = useState<MasterContent | null>(null);
@@ -114,6 +115,27 @@ const Repurpose = () => {
       });
     }
   };
+
+  // Auto-select master from URL (?master=ID) and load its derivatives
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const masterId = params.get('master');
+
+    if (masterContents.length === 0) return;
+
+    if (masterId) {
+      const found = masterContents.find(m => m.id === masterId) || null;
+      if (found) {
+        setSelectedMaster(found);
+        fetchDerivatives(masterId);
+      }
+    } else if (!selectedMaster) {
+      // Default to the most recent master content
+      const first = masterContents[0];
+      setSelectedMaster(first);
+      fetchDerivatives(first.id);
+    }
+  }, [location.search, masterContents, selectedMaster]);
 
   const handleSelectMaster = (master: MasterContent) => {
     setSelectedMaster(master);

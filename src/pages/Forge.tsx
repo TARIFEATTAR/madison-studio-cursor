@@ -656,7 +656,7 @@ const Forge = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/repurpose')}
+            onClick={() => navigate(`/repurpose?master=${masterData.id}`)}
           >
             View Derivatives
           </Button>
