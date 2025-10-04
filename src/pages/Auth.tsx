@@ -15,6 +15,8 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [resetMode, setResetMode] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
 
   useEffect(() => {
     // Check for existing session
@@ -86,6 +88,59 @@ const Auth = () => {
     }
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/`,
+    });
+
+    setLoading(false);
+
+    if (error) {
+      toast({
+        title: "Error sending reset email",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Check your email",
+        description: "We've sent you a password reset link.",
+      });
+      setResetMode(false);
+    }
+  };
+
+  const handleMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+      },
+    });
+
+    setLoading(false);
+
+    if (error) {
+      toast({
+        title: "Error sending magic link",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      setMagicLinkSent(true);
+      toast({
+        title: "Check your email",
+        description: "We've sent you a magic link to sign in.",
+      });
+    }
+  };
+
   if (user) {
     return null;
   }
@@ -102,45 +157,129 @@ const Auth = () => {
 
         <div className="card-matte p-8 rounded-lg border border-border/40 fade-enter">
           <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="signin">Begin</TabsTrigger>
               <TabsTrigger value="signup">Craft Account</TabsTrigger>
+              <TabsTrigger value="magic">Magic Link</TabsTrigger>
             </TabsList>
 
             <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
-                  <Input
-                    id="signin-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="bg-background/50"
-                    placeholder="your@email.com"
-                  />
+              {resetMode ? (
+                <form onSubmit={handleResetPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email">Email</Label>
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="bg-background/50"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full btn-craft"
+                    disabled={loading}
+                  >
+                    {loading ? "Sending..." : "Send Reset Link"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => setResetMode(false)}
+                  >
+                    Back to Sign In
+                  </Button>
+                </form>
+              ) : (
+                <form onSubmit={handleSignIn} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signin-email">Email</Label>
+                    <Input
+                      id="signin-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="bg-background/50"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signin-password">Password</Label>
+                    <Input
+                      id="signin-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="bg-background/50"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full btn-craft"
+                    disabled={loading}
+                  >
+                    {loading ? "Entering..." : "Begin"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="w-full text-sm text-muted-foreground"
+                    onClick={() => setResetMode(true)}
+                  >
+                    Forgot password?
+                  </Button>
+                </form>
+              )}
+            </TabsContent>
+
+            <TabsContent value="magic">
+              {magicLinkSent ? (
+                <div className="space-y-4 text-center">
+                  <p className="text-muted-foreground">
+                    Check your email for a magic link to sign in.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setMagicLinkSent(false)}
+                  >
+                    Send Another Link
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password">Password</Label>
-                  <Input
-                    id="signin-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="bg-background/50"
-                    placeholder="••••••••"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full btn-craft"
-                  disabled={loading}
-                >
-                  {loading ? "Entering..." : "Begin"}
-                </Button>
-              </form>
+              ) : (
+                <form onSubmit={handleMagicLink} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="magic-email">Email</Label>
+                    <Input
+                      id="magic-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="bg-background/50"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full btn-craft"
+                    disabled={loading}
+                  >
+                    {loading ? "Sending..." : "Send Magic Link"}
+                  </Button>
+                  <p className="text-sm text-muted-foreground text-center">
+                    We'll email you a link to sign in without a password.
+                  </p>
+                </form>
+              )}
             </TabsContent>
 
             <TabsContent value="signup">
