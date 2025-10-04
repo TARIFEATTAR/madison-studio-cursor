@@ -613,9 +613,18 @@ const Forge = () => {
       // Generate derivatives via edge function
       console.log('Calling repurpose-content with master content ID:', masterData.id);
       
+      // Ensure we pass the user's JWT to the protected function
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session?.access_token) {
+        throw new Error('Authentication required. Please sign in again and retry.');
+      }
+      
       const { data: repurposeData, error: repurposeError } = await supabase.functions.invoke(
         'repurpose-content',
         {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
           body: {
             masterContentId: masterData.id,
             derivativeTypes: selectedDerivatives,
