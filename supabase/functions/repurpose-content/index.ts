@@ -158,21 +158,55 @@ serve(async (req) => {
     const { masterContentId, derivativeTypes, masterContent } = await req.json();
     
     const authHeader = req.headers.get('Authorization');
+    console.log('Auth header present:', !!authHeader);
+    
     if (!authHeader) {
-      throw new Error('Missing authorization header');
+      console.error('Missing authorization header');
+      return new Response(JSON.stringify({ 
+        error: 'Missing authorization header',
+        success: false,
+      }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
+      { 
+        global: { 
+          headers: { Authorization: authHeader } 
+        },
+        auth: {
+          persistSession: false
+        }
+      }
     );
 
     // Get user
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    if (userError || !user) {
+    
+    if (userError) {
       console.error('Auth error:', userError);
-      throw new Error('Unauthorized');
+      return new Response(JSON.stringify({ 
+        error: 'Authentication failed: ' + userError.message,
+        success: false,
+      }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    if (!user) {
+      console.error('No user found');
+      return new Response(JSON.stringify({ 
+        error: 'User not authenticated',
+        success: false,
+      }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     console.log(`Repurposing content for user ${user.id}, master: ${masterContentId}`);
@@ -310,8 +344,11 @@ Generate the ${derivativeType} version now.`;
 
   } catch (error) {
     console.error('Error in repurpose-content function:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error details:', errorMessage);
+    
     return new Response(JSON.stringify({ 
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: errorMessage,
       success: false,
     }), {
       status: 500,

@@ -611,13 +611,11 @@ const Forge = () => {
       if (masterError) throw masterError;
 
       // Generate derivatives via edge function
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Calling repurpose-content with master content ID:', masterData.id);
+      
       const { data: repurposeData, error: repurposeError } = await supabase.functions.invoke(
         'repurpose-content',
         {
-          headers: {
-            Authorization: `Bearer ${session?.access_token}`,
-          },
           body: {
             masterContentId: masterData.id,
             derivativeTypes: selectedDerivatives,
@@ -631,11 +629,20 @@ const Forge = () => {
         }
       );
 
-      if (repurposeError) throw repurposeError;
+      console.log('Repurpose response:', { data: repurposeData, error: repurposeError });
+
+      if (repurposeError) {
+        console.error('Repurpose error:', repurposeError);
+        throw new Error(repurposeError.message || 'Failed to generate derivatives');
+      }
+
+      if (!repurposeData?.success) {
+        throw new Error(repurposeData?.error || 'Failed to generate derivatives');
+      }
 
       toast({
         title: "Content repurposed successfully",
-        description: `Generated ${selectedDerivatives.length} derivative assets. View them in Repurpose.`,
+        description: `Generated ${repurposeData.derivatives?.length || selectedDerivatives.length} derivative assets. View them in Repurpose.`,
         action: (
           <Button
             variant="outline"
