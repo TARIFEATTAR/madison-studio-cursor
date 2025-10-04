@@ -1,7 +1,7 @@
 project_id = "iflwjiwkbxuvmiviqdxv"
 
 [functions.generate-with-claude]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-image-with-nano]
 verify_jwt = true
