@@ -312,9 +312,8 @@ const Reservoir = () => {
   const activeChips = getActiveFilterChips();
 
   return (
-    <div>
-      <SidebarProvider>
-        <div className="flex min-h-screen w-full bg-background pt-20">
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full bg-background pt-20">
           {/* Sidebar - sticky positioned below nav */}
           <div className="sticky top-20 h-[calc(100vh-5rem)] self-start">
             <LibrarySidebar
@@ -438,7 +437,6 @@ const Reservoir = () => {
           </div>
           </main>
         </div>
-      </SidebarProvider>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -461,7 +459,7 @@ const Reservoir = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </SidebarProvider>
   );
 };
 

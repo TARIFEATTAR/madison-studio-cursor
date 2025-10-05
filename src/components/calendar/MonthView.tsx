@@ -34,9 +34,9 @@ export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick
   };
 
   return (
-    <div className="bg-card rounded-lg border border-border/40 overflow-hidden">
+    <div className="bg-card rounded-lg border border-border/40 overflow-hidden h-auto">
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 border-b border-border/40">
+      <div className="grid grid-cols-7 border-b border-border/40 bg-muted/30">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
           <div key={day} className="p-3 text-center text-sm font-medium text-muted-foreground">
             {day}
@@ -45,7 +45,7 @@ export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7">
+      <div className="grid grid-cols-7 auto-rows-fr">
         {days.map((day, idx) => {
           const dayItems = getItemsForDay(day);
           const isCurrentMonth = isSameMonth(day, currentDate);
