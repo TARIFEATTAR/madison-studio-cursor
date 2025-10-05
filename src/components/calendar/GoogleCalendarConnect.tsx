@@ -52,6 +52,9 @@ export const GoogleCalendarConnect = () => {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
+        body: {
+          app_origin: window.location.origin,
+        },
       });
 
       if (error) throw error;

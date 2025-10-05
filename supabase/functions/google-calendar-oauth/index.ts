@@ -40,8 +40,16 @@ serve(async (req) => {
         throw new Error('Unauthorized');
       }
 
-      // Store user ID in state parameter for callback
-      const state = user.id;
+      // Get app origin from request body
+      const body = await req.json();
+      const appOrigin = body.app_origin || 'https://the-whispered-codex.lovable.app';
+
+      // Store user ID and app origin in state parameter for callback
+      const stateData = {
+        user_id: user.id,
+        app_origin: appOrigin,
+      };
+      const state = btoa(JSON.stringify(stateData));
       const redirectUri = `${SUPABASE_URL}/functions/v1/google-calendar-oauth/callback`;
       
       const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
@@ -61,19 +69,22 @@ serve(async (req) => {
     // Step 2: Handle OAuth callback from Google
     if (path === 'callback') {
       const code = url.searchParams.get('code');
-      const state = url.searchParams.get('state'); // This is the user_id
+      const state = url.searchParams.get('state');
       const error = url.searchParams.get('error');
 
       if (error) {
         console.error('OAuth error:', error);
-        return Response.redirect(`${url.origin}?error=access_denied`);
+        return Response.redirect(`https://the-whispered-codex.lovable.app/calendar?error=access_denied`);
       }
 
       if (!code || !state) {
         throw new Error('Missing code or state parameter');
       }
 
-      const userId = state;
+      // Parse state to get user_id and app_origin
+      const stateData = JSON.parse(atob(state));
+      const userId = stateData.user_id;
+      const appOrigin = stateData.app_origin;
       const redirectUri = `${SUPABASE_URL}/functions/v1/google-calendar-oauth/callback`;
 
       // Exchange authorization code for tokens
@@ -137,7 +148,7 @@ serve(async (req) => {
       console.log('Successfully stored tokens for user:', userId);
 
       // Redirect back to calendar page with success
-      return Response.redirect(`${url.origin}/calendar?connected=true`);
+      return Response.redirect(`${appOrigin}/calendar?connected=true`);
     }
 
     return new Response(JSON.stringify({ error: 'Invalid endpoint' }), {
