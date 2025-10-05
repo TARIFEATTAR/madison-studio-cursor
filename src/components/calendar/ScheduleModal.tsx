@@ -138,7 +138,7 @@ export const ScheduleModal = ({ open, onOpenChange, selectedDate, itemToEdit, on
           <DialogTitle>{itemToEdit ? "Edit Schedule" : "Schedule Content"}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-6 py-6">
           {/* Title */}
           <div className="space-y-2">
             <Label htmlFor="title">Title *</Label>

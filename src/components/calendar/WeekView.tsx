@@ -41,10 +41,10 @@ export const WeekView = ({ currentDate, scheduledItems, dipWeekInfo, onItemClick
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* DIP Week Info */}
       {dipWeekInfo && (
-        <div className="card-matte p-6 rounded-lg border border-border/40">
+        <div className="card-matte p-8 rounded-lg border border-border/40">
           <div className="flex items-start justify-between">
             <div>
               <Badge className="bg-saffron-gold/20 text-saffron-gold border-saffron-gold/30 mb-3">

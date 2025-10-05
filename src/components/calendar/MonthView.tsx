@@ -56,21 +56,21 @@ export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick
               key={idx}
               onClick={() => onDayClick(day)}
               className={cn(
-                "min-h-[120px] p-3 border-b border-r border-border/20 cursor-pointer transition-colors",
+                "min-h-[120px] p-4 border-b border-r border-border/20 cursor-pointer transition-colors",
                 "hover:bg-accent/50",
                 !isCurrentMonth && "bg-muted/20",
                 isDayToday && "bg-accent/30"
               )}
             >
               <div className={cn(
-                "text-sm font-medium mb-2",
+                "text-sm font-medium mb-3",
                 !isCurrentMonth && "text-muted-foreground/50",
                 isDayToday && "text-primary font-bold"
               )}>
                 {format(day, "d")}
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 {dayItems.slice(0, 3).map(item => (
                   <div
                     key={item.id}

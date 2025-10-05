@@ -20,7 +20,7 @@ export const CalendarHeader = ({
   onToday,
 }: CalendarHeaderProps) => {
   return (
-    <div className="flex items-center justify-between mb-6 fade-enter">
+    <div className="flex items-center justify-between fade-enter">
       <div>
         <h1 className="text-foreground mb-2">The Calendar</h1>
         <p className="text-muted-foreground text-lg">

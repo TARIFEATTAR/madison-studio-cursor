@@ -77,8 +77,8 @@ const Calendar = () => {
   };
 
   return (
-    <div className="min-h-screen py-12 px-6 md:px-12">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen pt-24 pb-12 px-6 md:px-12">
+      <div className="max-w-7xl mx-auto space-y-6">
         <CalendarHeader
           currentDate={currentDate}
           viewMode={viewMode}
@@ -88,7 +88,7 @@ const Calendar = () => {
           onToday={handleToday}
         />
 
-        <div className="mb-6 fade-enter">
+        <div className="fade-enter">
           <Button onClick={handleNewSchedule} className="gap-2">
             <Plus className="w-4 h-4" />
             Schedule Content
