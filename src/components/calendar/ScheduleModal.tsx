@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +9,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Clock, AlertCircle } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, AlertCircle, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -69,6 +70,7 @@ export const ScheduleModal = ({
   const [platform, setPlatform] = useState("");
   const [notes, setNotes] = useState("");
   const [conflicts, setConflicts] = useState<any[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     if (itemToEdit) {
@@ -223,7 +225,64 @@ export const ScheduleModal = ({
     }
   };
 
+  const handleDelete = async () => {
+    if (!itemToEdit) return;
+
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Check if Google Calendar sync is enabled
+      const { data: syncSettings } = await supabase
+        .from('google_calendar_sync')
+        .select('sync_enabled')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      // If synced to Google Calendar, delete from there first
+      if (syncSettings?.sync_enabled && itemToEdit.google_event_id) {
+        try {
+          await supabase.functions.invoke('sync-to-google-calendar', {
+            body: {
+              operation: 'delete',
+              googleEventId: itemToEdit.google_event_id,
+            },
+          });
+        } catch (syncError: any) {
+          console.error("Google Calendar delete error:", syncError);
+        }
+      }
+
+      // Delete from database
+      const { error } = await supabase
+        .from("scheduled_content")
+        .delete()
+        .eq("id", itemToEdit.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Deleted",
+        description: "Schedule item deleted successfully",
+      });
+
+      onSuccess();
+      onOpenChange(false);
+      setDeleteDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -344,15 +403,49 @@ export const ScheduleModal = ({
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={loading}>
-            {loading ? "Saving..." : itemToEdit ? "Update" : "Schedule"}
-          </Button>
+        <DialogFooter className="flex-row justify-between items-center">
+          <div>
+            {itemToEdit && (
+              <Button 
+                variant="destructive" 
+                onClick={() => setDeleteDialogOpen(true)}
+                disabled={loading}
+                className="gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={loading}>
+              {loading ? "Saving..." : itemToEdit ? "Update" : "Schedule"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Schedule Item</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete "{itemToEdit?.title}"? This action cannot be undone.
+            {itemToEdit?.google_event_id && " This will also remove the event from Google Calendar."}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDelete} disabled={loading} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            {loading ? "Deleting..." : "Delete"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 };

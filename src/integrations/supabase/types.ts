@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      calendar_notes: {
+        Row: {
+          created_at: string | null
+          id: string
+          note_content: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          note_content?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          note_content?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       calendar_schedule: {
         Row: {
           core_lexicon: string[] | null
@@ -84,6 +108,36 @@ export type Database = {
           optimal_times?: string[] | null
           platform?: string
           timezone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      calendar_tasks: {
+        Row: {
+          created_at: string | null
+          due_date: string | null
+          id: string
+          is_completed: boolean
+          task_text: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          is_completed?: boolean
+          task_text: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          is_completed?: boolean
+          task_text?: string
           updated_at?: string | null
           user_id?: string
         }

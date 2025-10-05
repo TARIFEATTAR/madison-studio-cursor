@@ -5,6 +5,7 @@ import { MonthView } from "@/components/calendar/MonthView";
 import { WeekView } from "@/components/calendar/WeekView";
 import { ScheduleModal } from "@/components/calendar/ScheduleModal";
 import { GoogleCalendarConnect } from "@/components/calendar/GoogleCalendarConnect";
+import { CalendarSidebar } from "@/components/calendar/CalendarSidebar";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -79,7 +80,7 @@ const Calendar = () => {
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-6 md:px-12">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-[1920px] mx-auto">
         <CalendarHeader
           currentDate={currentDate}
           viewMode={viewMode}
@@ -89,7 +90,7 @@ const Calendar = () => {
           onToday={handleToday}
         />
 
-        <div className="fade-enter space-y-6">
+        <div className="mt-6 fade-enter space-y-6">
           <GoogleCalendarConnect />
           
           <Button onClick={handleNewSchedule} className="gap-2">
@@ -98,29 +99,39 @@ const Calendar = () => {
           </Button>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-muted-foreground">Loading calendar...</div>
-          </div>
-        ) : (
-          <div className="fade-enter">
-            {viewMode === "month" ? (
-              <MonthView
-                currentDate={currentDate}
-                scheduledItems={scheduledItems}
-                onDayClick={handleDayClick}
-                onItemClick={handleItemClick}
-              />
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-6">
+          {/* Calendar Section */}
+          <div>
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-muted-foreground">Loading calendar...</div>
+              </div>
             ) : (
-              <WeekView
-                currentDate={currentDate}
-                scheduledItems={scheduledItems}
-                dipWeekInfo={dipWeekInfo}
-                onItemClick={handleItemClick}
-              />
+              <div className="fade-enter">
+                {viewMode === "month" ? (
+                  <MonthView
+                    currentDate={currentDate}
+                    scheduledItems={scheduledItems}
+                    onDayClick={handleDayClick}
+                    onItemClick={handleItemClick}
+                  />
+                ) : (
+                  <WeekView
+                    currentDate={currentDate}
+                    scheduledItems={scheduledItems}
+                    dipWeekInfo={dipWeekInfo}
+                    onItemClick={handleItemClick}
+                  />
+                )}
+              </div>
             )}
           </div>
-        )}
+
+          {/* Sidebar Section */}
+          <div className="lg:sticky lg:top-24 h-fit max-h-[calc(100vh-7rem)] overflow-hidden">
+            <CalendarSidebar />
+          </div>
+        </div>
 
         <ScheduleModal
           open={scheduleModalOpen}
