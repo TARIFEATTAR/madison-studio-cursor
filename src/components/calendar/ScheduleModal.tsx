@@ -146,26 +146,69 @@ export const ScheduleModal = ({
         content_id: derivativeAsset?.master_content_id || masterContent?.id || null,
       };
 
-      let error;
+      let result;
       if (itemToEdit) {
-        const { error: updateError } = await supabase
+        const { data, error } = await supabase
           .from("scheduled_content")
           .update(scheduleData)
-          .eq("id", itemToEdit.id);
-        error = updateError;
+          .eq("id", itemToEdit.id)
+          .select()
+          .single();
+        if (error) throw error;
+        result = data;
       } else {
-        const { error: insertError } = await supabase
+        const { data, error } = await supabase
           .from("scheduled_content")
-          .insert(scheduleData);
-        error = insertError;
+          .insert(scheduleData)
+          .select()
+          .single();
+        if (error) throw error;
+        result = data;
       }
 
-      if (error) throw error;
+      // Sync to Google Calendar
+      try {
+        const { data: syncSettings } = await supabase
+          .from('google_calendar_sync')
+          .select('sync_enabled')
+          .eq('user_id', user.id)
+          .maybeSingle();
 
-      toast({
-        title: "Success",
-        description: itemToEdit ? "Schedule updated" : "Content scheduled successfully",
-      });
+        if (syncSettings?.sync_enabled) {
+          const operation = itemToEdit ? 'update' : 'create';
+          
+          await supabase.functions.invoke('sync-to-google-calendar', {
+            body: {
+              operation,
+              scheduledContentId: result.id,
+              eventData: {
+                title: title.trim(),
+                date: format(date, 'yyyy-MM-dd'),
+                time: time || undefined,
+                notes: notes?.trim() || undefined,
+                platform: platform || undefined,
+              },
+              googleEventId: itemToEdit?.google_event_id || undefined,
+            },
+          });
+
+          toast({
+            title: "Success",
+            description: `${itemToEdit ? 'Updated' : 'Scheduled'} and synced to Google Calendar`,
+          });
+        } else {
+          toast({
+            title: "Success",
+            description: itemToEdit ? "Schedule updated" : "Content scheduled successfully",
+          });
+        }
+      } catch (syncError: any) {
+        console.error("Google Calendar sync error:", syncError);
+        toast({
+          title: "Saved locally",
+          description: `Schedule saved but Google Calendar sync failed: ${syncError.message}`,
+        });
+      }
 
       onSuccess();
       onOpenChange(false);

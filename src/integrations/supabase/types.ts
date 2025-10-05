@@ -453,6 +453,7 @@ export type Database = {
           scheduled_date: string
           scheduled_time: string | null
           status: string | null
+          sync_status: string | null
           title: string
           updated_at: string | null
           user_id: string
@@ -472,6 +473,7 @@ export type Database = {
           scheduled_date: string
           scheduled_time?: string | null
           status?: string | null
+          sync_status?: string | null
           title: string
           updated_at?: string | null
           user_id: string
@@ -491,6 +493,7 @@ export type Database = {
           scheduled_date?: string
           scheduled_time?: string | null
           status?: string | null
+          sync_status?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string
