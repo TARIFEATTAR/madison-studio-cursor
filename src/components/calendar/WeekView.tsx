@@ -1,6 +1,8 @@
 import { startOfWeek, endOfWeek, eachDayOfInterval, format, isSameDay, isToday } from "date-fns";
+import { Droppable, Draggable } from "react-beautiful-dnd";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { GripVertical } from "lucide-react";
 
 interface ScheduledItem {
   id: string;
@@ -11,6 +13,8 @@ interface ScheduledItem {
   pillar: string | null;
   status: string;
   dip_week: number | null;
+  google_event_id: string | null;
+  notes: string | null;
 }
 
 interface WeekViewProps {
@@ -71,63 +75,85 @@ export const WeekView = ({ currentDate, scheduledItems, dipWeekInfo, onItemClick
         {days.map((day, idx) => {
           const dayItems = getItemsForDay(day);
           const isDayToday = isToday(day);
+          const dayId = format(day, "yyyy-MM-dd");
 
           return (
-            <div
-              key={idx}
-              className={cn(
-                "rounded-lg border border-border/40 overflow-hidden",
-                isDayToday && "ring-2 ring-primary/50"
-              )}
-            >
-              {/* Day header */}
-              <div className={cn(
-                "p-3 border-b border-border/40",
-                isDayToday ? "bg-primary/10" : "bg-muted/20"
-              )}>
-                <div className="text-xs text-muted-foreground">
-                  {format(day, "EEE")}
-                </div>
-                <div className={cn(
-                  "text-lg font-medium",
-                  isDayToday && "text-primary"
-                )}>
-                  {format(day, "d")}
-                </div>
-              </div>
-
-              {/* Day items */}
-              <div className="p-2 space-y-2 min-h-[200px]">
-                {dayItems.map(item => (
-                  <div
-                    key={item.id}
-                    onClick={() => onItemClick(item)}
-                    className="p-3 rounded-md bg-card hover:bg-accent/50 border border-border/40 cursor-pointer transition-colors"
-                  >
-                    {item.scheduled_time && (
-                      <div className="text-xs font-medium text-muted-foreground mb-1">
-                        {format(new Date(`2000-01-01T${item.scheduled_time}`), "h:mm a")}
-                      </div>
-                    )}
-                    <div className="text-sm font-medium mb-1 line-clamp-2">
-                      {item.title}
+            <Droppable key={dayId} droppableId={dayId}>
+              {(provided, snapshot) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className={cn(
+                    "rounded-lg border border-border/40 overflow-hidden",
+                    isDayToday && "ring-2 ring-primary/50",
+                    snapshot.isDraggingOver && "ring-2 ring-primary/30 bg-primary/5"
+                  )}
+                >
+                  {/* Day header */}
+                  <div className={cn(
+                    "p-3 border-b border-border/40",
+                    isDayToday ? "bg-primary/10" : "bg-muted/20"
+                  )}>
+                    <div className="text-xs text-muted-foreground">
+                      {format(day, "EEE")}
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {item.platform && (
-                        <Badge variant="outline" className="text-[10px] py-0">
-                          {item.platform}
-                        </Badge>
-                      )}
-                      {item.pillar && (
-                        <Badge variant="outline" className="text-[10px] py-0">
-                          {item.pillar}
-                        </Badge>
-                      )}
+                    <div className={cn(
+                      "text-lg font-medium",
+                      isDayToday && "text-primary"
+                    )}>
+                      {format(day, "d")}
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
+
+                  {/* Day items */}
+                  <div className="p-2 space-y-2 min-h-[200px]">
+                    {dayItems.map((item, index) => (
+                      <Draggable key={item.id} draggableId={item.id} index={index}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            onClick={() => onItemClick(item)}
+                            className={cn(
+                              "p-3 rounded-md bg-card hover:bg-accent/50 border border-border/40 cursor-pointer transition-colors group",
+                              snapshot.isDragging && "shadow-lg ring-2 ring-primary/50"
+                            )}
+                          >
+                            <div className="flex items-start gap-2">
+                              <GripVertical className="w-4 h-4 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-0.5" />
+                              <div className="flex-1 min-w-0">
+                                {item.scheduled_time && (
+                                  <div className="text-xs font-medium text-muted-foreground mb-1">
+                                    {format(new Date(`2000-01-01T${item.scheduled_time}`), "h:mm a")}
+                                  </div>
+                                )}
+                                <div className="text-sm font-medium mb-1 line-clamp-2">
+                                  {item.title}
+                                </div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {item.platform && (
+                                    <Badge variant="outline" className="text-[10px] py-0">
+                                      {item.platform}
+                                    </Badge>
+                                  )}
+                                  {item.pillar && (
+                                    <Badge variant="outline" className="text-[10px] py-0">
+                                      {item.pillar}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                </div>
+              )}
+            </Droppable>
           );
         })}
       </div>

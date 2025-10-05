@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { addMonths, subMonths } from "date-fns";
+import { addMonths, subMonths, format } from "date-fns";
+import { DragDropContext, DropResult } from "react-beautiful-dnd";
 import { CalendarHeader } from "@/components/calendar/CalendarHeader";
 import { MonthView } from "@/components/calendar/MonthView";
 import { WeekView } from "@/components/calendar/WeekView";
@@ -78,6 +79,76 @@ const Calendar = () => {
     setScheduleModalOpen(true);
   };
 
+  const handleDragEnd = async (result: DropResult) => {
+    const { draggableId, destination } = result;
+
+    if (!destination) return;
+
+    const itemId = draggableId;
+    const newDate = new Date(destination.droppableId);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Find the item being moved
+      const item = scheduledItems.find(i => i.id === itemId);
+      if (!item) return;
+
+      // Update the database
+      const { error } = await supabase
+        .from("scheduled_content")
+        .update({ scheduled_date: format(newDate, "yyyy-MM-dd") })
+        .eq("id", itemId);
+
+      if (error) throw error;
+
+      // Check if Google Calendar sync is enabled
+      const { data: syncSettings } = await supabase
+        .from('google_calendar_sync')
+        .select('sync_enabled')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      // Sync to Google Calendar if enabled
+      if (syncSettings?.sync_enabled && item.google_event_id) {
+        await supabase.functions.invoke('sync-to-google-calendar', {
+          body: {
+            operation: 'update',
+            scheduledContentId: itemId,
+            eventData: {
+              title: item.title,
+              date: format(newDate, 'yyyy-MM-dd'),
+              time: item.scheduled_time || undefined,
+              notes: item.notes || undefined,
+              platform: item.platform || undefined,
+            },
+            googleEventId: item.google_event_id,
+          },
+        });
+
+        toast({
+          title: "Moved",
+          description: "Event moved and synced to Google Calendar",
+        });
+      } else {
+        toast({
+          title: "Moved",
+          description: "Event moved successfully",
+        });
+      }
+
+      // Refresh the calendar
+      fetchScheduledContent();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen pt-24 pb-12 px-6 md:px-12">
       <div className="max-w-[1920px] mx-auto">
@@ -99,39 +170,41 @@ const Calendar = () => {
           </Button>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-6">
-          {/* Calendar Section */}
-          <div>
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-muted-foreground">Loading calendar...</div>
-              </div>
-            ) : (
-              <div className="fade-enter">
-                {viewMode === "month" ? (
-                  <MonthView
-                    currentDate={currentDate}
-                    scheduledItems={scheduledItems}
-                    onDayClick={handleDayClick}
-                    onItemClick={handleItemClick}
-                  />
-                ) : (
-                  <WeekView
-                    currentDate={currentDate}
-                    scheduledItems={scheduledItems}
-                    dipWeekInfo={dipWeekInfo}
-                    onItemClick={handleItemClick}
-                  />
-                )}
-              </div>
-            )}
-          </div>
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="mt-6 grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-6">
+            {/* Calendar Section */}
+            <div>
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-muted-foreground">Loading calendar...</div>
+                </div>
+              ) : (
+                <div className="fade-enter">
+                  {viewMode === "month" ? (
+                    <MonthView
+                      currentDate={currentDate}
+                      scheduledItems={scheduledItems}
+                      onDayClick={handleDayClick}
+                      onItemClick={handleItemClick}
+                    />
+                  ) : (
+                    <WeekView
+                      currentDate={currentDate}
+                      scheduledItems={scheduledItems}
+                      dipWeekInfo={dipWeekInfo}
+                      onItemClick={handleItemClick}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
 
-          {/* Sidebar Section */}
-          <div className="lg:sticky lg:top-24 h-fit max-h-[calc(100vh-7rem)] overflow-hidden">
-            <CalendarSidebar />
+            {/* Sidebar Section */}
+            <div className="lg:sticky lg:top-24 h-fit max-h-[calc(100vh-7rem)] overflow-hidden">
+              <CalendarSidebar />
+            </div>
           </div>
-        </div>
+        </DragDropContext>
 
         <ScheduleModal
           open={scheduleModalOpen}
