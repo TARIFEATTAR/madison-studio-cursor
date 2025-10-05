@@ -13,7 +13,7 @@ const steps = [
   {
     number: "2",
     title: "Create & Generate",
-    description: "Use the Forge to generate on-brand blog posts and marketing content with AI assistance.",
+    description: "Use the Composer to generate on-brand blog posts and marketing content with AI assistance.",
     icon: Sparkles,
   },
   {
