@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           core_lexicon: string[] | null
           created_at: string | null
+          created_by: string
           end_date: string
           id: string
           pillar: Database["public"]["Enums"]["pillar_type"]
@@ -30,6 +31,7 @@ export type Database = {
         Insert: {
           core_lexicon?: string[] | null
           created_at?: string | null
+          created_by: string
           end_date: string
           id?: string
           pillar: Database["public"]["Enums"]["pillar_type"]
@@ -42,6 +44,7 @@ export type Database = {
         Update: {
           core_lexicon?: string[] | null
           created_at?: string | null
+          created_by?: string
           end_date?: string
           id?: string
           pillar?: Database["public"]["Enums"]["pillar_type"]
