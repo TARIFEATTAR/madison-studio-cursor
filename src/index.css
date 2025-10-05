@@ -1,14 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Lato:wght@300;400;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* The Codex Design System - Museum Quality Aesthetic */
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE CODEX - INTIMATE LUXURY DESIGN SYSTEM
+   Museum-quality aesthetic for Tarife Attar's brand intelligence platform
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 @layer base {
   :root {
-    /* Core Brand Colors - The Confident Whisper Palette */
+    /* ──────────────────────────────────────────────────────────────────────
+       CORE BRAND COLORS - The Confident Whisper Palette
+       ────────────────────────────────────────────────────────────────────── */
     --stone-beige: 36 33% 88%;
     --sandstone: 36 26% 76%;
     --saffron-gold: 43 65% 52%;
@@ -16,168 +19,523 @@
     --soft-ivory: 40 43% 95%;
     --golden-brown: 30 24% 45%;
     
-    /* Semantic Tokens */
-    --background: 40 43% 95%; /* Soft Ivory */
-    --foreground: 20 10% 17%; /* Deep Charcoal */
+    /* DIP Week Palette */
+    --sage-green: 155 20% 55%;      /* Week 1: Identity */
+    --ocean-blue: 200 35% 58%;      /* Week 2: Memory */
+    --burgundy: 345 35% 45%;        /* Week 3: Remembrance */
+    /* Week 4 uses --saffron-gold */
+    
+    /* ──────────────────────────────────────────────────────────────────────
+       SEMANTIC COLOR TOKENS
+       ────────────────────────────────────────────────────────────────────── */
+    --background: 40 43% 95%;       /* Soft Ivory - Page background */
+    --foreground: 20 10% 17%;       /* Deep Charcoal - Primary text */
 
-    --card: 36 33% 88%; /* Stone Beige */
+    --card: 36 33% 88%;             /* Stone Beige - Card surfaces */
     --card-foreground: 20 10% 17%;
 
-    --popover: 40 43% 95%;
+    --popover: 40 43% 95%;          /* Elevated surfaces */
     --popover-foreground: 20 10% 17%;
 
-    --primary: 43 65% 52%; /* Saffron Gold */
-    --primary-foreground: 40 43% 95%;
+    --primary: 43 65% 52%;          /* Saffron Gold - Brand primary */
+    --primary-foreground: 20 10% 17%;
+    --primary-glow: 43 80% 65%;     /* Lighter glow variant */
 
-    --secondary: 36 26% 76%; /* Sandstone */
+    --secondary: 36 26% 76%;        /* Sandstone - Subtle actions */
     --secondary-foreground: 20 10% 17%;
 
-    --muted: 36 33% 88%;
-    --muted-foreground: 30 24% 45%;
+    --muted: 36 33% 88%;            /* Muted backgrounds */
+    --muted-foreground: 30 24% 45%; /* Secondary text */
 
     --accent: 43 65% 52%;
-    --accent-foreground: 40 43% 95%;
+    --accent-foreground: 20 10% 17%;
 
     --destructive: 0 65% 45%;
     --destructive-foreground: 40 43% 95%;
 
     --border: 36 26% 82%;
-    --input: 36 26% 82%;
+    --input: 0 0% 100%;             /* Pure white for inputs */
     --ring: 43 65% 52%;
 
-    --radius: 0.375rem;
+    --radius: 0.5rem;               /* 8px - Museum quality corners */
 
-    /* Shadow System - Golden-Brown Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(30 24% 45% / 0.08);
-    --shadow-md: 0 4px 6px -1px hsl(30 24% 45% / 0.12), 0 2px 4px -2px hsl(30 24% 45% / 0.08);
-    --shadow-lg: 0 10px 15px -3px hsl(30 24% 45% / 0.14), 0 4px 6px -4px hsl(30 24% 45% / 0.10);
-    --shadow-elegant: 0 20px 40px -12px hsl(30 24% 45% / 0.18);
-    --shadow-glow: 0 0 24px -4px hsl(43 65% 52% / 0.15);
+    /* ──────────────────────────────────────────────────────────────────────
+       SOPHISTICATED SHADOW SYSTEM - Warm, Layered Depth
+       ────────────────────────────────────────────────────────────────────── */
     
-    /* Transition System */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-spring: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* Level 1: Resting cards */
+    --shadow-level-1: 
+      0 1px 2px hsl(20 10% 17% / 0.06),
+      0 2px 4px hsl(20 10% 17% / 0.04);
+    
+    /* Level 2: Hover, slight elevation */
+    --shadow-level-2:
+      0 2px 4px hsl(20 10% 17% / 0.08),
+      0 4px 8px hsl(20 10% 17% / 0.06),
+      0 8px 16px hsl(20 10% 17% / 0.04);
+    
+    /* Level 3: Modals, dropdowns, high elevation */
+    --shadow-level-3:
+      0 4px 8px hsl(20 10% 17% / 0.10),
+      0 8px 16px hsl(20 10% 17% / 0.08),
+      0 16px 32px hsl(20 10% 17% / 0.06);
+    
+    /* Saffron Glow: Primary actions, focused inputs */
+    --shadow-saffron-glow:
+      0 0 0 2px hsl(43 65% 52% / 0.2),
+      0 2px 8px hsl(43 65% 52% / 0.15),
+      0 4px 16px hsl(43 65% 52% / 0.1);
+
+    /* ──────────────────────────────────────────────────────────────────────
+       GRADIENT SYSTEM - Depth and Richness
+       ────────────────────────────────────────────────────────────────────── */
+    --gradient-primary: linear-gradient(135deg, hsl(43 65% 52%) 0%, hsl(43 55% 48%) 100%);
+    --gradient-card: radial-gradient(circle at top left, hsl(40 43% 95%) 0%, hsl(36 33% 88%) 100%);
+    --gradient-sidebar: linear-gradient(180deg, hsl(40 43% 95%) 0%, hsl(36 33% 88%) 100%);
+    --gradient-brass: linear-gradient(135deg, #D4AF37 0%, #F2D06B 25%, #C9A456 50%, #DDB945 75%, #D4AF37 100%);
+    
+    /* ──────────────────────────────────────────────────────────────────────
+       EASING CURVES - Purposeful, Sophisticated Motion
+       ────────────────────────────────────────────────────────────────────── */
+    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-quick: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-deliberate: cubic-bezier(0.4, 0, 0.2, 1);
+    
+    --transition-quick: all 150ms var(--ease-quick);
+    --transition-standard: all 300ms var(--ease-standard);
+    --transition-deliberate: all 400ms var(--ease-deliberate);
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE STYLES - Foundation
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 @layer base {
   * {
     @apply border-border;
   }
 
+  /* Page Background with Subtle Paper Texture */
   body {
     @apply bg-background text-foreground font-sans;
     font-family: 'Lato', -apple-system, BlinkMacSystemFont, sans-serif;
-    line-height: 1.75;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+    position: relative;
+  }
+
+  /* Subtle paper texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0.02;
+    z-index: 0;
+    background-image: 
+      repeating-linear-gradient(0deg, transparent, transparent 1px, hsl(20 10% 17% / 0.02) 1px, hsl(20 10% 17% / 0.02) 2px);
+  }
+
+  /* Typography Hierarchy - Museum Quality */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    line-height: 1.3;
+    color: hsl(var(--deep-charcoal));
+  }
+
+  /* Display - Page titles */
+  h1 {
+    font-size: 48px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  /* H1 - Section headers */
+  h2 {
+    font-size: 36px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  /* H2 - Card titles */
+  h3 {
+    font-size: 24px;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  /* H3 - Subsections */
+  h4 {
+    font-size: 20px;
+    font-weight: 500;
     letter-spacing: 0.01em;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Cormorant Garamond', serif;
+  /* Body Text Sizes */
+  .text-large {
+    font-size: 18px;
+    line-height: 1.7;
+  }
+
+  .text-regular {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .text-small {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .text-tiny {
+    font-size: 12px;
     font-weight: 500;
-    letter-spacing: 0.02em;
-    line-height: 1.3;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
   }
 
-  h1 {
-    @apply text-4xl md:text-5xl lg:text-6xl;
-  }
-
-  h2 {
-    @apply text-3xl md:text-4xl;
-  }
-
-  h3 {
-    @apply text-2xl md:text-3xl;
+  /* Accent Text - Editorial Quotes */
+  .text-accent {
+    font-family: 'Crimson Text', serif;
+    font-size: 20px;
+    font-weight: 400;
+    font-style: italic;
+    line-height: 1.8;
+    color: hsl(var(--deep-charcoal) / 0.8);
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPONENT STYLES - Premium Luxury Elements
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 @layer components {
-  /* Enhanced Card Texture with Depth */
-  .card-matte {
-    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.95) 100%);
-    box-shadow: var(--shadow-md);
-    backdrop-filter: blur(12px);
-    transition: var(--transition-smooth);
-  }
 
-  .card-matte:hover {
-    box-shadow: var(--shadow-lg), var(--shadow-glow);
-    transform: translateY(-2px);
-  }
-
-  /* Allegorical Button Styles */
-  .btn-craft {
-    @apply bg-primary text-primary-foreground transition-all duration-300;
-    box-shadow: var(--shadow-sm);
+  /* ──────────────────────────────────────────────────────────────────────
+     CARD COMPONENTS - Museum Display Cases
+     ────────────────────────────────────────────────────────────────────── */
+  
+  .card-luxury {
+    background: var(--gradient-card);
+    border: 1px solid hsl(var(--border) / 0.3);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: var(--shadow-level-1);
+    transition: var(--transition-standard);
     position: relative;
     overflow: hidden;
   }
 
-  .btn-craft::before {
+  /* Subtle texture overlay */
+  .card-luxury::before {
     content: '';
     position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, transparent 0%, hsl(var(--primary) / 0.1) 100%);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, hsl(0 0% 100% / 0.5) 0%, transparent 100%);
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 300ms ease;
+    pointer-events: none;
   }
 
-  .btn-craft:hover {
-    box-shadow: var(--shadow-md), var(--shadow-glow);
-    transform: translateY(-1px);
-  }
-
-  .btn-craft:hover::before {
+  .card-luxury:hover::before {
     opacity: 1;
   }
 
-  .btn-craft:active {
-    transform: translateY(0);
+  .card-luxury:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-level-2);
   }
 
-  /* Interactive Badge Styles */
-  .badge-interactive {
-    @apply transition-all duration-200 cursor-pointer;
+  /* ──────────────────────────────────────────────────────────────────────
+     BUTTON COMPONENTS - Premium Interactivity
+     ────────────────────────────────────────────────────────────────────── */
+  
+  .btn-primary-luxury {
+    background: var(--gradient-primary);
+    color: hsl(var(--primary-foreground));
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 12px 24px;
+    border-radius: 6px;
+    border: none;
+    box-shadow: 
+      0 2px 4px hsl(43 65% 52% / 0.3),
+      inset 0 1px 0 hsl(0 0% 100% / 0.2);
+    transition: var(--transition-standard);
+    position: relative;
+    overflow: hidden;
   }
 
-  .badge-interactive:hover {
-    transform: scale(1.05);
-    box-shadow: var(--shadow-sm);
+  /* Shine effect on hover */
+  .btn-primary-luxury::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.3), transparent);
+    transition: left 500ms ease;
   }
 
-  .badge-interactive:active {
-    transform: scale(0.98);
+  .btn-primary-luxury:hover::before {
+    left: 100%;
   }
 
-  /* Enhanced Input Focus */
-  .input-enhanced {
-    @apply transition-all duration-300;
-  }
-
-  .input-enhanced:focus {
-    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1), var(--shadow-sm);
+  .btn-primary-luxury:hover {
     transform: translateY(-1px);
+    box-shadow: 
+      0 4px 8px hsl(43 65% 52% / 0.4),
+      inset 0 1px 0 hsl(0 0% 100% / 0.2);
   }
 
-  /* Generous Spacing Utility */
+  .btn-primary-luxury:active {
+    transform: translateY(0px);
+    box-shadow: 
+      0 1px 2px hsl(43 65% 52% / 0.3),
+      inset 0 1px 0 hsl(0 0% 100% / 0.2);
+  }
+
+  /* Secondary Button - Subtle */
+  .btn-secondary-luxury {
+    background: transparent;
+    color: hsl(var(--foreground));
+    border: 1.5px solid hsl(var(--border) / 0.4);
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: var(--transition-standard);
+  }
+
+  .btn-secondary-luxury:hover {
+    border-color: hsl(var(--primary));
+    background: hsl(var(--primary) / 0.05);
+    color: hsl(var(--primary));
+  }
+
+  /* Icon Button - Minimal */
+  .btn-icon-luxury {
+    background: transparent;
+    border: none;
+    padding: 8px;
+    border-radius: 6px;
+    color: hsl(var(--foreground) / 0.6);
+    transition: var(--transition-quick);
+  }
+
+  .btn-icon-luxury:hover {
+    background: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────
+     BADGE COMPONENTS - Frosted Glass Effect
+     ────────────────────────────────────────────────────────────────────── */
+  
+  .badge-luxury {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    background: hsl(var(--primary) / 0.1);
+    border: 1px solid hsl(var(--primary) / 0.2);
+    color: hsl(var(--primary));
+    box-shadow: inset 0 1px 2px hsl(0 0% 100% / 0.3);
+    transition: var(--transition-quick);
+  }
+
+  .badge-luxury:hover {
+    transform: scale(1.05);
+    box-shadow: 
+      inset 0 1px 2px hsl(0 0% 100% / 0.3),
+      var(--shadow-level-1);
+  }
+
+  /* Badge variants by collection */
+  .badge-cadence {
+    background: hsl(43 65% 52% / 0.1);
+    border-color: hsl(43 65% 52% / 0.2);
+    color: hsl(43 55% 48%);
+  }
+
+  .badge-reserve {
+    background: hsl(345 35% 45% / 0.1);
+    border-color: hsl(345 35% 45% / 0.2);
+    color: hsl(345 35% 40%);
+  }
+
+  .badge-purity {
+    background: hsl(155 20% 55% / 0.1);
+    border-color: hsl(155 20% 55% / 0.2);
+    color: hsl(155 25% 45%);
+  }
+
+  .badge-sacred-space {
+    background: hsl(200 35% 58% / 0.1);
+    border-color: hsl(200 35% 58% / 0.2);
+    color: hsl(200 40% 48%);
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────
+     INPUT FIELDS - Tactile Feel
+     ────────────────────────────────────────────────────────────────────── */
+  
+  .input-luxury {
+    background: hsl(var(--input));
+    border: 1.5px solid hsl(var(--border) / 0.4);
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 16px;
+    color: hsl(var(--foreground));
+    box-shadow: inset 0 1px 2px hsl(20 10% 17% / 0.05);
+    transition: var(--transition-standard);
+  }
+
+  .input-luxury:focus {
+    border-color: hsl(var(--primary));
+    outline: none;
+    box-shadow: 
+      inset 0 1px 2px hsl(20 10% 17% / 0.05),
+      var(--shadow-saffron-glow);
+  }
+
+  .input-luxury::placeholder {
+    color: hsl(var(--foreground) / 0.4);
+    font-style: italic;
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────
+     DIVIDERS - Not Plain Lines
+     ────────────────────────────────────────────────────────────────────── */
+  
+  .divider-luxury {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--border) / 0.4) 50%,
+      transparent 100%
+    );
+    margin: 24px 0;
+  }
+
+  .divider-ornate {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 32px 0;
+  }
+
+  .divider-ornate::before,
+  .divider-ornate::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--primary) / 0.3) 50%,
+      transparent 100%
+    );
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────
+     LOADING STATES - Sophisticated Skeleton
+     ────────────────────────────────────────────────────────────────────── */
+  
+  .skeleton-luxury {
+    background: linear-gradient(
+      90deg,
+      hsl(36 33% 88%) 0%,
+      hsl(40 43% 95%) 50%,
+      hsl(36 33% 88%) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Progress bar */
+  .progress-bar-luxury {
+    height: 4px;
+    background: hsl(var(--border) / 0.3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill-luxury {
+    height: 100%;
+    background: var(--gradient-primary);
+    background-size: 200% 100%;
+    animation: progressShine 1.5s infinite;
+    transition: width 300ms ease;
+  }
+
+  @keyframes progressShine {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────
+     SPECIAL TOUCHES
+     ────────────────────────────────────────────────────────────────────── */
+  
+  /* Brass Accent Text - for star ratings, premium badges */
+  .brass-accent {
+    background: var(--gradient-brass);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: brassShimmer 3s ease infinite;
+  }
+
+  @keyframes brassShimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────
+     UTILITY CLASSES
+     ────────────────────────────────────────────────────────────────────── */
+  
   .codex-spacing {
     @apply space-y-8 md:space-y-12;
   }
 
-  /* Refined Animations */
   .fade-enter {
-    animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: fadeIn 400ms var(--ease-standard) forwards;
   }
 
-  .slide-in {
-    animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  }
+  .stagger-1 { animation-delay: 50ms; }
+  .stagger-2 { animation-delay: 100ms; }
+  .stagger-3 { animation-delay: 150ms; }
+  .stagger-4 { animation-delay: 200ms; }
+  .stagger-5 { animation-delay: 250ms; }
+  .stagger-6 { animation-delay: 300ms; }
 
   @keyframes fadeIn {
     from {
       opacity: 0;
-      transform: translateY(12px);
+      transform: translateY(10px);
     }
     to {
       opacity: 1;
@@ -185,29 +543,89 @@
     }
   }
 
-  @keyframes slideIn {
+  @keyframes fadeInUp {
     from {
       opacity: 0;
-      transform: translateX(-20px);
+      transform: translateY(10px);
     }
     to {
       opacity: 1;
-      transform: translateX(0);
+      transform: translateY(0);
     }
   }
 
-  /* Smooth Hover Lift */
-  .hover-lift {
-    @apply transition-all duration-300;
+  /* Modal entrance */
+  @keyframes modalFadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
   }
 
-  .hover-lift:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+  .modal-enter {
+    animation: modalFadeIn 300ms var(--ease-standard);
   }
 
-  /* Sidebar Active State Border */
-  .border-l-3 {
-    border-left-width: 3px;
+  /* Accordion arrow rotation */
+  .accordion-arrow {
+    transition: transform 300ms var(--ease-standard);
+  }
+
+  .accordion-arrow.expanded {
+    transform: rotate(90deg);
+  }
+
+  /* Sidebar active state */
+  .sidebar-item-active {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--primary) / 0.15) 0%,
+      hsl(var(--primary) / 0.05) 100%
+    );
+    border-left: 3px solid hsl(var(--primary));
+    padding-left: 13px;
+    color: hsl(var(--primary));
+    font-weight: 500;
+    box-shadow: inset 0 1px 2px hsl(var(--primary) / 0.1);
+  }
+
+  .sidebar-item-hover {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--primary) / 0.08) 0%,
+      transparent 100%
+    );
+    color: hsl(var(--foreground));
+  }
+
+  /* Empty state styling */
+  .empty-state-luxury {
+    text-align: center;
+    padding: 64px 32px;
+    color: hsl(var(--foreground) / 0.5);
+  }
+
+  .empty-state-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+  }
+
+  .empty-state-title {
+    font-family: 'Crimson Text', serif;
+    font-size: 24px;
+    font-style: italic;
+    color: hsl(var(--foreground) / 0.6);
+    margin-bottom: 8px;
+  }
+
+  .empty-state-description {
+    font-size: 16px;
+    line-height: 1.6;
+    color: hsl(var(--foreground) / 0.5);
   }
 }
