@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import Navigation from "./components/Navigation";
 import Index from "./pages/Index";
@@ -34,58 +34,72 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const AppContent = () => {
+  const location = useLocation();
+  const { user } = useAuth();
+  
+  // Hide global navigation on landing page for non-authenticated users
+  const showNavigation = !(location.pathname === '/' && !user);
+
+  return (
+    <>
+      {showNavigation && <Navigation />}
+      <Routes>
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/" element={<Index />} />
+        <Route
+          path="/library"
+          element={
+            <ProtectedRoute>
+              <Reservoir />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/forge"
+          element={
+            <ProtectedRoute>
+              <Forge />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/repurpose"
+          element={
+            <ProtectedRoute>
+              <Repurpose />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/archive"
+          element={
+            <ProtectedRoute>
+              <Archive />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/calendar"
+          element={
+            <ProtectedRoute>
+              <Calendar />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Navigation />
-        <Routes>
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/" element={<Index />} />
-          <Route
-            path="/library"
-            element={
-              <ProtectedRoute>
-                <Reservoir />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/forge"
-            element={
-              <ProtectedRoute>
-                <Forge />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/repurpose"
-            element={
-              <ProtectedRoute>
-                <Repurpose />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/archive"
-            element={
-              <ProtectedRoute>
-                <Archive />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/calendar"
-            element={
-              <ProtectedRoute>
-                <Calendar />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AppContent />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
