@@ -52,7 +52,7 @@ const Landing = () => {
               <img 
                 src="/logo.png" 
                 alt="Scriptorium - Brand Intelligence" 
-                className="h-14 w-auto"
+                className="h-14 w-auto transition-transform duration-300 hover:scale-105"
               />
             </div>
             <div className="flex items-center gap-4">
@@ -78,23 +78,23 @@ const Landing = () => {
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-b from-card to-background">
         <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent" />
-        <div className="max-w-7xl mx-auto px-6 md:px-12 py-24 md:py-32 relative">
-          <div className="text-center max-w-4xl mx-auto">
-            <h1 className="font-serif text-5xl md:text-7xl font-bold text-foreground mb-6 leading-tight">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 py-20 md:py-28 relative">
+          <div className="text-center max-w-4xl mx-auto codex-spacing fade-enter">
+            <h1 className="text-foreground mb-6">
               Your Brand Intelligence,
               <span className="text-primary block mt-2">Simplified</span>
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-12 leading-relaxed">
+            <p className="text-large text-muted-foreground mb-12 leading-relaxed max-w-3xl mx-auto">
               Scriptorium transforms content marketing from chaos to clarity. Build your prompt library, 
               generate on-brand content, and orchestrate multi-channel campaigns—all in one elegant platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" variant="brass" className="text-lg px-8 py-6">
-                <Link to="/auth">
-                  Start Creating <ArrowRight className="ml-2 w-5 h-5" />
+              <Button asChild size="lg" variant="brass">
+                <Link to="/auth" className="gap-2">
+                  Start Creating <ArrowRight className="w-5 h-5" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="text-lg px-8 py-6">
+              <Button asChild size="lg" variant="outline">
                 <Link to="#features">
                   Explore Features
                 </Link>
@@ -105,18 +105,18 @@ const Landing = () => {
       </section>
 
       {/* Features Grid */}
-      <section id="features" className="py-24 border-t border-border/40">
+      <section id="features" className="py-20 border-t border-border/40">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <div className="text-center mb-16">
-            <h2 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-4">
+          <div className="text-center mb-16 codex-spacing fade-enter">
+            <h2 className="text-foreground mb-4">
               Everything You Need to Scale Content
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-large text-muted-foreground max-w-2xl mx-auto">
               From ideation to publication, Scriptorium streamlines your entire content workflow.
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 fade-enter">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
@@ -130,7 +130,7 @@ const Landing = () => {
                   <h3 className="font-serif text-2xl font-bold text-foreground mb-3">
                     {feature.title}
                   </h3>
-                  <p className="text-muted-foreground leading-relaxed">
+                  <p className="text-regular text-muted-foreground leading-relaxed">
                     {feature.description}
                   </p>
                 </div>
@@ -141,14 +141,14 @@ const Landing = () => {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-24 bg-gradient-to-b from-transparent to-primary/5 border-t border-border/40">
+      <section className="py-20 bg-gradient-to-b from-transparent to-primary/5 border-t border-border/40">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-6">
+          <div className="grid lg:grid-cols-2 gap-12 items-center fade-enter">
+            <div className="codex-spacing">
+              <h2 className="text-foreground mb-6">
                 Built for Modern Marketing Teams
               </h2>
-              <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
+              <p className="text-large text-muted-foreground mb-8 leading-relaxed">
                 Whether you're a solo creator or managing content for multiple brands, 
                 Scriptorium adapts to your workflow. White-label ready for agencies who 
                 want to offer best-in-class content intelligence to their clients.
@@ -157,21 +157,21 @@ const Landing = () => {
                 {benefits.map((benefit, index) => (
                   <li key={index} className="flex items-start gap-3">
                     <CheckCircle2 className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-foreground/90 text-lg">{benefit}</span>
+                    <span className="text-regular text-foreground/90">{benefit}</span>
                   </li>
                 ))}
               </ul>
             </div>
             <div className="relative">
-              <div className="card-luxury bg-gradient-to-br from-card to-primary/5 border-primary/20 p-12 shadow-level-3">
+              <div className="card-luxury bg-gradient-to-br from-card to-primary/5 border-primary/20 p-10 shadow-level-3">
                 <div className="space-y-6">
-                  <div className="bg-background/50 rounded-lg p-6 border border-border/20 shadow-level-1">
-                    <p className="font-serif text-2xl text-foreground mb-2">"Game-changing"</p>
-                    <p className="text-muted-foreground">Cut content production time by 60% while maintaining brand consistency.</p>
+                  <div className="bg-background/50 rounded-lg p-6 border border-border/20 shadow-level-1 transition-all duration-300 hover:shadow-level-2">
+                    <p className="font-serif text-xl font-semibold text-foreground mb-2">"Game-changing"</p>
+                    <p className="text-regular text-muted-foreground">Cut content production time by 60% while maintaining brand consistency.</p>
                   </div>
-                  <div className="bg-background/50 rounded-lg p-6 border border-border/20 shadow-level-1">
-                    <p className="font-serif text-2xl text-foreground mb-2">"Effortless scaling"</p>
-                    <p className="text-muted-foreground">From 2 posts per week to 20—without adding headcount.</p>
+                  <div className="bg-background/50 rounded-lg p-6 border border-border/20 shadow-level-1 transition-all duration-300 hover:shadow-level-2">
+                    <p className="font-serif text-xl font-semibold text-foreground mb-2">"Effortless scaling"</p>
+                    <p className="text-regular text-muted-foreground">From 2 posts per week to 20—without adding headcount.</p>
                   </div>
                 </div>
               </div>
@@ -181,17 +181,17 @@ const Landing = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 border-t border-border/40">
-        <div className="max-w-4xl mx-auto px-6 md:px-12 text-center">
-          <h2 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-6">
+      <section className="py-20 border-t border-border/40">
+        <div className="max-w-4xl mx-auto px-6 md:px-12 text-center fade-enter codex-spacing">
+          <h2 className="text-foreground mb-6">
             Ready to Transform Your Content Workflow?
           </h2>
-          <p className="text-xl text-muted-foreground mb-10">
+          <p className="text-large text-muted-foreground mb-10 max-w-2xl mx-auto">
             Join forward-thinking teams who've simplified their content operations with Scriptorium.
           </p>
-          <Button asChild size="lg" variant="brass" className="text-lg px-10 py-6">
-            <Link to="/auth">
-              Get Started Free <ArrowRight className="ml-2 w-5 h-5" />
+          <Button asChild size="lg" variant="brass">
+            <Link to="/auth" className="gap-2">
+              Get Started Free <ArrowRight className="w-5 h-5" />
             </Link>
           </Button>
         </div>
