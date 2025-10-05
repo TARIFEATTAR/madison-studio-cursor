@@ -84,9 +84,9 @@ export const WeekView = ({ currentDate, scheduledItems, dipWeekInfo, onItemClick
                   ref={provided.innerRef}
                   {...provided.droppableProps}
                   className={cn(
-                    "rounded-lg border border-border/40 overflow-hidden",
+                    "rounded-lg border border-border/40 overflow-hidden transition-all",
                     isDayToday && "ring-2 ring-primary/50",
-                    snapshot.isDraggingOver && "ring-2 ring-primary/30 bg-primary/5"
+                    snapshot.isDraggingOver && "ring-2 ring-primary bg-primary/10 shadow-lg scale-[1.02]"
                   )}
                 >
                   {/* Day header */}
@@ -106,7 +106,7 @@ export const WeekView = ({ currentDate, scheduledItems, dipWeekInfo, onItemClick
                   </div>
 
                   {/* Day items */}
-                  <div className="p-2 space-y-2 min-h-[200px]">
+                  <div className="p-3 space-y-2 min-h-[240px]">
                     {dayItems.map((item, index) => (
                       <Draggable key={item.id} draggableId={item.id} index={index}>
                         {(provided, snapshot) => (
@@ -116,12 +116,12 @@ export const WeekView = ({ currentDate, scheduledItems, dipWeekInfo, onItemClick
                             {...provided.dragHandleProps}
                             onClick={() => onItemClick(item)}
                             className={cn(
-                              "p-3 rounded-md bg-card hover:bg-accent/50 border border-border/40 cursor-pointer transition-colors group",
-                              snapshot.isDragging && "shadow-lg ring-2 ring-primary/50"
+                              "p-3 rounded-md bg-card hover:bg-accent/50 border border-border/40 cursor-grab active:cursor-grabbing transition-all group",
+                              snapshot.isDragging && "shadow-2xl ring-2 ring-primary opacity-80 scale-105 rotate-1"
                             )}
                           >
                             <div className="flex items-start gap-2">
-                              <GripVertical className="w-4 h-4 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-0.5" />
+                              <GripVertical className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                               <div className="flex-1 min-w-0">
                                 {item.scheduled_time && (
                                   <div className="text-xs font-medium text-muted-foreground mb-1">

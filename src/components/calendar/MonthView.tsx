@@ -52,7 +52,7 @@ export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7 auto-rows-fr">
+      <div className="grid grid-cols-7 [&>*]:min-h-[160px]">
         {days.map((day, idx) => {
           const dayItems = getItemsForDay(day);
           const isCurrentMonth = isSameMonth(day, currentDate);
@@ -67,11 +67,11 @@ export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick
                   {...provided.droppableProps}
                   onClick={() => onDayClick(day)}
                   className={cn(
-                    "min-h-[120px] p-4 border-b border-r border-border/20 cursor-pointer transition-colors",
-                    "hover:bg-accent/50",
+                    "h-full p-3 border-b border-r border-border/20 cursor-pointer transition-all",
+                    "hover:bg-accent/30",
                     !isCurrentMonth && "bg-muted/20",
-                    isDayToday && "bg-accent/30",
-                    snapshot.isDraggingOver && "bg-primary/10 ring-2 ring-primary/30"
+                    isDayToday && "bg-accent/30 ring-1 ring-primary/40",
+                    snapshot.isDraggingOver && "bg-primary/10 ring-2 ring-primary shadow-inner"
                   )}
                 >
                   <div className={cn(
@@ -82,7 +82,7 @@ export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick
                     {format(day, "d")}
                   </div>
 
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 min-h-[80px]">
                     {dayItems.slice(0, 3).map((item, index) => (
                       <Draggable key={item.id} draggableId={item.id} index={index}>
                         {(provided, snapshot) => (
@@ -95,12 +95,12 @@ export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick
                               onItemClick(item);
                             }}
                             className={cn(
-                              "text-xs p-1.5 rounded bg-primary/10 hover:bg-primary/20 transition-colors truncate group",
-                              snapshot.isDragging && "shadow-lg ring-2 ring-primary/50"
+                              "text-xs p-2 rounded bg-primary/10 hover:bg-primary/20 transition-all truncate group cursor-grab active:cursor-grabbing",
+                              snapshot.isDragging && "shadow-2xl ring-2 ring-primary opacity-80 rotate-2 scale-105"
                             )}
                           >
-                            <div className="flex items-center gap-1">
-                              <GripVertical className="w-3 h-3 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                            <div className="flex items-center gap-1.5">
+                              <GripVertical className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                               {item.scheduled_time && (
                                 <span className="text-[10px] text-muted-foreground">
                                   {format(new Date(`2000-01-01T${item.scheduled_time}`), "h:mm a")}
