@@ -25,7 +25,7 @@ const Navigation = () => {
             <img 
               src="/logo.png" 
               alt="Scriptorium - Brand Intelligence" 
-              className="h-12 w-auto transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5"
+              className="h-14 w-auto transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 group-hover:drop-shadow-lg"
             />
           </Link>
 
