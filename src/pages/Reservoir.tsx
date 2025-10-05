@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,31 +24,59 @@ const Reservoir = () => {
     quickFilter?: string;
   }>({});
   
-  // Mock counts - will be replaced with real data
-  const counts = {
-    byCollection: {
-      cadence: { total: 47, families: { warm: 12, floral: 15, fresh: 10, woody: 10 } },
-      reserve: { total: 8, families: { warm: 2, floral: 3, fresh: 2, woody: 1 } },
-      purity: { total: 12, families: { warm: 3, floral: 4, fresh: 3, woody: 2 } },
-      sacred_space: { total: 3, families: { warm: 1, floral: 1, fresh: 1, woody: 0 } },
-    },
-    byContentType: {
-      product: 35,
-      email: 18,
-      social: 22,
-      visual: 15,
-      blog: 8,
-    },
-    byDipWeek: {
-      1: 20,
-      2: 25,
-      3: 18,
-      4: 15,
-    },
-    favorites: 12,
-    recent: 10,
-    archived: 0,
-  };
+  // Calculate dynamic counts from actual prompts data
+  const counts = useMemo(() => {
+    const byCollection: Record<string, { total: number; families: Record<string, number> }> = {
+      cadence: { total: 0, families: { warm: 0, floral: 0, fresh: 0, woody: 0 } },
+      reserve: { total: 0, families: { warm: 0, floral: 0, fresh: 0, woody: 0 } },
+      purity: { total: 0, families: { warm: 0, floral: 0, fresh: 0, woody: 0 } },
+      sacred_space: { total: 0, families: { warm: 0, floral: 0, fresh: 0, woody: 0 } },
+    };
+    
+    const byContentType: Record<string, number> = {};
+    const byDipWeek: Record<number, number> = {};
+    let favorites = 0;
+    let recent = 0;
+    let archived = 0;
+    
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    prompts.forEach(prompt => {
+      // Count by collection and scent family
+      const collection = prompt.collection || 'cadence';
+      if (byCollection[collection]) {
+        byCollection[collection].total++;
+        const family = prompt.scent_family || 'warm';
+        if (byCollection[collection].families[family] !== undefined) {
+          byCollection[collection].families[family]++;
+        }
+      }
+      
+      // Count by content type
+      const contentType = prompt.content_type || 'other';
+      byContentType[contentType] = (byContentType[contentType] || 0) + 1;
+      
+      // Count by DIP week
+      if (prompt.dip_week) {
+        byDipWeek[prompt.dip_week] = (byDipWeek[prompt.dip_week] || 0) + 1;
+      }
+      
+      // Count recent (last 7 days)
+      if (prompt.created_at && new Date(prompt.created_at) > sevenDaysAgo) {
+        recent++;
+      }
+    });
+    
+    return {
+      byCollection,
+      byContentType,
+      byDipWeek,
+      favorites,
+      recent,
+      archived,
+    };
+  }, [prompts]);
 
   useEffect(() => {
     if (user) {
