@@ -245,13 +245,17 @@ const Repurpose = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Loading master content...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="pt-20">
+      <div className="container mx-auto px-4 py-8 space-y-8">
       <div className="space-y-2">
         <h1 className="text-4xl font-serif text-foreground">Content Repurposing</h1>
         <p className="text-muted-foreground">
@@ -493,6 +497,7 @@ const Repurpose = () => {
           )}
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 };

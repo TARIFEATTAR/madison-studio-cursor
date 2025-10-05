@@ -176,19 +176,20 @@ const Reservoir = () => {
   const activeChips = getActiveFilterChips();
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
-        {/* Sidebar */}
-        <LibrarySidebar
-          onFilterChange={handleFilterChange}
-          activeFilters={sidebarFilters}
-          counts={counts}
-        />
+    <div className="pt-20">
+      <SidebarProvider>
+        <div className="flex min-h-[calc(100vh-5rem)] w-full bg-background">
+          {/* Sidebar */}
+          <LibrarySidebar
+            onFilterChange={handleFilterChange}
+            activeFilters={sidebarFilters}
+            counts={counts}
+          />
 
-        {/* Main Content */}
-        <main className="flex-1">
-          {/* Header with Sidebar Toggle */}
-          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/40">
+          {/* Main Content */}
+          <main className="flex-1">
+            {/* Header with Sidebar Toggle */}
+            <div className="sticky top-20 z-10 bg-background/95 backdrop-blur-sm border-b border-border/40">
             <div className="flex items-center gap-4 px-6 py-4">
               <SidebarTrigger className="-ml-1" />
               <div className="flex-1">
@@ -292,9 +293,10 @@ const Reservoir = () => {
               )}
             </div>
           </div>
-        </main>
-      </div>
-    </SidebarProvider>
+          </main>
+        </div>
+      </SidebarProvider>
+    </div>
   );
 };
 
