@@ -28,9 +28,12 @@ export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
   const getItemsForDay = (date: Date) => {
-    return scheduledItems.filter(item => 
-      isSameDay(new Date(item.scheduled_date), date)
-    );
+    return scheduledItems.filter(item => {
+      // Parse date string as local date to avoid timezone shifts
+      const [year, month, day] = item.scheduled_date.split('-').map(Number);
+      const itemDate = new Date(year, month - 1, day);
+      return isSameDay(itemDate, date);
+    });
   };
 
   return (
