@@ -21,13 +21,12 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto px-6 md:px-12">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-md bg-aged-brass/20 flex items-center justify-center border border-aged-brass/30 group-hover:bg-aged-brass/30 transition-all duration-300 group-hover:shadow-md group-hover:-translate-y-0.5">
-              <BookOpen className="w-5 h-5 text-aged-brass transition-transform duration-300 group-hover:scale-110" />
-            </div>
-            <span className="font-serif text-2xl text-parchment-white tracking-wide">
-              Scriptorium
-            </span>
+          <Link to="/" className="flex items-center group">
+            <img 
+              src="/logo.png" 
+              alt="Scriptorium - Brand Intelligence" 
+              className="h-12 w-auto transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5"
+            />
           </Link>
 
           {/* Navigation Links */}
