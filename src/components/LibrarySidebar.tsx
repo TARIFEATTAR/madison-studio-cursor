@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChevronRight, Star, Clock, Archive, Folder, FileText, Mail, Image as ImageIcon, BookOpen, Instagram } from "lucide-react";
 import {
   Sidebar,
@@ -40,6 +41,7 @@ interface LibrarySidebarProps {
 }
 
 export function LibrarySidebar({ onFilterChange, activeFilters, counts }: LibrarySidebarProps) {
+  const navigate = useNavigate();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -373,11 +375,8 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
 
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(
-                    "h-9 px-2 rounded-md transition-all",
-                    activeFilters.quickFilter === "archived" && "bg-saffron-gold/20 border-l-3 border-saffron-gold font-medium"
-                  )}
-                  onClick={() => handleFilterClick("quickFilter", "archived")}
+                  className="h-9 px-2 rounded-md transition-all"
+                  onClick={() => navigate('/archive')}
                 >
                   <Archive className="w-4 h-4" />
                   {!collapsed && (

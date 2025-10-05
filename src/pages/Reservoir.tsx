@@ -246,9 +246,17 @@ const Reservoir = () => {
       });
     }
     
-    if (sidebarFilters.quickFilter) {
+    if (sidebarFilters.quickFilter === "favorites") {
       chips.push({
-        label: sidebarFilters.quickFilter,
+        label: "Favorites",
+        key: "quickFilter",
+        value: sidebarFilters.quickFilter,
+      });
+    }
+    
+    if (sidebarFilters.quickFilter === "recent") {
+      chips.push({
+        label: "Recent",
         key: "quickFilter",
         value: sidebarFilters.quickFilter,
       });
@@ -281,8 +289,15 @@ const Reservoir = () => {
     const matchesDipWeek =
       !sidebarFilters.dipWeek || prompt.dip_week === sidebarFilters.dipWeek;
 
-    // Quick filters would need additional logic based on your data structure
-    const matchesQuickFilter = !sidebarFilters.quickFilter || true;
+    // Quick filters
+    let matchesQuickFilter = true;
+    if (sidebarFilters.quickFilter === "recent") {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      matchesQuickFilter = prompt.created_at && new Date(prompt.created_at) > sevenDaysAgo;
+    } else if (sidebarFilters.quickFilter === "favorites") {
+      matchesQuickFilter = prompt.is_favorite === true;
+    }
 
     return (
       matchesSearch &&
