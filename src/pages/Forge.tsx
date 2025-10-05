@@ -17,6 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ChevronsUpDown } from "lucide-react";
 import { IMAGE_PROMPT_TEMPLATES, type ImagePromptType } from "@/config/imagePromptGuidelines";
 import { BLOG_POST_TYPES, BLOG_REPURPOSE_TARGETS, generateBlogPrompt, validateBlogVoice, type BlogPostType } from "@/config/blogPostGuidelines";
+import { ContentEditor } from "@/components/ContentEditor";
 
 // Product catalogue with collection and scent family mappings
 const PRODUCTS = [
@@ -1153,9 +1154,11 @@ const Forge = () => {
               {generatedOutput && (
                 <div className="mt-6 space-y-4">
                   <h3 className="text-lg font-serif mb-3">Generated Output</h3>
-                  <div className="bg-background/50 rounded-md p-6 min-h-[200px] leading-relaxed border border-border/30">
-                    <p className="text-foreground whitespace-pre-wrap">{generatedOutput}</p>
-                  </div>
+                  <ContentEditor
+                    content={generatedOutput}
+                    onChange={setGeneratedOutput}
+                    placeholder="Generated content will appear here..."
+                  />
                   
                   {formData.contentType === 'blog' && voiceValidation && (
                     <div className="p-4 bg-background/30 rounded-md border border-border/40">
