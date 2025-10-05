@@ -7,14 +7,13 @@ interface PromptCardProps {
     id: string;
     title: string;
     collection: string;
-    scentFamily: string | null;
-    dipWeek: number;
-    dipWorld: string;
-    contentType: string;
-    preview: string;
-    lastUsed: string;
-    version: string;
-    rating: number;
+    scent_family: string | null;
+    dip_week: number | null;
+    content_type: string;
+    prompt_text: string;
+    created_at: string;
+    updated_at?: string;
+    version?: number;
   };
 }
 
@@ -40,6 +39,22 @@ const dipWorlds: Record<number, string> = {
 };
 
 const PromptCard = ({ prompt }: PromptCardProps) => {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    return date.toLocaleDateString();
+  };
+
+  const dipWorld = prompt.dip_week ? dipWorlds[prompt.dip_week] : null;
+  const preview = prompt.prompt_text?.substring(0, 200) || "";
+
   return (
     <Card className="card-matte p-6 hover:shadow-elegant transition-all duration-300 cursor-pointer border border-border/40 group">
       {/* Header Tags */}
@@ -47,13 +62,18 @@ const PromptCard = ({ prompt }: PromptCardProps) => {
         <Badge className={collectionColors[prompt.collection] || "bg-muted"}>
           {prompt.collection}
         </Badge>
-        {prompt.scentFamily && (
+        {prompt.scent_family && (
           <Badge variant="outline" className="border-border/60">
-            {scentFamilyIcons[prompt.scentFamily]} {prompt.scentFamily}
+            {scentFamilyIcons[prompt.scent_family]} {prompt.scent_family}
           </Badge>
         )}
-        <Badge variant="outline" className="border-border/60">
-          Week {prompt.dipWeek}: {prompt.dipWorld}
+        {prompt.dip_week && dipWorld && (
+          <Badge variant="outline" className="border-border/60">
+            Week {prompt.dip_week}: {dipWorld}
+          </Badge>
+        )}
+        <Badge variant="outline" className="border-border/60 capitalize">
+          {prompt.content_type}
         </Badge>
       </div>
 
@@ -64,7 +84,7 @@ const PromptCard = ({ prompt }: PromptCardProps) => {
 
       {/* Preview */}
       <p className="text-muted-foreground leading-relaxed mb-6 line-clamp-4 text-sm">
-        {prompt.preview}
+        {preview}
       </p>
 
       {/* Footer Metadata */}
@@ -72,25 +92,14 @@ const PromptCard = ({ prompt }: PromptCardProps) => {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
             <Calendar className="w-4 h-4" />
-            <span>{prompt.lastUsed}</span>
+            <span>{formatDate(prompt.updated_at || prompt.created_at)}</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <BookOpen className="w-4 h-4" />
-            <span>v{prompt.version}</span>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-0.5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Star
-              key={i}
-              className={`w-4 h-4 ${
-                i < prompt.rating
-                  ? "fill-saffron-gold text-saffron-gold"
-                  : "text-border"
-              }`}
-            />
-          ))}
+          {prompt.version && (
+            <div className="flex items-center gap-1.5">
+              <BookOpen className="w-4 h-4" />
+              <span>v{prompt.version}</span>
+            </div>
+          )}
         </div>
       </div>
     </Card>

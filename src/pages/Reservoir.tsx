@@ -1,109 +1,300 @@
-import { useState } from "react";
-import { Search, Filter, Tag } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { LibrarySidebar } from "@/components/LibrarySidebar";
 import PromptCard from "@/components/PromptCard";
-
-const mockPrompts: any[] = [];
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const Reservoir = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCollection, setSelectedCollection] = useState<string | null>(null);
-  const [selectedContentType, setSelectedContentType] = useState<string | null>(null);
+  const [prompts, setPrompts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sidebarFilters, setSidebarFilters] = useState<{
+    collection?: string;
+    scentFamily?: string;
+    contentType?: string;
+    dipWeek?: number;
+    quickFilter?: string;
+  }>({});
+  
+  // Mock counts - will be replaced with real data
+  const counts = {
+    byCollection: {
+      cadence: { total: 47, families: { warm: 12, floral: 15, fresh: 10, woody: 10 } },
+      reserve: { total: 8, families: { warm: 2, floral: 3, fresh: 2, woody: 1 } },
+      purity: { total: 12, families: { warm: 3, floral: 4, fresh: 3, woody: 2 } },
+      sacred_space: { total: 3, families: { warm: 1, floral: 1, fresh: 1, woody: 0 } },
+    },
+    byContentType: {
+      product: 35,
+      email: 18,
+      social: 22,
+      visual: 15,
+      blog: 8,
+    },
+    byDipWeek: {
+      1: 20,
+      2: 25,
+      3: 18,
+      4: 15,
+    },
+    favorites: 12,
+    recent: 10,
+    archived: 0,
+  };
 
-  const collections = ["Cadence", "Reserve", "Purity", "Sacred Space"];
-  const contentTypes = ["Product", "Email", "Social", "Visual"];
+  useEffect(() => {
+    if (user) {
+      fetchPrompts();
+    }
+  }, [user]);
+
+  const fetchPrompts = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("prompts")
+        .select("*")
+        .eq("created_by", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setPrompts(data || []);
+    } catch (error) {
+      console.error("Error fetching prompts:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load prompts. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFilterChange = (filters: typeof sidebarFilters) => {
+    setSidebarFilters(filters);
+  };
+
+  const clearAllFilters = () => {
+    setSidebarFilters({});
+    setSearchQuery("");
+  };
+
+  const getActiveFilterChips = () => {
+    const chips: { label: string; key: string; value: any }[] = [];
+    
+    if (sidebarFilters.collection) {
+      chips.push({
+        label: `Collection: ${sidebarFilters.collection}`,
+        key: "collection",
+        value: sidebarFilters.collection,
+      });
+    }
+    
+    if (sidebarFilters.scentFamily) {
+      chips.push({
+        label: `Family: ${sidebarFilters.scentFamily}`,
+        key: "scentFamily",
+        value: sidebarFilters.scentFamily,
+      });
+    }
+    
+    if (sidebarFilters.contentType) {
+      chips.push({
+        label: `Type: ${sidebarFilters.contentType}`,
+        key: "contentType",
+        value: sidebarFilters.contentType,
+      });
+    }
+    
+    if (sidebarFilters.dipWeek) {
+      chips.push({
+        label: `Week ${sidebarFilters.dipWeek}`,
+        key: "dipWeek",
+        value: sidebarFilters.dipWeek,
+      });
+    }
+    
+    if (sidebarFilters.quickFilter) {
+      chips.push({
+        label: sidebarFilters.quickFilter,
+        key: "quickFilter",
+        value: sidebarFilters.quickFilter,
+      });
+    }
+    
+    return chips;
+  };
+
+  const removeFilter = (key: string) => {
+    const newFilters = { ...sidebarFilters };
+    delete newFilters[key as keyof typeof sidebarFilters];
+    setSidebarFilters(newFilters);
+  };
+
+  const filteredPrompts = prompts.filter((prompt) => {
+    const matchesSearch =
+      searchQuery === "" ||
+      prompt.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      prompt.prompt_text?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesCollection =
+      !sidebarFilters.collection || prompt.collection === sidebarFilters.collection;
+
+    const matchesScentFamily =
+      !sidebarFilters.scentFamily || prompt.scent_family === sidebarFilters.scentFamily;
+
+    const matchesContentType =
+      !sidebarFilters.contentType || prompt.content_type === sidebarFilters.contentType;
+
+    const matchesDipWeek =
+      !sidebarFilters.dipWeek || prompt.dip_week === sidebarFilters.dipWeek;
+
+    // Quick filters would need additional logic based on your data structure
+    const matchesQuickFilter = !sidebarFilters.quickFilter || true;
+
+    return (
+      matchesSearch &&
+      matchesCollection &&
+      matchesScentFamily &&
+      matchesContentType &&
+      matchesDipWeek &&
+      matchesQuickFilter
+    );
+  });
+
+  const activeChips = getActiveFilterChips();
 
   return (
-    <div className="min-h-screen py-12 px-6 md:px-12">
-      <div className="max-w-7xl mx-auto codex-spacing">
-        {/* Header */}
-        <div className="fade-enter">
-          <h1 className="text-foreground mb-3">The Reservoir</h1>
-          <p className="text-muted-foreground text-lg max-w-2xl">
-            Your curated collection of brand-aligned prompts, each a vessel of the Confident Whisper.
-          </p>
-        </div>
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full bg-background">
+        {/* Sidebar */}
+        <LibrarySidebar
+          onFilterChange={handleFilterChange}
+          activeFilters={sidebarFilters}
+          counts={counts}
+        />
 
-        {/* Search and Filters */}
-        <div className="fade-enter space-y-6">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-            <Input
-              type="text"
-              placeholder="Search prompts, lexicon, or allegorical terms..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-14 bg-card/50 backdrop-blur-sm border-border focus:border-primary transition-all duration-300 text-base focus:shadow-lg focus:-translate-y-0.5"
-            />
-          </div>
-
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground font-medium">Collection:</span>
-              {collections.map((collection) => (
-                <Badge
-                  key={collection}
-                  variant={selectedCollection === collection ? "default" : "outline"}
-                  className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-sm active:scale-95"
-                  onClick={() => setSelectedCollection(selectedCollection === collection ? null : collection)}
-                >
-                  {collection}
-                </Badge>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Tag className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground font-medium">Content:</span>
-              {contentTypes.map((type) => (
-                <Badge
-                  key={type}
-                  variant={selectedContentType === type ? "default" : "outline"}
-                  className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-sm active:scale-95"
-                  onClick={() => setSelectedContentType(selectedContentType === type ? null : type)}
-                >
-                  {type}
-                </Badge>
-              ))}
+        {/* Main Content */}
+        <main className="flex-1">
+          {/* Header with Sidebar Toggle */}
+          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/40">
+            <div className="flex items-center gap-4 px-6 py-4">
+              <SidebarTrigger className="-ml-1" />
+              <div className="flex-1">
+                <h1 className="text-2xl font-serif text-foreground">The Reservoir</h1>
+                <p className="text-sm text-muted-foreground">
+                  Your curated collection of brand-aligned prompts
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Prompt Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 fade-enter">
-          {mockPrompts
-            .filter((prompt) => {
-              const matchesSearch = searchQuery === "" || 
-                prompt.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                prompt.preview.toLowerCase().includes(searchQuery.toLowerCase());
-              const matchesCollection = !selectedCollection || prompt.collection === selectedCollection;
-              const matchesContentType = !selectedContentType || prompt.contentType === selectedContentType;
-              return matchesSearch && matchesCollection && matchesContentType;
-            })
-            .map((prompt) => (
-              <PromptCard key={prompt.id} prompt={prompt} />
-            ))}
-        </div>
+          <div className="py-8 px-6 md:px-12">
+            <div className="max-w-7xl mx-auto codex-spacing">
+              {/* Search Bar */}
+              <div className="fade-enter mb-6">
+                <div className="relative max-w-2xl">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                  <Input
+                    type="text"
+                    placeholder="🔍 Search prompts, content, campaigns..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-12 h-12 bg-card/50 backdrop-blur-sm border-border focus:border-primary transition-all duration-300"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
 
-        {/* Empty State */}
-        {mockPrompts.filter((prompt) => {
-          const matchesSearch = searchQuery === "" || 
-            prompt.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            prompt.preview.toLowerCase().includes(searchQuery.toLowerCase());
-          const matchesCollection = !selectedCollection || prompt.collection === selectedCollection;
-          const matchesContentType = !selectedContentType || prompt.contentType === selectedContentType;
-          return matchesSearch && matchesCollection && matchesContentType;
-        }).length === 0 && (
-          <div className="text-center py-16 fade-enter">
-            <p className="text-2xl font-serif text-muted-foreground">The Reservoir awaits</p>
-            <p className="text-muted-foreground mt-2">No prompts match your refined criteria</p>
+              {/* Active Filter Chips */}
+              {activeChips.length > 0 && (
+                <div className="fade-enter flex flex-wrap items-center gap-2 mb-6">
+                  <span className="text-sm text-muted-foreground font-medium">Active filters:</span>
+                  {activeChips.map((chip) => (
+                    <Badge
+                      key={`${chip.key}-${chip.value}`}
+                      variant="secondary"
+                      className="bg-saffron-gold/20 text-saffron-gold border-saffron-gold/30 gap-2 pr-1"
+                    >
+                      {chip.label}
+                      <button
+                        onClick={() => removeFilter(chip.key)}
+                        className="hover:bg-saffron-gold/30 rounded-full p-0.5 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearAllFilters}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Clear All
+                  </Button>
+                </div>
+              )}
+
+              {/* Loading State */}
+              {loading && (
+                <div className="text-center py-16">
+                  <p className="text-muted-foreground">Loading prompts...</p>
+                </div>
+              )}
+
+              {/* Prompt Grid */}
+              {!loading && filteredPrompts.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 fade-enter">
+                  {filteredPrompts.map((prompt) => (
+                    <PromptCard key={prompt.id} prompt={prompt} />
+                  ))}
+                </div>
+              )}
+
+              {/* Empty State */}
+              {!loading && filteredPrompts.length === 0 && (
+                <div className="text-center py-16 fade-enter">
+                  <p className="text-2xl font-serif text-muted-foreground">The Reservoir awaits</p>
+                  <p className="text-muted-foreground mt-2">
+                    {prompts.length === 0
+                      ? "No prompts have been created yet"
+                      : "No prompts match your refined criteria"}
+                  </p>
+                  {activeChips.length > 0 && (
+                    <Button
+                      variant="outline"
+                      className="mt-4"
+                      onClick={clearAllFilters}
+                    >
+                      Clear Filters
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        )}
+        </main>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
