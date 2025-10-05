@@ -188,7 +188,7 @@ const Repurpose = () => {
 
       toast({
         title: "Asset rejected",
-        description: "This derivative has been rejected.",
+        description: "View in Rejected tab if needed.",
       });
     } catch (error: any) {
       toast({
@@ -250,8 +250,11 @@ const Repurpose = () => {
   const rejectedCount = derivatives.filter(d => d.approval_status === 'rejected').length;
   
   const filteredDerivatives = derivatives.filter(d => {
-    if (statusFilter === "all") return true;
-    return d.approval_status === statusFilter;
+    if (statusFilter === "rejected") return d.approval_status === 'rejected';
+    if (statusFilter === "pending") return d.approval_status === 'pending';
+    if (statusFilter === "approved") return d.approval_status === 'approved';
+    // "all" tab excludes rejected items by default
+    return d.approval_status !== 'rejected';
   });
 
   const getStatusBorderColor = (status: string) => {
@@ -331,7 +334,7 @@ const Repurpose = () => {
                 <h2 className="text-xl font-serif text-foreground">Derivative Assets</h2>
               </div>
 
-              <Card className="p-6 bg-muted/20 sticky top-24 z-10">
+              <Card className="p-6 bg-muted/20 sticky top-24">
                 <div className="space-y-3">
                   <h3 className="font-serif text-lg text-foreground">{selectedMaster.title}</h3>
                   <p className="text-sm text-muted-foreground line-clamp-3">
