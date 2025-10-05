@@ -17,7 +17,7 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="border-b border-aged-brass/15 bg-ink-black sticky top-0 z-50 shadow-level-2">
+    <nav className="border-b border-aged-brass/15 bg-[hsl(var(--ink-black))] sticky top-0 z-50 shadow-level-2">
       <div className="max-w-7xl mx-auto px-6 md:px-12">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
