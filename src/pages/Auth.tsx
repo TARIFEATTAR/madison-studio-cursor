@@ -191,7 +191,11 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center px-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8 fade-enter">
-          <h1 className="text-foreground mb-3">Scriptorium</h1>
+          <img 
+            src="/logo-full.png" 
+            alt="Scriptorium" 
+            className="h-16 w-auto mx-auto mb-3"
+          />
           <p className="text-muted-foreground text-lg">
             Where brands craft their narrative
           </p>
