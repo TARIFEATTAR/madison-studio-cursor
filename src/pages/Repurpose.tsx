@@ -69,12 +69,8 @@ const Repurpose = () => {
   const [editedContent, setEditedContent] = useState("");
 
   useEffect(() => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
     fetchMasterContents();
-  }, [user, navigate]);
+  }, []);
 
   const fetchMasterContents = async () => {
     try {
@@ -125,7 +121,7 @@ const Repurpose = () => {
 
     if (masterId) {
       const found = masterContents.find(m => m.id === masterId) || null;
-      if (found) {
+      if (found && found.id !== selectedMaster?.id) {
         setSelectedMaster(found);
         fetchDerivatives(masterId);
       }
@@ -135,7 +131,7 @@ const Repurpose = () => {
       setSelectedMaster(first);
       fetchDerivatives(first.id);
     }
-  }, [location.search, masterContents, selectedMaster]);
+  }, [location.search, masterContents]);
 
   const handleSelectMaster = (master: MasterContent) => {
     setSelectedMaster(master);

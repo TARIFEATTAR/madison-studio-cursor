@@ -2,7 +2,68 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-const dipWeeks: any[] = [];
+const dipWeeks = [
+  {
+    week: 1,
+    dateRange: "Oct 7-13, 2025",
+    pillar: "Identity",
+    world: "Silk Road",
+    lexicon: ["Authenticity", "Origin", "Craftsmanship", "Heritage", "Purity"],
+    imagery: ["Ancient trade routes", "Caravans", "Spices", "Merchants", "Desert landscapes"],
+    scheduled: [
+      { day: "Mon", content: "Instagram: Identity hook post" },
+      { day: "Wed", content: "Email: Origin story feature" },
+      { day: "Fri", content: "Twitter: Craftsmanship thread" },
+    ],
+    completed: 2,
+    total: 3,
+  },
+  {
+    week: 2,
+    dateRange: "Oct 14-20, 2025",
+    pillar: "Memory",
+    world: "Maritime",
+    lexicon: ["Nostalgia", "Journey", "Voyage", "Discovery", "Timeless"],
+    imagery: ["Ocean waves", "Ships", "Compasses", "Maps", "Sailors"],
+    scheduled: [
+      { day: "Mon", content: "Instagram: Memory moment carousel" },
+      { day: "Wed", content: "Email: Journey narrative" },
+      { day: "Fri", content: "Product: Maritime collection feature" },
+    ],
+    completed: 1,
+    total: 3,
+  },
+  {
+    week: 3,
+    dateRange: "Oct 21-27, 2025",
+    pillar: "Remembrance",
+    world: "Imperial",
+    lexicon: ["Reverence", "Legacy", "Ritual", "Tradition", "Sacred"],
+    imagery: ["Palaces", "Royal courts", "Ceremonial spaces", "Gold accents", "Architecture"],
+    scheduled: [
+      { day: "Mon", content: "Instagram: Legacy story reel" },
+      { day: "Wed", content: "Email: Ritual and tradition piece" },
+      { day: "Fri", content: "Twitter: Sacred space thread" },
+    ],
+    completed: 0,
+    total: 3,
+  },
+  {
+    week: 4,
+    dateRange: "Oct 28-Nov 3, 2025",
+    pillar: "Cadence",
+    world: "Royal Court",
+    lexicon: ["Rhythm", "Balance", "Harmony", "Flow", "Elegance"],
+    imagery: ["Royal chambers", "Silk fabrics", "Ornate details", "Symmetry", "Grace"],
+    scheduled: [
+      { day: "Mon", content: "Instagram: Cadence collection showcase" },
+      { day: "Wed", content: "Email: Balance and harmony newsletter" },
+      { day: "Fri", content: "Product: New release announcement" },
+    ],
+    completed: 0,
+    total: 3,
+  },
+];
 
 const Calendar = () => {
   return (
