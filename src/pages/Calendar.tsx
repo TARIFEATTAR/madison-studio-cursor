@@ -5,7 +5,6 @@ import { CalendarHeader } from "@/components/calendar/CalendarHeader";
 import { MonthView } from "@/components/calendar/MonthView";
 import { WeekView } from "@/components/calendar/WeekView";
 import { ScheduleModal } from "@/components/calendar/ScheduleModal";
-import { GoogleCalendarConnect } from "@/components/calendar/GoogleCalendarConnect";
 import { CalendarSidebar } from "@/components/calendar/CalendarSidebar";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -165,16 +164,14 @@ const Calendar = () => {
           onToday={handleToday}
         />
 
-          <div className="mt-6 space-y-6">
-            <GoogleCalendarConnect />
-            
-            <Button onClick={handleNewSchedule} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Schedule Content
-            </Button>
-          </div>
+        <div className="mt-6">
+          <Button onClick={handleNewSchedule} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Schedule Content
+          </Button>
+        </div>
 
-        <DragDropContext 
+        <DragDropContext
           onDragStart={() => setIsDragging(true)}
           onDragEnd={handleDragEnd}
         >
