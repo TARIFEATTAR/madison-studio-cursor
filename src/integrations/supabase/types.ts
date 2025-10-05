@@ -56,6 +56,39 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_settings: {
+        Row: {
+          auto_suggest: boolean | null
+          created_at: string | null
+          id: string
+          optimal_times: string[] | null
+          platform: string
+          timezone: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auto_suggest?: boolean | null
+          created_at?: string | null
+          id?: string
+          optimal_times?: string[] | null
+          platform: string
+          timezone?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auto_suggest?: boolean | null
+          created_at?: string | null
+          id?: string
+          optimal_times?: string[] | null
+          platform?: string
+          timezone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       derivative_assets: {
         Row: {
           approval_status: string | null
@@ -108,6 +141,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      dip_week_calendar: {
+        Row: {
+          core_lexicon: string[] | null
+          created_at: string | null
+          end_date: string
+          id: string
+          pillar: string
+          start_date: string
+          visual_world: string
+          week_number: number
+        }
+        Insert: {
+          core_lexicon?: string[] | null
+          created_at?: string | null
+          end_date: string
+          id?: string
+          pillar: string
+          start_date: string
+          visual_world: string
+          week_number: number
+        }
+        Update: {
+          core_lexicon?: string[] | null
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          pillar?: string
+          start_date?: string
+          visual_world?: string
+          week_number?: number
+        }
+        Relationships: []
+      }
+      google_calendar_sync: {
+        Row: {
+          access_token: string | null
+          calendar_id: string | null
+          created_at: string | null
+          id: string
+          last_sync_at: string | null
+          refresh_token: string | null
+          sync_enabled: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          calendar_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_sync_at?: string | null
+          refresh_token?: string | null
+          sync_enabled?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          calendar_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_sync_at?: string | null
+          refresh_token?: string | null
+          sync_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       master_content: {
         Row: {
@@ -310,6 +412,88 @@ export type Database = {
           transformation_prompt?: string
         }
         Relationships: []
+      }
+      scheduled_content: {
+        Row: {
+          content_id: string | null
+          content_type: string
+          created_at: string | null
+          derivative_id: string | null
+          dip_week: number | null
+          google_event_id: string | null
+          id: string
+          notes: string | null
+          pillar: string | null
+          platform: string | null
+          prompt_id: string | null
+          scheduled_date: string
+          scheduled_time: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content_id?: string | null
+          content_type: string
+          created_at?: string | null
+          derivative_id?: string | null
+          dip_week?: number | null
+          google_event_id?: string | null
+          id?: string
+          notes?: string | null
+          pillar?: string | null
+          platform?: string | null
+          prompt_id?: string | null
+          scheduled_date: string
+          scheduled_time?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content_id?: string | null
+          content_type?: string
+          created_at?: string | null
+          derivative_id?: string | null
+          dip_week?: number | null
+          google_event_id?: string | null
+          id?: string
+          notes?: string | null
+          pillar?: string | null
+          platform?: string | null
+          prompt_id?: string | null
+          scheduled_date?: string
+          scheduled_time?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_content_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "master_content"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_content_derivative_id_fkey"
+            columns: ["derivative_id"]
+            isOneToOne: false
+            referencedRelation: "derivative_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_content_prompt_id_fkey"
+            columns: ["prompt_id"]
+            isOneToOne: false
+            referencedRelation: "prompts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vocabulary_library: {
         Row: {
