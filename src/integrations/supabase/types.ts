@@ -206,6 +206,7 @@ export type Database = {
       }
       prompts: {
         Row: {
+          archived_at: string | null
           base_notes: string | null
           collection: Database["public"]["Enums"]["collection_type"]
           content_type: Database["public"]["Enums"]["content_type"]
@@ -213,6 +214,7 @@ export type Database = {
           created_by: string | null
           dip_week: number | null
           id: string
+          is_archived: boolean
           meta_instructions: Json | null
           middle_notes: string | null
           parent_prompt_id: string | null
@@ -226,6 +228,7 @@ export type Database = {
           version: number | null
         }
         Insert: {
+          archived_at?: string | null
           base_notes?: string | null
           collection: Database["public"]["Enums"]["collection_type"]
           content_type: Database["public"]["Enums"]["content_type"]
@@ -233,6 +236,7 @@ export type Database = {
           created_by?: string | null
           dip_week?: number | null
           id?: string
+          is_archived?: boolean
           meta_instructions?: Json | null
           middle_notes?: string | null
           parent_prompt_id?: string | null
@@ -246,6 +250,7 @@ export type Database = {
           version?: number | null
         }
         Update: {
+          archived_at?: string | null
           base_notes?: string | null
           collection?: Database["public"]["Enums"]["collection_type"]
           content_type?: Database["public"]["Enums"]["content_type"]
@@ -253,6 +258,7 @@ export type Database = {
           created_by?: string | null
           dip_week?: number | null
           id?: string
+          is_archived?: boolean
           meta_instructions?: Json | null
           middle_notes?: string | null
           parent_prompt_id?: string | null
