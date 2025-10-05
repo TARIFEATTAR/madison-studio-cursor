@@ -1,6 +1,13 @@
-import { Star, Calendar, BookOpen } from "lucide-react";
+import { Star, Calendar, BookOpen, MoreVertical, Archive, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface PromptCardProps {
   prompt: {
@@ -15,6 +22,9 @@ interface PromptCardProps {
     updated_at?: string;
     version?: number;
   };
+  onArchive?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onClick?: (id: string) => void;
 }
 
 const collectionColors: Record<string, string> = {
@@ -38,7 +48,7 @@ const dipWorlds: Record<number, string> = {
   4: "Royal Court",
 };
 
-const PromptCard = ({ prompt }: PromptCardProps) => {
+const PromptCard = ({ prompt, onArchive, onDelete, onClick }: PromptCardProps) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -56,8 +66,52 @@ const PromptCard = ({ prompt }: PromptCardProps) => {
   const preview = prompt.prompt_text?.substring(0, 200) || "";
 
   return (
-    <Card className="card-matte p-6 hover:shadow-elegant transition-all duration-300 cursor-pointer border border-border/40 group">
-      {/* Header Tags */}
+    <Card className="card-matte p-6 hover:shadow-elegant transition-all duration-300 border border-border/40 group relative">
+      {/* Actions Menu */}
+      <div className="absolute top-4 right-4 z-10">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            {onArchive && (
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onArchive(prompt.id);
+                }}
+                className="cursor-pointer"
+              >
+                <Archive className="mr-2 h-4 w-4" />
+                Archive
+              </DropdownMenuItem>
+            )}
+            {onDelete && (
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(prompt.id);
+                }}
+                className="cursor-pointer text-destructive focus:text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Permanently
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Card Content */}
+      <div onClick={() => onClick?.(prompt.id)} className={onClick ? "cursor-pointer" : ""}>
+        {/* Header Tags */}
       <div className="flex flex-wrap gap-2 mb-4">
         <Badge className={collectionColors[prompt.collection] || "bg-muted"}>
           {prompt.collection}
@@ -87,19 +141,20 @@ const PromptCard = ({ prompt }: PromptCardProps) => {
         {preview}
       </p>
 
-      {/* Footer Metadata */}
-      <div className="flex items-center justify-between text-sm text-muted-foreground border-t border-border/40 pt-4">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <Calendar className="w-4 h-4" />
-            <span>{formatDate(prompt.updated_at || prompt.created_at)}</span>
-          </div>
-          {prompt.version && (
+        {/* Footer Metadata */}
+        <div className="flex items-center justify-between text-sm text-muted-foreground border-t border-border/40 pt-4">
+          <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
-              <BookOpen className="w-4 h-4" />
-              <span>v{prompt.version}</span>
+              <Calendar className="w-4 h-4" />
+              <span>{formatDate(prompt.updated_at || prompt.created_at)}</span>
             </div>
-          )}
+            {prompt.version && (
+              <div className="flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4" />
+                <span>v{prompt.version}</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </Card>

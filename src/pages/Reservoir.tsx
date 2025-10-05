@@ -9,6 +9,16 @@ import PromptCard from "@/components/PromptCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Reservoir = () => {
   const { user } = useAuth();
@@ -23,6 +33,8 @@ const Reservoir = () => {
     dipWeek?: number;
     quickFilter?: string;
   }>({});
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [promptToDelete, setPromptToDelete] = useState<string | null>(null);
   
   // Calculate dynamic counts from actual prompts data
   const counts = useMemo(() => {
@@ -93,6 +105,7 @@ const Reservoir = () => {
         .from("prompts")
         .select("*")
         .eq("created_by", user.id)
+        .eq("is_archived", false)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -106,6 +119,66 @@ const Reservoir = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleArchivePrompt = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("prompts")
+        .update({ is_archived: true })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Prompt Archived",
+        description: "The prompt has been moved to The Archive.",
+      });
+
+      fetchPrompts();
+    } catch (error) {
+      console.error("Error archiving prompt:", error);
+      toast({
+        title: "Error",
+        description: "Failed to archive prompt. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeletePrompt = (id: string) => {
+    setPromptToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!promptToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from("prompts")
+        .delete()
+        .eq("id", promptToDelete);
+
+      if (error) throw error;
+
+      toast({
+        title: "Prompt Deleted",
+        description: "The prompt has been permanently deleted.",
+      });
+
+      fetchPrompts();
+    } catch (error) {
+      console.error("Error deleting prompt:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete prompt. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setPromptToDelete(null);
     }
   };
 
@@ -294,7 +367,12 @@ const Reservoir = () => {
               {!loading && filteredPrompts.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 fade-enter">
                   {filteredPrompts.map((prompt) => (
-                    <PromptCard key={prompt.id} prompt={prompt} />
+                    <PromptCard
+                      key={prompt.id}
+                      prompt={prompt}
+                      onArchive={handleArchivePrompt}
+                      onDelete={handleDeletePrompt}
+                    />
                   ))}
                 </div>
               )}
@@ -324,6 +402,28 @@ const Reservoir = () => {
           </main>
         </div>
       </SidebarProvider>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Prompt Permanently?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the prompt from your collection.
+              Consider archiving instead to preserve it for future reference.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Permanently
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
