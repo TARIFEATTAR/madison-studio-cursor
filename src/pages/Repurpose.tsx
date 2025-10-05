@@ -6,13 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Check, X, Edit, FileText, Mail, Instagram, Twitter, Package, MessageSquare, Copy, MoreVertical, Search } from "lucide-react";
+import { Loader2, Check, X, Edit, FileText, Mail, Instagram, Twitter, Package, MessageSquare, Copy, MoreVertical, Search, CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ScheduleModal } from "@/components/calendar/ScheduleModal";
+import { format } from "date-fns";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -76,6 +78,14 @@ const DERIVATIVE_LABELS = {
   sms: "SMS Message",
 };
 
+const PLATFORM_MAPPING: Record<string, string> = {
+  email: "Email",
+  instagram: "Instagram",
+  twitter: "Twitter",
+  product: "LinkedIn",
+  sms: "SMS"
+};
+
 const Repurpose = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -94,6 +104,9 @@ const Repurpose = () => {
   const [sortBy, setSortBy] = useState("newest");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ type: 'master' | 'derivative', id: string, title?: string } | null>(null);
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [derivativeToSchedule, setDerivativeToSchedule] = useState<DerivativeAsset | null>(null);
+  const [scheduledDerivatives, setScheduledDerivatives] = useState<Record<string, any>>({});
 
   useEffect(() => {
     fetchMasterContents();
@@ -132,12 +145,39 @@ const Repurpose = () => {
 
       if (error) throw error;
       setDerivatives(data || []);
+      
+      // Fetch scheduling status for derivatives
+      if (data && data.length > 0) {
+        fetchScheduledStatus(data.map(d => d.id));
+      }
     } catch (error: any) {
       toast({
         title: "Error loading derivatives",
         description: error.message,
         variant: "destructive",
       });
+    }
+  };
+
+  const fetchScheduledStatus = async (derivativeIds: string[]) => {
+    try {
+      const { data, error } = await supabase
+        .from('scheduled_content')
+        .select('derivative_id, scheduled_date, scheduled_time, platform, id')
+        .in('derivative_id', derivativeIds)
+        .neq('status', 'cancelled');
+
+      if (error) throw error;
+
+      const statusMap: Record<string, any> = {};
+      data?.forEach(item => {
+        if (item.derivative_id) {
+          statusMap[item.derivative_id] = item;
+        }
+      });
+      setScheduledDerivatives(statusMap);
+    } catch (error: any) {
+      console.error("Error fetching scheduled status:", error);
     }
   };
 
@@ -191,6 +231,30 @@ const Repurpose = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleScheduleDerivative = (derivative: DerivativeAsset) => {
+    setDerivativeToSchedule(derivative);
+    setScheduleModalOpen(true);
+  };
+
+  const handleApproveAndSchedule = async (derivative: DerivativeAsset) => {
+    await handleApprove(derivative.id);
+    handleScheduleDerivative(derivative);
+  };
+
+  const handleScheduleSuccess = () => {
+    if (selectedMaster) {
+      fetchDerivatives(selectedMaster.id);
+    }
+    toast({
+      title: "Success",
+      description: "Derivative scheduled successfully",
+    });
+  };
+
+  const handleViewOnCalendar = (scheduleDate: string) => {
+    navigate(`/calendar?date=${scheduleDate}`);
   };
 
   const handleReject = async (derivativeId: string) => {
@@ -705,7 +769,29 @@ const Repurpose = () => {
                               </p>
                             </div>
 
-                            <div className="flex gap-2 items-center">
+                            {/* Scheduling Status Badge */}
+                            {scheduledDerivatives[derivative.id] && (
+                              <div className="bg-primary/10 border border-primary/30 rounded-md p-3 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <CalendarIcon className="h-4 w-4 text-primary" />
+                                  <span className="text-sm font-medium">
+                                    Scheduled for {format(new Date(scheduledDerivatives[derivative.id].scheduled_date), "MMM d, yyyy")}
+                                    {scheduledDerivatives[derivative.id].scheduled_time && 
+                                      ` at ${scheduledDerivatives[derivative.id].scheduled_time}`
+                                    }
+                                  </span>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleViewOnCalendar(scheduledDerivatives[derivative.id].scheduled_date)}
+                                >
+                                  View on Calendar
+                                </Button>
+                              </div>
+                            )}
+
+                            <div className="flex gap-2 items-center flex-wrap">
                               <Button
                                 size="sm"
                                 variant="default"
@@ -719,10 +805,18 @@ const Repurpose = () => {
                                 <>
                                   <Button
                                     size="sm"
-                                    onClick={() => handleApprove(derivative.id)}
+                                    variant="outline"
+                                    onClick={() => handleScheduleDerivative(derivative)}
+                                  >
+                                    <CalendarIcon className="h-4 w-4 mr-1" />
+                                    Schedule
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleApproveAndSchedule(derivative)}
                                   >
                                     <Check className="h-4 w-4 mr-1" />
-                                    Approve
+                                    Approve & Schedule
                                   </Button>
                                   <Button
                                     size="sm"
@@ -733,6 +827,17 @@ const Repurpose = () => {
                                     Reject
                                   </Button>
                                 </>
+                              )}
+
+                              {derivative.approval_status === 'approved' && !scheduledDerivatives[derivative.id] && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleScheduleDerivative(derivative)}
+                                >
+                                  <CalendarIcon className="h-4 w-4 mr-1" />
+                                  Schedule
+                                </Button>
                               )}
 
                               <DropdownMenu>
@@ -749,6 +854,12 @@ const Repurpose = () => {
                                     <Edit className="h-4 w-4 mr-2" />
                                     Edit
                                   </DropdownMenuItem>
+                                  {!scheduledDerivatives[derivative.id] && (
+                                    <DropdownMenuItem onClick={() => handleScheduleDerivative(derivative)}>
+                                      <CalendarIcon className="h-4 w-4 mr-2" />
+                                      Schedule
+                                    </DropdownMenuItem>
+                                  )}
                                   {derivative.approval_status === 'approved' && (
                                     <DropdownMenuItem onClick={() => handleReject(derivative.id)}>
                                       <X className="h-4 w-4 mr-2" />
@@ -850,6 +961,15 @@ const Repurpose = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Schedule Modal */}
+      <ScheduleModal
+        open={scheduleModalOpen}
+        onOpenChange={setScheduleModalOpen}
+        derivativeAsset={derivativeToSchedule}
+        masterContent={selectedMaster}
+        onSuccess={handleScheduleSuccess}
+      />
       </div>
     </div>
   );

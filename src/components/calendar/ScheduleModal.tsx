@@ -13,15 +13,55 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
+interface DerivativeAsset {
+  id: string;
+  master_content_id: string;
+  asset_type: string;
+  generated_content: string;
+  platform_specs: any;
+}
+
+interface MasterContent {
+  id: string;
+  title: string;
+  content_type: string;
+}
+
 interface ScheduleModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedDate?: Date;
   itemToEdit?: any;
   onSuccess: () => void;
+  derivativeAsset?: DerivativeAsset;
+  masterContent?: MasterContent;
 }
 
-export const ScheduleModal = ({ open, onOpenChange, selectedDate, itemToEdit, onSuccess }: ScheduleModalProps) => {
+const PLATFORM_MAPPING: Record<string, string> = {
+  email: "Email",
+  instagram: "Instagram",
+  twitter: "Twitter",
+  product: "LinkedIn",
+  sms: "SMS"
+};
+
+const DERIVATIVE_LABELS: Record<string, string> = {
+  email: "Email Newsletter",
+  instagram: "Instagram Carousel",
+  twitter: "Twitter Thread",
+  product: "Product Description",
+  sms: "SMS Message",
+};
+
+export const ScheduleModal = ({ 
+  open, 
+  onOpenChange, 
+  selectedDate, 
+  itemToEdit, 
+  onSuccess,
+  derivativeAsset,
+  masterContent 
+}: ScheduleModalProps) => {
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Date | undefined>(selectedDate || new Date());
   const [time, setTime] = useState("");
@@ -37,6 +77,13 @@ export const ScheduleModal = ({ open, onOpenChange, selectedDate, itemToEdit, on
       setTitle(itemToEdit.title);
       setPlatform(itemToEdit.platform || "");
       setNotes(itemToEdit.notes || "");
+    } else if (derivativeAsset && masterContent) {
+      // Pre-fill from derivative asset
+      setDate(selectedDate || new Date());
+      setTime("");
+      setTitle(`${DERIVATIVE_LABELS[derivativeAsset.asset_type] || derivativeAsset.asset_type} - ${masterContent.title}`);
+      setPlatform(PLATFORM_MAPPING[derivativeAsset.asset_type] || "");
+      setNotes(`Generated from master content: ${masterContent.title}\nAsset ID: ${derivativeAsset.id}`);
     } else {
       setDate(selectedDate || new Date());
       setTime("");
@@ -44,7 +91,7 @@ export const ScheduleModal = ({ open, onOpenChange, selectedDate, itemToEdit, on
       setPlatform("");
       setNotes("");
     }
-  }, [itemToEdit, selectedDate, open]);
+  }, [itemToEdit, selectedDate, open, derivativeAsset, masterContent]);
 
   useEffect(() => {
     if (date && time) {
@@ -95,6 +142,8 @@ export const ScheduleModal = ({ open, onOpenChange, selectedDate, itemToEdit, on
         scheduled_time: time || null,
         notes,
         status: "scheduled",
+        derivative_id: derivativeAsset?.id || null,
+        content_id: derivativeAsset?.master_content_id || masterContent?.id || null,
       };
 
       let error;
@@ -135,7 +184,14 @@ export const ScheduleModal = ({ open, onOpenChange, selectedDate, itemToEdit, on
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{itemToEdit ? "Edit Schedule" : "Schedule Content"}</DialogTitle>
+          <DialogTitle>
+            {itemToEdit 
+              ? "Edit Schedule" 
+              : derivativeAsset 
+                ? `Schedule ${DERIVATIVE_LABELS[derivativeAsset.asset_type] || "Content"}` 
+                : "Schedule Content"
+            }
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 py-6">
