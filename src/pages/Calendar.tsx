@@ -164,14 +164,14 @@ const Calendar = () => {
           onToday={handleToday}
         />
 
-        <div className="mt-6 fade-enter space-y-6">
-          <GoogleCalendarConnect />
-          
-          <Button onClick={handleNewSchedule} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Schedule Content
-          </Button>
-        </div>
+          <div className="mt-6 space-y-6">
+            <GoogleCalendarConnect />
+            
+            <Button onClick={handleNewSchedule} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Schedule Content
+            </Button>
+          </div>
 
         <DragDropContext 
           onDragStart={() => setIsDragging(true)}
@@ -185,7 +185,7 @@ const Calendar = () => {
                   <div className="text-muted-foreground">Loading calendar...</div>
                 </div>
               ) : (
-                <div className="fade-enter">
+                <div>
                   {viewMode === "month" ? (
                     <MonthView
                       currentDate={currentDate}
