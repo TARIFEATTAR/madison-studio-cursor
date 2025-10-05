@@ -147,6 +147,30 @@ AVOID:
 ✗ "Limited time offer!" (creates panic)
 
 Generate 3 SMS options, each under 160 chars.`,
+
+  linkedin: `Adapt this content for LinkedIn with a more professional tone while maintaining core philosophy.
+
+TRANSFORMATION REQUIREMENTS:
+- Condense to 40% of original length (target: 400-600 words)
+- Opening: Professional insight or industry observation
+- Body: 2-3 paragraphs with core argument
+- Tone: Slightly more professional, less allegorical than blog
+- Closing: Professional takeaway + link
+
+STRUCTURE:
+1. First line: Provocative hook (professional context)
+2. 2-3 paragraphs: Core argument from master content
+3. Closing: Professional insight
+4. Link: "Read more: [URL]"
+
+CONSTRAINTS:
+- Maintain brand philosophy
+- Avoid corporate jargon
+- Keep Confident Whisper essence but professional wrapper
+- No hashtags (diminishes sophistication)
+- Word count: 400-600 words
+
+Generate LinkedIn post now.`,
 };
 
 serve(async (req) => {

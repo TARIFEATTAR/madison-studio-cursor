@@ -16,6 +16,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronsUpDown } from "lucide-react";
 import { IMAGE_PROMPT_TEMPLATES, type ImagePromptType } from "@/config/imagePromptGuidelines";
+import { BLOG_POST_TYPES, BLOG_REPURPOSE_TARGETS, generateBlogPrompt, validateBlogVoice, type BlogPostType } from "@/config/blogPostGuidelines";
 
 // Product catalogue with collection and scent family mappings
 const PRODUCTS = [
@@ -281,6 +282,15 @@ const Forge = () => {
   const [selectedDerivatives, setSelectedDerivatives] = useState<string[]>([]);
   const [repurposing, setRepurposing] = useState(false);
   
+  // Blog Post state
+  const [blogPostType, setBlogPostType] = useState<BlogPostType>("philosophy");
+  const [blogSubject, setBlogSubject] = useState("");
+  const [blogThemes, setBlogThemes] = useState<string[]>(["", "", ""]);
+  const [blogTakeaway, setBlogTakeaway] = useState("");
+  const [blogProductConnection, setBlogProductConnection] = useState("");
+  const [blogWordCount, setBlogWordCount] = useState(1200);
+  const [voiceValidation, setVoiceValidation] = useState<ReturnType<typeof validateBlogVoice> | null>(null);
+  
   const [formData, setFormData] = useState({
     title: "",
     contentType: "",
@@ -305,6 +315,20 @@ const Forge = () => {
 
   const generatePrompt = () => {
     const parts = [];
+    
+    // For blog posts, use specialized blog prompt generator
+    if (formData.contentType === 'blog') {
+      return generateBlogPrompt({
+        postType: blogPostType,
+        pillar: formData.pillar || 'Identity',
+        wordCount: blogWordCount,
+        dipWeek: formData.dipWeek ? parseInt(formData.dipWeek) : undefined,
+        subject: blogSubject,
+        themes: blogThemes.filter(t => t.trim().length > 0),
+        takeaway: blogTakeaway,
+        productConnection: blogProductConnection || undefined,
+      });
+    }
     
     // For visual assets, use standardized image prompt templates
     if (formData.contentType === 'visual') {
@@ -353,6 +377,7 @@ const Forge = () => {
         email: "Email Campaign",
         social: "Social Media",
         visual: "Visual Asset",
+        blog: "Blog Post",
       };
       parts.push(`Content Type: ${contentTypes[formData.contentType] || formData.contentType}`);
     }
@@ -426,6 +451,22 @@ const Forge = () => {
       if (data?.generatedContent) {
         const cleanContent = stripMarkdown(data.generatedContent);
         setGeneratedOutput(cleanContent);
+        
+        // If this is a blog post, validate voice
+        if (formData.contentType === 'blog') {
+          const validation = validateBlogVoice(cleanContent);
+          setVoiceValidation(validation);
+          
+          // Show warnings if needed
+          if (validation.forbiddenWords.length > 0) {
+            toast({
+              title: "Voice validation warning",
+              description: `Found ${validation.forbiddenWords.length} forbidden words. Review output for brand voice compliance.`,
+              variant: "destructive",
+            });
+          }
+        }
+        
         toast({
           title: "Content crafted",
           description: "Claude has generated your content successfully.",
@@ -810,6 +851,7 @@ const Forge = () => {
                       <SelectItem value="email">Email Campaign</SelectItem>
                       <SelectItem value="social">Social Media</SelectItem>
                       <SelectItem value="visual">Visual Asset</SelectItem>
+                      <SelectItem value="blog">Blog Post</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -842,6 +884,93 @@ const Forge = () => {
                     <p className="text-xs text-muted-foreground">
                       {IMAGE_PROMPT_TEMPLATES[formData.imageTemplate].useCase}
                     </p>
+                  </div>
+                )}
+
+                {formData.contentType === 'blog' && (
+                  <div className="space-y-6 border-t border-border/40 pt-6 mt-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="blogType">Blog Post Type</Label>
+                      <Select
+                        value={blogPostType}
+                        onValueChange={(value: BlogPostType) => setBlogPostType(value)}
+                      >
+                        <SelectTrigger id="blogType" className="bg-background/50">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(BLOG_POST_TYPES).map(([key, type]) => (
+                            <SelectItem key={key} value={key}>
+                              {type.label} - {type.description}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="blogWordCount">Target Word Count</Label>
+                      <Input
+                        id="blogWordCount"
+                        type="number"
+                        value={blogWordCount}
+                        onChange={(e) => setBlogWordCount(parseInt(e.target.value))}
+                        className="bg-background/50"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Recommended: {BLOG_POST_TYPES[blogPostType].wordCountRange[0]}-{BLOG_POST_TYPES[blogPostType].wordCountRange[1]} words
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="blogSubject">Subject/Topic *</Label>
+                      <Textarea
+                        id="blogSubject"
+                        value={blogSubject}
+                        onChange={(e) => setBlogSubject(e.target.value)}
+                        placeholder="Describe what the post is about in 2-3 sentences..."
+                        className="bg-background/50 min-h-[100px]"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Key Themes (3 themes)</Label>
+                      {blogThemes.map((theme, idx) => (
+                        <Input
+                          key={idx}
+                          value={theme}
+                          onChange={(e) => {
+                            const newThemes = [...blogThemes];
+                            newThemes[idx] = e.target.value;
+                            setBlogThemes(newThemes);
+                          }}
+                          placeholder={`Theme ${idx + 1}...`}
+                          className="bg-background/50"
+                        />
+                      ))}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="blogTakeaway">Desired Takeaway *</Label>
+                      <Textarea
+                        id="blogTakeaway"
+                        value={blogTakeaway}
+                        onChange={(e) => setBlogTakeaway(e.target.value)}
+                        placeholder="What should reader understand/feel after reading?"
+                        className="bg-background/50 min-h-[80px]"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="blogProduct">Product Connection (Optional)</Label>
+                      <Input
+                        id="blogProduct"
+                        value={blogProductConnection}
+                        onChange={(e) => setBlogProductConnection(e.target.value)}
+                        placeholder="Which collection or product relates to this topic?"
+                        className="bg-background/50"
+                      />
+                    </div>
                   </div>
                 )}
 
@@ -1027,6 +1156,28 @@ const Forge = () => {
                   <div className="bg-background/50 rounded-md p-6 min-h-[200px] leading-relaxed border border-border/30">
                     <p className="text-foreground whitespace-pre-wrap">{generatedOutput}</p>
                   </div>
+                  
+                  {formData.contentType === 'blog' && voiceValidation && (
+                    <div className="p-4 bg-background/30 rounded-md border border-border/40">
+                      <h4 className="text-sm font-medium mb-2">Voice Validation</h4>
+                      <div className="space-y-2 text-sm">
+                        {voiceValidation.forbiddenWords.length > 0 && (
+                          <div className="text-destructive">
+                            ❌ Forbidden words found: {voiceValidation.forbiddenWords.join(', ')}
+                          </div>
+                        )}
+                        <div className="text-muted-foreground">
+                          ✅ Approved vocabulary: {voiceValidation.approvedCount} instances
+                        </div>
+                        <div className="text-muted-foreground">
+                          {voiceValidation.hasEmoji ? '❌ Contains emojis' : '✅ No emojis'}
+                        </div>
+                        <div className="text-muted-foreground">
+                          Sentence variety score: {voiceValidation.sentenceVariety}%
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   <div className="pt-4 border-t border-border/40">
                     <QualityRating rating={qualityRating} onRatingChange={setQualityRating} />
@@ -1216,13 +1367,13 @@ const Forge = () => {
                   <div className="space-y-3">
                     <Label>Target Derivative Assets *</Label>
                     <div className="space-y-2">
-                      {[
-                        { value: 'email', label: 'Email Newsletter Version' },
-                        { value: 'instagram', label: 'Instagram Carousel (5 slides)' },
-                        { value: 'twitter', label: 'Twitter/X Thread (8-12 tweets)' },
-                        { value: 'product', label: 'Product Description' },
-                        { value: 'sms', label: 'SMS/Short Message (160 chars)' },
-                      ].map((derivative) => (
+                      {(masterContentType === 'blog_post' ? BLOG_REPURPOSE_TARGETS : [
+                        { value: 'email', label: 'Email Newsletter Version', description: 'Condensed email format' },
+                        { value: 'instagram', label: 'Instagram Carousel (5 slides)', description: 'Visual slides + caption' },
+                        { value: 'twitter', label: 'Twitter/X Thread (8-12 tweets)', description: 'Progressive thread' },
+                        { value: 'product', label: 'Product Description', description: 'Product copy' },
+                        { value: 'sms', label: 'SMS/Short Message (160 chars)', description: 'Short message' },
+                      ]).map((derivative) => (
                         <div key={derivative.value} className="flex items-center space-x-2">
                           <Checkbox
                             id={`derivative-${derivative.value}`}
@@ -1235,9 +1386,14 @@ const Forge = () => {
                               }
                             }}
                           />
-                          <Label htmlFor={`derivative-${derivative.value}`} className="cursor-pointer font-normal">
-                            {derivative.label}
-                          </Label>
+                          <div className="flex-1">
+                            <Label htmlFor={`derivative-${derivative.value}`} className="cursor-pointer font-normal">
+                              {derivative.label}
+                            </Label>
+                            {derivative.description && (
+                              <p className="text-xs text-muted-foreground mt-0.5">{derivative.description}</p>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1288,6 +1444,7 @@ const Forge = () => {
                             {type === 'twitter' && 'Twitter'}
                             {type === 'product' && 'Product'}
                             {type === 'sms' && 'SMS'}
+                            {type === 'linkedin' && 'LinkedIn'}
                           </Badge>
                         ))}
                       </div>
