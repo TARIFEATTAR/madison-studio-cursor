@@ -296,21 +296,19 @@ const Repurpose = () => {
     }
   });
 
-  // Group sorted content by week
+  // Group sorted content by content type
   const groupedContent = sortedContent.reduce((groups, master) => {
-    const key = master.dip_week ? `Week ${master.dip_week}` : "No Week Assigned";
+    const key = master.content_type || "Other";
     if (!groups[key]) groups[key] = [];
     groups[key].push(master);
     return groups;
   }, {} as Record<string, MasterContent[]>);
 
-  // Get group keys in proper order
+  // Get group keys in alphabetical order
   const groupKeys = Object.keys(groupedContent).sort((a, b) => {
-    if (a === "No Week Assigned") return 1;
-    if (b === "No Week Assigned") return -1;
-    const weekA = parseInt(a.replace("Week ", ""));
-    const weekB = parseInt(b.replace("Week ", ""));
-    return sortBy === "oldest" ? weekA - weekB : weekB - weekA;
+    if (a === "Other") return 1;
+    if (b === "Other") return -1;
+    return a.localeCompare(b);
   });
 
   if (loading) {
