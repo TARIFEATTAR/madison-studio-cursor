@@ -177,34 +177,28 @@ export type Database = {
       }
       google_calendar_sync: {
         Row: {
-          access_token: string | null
           calendar_id: string | null
           created_at: string | null
           id: string
           last_sync_at: string | null
-          refresh_token: string | null
           sync_enabled: boolean | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
-          access_token?: string | null
           calendar_id?: string | null
           created_at?: string | null
           id?: string
           last_sync_at?: string | null
-          refresh_token?: string | null
           sync_enabled?: boolean | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
-          access_token?: string | null
           calendar_id?: string | null
           created_at?: string | null
           id?: string
           last_sync_at?: string | null
-          refresh_token?: string | null
           sync_enabled?: boolean | null
           updated_at?: string | null
           user_id?: string
