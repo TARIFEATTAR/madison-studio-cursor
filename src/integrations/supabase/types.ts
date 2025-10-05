@@ -551,30 +551,7 @@ export type Database = {
       }
     }
     Views: {
-      google_calendar_tokens_metadata: {
-        Row: {
-          created_at: string | null
-          id: string | null
-          token_expiry: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string | null
-          token_expiry?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string | null
-          token_expiry?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       [_ in never]: never
