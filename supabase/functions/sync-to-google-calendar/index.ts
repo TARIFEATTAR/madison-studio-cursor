@@ -88,7 +88,7 @@ serve(async (req) => {
         .eq('user_id', user.id);
     }
 
-    // Get calendar ID from sync settings
+    // Get calendar ID and timezone from settings
     const { data: syncSettings } = await supabaseClient
       .from('google_calendar_sync')
       .select('calendar_id, sync_enabled')
@@ -99,7 +99,14 @@ serve(async (req) => {
       throw new Error('Google Calendar sync is disabled');
     }
 
+    const { data: calendarSettings } = await supabaseClient
+      .from('calendar_settings')
+      .select('timezone')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
     const calendarId = syncSettings.calendar_id || 'primary';
+    const timezone = calendarSettings?.timezone || 'America/Los_Angeles';
 
     let result: any = {};
 
@@ -118,11 +125,11 @@ serve(async (req) => {
         description: `${eventData.notes || ''}\n\nPlatform: ${eventData.platform || 'N/A'}`,
         start: {
           dateTime: startDateTime,
-          timeZone: 'UTC',
+          timeZone: timezone,
         },
         end: {
           dateTime: endDateTime,
-          timeZone: 'UTC',
+          timeZone: timezone,
         },
       };
 
@@ -170,11 +177,11 @@ serve(async (req) => {
         description: `${eventData.notes || ''}\n\nPlatform: ${eventData.platform || 'N/A'}`,
         start: {
           dateTime: startDateTime,
-          timeZone: 'UTC',
+          timeZone: timezone,
         },
         end: {
           dateTime: endDateTime,
-          timeZone: 'UTC',
+          timeZone: timezone,
         },
       };
 
