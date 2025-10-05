@@ -3,6 +3,7 @@ import { Droppable, Draggable } from "react-beautiful-dnd";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { GripVertical } from "lucide-react";
+import { useMemo } from "react";
 
 interface ScheduledItem {
   id: string;
@@ -32,13 +33,21 @@ export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick
 
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
-  const getItemsForDay = (date: Date) => {
-    return scheduledItems.filter(item => {
-      // Parse date string as local date to avoid timezone shifts
-      const [year, month, day] = item.scheduled_date.split('-').map(Number);
-      const itemDate = new Date(year, month - 1, day);
-      return isSameDay(itemDate, date);
+  // Memoize items by day to avoid recalculating on every render
+  const itemsByDay = useMemo(() => {
+    const map = new Map<string, ScheduledItem[]>();
+    scheduledItems.forEach(item => {
+      const dayId = item.scheduled_date;
+      if (!map.has(dayId)) {
+        map.set(dayId, []);
+      }
+      map.get(dayId)!.push(item);
     });
+    return map;
+  }, [scheduledItems]);
+
+  const getItemsForDay = (dayId: string) => {
+    return itemsByDay.get(dayId) || [];
   };
 
   return (
@@ -55,10 +64,10 @@ export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick
       {/* Calendar grid */}
       <div className="grid grid-cols-7 [&>*]:min-h-[160px]">
         {days.map((day, idx) => {
-          const dayItems = getItemsForDay(day);
+          const dayId = format(day, "yyyy-MM-dd");
+          const dayItems = getItemsForDay(dayId);
           const isCurrentMonth = isSameMonth(day, currentDate);
           const isDayToday = isToday(day);
-          const dayId = format(day, "yyyy-MM-dd");
 
           return (
             <Droppable key={dayId} droppableId={dayId}>

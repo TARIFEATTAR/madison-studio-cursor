@@ -3,6 +3,7 @@ import { Droppable, Draggable } from "react-beautiful-dnd";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { GripVertical } from "lucide-react";
+import { useMemo } from "react";
 
 interface ScheduledItem {
   id: string;
@@ -34,19 +35,29 @@ export const WeekView = ({ currentDate, scheduledItems, dipWeekInfo, onItemClick
   const weekEnd = endOfWeek(currentDate);
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
-  const getItemsForDay = (date: Date) => {
-    return scheduledItems
-      .filter(item => {
-        // Parse date string as local date to avoid timezone shifts
-        const [year, month, day] = item.scheduled_date.split('-').map(Number);
-        const itemDate = new Date(year, month - 1, day);
-        return isSameDay(itemDate, date);
-      })
-      .sort((a, b) => {
+  // Memoize items by day to avoid recalculating on every render
+  const itemsByDay = useMemo(() => {
+    const map = new Map<string, ScheduledItem[]>();
+    scheduledItems.forEach(item => {
+      const dayId = item.scheduled_date;
+      if (!map.has(dayId)) {
+        map.set(dayId, []);
+      }
+      map.get(dayId)!.push(item);
+    });
+    // Sort items by time for each day
+    map.forEach((items) => {
+      items.sort((a, b) => {
         if (!a.scheduled_time) return 1;
         if (!b.scheduled_time) return -1;
         return a.scheduled_time.localeCompare(b.scheduled_time);
       });
+    });
+    return map;
+  }, [scheduledItems]);
+
+  const getItemsForDay = (dayId: string) => {
+    return itemsByDay.get(dayId) || [];
   };
 
   return (
@@ -78,9 +89,9 @@ export const WeekView = ({ currentDate, scheduledItems, dipWeekInfo, onItemClick
       {/* Week Grid */}
       <div className="grid grid-cols-7 gap-4">
         {days.map((day, idx) => {
-          const dayItems = getItemsForDay(day);
-          const isDayToday = isToday(day);
           const dayId = format(day, "yyyy-MM-dd");
+          const dayItems = getItemsForDay(dayId);
+          const isDayToday = isToday(day);
 
           return (
             <Droppable key={dayId} droppableId={dayId}>

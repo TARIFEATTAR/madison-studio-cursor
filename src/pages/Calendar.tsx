@@ -87,18 +87,19 @@ const Calendar = () => {
     if (!destination) return;
 
     const itemId = draggableId;
-    // Use the droppableId directly as it's already in yyyy-MM-dd format (local date string)
     const newDateStr = destination.droppableId;
 
+    // Find the item being moved
+    const item = scheduledItems.find(i => i.id === itemId);
+    if (!item) return;
+
+    // Optimistic update - update UI immediately
+    setScheduledItems(prev => 
+      prev.map(i => i.id === itemId ? { ...i, scheduled_date: newDateStr } : i)
+    );
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Find the item being moved
-      const item = scheduledItems.find(i => i.id === itemId);
-      if (!item) return;
-
-      // Update the database with the local date string directly
+      // Update database in background
       const { error } = await supabase
         .from("scheduled_content")
         .update({ scheduled_date: newDateStr })
@@ -106,16 +107,19 @@ const Calendar = () => {
 
       if (error) throw error;
 
-      // Check if Google Calendar sync is enabled
-      const { data: syncSettings } = await supabase
-        .from('google_calendar_sync')
-        .select('sync_enabled')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      // Get user and sync settings in parallel
+      const [{ data: { user } }, { data: syncSettings }] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase
+          .from('google_calendar_sync')
+          .select('sync_enabled')
+          .eq('user_id', (await supabase.auth.getUser()).data.user?.id || '')
+          .maybeSingle()
+      ]);
 
-      // Sync to Google Calendar if enabled
-      if (syncSettings?.sync_enabled && item.google_event_id) {
-        await supabase.functions.invoke('sync-to-google-calendar', {
+      // Sync to Google Calendar if enabled (fire and forget)
+      if (syncSettings?.sync_enabled && item.google_event_id && user) {
+        supabase.functions.invoke('sync-to-google-calendar', {
           body: {
             operation: 'update',
             scheduledContentId: itemId,
@@ -128,22 +132,19 @@ const Calendar = () => {
             },
             googleEventId: item.google_event_id,
           },
-        });
-
-        toast({
-          title: "Moved",
-          description: "Event moved and synced to Google Calendar",
-        });
-      } else {
-        toast({
-          title: "Moved",
-          description: "Event moved successfully",
-        });
+        }).catch(err => console.error('Google sync failed:', err));
       }
 
-      // Refresh the calendar
-      fetchScheduledContent();
+      toast({
+        title: "Moved",
+        description: syncSettings?.sync_enabled ? "Event moved and syncing to Google Calendar" : "Event moved successfully",
+      });
     } catch (error: any) {
+      // Revert optimistic update on error
+      setScheduledItems(prev => 
+        prev.map(i => i.id === itemId ? { ...i, scheduled_date: item.scheduled_date } : i)
+      );
+      
       toast({
         title: "Error",
         description: error.message,
