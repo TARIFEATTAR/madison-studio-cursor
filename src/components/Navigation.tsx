@@ -9,7 +9,7 @@ const Navigation = () => {
   const { user, signOut } = useAuth();
 
   const navItems = [
-    { path: "/", label: "Library", icon: BookOpen },
+    { path: "/library", label: "Library", icon: BookOpen },
     { path: "/forge", label: "Composer", icon: Sparkles },
     { path: "/repurpose", label: "Amplify", icon: Repeat },
     { path: "/archive", label: "Portfolio", icon: Archive },

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import Navigation from "./components/Navigation";
 import Index from "./pages/Index";
+import Reservoir from "./pages/Reservoir";
 import Forge from "./pages/Forge";
 import Repurpose from "./pages/Repurpose";
 import Archive from "./pages/Archive";
@@ -42,11 +43,12 @@ const App = () => (
         <Navigation />
         <Routes>
           <Route path="/auth" element={<Auth />} />
+          <Route path="/" element={<Index />} />
           <Route
-            path="/"
+            path="/library"
             element={
               <ProtectedRoute>
-                <Index />
+                <Reservoir />
               </ProtectedRoute>
             }
           />
