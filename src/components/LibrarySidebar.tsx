@@ -111,7 +111,7 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
   return (
     <Sidebar
       className={cn(
-        "border-r border-border/40 bg-soft-ivory transition-all duration-200",
+        "border-r border-border/40 bg-soft-ivory transition-all duration-200 top-20 h-[calc(100vh-5rem)]",
         collapsed ? "w-14" : "w-60"
       )}
       collapsible="icon"
