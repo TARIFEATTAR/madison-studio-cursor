@@ -25,7 +25,11 @@ const Navigation = () => {
             <img 
               src="/logo.png" 
               alt="Scriptorium - Brand Intelligence" 
-              className="h-14 w-auto transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 group-hover:drop-shadow-lg"
+              className="h-16 w-auto transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 group-hover:drop-shadow-lg"
+              onError={(e) => {
+                console.error('Logo failed to load');
+                e.currentTarget.style.display = 'none';
+              }}
             />
           </Link>
 
