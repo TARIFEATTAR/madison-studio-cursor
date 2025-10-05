@@ -6,8 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Check, X, Edit, FileText, Mail, Instagram, Twitter, Package, MessageSquare, Copy } from "lucide-react";
+import { Loader2, Check, X, Edit, FileText, Mail, Instagram, Twitter, Package, MessageSquare, Copy, MoreVertical } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -67,6 +75,7 @@ const Repurpose = () => {
   const [previewContent, setPreviewContent] = useState<DerivativeAsset | null>(null);
   const [editingDerivative, setEditingDerivative] = useState<string | null>(null);
   const [editedContent, setEditedContent] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
     fetchMasterContents();
@@ -237,6 +246,20 @@ const Repurpose = () => {
   };
 
   const approvedCount = derivatives.filter(d => d.approval_status === 'approved').length;
+  const pendingCount = derivatives.filter(d => d.approval_status === 'pending').length;
+  const rejectedCount = derivatives.filter(d => d.approval_status === 'rejected').length;
+  
+  const filteredDerivatives = derivatives.filter(d => {
+    if (statusFilter === "all") return true;
+    return d.approval_status === statusFilter;
+  });
+
+  const getStatusBorderColor = (status: string) => {
+    if (status === 'approved') return 'border-l-4 border-l-green-500 bg-green-500/5';
+    if (status === 'pending') return 'border-l-4 border-l-orange-500 bg-orange-500/5';
+    if (status === 'rejected') return 'border-l-4 border-l-muted bg-muted/20 opacity-60';
+    return '';
+  };
 
   if (loading) {
     return (
@@ -306,15 +329,10 @@ const Repurpose = () => {
             <>
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-serif text-foreground">Derivative Assets</h2>
-                {derivatives.length > 0 && (
-                  <Badge variant="secondary">
-                    {approvedCount}/{derivatives.length} approved
-                  </Badge>
-                )}
               </div>
 
-              <Card className="p-6 bg-muted/20">
-                <div className="space-y-2">
+              <Card className="p-6 bg-muted/20 sticky top-24 z-10">
+                <div className="space-y-3">
                   <h3 className="font-serif text-lg text-foreground">{selectedMaster.title}</h3>
                   <p className="text-sm text-muted-foreground line-clamp-3">
                     {selectedMaster.full_content}
@@ -327,6 +345,20 @@ const Repurpose = () => {
                       <Badge variant="outline">{selectedMaster.pillar_focus}</Badge>
                     )}
                   </div>
+                  {derivatives.length > 0 && (
+                    <div className="pt-3 space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Approval Progress</span>
+                        <span className="font-medium">{approvedCount}/{derivatives.length}</span>
+                      </div>
+                      <Progress value={(approvedCount / derivatives.length) * 100} />
+                      <div className="flex gap-4 text-xs pt-2">
+                        <span className="text-green-600">✓ {approvedCount} Approved</span>
+                        <span className="text-orange-600">◷ {pendingCount} Pending</span>
+                        <span className="text-muted-foreground">✕ {rejectedCount} Rejected</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Card>
 
@@ -340,37 +372,50 @@ const Repurpose = () => {
                   </p>
                 </Card>
               ) : (
-                <div className="space-y-4">
-                  {derivatives.map((derivative) => {
+                <Tabs value={statusFilter} onValueChange={setStatusFilter} className="space-y-4">
+                  <TabsList className="bg-muted">
+                    <TabsTrigger value="all">All ({derivatives.length})</TabsTrigger>
+                    <TabsTrigger value="pending">Pending ({pendingCount})</TabsTrigger>
+                    <TabsTrigger value="approved">Approved ({approvedCount})</TabsTrigger>
+                    <TabsTrigger value="rejected">Rejected ({rejectedCount})</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value={statusFilter} className="space-y-4">
+                    {filteredDerivatives.length === 0 ? (
+                      <Card className="p-8 text-center">
+                        <p className="text-muted-foreground">No {statusFilter} derivatives</p>
+                      </Card>
+                    ) : (
+                      filteredDerivatives.map((derivative) => {
                     const Icon = DERIVATIVE_ICONS[derivative.asset_type as keyof typeof DERIVATIVE_ICONS] || FileText;
                     const isEditing = editingDerivative === derivative.id;
 
-                    return (
-                      <Card key={derivative.id} className="p-6 space-y-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-3">
-                            <Icon className="h-5 w-5 text-primary" />
-                            <div>
-                              <h3 className="font-medium text-foreground">
-                                {DERIVATIVE_LABELS[derivative.asset_type as keyof typeof DERIVATIVE_LABELS]}
-                              </h3>
-                              <p className="text-xs text-muted-foreground">
-                                {new Date(derivative.created_at).toLocaleDateString()}
-                              </p>
+                        return (
+                          <Card key={derivative.id} className={`p-6 space-y-4 ${getStatusBorderColor(derivative.approval_status)}`}>
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-3">
+                                <Icon className="h-5 w-5 text-primary" />
+                                <div>
+                                  <h3 className="font-medium text-foreground">
+                                    {DERIVATIVE_LABELS[derivative.asset_type as keyof typeof DERIVATIVE_LABELS]}
+                                  </h3>
+                                  <p className="text-xs text-muted-foreground">
+                                    {new Date(derivative.created_at).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                              <Badge
+                                variant={
+                                  derivative.approval_status === 'approved'
+                                    ? 'default'
+                                    : derivative.approval_status === 'rejected'
+                                    ? 'destructive'
+                                    : 'secondary'
+                                }
+                              >
+                                {derivative.approval_status}
+                              </Badge>
                             </div>
-                          </div>
-                          <Badge
-                            variant={
-                              derivative.approval_status === 'approved'
-                                ? 'default'
-                                : derivative.approval_status === 'rejected'
-                                ? 'destructive'
-                                : 'secondary'
-                            }
-                          >
-                            {derivative.approval_status}
-                          </Badge>
-                        </div>
 
                         {isEditing ? (
                           <div className="space-y-3">
@@ -401,7 +446,7 @@ const Repurpose = () => {
                               </p>
                             </div>
 
-                            <div className="flex gap-2 flex-wrap">
+                            <div className="flex gap-2 items-center">
                               <Button
                                 size="sm"
                                 variant="default"
@@ -410,47 +455,64 @@ const Repurpose = () => {
                                 <Copy className="h-4 w-4 mr-1" />
                                 Copy Content
                               </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handlePreview(derivative)}
-                              >
-                                Preview
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleEdit(derivative)}
-                              >
-                                <Edit className="h-4 w-4 mr-1" />
-                                Edit
-                              </Button>
-                              {derivative.approval_status !== 'approved' && (
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleApprove(derivative.id)}
-                                >
-                                  <Check className="h-4 w-4 mr-1" />
-                                  Approve
-                                </Button>
+                              
+                              {derivative.approval_status === 'pending' && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleApprove(derivative.id)}
+                                  >
+                                    <Check className="h-4 w-4 mr-1" />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => handleReject(derivative.id)}
+                                  >
+                                    <X className="h-4 w-4 mr-1" />
+                                    Reject
+                                  </Button>
+                                </>
                               )}
-                              {derivative.approval_status !== 'rejected' && (
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => handleReject(derivative.id)}
-                                >
-                                  <X className="h-4 w-4 mr-1" />
-                                  Reject
-                                </Button>
-                              )}
+
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button size="sm" variant="outline">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="bg-background">
+                                  <DropdownMenuItem onClick={() => handlePreview(derivative)}>
+                                    Preview
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleEdit(derivative)}>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                  {derivative.approval_status === 'approved' && (
+                                    <DropdownMenuItem onClick={() => handleReject(derivative.id)}>
+                                      <X className="h-4 w-4 mr-2" />
+                                      Reject
+                                    </DropdownMenuItem>
+                                  )}
+                                  {derivative.approval_status === 'rejected' && (
+                                    <DropdownMenuItem onClick={() => handleApprove(derivative.id)}>
+                                      <Check className="h-4 w-4 mr-2" />
+                                      Approve
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </>
                         )}
-                      </Card>
-                    );
-                  })}
-                </div>
+                          </Card>
+                        );
+                      })
+                    )}
+                  </TabsContent>
+                </Tabs>
               )}
             </>
           ) : (
