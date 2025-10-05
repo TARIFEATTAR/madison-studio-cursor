@@ -36,7 +36,12 @@ export const WeekView = ({ currentDate, scheduledItems, dipWeekInfo, onItemClick
 
   const getItemsForDay = (date: Date) => {
     return scheduledItems
-      .filter(item => isSameDay(new Date(item.scheduled_date), date))
+      .filter(item => {
+        // Parse date string as local date to avoid timezone shifts
+        const [year, month, day] = item.scheduled_date.split('-').map(Number);
+        const itemDate = new Date(year, month - 1, day);
+        return isSameDay(itemDate, date);
+      })
       .sort((a, b) => {
         if (!a.scheduled_time) return 1;
         if (!b.scheduled_time) return -1;
@@ -86,7 +91,7 @@ export const WeekView = ({ currentDate, scheduledItems, dipWeekInfo, onItemClick
                   className={cn(
                     "rounded-lg border border-border/40 overflow-hidden transition-all",
                     isDayToday && "ring-2 ring-primary/50",
-                    snapshot.isDraggingOver && "ring-2 ring-primary bg-primary/10 shadow-lg scale-[1.02]"
+                    snapshot.isDraggingOver && "ring-2 ring-primary bg-primary/10 shadow-lg"
                   )}
                 >
                   {/* Day header */}
@@ -116,12 +121,12 @@ export const WeekView = ({ currentDate, scheduledItems, dipWeekInfo, onItemClick
                             {...provided.dragHandleProps}
                             onClick={() => onItemClick(item)}
                             className={cn(
-                              "p-3 rounded-md bg-card hover:bg-accent/50 border border-border/40 cursor-grab active:cursor-grabbing transition-all group",
-                              snapshot.isDragging && "shadow-2xl ring-2 ring-primary opacity-80 scale-105 rotate-1"
+                              "p-3 rounded-md bg-card hover:bg-accent/50 border border-border/40 cursor-grab active:cursor-grabbing transition-all group select-none",
+                              snapshot.isDragging && "shadow-2xl ring-2 ring-primary opacity-90 scale-105"
                             )}
                           >
                             <div className="flex items-start gap-2">
-                              <GripVertical className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                              <GripVertical className="w-4 h-4 text-muted-foreground/70 flex-shrink-0 mt-0.5" />
                               <div className="flex-1 min-w-0">
                                 {item.scheduled_time && (
                                   <div className="text-xs font-medium text-muted-foreground mb-1">

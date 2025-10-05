@@ -21,6 +21,7 @@ const Calendar = () => {
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const dipWeekInfo = useDipWeekCalculation(currentDate);
 
@@ -80,12 +81,14 @@ const Calendar = () => {
   };
 
   const handleDragEnd = async (result: DropResult) => {
+    setIsDragging(false);
     const { draggableId, destination } = result;
 
     if (!destination) return;
 
     const itemId = draggableId;
-    const newDate = new Date(destination.droppableId);
+    // Use the droppableId directly as it's already in yyyy-MM-dd format (local date string)
+    const newDateStr = destination.droppableId;
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -95,10 +98,10 @@ const Calendar = () => {
       const item = scheduledItems.find(i => i.id === itemId);
       if (!item) return;
 
-      // Update the database
+      // Update the database with the local date string directly
       const { error } = await supabase
         .from("scheduled_content")
-        .update({ scheduled_date: format(newDate, "yyyy-MM-dd") })
+        .update({ scheduled_date: newDateStr })
         .eq("id", itemId);
 
       if (error) throw error;
@@ -118,7 +121,7 @@ const Calendar = () => {
             scheduledContentId: itemId,
             eventData: {
               title: item.title,
-              date: format(newDate, 'yyyy-MM-dd'),
+              date: newDateStr,
               time: item.scheduled_time || undefined,
               notes: item.notes || undefined,
               platform: item.platform || undefined,
@@ -170,7 +173,10 @@ const Calendar = () => {
           </Button>
         </div>
 
-        <DragDropContext onDragEnd={handleDragEnd}>
+        <DragDropContext 
+          onDragStart={() => setIsDragging(true)}
+          onDragEnd={handleDragEnd}
+        >
           <div className="mt-6 grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-6">
             {/* Calendar Section */}
             <div>
@@ -186,6 +192,7 @@ const Calendar = () => {
                       scheduledItems={scheduledItems}
                       onDayClick={handleDayClick}
                       onItemClick={handleItemClick}
+                      isDragging={isDragging}
                     />
                   ) : (
                     <WeekView

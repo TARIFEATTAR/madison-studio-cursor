@@ -21,9 +21,10 @@ interface MonthViewProps {
   scheduledItems: ScheduledItem[];
   onDayClick: (date: Date) => void;
   onItemClick: (item: ScheduledItem) => void;
+  isDragging?: boolean;
 }
 
-export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick }: MonthViewProps) => {
+export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick, isDragging }: MonthViewProps) => {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const calendarStart = startOfWeek(monthStart);
@@ -65,13 +66,13 @@ export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  onClick={() => onDayClick(day)}
+                  onClick={() => !isDragging && onDayClick(day)}
                   className={cn(
-                    "h-full p-3 border-b border-r border-border/20 cursor-pointer transition-all",
-                    "hover:bg-accent/30",
+                    "h-full p-3 border-b border-r border-border/20 transition-all",
+                    !isDragging && "cursor-pointer hover:bg-accent/30",
                     !isCurrentMonth && "bg-muted/20",
                     isDayToday && "bg-accent/30 ring-1 ring-primary/40",
-                    snapshot.isDraggingOver && "bg-primary/10 ring-2 ring-primary shadow-inner"
+                    snapshot.isDraggingOver && "bg-primary/10 ring-2 ring-primary shadow-lg"
                   )}
                 >
                   <div className={cn(
@@ -95,12 +96,12 @@ export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick
                               onItemClick(item);
                             }}
                             className={cn(
-                              "text-xs p-2 rounded bg-primary/10 hover:bg-primary/20 transition-all truncate group cursor-grab active:cursor-grabbing",
-                              snapshot.isDragging && "shadow-2xl ring-2 ring-primary opacity-80 rotate-2 scale-105"
+                              "text-xs p-2 rounded bg-primary/10 hover:bg-primary/20 transition-all truncate group cursor-grab active:cursor-grabbing select-none",
+                              snapshot.isDragging && "shadow-2xl ring-2 ring-primary opacity-90 scale-105"
                             )}
                           >
                             <div className="flex items-center gap-1.5">
-                              <GripVertical className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                              <GripVertical className="w-3 h-3 text-muted-foreground/70 flex-shrink-0" />
                               {item.scheduled_time && (
                                 <span className="text-[10px] text-muted-foreground">
                                   {format(new Date(`2000-01-01T${item.scheduled_time}`), "h:mm a")}
