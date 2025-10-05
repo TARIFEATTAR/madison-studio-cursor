@@ -15,7 +15,7 @@ export const NotesPanel = () => {
   }, []);
 
   useEffect(() => {
-    if (!loading && debouncedNotes !== notes) {
+    if (!loading) {
       saveNotes();
     }
   }, [debouncedNotes]);
@@ -53,7 +53,7 @@ export const NotesPanel = () => {
         // Update existing note
         const { error } = await supabase
           .from("calendar_notes")
-          .update({ note_content: notes })
+          .update({ note_content: debouncedNotes })
           .eq("id", noteId);
 
         if (error) throw error;
@@ -61,7 +61,7 @@ export const NotesPanel = () => {
         // Create new note
         const { data, error } = await supabase
           .from("calendar_notes")
-          .insert({ user_id: user.id, note_content: notes })
+          .insert({ user_id: user.id, note_content: debouncedNotes })
           .select()
           .single();
 
