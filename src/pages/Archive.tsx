@@ -91,6 +91,7 @@ const Archive = () => {
           created_at
         `)
         .eq('created_by', user?.id)
+        .eq('is_archived', true)
         .order('created_at', { ascending: false });
 
       if (promptsError) throw promptsError;
@@ -201,6 +202,29 @@ const Archive = () => {
     }
   };
 
+  const handleRestorePrompt = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('prompts')
+        .update({ is_archived: false, archived_at: null })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setArchives(prev => prev.filter(p => p.id !== id));
+      toast({
+        title: "Prompt restored",
+        description: "Prompt has been restored to The Reservoir.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error restoring prompt",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const confirmDelete = (type: 'master' | 'derivative' | 'prompt', id: string, title: string) => {
     setItemToDelete({ type, id, title });
     setDeleteDialogOpen(true);
@@ -235,6 +259,19 @@ const Archive = () => {
         toast({
           title: "Derivative deleted",
           description: "Asset has been permanently deleted.",
+        });
+      } else if (itemToDelete.type === 'prompt') {
+        const { error } = await supabase
+          .from('prompts')
+          .delete()
+          .eq('id', itemToDelete.id);
+
+        if (error) throw error;
+        setArchives(prev => prev.filter(p => p.id !== itemToDelete.id));
+        
+        toast({
+          title: "Prompt deleted",
+          description: "Prompt has been permanently deleted.",
         });
       }
     } catch (error: any) {
@@ -488,6 +525,28 @@ const Archive = () => {
                           </div>
                         )}
                       </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-border/30">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRestorePrompt(archive.id)}
+                        className="gap-2"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        Restore
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => confirmDelete('prompt', archive.id, archive.title)}
+                        className="gap-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete
+                      </Button>
                     </div>
                   </div>
                 ))}

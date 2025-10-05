@@ -26,6 +26,7 @@ const Reservoir = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [prompts, setPrompts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [archivedCount, setArchivedCount] = useState(0);
   const [sidebarFilters, setSidebarFilters] = useState<{
     collection?: string;
     scentFamily?: string;
@@ -86,15 +87,33 @@ const Reservoir = () => {
       byDipWeek,
       favorites,
       recent,
-      archived,
+      archived: archivedCount,
     };
-  }, [prompts]);
+  }, [prompts, archivedCount]);
 
   useEffect(() => {
     if (user) {
       fetchPrompts();
+      fetchArchivedCount();
     }
   }, [user]);
+
+  const fetchArchivedCount = async () => {
+    if (!user) return;
+    
+    try {
+      const { count, error } = await supabase
+        .from("prompts")
+        .select("*", { count: 'exact', head: true })
+        .eq("created_by", user.id)
+        .eq("is_archived", true);
+
+      if (error) throw error;
+      setArchivedCount(count || 0);
+    } catch (error) {
+      console.error("Error fetching archived count:", error);
+    }
+  };
 
   const fetchPrompts = async () => {
     if (!user) return;
@@ -137,6 +156,7 @@ const Reservoir = () => {
       });
 
       fetchPrompts();
+      fetchArchivedCount();
     } catch (error) {
       console.error("Error archiving prompt:", error);
       toast({
