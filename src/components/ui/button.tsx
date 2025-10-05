@@ -9,12 +9,13 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground hover:border-primary/30 hover:shadow-sm",
+        default: "bg-gradient-to-br from-deep-charcoal to-[hsl(20,10%,12%)] text-white shadow-level-1 hover:from-[hsl(20,10%,20%)] hover:to-[hsl(20,10%,15%)] hover:shadow-level-2 hover:-translate-y-0.5 hover:ring-1 hover:ring-saffron-gold/30 active:translate-y-0",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:shadow-level-2 hover:-translate-y-0.5 active:translate-y-0",
+        outline: "border-[1.5px] border-deep-charcoal/30 bg-background text-foreground hover:bg-deep-charcoal/5 hover:border-deep-charcoal hover:shadow-sm",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0",
-        ghost: "hover:bg-accent hover:text-accent-foreground hover:shadow-sm",
-        link: "text-primary underline-offset-4 hover:underline",
+        ghost: "hover:bg-saffron-gold/10 hover:text-saffron-gold hover:shadow-sm",
+        link: "text-deep-charcoal underline-offset-4 hover:underline hover:text-saffron-gold",
+        saffron: "bg-gradient-to-br from-saffron-gold to-[hsl(43,55%,48%)] text-deep-charcoal font-semibold shadow-level-1 hover:from-[hsl(43,70%,58%)] hover:to-saffron-gold hover:shadow-level-2 hover:-translate-y-0.5 active:translate-y-0",
       },
       size: {
         default: "h-10 px-4 py-2",
