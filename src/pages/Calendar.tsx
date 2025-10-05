@@ -4,6 +4,7 @@ import { CalendarHeader } from "@/components/calendar/CalendarHeader";
 import { MonthView } from "@/components/calendar/MonthView";
 import { WeekView } from "@/components/calendar/WeekView";
 import { ScheduleModal } from "@/components/calendar/ScheduleModal";
+import { GoogleCalendarConnect } from "@/components/calendar/GoogleCalendarConnect";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -88,7 +89,9 @@ const Calendar = () => {
           onToday={handleToday}
         />
 
-        <div className="fade-enter">
+        <div className="fade-enter space-y-6">
+          <GoogleCalendarConnect />
+          
           <Button onClick={handleNewSchedule} className="gap-2">
             <Plus className="w-4 h-4" />
             Schedule Content
