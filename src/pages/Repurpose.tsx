@@ -6,10 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Check, X, Edit, FileText, Mail, Instagram, Twitter, Package, MessageSquare, Copy, MoreVertical } from "lucide-react";
+import { Loader2, Check, X, Edit, FileText, Mail, Instagram, Twitter, Package, MessageSquare, Copy, MoreVertical, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -76,6 +79,8 @@ const Repurpose = () => {
   const [editingDerivative, setEditingDerivative] = useState<string | null>(null);
   const [editedContent, setEditedContent] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
 
   useEffect(() => {
     fetchMasterContents();
@@ -264,6 +269,50 @@ const Repurpose = () => {
     return '';
   };
 
+  // Filter master content by search query
+  const searchFilteredContent = masterContents.filter(master => {
+    const query = searchQuery.toLowerCase();
+    return (
+      master.title.toLowerCase().includes(query) ||
+      master.content_type.toLowerCase().includes(query) ||
+      (master.collection?.toLowerCase() || "").includes(query) ||
+      (master.pillar_focus?.toLowerCase() || "").includes(query)
+    );
+  });
+
+  // Sort filtered content
+  const sortedContent = [...searchFilteredContent].sort((a, b) => {
+    switch(sortBy) {
+      case "oldest": 
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      case "week": 
+        return (a.dip_week || 999) - (b.dip_week || 999);
+      case "title": 
+        return a.title.localeCompare(b.title);
+      case "type": 
+        return a.content_type.localeCompare(b.content_type);
+      default: // "newest"
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }
+  });
+
+  // Group sorted content by week
+  const groupedContent = sortedContent.reduce((groups, master) => {
+    const key = master.dip_week ? `Week ${master.dip_week}` : "No Week Assigned";
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(master);
+    return groups;
+  }, {} as Record<string, MasterContent[]>);
+
+  // Get group keys in proper order
+  const groupKeys = Object.keys(groupedContent).sort((a, b) => {
+    if (a === "No Week Assigned") return 1;
+    if (b === "No Week Assigned") return -1;
+    const weekA = parseInt(a.replace("Week ", ""));
+    const weekB = parseInt(b.replace("Week ", ""));
+    return sortBy === "oldest" ? weekA - weekB : weekB - weekA;
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -289,6 +338,7 @@ const Repurpose = () => {
         {/* Master Content List */}
         <div className="lg:col-span-1 space-y-4">
           <h2 className="text-xl font-serif text-foreground">Master Content</h2>
+          
           {masterContents.length === 0 ? (
             <Card className="p-6 text-center space-y-4">
               <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
@@ -296,33 +346,82 @@ const Repurpose = () => {
               <Button onClick={() => navigate('/forge')}>Create in Forge</Button>
             </Card>
           ) : (
-            <div className="space-y-3">
-              {masterContents.map((master) => (
-                <Card
-                  key={master.id}
-                  className={`p-4 cursor-pointer transition-all hover:shadow-glow ${
-                    selectedMaster?.id === master.id ? 'border-primary shadow-glow' : ''
-                  }`}
-                  onClick={() => handleSelectMaster(master)}
-                >
-                  <div className="space-y-2">
-                    <h3 className="font-medium text-foreground">{master.title}</h3>
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline">{master.content_type}</Badge>
-                      {master.dip_week && (
-                        <Badge variant="secondary">Week {master.dip_week}</Badge>
-                      )}
-                      {master.word_count && (
-                        <Badge variant="outline">{master.word_count} words</Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(master.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
+            <>
+              {/* Search & Sort Controls */}
+              <div className="space-y-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by title, type, collection..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sort by..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background">
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                    <SelectItem value="week">By Week</SelectItem>
+                    <SelectItem value="title">By Title (A-Z)</SelectItem>
+                    <SelectItem value="type">By Content Type</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Grouped Content */}
+              {sortedContent.length === 0 ? (
+                <Card className="p-6 text-center">
+                  <p className="text-muted-foreground">No matches found. Try different keywords.</p>
                 </Card>
-              ))}
-            </div>
+              ) : (
+                <Accordion type="multiple" defaultValue={groupKeys.slice(0, 2)} className="space-y-2">
+                  {groupKeys.map((groupKey) => (
+                    <AccordionItem key={groupKey} value={groupKey} className="border rounded-lg px-4">
+                      <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{groupKey}</span>
+                          <Badge variant="secondary" className="text-xs">
+                            {groupedContent[groupKey].length}
+                          </Badge>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="space-y-3 pt-3 pb-4">
+                        {groupedContent[groupKey].map((master) => (
+                          <Card
+                            key={master.id}
+                            className={`p-4 cursor-pointer transition-all hover:shadow-glow ${
+                              selectedMaster?.id === master.id ? 'border-primary shadow-glow' : ''
+                            }`}
+                            onClick={() => handleSelectMaster(master)}
+                          >
+                            <div className="space-y-2">
+                              <h3 className="font-medium text-foreground">{master.title}</h3>
+                              <div className="flex flex-wrap gap-2">
+                                <Badge variant="outline">{master.content_type}</Badge>
+                                {master.dip_week && (
+                                  <Badge variant="secondary">Week {master.dip_week}</Badge>
+                                )}
+                                {master.word_count && (
+                                  <Badge variant="outline">{master.word_count} words</Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(master.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </Card>
+                        ))}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              )}
+            </>
           )}
         </div>
 
