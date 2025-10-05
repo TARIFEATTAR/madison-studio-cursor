@@ -3,6 +3,27 @@ import { BookOpen, Sparkles, Repeat, Archive, Calendar, ArrowRight, CheckCircle2
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 
+const steps = [
+  {
+    number: "1",
+    title: "Build Your Library",
+    description: "Store prompts, brand guidelines, and content templates in your centralized Reservoir.",
+    icon: BookOpen,
+  },
+  {
+    number: "2",
+    title: "Create & Generate",
+    description: "Use the Forge to generate on-brand blog posts and marketing content with AI assistance.",
+    icon: Sparkles,
+  },
+  {
+    number: "3",
+    title: "Repurpose & Schedule",
+    description: "Transform content across channels and plan your publishing calendar strategically.",
+    icon: Calendar,
+  }
+];
+
 const Landing = () => {
   const { user } = useAuth();
 
@@ -100,6 +121,47 @@ const Landing = () => {
                 </Link>
               </Button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works - 3 Steps */}
+      <section className="py-20 border-t border-border/40 bg-gradient-to-b from-background to-card/30">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="text-center mb-16 codex-spacing fade-enter">
+            <h2 className="text-foreground mb-4">
+              How It Works
+            </h2>
+            <p className="text-large text-muted-foreground max-w-2xl mx-auto">
+              Three simple steps to streamline your content workflow
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 fade-enter">
+            {steps.map((step, index) => {
+              const Icon = step.icon;
+              return (
+                <div 
+                  key={index}
+                  className="relative card-luxury text-center group cursor-default"
+                >
+                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-level-2 group-hover:scale-110 transition-transform">
+                    <span className="text-2xl font-bold text-primary-foreground font-serif">{step.number}</span>
+                  </div>
+                  <div className="pt-8">
+                    <div className="bg-primary/10 w-16 h-16 rounded-lg flex items-center justify-center mb-4 mx-auto group-hover:bg-primary/15 transition-colors">
+                      <Icon className="w-8 h-8 text-primary" />
+                    </div>
+                    <h3 className="font-serif text-2xl font-bold text-foreground mb-3">
+                      {step.title}
+                    </h3>
+                    <p className="text-regular text-muted-foreground leading-relaxed">
+                      {step.description}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
