@@ -9,13 +9,13 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-gradient-to-br from-deep-charcoal to-[hsl(20,10%,12%)] text-white shadow-level-1 hover:from-[hsl(20,10%,20%)] hover:to-[hsl(20,10%,15%)] hover:shadow-level-2 hover:-translate-y-0.5 hover:ring-1 hover:ring-saffron-gold/30 active:translate-y-0",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:shadow-level-2 hover:-translate-y-0.5 active:translate-y-0",
-        outline: "border-[1.5px] border-deep-charcoal/30 bg-background text-foreground hover:bg-deep-charcoal/5 hover:border-deep-charcoal hover:shadow-sm",
+        default: "bg-ink-black text-parchment-white border border-aged-brass/30 shadow-level-1 hover:bg-charcoal hover:border-aged-brass hover:shadow-level-2 hover:-translate-y-0.5 hover:ring-1 hover:ring-aged-brass active:translate-y-0",
+        destructive: "bg-deep-burgundy text-parchment-white hover:bg-deep-burgundy/90 hover:shadow-level-2 hover:-translate-y-0.5 active:translate-y-0",
+        outline: "border-[1.5px] border-charcoal/25 bg-background text-charcoal hover:bg-aged-brass/8 hover:border-aged-brass hover:text-ink-black hover:shadow-sm",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0",
-        ghost: "hover:bg-saffron-gold/10 hover:text-saffron-gold hover:shadow-sm",
-        link: "text-deep-charcoal underline-offset-4 hover:underline hover:text-saffron-gold",
-        saffron: "bg-gradient-to-br from-saffron-gold to-[hsl(43,55%,48%)] text-deep-charcoal font-semibold shadow-level-1 hover:from-[hsl(43,70%,58%)] hover:to-saffron-gold hover:shadow-level-2 hover:-translate-y-0.5 active:translate-y-0",
+        ghost: "hover:bg-aged-brass/10 hover:text-aged-brass hover:shadow-sm",
+        link: "text-aged-brass underline-offset-4 hover:underline hover:text-antique-gold",
+        brass: "bg-aged-brass text-ink-black font-semibold shadow-level-1 hover:bg-antique-gold hover:shadow-level-2 hover:-translate-y-0.5 active:translate-y-0 active:bg-primary-dark",
       },
       size: {
         default: "h-10 px-4 py-2",
