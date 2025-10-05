@@ -312,18 +312,20 @@ const Reservoir = () => {
   const activeChips = getActiveFilterChips();
 
   return (
-    <div className="pt-20">
+    <div>
       <SidebarProvider>
-        <div className="flex min-h-[calc(100vh-5rem)] w-full bg-background">
-          {/* Sidebar */}
-          <LibrarySidebar
-            onFilterChange={handleFilterChange}
-            activeFilters={sidebarFilters}
-            counts={counts}
-          />
+        <div className="flex min-h-screen w-full bg-background pt-20">
+          {/* Sidebar - sticky positioned below nav */}
+          <div className="sticky top-20 h-[calc(100vh-5rem)] self-start">
+            <LibrarySidebar
+              onFilterChange={handleFilterChange}
+              activeFilters={sidebarFilters}
+              counts={counts}
+            />
+          </div>
 
           {/* Main Content */}
-          <main className="flex-1">
+          <main className="flex-1 min-w-0">
             {/* Header with Sidebar Toggle */}
             <div className="sticky top-20 z-10 bg-background/95 backdrop-blur-sm border-b border-border/40">
             <div className="flex items-center gap-4 px-6 py-4">
