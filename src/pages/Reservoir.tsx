@@ -152,7 +152,7 @@ const Reservoir = () => {
 
       toast({
         title: "Prompt Archived",
-        description: "The prompt has been moved to The Archive.",
+        description: "The prompt has been moved to Portfolio.",
       });
 
       fetchPrompts();
@@ -330,9 +330,9 @@ const Reservoir = () => {
             <div className="flex items-center gap-4 px-6 py-4">
               <SidebarTrigger className="-ml-1" />
               <div className="flex-1">
-                <h1 className="text-2xl font-serif text-foreground">The Reservoir</h1>
+                <h1 className="text-2xl font-serif text-foreground">Library</h1>
                 <p className="text-sm text-muted-foreground">
-                  Your curated collection of brand-aligned prompts
+                  Your collection of brand-intelligent prompts
                 </p>
               </div>
             </div>
@@ -346,7 +346,7 @@ const Reservoir = () => {
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
                   <Input
                     type="text"
-                    placeholder="🔍 Search prompts, content, campaigns..."
+                    placeholder="🔍 Search Library..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-12 h-12 bg-card/50 backdrop-blur-sm border-border focus:border-primary transition-all duration-300"
@@ -416,11 +416,11 @@ const Reservoir = () => {
               {/* Empty State */}
               {!loading && filteredPrompts.length === 0 && (
                 <div className="text-center py-16 fade-enter">
-                  <p className="text-2xl font-serif text-muted-foreground">The Reservoir awaits</p>
+                  <p className="text-2xl font-serif text-muted-foreground">Your Library Awaits</p>
                   <p className="text-muted-foreground mt-2">
                     {prompts.length === 0
-                      ? "No prompts have been created yet"
-                      : "No prompts match your refined criteria"}
+                      ? "Begin crafting prompts that maintain your brand's voice"
+                      : "No prompts match your search criteria"}
                   </p>
                   {activeChips.length > 0 && (
                     <Button

@@ -98,14 +98,14 @@ const Auth = () => {
 
     if (error) {
       toast({
-        title: "This vessel requires refinement",
+        title: "Sign up error",
         description: error.message,
         variant: "destructive",
       });
     } else {
       toast({
-        title: "Welcome to The Codex",
-        description: "Your account has been crafted successfully.",
+        title: "Welcome to Scriptorium",
+        description: "Your account has been created successfully.",
       });
     }
   };
@@ -123,7 +123,7 @@ const Auth = () => {
 
     if (error) {
       toast({
-        title: "This vessel requires refinement",
+        title: "Sign in error",
         description: error.message,
         variant: "destructive",
       });
@@ -191,9 +191,9 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center px-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8 fade-enter">
-          <h1 className="text-foreground mb-3">The Codex</h1>
+          <h1 className="text-foreground mb-3">Scriptorium</h1>
           <p className="text-muted-foreground text-lg">
-            Enter the vault of the Confident Whisper
+            Where brands craft their narrative
           </p>
         </div>
 

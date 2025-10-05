@@ -117,9 +117,9 @@ const Archive = () => {
 
       setArchives(archivesWithOutputs);
     } catch (error) {
-      console.error('Error fetching archives:', error);
+      console.error("Error fetching archives:", error);
       toast({
-        title: "This vessel requires refinement",
+        title: "Error loading portfolio",
         description: "Failed to fetch archived prompts.",
         variant: "destructive",
       });
@@ -214,7 +214,7 @@ const Archive = () => {
       setArchives(prev => prev.filter(p => p.id !== id));
       toast({
         title: "Prompt restored",
-        description: "Prompt has been restored to The Reservoir.",
+        description: "Prompt has been restored to Library.",
       });
     } catch (error: any) {
       toast({
@@ -319,9 +319,9 @@ const Archive = () => {
       <div className="max-w-7xl mx-auto codex-spacing">
         {/* Header */}
         <div className="fade-enter">
-          <h1 className="text-foreground mb-3">The Archive</h1>
+          <h1 className="text-foreground mb-3">Portfolio</h1>
           <p className="text-muted-foreground text-lg max-w-2xl">
-            Your curated collection of crafted prompts, generated outputs, and archived content.
+            Your body of work
           </p>
         </div>
 
@@ -339,7 +339,7 @@ const Archive = () => {
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
                 <Input
                   type="text"
-                  placeholder="Search archived vessels..."
+                  placeholder="Search Portfolio..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-12 h-14 bg-card/50 backdrop-blur-sm border-border focus:border-primary transition-all duration-300 text-base focus:shadow-lg focus:-translate-y-0.5"
@@ -553,11 +553,11 @@ const Archive = () => {
               </div>
             ) : (
               <div className="text-center py-16">
-                <p className="text-2xl font-serif text-muted-foreground">The Archive awaits</p>
+                <p className="text-2xl font-serif text-muted-foreground">Your Portfolio Begins Here</p>
                 <p className="text-muted-foreground mt-2">
                   {searchQuery || selectedRating || selectedContentType || selectedCollection
-                    ? "No vessels match your refined criteria"
-                    : "Craft and archive your first prompt in The Forge"}
+                    ? "No content matches your search criteria"
+                    : "Finished works will appear as you create"}
                 </p>
               </div>
             )}

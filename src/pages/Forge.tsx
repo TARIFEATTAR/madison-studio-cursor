@@ -405,7 +405,7 @@ const Forge = () => {
   const testWithClaude = async () => {
     if (!generatedPrompt) {
       toast({
-        title: "This vessel requires refinement",
+        title: "Needs review",
         description: "Please craft a prompt first before testing with Claude.",
         variant: "destructive",
       });
@@ -432,9 +432,9 @@ const Forge = () => {
         });
       }
     } catch (error) {
-      console.error('Error generating with Claude:', error);
+      console.error("Error generating with Claude:", error);
       toast({
-        title: "This vessel requires refinement",
+        title: "Generation error",
         description: error instanceof Error ? error.message : "Failed to generate content with Claude.",
         variant: "destructive",
       });
@@ -444,12 +444,12 @@ const Forge = () => {
   };
 
 
-  const archiveVessel = async () => {
+  const archiveContent = async () => {
     if (!user) return;
     
     if (!formData.title) {
       toast({
-        title: "This vessel requires refinement",
+        title: "Title required",
         description: "Please provide a title for your prompt.",
         variant: "destructive",
       });
@@ -538,10 +538,10 @@ const Forge = () => {
       setQualityRating(0);
 
     } catch (error) {
-      console.error('Error archiving vessel:', error);
+      console.error("Error saving content:", error);
       toast({
-        title: "This vessel requires refinement",
-        description: error instanceof Error ? error.message : "Failed to archive the vessel.",
+        title: "Save error",
+        description: error instanceof Error ? error.message : "Failed to save content.",
         variant: "destructive",
       });
     } finally {
@@ -698,8 +698,9 @@ const Forge = () => {
     <div className="min-h-screen py-12 px-6 md:px-12">
       <div className="max-w-7xl mx-auto codex-spacing">
         <div className="fade-enter mb-12">
-          <h1 className="text-foreground mb-3">The Forge</h1>
+          <h1 className="text-foreground mb-3">Composer</h1>
           <p className="text-muted-foreground text-lg max-w-2xl">
+            Craft content with precision
             {contentMode === "single" 
               ? "Select a product from your catalogue and craft content with brand guardrails."
               : "Create master content and repurpose it into multi-channel derivative assets."
@@ -991,7 +992,7 @@ const Forge = () => {
           <div className="fade-enter">
             <div className="card-matte p-8 rounded-lg border border-border/40 sticky top-8">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl">Crafted Prompt</h2>
+                <h2 className="text-2xl">Generated Prompt</h2>
                 <Button
                   onClick={copyToClipboard}
                   variant="outline"
@@ -1097,18 +1098,18 @@ const Forge = () => {
                   <Button 
                     variant="outline" 
                     className="flex-1 gap-2"
-                    onClick={archiveVessel}
+                    onClick={archiveContent}
                     disabled={saving}
                   >
                     {saving ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Archiving...
+                        Saving...
                       </>
                     ) : (
                       <>
                         <Archive className="w-4 h-4" />
-                        Archive This Vessel
+                        Save to Portfolio
                       </>
                     )}
                   </Button>

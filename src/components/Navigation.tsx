@@ -9,11 +9,11 @@ const Navigation = () => {
   const { user, signOut } = useAuth();
 
   const navItems = [
-    { path: "/", label: "The Reservoir", icon: BookOpen },
-    { path: "/forge", label: "The Forge", icon: Sparkles },
-    { path: "/repurpose", label: "Repurpose", icon: Repeat },
-    { path: "/archive", label: "The Archive", icon: Archive },
-    { path: "/calendar", label: "The Calendar", icon: CalendarIcon },
+    { path: "/", label: "Library", icon: BookOpen },
+    { path: "/forge", label: "Composer", icon: Sparkles },
+    { path: "/repurpose", label: "Amplify", icon: Repeat },
+    { path: "/archive", label: "Portfolio", icon: Archive },
+    { path: "/calendar", label: "Planner", icon: CalendarIcon },
   ];
 
   return (
@@ -26,7 +26,7 @@ const Navigation = () => {
               <BookOpen className="w-5 h-5 text-saffron-gold transition-transform duration-300 group-hover:scale-110" />
             </div>
             <span className="font-serif text-2xl text-foreground tracking-wide">
-              The Codex
+              Scriptorium
             </span>
           </Link>
 
@@ -69,7 +69,7 @@ const Navigation = () => {
                 className="gap-2 ml-2"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="hidden md:inline">Depart</span>
+                <span className="hidden md:inline">Sign Out</span>
               </Button>
             )}
           </div>

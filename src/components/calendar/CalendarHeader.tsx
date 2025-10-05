@@ -22,9 +22,9 @@ export const CalendarHeader = ({
   return (
     <div className="flex items-center justify-between fade-enter">
       <div>
-        <h1 className="text-foreground mb-2">The Calendar</h1>
+        <h1 className="text-foreground mb-2">Planner</h1>
         <p className="text-muted-foreground text-lg">
-          {format(currentDate, "MMMM yyyy")}
+          Content calendar with intelligence
         </p>
       </div>
 

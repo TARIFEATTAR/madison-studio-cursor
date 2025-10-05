@@ -353,7 +353,7 @@ const Repurpose = () => {
 
       toast({
         title: "Content archived",
-        description: "Master content has been moved to the Archive.",
+        description: "Master content has been moved to Portfolio.",
       });
     } catch (error: any) {
       toast({
@@ -377,7 +377,7 @@ const Repurpose = () => {
 
       toast({
         title: "Asset archived",
-        description: "Derivative has been moved to the Archive.",
+        description: "Derivative has been moved to Portfolio.",
       });
     } catch (error: any) {
       toast({
@@ -421,7 +421,7 @@ const Repurpose = () => {
 
         toast({
           title: "Content deleted",
-          description: "Master content and its derivatives have been permanently deleted.",
+          description: "Content and its derivatives have been permanently deleted.",
         });
       } else {
         // Delete derivative
@@ -517,7 +517,7 @@ const Repurpose = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Loading master content...</p>
+          <p className="text-muted-foreground">Loading content...</p>
         </div>
       </div>
     );
@@ -527,9 +527,9 @@ const Repurpose = () => {
     <div className="pt-20">
       <div className="container mx-auto px-4 py-8 space-y-8">
       <div className="space-y-2">
-        <h1 className="text-4xl font-serif text-foreground">Content Repurposing</h1>
+        <h1 className="text-4xl font-serif text-foreground">Amplify</h1>
         <p className="text-muted-foreground">
-          Transform master content into multi-channel derivative assets
+          One voice, every channel
         </p>
       </div>
 
@@ -541,8 +541,8 @@ const Repurpose = () => {
           {masterContents.length === 0 ? (
             <Card className="p-6 text-center space-y-4">
               <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
-              <p className="text-muted-foreground">No master content yet</p>
-              <Button onClick={() => navigate('/forge')}>Create in Forge</Button>
+              <p className="text-muted-foreground">Ready to Amplify</p>
+              <Button onClick={() => navigate("/forge")}>Create in Composer</Button>
             </Card>
           ) : (
             <>
@@ -691,7 +691,7 @@ const Repurpose = () => {
                     No derivatives generated for this content yet.
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Generate derivatives from the Forge using Master Content mode.
+                    Generate derivatives using Composer's Master Content mode.
                   </p>
                 </Card>
               ) : (
@@ -897,7 +897,7 @@ const Repurpose = () => {
           ) : (
             <Card className="p-8 text-center">
               <p className="text-muted-foreground">
-                Select master content from the left to view its derivatives
+                Select content from the left to view its derivatives
               </p>
             </Card>
           )}
