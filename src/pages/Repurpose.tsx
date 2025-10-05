@@ -25,7 +25,18 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface MasterContent {
   id: string;
@@ -81,6 +92,8 @@ const Repurpose = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ type: 'master' | 'derivative', id: string, title?: string } | null>(null);
 
   useEffect(() => {
     fetchMasterContents();
@@ -92,6 +105,7 @@ const Repurpose = () => {
       const { data, error } = await supabase
         .from('master_content')
         .select('*')
+        .eq('is_archived', false)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -113,6 +127,7 @@ const Repurpose = () => {
         .from('derivative_assets')
         .select('*')
         .eq('master_content_id', masterContentId)
+        .eq('is_archived', false)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -248,6 +263,128 @@ const Repurpose = () => {
   const handlePreview = (derivative: DerivativeAsset) => {
     setPreviewContent(derivative);
     setPreviewOpen(true);
+  };
+
+  const handleArchiveMaster = async (masterId: string) => {
+    try {
+      const { error } = await supabase
+        .from('master_content')
+        .update({ is_archived: true })
+        .eq('id', masterId);
+
+      if (error) throw error;
+
+      setMasterContents(prev => prev.filter(m => m.id !== masterId));
+      
+      if (selectedMaster?.id === masterId) {
+        const nextMaster = masterContents.find(m => m.id !== masterId);
+        if (nextMaster) {
+          setSelectedMaster(nextMaster);
+          fetchDerivatives(nextMaster.id);
+        } else {
+          setSelectedMaster(null);
+          setDerivatives([]);
+        }
+      }
+
+      toast({
+        title: "Content archived",
+        description: "Master content has been moved to the Archive.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error archiving content",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleArchiveDerivative = async (derivativeId: string) => {
+    try {
+      const { error } = await supabase
+        .from('derivative_assets')
+        .update({ is_archived: true })
+        .eq('id', derivativeId);
+
+      if (error) throw error;
+
+      setDerivatives(prev => prev.filter(d => d.id !== derivativeId));
+
+      toast({
+        title: "Asset archived",
+        description: "Derivative has been moved to the Archive.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error archiving asset",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const confirmDelete = (type: 'master' | 'derivative', id: string, title?: string) => {
+    setItemToDelete({ type, id, title });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirmed = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      if (itemToDelete.type === 'master') {
+        // Delete master content and its derivatives will cascade
+        const { error } = await supabase
+          .from('master_content')
+          .delete()
+          .eq('id', itemToDelete.id);
+
+        if (error) throw error;
+
+        setMasterContents(prev => prev.filter(m => m.id !== itemToDelete.id));
+        
+        if (selectedMaster?.id === itemToDelete.id) {
+          const nextMaster = masterContents.find(m => m.id !== itemToDelete.id);
+          if (nextMaster) {
+            setSelectedMaster(nextMaster);
+            fetchDerivatives(nextMaster.id);
+          } else {
+            setSelectedMaster(null);
+            setDerivatives([]);
+          }
+        }
+
+        toast({
+          title: "Content deleted",
+          description: "Master content and its derivatives have been permanently deleted.",
+        });
+      } else {
+        // Delete derivative
+        const { error } = await supabase
+          .from('derivative_assets')
+          .delete()
+          .eq('id', itemToDelete.id);
+
+        if (error) throw error;
+
+        setDerivatives(prev => prev.filter(d => d.id !== itemToDelete.id));
+
+        toast({
+          title: "Asset deleted",
+          description: "Derivative has been permanently deleted.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error deleting",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+    }
   };
 
   const approvedCount = derivatives.filter(d => d.approval_status === 'approved').length;
@@ -392,25 +529,47 @@ const Repurpose = () => {
                         {groupedContent[groupKey].map((master) => (
                           <Card
                             key={master.id}
-                            className={`p-4 cursor-pointer transition-all hover:shadow-glow ${
+                            className={`p-4 transition-all hover:shadow-glow ${
                               selectedMaster?.id === master.id ? 'border-primary shadow-glow' : ''
                             }`}
-                            onClick={() => handleSelectMaster(master)}
                           >
-                            <div className="space-y-2">
-                              <h3 className="font-medium text-foreground">{master.title}</h3>
-                              <div className="flex flex-wrap gap-2">
-                                <Badge variant="outline">{master.content_type}</Badge>
-                                {master.dip_week && (
-                                  <Badge variant="secondary">Week {master.dip_week}</Badge>
-                                )}
-                                {master.word_count && (
-                                  <Badge variant="outline">{master.word_count} words</Badge>
-                                )}
+                            <div className="flex items-start justify-between gap-3">
+                              <div 
+                                className="flex-1 space-y-2 cursor-pointer"
+                                onClick={() => handleSelectMaster(master)}
+                              >
+                                <h3 className="font-medium text-foreground">{master.title}</h3>
+                                <div className="flex flex-wrap gap-2">
+                                  <Badge variant="outline">{master.content_type}</Badge>
+                                  {master.dip_week && (
+                                    <Badge variant="secondary">Week {master.dip_week}</Badge>
+                                  )}
+                                  {master.word_count && (
+                                    <Badge variant="outline">{master.word_count} words</Badge>
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(master.created_at).toLocaleDateString()}
+                                </p>
                               </div>
-                              <p className="text-xs text-muted-foreground">
-                                {new Date(master.created_at).toLocaleDateString()}
-                              </p>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="bg-background">
+                                  <DropdownMenuItem onClick={() => handleArchiveMaster(master.id)}>
+                                    Archive
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => confirmDelete('master', master.id, master.title)}
+                                    className="text-destructive"
+                                  >
+                                    Delete Permanently
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </Card>
                         ))}
@@ -602,6 +761,15 @@ const Repurpose = () => {
                                       Approve
                                     </DropdownMenuItem>
                                   )}
+                                  <DropdownMenuItem onClick={() => handleArchiveDerivative(derivative.id)}>
+                                    Archive
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => confirmDelete('derivative', derivative.id)}
+                                    className="text-destructive"
+                                  >
+                                    Delete Permanently
+                                  </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
@@ -655,6 +823,33 @@ const Repurpose = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {itemToDelete?.type === 'master' ? (
+                <>
+                  This will permanently delete "{itemToDelete.title}" and all its derivative assets. 
+                  This action cannot be undone.
+                </>
+              ) : (
+                <>
+                  This will permanently delete this derivative asset. This action cannot be undone.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirmed} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete Permanently
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       </div>
     </div>
   );

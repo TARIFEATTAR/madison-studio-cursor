@@ -59,11 +59,13 @@ export type Database = {
       derivative_assets: {
         Row: {
           approval_status: string | null
+          archived_at: string | null
           asset_type: string
           created_at: string | null
           created_by: string | null
           generated_content: string | null
           id: string
+          is_archived: boolean
           master_content_id: string | null
           platform_specs: Json | null
           published_at: string | null
@@ -71,11 +73,13 @@ export type Database = {
         }
         Insert: {
           approval_status?: string | null
+          archived_at?: string | null
           asset_type: string
           created_at?: string | null
           created_by?: string | null
           generated_content?: string | null
           id?: string
+          is_archived?: boolean
           master_content_id?: string | null
           platform_specs?: Json | null
           published_at?: string | null
@@ -83,11 +87,13 @@ export type Database = {
         }
         Update: {
           approval_status?: string | null
+          archived_at?: string | null
           asset_type?: string
           created_at?: string | null
           created_by?: string | null
           generated_content?: string | null
           id?: string
+          is_archived?: boolean
           master_content_id?: string | null
           platform_specs?: Json | null
           published_at?: string | null
@@ -105,6 +111,7 @@ export type Database = {
       }
       master_content: {
         Row: {
+          archived_at: string | null
           collection: Database["public"]["Enums"]["collection_type"] | null
           content_type: string
           created_at: string | null
@@ -112,12 +119,14 @@ export type Database = {
           dip_week: number | null
           full_content: string
           id: string
+          is_archived: boolean
           pillar_focus: Database["public"]["Enums"]["pillar_type"] | null
           title: string
           updated_at: string | null
           word_count: number | null
         }
         Insert: {
+          archived_at?: string | null
           collection?: Database["public"]["Enums"]["collection_type"] | null
           content_type: string
           created_at?: string | null
@@ -125,12 +134,14 @@ export type Database = {
           dip_week?: number | null
           full_content: string
           id?: string
+          is_archived?: boolean
           pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
           title: string
           updated_at?: string | null
           word_count?: number | null
         }
         Update: {
+          archived_at?: string | null
           collection?: Database["public"]["Enums"]["collection_type"] | null
           content_type?: string
           created_at?: string | null
@@ -138,6 +149,7 @@ export type Database = {
           dip_week?: number | null
           full_content?: string
           id?: string
+          is_archived?: boolean
           pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
           title?: string
           updated_at?: string | null
