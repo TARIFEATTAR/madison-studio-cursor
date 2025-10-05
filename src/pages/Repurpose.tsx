@@ -334,7 +334,7 @@ const Repurpose = () => {
                 <h2 className="text-xl font-serif text-foreground">Derivative Assets</h2>
               </div>
 
-              <Card className="p-6 bg-muted/20 sticky top-24">
+              <Card className="p-6 bg-muted/20">
                 <div className="space-y-3">
                   <h3 className="font-serif text-lg text-foreground">{selectedMaster.title}</h3>
                   <p className="text-sm text-muted-foreground line-clamp-3">
