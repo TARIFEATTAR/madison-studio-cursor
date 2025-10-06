@@ -173,6 +173,32 @@ CONSTRAINTS:
 Generate LinkedIn post now.`,
 };
 
+// Utility: strip Markdown and common formatting to plain text
+const stripMarkdown = (text: string): string => {
+  return text
+    // Bold/italics
+    .replace(/(\*\*|__)(.*?)\1/g, '$2')
+    .replace(/(\*|_)(.*?)\1/g, '$2')
+    // Headings
+    .replace(/^#{1,6}\s*/gm, '')
+    // Code fences and inline code
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`([^`]+)`/g, '$1')
+    // Links and images
+    .replace(/!\[[^\]]*\]\([^\)]*\)/g, '')
+    .replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '$1')
+    // Blockquotes and HRs
+    .replace(/^>\s?/gm, '')
+    .replace(/^(-{3,}|\*{3,}|_{3,})$/gm, '')
+    // Lists (bulleted and ordered)
+    .replace(/^\s*[-*+]\s+/gm, '')
+    .replace(/^\s*\d+\.\s+/gm, '')
+    // Extra whitespace
+    .replace(/[\t ]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -267,13 +293,8 @@ serve(async (req) => {
       }
 
       const fullPrompt = `${transformationPrompt}
-
-${contextInfo}
-
-MASTER CONTENT:
-${masterContent.full_content}
-
-Generate the ${derivativeType} version now.`;
+\n${contextInfo}
+\nIMPORTANT OUTPUT RULES:\n- Return PLAIN TEXT only.\n- Do NOT use any Markdown or markup (no **bold**, *italics*, # headings, lists, or backticks).\n- Keep labels like SLIDE 1:, TWEET 1:, SUBJECT LINE 1: as plain text when applicable.\n\nMASTER CONTENT:\n${masterContent.full_content}\n\nGenerate the ${derivativeType} version now.`;
 
       // Call Lovable AI Gateway (default to Gemini 2.5 Flash)
       const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -302,37 +323,34 @@ Generate the ${derivativeType} version now.`;
 
       const aiData = await aiResponse.json();
       const generatedContent = aiData.choices?.[0]?.message?.content ?? '';
+      const cleanedContent = stripMarkdown(generatedContent);
 
-      // Parse platform-specific specs
+      // Parse platform-specific specs (from cleaned text to avoid markdown tokens)
       let platformSpecs: any = {};
-      
       if (derivativeType === 'email') {
-        // Extract subject lines and preview text
-        const subjectMatch = generatedContent.match(/SUBJECT LINE \d+: (.+)/g);
-        const previewMatch = generatedContent.match(/PREVIEW TEXT: (.+)/);
+        const subjectMatch = cleanedContent.match(/SUBJECT LINE \d+: (.+)/g);
+        const previewMatch = cleanedContent.match(/PREVIEW TEXT: (.+)/);
         platformSpecs = {
           subjectLines: subjectMatch?.map((s: string) => s.replace(/SUBJECT LINE \d+: /, '').trim()) || [],
           previewText: previewMatch?.[1]?.trim() || '',
         };
       } else if (derivativeType === 'instagram') {
-        const slides = generatedContent.match(/SLIDE \d+: (.+)/g);
-        const captionMatch = generatedContent.match(/CAPTION: ([\s\S]+)/);
+        const slides = cleanedContent.match(/SLIDE \d+: (.+)/g);
+        const captionMatch = cleanedContent.match(/CAPTION: ([\s\S]+)/);
         platformSpecs = {
           slideCount: slides?.length || 5,
           slides: slides?.map((s: string) => s.replace(/SLIDE \d+: /, '').trim()) || [],
           caption: captionMatch?.[1]?.trim() || '',
         };
       } else if (derivativeType === 'twitter') {
-        const tweets = generatedContent.match(/TWEET \d+: (.+)/g);
+        const tweets = cleanedContent.match(/TWEET \d+: (.+)/g);
         platformSpecs = {
           tweetCount: tweets?.length || 0,
           tweets: tweets?.map((t: string) => t.replace(/TWEET \d+: /, '').trim()) || [],
         };
       } else if (derivativeType === 'sms') {
-        const smsOptions = generatedContent.split('\n').filter((line: string) => line.trim() && !line.startsWith('REQUIREMENTS') && !line.startsWith('FORMAT'));
-        platformSpecs = {
-          options: smsOptions.slice(0, 3),
-        };
+        const smsOptions = cleanedContent.split('\n').filter((line: string) => line.trim() && !line.startsWith('REQUIREMENTS') && !line.startsWith('FORMAT'));
+        platformSpecs = { options: smsOptions.slice(0, 3) };
       }
 
       // Save to database
@@ -341,7 +359,7 @@ Generate the ${derivativeType} version now.`;
         .insert({
           master_content_id: masterContentId,
           asset_type: derivativeType,
-          generated_content: generatedContent,
+          generated_content: cleanedContent,
           platform_specs: platformSpecs,
           approval_status: 'pending',
           created_by: user.id,

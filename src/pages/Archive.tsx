@@ -18,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { stripMarkdown } from "@/utils/forgeHelpers";
 
 interface ArchivedPrompt {
   id: string;
@@ -513,7 +514,7 @@ const Archive = () => {
                           /* Text Content */
                           <div className="bg-background/50 rounded-md p-4 border border-border/30 min-h-[200px]">
                             <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                              {archive.output?.generated_content || "No output generated"}
+                              {stripMarkdown(archive.output?.generated_content || "No output generated")}
                             </p>
                           </div>
                         )}
@@ -627,7 +628,7 @@ const Archive = () => {
                         </div>
                         <div className="bg-muted/50 p-4 rounded-md">
                           <p className="text-sm text-foreground line-clamp-3 whitespace-pre-wrap">
-                            {derivative.generated_content}
+                            {stripMarkdown(derivative.generated_content)}
                           </p>
                         </div>
                       </div>
