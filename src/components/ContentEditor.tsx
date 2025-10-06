@@ -55,8 +55,11 @@ export const ContentEditor = ({
 
   // Initialize richHtml when entering full-screen
   useEffect(() => {
-    if (isFullScreen) {
-      setRichHtml(content.replace(/\n/g, '<br>'));
+    if (isFullScreen && editableRef.current) {
+      // Set the content directly on the element
+      editableRef.current.innerHTML = content.replace(/\n/g, '<br>');
+      setRichHtml(editableRef.current.innerHTML);
+      
       setTimeout(() => {
         if (editableRef.current) {
           editableRef.current.focus();
@@ -635,7 +638,6 @@ export const ContentEditor = ({
                   suppressContentEditableWarning
                   style={{ fontFamily: currentFontFamily }}
                   className="w-full min-h-[calc(100vh-200px)] bg-background border-none focus:outline-none text-lg leading-relaxed resize-none shadow-sm rounded-lg p-12"
-                  dangerouslySetInnerHTML={{ __html: richHtml }}
                 />
               </div>
             </div>
