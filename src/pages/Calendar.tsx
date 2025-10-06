@@ -11,7 +11,6 @@ import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useDipWeekCalculation } from "@/hooks/useDipWeekCalculation";
 import { toast } from "@/hooks/use-toast";
-import calendarWatch from "@/assets/calendar-watch.png";
 import {
   Tooltip,
   TooltipContent,
@@ -161,18 +160,6 @@ const Calendar = () => {
   return (
     <div className="min-h-screen pt-24 pb-12 px-6 md:px-12">
       <div className="max-w-[1920px] mx-auto">
-        {/* Decorative Watch Hero - Hidden on mobile, subtle on desktop */}
-        <div className="hidden md:flex justify-center mb-8 opacity-60 hover:opacity-100 transition-opacity duration-500">
-          <div className="relative w-48 h-48 rounded-full overflow-hidden shadow-2xl">
-            <img 
-              src={calendarWatch} 
-              alt="Timepiece" 
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/20" />
-          </div>
-        </div>
-
         <CalendarHeader
           currentDate={currentDate}
           viewMode={viewMode}
