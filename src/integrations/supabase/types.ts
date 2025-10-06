@@ -112,6 +112,53 @@ export type Database = {
           },
         ]
       }
+      brand_products: {
+        Row: {
+          base_notes: string | null
+          collection: string | null
+          created_at: string
+          id: string
+          middle_notes: string | null
+          name: string
+          organization_id: string
+          scent_family: string | null
+          top_notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          base_notes?: string | null
+          collection?: string | null
+          created_at?: string
+          id?: string
+          middle_notes?: string | null
+          name: string
+          organization_id: string
+          scent_family?: string | null
+          top_notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          base_notes?: string | null
+          collection?: string | null
+          created_at?: string
+          id?: string
+          middle_notes?: string | null
+          name?: string
+          organization_id?: string
+          scent_family?: string | null
+          top_notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_products_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_notes: {
         Row: {
           created_at: string | null

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { useProducts } from "@/hooks/useProducts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,210 +20,6 @@ import { ChevronsUpDown } from "lucide-react";
 import { IMAGE_PROMPT_TEMPLATES, type ImagePromptType } from "@/config/imagePromptGuidelines";
 import { BLOG_POST_TYPES, BLOG_REPURPOSE_TARGETS, generateBlogPrompt, validateBlogVoice, type BlogPostType } from "@/config/blogPostGuidelines";
 import { ContentEditor } from "@/components/ContentEditor";
-
-// Product catalogue with collection and scent family mappings
-const PRODUCTS = [
-  { 
-    name: "Aged Mysore Sandalwood", 
-    collection: "Purity Collection", 
-    scentFamily: "Woody",
-    topNotes: "Sandalwood (Santalum Album)",
-    middleNotes: "Sandalwood (Santalum Album)",
-    baseNotes: "Sandalwood (Santalum Album)"
-  },
-  { 
-    name: "Aseel", 
-    collection: "Cadence Collection", 
-    scentFamily: "Fresh",
-    topNotes: "Fresh and vibrant citrus",
-    middleNotes: "A blend of floral and spicy undertones",
-    baseNotes: "Rich, woody accords combined with a touch of musk"
-  },
-  { 
-    name: "Black Musk", 
-    collection: "Cadence Collection", 
-    scentFamily: "Warm",
-    topNotes: "Ambrette",
-    middleNotes: "Plant Resins",
-    baseNotes: "Labdanum"
-  },
-  { 
-    name: "Black Oudh", 
-    collection: "Cadence Collection", 
-    scentFamily: "Woody",
-    topNotes: "Bergamot, and Lime",
-    middleNotes: "Cedarwood, Rose",
-    baseNotes: "Oud, Cedar, and Amber"
-  },
-  { 
-    name: "China Rain", 
-    collection: "Cadence Collection", 
-    scentFamily: "Fresh",
-    topNotes: "Nectarine, green notes",
-    middleNotes: "White lilies, Chinese roses",
-    baseNotes: "Clean musk, sandalwood, moss"
-  },
-  { 
-    name: "Egyptian Musk", 
-    collection: "Cadence Collection", 
-    scentFamily: "Warm",
-    topNotes: "Light Musk",
-    middleNotes: "Florals",
-    baseNotes: "Musk"
-  },
-  { 
-    name: "Floral Dew", 
-    collection: "Cadence Collection", 
-    scentFamily: "Fresh",
-    topNotes: "White Musk",
-    middleNotes: "Light Florals",
-    baseNotes: "Ylang Ylang"
-  },
-  { 
-    name: "Frankincense & Myrrh", 
-    collection: "Cadence Collection", 
-    scentFamily: "Woody",
-    topNotes: "Frankincense",
-    middleNotes: "Myrrh, Indian Frankincense",
-    baseNotes: "Myrrh Essential Oil"
-  },
-  { 
-    name: "Granada Amber", 
-    collection: "Cadence Collection", 
-    scentFamily: "Warm",
-    topNotes: "Amber",
-    middleNotes: "Vanilla, Amber Liquid",
-    baseNotes: "Labdanum, Amber"
-  },
-  { 
-    name: "Himalayan Musk", 
-    collection: "Cadence Collection", 
-    scentFamily: "Warm",
-    topNotes: "Florals",
-    middleNotes: "Light Florals",
-    baseNotes: "Musk"
-  },
-  { 
-    name: "Hojari Frankincense & Yemeni Myrrh", 
-    collection: "Reserve Collection", 
-    scentFamily: "Woody",
-    topNotes: "Citrusy Freshness, Piney",
-    middleNotes: "Balsamic, Earthy",
-    baseNotes: "Resinous quality"
-  },
-  { 
-    name: "Honey Oudh", 
-    collection: "Cadence Collection", 
-    scentFamily: "Warm",
-    topNotes: "Honey & Bergamot",
-    middleNotes: "Agarwood (Oud) & Sumatran Patchouli",
-    baseNotes: "Agarwood (Oud), Amber, Leather, Madagascar Vanilla, Labdanum, and Musk"
-  },
-  { 
-    name: "Indonesian Patchouli", 
-    collection: "Purity Collection", 
-    scentFamily: "Woody",
-    topNotes: "Indian Patchouli",
-    middleNotes: "Indian Patchouli",
-    baseNotes: "Indian Patchouli"
-  },
-  { 
-    name: "Jannatul Firdaus", 
-    collection: "Cadence Collection", 
-    scentFamily: "Floral",
-    topNotes: "Rose and Lotus",
-    middleNotes: "Jasmine, Geranium",
-    baseNotes: "Earthy, Woody, and Herbal Notes"
-  },
-  { 
-    name: "Kush", 
-    collection: "Cadence Collection", 
-    scentFamily: "Woody",
-    topNotes: "Cinnamon, Spices",
-    middleNotes: "Incense, Myrrh",
-    baseNotes: "Patchouli, Musk Myrrh"
-  },
-  { 
-    name: "Majmua Attar", 
-    collection: "Cadence Collection", 
-    scentFamily: "Floral",
-    topNotes: "",
-    middleNotes: "",
-    baseNotes: ""
-  },
-  { 
-    name: "Musk Tahara", 
-    collection: "Cadence Collection", 
-    scentFamily: "Warm",
-    topNotes: "Floral Musk",
-    middleNotes: "Musk, Powdery, Light Florals",
-    baseNotes: "Musk"
-  },
-  { 
-    name: "Red Musk", 
-    collection: "Cadence Collection", 
-    scentFamily: "Warm",
-    topNotes: "Nutmeg, Geraniol",
-    middleNotes: "Ambrette, Spice",
-    baseNotes: "Neem Oil, Myrrh, Patchouli"
-  },
-  { 
-    name: "Royal Green Frankincense", 
-    collection: "Sacred Space", 
-    scentFamily: "Woody",
-    topNotes: "",
-    middleNotes: "",
-    baseNotes: ""
-  },
-  { 
-    name: "Royal Tahara", 
-    collection: "Cadence Collection", 
-    scentFamily: "Warm",
-    topNotes: "Light Florals",
-    middleNotes: "Powdery Notes",
-    baseNotes: "Musk"
-  },
-  { 
-    name: "Sandalwood Rose", 
-    collection: "Cadence Collection", 
-    scentFamily: "Floral",
-    topNotes: "Rose Otto",
-    middleNotes: "Damascus Rose",
-    baseNotes: "Sandalwood"
-  },
-  { 
-    name: "Seville", 
-    collection: "Cadence Collection", 
-    scentFamily: "Woody",
-    topNotes: "",
-    middleNotes: "",
-    baseNotes: ""
-  },
-  { 
-    name: "Turkish Rose", 
-    collection: "Cadence Collection", 
-    scentFamily: "Floral",
-    topNotes: "Rose Otto",
-    middleNotes: "Damascus Rose",
-    baseNotes: "Light Woody Notes"
-  },
-  { 
-    name: "Vanilla Sands", 
-    collection: "Cadence Collection", 
-    scentFamily: "Warm",
-    topNotes: "Musk",
-    middleNotes: "Vanilla, Caramel",
-    baseNotes: "Musk, Woody Notes"
-  },
-  { 
-    name: "White Amber", 
-    collection: "Cadence Collection", 
-    scentFamily: "Warm",
-    topNotes: "Amber",
-    middleNotes: "Amber",
-    baseNotes: "Amber"
-  },
-].sort((a, b) => a.name.localeCompare(b.name));
 
 // Helpers to map display labels to database enum values
 const toEnum = (v?: string | null) => (v ? v.toLowerCase().replace(/\s+/g, '_') : null);
@@ -269,6 +66,7 @@ const Forge = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { currentOrganizationId } = useOnboarding();
+  const { products } = useProducts();
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -310,11 +108,11 @@ const Forge = () => {
   });
 
   const filteredProducts = useMemo(() => {
-    if (!productSearchValue) return PRODUCTS;
-    return PRODUCTS.filter(product =>
+    if (!productSearchValue) return products;
+    return products.filter(product =>
       product.name.toLowerCase().includes(productSearchValue.toLowerCase())
     );
-  }, [productSearchValue]);
+  }, [productSearchValue, products]);
 
   const generatePrompt = () => {
     const parts = [];
