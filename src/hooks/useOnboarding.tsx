@@ -10,7 +10,10 @@ export function useOnboarding() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
 
     const checkOnboardingStatus = async () => {
       try {
