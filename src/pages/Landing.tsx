@@ -39,28 +39,28 @@ const Landing = () => {
   const features = [
     {
       icon: libraryIcon,
-      title: "Curate Your Library",
+      title: "CURATE YOUR LIBRARY",
       description: "Build a centralized repository of high-quality prompts and brand guidelines that power consistent, on-brand content."
     },
     {
-      icon: composeIcon,
-      title: "Compose with Intelligence",
-      description: "Generate content with AI assistance, then perfect it in our rich editor. Move polished content to repurposing—all in one seamless workflow."
-    },
-    {
       icon: amplifyIcon,
-      title: "Amplify Effortlessly",
+      title: "AMPLIFY EFFORTLESSLY",
       description: "Repurpose your best content across channels—transform blog posts into social media, newsletters, and more."
     },
     {
-      icon: portfolioIcon,
-      title: "Portfolio at a Glance",
-      description: "Track all your published content in one place, rate your work, and maintain an organized archive of everything you've created."
+      icon: composeIcon,
+      title: "COMPOSE WITH INTELLIGENCE",
+      description: "Generate content with AI assistance, then perfect it in our rich editor. Move polished content to repurposing—all in one seamless workflow."
     },
     {
       icon: calendarIcon,
-      title: "Plan Strategically",
+      title: "PLAN STRATEGICALLY",
       description: "Schedule content across your calendar, sync with Google Calendar, and never miss a publishing deadline."
+    },
+    {
+      icon: portfolioIcon,
+      title: "PORTFOLIO AT A GLANCE",
+      description: "Track all your published content in one organized archive with easy access to your content library."
     }
   ];
 
@@ -218,14 +218,14 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="text-center mb-16 codex-spacing fade-enter">
             <h2 className="text-foreground mb-4">
-              Everything You Need to Scale Content
+              The Scriptorium Workflow
             </h2>
             <p className="text-large text-muted-foreground max-w-2xl mx-auto">
               From ideation to publication, Scriptorium streamlines your entire content workflow.
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 fade-enter">
+          <div className="grid md:grid-cols-2 gap-10 fade-enter">
             {features.map((feature, index) => {
               const icon = feature.icon;
               const isImageIcon = typeof icon === 'string';
@@ -234,17 +234,17 @@ const Landing = () => {
                   key={index}
                   className="group cursor-default"
                 >
-                  <div className="bg-primary/10 w-10 h-10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/15 transition-colors">
+                  <div className="mb-5">
                     {isImageIcon ? (
-                      <img src={icon} alt={feature.title} className="w-9 h-9 object-contain" />
+                      <img src={icon} alt={feature.title} className="w-15 h-15 object-contain" />
                     ) : (
                       (() => {
                         const IconComponent = icon as React.ComponentType<{ className?: string }>;
-                        return <IconComponent className="w-6 h-6 text-primary" />;
+                        return <IconComponent className="w-15 h-15 text-primary" />;
                       })()
                     )}
                   </div>
-                  <h3 className="font-serif text-2xl font-bold text-foreground mb-3">
+                  <h3 className="font-serif text-2xl font-bold text-foreground mb-3 uppercase">
                     {feature.title}
                   </h3>
                   <p className="text-regular text-muted-foreground leading-relaxed">
