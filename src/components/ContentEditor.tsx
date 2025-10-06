@@ -37,6 +37,7 @@ export const ContentEditor = ({
   const historyIndexRef = useRef(0);
   const isUndoRedoRef = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editableRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   // Prevent background scroll when full-screen
@@ -50,17 +51,26 @@ export const ContentEditor = ({
     }
   }, [isFullScreen]);
 
-  // Focus textarea when entering full-screen
+  // Focus editable div when entering full-screen
   useEffect(() => {
-    if (isFullScreen && textareaRef.current) {
-      const t = textareaRef.current;
-      t.focus();
-      const len = t.value.length;
-      try {
-        t.setSelectionRange(len, len);
-      } catch {}
+    if (isFullScreen && editableRef.current) {
+      editableRef.current.focus();
+      // Move cursor to end
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.selectNodeContents(editableRef.current);
+      range.collapse(false);
+      sel?.removeAllRanges();
+      sel?.addRange(range);
     }
   }, [isFullScreen]);
+
+  // Sync content to editable div when content prop changes
+  useEffect(() => {
+    if (editableRef.current && !isFullScreen) {
+      editableRef.current.innerHTML = content.replace(/\n/g, '<br>');
+    }
+  }, [content, isFullScreen]);
 
   // Calculate word count
   useEffect(() => {
@@ -122,7 +132,8 @@ export const ContentEditor = ({
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(content);
+      const textToCopy = editableRef.current?.innerText || content;
+      await navigator.clipboard.writeText(textToCopy);
       setCopied(true);
       toast({
         title: "Copied!",
@@ -138,111 +149,27 @@ export const ContentEditor = ({
     }
   };
 
-  const insertMarkdown = (before: string, after: string = before) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = content.substring(start, end);
-    const newText = content.substring(0, start) + before + selectedText + after + content.substring(end);
-    
-    onChange(newText);
-    
-    // Restore cursor position
-    setTimeout(() => {
-      textarea.focus();
-      const newCursorPos = start + before.length + selectedText.length + after.length;
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
-    }, 0);
+  const execCommand = (command: string, value?: string) => {
+    document.execCommand(command, false, value);
+    updateContentFromEditable();
   };
 
-  const insertLineMarkdown = (prefix: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const lines = content.split('\n');
-    
-    let currentPos = 0;
-    let startLine = 0;
-    let endLine = 0;
-    
-    // Find which lines are selected
-    for (let i = 0; i < lines.length; i++) {
-      const lineLength = lines[i].length + 1; // +1 for newline
-      if (currentPos <= start && start < currentPos + lineLength) {
-        startLine = i;
-      }
-      if (currentPos <= end && end < currentPos + lineLength) {
-        endLine = i;
-        break;
-      }
-      currentPos += lineLength;
+  const updateContentFromEditable = () => {
+    if (editableRef.current) {
+      const html = editableRef.current.innerHTML;
+      const text = editableRef.current.innerText;
+      onChange(text);
     }
-    
-    // Toggle prefix on selected lines
-    const modifiedLines = lines.map((line, i) => {
-      if (i >= startLine && i <= endLine) {
-        if (line.startsWith(prefix)) {
-          return line.substring(prefix.length);
-        } else {
-          return prefix + line;
-        }
-      }
-      return line;
-    });
-    
-    onChange(modifiedLines.join('\n'));
-    
-    setTimeout(() => {
-      textarea.focus();
-    }, 0);
   };
 
-  const insertNumberedList = () => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const lines = content.split('\n');
-    
-    let currentPos = 0;
-    let startLine = 0;
-    let endLine = 0;
-    
-    for (let i = 0; i < lines.length; i++) {
-      const lineLength = lines[i].length + 1;
-      if (currentPos <= start && start < currentPos + lineLength) {
-        startLine = i;
-      }
-      if (currentPos <= end && end < currentPos + lineLength) {
-        endLine = i;
-        break;
-      }
-      currentPos += lineLength;
-    }
-    
-    const modifiedLines = lines.map((line, i) => {
-      if (i >= startLine && i <= endLine) {
-        const match = line.match(/^(\d+)\.\s/);
-        if (match) {
-          return line.substring(match[0].length);
-        } else {
-          return `${i - startLine + 1}. ${line}`;
-        }
-      }
-      return line;
-    });
-    
-    onChange(modifiedLines.join('\n'));
-    
-    setTimeout(() => {
-      textarea.focus();
-    }, 0);
-  };
+  const handleBold = () => execCommand('bold');
+  const handleItalic = () => execCommand('italic');
+  const handleUnderline = () => execCommand('underline');
+  const handleH1 = () => execCommand('formatBlock', '<h1>');
+  const handleH2 = () => execCommand('formatBlock', '<h2>');
+  const handleH3 = () => execCommand('formatBlock', '<h3>');
+  const handleBulletList = () => execCommand('insertUnorderedList');
+  const handleNumberedList = () => execCommand('insertOrderedList');
 
   const currentFontFamily = FONT_OPTIONS.find(f => f.value === selectedFont)?.family || FONT_OPTIONS[0].family;
 
@@ -342,7 +269,10 @@ export const ContentEditor = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => insertMarkdown('**')}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleBold();
+                      }}
                       className="h-9 w-9 p-0"
                       title="Bold"
                     >
@@ -351,7 +281,10 @@ export const ContentEditor = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => insertMarkdown('*')}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleItalic();
+                      }}
                       className="h-9 w-9 p-0"
                       title="Italic"
                     >
@@ -360,7 +293,10 @@ export const ContentEditor = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => insertMarkdown('<u>', '</u>')}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleUnderline();
+                      }}
                       className="h-9 w-9 p-0"
                       title="Underline"
                     >
@@ -375,7 +311,10 @@ export const ContentEditor = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => insertLineMarkdown('# ')}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleH1();
+                      }}
                       className="h-9 w-9 p-0"
                       title="Heading 1"
                     >
@@ -384,7 +323,10 @@ export const ContentEditor = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => insertLineMarkdown('## ')}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleH2();
+                      }}
                       className="h-9 w-9 p-0"
                       title="Heading 2"
                     >
@@ -393,7 +335,10 @@ export const ContentEditor = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => insertLineMarkdown('### ')}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleH3();
+                      }}
                       className="h-9 w-9 p-0"
                       title="Heading 3"
                     >
@@ -408,7 +353,10 @@ export const ContentEditor = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => insertLineMarkdown('- ')}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleBulletList();
+                      }}
                       className="h-9 w-9 p-0"
                       title="Bullet List"
                     >
@@ -417,7 +365,10 @@ export const ContentEditor = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={insertNumberedList}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleNumberedList();
+                      }}
                       className="h-9 w-9 p-0"
                       title="Numbered List"
                     >
@@ -493,15 +444,15 @@ export const ContentEditor = ({
             {/* Document Editor Area - Centered with max-width */}
             <div className="flex-1 overflow-auto bg-muted/30">
               <div className="max-w-4xl mx-auto py-12 px-8 md:px-16">
-                <Textarea
-                  ref={textareaRef}
-                  value={content}
-                  onChange={(e) => onChange(e.target.value)}
+                <div
+                  ref={editableRef}
+                  contentEditable
+                  onInput={updateContentFromEditable}
                   onKeyDown={handleKeyDown}
-                  placeholder={placeholder}
+                  suppressContentEditableWarning
                   style={{ fontFamily: currentFontFamily }}
-                  className="w-full min-h-[calc(100vh-200px)] bg-background border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-lg leading-relaxed resize-none shadow-sm rounded-lg p-12"
-                  autoFocus
+                  className="w-full min-h-[calc(100vh-200px)] bg-background border-none focus:outline-none text-lg leading-relaxed resize-none shadow-sm rounded-lg p-12"
+                  dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br>') }}
                 />
               </div>
             </div>
