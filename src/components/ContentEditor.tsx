@@ -41,7 +41,19 @@ export const ContentEditor = ({
     }
   }, [isFullScreen]);
 
-   // Calculate word count
+  // Focus textarea when entering full-screen
+  useEffect(() => {
+    if (isFullScreen && textareaRef.current) {
+      const t = textareaRef.current;
+      t.focus();
+      const len = t.value.length;
+      try {
+        t.setSelectionRange(len, len);
+      } catch {}
+    }
+  }, [isFullScreen]);
+
+  // Calculate word count
   useEffect(() => {
     const words = content.trim().split(/\s+/).filter(word => word.length > 0);
     setWordCount(words.length);
@@ -86,6 +98,9 @@ export const ContentEditor = ({
     } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
       e.preventDefault();
       handleRedo();
+    } else if (e.key === 'Escape' && isFullScreen) {
+      e.preventDefault();
+      setIsFullScreen(false);
     }
   };
 
