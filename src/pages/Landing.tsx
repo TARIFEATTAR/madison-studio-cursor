@@ -225,16 +225,23 @@ const Landing = () => {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-10 fade-enter">
+          <div className="grid md:grid-cols-2 gap-12 fade-enter">
             {features.map((feature, index) => {
               const icon = feature.icon;
               const isImageIcon = typeof icon === 'string';
               return (
                 <div 
                   key={index}
-                  className="group cursor-default"
+                  className="group relative bg-card/50 border border-border/50 rounded-xl p-8 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:border-primary/30 cursor-default"
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className="mb-5">
+                  {/* Step Number */}
+                  <div className="absolute top-6 right-6 text-4xl font-serif font-bold text-primary/40 group-hover:text-primary/60 transition-colors duration-300">
+                    {index + 1}
+                  </div>
+                  
+                  {/* Icon with Background */}
+                  <div className="mb-6 w-20 h-20 rounded-full bg-primary/10 group-hover:bg-primary/15 transition-all duration-300 flex items-center justify-center">
                     {isImageIcon ? (
                       <img src={icon} alt={feature.title} className="w-14 h-14 object-contain" />
                     ) : (
@@ -244,9 +251,13 @@ const Landing = () => {
                       })()
                     )}
                   </div>
-                  <h3 className="font-serif text-2xl font-bold text-foreground mb-3 uppercase">
+                  
+                  {/* Title - Title Case */}
+                  <h3 className="font-serif text-2xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors duration-300">
                     {feature.title}
                   </h3>
+                  
+                  {/* Description */}
                   <p className="text-regular text-muted-foreground leading-relaxed">
                     {feature.description}
                   </p>
