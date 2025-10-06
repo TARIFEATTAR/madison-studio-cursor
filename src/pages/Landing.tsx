@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { BookOpen, Sparkles, Repeat, Archive, Calendar, ArrowRight, CheckCircle2 } from "lucide-react";
+import { BookOpen, Sparkles, Repeat, Archive, Calendar, ArrowRight, CheckCircle2, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import penHeroImage from "@/assets/pen-hero.jpg";
@@ -61,6 +61,11 @@ const Landing = () => {
       icon: portfolioIcon,
       title: "Track Your Portfolio",
       description: "Monitor all your published content in one organized archive with instant access to your complete content library."
+    },
+    {
+      icon: BarChart3,
+      title: "Measure Performance",
+      description: "Analyze content performance with comprehensive analytics. Track engagement, reach, and ROI to continuously improve your content strategy."
     }
   ];
 
