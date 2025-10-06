@@ -40,7 +40,7 @@ const Landing = () => {
     {
       icon: Sparkles,
       title: "Compose with Intelligence",
-      description: "Generate and perfect content with AI assistance. Edit directly in our rich editor, then move polished content to repurposing—all in one seamless workflow."
+      description: "Generate content with AI assistance, then perfect it in our rich editor. Move polished content to repurposing—all in one seamless workflow."
     },
     {
       icon: Repeat,
@@ -50,7 +50,7 @@ const Landing = () => {
     {
       icon: Archive,
       title: "Portfolio at a Glance",
-      description: "Track all your published content in one place, with quality ratings and performance insights."
+      description: "Track all your published content in one organized archive with easy access to your content library."
     },
     {
       icon: Calendar,
@@ -61,10 +61,10 @@ const Landing = () => {
 
   const benefits = [
     "White-label ready for agency deployment",
-    "Brand voice consistency across all content",
+    "Centralized prompt and template library",
     "AI-powered content generation and repurposing",
     "Integrated calendar planning and scheduling",
-    "Quality tracking and portfolio management"
+    "Organized content portfolio management"
   ];
 
   return (
