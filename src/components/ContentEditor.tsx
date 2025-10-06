@@ -246,8 +246,11 @@ export const ContentEditor = ({
   };
 
   const execCommand = (command: string, value?: string) => {
-    document.execCommand(command, false, value);
-    updateContentFromEditable();
+    if (editableRef.current) {
+      editableRef.current.focus();
+      document.execCommand(command, false, value);
+      updateContentFromEditable();
+    }
   };
 
   const updateContentFromEditable = () => {
