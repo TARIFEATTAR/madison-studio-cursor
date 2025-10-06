@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Maximize2, Minimize2, Save, Undo2, Redo2, Copy, Check, Bold, Italic, List, Heading } from "lucide-react";
+import { Maximize2, Minimize2, Undo2, Redo2, Copy, Check, Bold, Italic, List, Heading } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -259,127 +259,130 @@ export const ContentEditor = ({
       )}
 
       {/* Full Screen Editor */}
-      {isFullScreen && (
-        <div className="fixed inset-0 z-50 bg-background flex flex-col">
-          {/* Floating Toolbar */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
-            <div className="flex items-center gap-2 bg-background/95 backdrop-blur-sm border border-border/40 rounded-lg px-3 py-2 shadow-lg">
-              {/* Formatting Tools */}
-              <div className="flex items-center gap-1 pr-2 border-r border-border/40">
+      {isFullScreen &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] bg-background w-screen h-[100dvh] flex flex-col">
+            {/* Floating Toolbar */}
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
+              <div className="flex items-center gap-2 bg-background/95 backdrop-blur-sm border border-border/40 rounded-lg px-3 py-2 shadow-lg">
+                {/* Formatting Tools */}
+                <div className="flex items-center gap-1 pr-2 border-r border-border/40">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => insertMarkdown('**')}
+                    className="h-8 w-8 p-0"
+                    title="Bold"
+                  >
+                    <Bold className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => insertMarkdown('*')}
+                    className="h-8 w-8 p-0"
+                    title="Italic"
+                  >
+                    <Italic className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => insertLineMarkdown('# ')}
+                    className="h-8 w-8 p-0"
+                    title="Heading"
+                  >
+                    <Heading className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => insertLineMarkdown('- ')}
+                    className="h-8 w-8 p-0"
+                    title="Bullet List"
+                  >
+                    <List className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                {/* Undo/Redo */}
+                <div className="flex items-center gap-1 pr-2 border-r border-border/40">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleUndo}
+                    disabled={!canUndo}
+                    className="h-8 w-8 p-0"
+                    title="Undo (Ctrl+Z)"
+                  >
+                    <Undo2 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRedo}
+                    disabled={!canRedo}
+                    className="h-8 w-8 p-0"
+                    title="Redo (Ctrl+Y)"
+                  >
+                    <Redo2 className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                {/* Word Count */}
+                <span className="text-sm text-muted-foreground px-2">
+                  {wordCount} {wordCount === 1 ? 'word' : 'words'}
+                </span>
+
+                {/* Copy Button */}
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => insertMarkdown('**')}
-                  className="h-8 w-8 p-0"
-                  title="Bold"
+                  onClick={handleCopy}
+                  className="h-8 gap-1.5"
                 >
-                  <Bold className="w-4 h-4" />
+                  {copied ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      Copy All
+                    </>
+                  )}
                 </Button>
+
+                {/* Exit */}
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  onClick={() => insertMarkdown('*')}
-                  className="h-8 w-8 p-0"
-                  title="Italic"
+                  onClick={handleToggleFullScreen}
+                  className="h-8 gap-1.5 ml-2"
                 >
-                  <Italic className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => insertLineMarkdown('# ')}
-                  className="h-8 w-8 p-0"
-                  title="Heading"
-                >
-                  <Heading className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => insertLineMarkdown('- ')}
-                  className="h-8 w-8 p-0"
-                  title="Bullet List"
-                >
-                  <List className="w-4 h-4" />
+                  <Minimize2 className="w-4 h-4" />
+                  Exit
                 </Button>
               </div>
-
-              {/* Undo/Redo */}
-              <div className="flex items-center gap-1 pr-2 border-r border-border/40">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleUndo}
-                  disabled={!canUndo}
-                  className="h-8 w-8 p-0"
-                  title="Undo (Ctrl+Z)"
-                >
-                  <Undo2 className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleRedo}
-                  disabled={!canRedo}
-                  className="h-8 w-8 p-0"
-                  title="Redo (Ctrl+Y)"
-                >
-                  <Redo2 className="w-4 h-4" />
-                </Button>
-              </div>
-
-              {/* Word Count */}
-              <span className="text-sm text-muted-foreground px-2">
-                {wordCount} {wordCount === 1 ? 'word' : 'words'}
-              </span>
-
-              {/* Copy Button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleCopy}
-                className="h-8 gap-1.5"
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-4 h-4" />
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4" />
-                    Copy All
-                  </>
-                )}
-              </Button>
-
-              {/* Exit */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleToggleFullScreen}
-                className="h-8 gap-1.5 ml-2"
-              >
-                <Minimize2 className="w-4 h-4" />
-                Exit
-              </Button>
             </div>
-          </div>
 
-          {/* Full Screen Editor Area - Completely Clean */}
-          <div className="flex-1 overflow-auto px-12 md:px-24 py-20">
-            <Textarea
-              ref={textareaRef}
-              value={content}
-              onChange={(e) => onChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={placeholder}
-              className="min-h-[calc(100vh-160px)] w-full bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-lg leading-relaxed font-serif resize-none shadow-none"
-              autoFocus
-            />
-          </div>
-        </div>
-      )}
+            {/* Full Screen Editor Area - Edge-to-edge */}
+            <div className="flex-1">
+              <Textarea
+                ref={textareaRef}
+                value={content}
+                onChange={(e) => onChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={placeholder}
+                className="w-full h-full bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-lg leading-relaxed font-serif resize-none shadow-none overflow-auto overscroll-contain"
+                autoFocus
+              />
+            </div>
+          </div>,
+          document.body
+        )
+      }
     </>
   );
 };
