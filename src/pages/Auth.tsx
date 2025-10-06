@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import scriptoraLogo from "@/assets/scriptora-logo.png";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -213,7 +214,7 @@ const Auth = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8 fade-enter">
           <img 
-            src="/logo-full.png" 
+            src={scriptoraLogo} 
             alt="Scriptora" 
             className="h-16 w-auto mx-auto mb-3"
           />
