@@ -3,6 +3,7 @@ import { Sparkles, Copy, Check, Loader2, Archive, Wand2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useOnboarding } from "@/hooks/useOnboarding";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -267,6 +268,7 @@ const Forge = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { currentOrganizationId } = useOnboarding();
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -538,8 +540,9 @@ const Forge = () => {
             customInstructions: formData.customInstructions,
           },
           created_by: user.id,
+          organization_id: currentOrganizationId!,
           is_archived: false,
-        })
+        } as any)
         .select()
         .single();
 
@@ -561,8 +564,9 @@ const Forge = () => {
           quality_rating: qualityRating,
           usage_context: `${formData.contentType} - ${formData.collection}`,
           created_by: user.id,
+          organization_id: currentOrganizationId!,
           is_archived: false,
-        });
+        } as any);
 
       if (outputError) throw outputError;
 
@@ -666,8 +670,9 @@ const Forge = () => {
           dip_week: formData.dipWeek ? parseInt(formData.dipWeek) : null,
           pillar_focus: formData.pillar ? (mapPillarToEnum(formData.pillar) as any) : null,
           created_by: user.id,
+          organization_id: currentOrganizationId!,
           is_archived: false,
-        })
+        } as any)
         .select()
         .single();
 
