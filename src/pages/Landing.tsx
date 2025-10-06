@@ -9,6 +9,7 @@ import bookIcon from "@/assets/book-icon.png";
 import portfolioIcon from "@/assets/portfolio-icon.png";
 import calendarIcon from "@/assets/calendar-icon.png";
 import amplifyIcon from "@/assets/amplify-icon.png";
+import composeIcon from "@/assets/compose-icon.png";
 
 const steps = [
   {
@@ -41,7 +42,7 @@ const Landing = () => {
       description: "Build a centralized repository of high-quality prompts and brand guidelines that power consistent, on-brand content."
     },
     {
-      icon: Sparkles,
+      icon: composeIcon,
       title: "Compose with Intelligence",
       description: "Generate content with AI assistance, then perfect it in our rich editor. Move polished content to repurposing—all in one seamless workflow."
     },
