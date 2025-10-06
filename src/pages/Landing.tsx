@@ -39,28 +39,28 @@ const Landing = () => {
   const features = [
     {
       icon: libraryIcon,
-      title: "CURATE YOUR LIBRARY",
-      description: "Build a centralized repository of high-quality prompts and brand guidelines that power consistent, on-brand content."
-    },
-    {
-      icon: amplifyIcon,
-      title: "AMPLIFY EFFORTLESSLY",
-      description: "Repurpose your best content across channels—transform blog posts into social media, newsletters, and more."
+      title: "Build Your Repository",
+      description: "Create a centralized library of high-quality content, prompts, and brand guidelines that power a consistent brand voice across all your marketing channels."
     },
     {
       icon: composeIcon,
-      title: "COMPOSE WITH INTELLIGENCE",
+      title: "Compose with Intelligence",
       description: "Generate content with AI assistance, then perfect it in our rich editor. Move polished content to repurposing—all in one seamless workflow."
     },
     {
+      icon: amplifyIcon,
+      title: "Amplify & Repurpose",
+      description: "Transform your content into multiple formats and extend its reach across different platforms and audiences."
+    },
+    {
       icon: calendarIcon,
-      title: "PLAN STRATEGICALLY",
+      title: "Plan Strategically",
       description: "Schedule content across your calendar, sync with Google Calendar, and never miss a publishing deadline."
     },
     {
       icon: portfolioIcon,
-      title: "PORTFOLIO AT A GLANCE",
-      description: "Track all your published content in one organized archive with easy access to your content library."
+      title: "Track Your Portfolio",
+      description: "Monitor all your published content in one organized archive with instant access to your complete content library."
     }
   ];
 
@@ -221,7 +221,7 @@ const Landing = () => {
               The Scriptorium Workflow
             </h2>
             <p className="text-large text-muted-foreground max-w-2xl mx-auto">
-              From ideation to publication, Scriptorium streamlines your entire content workflow.
+              Build your centralized repository of high-quality content, prompts, and brand guidelines. Then compose, amplify, plan, and track—everything you need to maintain a consistent brand voice across all your marketing channels.
             </p>
           </div>
           
