@@ -243,11 +243,11 @@ const Landing = () => {
                   {/* Icon */}
                   <div className="mb-6">
                     {isImageIcon ? (
-                      <img src={icon} alt={feature.title} className="w-20 h-20 object-contain" />
+                      <img src={icon} alt={feature.title} className="w-24 h-24 object-contain" />
                     ) : (
                       (() => {
                         const IconComponent = icon as React.ComponentType<{ className?: string }>;
-                        return <IconComponent className="w-20 h-20 text-primary" />;
+                        return <IconComponent className="w-24 h-24 text-primary" />;
                       })()
                     )}
                   </div>
