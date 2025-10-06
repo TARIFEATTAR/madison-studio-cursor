@@ -171,6 +171,235 @@ CONSTRAINTS:
 - Word count: 400-600 words
 
 Generate LinkedIn post now.`,
+
+  email_3part: `Transform this master content into a 3-part email sequence following the Welcome/Value/Invitation framework.
+
+SEQUENCE STRUCTURE:
+EMAIL 1 - THE WELCOME (Day 1):
+- Subject: Warm, intriguing introduction
+- Body: Establish relationship, set expectations, hint at journey ahead
+- Tone: Intimate greeting, "You've arrived at something different"
+- CTA: "Tomorrow, we explore [key concept]"
+- Length: 300-400 words
+
+EMAIL 2 - THE VALUE (Day 3):
+- Subject: Promise delivery from Email 1
+- Body: Core philosophy/insight from master content (condensed 50%)
+- Tone: This is what we believe, why it matters
+- CTA: "One more thing to share with you"
+- Length: 400-500 words
+
+EMAIL 3 - THE INVITATION (Day 5):
+- Subject: Gentle call to action
+- Body: Synthesize journey, extend invitation to engage further
+- Tone: "You're ready now" confidence without pressure
+- CTA: Clear next step (visit collection, read full post, etc.)
+- Length: 300-400 words
+
+SEQUENCE CONSISTENCY:
+- Maintain narrative thread across all 3 emails
+- Each email must stand alone but build on previous
+- Reference previous emails: "As I mentioned..." "Remember when..."
+- Use Confident Whisper tone throughout
+- Each email ends with signature: "In quiet rebellion, The Tarife Attar Custodians"
+
+TIMING NOTES:
+- Day 1, Day 3, Day 5 (2-day gaps for contemplation)
+
+OUTPUT FORMAT:
+EMAIL 1:
+SUBJECT: [subject line]
+PREVIEW: [40-60 chars]
+BODY: [email content]
+
+EMAIL 2:
+SUBJECT: [subject line]
+PREVIEW: [40-60 chars]
+BODY: [email content]
+
+EMAIL 3:
+SUBJECT: [subject line]
+PREVIEW: [40-60 chars]
+BODY: [email content]
+
+Generate the complete 3-part sequence now.`,
+
+  email_5part: `Transform this master content into a 5-part email sequence following the extended nurture framework.
+
+SEQUENCE STRUCTURE:
+EMAIL 1 - THE OPENING (Day 1):
+- Subject: Provocative question or observation
+- Body: Hook reader, promise transformation of understanding
+- Tone: "Something's off in this industry, you've felt it too"
+- CTA: "Tomorrow: Why this matters to you"
+- Length: 250-350 words
+
+EMAIL 2 - THE PROBLEM (Day 2):
+- Subject: Name the villain (Trophy Perfume culture)
+- Body: Articulate what's broken in current paradigm
+- Tone: Empathetic critique, not angry rant
+- CTA: "There's another way..."
+- Length: 350-450 words
+
+EMAIL 3 - THE SOLUTION (Day 4):
+- Subject: Introduce your philosophy/approach
+- Body: Core content from master (condensed 40%)
+- Tone: "This is how we do it differently"
+- CTA: "Let me show you what this looks like in practice"
+- Length: 400-500 words
+
+EMAIL 4 - THE PROOF (Day 6):
+- Subject: Evidence, testimonial, deeper dive
+- Body: Expand on one key pillar or benefit from master content
+- Tone: "See it in action" confidence
+- CTA: "One final insight tomorrow"
+- Length: 350-450 words
+
+EMAIL 5 - THE INVITATION (Day 8):
+- Subject: Clear next step
+- Body: Synthesize journey, extend specific invitation
+- Tone: "You're ready now" + gentle urgency
+- CTA: Clear action (visit collection, book consultation, etc.)
+- Length: 300-400 words
+
+SEQUENCE CONSISTENCY:
+- Build narrative tension: problem → solution → proof → invitation
+- Reference previous emails to create continuity
+- Each email must deliver standalone value
+- Maintain Confident Whisper throughout
+- Signature on each: "In quiet rebellion, The Tarife Attar Custodians"
+
+TIMING NOTES:
+- Days 1, 2, 4, 6, 8 (varied spacing for rhythm)
+
+OUTPUT FORMAT:
+EMAIL 1:
+SUBJECT: [subject line]
+PREVIEW: [40-60 chars]
+BODY: [email content]
+
+EMAIL 2:
+SUBJECT: [subject line]
+PREVIEW: [40-60 chars]
+BODY: [email content]
+
+EMAIL 3:
+SUBJECT: [subject line]
+PREVIEW: [40-60 chars]
+BODY: [email content]
+
+EMAIL 4:
+SUBJECT: [subject line]
+PREVIEW: [40-60 chars]
+BODY: [email content]
+
+EMAIL 5:
+SUBJECT: [subject line]
+PREVIEW: [40-60 chars]
+BODY: [email content]
+
+Generate the complete 5-part sequence now.`,
+
+  email_7part: `Transform this master content into a 7-part email sequence following the deep dive journey framework.
+
+SEQUENCE STRUCTURE:
+EMAIL 1 - THE ARRIVAL (Day 1):
+- Subject: "You've landed somewhere different"
+- Body: Welcome, set expectations for 2-week journey
+- Tone: Intimate, conspiratorial
+- CTA: "Tomorrow: A question to ponder"
+- Length: 200-300 words
+
+EMAIL 2 - THE QUESTION (Day 2):
+- Subject: Provocative question that reframes thinking
+- Body: Challenge assumptions, introduce tension
+- Tone: Thoughtful provocation
+- CTA: "More tomorrow"
+- Length: 250-350 words
+
+EMAIL 3 - THE CONTEXT (Day 4):
+- Subject: Historical/cultural background
+- Body: "How did we get here?" - Set up the problem
+- Tone: Editorial, contemplative
+- CTA: "Next: The turning point"
+- Length: 400-500 words
+
+EMAIL 4 - THE PHILOSOPHY (Day 6):
+- Subject: Core belief system
+- Body: Main content from master (condensed 30%)
+- Tone: "This is what we believe and why"
+- CTA: "Let me show you how this works"
+- Length: 500-600 words
+
+EMAIL 5 - THE PRACTICE (Day 8):
+- Subject: Practical application
+- Body: "Here's how to live this philosophy"
+- Tone: Instructive but poetic
+- CTA: "Tomorrow: Real-world proof"
+- Length: 400-500 words
+
+EMAIL 6 - THE EVIDENCE (Day 10):
+- Subject: Testimonials, case studies, deeper dive
+- Body: Social proof + expanded pillar content
+- Tone: "See it in others, imagine it for yourself"
+- CTA: "Final invitation tomorrow"
+- Length: 350-450 words
+
+EMAIL 7 - THE THRESHOLD (Day 12):
+- Subject: "You're standing at the threshold"
+- Body: Synthesize entire journey, clear call to cross over
+- Tone: Confident invitation, gentle urgency
+- CTA: Specific next step (visit collection, consultation, etc.)
+- Length: 300-400 words
+
+SEQUENCE CONSISTENCY:
+- Arc from curiosity → understanding → action
+- Rich narrative through-line across all 7 emails
+- Each email references previous journey steps
+- Deep philosophical exploration (not surface tactics)
+- Maintain Confident Whisper throughout
+- Signature on each: "In quiet rebellion, The Tarife Attar Custodians"
+
+TIMING NOTES:
+- Days 1, 2, 4, 6, 8, 10, 12 (2-day gaps after Email 2 for contemplation)
+
+OUTPUT FORMAT:
+EMAIL 1:
+SUBJECT: [subject line]
+PREVIEW: [40-60 chars]
+BODY: [email content]
+
+EMAIL 2:
+SUBJECT: [subject line]
+PREVIEW: [40-60 chars]
+BODY: [email content]
+
+EMAIL 3:
+SUBJECT: [subject line]
+PREVIEW: [40-60 chars]
+BODY: [email content]
+
+EMAIL 4:
+SUBJECT: [subject line]
+PREVIEW: [40-60 chars]
+BODY: [email content]
+
+EMAIL 5:
+SUBJECT: [subject line]
+PREVIEW: [40-60 chars]
+BODY: [email content]
+
+EMAIL 6:
+SUBJECT: [subject line]
+PREVIEW: [40-60 chars]
+BODY: [email content]
+
+EMAIL 7:
+SUBJECT: [subject line]
+PREVIEW: [40-60 chars]
+BODY: [email content]
+
+Generate the complete 7-part sequence now.`,
 };
 
 // Utility: strip Markdown and common formatting to plain text
@@ -351,6 +580,23 @@ serve(async (req) => {
       } else if (derivativeType === 'sms') {
         const smsOptions = cleanedContent.split('\n').filter((line: string) => line.trim() && !line.startsWith('REQUIREMENTS') && !line.startsWith('FORMAT'));
         platformSpecs = { options: smsOptions.slice(0, 3) };
+      } else if (derivativeType === 'email_3part' || derivativeType === 'email_5part' || derivativeType === 'email_7part') {
+        const emailMatches = cleanedContent.match(/EMAIL \d+:\s*SUBJECT: (.+?)\s*PREVIEW: (.+?)\s*BODY: ([\s\S]+?)(?=EMAIL \d+:|$)/g);
+        const emails = emailMatches?.map((match: string) => {
+          const subjectMatch = match.match(/SUBJECT: (.+)/);
+          const previewMatch = match.match(/PREVIEW: (.+)/);
+          const bodyMatch = match.match(/BODY: ([\s\S]+)/);
+          return {
+            subject: subjectMatch?.[1]?.trim() || '',
+            preview: previewMatch?.[1]?.trim() || '',
+            body: bodyMatch?.[1]?.trim() || '',
+          };
+        }) || [];
+        platformSpecs = {
+          emailCount: emails.length,
+          emails: emails,
+          sequenceType: derivativeType,
+        };
       }
 
       // Save to database

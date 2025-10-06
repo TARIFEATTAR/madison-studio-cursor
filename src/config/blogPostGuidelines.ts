@@ -85,6 +85,9 @@ export const BLOG_REPURPOSE_TARGETS = [
   { value: 'twitter', label: 'Twitter Thread (8-12 tweets)', description: 'Progressive narrative flow' },
   { value: 'linkedin', label: 'LinkedIn Post (500 words)', description: 'Professional tone variant' },
   { value: 'sms', label: 'SMS Teaser (140 chars)', description: 'Single concept extraction' },
+  { value: 'email_3part', label: '3-Part Email Sequence', description: 'Welcome/Value/Invitation flow (3 days)' },
+  { value: 'email_5part', label: '5-Part Email Sequence', description: 'Extended nurture sequence (5 days)' },
+  { value: 'email_7part', label: '7-Part Email Sequence', description: 'Deep dive journey (7 days)' },
 ];
 
 /**

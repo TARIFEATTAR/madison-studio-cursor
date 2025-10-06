@@ -68,6 +68,9 @@ const DERIVATIVE_ICONS = {
   twitter: Twitter,
   product: Package,
   sms: MessageSquare,
+  email_3part: Mail,
+  email_5part: Mail,
+  email_7part: Mail,
 };
 
 const DERIVATIVE_LABELS = {
@@ -76,6 +79,9 @@ const DERIVATIVE_LABELS = {
   twitter: "Twitter Thread",
   product: "Product Description",
   sms: "SMS Message",
+  email_3part: "3-Part Email Sequence",
+  email_5part: "5-Part Email Sequence",
+  email_7part: "7-Part Email Sequence",
 };
 
 const PLATFORM_MAPPING: Record<string, string> = {
@@ -83,7 +89,10 @@ const PLATFORM_MAPPING: Record<string, string> = {
   instagram: "Instagram",
   twitter: "Twitter",
   product: "LinkedIn",
-  sms: "SMS"
+  sms: "SMS",
+  email_3part: "Email",
+  email_5part: "Email",
+  email_7part: "Email",
 };
 
 const Repurpose = () => {
