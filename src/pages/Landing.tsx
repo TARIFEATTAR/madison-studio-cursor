@@ -240,14 +240,14 @@ const Landing = () => {
                     {index + 1}
                   </div>
                   
-                  {/* Icon with Background */}
-                  <div className="mb-6 w-20 h-20 rounded-full bg-primary/10 group-hover:bg-primary/15 transition-all duration-300 flex items-center justify-center">
+                  {/* Icon */}
+                  <div className="mb-6">
                     {isImageIcon ? (
-                      <img src={icon} alt={feature.title} className="w-14 h-14 object-contain" />
+                      <img src={icon} alt={feature.title} className="w-20 h-20 object-contain" />
                     ) : (
                       (() => {
                         const IconComponent = icon as React.ComponentType<{ className?: string }>;
-                        return <IconComponent className="w-14 h-14 text-primary" />;
+                        return <IconComponent className="w-20 h-20 text-primary" />;
                       })()
                     )}
                   </div>
