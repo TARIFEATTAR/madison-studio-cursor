@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Maximize2, Minimize2, Save, Undo2, Redo2, Copy, Check, Bold, Italic, List, Heading } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,7 +30,18 @@ export const ContentEditor = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
 
-  // Calculate word count
+  // Prevent background scroll when full-screen
+  useEffect(() => {
+    if (isFullScreen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [isFullScreen]);
+
+   // Calculate word count
   useEffect(() => {
     const words = content.trim().split(/\s+/).filter(word => word.length > 0);
     setWordCount(words.length);
