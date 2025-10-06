@@ -696,7 +696,7 @@ export const ContentEditor = ({
                   onInput={updateContentFromEditable}
                   onKeyDown={handleKeyDown}
                   suppressContentEditableWarning
-                  className="w-full min-h-[calc(100vh-200px)] bg-background border-none focus:outline-none text-lg leading-relaxed resize-none shadow-sm rounded-lg p-12 font-serif"
+                  className="rte-content w-full min-h-[calc(100vh-200px)] bg-background border-none focus:outline-none text-lg leading-relaxed resize-none shadow-sm rounded-lg p-12 font-serif"
                 />
               </div>
             </div>
