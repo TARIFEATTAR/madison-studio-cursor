@@ -7,6 +7,7 @@ import calendarWatch from "@/assets/calendar-watch-v2.png";
 import penNibIcon from "@/assets/pen-nib-icon.png";
 import bookIcon from "@/assets/book-icon.png";
 import portfolioIcon from "@/assets/portfolio-icon.png";
+import calendarIcon from "@/assets/calendar-icon.png";
 
 const steps = [
   {
@@ -54,7 +55,7 @@ const Landing = () => {
       description: "Track all your published content in one place, rate your work, and maintain an organized archive of everything you've created."
     },
     {
-      icon: Calendar,
+      icon: calendarIcon,
       title: "Plan Strategically",
       description: "Schedule content across your calendar, sync with Google Calendar, and never miss a publishing deadline."
     }
@@ -232,7 +233,7 @@ const Landing = () => {
                 >
                   <div className="bg-primary/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/15 transition-colors">
                     {isImageIcon ? (
-                      <img src={Icon} alt={feature.title} className="w-6 h-6 object-contain" />
+                      <img src={Icon} alt={feature.title} className="w-10 h-10 object-contain" />
                     ) : (
                       <Icon className="w-6 h-6 text-primary" />
                     )}
