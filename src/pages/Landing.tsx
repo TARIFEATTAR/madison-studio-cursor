@@ -50,7 +50,7 @@ const Landing = () => {
     {
       icon: Archive,
       title: "Portfolio at a Glance",
-      description: "Track all your published content in one organized archive with easy access to your content library."
+      description: "Track all your published content in one place, rate your work, and maintain an organized archive of everything you've created."
     },
     {
       icon: Calendar,
