@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { BookOpen, Sparkles, Repeat, Archive, Calendar, ArrowRight, CheckCircle2, BarChart3 } from "lucide-react";
+import { BookOpen, Sparkles, Repeat, Archive, Calendar, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import penHeroImage from "@/assets/pen-hero.jpg";
@@ -11,6 +11,7 @@ import calendarIcon from "@/assets/calendar-icon.png";
 import amplifyIcon from "@/assets/amplify-icon.png";
 import composeIcon from "@/assets/compose-icon.png";
 import libraryIcon from "@/assets/library-icon.png";
+import analyticsIcon from "@/assets/analytics-icon.png";
 
 const steps = [
   {
@@ -63,7 +64,7 @@ const Landing = () => {
       description: "Monitor all your published content in one organized archive with instant access to your complete content library."
     },
     {
-      icon: BarChart3,
+      icon: analyticsIcon,
       title: "Measure Performance",
       description: "Analyze content performance with comprehensive analytics. Track engagement, reach, and ROI to continuously improve your content strategy."
     }
