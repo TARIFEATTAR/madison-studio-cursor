@@ -35,9 +35,11 @@ export const ContentEditor = ({
   const [copiedFormatted, setCopiedFormatted] = useState(false);
   const [selectedFont, setSelectedFont] = useState('cormorant');
   const [richHtml, setRichHtml] = useState('');
-  const historyRef = useRef<string[]>([content]);
+  const historyRef = useRef<string[]>([]);
+  const richHistoryRef = useRef<string[]>([]);
   const historyIndexRef = useRef(0);
   const isUndoRedoRef = useRef(false);
+  const updateTimeoutRef = useRef<NodeJS.Timeout>();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const editableRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -88,21 +90,32 @@ export const ContentEditor = ({
     if (!isUndoRedoRef.current && content !== historyRef.current[historyIndexRef.current]) {
       const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
       newHistory.push(content);
+      const newRichHistory = richHistoryRef.current.slice(0, historyIndexRef.current + 1);
+      newRichHistory.push(richHtml || '');
+      
       // Keep history limited to 50 states
       if (newHistory.length > 50) {
         newHistory.shift();
+        newRichHistory.shift();
       } else {
         historyIndexRef.current++;
       }
       historyRef.current = newHistory;
+      richHistoryRef.current = newRichHistory;
     }
     isUndoRedoRef.current = false;
-  }, [content]);
+  }, [content, richHtml]);
 
   const handleUndo = () => {
     if (historyIndexRef.current > 0) {
       isUndoRedoRef.current = true;
       historyIndexRef.current--;
+      
+      if (isFullScreen && editableRef.current) {
+        const prevRichHtml = richHistoryRef.current[historyIndexRef.current];
+        editableRef.current.innerHTML = prevRichHtml;
+        setRichHtml(prevRichHtml);
+      }
       onChange(historyRef.current[historyIndexRef.current]);
     }
   };
@@ -111,6 +124,12 @@ export const ContentEditor = ({
     if (historyIndexRef.current < historyRef.current.length - 1) {
       isUndoRedoRef.current = true;
       historyIndexRef.current++;
+      
+      if (isFullScreen && editableRef.current) {
+        const nextRichHtml = richHistoryRef.current[historyIndexRef.current];
+        editableRef.current.innerHTML = nextRichHtml;
+        setRichHtml(nextRichHtml);
+      }
       onChange(historyRef.current[historyIndexRef.current]);
     }
   };
@@ -235,7 +254,31 @@ export const ContentEditor = ({
     if (editableRef.current) {
       const html = editableRef.current.innerHTML;
       setRichHtml(html);
-      // Don't call onChange while editing - only on exit
+      
+      // Debounce history updates to avoid too many entries while typing
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+      
+      updateTimeoutRef.current = setTimeout(() => {
+        if (!isUndoRedoRef.current) {
+          const plainText = htmlToPlainText(html);
+          const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
+          newHistory.push(plainText);
+          const newRichHistory = richHistoryRef.current.slice(0, historyIndexRef.current + 1);
+          newRichHistory.push(html);
+          
+          if (newHistory.length > 50) {
+            newHistory.shift();
+            newRichHistory.shift();
+          } else {
+            historyIndexRef.current++;
+          }
+          
+          historyRef.current = newHistory;
+          richHistoryRef.current = newRichHistory;
+        }
+      }, 500);
     }
   };
 
@@ -331,8 +374,22 @@ export const ContentEditor = ({
               <div className="flex items-center justify-between px-6 py-3 max-w-5xl mx-auto">
                 {/* Left: Font & Formatting */}
                 <div className="flex items-center gap-3">
-                  {/* Font Selector */}
-                  <Select value={selectedFont} onValueChange={setSelectedFont}>
+                   {/* Font Selector */}
+                  <Select 
+                    value={selectedFont} 
+                    onValueChange={(value) => {
+                      setSelectedFont(value);
+                      const fontFamily = FONT_OPTIONS.find(f => f.value === value)?.family;
+                      if (fontFamily && editableRef.current) {
+                        const selection = window.getSelection();
+                        if (selection && !selection.isCollapsed) {
+                          // Apply font to selected text only
+                          document.execCommand('fontName', false, fontFamily);
+                          updateContentFromEditable();
+                        }
+                      }
+                    }}
+                  >
                     <SelectTrigger className="w-[180px] h-9">
                       <SelectValue />
                     </SelectTrigger>
@@ -636,8 +693,7 @@ export const ContentEditor = ({
                   onInput={updateContentFromEditable}
                   onKeyDown={handleKeyDown}
                   suppressContentEditableWarning
-                  style={{ fontFamily: currentFontFamily }}
-                  className="w-full min-h-[calc(100vh-200px)] bg-background border-none focus:outline-none text-lg leading-relaxed resize-none shadow-sm rounded-lg p-12"
+                  className="w-full min-h-[calc(100vh-200px)] bg-background border-none focus:outline-none text-lg leading-relaxed resize-none shadow-sm rounded-lg p-12 font-serif"
                 />
               </div>
             </div>
