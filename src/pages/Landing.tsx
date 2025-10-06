@@ -105,10 +105,8 @@ const Landing = () => {
           style={{ backgroundImage: `url(${penHeroImage})` }}
         />
         
-        {/* Gradient Overlays for Text Readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
+        {/* Overlay for Text Readability */}
+        <div className="absolute inset-0 bg-black/40" />
         
         {/* Content */}
         <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-20">
