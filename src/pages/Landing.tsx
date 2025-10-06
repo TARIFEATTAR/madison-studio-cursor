@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { BookOpen, Sparkles, Repeat, Archive, Calendar, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import heroPen from "@/assets/hero-pen.jpeg";
 
 const steps = [
   {
@@ -98,35 +97,12 @@ const Landing = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden min-h-[600px] md:min-h-[700px] flex items-center">
-        {/* Desktop: Split layout with image on right */}
-        <div className="hidden md:grid md:grid-cols-2 w-full h-full absolute inset-0">
-          {/* Left side - Text area with gradient fade to black */}
-          <div className="bg-gradient-to-r from-black via-black to-transparent z-10" />
-          {/* Right side - Image */}
-          <div className="relative">
-            <img 
-              src={heroPen} 
-              alt="Luxury fountain pen" 
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-l from-transparent via-black/20 to-black" />
-          </div>
-        </div>
-
-        {/* Mobile: Image background with overlay */}
-        <div className="md:hidden absolute inset-0">
-          <img 
-            src={heroPen} 
-            alt="Luxury fountain pen" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/80" />
-        </div>
-
+      <section className="relative overflow-hidden py-20 md:py-32 bg-gradient-to-b from-black via-black/95 to-background">
+        <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent" />
+        
         {/* Content */}
-        <div className="max-w-7xl mx-auto px-6 md:px-12 py-20 md:py-28 relative z-20 w-full">
-          <div className="text-center md:text-left max-w-xl md:max-w-2xl mx-auto md:mx-0 codex-spacing fade-enter">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-20">
+          <div className="text-center max-w-4xl mx-auto codex-spacing fade-enter">
             <h1 className="text-white mb-6">
               Your Brand Intelligence,
               <span className="text-primary block mt-2">Simplified</span>
@@ -135,7 +111,7 @@ const Landing = () => {
               Scriptorium transforms content marketing from chaos to clarity. Build your prompt library, 
               generate on-brand content, and orchestrate multi-channel campaigns—all in one elegant platform.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" variant="brass">
                 <Link to="/auth" className="gap-2">
                   Start Creating <ArrowRight className="w-5 h-5" />
