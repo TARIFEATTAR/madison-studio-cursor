@@ -1370,13 +1370,7 @@ const Forge = () => {
                   <div className="space-y-3">
                     <Label>Target Derivative Assets *</Label>
                     <div className="space-y-2">
-                      {(masterContentType === 'blog_post' ? BLOG_REPURPOSE_TARGETS : [
-                        { value: 'email', label: 'Email Newsletter Version', description: 'Condensed email format' },
-                        { value: 'instagram', label: 'Instagram Carousel (5 slides)', description: 'Visual slides + caption' },
-                        { value: 'twitter', label: 'Twitter/X Thread (8-12 tweets)', description: 'Progressive thread' },
-                        { value: 'product', label: 'Product Description', description: 'Product copy' },
-                        { value: 'sms', label: 'SMS/Short Message (160 chars)', description: 'Short message' },
-                      ]).map((derivative) => (
+                      {BLOG_REPURPOSE_TARGETS.map((derivative) => (
                         <div key={derivative.value} className="flex items-center space-x-2">
                           <Checkbox
                             id={`derivative-${derivative.value}`}
