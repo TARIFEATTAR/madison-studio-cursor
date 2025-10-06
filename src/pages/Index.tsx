@@ -2,17 +2,30 @@ import { useAuth } from "@/hooks/useAuth";
 import Landing from "./Landing";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { BookOpen, Sparkles, Archive, Calendar, Repeat } from "lucide-react";
+import { BookOpen, Sparkles, Archive, Calendar, Repeat, FileText } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
+import { CompleteBrandBanner } from "@/components/onboarding/CompleteBrandBanner";
+import { BrandKnowledgeCenter } from "@/components/onboarding/BrandKnowledgeCenter";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 const Index = () => {
   const { user, loading } = useAuth();
+  const {
+    showWelcome,
+    showBanner,
+    currentOrganizationId,
+    isLoading: onboardingLoading,
+    completeWelcome,
+    skipWelcome,
+    dismissBanner,
+  } = useOnboarding();
 
-  if (loading) {
+  if (loading || onboardingLoading) {
     return (
       <div className="min-h-screen bg-ink-black flex items-center justify-center">
         <div className="text-parchment-white">Loading...</div>
@@ -27,25 +40,29 @@ const Index = () => {
 
   // Show dashboard/home for authenticated users
   return (
-    <div className="min-h-screen bg-gradient-to-b from-card to-background">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent" />
-        <div className="max-w-7xl mx-auto px-6 md:px-12 py-16 md:py-20 relative">
-          <div className="text-center max-w-4xl mx-auto codex-spacing fade-enter">
-            <h1 className="text-foreground mb-4">
-              Welcome to Scriptorium
-            </h1>
-            <p className="text-large text-muted-foreground mb-12 leading-relaxed">
-              Your brand intelligence platform for crafting and managing content
-            </p>
+    <>
+      <WelcomeModal open={showWelcome} onComplete={completeWelcome} onSkip={skipWelcome} />
+      
+      <div className="min-h-screen bg-gradient-to-b from-card to-background">
+        {/* Hero Section */}
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent" />
+          <div className="max-w-7xl mx-auto px-6 md:px-12 py-16 md:py-20 relative">
+            <div className="text-center max-w-4xl mx-auto codex-spacing fade-enter">
+              <h1 className="text-foreground mb-4">
+                Welcome to Scriptorium
+              </h1>
+              <p className="text-large text-muted-foreground mb-12 leading-relaxed">
+                Your brand intelligence platform for crafting and managing content
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Dashboard Cards */}
-      <section className="pb-20">
-        <div className="max-w-7xl mx-auto px-6 md:px-12">
+        {/* Dashboard Cards */}
+        <section className="pb-20">
+          <div className="max-w-7xl mx-auto px-6 md:px-12">
+            {showBanner && <CompleteBrandBanner onDismiss={dismissBanner} />}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 fade-enter">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -142,9 +159,17 @@ const Index = () => {
               </TooltipContent>
             </Tooltip>
           </div>
+
+          {/* Brand Knowledge Center */}
+          {currentOrganizationId && (
+            <div className="mt-12" id="brand-knowledge-center">
+              <BrandKnowledgeCenter organizationId={currentOrganizationId} />
+            </div>
+          )}
         </div>
       </section>
     </div>
+    </>
   );
 };
 
