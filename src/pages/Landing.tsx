@@ -3,7 +3,7 @@ import { BookOpen, Sparkles, Repeat, Archive, Calendar, ArrowRight, CheckCircle2
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import penHeroImage from "@/assets/pen-hero.jpg";
-import calendarWatch from "@/assets/calendar-watch.png";
+import calendarWatch from "@/assets/calendar-watch-v2.png";
 import penNibIcon from "@/assets/pen-nib-icon.png";
 
 const steps = [
