@@ -17,7 +17,7 @@ const steps = [
   {
     number: "2",
     title: "Create & Generate",
-    description: "Use the Composer to generate on-brand blog posts and marketing content with AI assistance.",
+    description: "Generate AI-powered content, then edit and perfect it in our rich editor before moving to repurpose.",
     icon: Sparkles,
   },
   {
@@ -40,7 +40,7 @@ const Landing = () => {
     {
       icon: Sparkles,
       title: "Compose with Intelligence",
-      description: "Generate blog posts, social content, and marketing materials using AI-powered tools that understand your brand voice."
+      description: "Generate and perfect content with AI assistance. Edit directly in our rich editor, then move polished content to repurposing—all in one seamless workflow."
     },
     {
       icon: Repeat,
