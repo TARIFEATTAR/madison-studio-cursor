@@ -34,25 +34,76 @@ export function useOnboarding() {
         if (existingOrgs?.organization_id) {
           orgId = existingOrgs.organization_id;
         } else {
-          // Create personal organization
-          const { data: newOrg, error: orgError } = await supabase
+          // Check if user already created an organization but wasn't added as member
+          const { data: userOrgs } = await supabase
             .from("organizations")
-            .insert({
-              name: `${user.email?.split("@")[0]}'s Workspace`,
-              created_by: user.id,
-            })
-            .select()
-            .single();
+            .select("id")
+            .eq("created_by", user.id)
+            .limit(1)
+            .maybeSingle();
 
-          if (orgError) throw orgError;
-          orgId = newOrg.id;
+          if (userOrgs) {
+            // User already has an organization, use it
+            orgId = userOrgs.id;
+            console.log("Found existing organization:", orgId);
+            
+            // Try to add them as a member if not already
+            const { data: existingMember } = await supabase
+              .from("organization_members")
+              .select("id")
+              .eq("organization_id", orgId)
+              .eq("user_id", user.id)
+              .maybeSingle();
+              
+            if (!existingMember) {
+              console.log("Adding user as member of existing organization");
+              const { error: memberError } = await supabase
+                .from("organization_members")
+                .insert({
+                  organization_id: orgId,
+                  user_id: user.id,
+                  role: "owner",
+                });
+              
+              if (memberError) {
+                console.error("Failed to add user as organization member:", memberError);
+                throw memberError;
+              }
+            }
+          } else {
+            // Create personal organization
+            console.log("Creating new organization for user");
+            const { data: newOrg, error: orgError } = await supabase
+              .from("organizations")
+              .insert({
+                name: `${user.email?.split("@")[0]}'s Workspace`,
+                created_by: user.id,
+              })
+              .select()
+              .single();
 
-          // Add user as owner
-          await supabase.from("organization_members").insert({
-            organization_id: orgId,
-            user_id: user.id,
-            role: "owner",
-          });
+            if (orgError) {
+              console.error("Failed to create organization:", orgError);
+              throw orgError;
+            }
+            
+            orgId = newOrg.id;
+
+            // Add user as owner
+            console.log("Adding user as owner of new organization");
+            const { error: memberError } = await supabase
+              .from("organization_members")
+              .insert({
+                organization_id: orgId,
+                user_id: user.id,
+                role: "owner",
+              });
+            
+            if (memberError) {
+              console.error("Failed to add user as organization owner:", memberError);
+              throw memberError;
+            }
+          }
         }
 
         setCurrentOrganizationId(orgId);
