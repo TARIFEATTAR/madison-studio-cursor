@@ -8,6 +8,7 @@ import penNibIcon from "@/assets/pen-nib-icon.png";
 import bookIcon from "@/assets/book-icon.png";
 import portfolioIcon from "@/assets/portfolio-icon.png";
 import calendarIcon from "@/assets/calendar-icon.png";
+import amplifyIcon from "@/assets/amplify-icon.png";
 
 const steps = [
   {
@@ -45,7 +46,7 @@ const Landing = () => {
       description: "Generate content with AI assistance, then perfect it in our rich editor. Move polished content to repurposing—all in one seamless workflow."
     },
     {
-      icon: Repeat,
+      icon: amplifyIcon,
       title: "Amplify Effortlessly",
       description: "Repurpose your best content across channels—transform blog posts into social media, newsletters, and more."
     },
@@ -233,7 +234,7 @@ const Landing = () => {
                 >
                   <div className="bg-primary/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/15 transition-colors">
                     {isImageIcon ? (
-                      <img src={Icon} alt={feature.title} className="w-10 h-10 object-contain" />
+                      <img src={Icon} alt={feature.title} className="w-11 h-11 object-contain" />
                     ) : (
                       <Icon className="w-6 h-6 text-primary" />
                     )}
