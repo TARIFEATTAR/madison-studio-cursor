@@ -25,10 +25,21 @@ interface MasterContentCardProps {
 }
 
 const collectionColors: Record<string, string> = {
-  'Cadence': 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
-  'Rhythm': 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
-  'Pulse': 'bg-purple-500/10 text-purple-700 dark:text-purple-400',
-  'Tempo': 'bg-green-500/10 text-green-700 dark:text-green-400',
+  cadence: "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20",
+  reserve: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20",
+  purity: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20",
+  sacred_space: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20",
+  "sacred space": "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20",
+};
+
+const normalizeCollectionName = (name: string): string => {
+  if (!name) return 'cadence';
+  return name.toLowerCase().replace(/ /g, '_');
+};
+
+const formatCollectionDisplay = (name: string): string => {
+  if (!name) return 'Cadence';
+  return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
 
 const dipWorlds: Record<number, string> = {
@@ -83,6 +94,10 @@ export function MasterContentCard({
     return text.substring(0, maxLength) + '...';
   };
 
+  const normalizedCollection = content.collection ? normalizeCollectionName(content.collection) : 'cadence';
+  const collectionColorClass = collectionColors[normalizedCollection] || collectionColors.cadence;
+  const displayCollection = content.collection ? formatCollectionDisplay(content.collection) : 'Cadence';
+
   return (
     <Card 
       className="hover:shadow-md transition-shadow cursor-pointer group"
@@ -124,11 +139,9 @@ export function MasterContentCard({
           )}
         </div>
         <div className="flex flex-wrap gap-2 mt-2">
-          {content.collection && (
-            <Badge variant="outline" className={collectionColors[content.collection] || 'bg-muted'}>
-              {content.collection}
-            </Badge>
-          )}
+          <Badge variant="outline" className={collectionColorClass}>
+            {displayCollection}
+          </Badge>
           <Badge variant="secondary">
             {content.content_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
           </Badge>

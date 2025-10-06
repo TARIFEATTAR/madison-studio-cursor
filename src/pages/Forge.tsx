@@ -555,7 +555,7 @@ const Forge = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/reservoir')}
+            onClick={() => navigate('/library')}
           >
             View in Library
           </Button>

@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PromptCard from "@/components/PromptCard";
 import { OutputCard } from "@/components/OutputCard";
 import { MasterContentCard } from "@/components/MasterContentCard";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -121,10 +122,20 @@ const Reservoir = () => {
 
   useEffect(() => {
     if (user) {
-      fetchPrompts();
-      fetchOutputs();
-      fetchMasterContent();
-      fetchArchivedCount();
+      const loadAllData = async () => {
+        setLoading(true);
+        try {
+          await Promise.allSettled([
+            fetchPrompts(),
+            fetchOutputs(),
+            fetchMasterContent(),
+            fetchArchivedCount(),
+          ]);
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadAllData();
     }
   }, [user]);
 
@@ -132,14 +143,26 @@ const Reservoir = () => {
     if (!user) return;
     
     try {
-      const { count, error } = await supabase
-        .from("prompts")
-        .select("*", { count: 'exact', head: true })
-        .eq("created_by", user.id)
-        .eq("is_archived", true);
+      const [promptsCount, outputsCount, masterCount] = await Promise.all([
+        supabase
+          .from("prompts")
+          .select("*", { count: 'exact', head: true })
+          .eq("created_by", user.id)
+          .eq("is_archived", true),
+        supabase
+          .from("outputs")
+          .select("*", { count: 'exact', head: true })
+          .eq("created_by", user.id)
+          .eq("is_archived", true),
+        supabase
+          .from("master_content")
+          .select("*", { count: 'exact', head: true })
+          .eq("created_by", user.id)
+          .eq("is_archived", true),
+      ]);
 
-      if (error) throw error;
-      setArchivedCount(count || 0);
+      const total = (promptsCount.count || 0) + (outputsCount.count || 0) + (masterCount.count || 0);
+      setArchivedCount(total);
     } catch (error) {
       console.error("Error fetching archived count:", error);
     }
@@ -148,7 +171,6 @@ const Reservoir = () => {
   const fetchPrompts = async () => {
     if (!user) return;
     
-    setLoading(true);
     try {
       const { data, error } = await supabase
         .from("prompts")
@@ -166,8 +188,6 @@ const Reservoir = () => {
         description: "Failed to load prompts",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -427,151 +447,152 @@ const Reservoir = () => {
           counts={counts}
         />
         <main className="flex-1 p-8">
-          <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <SidebarTrigger />
-                <h1 className="text-4xl font-bold">Library</h1>
-              </div>
-            </div>
-
-            {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ContentTab)} className="mb-6">
-              <TabsList className="grid w-full max-w-md grid-cols-3">
-                <TabsTrigger value="prompts" className="gap-2">
-                  <Edit className="h-4 w-4" />
-                  Prompts
-                  <Badge variant="secondary" className="ml-1">{tabCounts.prompts}</Badge>
-                </TabsTrigger>
-                <TabsTrigger value="outputs" className="gap-2">
-                  <FileText className="h-4 w-4" />
-                  Single Assets
-                  <Badge variant="secondary" className="ml-1">{tabCounts.outputs}</Badge>
-                </TabsTrigger>
-                <TabsTrigger value="master" className="gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  Master Content
-                  <Badge variant="secondary" className="ml-1">{tabCounts.master}</Badge>
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            {/* Search and Filters */}
-            <div className="mb-6">
-              <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder={`Search ${activeTab === 'prompts' ? 'prompts' : activeTab === 'outputs' ? 'outputs' : 'master content'}...`}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+          <ErrorBoundary>
+            <div className="max-w-7xl mx-auto">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <SidebarTrigger />
+                  <h1 className="text-4xl font-bold">Library</h1>
+                </div>
               </div>
 
-              {/* Active filter chips */}
-              {activeChips.length > 0 && (
-                <div className="flex flex-wrap gap-2 items-center">
-                  <span className="text-sm text-muted-foreground">Active filters:</span>
-                  {activeChips.map((chip) => (
-                    <Badge
-                      key={chip.key}
-                      variant="secondary"
-                      className="gap-1 cursor-pointer hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                      onClick={() => removeFilter(chip.key)}
+              {/* Search and Filters */}
+              <div className="mb-6">
+                <div className="relative mb-4">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder={`Search ${activeTab === 'prompts' ? 'prompts' : activeTab === 'outputs' ? 'outputs' : 'master content'}...`}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+
+                {/* Active filter chips */}
+                {activeChips.length > 0 && (
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <span className="text-sm text-muted-foreground">Active filters:</span>
+                    {activeChips.map((chip) => (
+                      <Badge
+                        key={chip.key}
+                        variant="secondary"
+                        className="gap-1 cursor-pointer hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                        onClick={() => removeFilter(chip.key)}
+                      >
+                        {chip.label}
+                        <X className="h-3 w-3" />
+                      </Badge>
+                    ))}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearAllFilters}
+                      className="h-7"
                     >
-                      {chip.label}
-                      <X className="h-3 w-3" />
-                    </Badge>
-                  ))}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearAllFilters}
-                    className="h-7"
-                  >
-                    Clear all
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {/* Content Area */}
-            {loading ? (
-              <div className="flex items-center justify-center h-64">
-                <p className="text-muted-foreground">Loading...</p>
+                      Clear all
+                    </Button>
+                  </div>
+                )}
               </div>
-            ) : (
-              <>
-                <TabsContent value="prompts">
-                  {filteredPrompts.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-64 gap-4">
-                      <Edit className="h-16 w-16 text-muted-foreground/50" />
-                      <p className="text-lg text-muted-foreground">No prompts found</p>
-                      <Button onClick={() => navigate('/forge')}>Create Your First Prompt</Button>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredPrompts.map((prompt) => (
-                        <PromptCard
-                          key={prompt.id}
-                          prompt={prompt}
-                          onArchive={(id) => handleArchiveItem(id, 'prompts')}
-                          onDelete={handleDeleteItem}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
 
-                <TabsContent value="outputs">
-              {filteredOutputs.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-64 gap-4">
-                  <FileText className="h-16 w-16 text-muted-foreground/50" />
-                  <p className="text-lg text-muted-foreground">No single assets found</p>
-                  <Button onClick={() => navigate('/forge')}>Create Your First Asset</Button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredOutputs.map((output) => (
-                    <OutputCard
-                      key={output.id}
-                      output={output}
-                      promptTitle={output.prompts?.[0]?.title}
-                      collection={output.prompts?.[0]?.collection}
-                      contentType={output.prompts?.[0]?.content_type}
-                      onArchive={(id) => handleArchiveItem(id, 'outputs')}
-                      onDelete={handleDeleteItem}
-                    />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
+              {/* Tabs with Content */}
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ContentTab)}>
+                <TabsList className="grid w-full max-w-md grid-cols-3 mb-6">
+                  <TabsTrigger value="prompts" className="gap-2">
+                    <Edit className="h-4 w-4" />
+                    Prompts
+                    <Badge variant="secondary" className="ml-1">{tabCounts.prompts}</Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="outputs" className="gap-2">
+                    <FileText className="h-4 w-4" />
+                    Single Assets
+                    <Badge variant="secondary" className="ml-1">{tabCounts.outputs}</Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="master" className="gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    Master Content
+                    <Badge variant="secondary" className="ml-1">{tabCounts.master}</Badge>
+                  </TabsTrigger>
+                </TabsList>
 
-            <TabsContent value="master">
-              {filteredMasterContent.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-64 gap-4">
-                  <BookOpen className="h-16 w-16 text-muted-foreground/50" />
-                  <p className="text-lg text-muted-foreground">No master content found</p>
-                  <Button onClick={() => navigate('/forge')}>Create Your First Master Content</Button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredMasterContent.map((content) => (
-                    <MasterContentCard
-                      key={content.id}
-                      content={content}
-                      onArchive={(id) => handleArchiveItem(id, 'master')}
-                      onDelete={handleDeleteItem}
-                      onGenerateDerivatives={(id) => navigate(`/repurpose?masterContentId=${id}`)}
-                    />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-              </>
-            )}
-          </div>
+                {loading ? (
+                  <div className="flex items-center justify-center h-64">
+                    <p className="text-muted-foreground">Loading...</p>
+                  </div>
+                ) : (
+                  <>
+                    <TabsContent value="prompts">
+                      {filteredPrompts.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-64 gap-4">
+                          <Edit className="h-16 w-16 text-muted-foreground/50" />
+                          <p className="text-lg text-muted-foreground">No prompts found</p>
+                          <Button onClick={() => navigate('/forge')}>Create Your First Prompt</Button>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {filteredPrompts.map((prompt) => (
+                            <PromptCard
+                              key={prompt.id}
+                              prompt={prompt}
+                              onArchive={(id) => handleArchiveItem(id, 'prompts')}
+                              onDelete={handleDeleteItem}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="outputs">
+                      {filteredOutputs.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-64 gap-4">
+                          <FileText className="h-16 w-16 text-muted-foreground/50" />
+                          <p className="text-lg text-muted-foreground">No single assets found</p>
+                          <Button onClick={() => navigate('/forge')}>Create Your First Asset</Button>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {filteredOutputs.map((output) => (
+                            <OutputCard
+                              key={output.id}
+                              output={output}
+                              promptTitle={output.prompts?.[0]?.title}
+                              collection={output.prompts?.[0]?.collection}
+                              contentType={output.prompts?.[0]?.content_type}
+                              onArchive={(id) => handleArchiveItem(id, 'outputs')}
+                              onDelete={handleDeleteItem}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="master">
+                      {filteredMasterContent.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-64 gap-4">
+                          <BookOpen className="h-16 w-16 text-muted-foreground/50" />
+                          <p className="text-lg text-muted-foreground">No master content found</p>
+                          <Button onClick={() => navigate('/forge')}>Create Your First Master Content</Button>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {filteredMasterContent.map((content) => (
+                            <MasterContentCard
+                              key={content.id}
+                              content={content}
+                              onArchive={(id) => handleArchiveItem(id, 'master')}
+                              onDelete={handleDeleteItem}
+                              onGenerateDerivatives={(id) => navigate(`/repurpose?masterContentId=${id}`)}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </TabsContent>
+                  </>
+                )}
+              </Tabs>
+            </div>
+          </ErrorBoundary>
         </main>
       </div>
 
