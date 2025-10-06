@@ -6,6 +6,7 @@ import penHeroImage from "@/assets/pen-hero.jpg";
 import calendarWatch from "@/assets/calendar-watch-v2.png";
 import penNibIcon from "@/assets/pen-nib-icon.png";
 import bookIcon from "@/assets/book-icon.png";
+import portfolioIcon from "@/assets/portfolio-icon.png";
 
 const steps = [
   {
@@ -48,7 +49,7 @@ const Landing = () => {
       description: "Repurpose your best content across channels—transform blog posts into social media, newsletters, and more."
     },
     {
-      icon: Archive,
+      icon: portfolioIcon,
       title: "Portfolio at a Glance",
       description: "Track all your published content in one place, rate your work, and maintain an organized archive of everything you've created."
     },
@@ -223,13 +224,18 @@ const Landing = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 fade-enter">
             {features.map((feature, index) => {
               const Icon = feature.icon;
+              const isImageIcon = typeof Icon === 'string';
               return (
                 <div 
                   key={index}
                   className="card-luxury group cursor-default"
                 >
                   <div className="bg-primary/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/15 transition-colors">
-                    <Icon className="w-6 h-6 text-primary" />
+                    {isImageIcon ? (
+                      <img src={Icon} alt={feature.title} className="w-6 h-6 object-contain" />
+                    ) : (
+                      <Icon className="w-6 h-6 text-primary" />
+                    )}
                   </div>
                   <h3 className="font-serif text-2xl font-bold text-foreground mb-3">
                     {feature.title}
