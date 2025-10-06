@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { BookOpen, Sparkles, Repeat, Archive, Calendar, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import penHeroImage from "@/assets/pen-hero.jpg";
 
 const steps = [
   {
@@ -97,8 +98,17 @@ const Landing = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 md:py-32 bg-gradient-to-b from-black via-black/95 to-background">
+      <section className="relative overflow-hidden py-20 md:py-32">
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat" 
+          style={{ backgroundImage: `url(${penHeroImage})` }}
+        />
+        
+        {/* Gradient Overlays for Text Readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent" />
         <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
         
         {/* Content */}
         <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-20">
