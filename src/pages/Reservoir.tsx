@@ -502,29 +502,29 @@ const Reservoir = () => {
                 <p className="text-muted-foreground">Loading...</p>
               </div>
             ) : (
-              <TabsContent value="prompts">
-                {filteredPrompts.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-64 gap-4">
-                    <Edit className="h-16 w-16 text-muted-foreground/50" />
-                    <p className="text-lg text-muted-foreground">No prompts found</p>
-                    <Button onClick={() => navigate('/forge')}>Create Your First Prompt</Button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredPrompts.map((prompt) => (
-                      <PromptCard
-                        key={prompt.id}
-                        prompt={prompt}
-                        onArchive={(id) => handleArchiveItem(id, 'prompts')}
-                        onDelete={handleDeleteItem}
-                      />
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-            )}
+              <>
+                <TabsContent value="prompts">
+                  {filteredPrompts.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-64 gap-4">
+                      <Edit className="h-16 w-16 text-muted-foreground/50" />
+                      <p className="text-lg text-muted-foreground">No prompts found</p>
+                      <Button onClick={() => navigate('/forge')}>Create Your First Prompt</Button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredPrompts.map((prompt) => (
+                        <PromptCard
+                          key={prompt.id}
+                          prompt={prompt}
+                          onArchive={(id) => handleArchiveItem(id, 'prompts')}
+                          onDelete={handleDeleteItem}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
 
-            <TabsContent value="outputs">
+                <TabsContent value="outputs">
               {filteredOutputs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-64 gap-4">
                   <FileText className="h-16 w-16 text-muted-foreground/50" />
@@ -569,6 +569,8 @@ const Reservoir = () => {
                 </div>
               )}
             </TabsContent>
+              </>
+            )}
           </div>
         </main>
       </div>
