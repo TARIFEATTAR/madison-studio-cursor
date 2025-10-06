@@ -216,7 +216,7 @@ const Auth = () => {
           <img 
             src={scriptoraLogo} 
             alt="Scriptora" 
-            className="h-[5.6rem] w-auto mx-auto mb-3"
+            className="h-36 w-auto mx-auto mb-3"
           />
           <p className="text-muted-foreground text-lg">
             Where brands craft and amplify their narrative
