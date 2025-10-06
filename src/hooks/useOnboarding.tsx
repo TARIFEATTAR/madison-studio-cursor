@@ -24,7 +24,7 @@ export function useOnboarding() {
           .select("organization_id, organizations(id, name, brand_config)")
           .eq("user_id", user.id)
           .limit(1)
-          .single();
+          .maybeSingle();
 
         let orgId: string;
 

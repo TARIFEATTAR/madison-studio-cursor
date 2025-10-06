@@ -11,6 +11,7 @@ import {
 import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
 import { CompleteBrandBanner } from "@/components/onboarding/CompleteBrandBanner";
 import { BrandKnowledgeCenter } from "@/components/onboarding/BrandKnowledgeCenter";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
 
 const Index = () => {
@@ -40,7 +41,7 @@ const Index = () => {
 
   // Show dashboard/home for authenticated users
   return (
-    <>
+    <ErrorBoundary>
       <WelcomeModal open={showWelcome} onComplete={completeWelcome} onSkip={skipWelcome} />
       
       <div className="min-h-screen bg-gradient-to-b from-card to-background">
@@ -169,7 +170,7 @@ const Index = () => {
         </div>
       </section>
     </div>
-    </>
+    </ErrorBoundary>
   );
 };
 
