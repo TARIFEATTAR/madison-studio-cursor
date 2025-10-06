@@ -165,6 +165,7 @@ export type Database = {
           middle_notes: string | null
           name: string
           organization_id: string
+          product_type: string | null
           scent_family: string | null
           top_notes: string | null
           updated_at: string
@@ -177,6 +178,7 @@ export type Database = {
           middle_notes?: string | null
           name: string
           organization_id: string
+          product_type?: string | null
           scent_family?: string | null
           top_notes?: string | null
           updated_at?: string
@@ -189,6 +191,7 @@ export type Database = {
           middle_notes?: string | null
           name?: string
           organization_id?: string
+          product_type?: string | null
           scent_family?: string | null
           top_notes?: string | null
           updated_at?: string
