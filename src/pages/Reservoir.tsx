@@ -1,11 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Search, X, Edit, FileText, BookOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { LibrarySidebar } from "@/components/LibrarySidebar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PromptCard from "@/components/PromptCard";
+import { OutputCard } from "@/components/OutputCard";
+import { MasterContentCard } from "@/components/MasterContentCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -25,11 +29,17 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+type ContentTab = 'prompts' | 'outputs' | 'master';
+
 const Reservoir = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<ContentTab>('prompts');
   const [searchQuery, setSearchQuery] = useState("");
   const [prompts, setPrompts] = useState<any[]>([]);
+  const [outputs, setOutputs] = useState<any[]>([]);
+  const [masterContent, setMasterContent] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [archivedCount, setArchivedCount] = useState(0);
   const [sidebarFilters, setSidebarFilters] = useState<{
@@ -40,10 +50,21 @@ const Reservoir = () => {
     quickFilter?: string;
   }>({});
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [promptToDelete, setPromptToDelete] = useState<string | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{ id: string; type: ContentTab } | null>(null);
   
-  // Calculate dynamic counts from actual prompts data
+  // Get current data array based on active tab
+  const getCurrentData = () => {
+    switch (activeTab) {
+      case 'prompts': return prompts;
+      case 'outputs': return outputs;
+      case 'master': return masterContent;
+    }
+  };
+
+  // Calculate dynamic counts from current tab data
   const counts = useMemo(() => {
+    const currentData = getCurrentData();
+    
     const byCollection: Record<string, { total: number; families: Record<string, number> }> = {
       cadence: { total: 0, families: { warm: 0, floral: 0, fresh: 0, woody: 0 } },
       reserve: { total: 0, families: { warm: 0, floral: 0, fresh: 0, woody: 0 } },
@@ -55,33 +76,35 @@ const Reservoir = () => {
     const byDipWeek: Record<number, number> = {};
     let favorites = 0;
     let recent = 0;
-    let archived = 0;
     
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
-    prompts.forEach(prompt => {
+    currentData.forEach(item => {
+      // Handle different data structures
+      const collection = item.collection || (item.prompts && item.prompts[0]?.collection) || 'cadence';
+      const contentType = item.content_type || (item.prompts && item.prompts[0]?.content_type) || 'other';
+      const scentFamily = item.scent_family || 'warm';
+      const dipWeek = item.dip_week;
+      
       // Count by collection and scent family
-      const collection = prompt.collection || 'cadence';
       if (byCollection[collection]) {
         byCollection[collection].total++;
-        const family = prompt.scent_family || 'warm';
-        if (byCollection[collection].families[family] !== undefined) {
-          byCollection[collection].families[family]++;
+        if (byCollection[collection].families[scentFamily] !== undefined) {
+          byCollection[collection].families[scentFamily]++;
         }
       }
       
       // Count by content type
-      const contentType = prompt.content_type || 'other';
       byContentType[contentType] = (byContentType[contentType] || 0) + 1;
       
       // Count by DIP week
-      if (prompt.dip_week) {
-        byDipWeek[prompt.dip_week] = (byDipWeek[prompt.dip_week] || 0) + 1;
+      if (dipWeek) {
+        byDipWeek[dipWeek] = (byDipWeek[dipWeek] || 0) + 1;
       }
       
       // Count recent (last 7 days)
-      if (prompt.created_at && new Date(prompt.created_at) > sevenDaysAgo) {
+      if (item.created_at && new Date(item.created_at) > sevenDaysAgo) {
         recent++;
       }
     });
@@ -94,11 +117,13 @@ const Reservoir = () => {
       recent,
       archived: archivedCount,
     };
-  }, [prompts, archivedCount]);
+  }, [activeTab, prompts, outputs, masterContent, archivedCount]);
 
   useEffect(() => {
     if (user) {
       fetchPrompts();
+      fetchOutputs();
+      fetchMasterContent();
       fetchArchivedCount();
     }
   }, [user]);
@@ -138,7 +163,7 @@ const Reservoir = () => {
       console.error("Error fetching prompts:", error);
       toast({
         title: "Error",
-        description: "Failed to load prompts. Please try again.",
+        description: "Failed to load prompts",
         variant: "destructive",
       });
     } finally {
@@ -146,64 +171,123 @@ const Reservoir = () => {
     }
   };
 
-  const handleArchivePrompt = async (id: string) => {
+  const fetchOutputs = async () => {
+    if (!user) return;
+    
     try {
+      const { data, error } = await supabase
+        .from("outputs")
+        .select(`
+          *,
+          prompts(title, collection, content_type)
+        `)
+        .eq("created_by", user.id)
+        .eq("is_archived", false)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setOutputs(data || []);
+    } catch (error) {
+      console.error("Error fetching outputs:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load outputs",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchMasterContent = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("master_content")
+        .select("*")
+        .eq("created_by", user.id)
+        .eq("is_archived", false)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setMasterContent(data || []);
+    } catch (error) {
+      console.error("Error fetching master content:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load master content",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleArchiveItem = async (id: string, type: ContentTab) => {
+    try {
+      const tableName = type === 'prompts' ? 'prompts' : type === 'outputs' ? 'outputs' : 'master_content';
+      
       const { error } = await supabase
-        .from("prompts")
+        .from(tableName)
         .update({ is_archived: true })
         .eq("id", id);
 
       if (error) throw error;
 
       toast({
-        title: "Prompt Archived",
-        description: "The prompt has been moved to Portfolio.",
+        title: "Content Archived",
+        description: "The content has been moved to Archive.",
       });
 
-      fetchPrompts();
+      if (type === 'prompts') fetchPrompts();
+      else if (type === 'outputs') fetchOutputs();
+      else fetchMasterContent();
       fetchArchivedCount();
     } catch (error) {
-      console.error("Error archiving prompt:", error);
+      console.error("Error archiving content:", error);
       toast({
         title: "Error",
-        description: "Failed to archive prompt. Please try again.",
+        description: "Failed to archive content",
         variant: "destructive",
       });
     }
   };
 
-  const handleDeletePrompt = (id: string) => {
-    setPromptToDelete(id);
+  const handleDeleteItem = (id: string) => {
+    setItemToDelete({ id, type: activeTab });
     setDeleteDialogOpen(true);
   };
 
   const confirmDelete = async () => {
-    if (!promptToDelete) return;
+    if (!itemToDelete) return;
 
     try {
+      const tableName = itemToDelete.type === 'prompts' ? 'prompts' : 
+                        itemToDelete.type === 'outputs' ? 'outputs' : 'master_content';
+      
       const { error } = await supabase
-        .from("prompts")
+        .from(tableName)
         .delete()
-        .eq("id", promptToDelete);
+        .eq("id", itemToDelete.id);
 
       if (error) throw error;
 
       toast({
-        title: "Prompt Deleted",
-        description: "The prompt has been permanently deleted.",
+        title: "Content Deleted",
+        description: `The ${itemToDelete.type.slice(0, -1)} has been permanently deleted.`,
       });
 
-      fetchPrompts();
+      if (itemToDelete.type === 'prompts') fetchPrompts();
+      else if (itemToDelete.type === 'outputs') fetchOutputs();
+      else fetchMasterContent();
+      
     } catch (error) {
-      console.error("Error deleting prompt:", error);
+      console.error("Error deleting content:", error);
       toast({
         title: "Error",
-        description: "Failed to delete prompt. Please try again.",
+        description: "Failed to delete content",
         variant: "destructive",
       });
     } finally {
       setDeleteDialogOpen(false);
-      setPromptToDelete(null);
+      setItemToDelete(null);
     }
   };
 
@@ -276,197 +360,232 @@ const Reservoir = () => {
     setSidebarFilters(newFilters);
   };
 
-  const filteredPrompts = prompts.filter((prompt) => {
-    const matchesSearch =
-      searchQuery === "" ||
-      prompt.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      prompt.prompt_text?.toLowerCase().includes(searchQuery.toLowerCase());
+  const filterData = (data: any[]) => {
+    return data.filter((item) => {
+      // Handle different data structures for prompts vs outputs
+      const itemTitle = item.title || (item.prompts && item.prompts[0]?.title) || '';
+      const itemContent = item.prompt_text || item.generated_content || item.full_content || '';
+      const itemCollection = item.collection || (item.prompts && item.prompts[0]?.collection);
+      const itemContentType = item.content_type || (item.prompts && item.prompts[0]?.content_type);
+      
+      const matchesSearch =
+        searchQuery === "" ||
+        itemTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        itemContent.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesCollection =
-      !sidebarFilters.collection || prompt.collection === sidebarFilters.collection;
+      const matchesCollection =
+        !sidebarFilters.collection || itemCollection === sidebarFilters.collection;
 
-    const matchesScentFamily =
-      !sidebarFilters.scentFamily || prompt.scent_family === sidebarFilters.scentFamily;
+      const matchesScentFamily =
+        !sidebarFilters.scentFamily || item.scent_family === sidebarFilters.scentFamily;
 
-    const matchesContentType =
-      !sidebarFilters.contentType || prompt.content_type === sidebarFilters.contentType;
+      const matchesContentType =
+        !sidebarFilters.contentType || itemContentType === sidebarFilters.contentType;
 
-    const matchesDipWeek =
-      !sidebarFilters.dipWeek || prompt.dip_week === sidebarFilters.dipWeek;
+      const matchesDipWeek =
+        !sidebarFilters.dipWeek || item.dip_week === sidebarFilters.dipWeek;
 
-    // Quick filters
-    let matchesQuickFilter = true;
-    if (sidebarFilters.quickFilter === "recent") {
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      matchesQuickFilter = prompt.created_at && new Date(prompt.created_at) > sevenDaysAgo;
-    } else if (sidebarFilters.quickFilter === "favorites") {
-      matchesQuickFilter = prompt.is_favorite === true;
-    }
+      let matchesQuickFilter = true;
+      if (sidebarFilters.quickFilter === "recent") {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        matchesQuickFilter = item.created_at && new Date(item.created_at) > sevenDaysAgo;
+      } else if (sidebarFilters.quickFilter === "favorites") {
+        matchesQuickFilter = item.is_favorite === true;
+      }
 
-    return (
-      matchesSearch &&
-      matchesCollection &&
-      matchesScentFamily &&
-      matchesContentType &&
-      matchesDipWeek &&
-      matchesQuickFilter
-    );
-  });
+      return (
+        matchesSearch &&
+        matchesCollection &&
+        matchesScentFamily &&
+        matchesContentType &&
+        matchesDipWeek &&
+        matchesQuickFilter
+      );
+    });
+  };
+
+  const filteredPrompts = filterData(prompts);
+  const filteredOutputs = filterData(outputs);
+  const filteredMasterContent = filterData(masterContent);
 
   const activeChips = getActiveFilterChips();
 
+  // Get tab counts
+  const tabCounts = {
+    prompts: prompts.length,
+    outputs: outputs.length,
+    master: masterContent.length,
+  };
+
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background pt-20">
-          {/* Sidebar - sticky positioned below nav */}
-          <div className="sticky top-20 h-[calc(100vh-5rem)] self-start">
-            <LibrarySidebar
-              onFilterChange={handleFilterChange}
-              activeFilters={sidebarFilters}
-              counts={counts}
-            />
-          </div>
-
-          {/* Main Content */}
-          <main className="flex-1 min-w-0">
-            {/* Header with Sidebar Toggle */}
-            <div className="sticky top-20 z-10 bg-background/95 backdrop-blur-sm border-b border-border/40">
-            <div className="flex items-center gap-4 px-6 py-4">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <SidebarTrigger className="-ml-1" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Toggle filters sidebar</p>
-                </TooltipContent>
-              </Tooltip>
-              <div className="flex-1">
-                <h1 className="text-2xl font-serif text-foreground">Library</h1>
-                <p className="text-sm text-muted-foreground">
-                  Your collection of brand-intelligent prompts
-                </p>
+      <div className="flex min-h-screen w-full">
+        <LibrarySidebar 
+          onFilterChange={handleFilterChange}
+          activeFilters={sidebarFilters}
+          counts={counts}
+        />
+        <main className="flex-1 p-8">
+          <div className="max-w-7xl mx-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <SidebarTrigger />
+                <h1 className="text-4xl font-bold">Library</h1>
               </div>
             </div>
-          </div>
 
-          <div className="py-8 px-6 md:px-12">
-            <div className="max-w-7xl mx-auto codex-spacing">
-              {/* Search Bar */}
-              <div className="fade-enter mb-6">
-                <div className="relative max-w-2xl">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                  <Input
-                    type="text"
-                    placeholder="🔍 Search Library..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-12 h-12 bg-card/50 backdrop-blur-sm border-border focus:border-primary transition-all duration-300"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery("")}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
+            {/* Tabs */}
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ContentTab)} className="mb-6">
+              <TabsList className="grid w-full max-w-md grid-cols-3">
+                <TabsTrigger value="prompts" className="gap-2">
+                  <Edit className="h-4 w-4" />
+                  Prompts
+                  <Badge variant="secondary" className="ml-1">{tabCounts.prompts}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="outputs" className="gap-2">
+                  <FileText className="h-4 w-4" />
+                  Single Assets
+                  <Badge variant="secondary" className="ml-1">{tabCounts.outputs}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="master" className="gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Master Content
+                  <Badge variant="secondary" className="ml-1">{tabCounts.master}</Badge>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {/* Search and Filters */}
+            <div className="mb-6">
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder={`Search ${activeTab === 'prompts' ? 'prompts' : activeTab === 'outputs' ? 'outputs' : 'master content'}...`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
               </div>
 
-              {/* Active Filter Chips */}
+              {/* Active filter chips */}
               {activeChips.length > 0 && (
-                <div className="fade-enter flex flex-wrap items-center gap-2 mb-6">
-                  <span className="text-sm text-muted-foreground font-medium">Active filters:</span>
+                <div className="flex flex-wrap gap-2 items-center">
+                  <span className="text-sm text-muted-foreground">Active filters:</span>
                   {activeChips.map((chip) => (
                     <Badge
-                      key={`${chip.key}-${chip.value}`}
+                      key={chip.key}
                       variant="secondary"
-                      className="bg-saffron-gold/20 text-saffron-gold border-saffron-gold/30 gap-2 pr-1"
+                      className="gap-1 cursor-pointer hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                      onClick={() => removeFilter(chip.key)}
                     >
                       {chip.label}
-                      <button
-                        onClick={() => removeFilter(chip.key)}
-                        className="hover:bg-saffron-gold/30 rounded-full p-0.5 transition-colors"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
+                      <X className="h-3 w-3" />
                     </Badge>
                   ))}
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={clearAllFilters}
-                    className="text-xs text-muted-foreground hover:text-foreground"
+                    className="h-7"
                   >
-                    Clear All
+                    Clear all
                   </Button>
                 </div>
               )}
+            </div>
 
-              {/* Loading State */}
-              {loading && (
-                <div className="text-center py-16">
-                  <p className="text-muted-foreground">Loading prompts...</p>
+            {/* Content Area */}
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <p className="text-muted-foreground">Loading...</p>
+              </div>
+            ) : (
+              <TabsContent value="prompts">
+                {filteredPrompts.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-64 gap-4">
+                    <Edit className="h-16 w-16 text-muted-foreground/50" />
+                    <p className="text-lg text-muted-foreground">No prompts found</p>
+                    <Button onClick={() => navigate('/forge')}>Create Your First Prompt</Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredPrompts.map((prompt) => (
+                      <PromptCard
+                        key={prompt.id}
+                        prompt={prompt}
+                        onArchive={(id) => handleArchiveItem(id, 'prompts')}
+                        onDelete={handleDeleteItem}
+                      />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            )}
+
+            <TabsContent value="outputs">
+              {filteredOutputs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-64 gap-4">
+                  <FileText className="h-16 w-16 text-muted-foreground/50" />
+                  <p className="text-lg text-muted-foreground">No single assets found</p>
+                  <Button onClick={() => navigate('/forge')}>Create Your First Asset</Button>
                 </div>
-              )}
-
-              {/* Prompt Grid */}
-              {!loading && filteredPrompts.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 fade-enter">
-                  {filteredPrompts.map((prompt) => (
-                    <PromptCard
-                      key={prompt.id}
-                      prompt={prompt}
-                      onArchive={handleArchivePrompt}
-                      onDelete={handleDeletePrompt}
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredOutputs.map((output) => (
+                    <OutputCard
+                      key={output.id}
+                      output={output}
+                      promptTitle={output.prompts?.[0]?.title}
+                      collection={output.prompts?.[0]?.collection}
+                      contentType={output.prompts?.[0]?.content_type}
+                      onArchive={(id) => handleArchiveItem(id, 'outputs')}
+                      onDelete={handleDeleteItem}
                     />
                   ))}
                 </div>
               )}
+            </TabsContent>
 
-              {/* Empty State */}
-              {!loading && filteredPrompts.length === 0 && (
-                <div className="text-center py-16 fade-enter">
-                  <p className="text-2xl font-serif text-muted-foreground">Your Library Awaits</p>
-                  <p className="text-muted-foreground mt-2">
-                    {prompts.length === 0
-                      ? "Begin crafting prompts that maintain your brand's voice"
-                      : "No prompts match your search criteria"}
-                  </p>
-                  {activeChips.length > 0 && (
-                    <Button
-                      variant="outline"
-                      className="mt-4"
-                      onClick={clearAllFilters}
-                    >
-                      Clear Filters
-                    </Button>
-                  )}
+            <TabsContent value="master">
+              {filteredMasterContent.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-64 gap-4">
+                  <BookOpen className="h-16 w-16 text-muted-foreground/50" />
+                  <p className="text-lg text-muted-foreground">No master content found</p>
+                  <Button onClick={() => navigate('/forge')}>Create Your First Master Content</Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredMasterContent.map((content) => (
+                    <MasterContentCard
+                      key={content.id}
+                      content={content}
+                      onArchive={(id) => handleArchiveItem(id, 'master')}
+                      onDelete={handleDeleteItem}
+                      onGenerateDerivatives={(id) => navigate(`/repurpose?masterContentId=${id}`)}
+                    />
+                  ))}
                 </div>
               )}
-            </div>
+            </TabsContent>
           </div>
-          </main>
-        </div>
+        </main>
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Prompt Permanently?</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the prompt from your collection.
-              Consider archiving instead to preserve it for future reference.
+              This action cannot be undone. This will permanently delete the content.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete Permanently
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

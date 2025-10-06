@@ -520,6 +520,7 @@ const Forge = () => {
             customInstructions: formData.customInstructions,
           },
           created_by: user.id,
+          is_archived: false,
         })
         .select()
         .single();
@@ -542,20 +543,21 @@ const Forge = () => {
           quality_rating: qualityRating,
           usage_context: `${formData.contentType} - ${formData.collection}`,
           created_by: user.id,
+          is_archived: false,
         });
 
       if (outputError) throw outputError;
 
       toast({
-        title: "Vessel archived successfully",
-        description: "Your prompt and output have been saved to the Archive.",
+        title: "Content saved to Library",
+        description: "Your prompt and output have been saved to the Library.",
         action: (
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/archive')}
+            onClick={() => navigate('/reservoir')}
           >
-            View in Archive
+            View in Library
           </Button>
         ),
       });
@@ -646,6 +648,7 @@ const Forge = () => {
           dip_week: formData.dipWeek ? parseInt(formData.dipWeek) : null,
           pillar_focus: formData.pillar ? (mapPillarToEnum(formData.pillar) as any) : null,
           created_by: user.id,
+          is_archived: false,
         })
         .select()
         .single();
@@ -1263,7 +1266,7 @@ const Forge = () => {
                     ) : (
                       <>
                         <Archive className="w-4 h-4" />
-                        Save to Portfolio
+                        Save to Library
                       </>
                     )}
                   </Button>
