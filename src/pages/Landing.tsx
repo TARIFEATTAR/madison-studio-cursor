@@ -87,7 +87,7 @@ const Landing = () => {
             <div className="flex items-center">
               <img 
                 src="/logo.png" 
-                alt="Scriptorium - Brand Intelligence" 
+                alt="Scriptora - Brand Intelligence" 
                 className="h-14 w-auto transition-transform duration-300 hover:scale-105"
               />
             </div>
@@ -130,7 +130,7 @@ const Landing = () => {
               <span className="text-primary block mt-2">Simplified</span>
             </h1>
             <p className="text-large text-white/90 mb-12 leading-relaxed">
-              Scriptorium transforms content marketing from chaos to clarity. Build your prompt library, 
+              Scriptora transforms content marketing from chaos to clarity. Build your prompt library, 
               generate on-brand content, and orchestrate multi-channel campaigns—all in one elegant platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -224,7 +224,7 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="text-center mb-16 codex-spacing fade-enter">
             <h2 className="text-foreground mb-4">
-              The Scriptorium Workflow
+              The Scriptora Workflow
             </h2>
             <p className="text-large text-muted-foreground max-w-2xl mx-auto">
               Build your centralized repository of high-quality content, prompts, and brand guidelines. Then compose, amplify, plan, and track—everything you need to maintain a consistent brand voice across all your marketing channels.
@@ -284,7 +284,7 @@ const Landing = () => {
               </h2>
               <p className="text-large text-muted-foreground mb-8 leading-relaxed">
                 Whether you're a solo creator or managing content for multiple brands, 
-                Scriptorium adapts to your workflow. White-label ready for agencies who 
+                Scriptora adapts to your workflow. White-label ready for agencies who 
                 want to offer best-in-class content intelligence to their clients.
               </p>
               <ul className="space-y-4">
@@ -321,7 +321,7 @@ const Landing = () => {
             Ready to Transform Your Content Workflow?
           </h2>
           <p className="text-large text-muted-foreground mb-10 max-w-2xl mx-auto">
-            Join forward-thinking teams who've simplified their content operations with Scriptorium.
+            Join forward-thinking teams who've simplified their content operations with Scriptora.
           </p>
           <Button asChild size="lg" variant="brass">
             <Link to="/auth" className="gap-2">
@@ -336,8 +336,8 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
-              <img src="/logo.png" alt="Scriptorium" className="h-10 w-auto" />
-              <span className="text-muted-foreground text-sm">© 2025 Scriptorium. All rights reserved.</span>
+              <img src="/logo.png" alt="Scriptora" className="h-10 w-auto" />
+              <span className="text-muted-foreground text-sm">© 2025 Scriptora. All rights reserved.</span>
             </div>
             <div className="flex gap-8">
               <Link to="/auth" className="text-muted-foreground hover:text-primary transition-colors">

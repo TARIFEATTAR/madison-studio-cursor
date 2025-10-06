@@ -104,7 +104,7 @@ const Auth = () => {
       });
     } else {
       toast({
-        title: "Welcome to Scriptorium",
+        title: "Welcome to Scriptora",
         description: "Your account has been created successfully.",
       });
     }
@@ -214,7 +214,7 @@ const Auth = () => {
         <div className="text-center mb-8 fade-enter">
           <img 
             src="/logo-full.png" 
-            alt="Scriptorium" 
+            alt="Scriptora" 
             className="h-16 w-auto mx-auto mb-3"
           />
           <p className="text-muted-foreground text-lg">

@@ -40,7 +40,7 @@ export function WelcomeModal({ open, onComplete, onSkip }: WelcomeModalProps) {
       <DialogContent className="max-w-md bg-card border-border/20">
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl text-foreground">
-            Welcome to Scriptorium
+            Welcome to Scriptora
           </DialogTitle>
           <p className="text-sm text-muted-foreground mt-2">
             Let's personalize your experience. This will only take 30 seconds.

@@ -1,5 +1,5 @@
 /**
- * Blog Post Content Guidelines for Scriptorium
+ * Blog Post Content Guidelines for Scriptora
  * Implements three-act structure and brand voice validation
  */
 

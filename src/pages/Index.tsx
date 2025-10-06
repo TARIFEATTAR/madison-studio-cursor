@@ -51,7 +51,7 @@ const Index = () => {
           <div className="max-w-7xl mx-auto px-6 md:px-12 py-16 md:py-20 relative">
             <div className="text-center max-w-4xl mx-auto codex-spacing fade-enter">
               <h1 className="text-foreground mb-4">
-                Welcome to Scriptorium
+                Welcome to Scriptora
               </h1>
               <p className="text-large text-muted-foreground mb-12 leading-relaxed">
                 Your brand intelligence platform for crafting and managing content
