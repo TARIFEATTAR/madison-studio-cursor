@@ -2,6 +2,11 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { BookOpen, Sparkles, Archive, Calendar as CalendarIcon, LogOut, Repeat } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const Navigation = () => {
   const location = useLocation();
@@ -9,11 +14,36 @@ const Navigation = () => {
   const { user, signOut } = useAuth();
 
   const navItems = [
-    { path: "/library", label: "Library", icon: BookOpen },
-    { path: "/forge", label: "Composer", icon: Sparkles },
-    { path: "/repurpose", label: "Amplify", icon: Repeat },
-    { path: "/archive", label: "Portfolio", icon: Archive },
-    { path: "/calendar", label: "Planner", icon: CalendarIcon },
+    { 
+      path: "/library", 
+      label: "Library", 
+      icon: BookOpen,
+      description: "Browse and manage your content library"
+    },
+    { 
+      path: "/forge", 
+      label: "Composer", 
+      icon: Sparkles,
+      description: "Generate new content with AI assistance"
+    },
+    { 
+      path: "/repurpose", 
+      label: "Amplify", 
+      icon: Repeat,
+      description: "Repurpose content for different platforms"
+    },
+    { 
+      path: "/archive", 
+      label: "Portfolio", 
+      icon: Archive,
+      description: "View your archived content portfolio"
+    },
+    { 
+      path: "/calendar", 
+      label: "Planner", 
+      icon: CalendarIcon,
+      description: "Schedule and plan your content calendar"
+    },
   ];
 
   return (
@@ -42,23 +72,29 @@ const Navigation = () => {
                   const isActive = location.pathname === item.path;
 
                   return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      aria-label={`Navigate to ${item.label}`}
-                      aria-current={isActive ? "page" : undefined}
-                      className={`
-                        inline-flex items-center gap-2 px-3 md:px-5 py-3 md:py-4 rounded-md transition-all duration-300
-                        ${
-                          isActive
-                            ? "bg-aged-brass/12 text-parchment-white font-medium shadow-sm border-b-2 border-aged-brass"
-                            : "text-parchment-white/70 hover:text-aged-brass hover:bg-aged-brass/8 hover:shadow-sm hover:-translate-y-0.5"
-                        }
-                      `}
-                    >
-                      <Icon className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
-                      <span className="text-sm md:text-base">{item.label}</span>
-                    </Link>
+                    <Tooltip key={item.path}>
+                      <TooltipTrigger asChild>
+                        <Link
+                          to={item.path}
+                          aria-label={`Navigate to ${item.label}`}
+                          aria-current={isActive ? "page" : undefined}
+                          className={`
+                            inline-flex items-center gap-2 px-3 md:px-5 py-3 md:py-4 rounded-md transition-all duration-300
+                            ${
+                              isActive
+                                ? "bg-aged-brass/12 text-parchment-white font-medium shadow-sm border-b-2 border-aged-brass"
+                                : "text-parchment-white/70 hover:text-aged-brass hover:bg-aged-brass/8 hover:shadow-sm hover:-translate-y-0.5"
+                            }
+                          `}
+                        >
+                          <Icon className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
+                          <span className="text-sm md:text-base">{item.label}</span>
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{item.description}</p>
+                      </TooltipContent>
+                    </Tooltip>
                   );
                 })}
               </nav>

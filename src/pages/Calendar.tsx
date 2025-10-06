@@ -12,6 +12,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDipWeekCalculation } from "@/hooks/useDipWeekCalculation";
 import { toast } from "@/hooks/use-toast";
 import calendarWatch from "@/assets/calendar-watch.png";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -178,10 +183,17 @@ const Calendar = () => {
         />
 
         <div className="mt-6">
-          <Button onClick={handleNewSchedule} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Schedule Content
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button onClick={handleNewSchedule} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Schedule Content
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Add new content to your calendar</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         <DragDropContext

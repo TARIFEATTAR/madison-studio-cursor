@@ -10,6 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -328,7 +333,14 @@ const Reservoir = () => {
             {/* Header with Sidebar Toggle */}
             <div className="sticky top-20 z-10 bg-background/95 backdrop-blur-sm border-b border-border/40">
             <div className="flex items-center gap-4 px-6 py-4">
-              <SidebarTrigger className="-ml-1" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SidebarTrigger className="-ml-1" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Toggle filters sidebar</p>
+                </TooltipContent>
+              </Tooltip>
               <div className="flex-1">
                 <h1 className="text-2xl font-serif text-foreground">Library</h1>
                 <p className="text-sm text-muted-foreground">
