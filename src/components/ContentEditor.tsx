@@ -190,6 +190,15 @@ export const ContentEditor = ({
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={handleCopy}
+                className="gap-1"
+                title="Copy All"
+              >
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleUndo}
                 disabled={!canUndo}
                 className="gap-1"
