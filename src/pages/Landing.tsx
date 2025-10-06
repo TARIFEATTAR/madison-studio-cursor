@@ -234,13 +234,13 @@ const Landing = () => {
                   key={index}
                   className="card-luxury group cursor-default"
                 >
-                  <div className="bg-primary/10 w-21 h-21 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/15 transition-colors">
+                  <div className="bg-primary/10 w-10 h-10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/15 transition-colors">
                     {isImageIcon ? (
-                      <img src={icon} alt={feature.title} className="w-18 h-18 object-contain" />
+                      <img src={icon} alt={feature.title} className="w-8 h-8 object-contain" />
                     ) : (
                       (() => {
                         const IconComponent = icon as React.ComponentType<{ className?: string }>;
-                        return <IconComponent className="w-9 h-9 text-primary" />;
+                        return <IconComponent className="w-5 h-5 text-primary" />;
                       })()
                     )}
                   </div>
