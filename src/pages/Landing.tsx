@@ -10,6 +10,7 @@ import portfolioIcon from "@/assets/portfolio-icon.png";
 import calendarIcon from "@/assets/calendar-icon.png";
 import amplifyIcon from "@/assets/amplify-icon.png";
 import composeIcon from "@/assets/compose-icon.png";
+import libraryIcon from "@/assets/library-icon.png";
 
 const steps = [
   {
@@ -37,7 +38,7 @@ const Landing = () => {
 
   const features = [
     {
-      icon: BookOpen,
+      icon: libraryIcon,
       title: "Curate Your Library",
       description: "Build a centralized repository of high-quality prompts and brand guidelines that power consistent, on-brand content."
     },
@@ -226,8 +227,8 @@ const Landing = () => {
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 fade-enter">
             {features.map((feature, index) => {
-              const Icon = feature.icon;
-              const isImageIcon = typeof Icon === 'string';
+              const icon = feature.icon;
+              const isImageIcon = typeof icon === 'string';
               return (
                 <div 
                   key={index}
@@ -235,9 +236,12 @@ const Landing = () => {
                 >
                   <div className="bg-primary/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/15 transition-colors">
                     {isImageIcon ? (
-                      <img src={Icon} alt={feature.title} className="w-11 h-11 object-contain" />
+                      <img src={icon} alt={feature.title} className="w-[52px] h-[52px] object-contain" />
                     ) : (
-                      <Icon className="w-6 h-6 text-primary" />
+                      (() => {
+                        const IconComponent = icon as React.ComponentType<{ className?: string }>;
+                        return <IconComponent className="w-6 h-6 text-primary" />;
+                      })()
                     )}
                   </div>
                   <h3 className="font-serif text-2xl font-bold text-foreground mb-3">
