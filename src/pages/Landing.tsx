@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import penHeroImage from "@/assets/pen-hero.jpg";
 import calendarWatch from "@/assets/calendar-watch-v2.png";
 import penNibIcon from "@/assets/pen-nib-icon.png";
+import bookIcon from "@/assets/book-icon.png";
 
 const steps = [
   {
@@ -161,7 +162,7 @@ const Landing = () => {
                   className="relative card-luxury text-center group cursor-default overflow-hidden"
                 >
                   {/* Large Corner Number */}
-                  <div className="absolute -top-2 -left-2 pointer-events-none">
+                  <div className="absolute top-3 left-4 pointer-events-none">
                     <span className="font-serif text-[72px] leading-none text-foreground/[0.12] select-none">
                       {step.number}
                     </span>
@@ -185,8 +186,12 @@ const Landing = () => {
                         />
                       </div>
                     ) : (
-                      <div className="bg-primary/10 w-24 h-24 rounded-lg flex items-center justify-center mb-4 mx-auto group-hover:bg-primary/15 transition-colors">
-                        <Icon className="w-12 h-12 text-primary" />
+                      <div className="w-28 h-28 flex items-center justify-center mb-4 mx-auto">
+                        <img 
+                          src={bookIcon} 
+                          alt="Build your library" 
+                          className="w-full h-full object-contain"
+                        />
                       </div>
                     )}
                     <h3 className="font-serif text-2xl font-bold text-foreground mb-3">
