@@ -296,7 +296,7 @@ export type Database = {
           id: string
           is_archived: boolean
           master_content_id: string | null
-          organization_id: string | null
+          organization_id: string
           platform_specs: Json | null
           published_at: string | null
           quality_rating: number | null
@@ -311,7 +311,7 @@ export type Database = {
           id?: string
           is_archived?: boolean
           master_content_id?: string | null
-          organization_id?: string | null
+          organization_id: string
           platform_specs?: Json | null
           published_at?: string | null
           quality_rating?: number | null
@@ -326,7 +326,7 @@ export type Database = {
           id?: string
           is_archived?: boolean
           master_content_id?: string | null
-          organization_id?: string | null
+          organization_id?: string
           platform_specs?: Json | null
           published_at?: string | null
           quality_rating?: number | null
@@ -452,7 +452,7 @@ export type Database = {
           full_content: string
           id: string
           is_archived: boolean
-          organization_id: string | null
+          organization_id: string
           pillar_focus: Database["public"]["Enums"]["pillar_type"] | null
           title: string
           updated_at: string | null
@@ -468,7 +468,7 @@ export type Database = {
           full_content: string
           id?: string
           is_archived?: boolean
-          organization_id?: string | null
+          organization_id: string
           pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
           title: string
           updated_at?: string | null
@@ -484,7 +484,7 @@ export type Database = {
           full_content?: string
           id?: string
           is_archived?: boolean
-          organization_id?: string | null
+          organization_id?: string
           pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
           title?: string
           updated_at?: string | null
@@ -578,7 +578,7 @@ export type Database = {
           image_urls: Json | null
           is_archived: boolean
           iteration_notes: string | null
-          organization_id: string | null
+          organization_id: string
           performance_metrics: Json | null
           prompt_id: string | null
           quality_rating: number | null
@@ -593,7 +593,7 @@ export type Database = {
           image_urls?: Json | null
           is_archived?: boolean
           iteration_notes?: string | null
-          organization_id?: string | null
+          organization_id: string
           performance_metrics?: Json | null
           prompt_id?: string | null
           quality_rating?: number | null
@@ -608,7 +608,7 @@ export type Database = {
           image_urls?: Json | null
           is_archived?: boolean
           iteration_notes?: string | null
-          organization_id?: string | null
+          organization_id?: string
           performance_metrics?: Json | null
           prompt_id?: string | null
           quality_rating?: number | null
@@ -644,7 +644,7 @@ export type Database = {
           is_archived: boolean
           meta_instructions: Json | null
           middle_notes: string | null
-          organization_id: string | null
+          organization_id: string
           parent_prompt_id: string | null
           pillar_focus: Database["public"]["Enums"]["pillar_type"] | null
           prompt_text: string
@@ -667,7 +667,7 @@ export type Database = {
           is_archived?: boolean
           meta_instructions?: Json | null
           middle_notes?: string | null
-          organization_id?: string | null
+          organization_id: string
           parent_prompt_id?: string | null
           pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
           prompt_text: string
@@ -690,7 +690,7 @@ export type Database = {
           is_archived?: boolean
           meta_instructions?: Json | null
           middle_notes?: string | null
-          organization_id?: string | null
+          organization_id?: string
           parent_prompt_id?: string | null
           pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
           prompt_text?: string
