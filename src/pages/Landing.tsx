@@ -232,7 +232,7 @@ const Landing = () => {
               return (
                 <div 
                   key={index}
-                  className="card-luxury group cursor-default"
+                  className="group cursor-default"
                 >
                   <div className="bg-primary/10 w-10 h-10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/15 transition-colors">
                     {isImageIcon ? (
