@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import penHeroImage from "@/assets/pen-hero.jpg";
 import calendarScheduleIcon from "@/assets/calendar-schedule-icon.png";
+import penNibIcon from "@/assets/pen-nib-icon.png";
 
 const steps = [
   {
@@ -152,6 +153,7 @@ const Landing = () => {
             {steps.map((step, index) => {
               const Icon = step.icon;
               const isScheduleStep = step.number === "3";
+              const isCreateStep = step.number === "2";
               
               return (
                 <div 
@@ -167,6 +169,14 @@ const Landing = () => {
                         <img 
                           src={calendarScheduleIcon} 
                           alt="Schedule and automate" 
+                          className="w-full h-full object-contain drop-shadow-lg"
+                        />
+                      </div>
+                    ) : isCreateStep ? (
+                      <div className="w-20 h-20 flex items-center justify-center mb-4 mx-auto">
+                        <img 
+                          src={penNibIcon} 
+                          alt="Create and generate content" 
                           className="w-full h-full object-contain drop-shadow-lg"
                         />
                       </div>
