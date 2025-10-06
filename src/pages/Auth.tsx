@@ -219,7 +219,7 @@ const Auth = () => {
             className="h-16 w-auto mx-auto mb-3"
           />
           <p className="text-muted-foreground text-lg">
-            Where brands craft their narrative
+            Where brands craft and amplify their narrative
           </p>
         </div>
 
