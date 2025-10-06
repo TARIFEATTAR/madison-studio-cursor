@@ -14,11 +14,110 @@ export type Database = {
   }
   public: {
     Tables: {
+      brand_documents: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string
+          file_url: string | null
+          id: string
+          organization_id: string
+          processing_status: string | null
+          updated_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          file_url?: string | null
+          id?: string
+          organization_id: string
+          processing_status?: string | null
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          file_url?: string | null
+          id?: string
+          organization_id?: string
+          processing_status?: string | null
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_documents_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_knowledge: {
+        Row: {
+          content: Json
+          created_at: string | null
+          document_id: string | null
+          id: string
+          is_active: boolean | null
+          knowledge_type: string
+          organization_id: string
+          updated_at: string | null
+          version: number | null
+        }
+        Insert: {
+          content?: Json
+          created_at?: string | null
+          document_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          knowledge_type: string
+          organization_id: string
+          updated_at?: string | null
+          version?: number | null
+        }
+        Update: {
+          content?: Json
+          created_at?: string | null
+          document_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          knowledge_type?: string
+          organization_id?: string
+          updated_at?: string | null
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_knowledge_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "brand_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_knowledge_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_notes: {
         Row: {
           created_at: string | null
           id: string
           note_content: string | null
+          organization_id: string | null
           updated_at: string | null
           user_id: string
         }
@@ -26,6 +125,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           note_content?: string | null
+          organization_id?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -33,10 +133,19 @@ export type Database = {
           created_at?: string | null
           id?: string
           note_content?: string | null
+          organization_id?: string | null
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "calendar_notes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       calendar_schedule: {
         Row: {
@@ -45,6 +154,7 @@ export type Database = {
           created_by: string
           end_date: string
           id: string
+          organization_id: string | null
           pillar: Database["public"]["Enums"]["pillar_type"]
           prompts_scheduled: string[] | null
           start_date: string
@@ -58,6 +168,7 @@ export type Database = {
           created_by: string
           end_date: string
           id?: string
+          organization_id?: string | null
           pillar: Database["public"]["Enums"]["pillar_type"]
           prompts_scheduled?: string[] | null
           start_date: string
@@ -71,6 +182,7 @@ export type Database = {
           created_by?: string
           end_date?: string
           id?: string
+          organization_id?: string | null
           pillar?: Database["public"]["Enums"]["pillar_type"]
           prompts_scheduled?: string[] | null
           start_date?: string
@@ -78,7 +190,15 @@ export type Database = {
           visual_world?: Database["public"]["Enums"]["visual_world"]
           week_number?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "calendar_schedule_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       calendar_settings: {
         Row: {
@@ -86,6 +206,7 @@ export type Database = {
           created_at: string | null
           id: string
           optimal_times: string[] | null
+          organization_id: string | null
           platform: string
           timezone: string | null
           updated_at: string | null
@@ -96,6 +217,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           optimal_times?: string[] | null
+          organization_id?: string | null
           platform: string
           timezone?: string | null
           updated_at?: string | null
@@ -106,12 +228,21 @@ export type Database = {
           created_at?: string | null
           id?: string
           optimal_times?: string[] | null
+          organization_id?: string | null
           platform?: string
           timezone?: string | null
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "calendar_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       calendar_tasks: {
         Row: {
@@ -119,6 +250,7 @@ export type Database = {
           due_date: string | null
           id: string
           is_completed: boolean
+          organization_id: string | null
           task_text: string
           updated_at: string | null
           user_id: string
@@ -128,6 +260,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           is_completed?: boolean
+          organization_id?: string | null
           task_text: string
           updated_at?: string | null
           user_id: string
@@ -137,11 +270,20 @@ export type Database = {
           due_date?: string | null
           id?: string
           is_completed?: boolean
+          organization_id?: string | null
           task_text?: string
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "calendar_tasks_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       derivative_assets: {
         Row: {
@@ -154,6 +296,7 @@ export type Database = {
           id: string
           is_archived: boolean
           master_content_id: string | null
+          organization_id: string | null
           platform_specs: Json | null
           published_at: string | null
           quality_rating: number | null
@@ -168,6 +311,7 @@ export type Database = {
           id?: string
           is_archived?: boolean
           master_content_id?: string | null
+          organization_id?: string | null
           platform_specs?: Json | null
           published_at?: string | null
           quality_rating?: number | null
@@ -182,6 +326,7 @@ export type Database = {
           id?: string
           is_archived?: boolean
           master_content_id?: string | null
+          organization_id?: string | null
           platform_specs?: Json | null
           published_at?: string | null
           quality_rating?: number | null
@@ -192,6 +337,13 @@ export type Database = {
             columns: ["master_content_id"]
             isOneToOne: false
             referencedRelation: "master_content"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "derivative_assets_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -300,6 +452,7 @@ export type Database = {
           full_content: string
           id: string
           is_archived: boolean
+          organization_id: string | null
           pillar_focus: Database["public"]["Enums"]["pillar_type"] | null
           title: string
           updated_at: string | null
@@ -315,6 +468,7 @@ export type Database = {
           full_content: string
           id?: string
           is_archived?: boolean
+          organization_id?: string | null
           pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
           title: string
           updated_at?: string | null
@@ -330,10 +484,87 @@ export type Database = {
           full_content?: string
           id?: string
           is_archived?: boolean
+          organization_id?: string | null
           pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
           title?: string
           updated_at?: string | null
           word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "master_content_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_members: {
+        Row: {
+          created_at: string | null
+          id: string
+          organization_id: string
+          role: Database["public"]["Enums"]["organization_role"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          organization_id: string
+          role?: Database["public"]["Enums"]["organization_role"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          organization_id?: string
+          role?: Database["public"]["Enums"]["organization_role"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          brand_config: Json | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          name: string
+          settings: Json | null
+          slug: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          brand_config?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name: string
+          settings?: Json | null
+          slug?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          brand_config?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name?: string
+          settings?: Json | null
+          slug?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -347,6 +578,7 @@ export type Database = {
           image_urls: Json | null
           is_archived: boolean
           iteration_notes: string | null
+          organization_id: string | null
           performance_metrics: Json | null
           prompt_id: string | null
           quality_rating: number | null
@@ -361,6 +593,7 @@ export type Database = {
           image_urls?: Json | null
           is_archived?: boolean
           iteration_notes?: string | null
+          organization_id?: string | null
           performance_metrics?: Json | null
           prompt_id?: string | null
           quality_rating?: number | null
@@ -375,12 +608,20 @@ export type Database = {
           image_urls?: Json | null
           is_archived?: boolean
           iteration_notes?: string | null
+          organization_id?: string | null
           performance_metrics?: Json | null
           prompt_id?: string | null
           quality_rating?: number | null
           usage_context?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "outputs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "outputs_prompt_id_fkey"
             columns: ["prompt_id"]
@@ -403,6 +644,7 @@ export type Database = {
           is_archived: boolean
           meta_instructions: Json | null
           middle_notes: string | null
+          organization_id: string | null
           parent_prompt_id: string | null
           pillar_focus: Database["public"]["Enums"]["pillar_type"] | null
           prompt_text: string
@@ -425,6 +667,7 @@ export type Database = {
           is_archived?: boolean
           meta_instructions?: Json | null
           middle_notes?: string | null
+          organization_id?: string | null
           parent_prompt_id?: string | null
           pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
           prompt_text: string
@@ -447,6 +690,7 @@ export type Database = {
           is_archived?: boolean
           meta_instructions?: Json | null
           middle_notes?: string | null
+          organization_id?: string | null
           parent_prompt_id?: string | null
           pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
           prompt_text?: string
@@ -458,6 +702,13 @@ export type Database = {
           version?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "prompts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "prompts_parent_prompt_id_fkey"
             columns: ["parent_prompt_id"]
@@ -507,6 +758,7 @@ export type Database = {
           google_event_id: string | null
           id: string
           notes: string | null
+          organization_id: string | null
           pillar: string | null
           platform: string | null
           prompt_id: string | null
@@ -527,6 +779,7 @@ export type Database = {
           google_event_id?: string | null
           id?: string
           notes?: string | null
+          organization_id?: string | null
           pillar?: string | null
           platform?: string | null
           prompt_id?: string | null
@@ -547,6 +800,7 @@ export type Database = {
           google_event_id?: string | null
           id?: string
           notes?: string | null
+          organization_id?: string | null
           pillar?: string | null
           platform?: string | null
           prompt_id?: string | null
@@ -571,6 +825,13 @@ export type Database = {
             columns: ["derivative_id"]
             isOneToOne: false
             referencedRelation: "derivative_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_content_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -614,11 +875,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_organization_role: {
+        Args: {
+          _org_id: string
+          _role: Database["public"]["Enums"]["organization_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_organization_member: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       collection_type: "cadence" | "reserve" | "purity" | "sacred_space"
       content_type: "product" | "email" | "social" | "visual" | "blog"
+      organization_role: "owner" | "admin" | "member"
       pillar_type: "identity" | "memory" | "remembrance" | "cadence"
       scent_family: "warm" | "floral" | "fresh" | "woody"
       visual_world:
@@ -755,6 +1028,7 @@ export const Constants = {
     Enums: {
       collection_type: ["cadence", "reserve", "purity", "sacred_space"],
       content_type: ["product", "email", "social", "visual", "blog"],
+      organization_role: ["owner", "admin", "member"],
       pillar_type: ["identity", "memory", "remembrance", "cadence"],
       scent_family: ["warm", "floral", "fresh", "woody"],
       visual_world: [
