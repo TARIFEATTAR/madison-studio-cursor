@@ -36,19 +36,19 @@ const Navigation = () => {
           {/* Navigation Links */}
           <div className="flex items-center gap-2">
             {user && (
-              <div className="flex items-center gap-1">
+              <nav className="flex items-center gap-1" role="navigation" aria-label="Main navigation">
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = location.pathname === item.path;
 
                   return (
-                    <button
+                    <Link
                       key={item.path}
-                      type="button"
-                      aria-label={item.label}
-                      onClick={() => navigate(item.path)}
+                      to={item.path}
+                      aria-label={`Navigate to ${item.label}`}
+                      aria-current={isActive ? "page" : undefined}
                       className={`
-                        inline-flex items-center gap-2 px-5 py-4 rounded-md transition-all duration-300
+                        inline-flex items-center gap-2 px-3 md:px-5 py-3 md:py-4 rounded-md transition-all duration-300
                         ${
                           isActive
                             ? "bg-aged-brass/12 text-parchment-white font-medium shadow-sm border-b-2 border-aged-brass"
@@ -56,12 +56,12 @@ const Navigation = () => {
                         }
                       `}
                     >
-                      <Icon className="w-5 h-5" />
-                      <span className="hidden md:inline">{item.label}</span>
-                    </button>
+                      <Icon className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
+                      <span className="text-sm md:text-base">{item.label}</span>
+                    </Link>
                   );
                 })}
-              </div>
+              </nav>
             )}
             
             {user && (
