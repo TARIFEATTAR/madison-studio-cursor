@@ -158,18 +158,22 @@ const Landing = () => {
               return (
                 <div 
                   key={index}
-                  className="relative card-luxury text-center group cursor-default"
+                  className="relative card-luxury text-center group cursor-default overflow-hidden"
                 >
-                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-level-2 group-hover:scale-110 transition-transform">
-                    <span className="text-2xl font-bold text-primary-foreground font-serif">{step.number}</span>
+                  {/* Large Corner Number */}
+                  <div className="absolute -top-2 -left-2 pointer-events-none">
+                    <span className="font-serif text-[100px] leading-none text-primary/20 select-none">
+                      {step.number}
+                    </span>
                   </div>
-                  <div className="pt-8">
+                  
+                  <div className="pt-6 relative z-10">
                     {isScheduleStep ? (
                       <div className="w-20 h-20 flex items-center justify-center mb-4 mx-auto">
                         <img 
                           src={calendarWatch} 
                           alt="Schedule and automate" 
-                          className="w-full h-full object-contain drop-shadow-lg"
+                          className="w-full h-full object-contain"
                         />
                       </div>
                     ) : isCreateStep ? (
@@ -177,7 +181,7 @@ const Landing = () => {
                         <img 
                           src={penNibIcon} 
                           alt="Create and generate content" 
-                          className="w-full h-full object-contain drop-shadow-lg"
+                          className="w-full h-full object-contain"
                         />
                       </div>
                     ) : (
