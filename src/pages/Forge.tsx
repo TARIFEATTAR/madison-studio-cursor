@@ -498,6 +498,24 @@ const Forge = () => {
       return;
     }
 
+    if (!formData.contentType) {
+      toast({
+        title: "Content type required",
+        description: "Please select a content type before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!generatedOutput && (!imageUrls || imageUrls.trim().length === 0)) {
+      toast({
+        title: "No content to save",
+        description: "Please generate content before saving to the library.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -842,7 +860,7 @@ const Forge = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="contentType">Content Type</Label>
+                  <Label htmlFor="contentType">Content Type *</Label>
                   <Select
                     value={formData.contentType}
                     onValueChange={(value) => setFormData({ ...formData, contentType: value })}

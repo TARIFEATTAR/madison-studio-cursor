@@ -618,7 +618,7 @@ export type Database = {
     }
     Enums: {
       collection_type: "cadence" | "reserve" | "purity" | "sacred_space"
-      content_type: "product" | "email" | "social" | "visual"
+      content_type: "product" | "email" | "social" | "visual" | "blog"
       pillar_type: "identity" | "memory" | "remembrance" | "cadence"
       scent_family: "warm" | "floral" | "fresh" | "woody"
       visual_world:
@@ -754,7 +754,7 @@ export const Constants = {
   public: {
     Enums: {
       collection_type: ["cadence", "reserve", "purity", "sacred_space"],
-      content_type: ["product", "email", "social", "visual"],
+      content_type: ["product", "email", "social", "visual", "blog"],
       pillar_type: ["identity", "memory", "remembrance", "cadence"],
       scent_family: ["warm", "floral", "fresh", "woody"],
       visual_world: [
