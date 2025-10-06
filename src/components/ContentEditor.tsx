@@ -111,13 +111,6 @@ export const ContentEditor = ({
     setIsFullScreen(!isFullScreen);
   };
 
-  const handleSave = () => {
-    onSave?.();
-    if (isFullScreen) {
-      setIsFullScreen(false);
-    }
-  };
-
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(content);
