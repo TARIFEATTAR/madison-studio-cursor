@@ -3,6 +3,7 @@ import { BookOpen, Sparkles, Repeat, Archive, Calendar, ArrowRight, CheckCircle2
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import penHeroImage from "@/assets/pen-hero.jpg";
+import calendarScheduleIcon from "@/assets/calendar-schedule-icon.png";
 
 const steps = [
   {
@@ -150,6 +151,8 @@ const Landing = () => {
           <div className="grid md:grid-cols-3 gap-8 fade-enter">
             {steps.map((step, index) => {
               const Icon = step.icon;
+              const isScheduleStep = step.number === "3";
+              
               return (
                 <div 
                   key={index}
@@ -159,9 +162,19 @@ const Landing = () => {
                     <span className="text-2xl font-bold text-primary-foreground font-serif">{step.number}</span>
                   </div>
                   <div className="pt-8">
-                    <div className="bg-primary/10 w-16 h-16 rounded-lg flex items-center justify-center mb-4 mx-auto group-hover:bg-primary/15 transition-colors">
-                      <Icon className="w-8 h-8 text-primary" />
-                    </div>
+                    {isScheduleStep ? (
+                      <div className="w-20 h-20 flex items-center justify-center mb-4 mx-auto">
+                        <img 
+                          src={calendarScheduleIcon} 
+                          alt="Schedule and automate" 
+                          className="w-full h-full object-contain drop-shadow-lg"
+                        />
+                      </div>
+                    ) : (
+                      <div className="bg-primary/10 w-16 h-16 rounded-lg flex items-center justify-center mb-4 mx-auto group-hover:bg-primary/15 transition-colors">
+                        <Icon className="w-8 h-8 text-primary" />
+                      </div>
+                    )}
                     <h3 className="font-serif text-2xl font-bold text-foreground mb-3">
                       {step.title}
                     </h3>
