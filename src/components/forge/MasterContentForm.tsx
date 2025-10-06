@@ -4,6 +4,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BLOG_REPURPOSE_TARGETS } from "@/config/blogPostGuidelines";
+import { useCollections } from "@/hooks/useCollections";
+import { useWeekNames } from "@/hooks/useWeekNames";
 
 interface MasterContentFormProps {
   title: string;
@@ -38,6 +40,9 @@ export function MasterContentForm({
   onMasterContentChange,
   onDerivativesChange,
 }: MasterContentFormProps) {
+  const { collections } = useCollections();
+  const { getWeekName } = useWeekNames();
+  
   const toggleDerivative = (type: string) => {
     if (selectedDerivatives.includes(type)) {
       onDerivativesChange(selectedDerivatives.filter(t => t !== type));
@@ -82,10 +87,10 @@ export function MasterContentForm({
             <SelectValue placeholder="Select week..." />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="1">Week 1: Identity / Silk Road</SelectItem>
-            <SelectItem value="2">Week 2: Memory / Maritime Voyage</SelectItem>
-            <SelectItem value="3">Week 3: Remembrance / Imperial Court</SelectItem>
-            <SelectItem value="4">Week 4: Cadence / Royal Court</SelectItem>
+            <SelectItem value="1">Week 1: {getWeekName(1)}</SelectItem>
+            <SelectItem value="2">Week 2: {getWeekName(2)}</SelectItem>
+            <SelectItem value="3">Week 3: {getWeekName(3)}</SelectItem>
+            <SelectItem value="4">Week 4: {getWeekName(4)}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -97,9 +102,13 @@ export function MasterContentForm({
             <SelectValue placeholder="Select collection..." />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Cadence Collection">Cadence Collection</SelectItem>
-            <SelectItem value="Reserve Collection">Reserve Collection</SelectItem>
-            <SelectItem value="Purity Collection">Purity Collection</SelectItem>
+            {collections.length === 0 ? (
+              <SelectItem value="_none" disabled>No collections yet - create one first</SelectItem>
+            ) : (
+              collections.map((col) => (
+                <SelectItem key={col.id} value={col.name}>{col.name}</SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
       </div>

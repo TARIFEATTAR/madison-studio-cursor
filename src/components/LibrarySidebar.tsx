@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, Star, Clock, Archive, Folder, FileText, Mail, Image as ImageIcon, BookOpen, Instagram } from "lucide-react";
+import { useCollections } from "@/hooks/useCollections";
+import { useWeekNames } from "@/hooks/useWeekNames";
 import {
   Sidebar,
   SidebarContent,
@@ -44,6 +46,9 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
   const navigate = useNavigate();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
+  const { collections: brandCollections } = useCollections();
+  const { getWeekName } = useWeekNames();
+  
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     collections: true,
     contentTypes: false,
@@ -82,12 +87,11 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
     }
   };
 
-  const collections = [
-    { name: "Cadence Collection", key: "cadence", icon: Folder },
-    { name: "Reserve Collection", key: "reserve", icon: Folder },
-    { name: "Purity Collection", key: "purity", icon: Folder },
-    { name: "Sacred Space", key: "sacred_space", icon: Folder },
-  ];
+  const collections = brandCollections.map(col => ({
+    name: col.name,
+    key: col.name.toLowerCase().replace(/\s+/g, '_'),
+    icon: Folder,
+  }));
 
   const scentFamilies = ["Warm", "Floral", "Fresh", "Woody"];
 
@@ -100,10 +104,10 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
   ];
 
   const dipWeeks = [
-    { number: 1, name: "Identity/Silk Road" },
-    { number: 2, name: "Memory/Maritime" },
-    { number: 3, name: "Remembrance/Imperial" },
-    { number: 4, name: "Cadence/Royal Court" },
+    { number: 1, name: getWeekName(1) },
+    { number: 2, name: getWeekName(2) },
+    { number: 3, name: getWeekName(3) },
+    { number: 4, name: getWeekName(4) },
   ];
 
   const isActive = (filterType: string, value: string | number) => {

@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useProducts } from "@/hooks/useProducts";
+import { useCollections } from "@/hooks/useCollections";
+import { useWeekNames } from "@/hooks/useWeekNames";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -67,6 +69,8 @@ const Forge = () => {
   const { user } = useAuth();
   const { currentOrganizationId } = useOnboarding();
   const { products } = useProducts();
+  const { collections } = useCollections();
+  const { getWeekName } = useWeekNames();
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -196,14 +200,13 @@ const Forge = () => {
     }
 
     if (formData.transparencyStatement && formData.transparencyStatement !== "none") {
-      const statements: Record<string, string> = {
-        cadence: "From the Cadence Collection—blended with natural ingredients and modern aromachemicals for balanced complexity.",
-        reserve: "From the Reserve Collection—crafted with 90-98% natural essences, minimal aromachemicals for refinement.",
-        purity: "From the Purity Collection—100% natural, no aromachemicals. Traditional attar art in its purest form.",
-        sacred: "From Sacred Space—ceremonial blends honoring ritual and reverence.",
-      };
-      if (statements[formData.transparencyStatement]) {
-        parts.push(`\n\n${statements[formData.transparencyStatement]}`);
+      // Find the collection that matches
+      const collection = collections.find(c => 
+        c.name.toLowerCase().replace(/\s+/g, '_') === formData.transparencyStatement
+      );
+      
+      if (collection?.transparency_statement) {
+        parts.push(`\n\n${collection.transparency_statement}`);
       }
     }
 
@@ -855,10 +858,11 @@ const Forge = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
-                      <SelectItem value="cadence">Cadence Collection Statement</SelectItem>
-                      <SelectItem value="reserve">Reserve Collection Statement</SelectItem>
-                      <SelectItem value="purity">Purity Collection Statement</SelectItem>
-                      <SelectItem value="sacred">Sacred Space Statement</SelectItem>
+                      {collections.map((collection) => (
+                        <SelectItem key={collection.id} value={collection.name.toLowerCase().replace(/\s+/g, '_')}>
+                          {collection.name} Statement
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

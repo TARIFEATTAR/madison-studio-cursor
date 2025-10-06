@@ -14,6 +14,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useCollections } from "@/hooks/useCollections";
 import {
   Tooltip,
   TooltipContent,
@@ -36,6 +37,7 @@ const Reservoir = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { collections } = useCollections();
   const [activeTab, setActiveTab] = useState<ContentTab>('prompts');
   const [searchQuery, setSearchQuery] = useState("");
   const [prompts, setPrompts] = useState<any[]>([]);
@@ -66,12 +68,12 @@ const Reservoir = () => {
   const counts = useMemo(() => {
     const currentData = getCurrentData();
     
-    const byCollection: Record<string, { total: number; families: Record<string, number> }> = {
-      cadence: { total: 0, families: { warm: 0, floral: 0, fresh: 0, woody: 0 } },
-      reserve: { total: 0, families: { warm: 0, floral: 0, fresh: 0, woody: 0 } },
-      purity: { total: 0, families: { warm: 0, floral: 0, fresh: 0, woody: 0 } },
-      sacred_space: { total: 0, families: { warm: 0, floral: 0, fresh: 0, woody: 0 } },
-    };
+    // Build byCollection object dynamically from collections
+    const byCollection: Record<string, { total: number; families: Record<string, number> }> = {};
+    collections.forEach(col => {
+      const key = col.name.toLowerCase().replace(/\s+/g, '_');
+      byCollection[key] = { total: 0, families: { warm: 0, floral: 0, fresh: 0, woody: 0 } };
+    });
     
     const byContentType: Record<string, number> = {};
     const byDipWeek: Record<number, number> = {};
@@ -83,13 +85,13 @@ const Reservoir = () => {
     
     currentData.forEach(item => {
       // Handle different data structures
-      const collection = item.collection || (item.prompts && item.prompts[0]?.collection) || 'cadence';
+      const collection = item.collection || (item.prompts && item.prompts[0]?.collection);
       const contentType = item.content_type || (item.prompts && item.prompts[0]?.content_type) || 'other';
       const scentFamily = item.scent_family || 'warm';
       const dipWeek = item.dip_week;
       
       // Count by collection and scent family
-      if (byCollection[collection]) {
+      if (collection && byCollection[collection]) {
         byCollection[collection].total++;
         if (byCollection[collection].families[scentFamily] !== undefined) {
           byCollection[collection].families[scentFamily]++;
@@ -118,7 +120,7 @@ const Reservoir = () => {
       recent,
       archived: archivedCount,
     };
-  }, [activeTab, prompts, outputs, masterContent, archivedCount]);
+  }, [activeTab, prompts, outputs, masterContent, archivedCount, collections]);
 
   useEffect(() => {
     if (user) {

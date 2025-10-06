@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      brand_collections: {
+        Row: {
+          color_theme: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          organization_id: string
+          sort_order: number
+          transparency_statement: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          color_theme?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          sort_order?: number
+          transparency_statement?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          color_theme?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          sort_order?: number
+          transparency_statement?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_collections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_documents: {
         Row: {
           created_at: string | null

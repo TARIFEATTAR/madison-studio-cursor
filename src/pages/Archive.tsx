@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useCollections } from "@/hooks/useCollections";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,6 +60,7 @@ interface DerivativeAsset {
 const Archive = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { collections } = useCollections();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [selectedContentType, setSelectedContentType] = useState<string | null>(null);
@@ -372,21 +374,19 @@ const Archive = () => {
               <div className="flex items-center gap-2 flex-wrap">
                 <Calendar className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground font-medium">Collection:</span>
-                {[
-                  { value: 'cadence', label: 'Cadence' },
-                  { value: 'reserve', label: 'Reserve' },
-                  { value: 'purity', label: 'Purity' },
-                  { value: 'sacred_space', label: 'Sacred Space' }
-                ].map((collection) => (
-                  <Badge
-                    key={collection.value}
-                    variant={selectedCollection === collection.value ? "default" : "outline"}
-                    className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-sm active:scale-95"
-                    onClick={() => setSelectedCollection(selectedCollection === collection.value ? null : collection.value)}
-                  >
-                    {collection.label}
-                  </Badge>
-                ))}
+                {collections.map((collection) => {
+                  const collectionKey = collection.name.toLowerCase().replace(/\s+/g, '_');
+                  return (
+                    <Badge
+                      key={collection.id}
+                      variant={selectedCollection === collectionKey ? "default" : "outline"}
+                      className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-sm active:scale-95"
+                      onClick={() => setSelectedCollection(selectedCollection === collectionKey ? null : collectionKey)}
+                    >
+                      {collection.name}
+                    </Badge>
+                  );
+                })}
               </div>
 
               {/* Quality Filter */}
