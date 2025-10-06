@@ -103,6 +103,22 @@ export function useOnboarding() {
               console.error("Failed to add user as organization owner:", memberError);
               throw memberError;
             }
+
+            // Create default "General" collection for new organizations
+            console.log("Creating default collection for new organization");
+            const { error: collectionError } = await supabase
+              .from("brand_collections")
+              .insert({
+                organization_id: orgId,
+                name: "General",
+                description: "Default collection for getting started",
+                sort_order: 1,
+              });
+            
+            if (collectionError) {
+              console.error("Failed to create default collection:", collectionError);
+              // Don't throw - this shouldn't block onboarding
+            }
           }
         }
 

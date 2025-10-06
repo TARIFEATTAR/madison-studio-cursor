@@ -11,6 +11,7 @@ import Forge from "./pages/Forge";
 import Repurpose from "./pages/Repurpose";
 import Archive from "./pages/Archive";
 import Calendar from "./pages/Calendar";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 
@@ -84,6 +85,14 @@ const AppContent = () => {
           element={
             <ProtectedRoute>
               <Calendar />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />

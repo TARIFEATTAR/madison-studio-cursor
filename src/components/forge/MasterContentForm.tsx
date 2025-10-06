@@ -6,6 +6,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { BLOG_REPURPOSE_TARGETS } from "@/config/blogPostGuidelines";
 import { useCollections } from "@/hooks/useCollections";
 import { useWeekNames } from "@/hooks/useWeekNames";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface MasterContentFormProps {
   title: string;
@@ -81,7 +84,17 @@ export function MasterContentForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="dipWeek">DIP Week</Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="dipWeek">DIP Week</Label>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <p>DIP (Deep Immersion Period) weeks help structure your content calendar. Customize these names in Settings.</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
         <Select value={dipWeek} onValueChange={onDipWeekChange}>
           <SelectTrigger id="dipWeek" className="bg-background/50">
             <SelectValue placeholder="Select week..." />
@@ -96,7 +109,17 @@ export function MasterContentForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="collection">Collection (Optional)</Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="collection">Collection (Optional)</Label>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <p>Collections help organize your brand's product lines or themes. They provide context to AI for more aligned content.</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
         <Select value={collection} onValueChange={onCollectionChange}>
           <SelectTrigger id="collection" className="bg-background/50">
             <SelectValue placeholder="Select collection..." />
@@ -111,6 +134,14 @@ export function MasterContentForm({
             )}
           </SelectContent>
         </Select>
+        {collections.length === 0 && (
+          <p className="text-xs text-muted-foreground">
+            Don't see your collections?{" "}
+            <Link to="/settings" className="text-primary hover:underline">
+              Create them in Settings
+            </Link>
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">

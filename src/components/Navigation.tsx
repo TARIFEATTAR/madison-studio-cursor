@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { BookOpen, Sparkles, Archive, Calendar as CalendarIcon, LogOut, Repeat } from "lucide-react";
+import { BookOpen, Sparkles, Archive, Calendar as CalendarIcon, LogOut, Repeat, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,6 +43,12 @@ const Navigation = () => {
       label: "Planner", 
       icon: CalendarIcon,
       description: "Schedule and plan your content calendar"
+    },
+    { 
+      path: "/settings", 
+      label: "Settings", 
+      icon: Settings,
+      description: "Manage collections, week names, and brand preferences"
     },
   ];
 
