@@ -170,7 +170,7 @@ const Landing = () => {
                   
                   <div className="pt-6 relative z-10">
                     {isScheduleStep ? (
-                      <div className="w-28 h-28 flex items-center justify-center mb-4 mx-auto">
+                      <div className="w-32 h-32 flex items-center justify-center mb-4 mx-auto">
                         <img 
                           src={calendarWatch} 
                           alt="Schedule and automate" 
@@ -178,7 +178,7 @@ const Landing = () => {
                         />
                       </div>
                     ) : isCreateStep ? (
-                      <div className="w-28 h-28 flex items-center justify-center mb-4 mx-auto">
+                      <div className="w-32 h-32 flex items-center justify-center mb-4 mx-auto">
                         <img 
                           src={penNibIcon} 
                           alt="Create and generate content" 
@@ -186,7 +186,7 @@ const Landing = () => {
                         />
                       </div>
                     ) : (
-                      <div className="w-28 h-28 flex items-center justify-center mb-4 mx-auto">
+                      <div className="w-32 h-32 flex items-center justify-center mb-4 mx-auto">
                         <img 
                           src={bookIcon} 
                           alt="Build your library" 
