@@ -347,18 +347,16 @@ export const ContentEditor = ({
           </div>
 
           {/* Full Screen Editor Area - Completely Clean */}
-          <div className="flex-1 overflow-auto px-8 py-20">
-            <div className="max-w-4xl mx-auto">
-              <Textarea
-                ref={textareaRef}
-                value={content}
-                onChange={(e) => onChange(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={placeholder}
-                className="min-h-[calc(100vh-160px)] w-full bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-lg leading-relaxed font-serif resize-none shadow-none"
-                autoFocus
-              />
-            </div>
+          <div className="flex-1 overflow-auto px-12 md:px-24 py-20">
+            <Textarea
+              ref={textareaRef}
+              value={content}
+              onChange={(e) => onChange(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={placeholder}
+              className="min-h-[calc(100vh-160px)] w-full bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-lg leading-relaxed font-serif resize-none shadow-none"
+              autoFocus
+            />
           </div>
         </div>
       )}
