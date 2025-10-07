@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Upload, Link as LinkIcon, FileText, Loader2, CheckCircle2, AlertCircle, FileUp } from "lucide-react";
+import { Upload, Link as LinkIcon, FileText, Loader2, CheckCircle2, AlertCircle, FileUp, X } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
   const [isDragging, setIsDragging] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [stagedFiles, setStagedFiles] = useState<File[]>([]);
 
   const handleUrlScrape = async () => {
     if (!websiteUrl.trim()) {
@@ -108,7 +108,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
     }
   };
 
-  const handleFileUpload = async (files: FileList | File[]) => {
+  const handleFilesAdded = (files: FileList | File[]) => {
     const fileArray = Array.from(files);
     const pdfFiles = fileArray.filter(file => file.type === 'application/pdf');
 
@@ -121,7 +121,29 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
       return;
     }
 
-    setUploadedFiles(pdfFiles);
+    // Add new files to staging area, avoiding duplicates
+    setStagedFiles(prev => {
+      const existingNames = new Set(prev.map(f => f.name));
+      const newFiles = pdfFiles.filter(f => !existingNames.has(f.name));
+      
+      if (newFiles.length < pdfFiles.length) {
+        toast({
+          title: "Duplicate Files Skipped",
+          description: "Some files were already added.",
+        });
+      }
+      
+      return [...prev, ...newFiles];
+    });
+  };
+
+  const removeFileFromStaging = (index: number) => {
+    setStagedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleUploadStagedFiles = async () => {
+    if (stagedFiles.length === 0) return;
+
     setIsProcessing(true);
     setUploadStatus("processing");
 
@@ -132,7 +154,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
         throw new Error("User not authenticated");
       }
 
-      for (const file of pdfFiles) {
+      for (const file of stagedFiles) {
         // Generate unique file path
         const timestamp = Date.now();
         const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
@@ -150,11 +172,6 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
           console.error('Storage upload error:', uploadError);
           throw uploadError;
         }
-
-        // Get public URL (even though bucket is private, we store the path)
-        const { data: { publicUrl } } = supabase.storage
-          .from('brand-documents')
-          .getPublicUrl(filePath);
 
         // Insert document record with file URL
         const { error: insertError } = await supabase
@@ -178,11 +195,13 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
       setUploadStatus("success");
       toast({
         title: "Documents Uploaded",
-        description: `Successfully uploaded ${pdfFiles.length} document${pdfFiles.length > 1 ? 's' : ''}.`,
+        description: `Successfully uploaded ${stagedFiles.length} document${stagedFiles.length > 1 ? 's' : ''}.`,
       });
 
+      // Clear staging area after successful upload
+      setStagedFiles([]);
+      
       setTimeout(() => {
-        setUploadedFiles([]);
         setUploadStatus("idle");
       }, 3000);
     } catch (error) {
@@ -204,9 +223,9 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
     
     const files = e.dataTransfer.files;
     if (files.length > 0) {
-      handleFileUpload(files);
+      handleFilesAdded(files);
     }
-  }, [organizationId]);
+  }, []);
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -220,7 +239,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      handleFileUpload(e.target.files);
+      handleFilesAdded(e.target.files);
     }
   };
 
@@ -282,45 +301,89 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
                 />
                 
                 <div className="flex flex-col items-center gap-3">
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="h-12 w-12 text-primary animate-spin" />
-                      <p className="text-sm font-medium text-foreground">Processing documents...</p>
-                    </>
-                  ) : (
-                    <>
-                      <FileUp className="h-12 w-12 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium text-foreground">
-                          {isDragging ? 'Drop files here' : 'Drag & drop PDFs here'}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          or click to browse
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {uploadedFiles.length > 0 && !isProcessing && (
-                  <div className="mt-4 text-left">
-                    <p className="text-xs font-medium text-foreground mb-2">Selected files:</p>
-                    <ul className="text-xs text-muted-foreground space-y-1">
-                      {uploadedFiles.map((file, idx) => (
-                        <li key={idx} className="flex items-center gap-2">
-                          <FileText className="h-3 w-3" />
-                          {file.name} ({(file.size / 1024).toFixed(1)} KB)
-                        </li>
-                      ))}
-                    </ul>
+                  <FileUp className="h-12 w-12 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      {isDragging ? 'Drop files here' : 'Drag & drop PDFs here'}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      or click to browse • Max 20MB per file
+                    </p>
                   </div>
-                )}
+                </div>
               </div>
+
+              {/* Staging Area */}
+              {stagedFiles.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium text-foreground">
+                      Files Ready to Upload ({stagedFiles.length})
+                    </Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setStagedFiles([])}
+                      className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Clear All
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto border border-border/40 rounded-md p-3 bg-muted/10">
+                    {stagedFiles.map((file, idx) => (
+                      <div 
+                        key={idx}
+                        className="flex items-center justify-between gap-3 p-2 rounded bg-card border border-border/30 hover:border-border/60 transition-colors"
+                      >
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <FileText className="h-4 w-4 text-primary flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {file.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {(file.size / 1024).toFixed(1)} KB
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFileFromStaging(idx)}
+                          disabled={isProcessing}
+                          className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive flex-shrink-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <Button
+                    onClick={handleUploadStagedFiles}
+                    disabled={isProcessing}
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Uploading {stagedFiles.length} file{stagedFiles.length > 1 ? 's' : ''}...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Upload {stagedFiles.length} Document{stagedFiles.length > 1 ? 's' : ''}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
 
               {uploadStatus === "success" && (
                 <div className="flex items-center gap-2 text-sm text-forest-ink bg-forest-ink/10 p-3 rounded-md border border-forest-ink/20">
                   <CheckCircle2 className="h-4 w-4" />
-                  Documents uploaded successfully!
+                  Documents uploaded and stored successfully!
                 </div>
               )}
 
