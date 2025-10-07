@@ -126,18 +126,37 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
     setUploadStatus("processing");
 
     try {
-      for (const file of pdfFiles) {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('organizationId', organizationId);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
 
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          throw new Error("User not authenticated");
+      for (const file of pdfFiles) {
+        // Generate unique file path
+        const timestamp = Date.now();
+        const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const filePath = `${organizationId}/${timestamp}_${sanitizedFileName}`;
+
+        // Upload file to storage
+        const { error: uploadError } = await supabase.storage
+          .from('brand-documents')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error('Storage upload error:', uploadError);
+          throw uploadError;
         }
 
-        // Insert document record
+        // Get public URL (even though bucket is private, we store the path)
+        const { data: { publicUrl } } = supabase.storage
+          .from('brand-documents')
+          .getPublicUrl(filePath);
+
+        // Insert document record with file URL
         const { error: insertError } = await supabase
           .from('brand_documents')
           .insert({
@@ -146,10 +165,14 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
             file_name: file.name,
             file_type: file.type,
             file_size: file.size,
-            processing_status: 'pending',
+            file_url: filePath,
+            processing_status: 'uploaded',
           });
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error('Database insert error:', insertError);
+          throw insertError;
+        }
       }
 
       setUploadStatus("success");
