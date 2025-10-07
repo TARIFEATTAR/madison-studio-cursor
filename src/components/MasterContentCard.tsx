@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreVertical, Archive, Trash2, FileText, Sparkles } from "lucide-react";
+import { getCollectionIcon, normalizeCollectionName, formatCollectionDisplay } from "@/utils/collectionIcons";
 
 interface MasterContentCardProps {
   content: {
@@ -30,16 +31,6 @@ const collectionColors: Record<string, string> = {
   purity: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20",
   sacred_space: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20",
   "sacred space": "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20",
-};
-
-const normalizeCollectionName = (name: string): string => {
-  if (!name) return 'cadence';
-  return name.toLowerCase().replace(/ /g, '_');
-};
-
-const formatCollectionDisplay = (name: string): string => {
-  if (!name) return 'Cadence';
-  return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
 
 const dipWorlds: Record<number, string> = {
@@ -94,9 +85,10 @@ export function MasterContentCard({
     return text.substring(0, maxLength) + '...';
   };
 
-  const normalizedCollection = content.collection ? normalizeCollectionName(content.collection) : 'cadence';
+  const normalizedCollection = normalizeCollectionName(content.collection);
   const collectionColorClass = collectionColors[normalizedCollection] || collectionColors.cadence;
-  const displayCollection = content.collection ? formatCollectionDisplay(content.collection) : 'Cadence';
+  const displayCollection = formatCollectionDisplay(content.collection);
+  const CollectionIcon = getCollectionIcon(content.collection);
 
   return (
     <Card 
@@ -140,7 +132,13 @@ export function MasterContentCard({
         </div>
         <div className="flex flex-wrap gap-2 mt-2">
           <Badge variant="outline" className={collectionColorClass}>
-            {displayCollection}
+            {CollectionIcon && (
+              <span className="flex items-center gap-1.5">
+                <CollectionIcon className="w-3 h-3" />
+                {displayCollection}
+              </span>
+            )}
+            {!CollectionIcon && displayCollection}
           </Badge>
           <Badge variant="secondary">
             {content.content_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}

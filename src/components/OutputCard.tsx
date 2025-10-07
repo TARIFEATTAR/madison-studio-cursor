@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreVertical, Archive, Trash2, Star } from "lucide-react";
+import { getCollectionIcon, normalizeCollectionName, formatCollectionDisplay } from "@/utils/collectionIcons";
 
 interface OutputCardProps {
   output: {
@@ -29,16 +30,6 @@ const collectionColors: Record<string, string> = {
   purity: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20",
   sacred_space: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20",
   "sacred space": "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20",
-};
-
-const normalizeCollectionName = (name: string): string => {
-  if (!name) return 'cadence';
-  return name.toLowerCase().replace(/ /g, '_');
-};
-
-const formatCollectionDisplay = (name: string): string => {
-  if (!name) return 'Cadence';
-  return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
 
 const formatDate = (dateString: string) => {
@@ -80,9 +71,10 @@ export function OutputCard({
     return text.substring(0, maxLength) + '...';
   };
 
-  const normalizedCollection = collection ? normalizeCollectionName(collection) : 'cadence';
+  const normalizedCollection = normalizeCollectionName(collection);
   const collectionColorClass = collectionColors[normalizedCollection] || collectionColors.cadence;
-  const displayCollection = collection ? formatCollectionDisplay(collection) : 'Cadence';
+  const displayCollection = formatCollectionDisplay(collection);
+  const CollectionIcon = getCollectionIcon(collection);
 
   return (
     <Card 
@@ -126,7 +118,13 @@ export function OutputCard({
         </div>
         <div className="flex flex-wrap gap-2 mt-2">
           <Badge variant="outline" className={collectionColorClass}>
-            {displayCollection}
+            {CollectionIcon && (
+              <span className="flex items-center gap-1.5">
+                <CollectionIcon className="w-3 h-3" />
+                {displayCollection}
+              </span>
+            )}
+            {!CollectionIcon && displayCollection}
           </Badge>
           {contentType && (
             <Badge variant="secondary">
