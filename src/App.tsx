@@ -44,8 +44,8 @@ const AppContent = () => {
   const { user } = useAuth();
   console.log("[AppContent] User state:", user ? "logged in" : "logged out");
   
-  // Hide global navigation on landing page for non-authenticated users
-  const showNavigation = !(location.pathname === '/' && !user);
+  // Show navigation everywhere except on the auth page
+  const showNavigation = location.pathname !== '/auth';
   console.log("[AppContent] Show navigation:", showNavigation);
 
   return (
@@ -54,7 +54,6 @@ const AppContent = () => {
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/" element={<Index />} />
-        <Route path="/landing" element={<Landing />} />
         <Route path="/index.html" element={<Index />} />
         <Route
           path="/library"
