@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { ChevronRight, Star, Clock, Archive, Folder, FileText, Mail, Image as ImageIcon, BookOpen, Instagram } from "lucide-react";
 import { useCollections } from "@/hooks/useCollections";
 import { useWeekNames } from "@/hooks/useWeekNames";
@@ -19,31 +19,42 @@ import { cn } from "@/lib/utils";
 
 interface LibrarySidebarProps {
   onFilterChange: (filters: {
-    collection?: string;
-    scentFamily?: string;
-    contentType?: string;
-    dipWeek?: number;
-    quickFilter?: string;
+    collection?: string | null;
+    contentType?: string | null;
+    dipWeek?: number | null;
+    quickAccess?: "favorites" | "recent" | null;
   }) => void;
   activeFilters: {
-    collection?: string;
-    scentFamily?: string;
-    contentType?: string;
-    dipWeek?: number;
-    quickFilter?: string;
+    collection?: string | null;
+    contentType?: string | null;
+    dipWeek?: number | null;
+    quickAccess?: "favorites" | "recent" | null;
   };
   counts: {
-    byCollection: Record<string, { total: number; families: Record<string, number> }>;
-    byContentType: Record<string, number>;
-    byDipWeek: Record<number, number>;
+    prompts: {
+      total: number;
+      byCollection: Record<string, number>;
+      byContentType: Record<string, number>;
+      byDipWeek: Record<number, number>;
+    };
+    outputs: {
+      total: number;
+      byCollection: Record<string, number>;
+      byContentType: Record<string, number>;
+      byDipWeek: Record<number, number>;
+    };
+    masterContent: {
+      total: number;
+      byCollection: Record<string, number>;
+      byContentType: Record<string, number>;
+      byDipWeek: Record<number, number>;
+    };
     favorites: number;
     recent: number;
-    archived: number;
   };
 }
 
 export function LibrarySidebar({ onFilterChange, activeFilters, counts }: LibrarySidebarProps) {
-  const navigate = useNavigate();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { collections: brandCollections } = useCollections();
@@ -54,7 +65,7 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
     contentTypes: false,
     dipWeeks: false,
   });
-  const [expandedCollections, setExpandedCollections] = useState<Record<string, boolean>>({});
+  
 
   const toggleSection = (section: string) => {
     setExpandedSections((prev) => ({
@@ -63,12 +74,6 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
     }));
   };
 
-  const toggleCollection = (collection: string) => {
-    setExpandedCollections((prev) => ({
-      ...prev,
-      [collection]: !prev[collection],
-    }));
-  };
 
   const handleFilterClick = (filterType: string, value: string | number) => {
     const currentValue = activeFilters[filterType as keyof typeof activeFilters];
@@ -93,7 +98,7 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
     icon: Folder,
   }));
 
-  const scentFamilies = ["Warm", "Floral", "Fresh", "Woody"];
+  
 
   const contentTypes = [
     { name: "Product Descriptions", key: "product", icon: FileText },
@@ -146,9 +151,11 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
             <SidebarGroupContent>
               <SidebarMenu>
                 {collections.map((collection) => {
-                  const collectionData = counts.byCollection[collection.key] || { total: 0, families: {} };
+                  const collectionCount = (counts.prompts.byCollection[collection.key] || 0) + 
+                                        (counts.outputs.byCollection[collection.key] || 0) + 
+                                        (counts.masterContent.byCollection[collection.key] || 0);
                   const isCollectionActive = activeFilters.collection === collection.key;
-                  const isExpanded = expandedCollections[collection.key];
+                  
 
                   return (
                     <div key={collection.key}>
@@ -161,18 +168,6 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
                           onClick={() => handleFilterClick("collection", collection.key)}
                         >
                           <div className="flex items-center gap-2">
-                            {!collapsed && (
-                              <ChevronRight
-                                className={cn(
-                                  "w-3 h-3 transition-transform",
-                                  isExpanded && "rotate-90"
-                                )}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleCollection(collection.key);
-                                }}
-                              />
-                            )}
                             <collection.icon className="w-4 h-4" />
                             {!collapsed && (
                               <span className="text-sm">{collection.name}</span>
@@ -180,38 +175,12 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
                           </div>
                           {!collapsed && (
                             <Badge variant="secondary" className="text-xs">
-                              {collectionData.total}
+                              {collectionCount}
                             </Badge>
                           )}
                         </SidebarMenuButton>
                       </SidebarMenuItem>
 
-                      {/* Nested Scent Families */}
-                      {!collapsed && isExpanded && (
-                        <div className="ml-6 mt-1 space-y-1">
-                          {scentFamilies.map((family) => {
-                            const familyCount = collectionData.families[family.toLowerCase()] || 0;
-                            const isFamilyActive = activeFilters.scentFamily === family.toLowerCase();
-
-                            return (
-                              <SidebarMenuItem key={family}>
-                                <SidebarMenuButton
-                                  className={cn(
-                                    "h-8 px-2 text-sm rounded-md",
-                                    isFamilyActive && "bg-saffron-gold/20 font-medium"
-                                  )}
-                                  onClick={() => handleFilterClick("scentFamily", family.toLowerCase())}
-                                >
-                                  <span className="flex-1">{family}</span>
-                                  <Badge variant="outline" className="text-xs">
-                                    {familyCount}
-                                  </Badge>
-                                </SidebarMenuButton>
-                              </SidebarMenuItem>
-                            );
-                          })}
-                        </div>
-                      )}
                     </div>
                   );
                 })}
@@ -243,7 +212,9 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
             <SidebarGroupContent>
               <SidebarMenu>
                 {contentTypes.map((type) => {
-                  const typeCount = counts.byContentType[type.key] || 0;
+                  const typeCount = (counts.prompts.byContentType[type.key] || 0) + 
+                                      (counts.outputs.byContentType[type.key] || 0) + 
+                                      (counts.masterContent.byContentType[type.key] || 0);
                   const isTypeActive = activeFilters.contentType === type.key;
 
                   return (
@@ -296,7 +267,9 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
             <SidebarGroupContent>
               <SidebarMenu>
                 {dipWeeks.map((week) => {
-                  const weekCount = counts.byDipWeek[week.number] || 0;
+                  const weekCount = (counts.prompts.byDipWeek[week.number] || 0) + 
+                                      (counts.outputs.byDipWeek[week.number] || 0) + 
+                                      (counts.masterContent.byDipWeek[week.number] || 0);
                   const isWeekActive = activeFilters.dipWeek === week.number;
 
                   return (
@@ -341,9 +314,9 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
                 <SidebarMenuButton
                   className={cn(
                     "h-9 px-2 rounded-md transition-all",
-                    activeFilters.quickFilter === "favorites" && "bg-saffron-gold/20 border-l-3 border-saffron-gold font-medium"
+                    activeFilters.quickAccess === "favorites" && "bg-saffron-gold/20 border-l-3 border-saffron-gold font-medium"
                   )}
-                  onClick={() => handleFilterClick("quickFilter", "favorites")}
+                  onClick={() => handleFilterClick("quickAccess", "favorites")}
                 >
                   <Star className="w-4 h-4" />
                   {!collapsed && (
@@ -361,9 +334,9 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
                 <SidebarMenuButton
                   className={cn(
                     "h-9 px-2 rounded-md transition-all",
-                    activeFilters.quickFilter === "recent" && "bg-saffron-gold/20 border-l-3 border-saffron-gold font-medium"
+                    activeFilters.quickAccess === "recent" && "bg-saffron-gold/20 border-l-3 border-saffron-gold font-medium"
                   )}
-                  onClick={() => handleFilterClick("quickFilter", "recent")}
+                  onClick={() => handleFilterClick("quickAccess", "recent")}
                 >
                   <Clock className="w-4 h-4" />
                   {!collapsed && (
@@ -377,22 +350,6 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  className="h-9 px-2 rounded-md transition-all"
-                  onClick={() => navigate('/archive')}
-                >
-                  <Archive className="w-4 h-4" />
-                  {!collapsed && (
-                    <>
-                      <span className="flex-1 text-sm">Archived</span>
-                      <Badge variant="secondary" className="text-xs">
-                        {counts.archived}
-                      </Badge>
-                    </>
-                  )}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

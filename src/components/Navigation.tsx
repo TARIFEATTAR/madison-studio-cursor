@@ -33,12 +33,6 @@ const Navigation = () => {
       description: "Repurpose content for different platforms"
     },
     { 
-      path: "/archive", 
-      label: "Portfolio", 
-      icon: Archive,
-      description: "View your archived content portfolio"
-    },
-    { 
       path: "/calendar", 
       label: "Planner", 
       icon: CalendarIcon,

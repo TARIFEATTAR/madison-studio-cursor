@@ -9,7 +9,7 @@ import Index from "./pages/Index";
 import Reservoir from "./pages/Reservoir";
 import Forge from "./pages/Forge";
 import Repurpose from "./pages/Repurpose";
-import Archive from "./pages/Archive";
+
 import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -74,14 +74,6 @@ const AppContent = () => {
           element={
             <ProtectedRoute>
               <Repurpose />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/archive"
-          element={
-            <ProtectedRoute>
-              <Archive />
             </ProtectedRoute>
           }
         />
