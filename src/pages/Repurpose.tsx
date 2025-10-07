@@ -4,9 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Check, X, Edit, FileText, Mail, Instagram, Twitter, Package, MessageSquare, Copy, MoreVertical, Search, CalendarIcon } from "lucide-react";
+import { Loader2, FileText, MoreVertical, Search, Mail, Instagram, Twitter, Package, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
@@ -22,14 +21,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -39,6 +30,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { DerivativeGridCard } from "@/components/amplify/DerivativeGridCard";
+import { DerivativeFullModal } from "@/components/amplify/DerivativeFullModal";
 
 interface MasterContent {
   id: string;
@@ -104,10 +97,8 @@ const Repurpose = () => {
   const [selectedMaster, setSelectedMaster] = useState<MasterContent | null>(null);
   const [derivatives, setDerivatives] = useState<DerivativeAsset[]>([]);
   const [loading, setLoading] = useState(true);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewContent, setPreviewContent] = useState<DerivativeAsset | null>(null);
-  const [editingDerivative, setEditingDerivative] = useState<string | null>(null);
-  const [editedContent, setEditedContent] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedDerivative, setSelectedDerivative] = useState<DerivativeAsset | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
@@ -216,18 +207,30 @@ const Repurpose = () => {
     fetchDerivatives(master.id);
   };
 
-  const handleApprove = async (derivativeId: string) => {
+  const handleOpenModal = (derivative: DerivativeAsset) => {
+    setSelectedDerivative(derivative);
+    setModalOpen(true);
+  };
+
+  const handleApprove = async (derivativeId?: string) => {
+    const id = derivativeId || selectedDerivative?.id;
+    if (!id) return;
+
     try {
       const { error } = await supabase
         .from('derivative_assets')
         .update({ approval_status: 'approved' })
-        .eq('id', derivativeId);
+        .eq('id', id);
 
       if (error) throw error;
 
       setDerivatives(prev =>
-        prev.map(d => d.id === derivativeId ? { ...d, approval_status: 'approved' } : d)
+        prev.map(d => d.id === id ? { ...d, approval_status: 'approved' } : d)
       );
+
+      if (selectedDerivative?.id === id) {
+        setSelectedDerivative(prev => prev ? { ...prev, approval_status: 'approved' } : null);
+      }
 
       toast({
         title: "Asset approved",
@@ -242,14 +245,17 @@ const Repurpose = () => {
     }
   };
 
-  const handleScheduleDerivative = (derivative: DerivativeAsset) => {
-    setDerivativeToSchedule(derivative);
+  const handleScheduleDerivative = () => {
+    if (!selectedDerivative) return;
+    setDerivativeToSchedule(selectedDerivative);
     setScheduleModalOpen(true);
   };
 
-  const handleApproveAndSchedule = async (derivative: DerivativeAsset) => {
-    await handleApprove(derivative.id);
-    handleScheduleDerivative(derivative);
+  const handleApproveAndSchedule = async () => {
+    if (!selectedDerivative) return;
+    await handleApprove(selectedDerivative.id);
+    setDerivativeToSchedule(selectedDerivative);
+    setScheduleModalOpen(true);
   };
 
   const handleScheduleSuccess = () => {
@@ -266,23 +272,31 @@ const Repurpose = () => {
     navigate(`/calendar?date=${scheduleDate}`);
   };
 
-  const handleReject = async (derivativeId: string) => {
+  const handleReject = async (derivativeId?: string) => {
+    const id = derivativeId || selectedDerivative?.id;
+    if (!id) return;
+
     try {
       const { error } = await supabase
         .from('derivative_assets')
         .update({ approval_status: 'rejected' })
-        .eq('id', derivativeId);
+        .eq('id', id);
 
       if (error) throw error;
 
       setDerivatives(prev =>
-        prev.map(d => d.id === derivativeId ? { ...d, approval_status: 'rejected' } : d)
+        prev.map(d => d.id === id ? { ...d, approval_status: 'rejected' } : d)
       );
+
+      if (selectedDerivative?.id === id) {
+        setSelectedDerivative(prev => prev ? { ...prev, approval_status: 'rejected' } : null);
+      }
 
       toast({
         title: "Asset rejected",
         description: "View in Rejected tab if needed.",
       });
+      setModalOpen(false);
     } catch (error: any) {
       toast({
         title: "Error rejecting asset",
@@ -292,25 +306,22 @@ const Repurpose = () => {
     }
   };
 
-  const handleEdit = (derivative: DerivativeAsset) => {
-    setEditingDerivative(derivative.id);
-    setEditedContent(derivative.generated_content);
-  };
+  const handleSaveEdit = async (newContent: string) => {
+    if (!selectedDerivative) return;
 
-  const handleSaveEdit = async (derivativeId: string) => {
     try {
       const { error } = await supabase
         .from('derivative_assets')
-        .update({ generated_content: editedContent })
-        .eq('id', derivativeId);
+        .update({ generated_content: newContent })
+        .eq('id', selectedDerivative.id);
 
       if (error) throw error;
 
       setDerivatives(prev =>
-        prev.map(d => d.id === derivativeId ? { ...d, generated_content: editedContent } : d)
+        prev.map(d => d.id === selectedDerivative.id ? { ...d, generated_content: newContent } : d)
       );
 
-      setEditingDerivative(null);
+      setSelectedDerivative(prev => prev ? { ...prev, generated_content: newContent } : null);
 
       toast({
         title: "Changes saved",
@@ -325,17 +336,14 @@ const Repurpose = () => {
     }
   };
 
-  const handleCopyContent = (content: string, assetType: string) => {
-    navigator.clipboard.writeText(content);
+  const handleCopyContent = () => {
+    if (!selectedDerivative) return;
+    
+    navigator.clipboard.writeText(selectedDerivative.generated_content);
     toast({
       title: "Content copied",
-      description: `${DERIVATIVE_LABELS[assetType as keyof typeof DERIVATIVE_LABELS]} copied to clipboard.`,
+      description: `${DERIVATIVE_LABELS[selectedDerivative.asset_type as keyof typeof DERIVATIVE_LABELS]} copied to clipboard.`,
     });
-  };
-
-  const handlePreview = (derivative: DerivativeAsset) => {
-    setPreviewContent(derivative);
-    setPreviewOpen(true);
   };
 
   const handleArchiveMaster = async (masterId: string) => {
@@ -373,16 +381,19 @@ const Repurpose = () => {
     }
   };
 
-  const handleArchiveDerivative = async (derivativeId: string) => {
+  const handleArchiveDerivative = async () => {
+    if (!selectedDerivative) return;
+
     try {
       const { error } = await supabase
         .from('derivative_assets')
         .update({ is_archived: true })
-        .eq('id', derivativeId);
+        .eq('id', selectedDerivative.id);
 
       if (error) throw error;
 
-      setDerivatives(prev => prev.filter(d => d.id !== derivativeId));
+      setDerivatives(prev => prev.filter(d => d.id !== selectedDerivative.id));
+      setModalOpen(false);
 
       toast({
         title: "Asset archived",
@@ -706,10 +717,24 @@ const Repurpose = () => {
               ) : (
                 <Tabs value={statusFilter} onValueChange={setStatusFilter} className="space-y-4">
                   <TabsList className="bg-muted">
-                    <TabsTrigger value="all">All ({derivatives.length})</TabsTrigger>
-                    <TabsTrigger value="pending">Pending ({pendingCount})</TabsTrigger>
-                    <TabsTrigger value="approved">Approved ({approvedCount})</TabsTrigger>
-                    <TabsTrigger value="rejected">Rejected ({rejectedCount})</TabsTrigger>
+                    <TabsTrigger value="all" className="relative">
+                      All ({derivatives.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="pending" className="relative">
+                      <span className="flex items-center gap-2">
+                        {pendingCount > 0 && <span className="w-2 h-2 rounded-full bg-antique-gold" />}
+                        Pending ({pendingCount})
+                      </span>
+                    </TabsTrigger>
+                    <TabsTrigger value="approved" className="relative">
+                      <span className="flex items-center gap-2">
+                        {approvedCount > 0 && <span className="w-2 h-2 rounded-full bg-forest-ink" />}
+                        Approved ({approvedCount})
+                      </span>
+                    </TabsTrigger>
+                    <TabsTrigger value="rejected">
+                      Rejected ({rejectedCount})
+                    </TabsTrigger>
                   </TabsList>
 
                   <TabsContent value={statusFilter} className="space-y-4">
@@ -718,186 +743,17 @@ const Repurpose = () => {
                         <p className="text-muted-foreground">No {statusFilter} derivatives</p>
                       </Card>
                     ) : (
-                      filteredDerivatives.map((derivative) => {
-                    const Icon = DERIVATIVE_ICONS[derivative.asset_type as keyof typeof DERIVATIVE_ICONS] || FileText;
-                    const isEditing = editingDerivative === derivative.id;
-
-                        return (
-                          <Card key={derivative.id} className={`p-6 space-y-4 ${getStatusBorderColor(derivative.approval_status)}`}>
-                            <div className="flex items-start justify-between">
-                              <div className="flex items-center gap-3">
-                                <Icon className="h-5 w-5 text-primary" />
-                                <div>
-                                  <h3 className="font-medium text-foreground">
-                                    {DERIVATIVE_LABELS[derivative.asset_type as keyof typeof DERIVATIVE_LABELS]}
-                                  </h3>
-                                  <p className="text-xs text-muted-foreground">
-                                    {new Date(derivative.created_at).toLocaleDateString()}
-                                  </p>
-                                </div>
-                              </div>
-                              <Badge
-                                variant={
-                                  derivative.approval_status === 'approved'
-                                    ? 'default'
-                                    : derivative.approval_status === 'rejected'
-                                    ? 'destructive'
-                                    : 'secondary'
-                                }
-                              >
-                                {derivative.approval_status}
-                              </Badge>
-                            </div>
-
-                        {isEditing ? (
-                          <div className="space-y-3">
-                            <Textarea
-                              value={editedContent}
-                              onChange={(e) => setEditedContent(e.target.value)}
-                              rows={8}
-                              className="font-mono text-sm"
-                            />
-                            <div className="flex gap-2">
-                              <Button size="sm" onClick={() => handleSaveEdit(derivative.id)}>
-                                Save Changes
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setEditingDerivative(null)}
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="bg-muted/50 p-4 rounded-md">
-                              <p className="text-sm text-muted-foreground line-clamp-4 whitespace-pre-wrap">
-                                {derivative.generated_content}
-                              </p>
-                            </div>
-
-                            {/* Scheduling Status Badge */}
-                            {scheduledDerivatives[derivative.id] && (
-                              <div className="bg-primary/10 border border-primary/30 rounded-md p-3 flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <CalendarIcon className="h-4 w-4 text-primary" />
-                                  <span className="text-sm font-medium">
-                                    Scheduled for {format(new Date(scheduledDerivatives[derivative.id].scheduled_date), "MMM d, yyyy")}
-                                    {scheduledDerivatives[derivative.id].scheduled_time && 
-                                      ` at ${scheduledDerivatives[derivative.id].scheduled_time}`
-                                    }
-                                  </span>
-                                </div>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleViewOnCalendar(scheduledDerivatives[derivative.id].scheduled_date)}
-                                >
-                                  View on Calendar
-                                </Button>
-                              </div>
-                            )}
-
-                            <div className="flex gap-2 items-center flex-wrap">
-                              <Button
-                                size="sm"
-                                variant="default"
-                                onClick={() => handleCopyContent(derivative.generated_content, derivative.asset_type)}
-                              >
-                                <Copy className="h-4 w-4 mr-1" />
-                                Copy Content
-                              </Button>
-                              
-                              {derivative.approval_status === 'pending' && (
-                                <>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleScheduleDerivative(derivative)}
-                                  >
-                                    <CalendarIcon className="h-4 w-4 mr-1" />
-                                    Schedule
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleApproveAndSchedule(derivative)}
-                                  >
-                                    <Check className="h-4 w-4 mr-1" />
-                                    Approve & Schedule
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() => handleReject(derivative.id)}
-                                  >
-                                    <X className="h-4 w-4 mr-1" />
-                                    Reject
-                                  </Button>
-                                </>
-                              )}
-
-                              {derivative.approval_status === 'approved' && !scheduledDerivatives[derivative.id] && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleScheduleDerivative(derivative)}
-                                >
-                                  <CalendarIcon className="h-4 w-4 mr-1" />
-                                  Schedule
-                                </Button>
-                              )}
-
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button size="sm" variant="outline">
-                                    <MoreVertical className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="bg-background">
-                                  <DropdownMenuItem onClick={() => handlePreview(derivative)}>
-                                    Preview
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleEdit(derivative)}>
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Edit
-                                  </DropdownMenuItem>
-                                  {!scheduledDerivatives[derivative.id] && (
-                                    <DropdownMenuItem onClick={() => handleScheduleDerivative(derivative)}>
-                                      <CalendarIcon className="h-4 w-4 mr-2" />
-                                      Schedule
-                                    </DropdownMenuItem>
-                                  )}
-                                  {derivative.approval_status === 'approved' && (
-                                    <DropdownMenuItem onClick={() => handleReject(derivative.id)}>
-                                      <X className="h-4 w-4 mr-2" />
-                                      Reject
-                                    </DropdownMenuItem>
-                                  )}
-                                  {derivative.approval_status === 'rejected' && (
-                                    <DropdownMenuItem onClick={() => handleApprove(derivative.id)}>
-                                      <Check className="h-4 w-4 mr-2" />
-                                      Approve
-                                    </DropdownMenuItem>
-                                  )}
-                                  <DropdownMenuItem onClick={() => handleArchiveDerivative(derivative.id)}>
-                                    Archive
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem 
-                                    onClick={() => confirmDelete('derivative', derivative.id)}
-                                    className="text-destructive"
-                                  >
-                                    Delete Permanently
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </>
-                        )}
-                          </Card>
-                        );
-                      })
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {filteredDerivatives.map((derivative) => (
+                          <DerivativeGridCard
+                            key={derivative.id}
+                            derivative={derivative}
+                            label={DERIVATIVE_LABELS[derivative.asset_type as keyof typeof DERIVATIVE_LABELS] || derivative.asset_type}
+                            isScheduled={!!scheduledDerivatives[derivative.id]}
+                            onClick={() => handleOpenModal(derivative)}
+                          />
+                        ))}
+                      </div>
                     )}
                   </TabsContent>
                 </Tabs>
@@ -913,36 +769,28 @@ const Repurpose = () => {
         </div>
       </div>
 
-      {/* Preview Dialog */}
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {previewContent && DERIVATIVE_LABELS[previewContent.asset_type as keyof typeof DERIVATIVE_LABELS]}
-            </DialogTitle>
-            <DialogDescription>Full preview of generated content</DialogDescription>
-          </DialogHeader>
-          {previewContent && (
-            <div className="space-y-4">
-              <div className="bg-muted/50 p-6 rounded-md">
-                <pre className="text-sm whitespace-pre-wrap font-sans">
-                  {previewContent.generated_content}
-                </pre>
-              </div>
-              {previewContent.platform_specs && Object.keys(previewContent.platform_specs).length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Platform Details</h4>
-                  <div className="bg-muted/50 p-4 rounded-md">
-                    <pre className="text-xs text-muted-foreground">
-                      {JSON.stringify(previewContent.platform_specs, null, 2)}
-                    </pre>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Full-Screen Modal */}
+      <DerivativeFullModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        derivative={selectedDerivative}
+        label={selectedDerivative ? DERIVATIVE_LABELS[selectedDerivative.asset_type as keyof typeof DERIVATIVE_LABELS] : ''}
+        isScheduled={selectedDerivative ? !!scheduledDerivatives[selectedDerivative.id] : false}
+        scheduledDate={selectedDerivative && scheduledDerivatives[selectedDerivative.id]?.scheduled_date}
+        onApprove={() => handleApprove()}
+        onReject={() => handleReject()}
+        onEdit={handleSaveEdit}
+        onCopy={handleCopyContent}
+        onSchedule={handleScheduleDerivative}
+        onApproveAndSchedule={handleApproveAndSchedule}
+        onArchive={handleArchiveDerivative}
+        onDelete={() => selectedDerivative && confirmDelete('derivative', selectedDerivative.id)}
+        onViewCalendar={
+          selectedDerivative && scheduledDerivatives[selectedDerivative.id]
+            ? () => handleViewOnCalendar(scheduledDerivatives[selectedDerivative.id].scheduled_date)
+            : undefined
+        }
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
