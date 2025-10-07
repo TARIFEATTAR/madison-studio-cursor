@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DerivativeGridCard } from "@/components/amplify/DerivativeGridCard";
 import { DerivativeFullModal } from "@/components/amplify/DerivativeFullModal";
+import { MasterContentCard } from "@/components/amplify/MasterContentCard";
 
 interface MasterContent {
   id: string;
@@ -545,20 +546,31 @@ const Repurpose = () => {
 
   return (
     <div className="pt-20">
-      <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-4xl font-serif text-foreground">Amplify</h1>
-        <p className="text-muted-foreground">
-          One voice, every channel
-        </p>
-      </div>
+      <div className="container mx-auto px-4 py-8 space-y-6">
+        {/* Compact Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-serif text-foreground">Amplify</h1>
+            <p className="text-sm text-muted-foreground">One voice, every channel</p>
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Master Content List */}
-        <div className="lg:col-span-1 space-y-4">
-          <h2 className="text-xl font-serif text-foreground">Master Content</h2>
-          
-          {masterContents.length === 0 ? (
+        {/* Master Content Section - Compact Grid */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-serif text-foreground">Master Content</h2>
+            {selectedMaster && (
+              <Badge variant="outline" className="text-xs">
+                {masterContents.length} total
+              </Badge>
+            )}
+          </div>
+
+          {loading ? (
+            <Card className="p-8 flex items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </Card>
+          ) : masterContents.length === 0 ? (
             <Card className="p-6 text-center space-y-4">
               <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
               <p className="text-muted-foreground">Ready to Amplify</p>
@@ -566,144 +578,84 @@ const Repurpose = () => {
             </Card>
           ) : (
             <>
-              {/* Search & Sort Controls */}
-              <div className="space-y-3">
-                <div className="relative">
+              {/* Compact Search + Sort */}
+              <div className="flex gap-2">
+                <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search by title, type, collection..."
+                    placeholder="Search content..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
+                    className="pl-9 h-9"
                   />
                 </div>
-                
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sort by..." />
+                  <SelectTrigger className="w-[140px] h-9">
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-background">
-                    <SelectItem value="newest">Newest First</SelectItem>
-                    <SelectItem value="oldest">Oldest First</SelectItem>
+                    <SelectItem value="newest">Newest</SelectItem>
+                    <SelectItem value="oldest">Oldest</SelectItem>
                     <SelectItem value="week">By Week</SelectItem>
-                    <SelectItem value="title">By Title (A-Z)</SelectItem>
-                    <SelectItem value="type">By Content Type</SelectItem>
+                    <SelectItem value="title">A-Z</SelectItem>
+                    <SelectItem value="type">By Type</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Grouped Content */}
+              {/* Master Content Grid */}
               {sortedContent.length === 0 ? (
                 <Card className="p-6 text-center">
-                  <p className="text-muted-foreground">No matches found. Try different keywords.</p>
+                  <p className="text-sm text-muted-foreground">No matches found</p>
                 </Card>
               ) : (
-                <Accordion type="multiple" defaultValue={groupKeys.slice(0, 2)} className="space-y-2">
-                  {groupKeys.map((groupKey) => (
-                    <AccordionItem key={groupKey} value={groupKey} className="border rounded-lg px-4">
-                      <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{groupKey}</span>
-                          <Badge variant="secondary" className="text-xs">
-                            {groupedContent[groupKey].length}
-                          </Badge>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="space-y-3 pt-3 pb-4">
-                        {groupedContent[groupKey].map((master) => (
-                          <Card
-                            key={master.id}
-                            className={`p-4 transition-all hover:shadow-glow ${
-                              selectedMaster?.id === master.id ? 'border-primary shadow-glow' : ''
-                            }`}
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div 
-                                className="flex-1 space-y-2 cursor-pointer"
-                                onClick={() => handleSelectMaster(master)}
-                              >
-                                <h3 className="font-medium text-foreground">{master.title}</h3>
-                                <div className="flex flex-wrap gap-2">
-                                  <Badge variant="outline">{master.content_type}</Badge>
-                                  {master.dip_week && (
-                                    <Badge variant="secondary">Week {master.dip_week}</Badge>
-                                  )}
-                                  {master.word_count && (
-                                    <Badge variant="outline">{master.word_count} words</Badge>
-                                  )}
-                                </div>
-                                <p className="text-xs text-muted-foreground">
-                                  {new Date(master.created_at).toLocaleDateString()}
-                                </p>
-                              </div>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <MoreVertical className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="bg-background">
-                                  <DropdownMenuItem onClick={() => handleArchiveMaster(master.id)}>
-                                    Archive
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem 
-                                    onClick={() => confirmDelete('master', master.id, master.title)}
-                                    className="text-destructive"
-                                  >
-                                    Delete Permanently
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </Card>
-                        ))}
-                      </AccordionContent>
-                    </AccordionItem>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                  {sortedContent.map((master) => (
+                    <MasterContentCard
+                      key={master.id}
+                      content={master}
+                      isSelected={selectedMaster?.id === master.id}
+                      onClick={() => handleSelectMaster(master)}
+                      onArchive={() => handleArchiveMaster(master.id)}
+                      onDelete={() => confirmDelete('master', master.id, master.title)}
+                    />
                   ))}
-                </Accordion>
+                </div>
               )}
             </>
           )}
         </div>
 
         {/* Derivatives Section */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="space-y-4">
           {selectedMaster ? (
             <>
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-serif text-foreground">Derivative Assets</h2>
-              </div>
-
-              <Card className="p-6 bg-muted/20">
-                <div className="space-y-3">
-                  <h3 className="font-serif text-lg text-foreground">{selectedMaster.title}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-3">
+              {/* Compact Selected Content Header */}
+              <div className="flex items-start justify-between gap-4 p-4 bg-muted/20 rounded-lg border">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h2 className="text-lg font-serif text-foreground">Derivative Assets</h2>
+                    <Badge variant="outline" className="text-xs">
+                      {selectedMaster.content_type.replace(/_/g, " ")}
+                    </Badge>
+                  </div>
+                  <h3 className="font-medium text-sm mb-1">{selectedMaster.title}</h3>
+                  <p className="text-xs text-muted-foreground line-clamp-2">
                     {selectedMaster.full_content}
                   </p>
-                  <div className="flex gap-2 pt-2">
-                    {selectedMaster.collection && (
-                      <Badge variant="outline">{selectedMaster.collection}</Badge>
-                    )}
-                    {selectedMaster.pillar_focus && (
-                      <Badge variant="outline">{selectedMaster.pillar_focus}</Badge>
-                    )}
-                  </div>
-                  {derivatives.length > 0 && (
-                    <div className="pt-3 space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Approval Progress</span>
-                        <span className="font-medium">{approvedCount}/{derivatives.length}</span>
-                      </div>
-                      <Progress value={(approvedCount / derivatives.length) * 100} />
-                      <div className="flex gap-4 text-xs pt-2">
-                        <span className="text-green-600">✓ {approvedCount} Approved</span>
-                        <span className="text-orange-600">◷ {pendingCount} Pending</span>
-                        <span className="text-muted-foreground">✕ {rejectedCount} Rejected</span>
-                      </div>
-                    </div>
-                  )}
                 </div>
-              </Card>
+                {derivatives.length > 0 && (
+                  <div className="flex flex-col items-end gap-1 min-w-[100px]">
+                    <div className="text-xs text-muted-foreground">Progress</div>
+                    <div className="text-lg font-semibold">{approvedCount}/{derivatives.length}</div>
+                    <div className="flex gap-2 text-xs">
+                      <span className="text-green-600">✓{approvedCount}</span>
+                      <span className="text-orange-600">◷{pendingCount}</span>
+                      <span className="text-muted-foreground">✕{rejectedCount}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {derivatives.length === 0 ? (
                 <Card className="p-8 text-center space-y-4">
@@ -827,7 +779,6 @@ const Repurpose = () => {
         masterContent={selectedMaster}
         onSuccess={handleScheduleSuccess}
       />
-      </div>
     </div>
   );
 };
