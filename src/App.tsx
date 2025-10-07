@@ -105,7 +105,6 @@ const AppContent = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
       
       <BrowserRouter>
         <ErrorBoundary>

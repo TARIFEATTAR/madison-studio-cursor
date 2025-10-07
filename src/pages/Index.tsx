@@ -28,8 +28,8 @@ const Index = () => {
 
   if (loading || onboardingLoading) {
     return (
-      <div className="min-h-screen bg-ink-black flex items-center justify-center">
-        <div className="text-parchment-white">Loading...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-foreground">Loading...</div>
       </div>
     );
   }
