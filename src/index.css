@@ -538,8 +538,7 @@
   }
 
   .fade-enter {
-    opacity: 1;
-    transform: none;
+    animation: fadeIn 400ms var(--ease-standard) forwards;
   }
 
   .stagger-1 { animation-delay: 50ms; }

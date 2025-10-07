@@ -14,7 +14,6 @@ import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
-import Landing from "./pages/Landing";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 const queryClient = new QueryClient();
 
@@ -44,17 +43,20 @@ const AppContent = () => {
   const { user } = useAuth();
   console.log("[AppContent] User state:", user ? "logged in" : "logged out");
   
-  // Show navigation everywhere except on the auth page
-  const showNavigation = location.pathname !== '/auth';
+  // Hide global navigation on landing page for non-authenticated users
+  const showNavigation = !(location.pathname === '/' && !user);
   console.log("[AppContent] Show navigation:", showNavigation);
 
   return (
     <> 
+      {/* Debug banner to verify render; will be removed after fix */}
+      <div className="fixed top-0 left-0 z-[9999] px-2 py-1 text-xs bg-green-600 text-white pointer-events-none">App mounted</div>
       {showNavigation && <Navigation />}
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/" element={<Index />} />
-        <Route path="/index.html" element={<Index />} />
+        <Route path="/home" element={<Navigate to="/" replace />} />
+        <Route path="/index.html" element={<Navigate to="/" replace />} />
         <Route
           path="/library"
           element={

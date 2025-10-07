@@ -121,8 +121,8 @@ const Landing = () => {
           style={{ backgroundImage: `url(${penHeroImage})` }}
         />
         
-        {/* Overlay for Text Readability */}
-        <div className="absolute inset-0 bg-ink-black/50" />
+        {/* Overlay for Text Readability (temporarily disabled during debug) */}
+        <div className="absolute inset-0 bg-black/0" />
         
         {/* Content */}
         <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-20">
