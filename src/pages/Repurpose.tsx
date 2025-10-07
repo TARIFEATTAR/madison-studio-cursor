@@ -34,6 +34,7 @@ import { DerivativeGridCard } from "@/components/amplify/DerivativeGridCard";
 import { DerivativeFullModal } from "@/components/amplify/DerivativeFullModal";
 import { MasterContentCard } from "@/components/amplify/MasterContentCard";
 import { DerivativeFolderSidebar } from "@/components/amplify/DerivativeFolderSidebar";
+import { MasterContentSwitcher } from "@/components/amplify/MasterContentSwitcher";
 
 interface MasterContent {
   id: string;
@@ -130,6 +131,7 @@ const Repurpose = () => {
   const [derivativeToSchedule, setDerivativeToSchedule] = useState<DerivativeAsset | null>(null);
   const [scheduledDerivatives, setScheduledDerivatives] = useState<Record<string, any>>({});
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [masterSwitcherOpen, setMasterSwitcherOpen] = useState(false);
 
   useEffect(() => {
     fetchMasterContents();
@@ -590,11 +592,8 @@ const Repurpose = () => {
             selectedFolder={selectedFolder}
             onSelectFolder={setSelectedFolder}
             folderCounts={folderCounts}
-            masterContents={masterContents}
-            selectedMasterId={selectedMaster?.id || null}
-            onSelectMaster={handleSelectMaster}
-            onArchiveMaster={handleArchiveMaster}
-            onDeleteMaster={(id) => confirmDelete('master', id, masterContents.find(m => m.id === id)?.title)}
+            selectedMasterTitle={selectedMaster?.title || null}
+            onOpenMasterSwitcher={() => setMasterSwitcherOpen(true)}
           />
         </div>
 
@@ -769,6 +768,17 @@ const Repurpose = () => {
         derivativeAsset={derivativeToSchedule}
         masterContent={selectedMaster}
         onSuccess={handleScheduleSuccess}
+      />
+
+      {/* Master Content Switcher */}
+      <MasterContentSwitcher
+        open={masterSwitcherOpen}
+        onOpenChange={setMasterSwitcherOpen}
+        masterContents={masterContents}
+        selectedMasterId={selectedMaster?.id || null}
+        onSelectMaster={handleSelectMaster}
+        onArchive={handleArchiveMaster}
+        onDelete={(id) => confirmDelete('master', id, masterContents.find(m => m.id === id)?.title)}
       />
     </div>
   );

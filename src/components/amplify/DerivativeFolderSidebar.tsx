@@ -1,29 +1,15 @@
-import { Mail, Instagram, Twitter, Package, MessageSquare, Linkedin, Layers } from "lucide-react";
+import { Mail, Instagram, Twitter, Package, MessageSquare, Linkedin, Layers, ChevronRight } from "lucide-react";
 import { DerivativeTypeFolder } from "./DerivativeTypeFolder";
-import { MasterContentLibrarySection } from "./MasterContentLibrarySection";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-interface MasterContent {
-  id: string;
-  title: string;
-  content_type: string;
-  full_content: string;
-  word_count: number;
-  collection: string | null;
-  dip_week: number | null;
-  pillar_focus: string | null;
-  created_at: string;
-}
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface DerivativeFolderSidebarProps {
   selectedFolder: string | null;
   onSelectFolder: (folder: string | null) => void;
   folderCounts: Record<string, number>;
-  masterContents: MasterContent[];
-  selectedMasterId: string | null;
-  onSelectMaster: (master: MasterContent) => void;
-  onArchiveMaster: (id: string) => void;
-  onDeleteMaster: (id: string) => void;
+  selectedMasterTitle: string | null;
+  onOpenMasterSwitcher: () => void;
 }
 
 const FOLDER_CONFIG = [
@@ -69,23 +55,47 @@ export function DerivativeFolderSidebar({
   selectedFolder,
   onSelectFolder,
   folderCounts,
-  masterContents,
-  selectedMasterId,
-  onSelectMaster,
-  onArchiveMaster,
-  onDeleteMaster,
+  selectedMasterTitle,
+  onOpenMasterSwitcher,
 }: DerivativeFolderSidebarProps) {
   const totalCount = Object.values(folderCounts).reduce((sum, count) => sum + count, 0);
 
   return (
     <div className="h-full flex flex-col bg-background/50 border-r border-border/20">
+      {/* Selected Master Content Display */}
+      <div className="p-4 border-b border-border/20 space-y-3">
+        <div>
+          <h2 className="text-xs uppercase tracking-wide text-muted-foreground mb-1 font-medium">
+            Current Content
+          </h2>
+          {selectedMasterTitle ? (
+            <div className="flex items-start gap-2">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground line-clamp-2 leading-tight">
+                  {selectedMasterTitle}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No content selected</p>
+          )}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full justify-between"
+          onClick={onOpenMasterSwitcher}
+        >
+          Switch Content
+          <ChevronRight className="h-4 w-4 ml-2" />
+        </Button>
+      </div>
+
+      {/* Derivative Type Filters */}
       <div className="p-4 border-b border-border/20">
-        <h2 className="text-lg font-serif font-semibold text-foreground mb-1">
-          Derivative Types
-        </h2>
-        <p className="text-xs text-muted-foreground">
-          Filter by content type
-        </p>
+        <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-3 font-medium">
+          Filter by Type
+        </h3>
       </div>
 
       <ScrollArea className="flex-1">
@@ -114,17 +124,6 @@ export function DerivativeFolderSidebar({
               colorClass={folder.colorClass}
             />
           ))}
-        </div>
-
-        {/* Master Content Library Section */}
-        <div className="px-4 pb-4">
-          <MasterContentLibrarySection
-            masterContents={masterContents}
-            selectedMasterId={selectedMasterId}
-            onSelectMaster={onSelectMaster}
-            onArchive={onArchiveMaster}
-            onDelete={onDeleteMaster}
-          />
         </div>
       </ScrollArea>
     </div>
