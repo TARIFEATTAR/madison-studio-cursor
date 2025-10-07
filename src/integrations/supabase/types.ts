@@ -508,27 +508,39 @@ export type Database = {
       google_calendar_tokens: {
         Row: {
           access_token: string
+          access_token_iv: string | null
           created_at: string | null
+          encrypted_access_token: string | null
+          encrypted_refresh_token: string | null
           id: string
           refresh_token: string
+          refresh_token_iv: string | null
           token_expiry: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           access_token: string
+          access_token_iv?: string | null
           created_at?: string | null
+          encrypted_access_token?: string | null
+          encrypted_refresh_token?: string | null
           id?: string
           refresh_token: string
+          refresh_token_iv?: string | null
           token_expiry?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           access_token?: string
+          access_token_iv?: string | null
           created_at?: string | null
+          encrypted_access_token?: string | null
+          encrypted_refresh_token?: string | null
           id?: string
           refresh_token?: string
+          refresh_token_iv?: string | null
           token_expiry?: string | null
           updated_at?: string | null
           user_id?: string
