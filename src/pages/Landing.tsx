@@ -35,7 +35,9 @@ const steps = [
 ];
 
 const Landing = () => {
+  console.log("[Landing] Rendering Landing page...");
   const { user } = useAuth();
+  console.log("[Landing] User state:", !!user);
 
   const features = [
     {

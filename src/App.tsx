@@ -36,11 +36,16 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AppContent = () => {
+  console.log("[AppContent] Rendering...");
   const location = useLocation();
+  console.log("[AppContent] Current location:", location.pathname);
+  
   const { user } = useAuth();
+  console.log("[AppContent] User state:", user ? "logged in" : "logged out");
   
   // Hide global navigation on landing page for non-authenticated users
   const showNavigation = !(location.pathname === '/' && !user);
+  console.log("[AppContent] Show navigation:", showNavigation);
 
   return (
     <>
@@ -102,17 +107,21 @@ const AppContent = () => {
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <BrowserRouter>
-        <ErrorBoundary>
-          <AppContent />
-        </ErrorBoundary>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  console.log("[App] App component rendering...");
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <BrowserRouter>
+          <ErrorBoundary>
+            <AppContent />
+          </ErrorBoundary>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

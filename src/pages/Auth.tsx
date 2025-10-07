@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import scriptoraLogo from "@/assets/scriptora-logo.png";
 
 const Auth = () => {
+  console.log("[Auth] Rendering Auth page...");
   const navigate = useNavigate();
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);

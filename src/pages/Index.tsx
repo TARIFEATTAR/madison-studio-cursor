@@ -15,7 +15,11 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
 
 const Index = () => {
+  console.log("[Index] Rendering Index page...");
+  
   const { user, loading } = useAuth();
+  console.log("[Index] Auth state - user:", !!user, "loading:", loading);
+  
   const {
     showWelcome,
     showBanner,
@@ -25,24 +29,31 @@ const Index = () => {
     skipWelcome,
     dismissBanner,
   } = useOnboarding();
+  
+  console.log("[Index] Onboarding state - showWelcome:", showWelcome, "loading:", onboardingLoading);
 
   if (loading || onboardingLoading) {
+    console.log("[Index] Showing loading state");
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-foreground">Loading...</div>
+        <div className="text-foreground text-xl">Loading Scriptora...</div>
       </div>
     );
   }
 
   // Show landing page for non-authenticated users
   if (!user) {
+    console.log("[Index] Showing Landing page for unauthenticated user");
     return <Landing />;
   }
 
+  console.log("[Index] Showing dashboard for authenticated user");
+  
   // Show dashboard/home for authenticated users
+  // TEMPORARILY DISABLE WELCOME MODAL FOR DEBUGGING
   return (
     <ErrorBoundary>
-      <WelcomeModal open={showWelcome} onComplete={completeWelcome} onSkip={skipWelcome} />
+      {/* <WelcomeModal open={showWelcome} onComplete={completeWelcome} onSkip={skipWelcome} /> */}
       
       <div className="min-h-screen bg-gradient-to-b from-card to-background">
         {/* Hero Section */}
