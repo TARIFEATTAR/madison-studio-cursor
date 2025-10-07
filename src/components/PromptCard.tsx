@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { getCollectionIcon } from "@/utils/collectionIcons";
 
 interface PromptCardProps {
   prompt: {
@@ -114,7 +115,15 @@ const PromptCard = ({ prompt, onArchive, onDelete, onClick }: PromptCardProps) =
         {/* Header Tags */}
       <div className="flex flex-wrap gap-2 mb-4">
         <Badge className={collectionColors[prompt.collection] || "bg-muted"}>
-          {prompt.collection}
+          {(() => {
+            const CollectionIcon = getCollectionIcon(prompt.collection);
+            return CollectionIcon ? (
+              <span className="flex items-center gap-1.5">
+                <CollectionIcon className="w-3 h-3" />
+                {prompt.collection}
+              </span>
+            ) : prompt.collection;
+          })()}
         </Badge>
         {prompt.scent_family && (
           <Badge variant="outline" className="border-border/60">

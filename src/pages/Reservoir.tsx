@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Archive, Search, X, RotateCcw, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,13 @@ import { LibrarySidebar } from "@/components/LibrarySidebar";
 import PromptCard from "@/components/PromptCard";
 import { OutputCard } from "@/components/OutputCard";
 import { MasterContentCard } from "@/components/MasterContentCard";
+import { ViewDensityToggle, ViewMode } from "@/components/library/ViewDensityToggle";
+import { SortDropdown, SortOption } from "@/components/library/SortDropdown";
+import { DateGroupHeader } from "@/components/library/DateGroupHeader";
+import { EmptyState } from "@/components/library/EmptyState";
+import { ContentGrid } from "@/components/library/ContentGrid";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { groupByDate, DateGroup } from "@/utils/dateGrouping";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +54,17 @@ const Reservoir = () => {
   const [sidebarFilters, setSidebarFilters] = useState<typeof initialFilters>(initialFilters);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ id: string; type: ContentTab | 'derivative' } | null>(null);
+  
+  // New state for ADHD-friendly features
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    return (localStorage.getItem('libraryViewMode') as ViewMode) || 'gallery';
+  });
+  const [sortOption, setSortOption] = useState<SortOption>(() => {
+    const saved = localStorage.getItem(`librarySortOption_${activeTab}`);
+    return (saved as SortOption) || 'recent';
+  });
+  const [groupByDateEnabled, setGroupByDateEnabled] = useState(true);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const getCurrentData = () => {
     switch (activeTab) {
@@ -316,6 +334,47 @@ const Reservoir = () => {
     }));
   };
 
+  // Save preferences to localStorage
+  useEffect(() => {
+    localStorage.setItem('libraryViewMode', viewMode);
+  }, [viewMode]);
+
+  useEffect(() => {
+    localStorage.setItem(`librarySortOption_${activeTab}`, sortOption);
+  }, [sortOption, activeTab]);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    onSearchFocus: () => searchInputRef.current?.focus(),
+    onEscape: () => {
+      setSearchQuery("");
+      setSidebarFilters(initialFilters);
+    },
+  });
+
+  const sortData = (data: any[]) => {
+    const sorted = [...data];
+    
+    switch (sortOption) {
+      case "recent":
+        return sorted.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      case "alphabetical":
+        return sorted.sort((a, b) => {
+          const aTitle = a.title || a.full_content?.substring(0, 50) || "";
+          const bTitle = b.title || b.full_content?.substring(0, 50) || "";
+          return aTitle.localeCompare(bTitle);
+        });
+      case "dipWeek":
+        return sorted.sort((a, b) => (a.dip_week || 0) - (b.dip_week || 0));
+      case "mostUsed":
+        return sorted.sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0));
+      default:
+        return sorted;
+    }
+  };
+
   const filterData = (data: any[]) => {
     let filtered = [...data];
 
@@ -363,10 +422,11 @@ const Reservoir = () => {
       filtered = filtered.filter((item: any) => item.is_favorite === true);
     }
 
-    return filtered;
+    return sortData(filtered);
   };
 
   const filteredData = filterData(getCurrentData());
+  const groupedData = groupByDateEnabled ? groupByDate(filteredData) : null;
   const activeFilters = getActiveFilterChips();
 
   if (loading) {
@@ -423,17 +483,29 @@ const Reservoir = () => {
                   </div>
                 </div>
 
-                {/* Search Bar */}
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                  <Input
-                    type="text"
-                    placeholder="Search library..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-12 h-14 bg-card/50 backdrop-blur-sm border-border focus:border-primary transition-all duration-300 text-base focus:shadow-lg focus:-translate-y-0.5"
-                  />
+                {/* Search Bar with View Controls */}
+                <div className="flex gap-3 items-center">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                    <Input
+                      ref={searchInputRef}
+                      type="text"
+                      placeholder="Search library... (Press / to focus)"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-12 h-14 bg-card/50 backdrop-blur-sm border-border focus:border-primary transition-all duration-300 text-base focus:shadow-lg focus:-translate-y-0.5"
+                    />
+                  </div>
+                  <ViewDensityToggle viewMode={viewMode} onChange={setViewMode} />
+                  <SortDropdown value={sortOption} onChange={setSortOption} />
                 </div>
+
+                {/* Result Count */}
+                {(searchQuery || activeFilters.length > 0) && (
+                  <div className="text-sm text-muted-foreground mt-2">
+                    {filteredData.length} {filteredData.length === 1 ? 'result' : 'results'} found
+                  </div>
+                )}
 
                 {/* Active Filters */}
                 {activeFilters.length > 0 && (
@@ -526,88 +598,158 @@ const Reservoir = () => {
                 {/* Master Content Tab */}
                 <TabsContent value="masterContent" className="space-y-6">
                   {filteredData.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredData.map((content: any) => (
-                        <MasterContentCard
-                          key={content.id}
-                          content={content}
-                          onArchive={() => handleArchiveItem(content.id, "masterContent")}
-                          onDelete={() => handleDeleteItem(content.id, "masterContent")}
-                        />
-                      ))}
-                    </div>
+                    groupedData ? (
+                      Array.from(groupedData.entries()).map(([group, items]) => (
+                        <div key={group} className="space-y-4">
+                          <DateGroupHeader group={group as DateGroup} count={items.length} />
+                          <ContentGrid viewMode={viewMode}>
+                            {items.map((content: any) => (
+                              <MasterContentCard
+                                key={content.id}
+                                content={content}
+                                onArchive={() => handleArchiveItem(content.id, "masterContent")}
+                                onDelete={() => handleDeleteItem(content.id, "masterContent")}
+                              />
+                            ))}
+                          </ContentGrid>
+                        </div>
+                      ))
+                    ) : (
+                      <ContentGrid viewMode={viewMode}>
+                        {filteredData.map((content: any) => (
+                          <MasterContentCard
+                            key={content.id}
+                            content={content}
+                            onArchive={() => handleArchiveItem(content.id, "masterContent")}
+                            onDelete={() => handleDeleteItem(content.id, "masterContent")}
+                          />
+                        ))}
+                      </ContentGrid>
+                    )
                   ) : (
-                    <div className="text-center py-16">
-                      <p className="text-muted-foreground text-lg">
-                        {showArchived ? "No archived master content" : "No master content found"}
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        {showArchived ? "Archive some content to see it here" : "Try adjusting your filters or create new master content"}
-                      </p>
-                    </div>
+                    <EmptyState
+                      hasSearch={!!searchQuery}
+                      hasFilters={activeFilters.length > 0}
+                      onClearFilters={clearAllFilters}
+                      contentType="master content"
+                    />
                   )}
                 </TabsContent>
 
                 {/* Derivatives Tab */}
                 <TabsContent value="derivatives" className="space-y-6">
                   {filteredData.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredData.map((derivative: any) => (
-                        <Card key={derivative.id} className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer border-border/40">
-                          <div className="space-y-3">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <h3 className="font-serif text-lg mb-2 text-foreground">{derivative.asset_type}</h3>
-                                {derivative.master_content && (
-                                  <p className="text-sm text-muted-foreground">
-                                    From: {derivative.master_content.title}
-                                  </p>
-                                )}
+                    groupedData ? (
+                      Array.from(groupedData.entries()).map(([group, items]) => (
+                        <div key={group} className="space-y-4">
+                          <DateGroupHeader group={group as DateGroup} count={items.length} />
+                          <ContentGrid viewMode={viewMode}>
+                            {items.map((derivative: any) => (
+                              <Card key={derivative.id} className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer border-border/40">
+                                <div className="space-y-3">
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <h3 className="font-serif text-lg mb-2 text-foreground">{derivative.asset_type}</h3>
+                                      {derivative.master_content && (
+                                        <p className="text-sm text-muted-foreground">
+                                          From: {derivative.master_content.title}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <p className="text-sm line-clamp-3 text-foreground/80">{derivative.generated_content}</p>
+                                  <div className="flex items-center gap-2 pt-2 border-t border-border/20">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleArchiveItem(derivative.id, "derivative")}
+                                      className="text-xs"
+                                    >
+                                      {showArchived ? (
+                                        <>
+                                          <RotateCcw className="w-3 h-3 mr-1" />
+                                          Restore
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Archive className="w-3 h-3 mr-1" />
+                                          Archive
+                                        </>
+                                      )}
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDeleteItem(derivative.id, "derivative")}
+                                      className="text-xs hover:text-destructive"
+                                    >
+                                      <Trash2 className="w-3 h-3 mr-1" />
+                                      Delete
+                                    </Button>
+                                  </div>
+                                </div>
+                              </Card>
+                            ))}
+                          </ContentGrid>
+                        </div>
+                      ))
+                    ) : (
+                      <ContentGrid viewMode={viewMode}>
+                        {filteredData.map((derivative: any) => (
+                          <Card key={derivative.id} className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer border-border/40">
+                            <div className="space-y-3">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <h3 className="font-serif text-lg mb-2 text-foreground">{derivative.asset_type}</h3>
+                                  {derivative.master_content && (
+                                    <p className="text-sm text-muted-foreground">
+                                      From: {derivative.master_content.title}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <p className="text-sm line-clamp-3 text-foreground/80">{derivative.generated_content}</p>
+                              <div className="flex items-center gap-2 pt-2 border-t border-border/20">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleArchiveItem(derivative.id, "derivative")}
+                                  className="text-xs"
+                                >
+                                  {showArchived ? (
+                                    <>
+                                      <RotateCcw className="w-3 h-3 mr-1" />
+                                      Restore
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Archive className="w-3 h-3 mr-1" />
+                                      Archive
+                                    </>
+                                  )}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteItem(derivative.id, "derivative")}
+                                  className="text-xs hover:text-destructive"
+                                >
+                                  <Trash2 className="w-3 h-3 mr-1" />
+                                  Delete
+                                </Button>
                               </div>
                             </div>
-                            <p className="text-sm line-clamp-3 text-foreground/80">{derivative.generated_content}</p>
-                            <div className="flex items-center gap-2 pt-2 border-t border-border/20">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleArchiveItem(derivative.id, "derivative")}
-                                className="text-xs"
-                              >
-                                {showArchived ? (
-                                  <>
-                                    <RotateCcw className="w-3 h-3 mr-1" />
-                                    Restore
-                                  </>
-                                ) : (
-                                  <>
-                                    <Archive className="w-3 h-3 mr-1" />
-                                    Archive
-                                  </>
-                                )}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteItem(derivative.id, "derivative")}
-                                className="text-xs hover:text-destructive"
-                              >
-                                <Trash2 className="w-3 h-3 mr-1" />
-                                Delete
-                              </Button>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
+                          </Card>
+                        ))}
+                      </ContentGrid>
+                    )
                   ) : (
-                    <div className="text-center py-16">
-                      <p className="text-muted-foreground text-lg">
-                        {showArchived ? "No archived derivatives" : "No derivatives found"}
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        {showArchived ? "Archive some derivatives to see them here" : "Create derivatives from master content"}
-                      </p>
-                    </div>
+                    <EmptyState
+                      hasSearch={!!searchQuery}
+                      hasFilters={activeFilters.length > 0}
+                      onClearFilters={clearAllFilters}
+                      contentType="derivatives"
+                    />
                   )}
                 </TabsContent>
               </Tabs>
