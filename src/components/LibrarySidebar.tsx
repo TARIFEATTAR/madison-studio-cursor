@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
-import { ChevronRight, Star, Clock, Archive, Folder, FileText, Mail, Image as ImageIcon, BookOpen, Instagram } from "lucide-react";
+import { ChevronRight, Star, Clock, ChevronDown, Folder } from "lucide-react";
 import { useCollections } from "@/hooks/useCollections";
 import { useWeekNames } from "@/hooks/useWeekNames";
+import { useProducts } from "@/hooks/useProducts";
+import { getCollectionIcon, normalizeCollectionName } from "@/utils/collectionIcons";
+import { contentTypeMapping } from "@/utils/contentTypeMapping";
 import {
   Sidebar,
   SidebarContent,
@@ -23,12 +26,14 @@ interface LibrarySidebarProps {
     contentType?: string | null;
     dipWeek?: number | null;
     quickAccess?: "favorites" | "recent" | null;
+    scentFamily?: string | null;
   }) => void;
   activeFilters: {
     collection?: string | null;
     contentType?: string | null;
     dipWeek?: number | null;
     quickAccess?: "favorites" | "recent" | null;
+    scentFamily?: string | null;
   };
   counts: {
     prompts: {
@@ -49,6 +54,12 @@ interface LibrarySidebarProps {
       byContentType: Record<string, number>;
       byDipWeek: Record<number, number>;
     };
+    derivatives: {
+      total: number;
+      byCollection: Record<string, number>;
+      byContentType: Record<string, number>;
+      byDipWeek: Record<number, number>;
+    };
     favorites: number;
     recent: number;
   };
@@ -59,12 +70,14 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
   const collapsed = state === "collapsed";
   const { collections: brandCollections } = useCollections();
   const { getWeekName } = useWeekNames();
+  const { products } = useProducts();
   
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     collections: true,
     contentTypes: false,
     dipWeeks: false,
   });
+  const [expandedCollections, setExpandedCollections] = useState<string[]>(['cadence']);
   
 
   const toggleSection = (section: string) => {
@@ -74,39 +87,80 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
     }));
   };
 
+  const toggleCollection = (collection: string) => {
+    setExpandedCollections(prev => 
+      prev.includes(collection) 
+        ? prev.filter(c => c !== collection)
+        : [...prev, collection]
+    );
+  };
 
-  const handleFilterClick = (filterType: string, value: string | number) => {
+  const handleFilterClick = (filterType: string, value: string | number, scentFamily?: string) => {
     const currentValue = activeFilters[filterType as keyof typeof activeFilters];
     
-    if (currentValue === value) {
+    if (filterType === "collection" && scentFamily) {
+      // Clicking a scent family
+      if (currentValue === value && activeFilters.scentFamily === scentFamily) {
+        // Deselect scent family
+        const newFilters = { ...activeFilters };
+        delete newFilters.collection;
+        delete newFilters.scentFamily;
+        onFilterChange(newFilters);
+      } else {
+        // Select scent family
+        onFilterChange({
+          ...activeFilters,
+          collection: value as string,
+          scentFamily,
+        });
+      }
+    } else if (currentValue === value) {
       // Deselect if clicking the same filter
       const newFilters = { ...activeFilters };
       delete newFilters[filterType as keyof typeof activeFilters];
+      if (filterType === "collection") {
+        delete newFilters.scentFamily;
+      }
       onFilterChange(newFilters);
     } else {
       // Select new filter
-      onFilterChange({
+      const newFilters = {
         ...activeFilters,
         [filterType]: value,
-      });
+      };
+      if (filterType === "collection") {
+        delete newFilters.scentFamily;
+      }
+      onFilterChange(newFilters);
     }
   };
+
+  // Group products by collection and scent family
+  const collectionHierarchy = useMemo(() => {
+    const hierarchy: Record<string, { count: number; scentFamilies: Record<string, number> }> = {};
+    
+    products.forEach(product => {
+      const collection = normalizeCollectionName(product.collection);
+      if (!hierarchy[collection]) {
+        hierarchy[collection] = { count: 0, scentFamilies: {} };
+      }
+      hierarchy[collection].count++;
+      
+      if (product.scentFamily) {
+        const scentFamily = product.scentFamily;
+        hierarchy[collection].scentFamilies[scentFamily] = 
+          (hierarchy[collection].scentFamilies[scentFamily] || 0) + 1;
+      }
+    });
+    
+    return hierarchy;
+  }, [products]);
 
   const collections = brandCollections.map(col => ({
     name: col.name,
     key: col.name.toLowerCase().replace(/\s+/g, '_'),
     icon: Folder,
   }));
-
-  
-
-  const contentTypes = [
-    { name: "Product Descriptions", key: "product", icon: FileText },
-    { name: "Emails", key: "email", icon: Mail },
-    { name: "Social Media", key: "social", icon: Instagram },
-    { name: "Visual Assets", key: "visual", icon: ImageIcon },
-    { name: "Blog Posts", key: "blog", icon: BookOpen },
-  ];
 
   const dipWeeks = [
     { number: 1, name: getWeekName(1) },
@@ -115,8 +169,29 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
     { number: 4, name: getWeekName(4) },
   ];
 
-  const isActive = (filterType: string, value: string | number) => {
+  const isActive = (filterType: string, value: string | number, scentFamily?: string) => {
+    if (scentFamily) {
+      return activeFilters[filterType as keyof typeof activeFilters] === value && activeFilters.scentFamily === scentFamily;
+    }
     return activeFilters[filterType as keyof typeof activeFilters] === value;
+  };
+
+  const getCollectionCount = (collectionKey: string) => {
+    return (counts.prompts?.byCollection?.[collectionKey] || 0) +
+           (counts.outputs?.byCollection?.[collectionKey] || 0) +
+           (counts.masterContent?.byCollection?.[collectionKey] || 0) +
+           (counts.derivatives?.byCollection?.[collectionKey] || 0);
+  };
+
+  const getContentTypeCount = (keys: string[]) => {
+    let total = 0;
+    keys.forEach(key => {
+      total += (counts.prompts?.byContentType?.[key] || 0) +
+               (counts.outputs?.byContentType?.[key] || 0) +
+               (counts.masterContent?.byContentType?.[key] || 0) +
+               (counts.derivatives?.byContentType?.[key] || 0);
+    });
+    return total;
   };
 
   return (
@@ -151,11 +226,11 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
             <SidebarGroupContent>
               <SidebarMenu>
                 {collections.map((collection) => {
-                  const collectionCount = (counts.prompts.byCollection[collection.key] || 0) + 
-                                        (counts.outputs.byCollection[collection.key] || 0) + 
-                                        (counts.masterContent.byCollection[collection.key] || 0);
-                  const isCollectionActive = activeFilters.collection === collection.key;
-                  
+                  const CollectionIcon = getCollectionIcon(collection.key) || collection.icon;
+                  const collectionCount = getCollectionCount(collection.key);
+                  const isCollectionExpanded = expandedCollections.includes(collection.key);
+                  const showScentFamilies = collection.key === 'cadence' && collectionHierarchy[collection.key]?.scentFamilies && Object.keys(collectionHierarchy[collection.key].scentFamilies).length > 0;
+                  const isCollectionActive = activeFilters.collection === collection.key && !activeFilters.scentFamily;
 
                   return (
                     <div key={collection.key}>
@@ -165,15 +240,25 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
                             "group flex items-center justify-between h-9 px-2 rounded-md transition-all",
                             isCollectionActive && "bg-saffron-gold/20 border-l-3 border-saffron-gold font-medium"
                           )}
-                          onClick={() => handleFilterClick("collection", collection.key)}
+                          onClick={() => {
+                            if (showScentFamilies) {
+                              toggleCollection(collection.key);
+                            }
+                            handleFilterClick("collection", collection.key);
+                          }}
                         >
                           <div className="flex items-center gap-2">
-                            <collection.icon className="w-4 h-4" />
+                            {showScentFamilies && !collapsed && (
+                              isCollectionExpanded ? 
+                                <ChevronDown className="w-3 h-3" /> : 
+                                <ChevronRight className="w-3 h-3" />
+                            )}
+                            <CollectionIcon className="w-4 h-4" />
                             {!collapsed && (
                               <span className="text-sm">{collection.name}</span>
                             )}
                           </div>
-                          {!collapsed && (
+                          {!collapsed && collectionCount > 0 && (
                             <Badge variant="secondary" className="text-xs">
                               {collectionCount}
                             </Badge>
@@ -181,6 +266,30 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
                         </SidebarMenuButton>
                       </SidebarMenuItem>
 
+                      {/* Scent Family Subcollections - Only for Cadence */}
+                      {showScentFamilies && isCollectionExpanded && !collapsed && (
+                        <div className="ml-6 mt-1 space-y-1">
+                          {Object.entries(collectionHierarchy[collection.key].scentFamilies)
+                            .sort(([a], [b]) => a.localeCompare(b))
+                            .map(([scentFamily, count]) => (
+                              <SidebarMenuItem key={`${collection.key}-${scentFamily}`}>
+                                <SidebarMenuButton
+                                  onClick={() => handleFilterClick("collection", collection.key, scentFamily)}
+                                  className={cn(
+                                    "h-8 px-2 rounded-md transition-all text-sm",
+                                    isActive("collection", collection.key, scentFamily) && 
+                                      "bg-saffron-gold/20 border-l-3 border-saffron-gold font-medium"
+                                  )}
+                                >
+                                  <span className="flex-1 capitalize">{scentFamily}</span>
+                                  <Badge variant="outline" className="text-xs">
+                                    {count}
+                                  </Badge>
+                                </SidebarMenuButton>
+                              </SidebarMenuItem>
+                            ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -211,28 +320,28 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
           {expandedSections.contentTypes && (
             <SidebarGroupContent>
               <SidebarMenu>
-                {contentTypes.map((type) => {
-                  const typeCount = (counts.prompts.byContentType[type.key] || 0) + 
-                                      (counts.outputs.byContentType[type.key] || 0) + 
-                                      (counts.masterContent.byContentType[type.key] || 0);
-                  const isTypeActive = activeFilters.contentType === type.key;
+                {contentTypeMapping.map((type) => {
+                  const typeCount = getContentTypeCount(type.keys);
+                  const isTypeActive = type.keys.some(key => activeFilters.contentType === key);
 
                   return (
-                    <SidebarMenuItem key={type.key}>
+                    <SidebarMenuItem key={type.name}>
                       <SidebarMenuButton
                         className={cn(
                           "h-9 px-2 rounded-md transition-all",
                           isTypeActive && "bg-saffron-gold/20 border-l-3 border-saffron-gold font-medium"
                         )}
-                        onClick={() => handleFilterClick("contentType", type.key)}
+                        onClick={() => handleFilterClick("contentType", type.keys[0])}
                       >
                         <type.icon className="w-4 h-4" />
                         {!collapsed && (
                           <>
                             <span className="flex-1 text-sm">{type.name}</span>
-                            <Badge variant="secondary" className="text-xs">
-                              {typeCount}
-                            </Badge>
+                            {typeCount > 0 && (
+                              <Badge variant="secondary" className="text-xs">
+                                {typeCount}
+                              </Badge>
+                            )}
                           </>
                         )}
                       </SidebarMenuButton>

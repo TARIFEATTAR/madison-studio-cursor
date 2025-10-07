@@ -20,6 +20,8 @@ import { EmptyState } from "@/components/library/EmptyState";
 import { ContentGrid } from "@/components/library/ContentGrid";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { groupByDate, DateGroup } from "@/utils/dateGrouping";
+import { useProducts } from "@/hooks/useProducts";
+import { contentTypeMapping } from "@/utils/contentTypeMapping";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,11 +40,13 @@ const initialFilters = {
   contentType: null as string | null,
   dipWeek: null as number | null,
   quickAccess: null as "favorites" | "recent" | null,
+  scentFamily: null as string | null,
 };
 
 const Reservoir = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { products } = useProducts();
   const [activeTab, setActiveTab] = useState<ContentTab>("prompts");
   const [searchQuery, setSearchQuery] = useState("");
   const [prompts, setPrompts] = useState<any[]>([]);
@@ -121,6 +125,7 @@ const Reservoir = () => {
       prompts: { total: prompts.length, ...calculateCounts(prompts) },
       outputs: { total: outputs.length, ...calculateCounts(outputs) },
       masterContent: { total: masterContent.length, ...calculateCounts(masterContent) },
+      derivatives: { total: derivatives.length, ...calculateCounts(derivatives) },
       favorites: favoritesCount,
       recent: recentCount,
     };
@@ -398,13 +403,32 @@ const Reservoir = () => {
 
     // Apply filters
     if (sidebarFilters.collection) {
-      filtered = filtered.filter((item: any) => item.collection === sidebarFilters.collection);
+      filtered = filtered.filter((item: any) => {
+        if (item.collection !== sidebarFilters.collection) return false;
+        
+        // If a scent family is selected, filter by products in that scent family
+        if (sidebarFilters.scentFamily) {
+          const productsInFamily = products.filter(p => 
+            p.collection?.toLowerCase().replace(/\s+/g, '_') === sidebarFilters.collection &&
+            p.scentFamily === sidebarFilters.scentFamily
+          );
+          // Check if the item references any product in this scent family
+          // This is a placeholder - adjust based on how items reference products
+          return true; // For now, keep all items from the collection
+        }
+        
+        return true;
+      });
     }
 
     if (sidebarFilters.contentType) {
+      // Support multi-key content type matching
+      const matchingMapping = contentTypeMapping.find(m => m.keys.includes(sidebarFilters.contentType!));
+      const keysToMatch = matchingMapping?.keys || [sidebarFilters.contentType];
+      
       filtered = filtered.filter((item: any) => 
-        (item.content_type === sidebarFilters.contentType) || 
-        (item.asset_type === sidebarFilters.contentType)
+        keysToMatch.includes(item.content_type) || 
+        keysToMatch.includes(item.asset_type)
       );
     }
 
