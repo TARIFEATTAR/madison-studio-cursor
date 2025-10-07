@@ -6,6 +6,65 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// AES-256-GCM decryption helper
+async function decryptToken(encryptedToken: string, ivString: string): Promise<string> {
+  const ENCRYPTION_KEY = Deno.env.get('GOOGLE_TOKEN_ENCRYPTION_KEY');
+  if (!ENCRYPTION_KEY) {
+    throw new Error('GOOGLE_TOKEN_ENCRYPTION_KEY not configured');
+  }
+
+  const keyData = Uint8Array.from(atob(ENCRYPTION_KEY), c => c.charCodeAt(0));
+  const key = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['decrypt']
+  );
+
+  const iv = Uint8Array.from(atob(ivString), c => c.charCodeAt(0));
+  const encryptedData = Uint8Array.from(atob(encryptedToken), c => c.charCodeAt(0));
+
+  const decryptedData = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    encryptedData
+  );
+
+  return new TextDecoder().decode(decryptedData);
+}
+
+// AES-256-GCM encryption helper
+async function encryptToken(token: string): Promise<{ encrypted: string; iv: string }> {
+  const ENCRYPTION_KEY = Deno.env.get('GOOGLE_TOKEN_ENCRYPTION_KEY');
+  if (!ENCRYPTION_KEY) {
+    throw new Error('GOOGLE_TOKEN_ENCRYPTION_KEY not configured');
+  }
+
+  const keyData = Uint8Array.from(atob(ENCRYPTION_KEY), c => c.charCodeAt(0));
+  const key = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt']
+  );
+
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encodedToken = new TextEncoder().encode(token);
+  
+  const encryptedData = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    encodedToken
+  );
+
+  return {
+    encrypted: btoa(String.fromCharCode(...new Uint8Array(encryptedData))),
+    iv: btoa(String.fromCharCode(...iv))
+  };
+}
+
 interface SyncRequest {
   operation: 'create' | 'update' | 'delete';
   scheduledContentId: string;
@@ -45,7 +104,7 @@ serve(async (req) => {
     // Get user's Google OAuth tokens
     const { data: tokenData, error: tokenError } = await supabaseClient
       .from('google_calendar_tokens')
-      .select('access_token, refresh_token, token_expiry')
+      .select('encrypted_access_token, access_token_iv, encrypted_refresh_token, refresh_token_iv, token_expiry')
       .eq('user_id', user.id)
       .maybeSingle();
 
@@ -53,8 +112,16 @@ serve(async (req) => {
       throw new Error('Google Calendar not connected. Please connect your Google Calendar first.');
     }
 
+    if (!tokenData.encrypted_access_token || !tokenData.access_token_iv || 
+        !tokenData.encrypted_refresh_token || !tokenData.refresh_token_iv) {
+      throw new Error('Invalid token data. Please reconnect your Google Calendar.');
+    }
+
+    // Decrypt tokens
+    const refreshToken = await decryptToken(tokenData.encrypted_refresh_token, tokenData.refresh_token_iv);
+    
     // Check if access token is expired and refresh if needed
-    let accessToken = tokenData.access_token;
+    let accessToken: string;
     const tokenExpiry = new Date(tokenData.token_expiry);
     const now = new Date();
 
@@ -66,7 +133,7 @@ serve(async (req) => {
         body: JSON.stringify({
           client_id: Deno.env.get('GOOGLE_CLIENT_ID'),
           client_secret: Deno.env.get('GOOGLE_CLIENT_SECRET'),
-          refresh_token: tokenData.refresh_token,
+          refresh_token: refreshToken,
           grant_type: 'refresh_token',
         }),
       });
@@ -78,14 +145,19 @@ serve(async (req) => {
       const refreshData = await refreshResponse.json();
       accessToken = refreshData.access_token;
 
-      // Update tokens in database
+      // Encrypt and update new access token in database
+      const encryptedAccess = await encryptToken(accessToken);
       await supabaseClient
         .from('google_calendar_tokens')
         .update({
-          access_token: accessToken,
+          encrypted_access_token: encryptedAccess.encrypted,
+          access_token_iv: encryptedAccess.iv,
           token_expiry: new Date(Date.now() + refreshData.expires_in * 1000).toISOString(),
         })
         .eq('user_id', user.id);
+    } else {
+      // Decrypt existing access token
+      accessToken = await decryptToken(tokenData.encrypted_access_token, tokenData.access_token_iv);
     }
 
     // Get calendar ID and timezone from settings

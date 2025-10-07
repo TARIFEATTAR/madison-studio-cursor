@@ -6,6 +6,37 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// AES-256-GCM encryption/decryption helpers
+async function encryptToken(token: string): Promise<{ encrypted: string; iv: string }> {
+  const ENCRYPTION_KEY = Deno.env.get('GOOGLE_TOKEN_ENCRYPTION_KEY');
+  if (!ENCRYPTION_KEY) {
+    throw new Error('GOOGLE_TOKEN_ENCRYPTION_KEY not configured');
+  }
+
+  const keyData = Uint8Array.from(atob(ENCRYPTION_KEY), c => c.charCodeAt(0));
+  const key = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt']
+  );
+
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encodedToken = new TextEncoder().encode(token);
+  
+  const encryptedData = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    encodedToken
+  );
+
+  return {
+    encrypted: btoa(String.fromCharCode(...new Uint8Array(encryptedData))),
+    iv: btoa(String.fromCharCode(...iv))
+  };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -117,13 +148,21 @@ serve(async (req) => {
 
       const tokenExpiry = new Date(Date.now() + expires_in * 1000);
 
-      // Store tokens in database (upsert to handle reconnections)
+      // Encrypt tokens before storing
+      const encryptedAccess = await encryptToken(access_token);
+      const encryptedRefresh = await encryptToken(refresh_token);
+
+      // Store encrypted tokens in database (upsert to handle reconnections)
       const { error: dbError } = await supabase
         .from('google_calendar_tokens')
         .upsert({
           user_id: userId,
-          access_token,
-          refresh_token,
+          access_token: '', // Keep for migration, will be removed later
+          refresh_token: '', // Keep for migration, will be removed later
+          encrypted_access_token: encryptedAccess.encrypted,
+          access_token_iv: encryptedAccess.iv,
+          encrypted_refresh_token: encryptedRefresh.encrypted,
+          refresh_token_iv: encryptedRefresh.iv,
           token_expiry: tokenExpiry.toISOString(),
         }, {
           onConflict: 'user_id'
