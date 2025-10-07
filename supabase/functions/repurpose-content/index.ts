@@ -492,6 +492,26 @@ serve(async (req) => {
     console.log(`Repurposing content for user ${user.id}, master: ${masterContentId}`);
     console.log(`Derivative types requested:`, derivativeTypes);
 
+    // Fetch master content to get organization_id
+    const { data: masterContentRecord, error: masterError } = await supabaseClient
+      .from('master_content')
+      .select('organization_id')
+      .eq('id', masterContentId)
+      .single();
+
+    if (masterError || !masterContentRecord) {
+      console.error('Error fetching master content:', masterError);
+      return new Response(JSON.stringify({ 
+        error: 'Master content not found or unauthorized',
+        success: false,
+      }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log(`Using organization_id: ${masterContentRecord.organization_id}`);
+
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY not configured');
@@ -609,6 +629,7 @@ serve(async (req) => {
           platform_specs: platformSpecs,
           approval_status: 'pending',
           created_by: user.id,
+          organization_id: masterContentRecord.organization_id,
         })
         .select()
         .single();
