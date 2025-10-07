@@ -103,7 +103,6 @@ const Forge = () => {
     dipWeek: "",
     scentFamily: "",
     pillar: "",
-    transparencyStatement: "",
     customInstructions: "",
     topNotes: "",
     middleNotes: "",
@@ -197,17 +196,6 @@ const Forge = () => {
     
     if (formData.pillar) {
       parts.push(`Focus on the ${formData.pillar} pillar.`);
-    }
-
-    if (formData.transparencyStatement && formData.transparencyStatement !== "none") {
-      // Find the collection that matches
-      const collection = collections.find(c => 
-        c.name.toLowerCase().replace(/\s+/g, '_') === formData.transparencyStatement
-      );
-      
-      if (collection?.transparency_statement) {
-        parts.push(`\n\n${collection.transparency_statement}`);
-      }
     }
 
     if (formData.customInstructions) {
@@ -333,7 +321,6 @@ const Forge = () => {
           dip_week: formData.dipWeek ? parseInt(formData.dipWeek) : null,
           pillar_focus: formData.pillar ? (mapPillarToEnum(formData.pillar) as any) : null,
           prompt_text: generatedPrompt,
-          transparency_statement: formData.transparencyStatement,
           top_notes: formData.topNotes || null,
           middle_notes: formData.middleNotes || null,
           base_notes: formData.baseNotes || null,
@@ -393,7 +380,6 @@ const Forge = () => {
         dipWeek: "",
         scentFamily: "",
         pillar: "",
-        transparencyStatement: "",
         customInstructions: "",
         topNotes: "",
         middleNotes: "",
@@ -543,7 +529,6 @@ const Forge = () => {
         dipWeek: "",
         scentFamily: "",
         pillar: "",
-        transparencyStatement: "",
         customInstructions: "",
         topNotes: "",
         middleNotes: "",
@@ -843,26 +828,6 @@ const Forge = () => {
                       <SelectItem value="Memory">Memory (Journey, Gathering)</SelectItem>
                       <SelectItem value="Remembrance">Remembrance (Ritual, Preservation)</SelectItem>
                       <SelectItem value="Cadence">Cadence (Rhythm, Presence)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="transparency">Transparency Statement (Optional)</Label>
-                  <Select
-                    value={formData.transparencyStatement || "none"}
-                    onValueChange={(value) => setFormData({ ...formData, transparencyStatement: value })}
-                  >
-                    <SelectTrigger id="transparency" className="bg-background/50">
-                      <SelectValue placeholder="None (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {collections.map((collection) => (
-                        <SelectItem key={collection.id} value={collection.name.toLowerCase().replace(/\s+/g, '_')}>
-                          {collection.name} Statement
-                        </SelectItem>
-                      ))}
                     </SelectContent>
                   </Select>
                 </div>

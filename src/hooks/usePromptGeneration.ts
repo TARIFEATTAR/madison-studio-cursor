@@ -8,7 +8,6 @@ export interface FormData {
   dipWeek: string;
   scentFamily: string;
   pillar: string;
-  transparencyStatement: string;
   customInstructions: string;
   topNotes: string;
   middleNotes: string;
@@ -104,18 +103,6 @@ export function generatePromptText(formData: FormData, blogData?: BlogData): str
   
   if (formData.pillar) {
     parts.push(`Focus on the ${formData.pillar} pillar.`);
-  }
-
-  if (formData.transparencyStatement && formData.transparencyStatement !== "none") {
-    const statements: Record<string, string> = {
-      cadence: "From the Cadence Collection—blended with natural ingredients and modern aromachemicals for balanced complexity.",
-      reserve: "From the Reserve Collection—crafted with 90-98% natural essences, minimal aromachemicals for refinement.",
-      purity: "From the Purity Collection—100% natural, no aromachemicals. Traditional attar art in its purest form.",
-      sacred: "From Sacred Space—ceremonial blends honoring ritual and reverence.",
-    };
-    if (statements[formData.transparencyStatement]) {
-      parts.push(`\n\n${statements[formData.transparencyStatement]}`);
-    }
   }
 
   if (formData.customInstructions) {
