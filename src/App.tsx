@@ -14,6 +14,7 @@ import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import Landing from "./pages/Landing";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 const queryClient = new QueryClient();
 
@@ -53,6 +54,7 @@ const AppContent = () => {
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/" element={<Index />} />
+        <Route path="/landing" element={<Landing />} />
         <Route path="/index.html" element={<Navigate to="/" replace />} />
         <Route
           path="/library"
