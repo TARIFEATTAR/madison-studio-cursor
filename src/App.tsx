@@ -48,7 +48,9 @@ const AppContent = () => {
   console.log("[AppContent] Show navigation:", showNavigation);
 
   return (
-    <>
+    <> 
+      {/* Debug banner to verify render; will be removed after fix */}
+      <div className="fixed top-0 left-0 z-[9999] px-2 py-1 text-xs bg-green-600 text-white pointer-events-none">App mounted</div>
       {showNavigation && <Navigation />}
       <Routes>
         <Route path="/auth" element={<Auth />} />
@@ -103,7 +105,7 @@ const AppContent = () => {
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<NotFound />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );
