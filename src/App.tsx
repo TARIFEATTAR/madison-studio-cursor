@@ -55,7 +55,7 @@ const AppContent = () => {
         <Route path="/auth" element={<Auth />} />
         <Route path="/" element={<Index />} />
         <Route path="/landing" element={<Landing />} />
-        <Route path="/index.html" element={<Navigate to="/" replace />} />
+        <Route path="/index.html" element={<Index />} />
         <Route
           path="/library"
           element={
