@@ -246,6 +246,7 @@ export const ScheduleModal = ({
           await supabase.functions.invoke('sync-to-google-calendar', {
             body: {
               operation: 'delete',
+              scheduledContentId: itemToEdit.id,
               googleEventId: itemToEdit.google_event_id,
             },
           });

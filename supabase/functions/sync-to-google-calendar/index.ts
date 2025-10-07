@@ -184,26 +184,36 @@ serve(async (req) => {
 
     if (operation === 'create' && eventData) {
       // Create Google Calendar event
-      const startDateTime = eventData.time 
-        ? `${eventData.date}T${eventData.time}:00`
-        : `${eventData.date}T09:00:00`;
-      
-      const endDateTime = eventData.time
-        ? `${eventData.date}T${addHour(eventData.time)}:00`
-        : `${eventData.date}T10:00:00`;
-
-      const event = {
+      const event: any = {
         summary: eventData.title,
         description: `${eventData.notes || ''}\n\nPlatform: ${eventData.platform || 'N/A'}`,
-        start: {
+      };
+
+      // Handle date/time properly for Google Calendar API
+      if (eventData.time) {
+        // Specific time - use dateTime with timezone
+        const startDateTime = `${eventData.date}T${eventData.time}:00`;
+        const endDateTime = `${eventData.date}T${addHour(eventData.time)}:00`;
+        
+        event.start = {
           dateTime: startDateTime,
           timeZone: timezone,
-        },
-        end: {
+        };
+        event.end = {
           dateTime: endDateTime,
           timeZone: timezone,
-        },
-      };
+        };
+      } else {
+        // All-day event - use date field only
+        event.start = {
+          date: eventData.date,
+        };
+        event.end = {
+          date: eventData.date,
+        };
+      }
+
+      console.log('Creating Google Calendar event:', JSON.stringify(event, null, 2));
 
       const createResponse = await fetch(
         `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`,
@@ -236,26 +246,36 @@ serve(async (req) => {
 
     } else if (operation === 'update' && eventData && googleEventId) {
       // Update Google Calendar event
-      const startDateTime = eventData.time 
-        ? `${eventData.date}T${eventData.time}:00`
-        : `${eventData.date}T09:00:00`;
-      
-      const endDateTime = eventData.time
-        ? `${eventData.date}T${addHour(eventData.time)}:00`
-        : `${eventData.date}T10:00:00`;
-
-      const event = {
+      const event: any = {
         summary: eventData.title,
         description: `${eventData.notes || ''}\n\nPlatform: ${eventData.platform || 'N/A'}`,
-        start: {
+      };
+
+      // Handle date/time properly for Google Calendar API
+      if (eventData.time) {
+        // Specific time - use dateTime with timezone
+        const startDateTime = `${eventData.date}T${eventData.time}:00`;
+        const endDateTime = `${eventData.date}T${addHour(eventData.time)}:00`;
+        
+        event.start = {
           dateTime: startDateTime,
           timeZone: timezone,
-        },
-        end: {
+        };
+        event.end = {
           dateTime: endDateTime,
           timeZone: timezone,
-        },
-      };
+        };
+      } else {
+        // All-day event - use date field only
+        event.start = {
+          date: eventData.date,
+        };
+        event.end = {
+          date: eventData.date,
+        };
+      }
+
+      console.log('Updating Google Calendar event:', JSON.stringify(event, null, 2));
 
       const updateResponse = await fetch(
         `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${googleEventId}`,
