@@ -39,7 +39,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export function ProductsTab() {
   const { toast } = useToast();
-  const { products, loading } = useProducts();
+  const { products, loading, refetch } = useProducts();
   const { currentOrganizationId } = useOnboarding();
   
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -135,7 +135,7 @@ export function ProductsTab() {
       setShowAddDialog(false);
       setEditingProduct(null);
       resetForm();
-      window.location.reload();
+      refetch();
     } catch (error) {
       console.error("Error saving product:", error);
       toast({
@@ -163,7 +163,7 @@ export function ProductsTab() {
       });
 
       setDeleteProductId(null);
-      window.location.reload();
+      refetch();
     } catch (error) {
       console.error("Error deleting product:", error);
       toast({
