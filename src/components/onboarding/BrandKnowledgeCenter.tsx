@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
-import { Upload, Link as LinkIcon, FileText, Loader2, CheckCircle2, AlertCircle, FileUp, X, Download, Trash2 } from "lucide-react";
+import { Upload, Link as LinkIcon, FileText, Loader2, CheckCircle2, AlertCircle, FileUp, X, Download, Trash2, Zap, ArrowRight, Sparkles } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
+import { motion } from "framer-motion";
 
 interface BrandKnowledgeCenterProps {
   organizationId: string;
@@ -25,31 +26,25 @@ interface UploadedDocument {
 
 export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterProps) {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem("brandKnowledgeTab") || "upload";
-  });
+  const [selectedMethod, setSelectedMethod] = useState<"upload" | "url" | "manual" | null>(null);
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [brandVoice, setBrandVoice] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
   const [isDragging, setIsDragging] = useState(false);
   const [stagedFiles, setStagedFiles] = useState<File[]>([]);
+  const [showQuickStart, setShowQuickStart] = useState(true);
   
   // Uploaded documents state
   const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocument[]>([]);
   const [loadingDocuments, setLoadingDocuments] = useState(false);
 
-  // Persist active tab
+  // Auto-select upload method when files are staged
   useEffect(() => {
-    localStorage.setItem("brandKnowledgeTab", activeTab);
-  }, [activeTab]);
-
-  // Force upload tab if staging files
-  useEffect(() => {
-    if (stagedFiles.length > 0 && activeTab !== "upload") {
-      setActiveTab("upload");
+    if (stagedFiles.length > 0 && !selectedMethod) {
+      setSelectedMethod("upload");
     }
-  }, [stagedFiles.length, activeTab]);
+  }, [stagedFiles.length, selectedMethod]);
 
   // Fetch uploaded documents
   useEffect(() => {
@@ -349,35 +344,200 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
     }
   };
 
+  const handleQuickStart = () => {
+    setShowQuickStart(false);
+    setSelectedMethod("upload");
+  };
+
+  const handleSkipForNow = () => {
+    toast({
+      title: "No problem!",
+      description: "You can add brand documents anytime from Settings.",
+    });
+  };
+
   return (
     <Card className="border-border/20 shadow-level-2 hover:shadow-level-3 transition-shadow">
       <CardHeader>
         <CardTitle className="font-serif text-xl flex items-center gap-2">
-          <FileText className="h-5 w-5 text-primary" />
+          <FileText className="h-5 w-5 text-brass" />
           Brand Knowledge Center
         </CardTitle>
-        <CardDescription className="text-muted-foreground">
+        <CardDescription className="text-charcoal/70">
           Train the AI to understand your brand's unique voice and style
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-muted/50">
-            <TabsTrigger value="upload" className="data-[state=active]:bg-card">
-              <FileUp className="h-4 w-4 mr-2" />
-              Upload PDFs
-            </TabsTrigger>
-            <TabsTrigger value="url" className="data-[state=active]:bg-card">
-              <LinkIcon className="h-4 w-4 mr-2" />
-              Website URL
-            </TabsTrigger>
-            <TabsTrigger value="manual" className="data-[state=active]:bg-card">
-              <FileText className="h-4 w-4 mr-2" />
-              Manual Entry
-            </TabsTrigger>
-          </TabsList>
+        {/* Progress Indicator */}
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <div className="flex items-center gap-2">
+            <div className="h-10 w-10 rounded-full bg-brass text-parchment flex items-center justify-center font-serif text-sm shadow-level-1">
+              1
+            </div>
+            <span className="text-xs text-charcoal font-medium hidden sm:inline">Choose Method</span>
+          </div>
+          <div className={`h-[2px] w-12 transition-colors ${selectedMethod ? 'bg-brass' : 'bg-charcoal/20'}`} />
+          <div className="flex items-center gap-2">
+            <div className={`h-10 w-10 rounded-full flex items-center justify-center font-serif text-sm transition-all ${
+              selectedMethod 
+                ? 'bg-brass text-parchment shadow-level-1' 
+                : 'border-2 border-charcoal/30 text-charcoal/50'
+            }`}>
+              2
+            </div>
+            <span className={`text-xs font-medium hidden sm:inline transition-colors ${
+              selectedMethod ? 'text-charcoal' : 'text-charcoal/50'
+            }`}>Add Content</span>
+          </div>
+          <div className={`h-[2px] w-12 transition-colors ${uploadStatus === 'success' ? 'bg-brass' : 'bg-charcoal/20'}`} />
+          <div className="flex items-center gap-2">
+            <div className={`h-10 w-10 rounded-full flex items-center justify-center font-serif text-sm transition-all ${
+              uploadStatus === 'success'
+                ? 'bg-brass text-parchment shadow-level-1'
+                : 'border-2 border-charcoal/30 text-charcoal/50'
+            }`}>
+              3
+            </div>
+            <span className={`text-xs font-medium hidden sm:inline transition-colors ${
+              uploadStatus === 'success' ? 'text-charcoal' : 'text-charcoal/50'
+            }`}>Complete</span>
+          </div>
+        </div>
 
-          <TabsContent value="upload" className="space-y-4 mt-4">
+        {/* Quick Start Option */}
+        {showQuickStart && !selectedMethod && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Card className="mb-6 bg-gradient-to-br from-brass/5 to-transparent border-2 border-brass/30 shadow-level-1 hover:shadow-level-2 transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="h-10 w-10 rounded-full bg-brass text-parchment flex items-center justify-center flex-shrink-0">
+                    <Zap className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-serif text-lg text-ink mb-1">Quick Start (30 seconds)</h3>
+                    <p className="text-sm text-charcoal/70 mb-4">Drop one document and you're done — the fastest way to get started</p>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={handleQuickStart}
+                        className="bg-brass text-ink hover:bg-antique-gold shadow-level-1 hover:shadow-level-2 hover:-translate-y-0.5 transition-all"
+                      >
+                        Start Now
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => setShowQuickStart(false)}
+                        className="text-charcoal hover:text-ink"
+                      >
+                        See All Options
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Visual Card System - Replace Tabs */}
+        {!selectedMethod && !showQuickStart && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          >
+            {/* Upload PDFs Card */}
+            <Card 
+              onClick={() => setSelectedMethod("upload")}
+              className="cursor-pointer border-2 border-transparent hover:border-brass transition-all duration-300 hover:shadow-level-3 group"
+            >
+              <CardContent className="p-8 text-center">
+                <div className="mb-4 p-4 rounded-full bg-brass/10 w-16 h-16 mx-auto flex items-center justify-center group-hover:bg-brass/20 transition-colors">
+                  <FileUp className="h-8 w-8 text-brass" />
+                </div>
+                <h3 className="font-serif text-xl text-ink mb-2">Upload PDFs</h3>
+                <p className="text-sm text-charcoal/70 mb-3">Best for detailed documentation</p>
+                <Badge className="bg-brass/10 text-brass border-brass/30 hover:bg-brass/20">Recommended</Badge>
+                
+                {/* Contextual Info */}
+                <div className="mt-4 p-4 bg-vellum/50 rounded-md border border-charcoal/10 text-left">
+                  <p className="text-xs font-medium text-ink mb-2 flex items-center gap-2">
+                    <span className="text-brass">✦</span> Best For:
+                  </p>
+                  <ul className="text-xs text-charcoal/70 space-y-1">
+                    <li>• Brand style guides</li>
+                    <li>• Voice & tone docs</li>
+                    <li>• Product catalogs</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Website Scan Card */}
+            <Card 
+              onClick={() => setSelectedMethod("url")}
+              className="cursor-pointer border-2 border-transparent hover:border-brass transition-all duration-300 hover:shadow-level-3 group"
+            >
+              <CardContent className="p-8 text-center">
+                <div className="mb-4 p-4 rounded-full bg-brass/10 w-16 h-16 mx-auto flex items-center justify-center group-hover:bg-brass/20 transition-colors">
+                  <LinkIcon className="h-8 w-8 text-brass" />
+                </div>
+                <h3 className="font-serif text-xl text-ink mb-2">Website Scan</h3>
+                <p className="text-sm text-charcoal/70 mb-3">Fastest option</p>
+                <Badge className="bg-brass/10 text-brass border-brass/30 hover:bg-brass/20">Quick</Badge>
+                
+                {/* Contextual Info */}
+                <div className="mt-4 p-4 bg-vellum/50 rounded-md border border-charcoal/10 text-left">
+                  <p className="text-xs font-medium text-ink mb-2 flex items-center gap-2">
+                    <span className="text-brass">✦</span> We Extract:
+                  </p>
+                  <ul className="text-xs text-charcoal/70 space-y-1">
+                    <li>• Voice & tone patterns</li>
+                    <li>• Common vocabulary</li>
+                    <li>• Writing style</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Manual Entry Card */}
+            <Card 
+              onClick={() => setSelectedMethod("manual")}
+              className="cursor-pointer border-2 border-transparent hover:border-brass transition-all duration-300 hover:shadow-level-3 group"
+            >
+              <CardContent className="p-8 text-center">
+                <div className="mb-4 p-4 rounded-full bg-brass/10 w-16 h-16 mx-auto flex items-center justify-center group-hover:bg-brass/20 transition-colors">
+                  <FileText className="h-8 w-8 text-brass" />
+                </div>
+                <h3 className="font-serif text-xl text-ink mb-2">Manual Entry</h3>
+                <p className="text-sm text-charcoal/70 mb-3">Most flexible</p>
+                <Badge className="bg-brass/10 text-brass border-brass/30 hover:bg-brass/20">Custom</Badge>
+                
+                {/* Contextual Info */}
+                <div className="mt-4 p-4 bg-vellum/50 rounded-md border border-charcoal/10 text-left">
+                  <p className="text-xs font-medium text-ink mb-2 flex items-center gap-2">
+                    <span className="text-brass">✦</span> Include:
+                  </p>
+                  <ul className="text-xs text-charcoal/70 space-y-1">
+                    <li>• Tone of voice</li>
+                    <li>• Key vocabulary</li>
+                    <li>• Brand personality</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Upload Method Content */}
+        {selectedMethod === "upload" && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label className="text-foreground">Brand Documents</Label>
               <p className="text-xs text-muted-foreground">
@@ -486,33 +646,58 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
                 </div>
               )}
 
+              {/* Enhanced Success State */}
               {uploadStatus === "success" && (
-                <div className="flex items-center gap-2 text-sm text-forest-ink bg-forest-ink/10 p-3 rounded-md border border-forest-ink/20">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Documents uploaded and stored successfully!
-                </div>
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="relative overflow-hidden rounded-lg border border-forest-ink/20 bg-gradient-to-br from-forest-ink/5 to-transparent p-6"
+                >
+                  <div className="flex items-center gap-4">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", delay: 0.2 }}
+                      className="h-12 w-12 rounded-full bg-forest-ink/10 flex items-center justify-center"
+                    >
+                      <CheckCircle2 className="h-6 w-6 text-forest-ink" />
+                    </motion.div>
+                    <div>
+                      <h4 className="font-serif text-lg text-ink mb-1">Documents Secured</h4>
+                      <p className="text-sm text-charcoal/70">Your brand knowledge is now preserved</p>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-forest-ink/5 to-transparent animate-shimmer pointer-events-none" />
+                </motion.div>
               )}
 
               {uploadStatus === "error" && (
-                <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-md border border-destructive/20">
+                <div className="flex items-center gap-2 text-sm text-deep-burgundy bg-deep-burgundy/10 p-3 rounded-md border border-deep-burgundy/20">
                   <AlertCircle className="h-4 w-4" />
                   Failed to upload documents. Please try again.
                 </div>
               )}
-            </div>
 
-            <div className="bg-muted/30 p-4 rounded-md border border-border/20">
-              <p className="text-sm font-medium text-foreground mb-2">Supported documents:</p>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Brand style guides (PDF)</li>
-                <li>• Voice & tone documentation (PDF)</li>
-                <li>• Collection-specific guidelines (PDF)</li>
-                <li>• Product catalogs & descriptions (PDF)</li>
-              </ul>
+              {/* Skip Button */}
+              <Button 
+                variant="ghost" 
+                onClick={handleSkipForNow}
+                className="w-full mt-4 text-charcoal/60 hover:text-charcoal text-sm"
+              >
+                I'll add this later
+                <ArrowRight className="ml-2 h-3 w-3" />
+              </Button>
             </div>
-          </TabsContent>
+          </motion.div>
+        )}
 
-          <TabsContent value="url" className="space-y-4 mt-4">
+        {/* URL Method Content */}
+        {selectedMethod === "url" && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="websiteUrl" className="text-foreground">
                 Website URL
@@ -549,33 +734,69 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
                 </Button>
               </div>
 
-              {uploadStatus === "success" && (
-                <div className="flex items-center gap-2 text-sm text-forest-ink bg-forest-ink/10 p-3 rounded-md border border-forest-ink/20">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Brand knowledge extracted and saved!
+              {/* Enhanced Processing State */}
+              {isProcessing && (
+                <div className="flex flex-col items-center gap-4 py-8">
+                  <div className="relative">
+                    <div className="h-16 w-16 rounded-full border-4 border-brass/20" />
+                    <div className="absolute inset-0 h-16 w-16 rounded-full border-4 border-brass border-t-transparent animate-spin" style={{ animationDuration: '1s' }} />
+                  </div>
+                  <p className="font-serif text-sm text-charcoal">Analyzing your website...</p>
                 </div>
               )}
 
+              {/* Enhanced Success State */}
+              {uploadStatus === "success" && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="relative overflow-hidden rounded-lg border border-forest-ink/20 bg-gradient-to-br from-forest-ink/5 to-transparent p-6"
+                >
+                  <div className="flex items-center gap-4">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", delay: 0.2 }}
+                      className="h-12 w-12 rounded-full bg-forest-ink/10 flex items-center justify-center"
+                    >
+                      <CheckCircle2 className="h-6 w-6 text-forest-ink" />
+                    </motion.div>
+                    <div>
+                      <h4 className="font-serif text-lg text-ink mb-1">Brand Knowledge Extracted</h4>
+                      <p className="text-sm text-charcoal/70">Your website has been analyzed successfully</p>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-forest-ink/5 to-transparent animate-shimmer pointer-events-none" />
+                </motion.div>
+              )}
+
               {uploadStatus === "error" && (
-                <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-md border border-destructive/20">
+                <div className="flex items-center gap-2 text-sm text-deep-burgundy bg-deep-burgundy/10 p-3 rounded-md border border-deep-burgundy/20">
                   <AlertCircle className="h-4 w-4" />
                   Failed to scan website. Please try again.
                 </div>
               )}
-            </div>
 
-            <div className="bg-muted/30 p-4 rounded-md border border-border/20">
-              <p className="text-sm font-medium text-foreground mb-2">What we extract:</p>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Brand voice and tone patterns</li>
-                <li>• Common vocabulary and phrases</li>
-                <li>• Writing style and structure</li>
-                <li>• Brand personality indicators</li>
-              </ul>
+              {/* Skip Button */}
+              <Button 
+                variant="ghost" 
+                onClick={handleSkipForNow}
+                className="w-full mt-4 text-charcoal/60 hover:text-charcoal text-sm"
+              >
+                I'll add this later
+                <ArrowRight className="ml-2 h-3 w-3" />
+              </Button>
             </div>
-          </TabsContent>
+          </motion.div>
+        )}
 
-          <TabsContent value="manual" className="space-y-4 mt-4">
+        {/* Manual Method Content */}
+        {selectedMethod === "manual" && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="brandVoice" className="text-foreground">
                 Brand Voice Description
@@ -609,19 +830,37 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
                   </>
                 )}
               </Button>
-            </div>
 
-            <div className="bg-muted/30 p-4 rounded-md border border-border/20">
-              <p className="text-sm font-medium text-foreground mb-2">Include details about:</p>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Tone of voice (formal, casual, poetic, technical, etc.)</li>
-                <li>• Key vocabulary and preferred terminology</li>
-                <li>• Words or phrases to avoid</li>
-                <li>• Brand personality and values</li>
-              </ul>
+              {/* Skip Button */}
+              <Button 
+                variant="ghost" 
+                onClick={handleSkipForNow}
+                className="w-full mt-4 text-charcoal/60 hover:text-charcoal text-sm"
+              >
+                I'll add this later
+                <ArrowRight className="ml-2 h-3 w-3" />
+              </Button>
             </div>
-          </TabsContent>
-        </Tabs>
+          </motion.div>
+        )}
+
+        {/* Back to Options Button */}
+        {selectedMethod && (
+          <Button 
+            variant="outline"
+            onClick={() => setSelectedMethod(null)}
+            className="mt-4"
+          >
+            ← Back to Options
+          </Button>
+        )}
+
+        {/* Reassurance Message */}
+        {!selectedMethod && (
+          <p className="text-xs text-center text-charcoal/50 mt-6">
+            Don't worry — you can always add brand documents later from Settings
+          </p>
+        )}
 
         {/* Uploaded Documents List */}
         <div className="mt-8 pt-6 border-t border-border/20">
