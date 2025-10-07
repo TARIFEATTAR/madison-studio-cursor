@@ -27,6 +27,7 @@ interface MasterContentSwitcherProps {
   onSelectMaster: (master: MasterContent) => void;
   onArchive: (id: string) => void;
   onDelete: (id: string) => void;
+  derivativeCounts: Record<string, number>;
 }
 
 export function MasterContentSwitcher({
@@ -37,6 +38,7 @@ export function MasterContentSwitcher({
   onSelectMaster,
   onArchive,
   onDelete,
+  derivativeCounts,
 }: MasterContentSwitcherProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
@@ -92,6 +94,13 @@ export function MasterContentSwitcher({
           <p className="text-sm text-muted-foreground mt-1">
             Select which master content to view derivatives for
           </p>
+          <div className="mt-3 p-3 bg-muted/30 rounded-lg border border-border/20">
+            <p className="text-xs text-muted-foreground">
+              <strong>Master Content</strong> = Original long-form pieces you create (blog posts, newsletters, product stories).
+              <br />
+              <strong>Derivatives</strong> = Shorter platform-specific versions generated from master content (emails, social posts, product descriptions).
+            </p>
+          </div>
         </SheetHeader>
 
         {/* Filters */}
@@ -171,6 +180,7 @@ export function MasterContentSwitcher({
                     onClick={() => handleSelect(content)}
                     onArchive={() => onArchive(content.id)}
                     onDelete={() => onDelete(content.id)}
+                    derivativeCount={derivativeCounts[content.id] || 0}
                   />
                 </div>
               ))}

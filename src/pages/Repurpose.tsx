@@ -503,6 +503,32 @@ const Repurpose = () => {
     return counts;
   }, {} as Record<string, number>);
 
+  // Calculate derivative counts per master content
+  const [allDerivatives, setAllDerivatives] = useState<DerivativeAsset[]>([]);
+  
+  useEffect(() => {
+    const fetchAllDerivatives = async () => {
+      if (!user) return;
+      
+      const { data, error } = await supabase
+        .from('derivative_assets')
+        .select('*')
+        .eq('is_archived', false);
+      
+      if (!error && data) {
+        setAllDerivatives(data);
+      }
+    };
+    
+    fetchAllDerivatives();
+  }, [user]);
+
+  const derivativeCounts: Record<string, number> = allDerivatives.reduce((counts, derivative) => {
+    const masterId = derivative.master_content_id;
+    counts[masterId] = (counts[masterId] || 0) + 1;
+    return counts;
+  }, {} as Record<string, number>);
+
   const approvedCount = derivatives.filter(d => d.approval_status === 'approved').length;
   const pendingCount = derivatives.filter(d => d.approval_status === 'pending').length;
   const rejectedCount = derivatives.filter(d => d.approval_status === 'rejected').length;
@@ -779,6 +805,7 @@ const Repurpose = () => {
         onSelectMaster={handleSelectMaster}
         onArchive={handleArchiveMaster}
         onDelete={(id) => confirmDelete('master', id, masterContents.find(m => m.id === id)?.title)}
+        derivativeCounts={derivativeCounts}
       />
     </div>
   );

@@ -27,6 +27,7 @@ interface MasterContentCardProps {
   onClick: () => void;
   onArchive: () => void;
   onDelete: () => void;
+  derivativeCount?: number;
 }
 
 const CONTENT_TYPE_COLORS: Record<string, string> = {
@@ -42,6 +43,7 @@ export function MasterContentCard({
   onClick,
   onArchive,
   onDelete,
+  derivativeCount = 0,
 }: MasterContentCardProps) {
   const colorClass = CONTENT_TYPE_COLORS[content.content_type] || "bg-muted/20 border-muted";
   
@@ -94,6 +96,11 @@ export function MasterContentCard({
         {content.dip_week && (
           <Badge variant="secondary" className="text-xs">
             Week {content.dip_week}
+          </Badge>
+        )}
+        {derivativeCount > 0 && (
+          <Badge variant="default" className="text-xs bg-primary/90">
+            {derivativeCount} {derivativeCount === 1 ? 'derivative' : 'derivatives'}
           </Badge>
         )}
       </div>
