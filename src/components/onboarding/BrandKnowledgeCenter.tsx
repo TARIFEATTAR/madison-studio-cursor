@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Upload, Link as LinkIcon, FileText, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Upload, Link as LinkIcon, FileText, Loader2, CheckCircle2, AlertCircle, FileUp } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,8 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
   const [brandVoice, setBrandVoice] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
   const handleUrlScrape = async () => {
     if (!websiteUrl.trim()) {
@@ -106,6 +108,99 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
     }
   };
 
+  const handleFileUpload = async (files: FileList | File[]) => {
+    const fileArray = Array.from(files);
+    const pdfFiles = fileArray.filter(file => file.type === 'application/pdf');
+
+    if (pdfFiles.length === 0) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please upload PDF files only.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadedFiles(pdfFiles);
+    setIsProcessing(true);
+    setUploadStatus("processing");
+
+    try {
+      for (const file of pdfFiles) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('organizationId', organizationId);
+
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          throw new Error("User not authenticated");
+        }
+
+        // Insert document record
+        const { error: insertError } = await supabase
+          .from('brand_documents')
+          .insert({
+            organization_id: organizationId,
+            uploaded_by: user.id,
+            file_name: file.name,
+            file_type: file.type,
+            file_size: file.size,
+            processing_status: 'pending',
+          });
+
+        if (insertError) throw insertError;
+      }
+
+      setUploadStatus("success");
+      toast({
+        title: "Documents Uploaded",
+        description: `Successfully uploaded ${pdfFiles.length} document${pdfFiles.length > 1 ? 's' : ''}.`,
+      });
+
+      setTimeout(() => {
+        setUploadedFiles([]);
+        setUploadStatus("idle");
+      }, 3000);
+    } catch (error) {
+      console.error("Error uploading documents:", error);
+      setUploadStatus("error");
+      toast({
+        title: "Upload Failed",
+        description: error instanceof Error ? error.message : "Failed to upload documents.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      handleFileUpload(files);
+    }
+  }, [organizationId]);
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleFileUpload(e.target.files);
+    }
+  };
+
   return (
     <Card className="border-border/20 shadow-level-2 hover:shadow-level-3 transition-shadow">
       <CardHeader>
@@ -119,7 +214,11 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-muted/50">
+          <TabsList className="grid w-full grid-cols-3 bg-muted/50">
+            <TabsTrigger value="upload" className="data-[state=active]:bg-card">
+              <FileUp className="h-4 w-4 mr-2" />
+              Upload PDFs
+            </TabsTrigger>
             <TabsTrigger value="url" className="data-[state=active]:bg-card">
               <LinkIcon className="h-4 w-4 mr-2" />
               Website URL
@@ -129,6 +228,97 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
               Manual Entry
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="upload" className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label className="text-foreground">Brand Documents</Label>
+              <p className="text-xs text-muted-foreground">
+                Upload PDFs containing brand guidelines, style guides, or documentation.
+              </p>
+              
+              <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                className={`
+                  relative border-2 border-dashed rounded-lg p-8 text-center transition-all
+                  ${isDragging 
+                    ? 'border-primary bg-primary/5 scale-[1.02]' 
+                    : 'border-border/40 bg-muted/20 hover:border-primary/50 hover:bg-muted/30'
+                  }
+                  ${isProcessing ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}
+                `}
+              >
+                <input
+                  type="file"
+                  accept=".pdf"
+                  multiple
+                  onChange={handleFileInputChange}
+                  disabled={isProcessing}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                
+                <div className="flex flex-col items-center gap-3">
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="h-12 w-12 text-primary animate-spin" />
+                      <p className="text-sm font-medium text-foreground">Processing documents...</p>
+                    </>
+                  ) : (
+                    <>
+                      <FileUp className="h-12 w-12 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          {isDragging ? 'Drop files here' : 'Drag & drop PDFs here'}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          or click to browse
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {uploadedFiles.length > 0 && !isProcessing && (
+                  <div className="mt-4 text-left">
+                    <p className="text-xs font-medium text-foreground mb-2">Selected files:</p>
+                    <ul className="text-xs text-muted-foreground space-y-1">
+                      {uploadedFiles.map((file, idx) => (
+                        <li key={idx} className="flex items-center gap-2">
+                          <FileText className="h-3 w-3" />
+                          {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              {uploadStatus === "success" && (
+                <div className="flex items-center gap-2 text-sm text-forest-ink bg-forest-ink/10 p-3 rounded-md border border-forest-ink/20">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Documents uploaded successfully!
+                </div>
+              )}
+
+              {uploadStatus === "error" && (
+                <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-md border border-destructive/20">
+                  <AlertCircle className="h-4 w-4" />
+                  Failed to upload documents. Please try again.
+                </div>
+              )}
+            </div>
+
+            <div className="bg-muted/30 p-4 rounded-md border border-border/20">
+              <p className="text-sm font-medium text-foreground mb-2">Supported documents:</p>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• Brand style guides (PDF)</li>
+                <li>• Voice & tone documentation (PDF)</li>
+                <li>• Collection-specific guidelines (PDF)</li>
+                <li>• Product catalogs & descriptions (PDF)</li>
+              </ul>
+            </div>
+          </TabsContent>
 
           <TabsContent value="url" className="space-y-4 mt-4">
             <div className="space-y-2">
