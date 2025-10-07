@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, AlertCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, AlertCircle, Upload } from "lucide-react";
 import { useProducts, Product } from "@/hooks/useProducts";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,11 +41,13 @@ export function ProductsTab() {
   const { toast } = useToast();
   const { products, loading, refetch } = useProducts();
   const { currentOrganizationId } = useOnboarding();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
   const [searchFilter, setSearchFilter] = useState("");
+  const [isImporting, setIsImporting] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -174,6 +176,65 @@ export function ProductsTab() {
     }
   };
 
+  const handleCSVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !currentOrganizationId) return;
+
+    setIsImporting(true);
+    try {
+      const text = await file.text();
+      const lines = text.split('\n').filter(line => line.trim());
+      const headers = lines[0].split(',').map(h => h.trim());
+      
+      const products = lines.slice(1).map(line => {
+        const values = line.split(',').map(v => v.trim());
+        const product: any = { organization_id: currentOrganizationId };
+        
+        headers.forEach((header, index) => {
+          if (header !== 'organization_id' && values[index]) {
+            product[header] = values[index] || null;
+          }
+        });
+        
+        return product;
+      }).filter(p => p.name); // Only include rows with a name
+
+      if (products.length === 0) {
+        toast({
+          title: "No products found",
+          description: "The CSV file appears to be empty or invalid.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('brand_products')
+        .insert(products);
+
+      if (error) throw error;
+
+      toast({
+        title: "Products imported",
+        description: `Successfully imported ${products.length} product${products.length === 1 ? '' : 's'}.`,
+      });
+
+      refetch();
+    } catch (error) {
+      console.error('Error importing CSV:', error);
+      toast({
+        title: "Import failed",
+        description: "Failed to import products. Please check your CSV format.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
     (p.collection?.toLowerCase() || "").includes(searchFilter.toLowerCase()) ||
@@ -191,7 +252,7 @@ export function ProductsTab() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
             <div>
               <CardTitle>Products Library</CardTitle>
               <CardDescription>
@@ -203,10 +264,28 @@ export function ProductsTab() {
                 )}
               </CardDescription>
             </div>
-            <Button onClick={handleAdd} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Add Product
-            </Button>
+            <div className="flex gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv"
+                onChange={handleCSVUpload}
+                className="hidden"
+              />
+              <Button 
+                onClick={() => fileInputRef.current?.click()} 
+                variant="outline"
+                disabled={isImporting}
+                className="gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                {isImporting ? "Importing..." : "Import CSV"}
+              </Button>
+              <Button onClick={handleAdd} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Add Product
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
