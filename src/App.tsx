@@ -49,13 +49,10 @@ const AppContent = () => {
 
   return (
     <> 
-      {/* Debug banner to verify render; will be removed after fix */}
-      <div className="fixed top-0 left-0 z-[9999] px-2 py-1 text-xs bg-green-600 text-white pointer-events-none">App mounted</div>
       {showNavigation && <Navigation />}
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/" element={<Index />} />
-        <Route path="/home" element={<Navigate to="/" replace />} />
         <Route path="/index.html" element={<Navigate to="/" replace />} />
         <Route
           path="/library"
