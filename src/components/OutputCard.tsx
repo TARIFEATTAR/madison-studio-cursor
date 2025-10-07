@@ -66,7 +66,8 @@ export function OutputCard({
     }
   };
 
-  const truncateText = (text: string, maxLength: number = 200) => {
+  const truncateText = (text?: string, maxLength: number = 200) => {
+    if (!text) return "";
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
   };

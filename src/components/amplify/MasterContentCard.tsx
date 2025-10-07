@@ -91,7 +91,7 @@ export function MasterContentCard({
       {/* Badges */}
       <div className="flex flex-wrap gap-1.5 mb-2">
         <Badge variant="outline" className="text-xs">
-          {content.content_type.replace(/_/g, " ")}
+          {(content.content_type || "").replace(/_/g, " ") || "Content"}
         </Badge>
         {content.dip_week && (
           <Badge variant="secondary" className="text-xs">

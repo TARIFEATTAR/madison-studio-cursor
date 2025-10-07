@@ -58,8 +58,8 @@ export function DerivativeGridCard({ derivative, label, isScheduled, onClick, ty
     }
   };
 
-  // Truncate content to first ~80 characters
-  const previewText = derivative.generated_content.slice(0, 80) + (derivative.generated_content.length > 80 ? '...' : '');
+  const base = derivative.generated_content || "";
+  const previewText = base.slice(0, 80) + (base.length > 80 ? '...' : '');
 
   return (
     <Card 

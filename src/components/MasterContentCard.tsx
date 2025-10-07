@@ -80,7 +80,8 @@ export function MasterContentCard({
     }
   };
 
-  const truncateText = (text: string, maxLength: number = 150) => {
+  const truncateText = (text?: string, maxLength: number = 150) => {
+    if (!text) return "";
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
   };
@@ -141,7 +142,7 @@ export function MasterContentCard({
             {!CollectionIcon && displayCollection}
           </Badge>
           <Badge variant="secondary">
-            {content.content_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+            {(content.content_type || '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Content'}
           </Badge>
           {content.dip_week && (
             <Badge variant="outline">
@@ -165,11 +166,11 @@ export function MasterContentCard({
         <p className="text-sm text-muted-foreground line-clamp-3">
           {truncateText(content.full_content)}
         </p>
-        {content.pillar_focus && (
-          <p className="text-xs text-muted-foreground mt-2">
-            Pillar: <span className="font-medium">{content.pillar_focus.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-          </p>
-        )}
+          {content.pillar_focus && (
+            <p className="text-xs text-muted-foreground mt-2">
+              Pillar: <span className="font-medium">{(content.pillar_focus || '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+            </p>
+          )}
       </CardContent>
       <CardFooter className="flex justify-between items-center">
         <span className="text-xs text-muted-foreground">
