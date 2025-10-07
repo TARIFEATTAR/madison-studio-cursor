@@ -54,7 +54,6 @@ export function ProductsTab() {
     name: "",
     product_type: "",
     collection: "",
-    sub_collection: "",
     scent_family: "",
     top_notes: "",
     middle_notes: "",
@@ -66,7 +65,6 @@ export function ProductsTab() {
       name: "",
       product_type: "",
       collection: "",
-      sub_collection: "",
       scent_family: "",
       top_notes: "",
       middle_notes: "",
@@ -84,7 +82,6 @@ export function ProductsTab() {
       name: product.name,
       product_type: product.product_type || "",
       collection: product.collection || "",
-      sub_collection: product.subCollection || "",
       scent_family: product.scentFamily || "",
       top_notes: product.topNotes || "",
       middle_notes: product.middleNotes || "",
@@ -102,7 +99,6 @@ export function ProductsTab() {
         name: formData.name.trim(),
         product_type: formData.product_type.trim() || null,
         collection: formData.collection.trim() || null,
-        sub_collection: formData.sub_collection.trim() || null,
         scent_family: formData.scent_family.trim() || null,
         top_notes: formData.top_notes.trim() || null,
         middle_notes: formData.middle_notes.trim() || null,
@@ -306,12 +302,11 @@ export function ProductsTab() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Collection</TableHead>
-                    <TableHead>Sub-Collection</TableHead>
-                    <TableHead>Scent Family</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Collection</TableHead>
+                  <TableHead>Scent Family</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -327,7 +322,6 @@ export function ProductsTab() {
                       </TableCell>
                       <TableCell>{product.product_type || "-"}</TableCell>
                       <TableCell>{product.collection || "-"}</TableCell>
-                      <TableCell>{product.subCollection || "-"}</TableCell>
                       <TableCell>
                         {product.scentFamily ? (
                           <Badge variant="secondary">{product.scentFamily}</Badge>
@@ -411,24 +405,14 @@ export function ProductsTab() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="sub_collection">Sub-Collection</Label>
+                <Label htmlFor="scent_family">Scent Family</Label>
                 <Input
-                  id="sub_collection"
-                  value={formData.sub_collection}
-                  onChange={(e) => setFormData({ ...formData, sub_collection: e.target.value })}
-                  placeholder="e.g., Warm, Fresh, Floral..."
+                  id="scent_family"
+                  value={formData.scent_family}
+                  onChange={(e) => setFormData({ ...formData, scent_family: e.target.value })}
+                  placeholder="e.g., Warm, Fresh, Woody, Floral"
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="scent_family">Scent Family</Label>
-              <Input
-                id="scent_family"
-                value={formData.scent_family}
-                onChange={(e) => setFormData({ ...formData, scent_family: e.target.value })}
-                placeholder="e.g., Warm, Fresh, Woody, Floral"
-              />
             </div>
 
             <div className="space-y-2">
