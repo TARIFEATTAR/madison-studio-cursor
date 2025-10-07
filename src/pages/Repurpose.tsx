@@ -33,6 +33,7 @@ import {
 import { DerivativeGridCard } from "@/components/amplify/DerivativeGridCard";
 import { DerivativeFullModal } from "@/components/amplify/DerivativeFullModal";
 import { MasterContentCard } from "@/components/amplify/MasterContentCard";
+import { DerivativeFolderSidebar } from "@/components/amplify/DerivativeFolderSidebar";
 
 interface MasterContent {
   id: string;
@@ -89,6 +90,26 @@ const PLATFORM_MAPPING: Record<string, string> = {
   email_7part: "Email",
 };
 
+const DERIVATIVE_TYPE_COLORS: Record<string, string> = {
+  email: 'hsl(217, 91%, 60%)',
+  instagram: 'hsl(291, 64%, 42%)',
+  twitter: 'hsl(199, 89%, 48%)',
+  product: 'hsl(25, 95%, 53%)',
+  sms: 'hsl(142, 71%, 45%)',
+  linkedin: 'hsl(221, 83%, 53%)',
+};
+
+// Map asset types to derivative type categories
+const mapAssetTypeToCategory = (assetType: string): string => {
+  if (assetType.includes('email')) return 'email';
+  if (assetType.includes('instagram')) return 'instagram';
+  if (assetType.includes('twitter')) return 'twitter';
+  if (assetType.includes('product')) return 'product';
+  if (assetType.includes('sms')) return 'sms';
+  if (assetType.includes('linkedin')) return 'linkedin';
+  return assetType;
+};
+
 const Repurpose = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -108,6 +129,7 @@ const Repurpose = () => {
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [derivativeToSchedule, setDerivativeToSchedule] = useState<DerivativeAsset | null>(null);
   const [scheduledDerivatives, setScheduledDerivatives] = useState<Record<string, any>>({});
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
 
   useEffect(() => {
     fetchMasterContents();
@@ -472,11 +494,26 @@ const Repurpose = () => {
     }
   };
 
+  // Calculate folder counts
+  const folderCounts: Record<string, number> = derivatives.reduce((counts, derivative) => {
+    const category = mapAssetTypeToCategory(derivative.asset_type);
+    counts[category] = (counts[category] || 0) + 1;
+    return counts;
+  }, {} as Record<string, number>);
+
   const approvedCount = derivatives.filter(d => d.approval_status === 'approved').length;
   const pendingCount = derivatives.filter(d => d.approval_status === 'pending').length;
   const rejectedCount = derivatives.filter(d => d.approval_status === 'rejected').length;
   
+  // Filter by folder first, then by status
   const filteredDerivatives = derivatives.filter(d => {
+    // Filter by folder (derivative type)
+    if (selectedFolder) {
+      const category = mapAssetTypeToCategory(d.asset_type);
+      if (category !== selectedFolder) return false;
+    }
+    
+    // Filter by status
     if (statusFilter === "rejected") return d.approval_status === 'rejected';
     if (statusFilter === "pending") return d.approval_status === 'pending';
     if (statusFilter === "approved") return d.approval_status === 'approved';
@@ -545,179 +582,133 @@ const Repurpose = () => {
   }
 
   return (
-    <div className="pt-20">
-      <div className="container mx-auto px-4 py-8 space-y-6">
-        {/* Compact Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-serif text-foreground">Amplify</h1>
-            <p className="text-sm text-muted-foreground">One voice, every channel</p>
-          </div>
+    <div className="min-h-screen pt-16 bg-background">
+      <div className="h-[calc(100vh-4rem)] flex w-full">
+        {/* Left Sidebar - Folder Navigation */}
+        <div className="w-80 flex-shrink-0 hidden lg:block">
+          <DerivativeFolderSidebar
+            selectedFolder={selectedFolder}
+            onSelectFolder={setSelectedFolder}
+            folderCounts={folderCounts}
+            masterContents={masterContents}
+            selectedMasterId={selectedMaster?.id || null}
+            onSelectMaster={handleSelectMaster}
+            onArchiveMaster={handleArchiveMaster}
+            onDeleteMaster={(id) => confirmDelete('master', id, masterContents.find(m => m.id === id)?.title)}
+          />
         </div>
 
-        {/* Master Content Section - Compact Grid */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-serif text-foreground">Master Content</h2>
-            {selectedMaster && (
-              <Badge variant="outline" className="text-xs">
-                {masterContents.length} total
-              </Badge>
+        {/* Right Content Area */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="container mx-auto px-6 py-6 space-y-6 max-w-7xl">
+            {/* Page Header */}
+            <div className="space-y-1">
+              <h1 className="text-2xl font-serif text-foreground">Amplify</h1>
+              <p className="text-sm text-muted-foreground">
+                {selectedMaster 
+                  ? `${selectedMaster.title} • ${derivatives.length} derivative${derivatives.length !== 1 ? 's' : ''}`
+                  : "One voice, every channel"}
+              </p>
+            </div>
+
+            {loading ? (
+              <Card className="p-8 flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </Card>
+            ) : !selectedMaster ? (
+              <Card className="p-12 text-center space-y-4">
+                <FileText className="h-16 w-16 mx-auto text-muted-foreground opacity-40" />
+                <div>
+                  <h3 className="text-lg font-medium mb-2">No Master Content Selected</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Select content from the sidebar or create new content to get started
+                  </p>
+                </div>
+                <Button onClick={() => navigate("/forge")}>Create in Composer</Button>
+              </Card>
+            ) : (
+              <>
+                {/* Derivative Assets Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-serif text-foreground">
+                      {selectedFolder 
+                        ? `${selectedFolder.charAt(0).toUpperCase() + selectedFolder.slice(1)} Derivatives`
+                        : "Derivative Assets"}
+                    </h2>
+                    <Progress value={(approvedCount / derivatives.length) * 100} className="w-32" />
+                  </div>
+
+                  {derivatives.length === 0 ? (
+                    <Card className="p-12 text-center space-y-4">
+                      <Mail className="h-16 w-16 mx-auto text-muted-foreground opacity-40" />
+                      <div>
+                        <h3 className="text-lg font-medium mb-2">No Derivatives Yet</h3>
+                        <p className="text-muted-foreground text-sm">
+                          This master content hasn't been repurposed yet
+                        </p>
+                      </div>
+                      <Button variant="outline" onClick={() => navigate("/forge")}>
+                        Generate Derivatives
+                      </Button>
+                    </Card>
+                  ) : (
+                    <Tabs value={statusFilter} onValueChange={setStatusFilter} className="space-y-4">
+                      <TabsList className="bg-muted">
+                        <TabsTrigger value="all" className="relative">
+                          All ({derivatives.length - rejectedCount})
+                        </TabsTrigger>
+                        <TabsTrigger value="pending" className="relative">
+                          <span className="flex items-center gap-2">
+                            {pendingCount > 0 && <span className="w-2 h-2 rounded-full bg-antique-gold" />}
+                            Pending ({pendingCount})
+                          </span>
+                        </TabsTrigger>
+                        <TabsTrigger value="approved" className="relative">
+                          <span className="flex items-center gap-2">
+                            {approvedCount > 0 && <span className="w-2 h-2 rounded-full bg-forest-ink" />}
+                            Approved ({approvedCount})
+                          </span>
+                        </TabsTrigger>
+                        <TabsTrigger value="rejected">
+                          Rejected ({rejectedCount})
+                        </TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value={statusFilter} className="space-y-4">
+                        {filteredDerivatives.length === 0 ? (
+                          <Card className="p-8 text-center">
+                            <p className="text-muted-foreground">
+                              No {statusFilter !== 'all' ? statusFilter : ''} derivatives
+                              {selectedFolder ? ` in ${selectedFolder}` : ''}
+                            </p>
+                          </Card>
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                            {filteredDerivatives.map((derivative) => {
+                              const category = mapAssetTypeToCategory(derivative.asset_type);
+                              const typeColor = DERIVATIVE_TYPE_COLORS[category];
+                              
+                              return (
+                                <DerivativeGridCard
+                                  key={derivative.id}
+                                  derivative={derivative}
+                                  label={DERIVATIVE_LABELS[derivative.asset_type as keyof typeof DERIVATIVE_LABELS] || derivative.asset_type}
+                                  isScheduled={!!scheduledDerivatives[derivative.id]}
+                                  onClick={() => handleOpenModal(derivative)}
+                                  typeColor={typeColor}
+                                />
+                              );
+                            })}
+                          </div>
+                        )}
+                      </TabsContent>
+                    </Tabs>
+                  )}
+                </div>
+              </>
             )}
           </div>
-
-          {loading ? (
-            <Card className="p-8 flex items-center justify-center">
-              <Loader2 className="h-6 w-6 animate-spin" />
-            </Card>
-          ) : masterContents.length === 0 ? (
-            <Card className="p-6 text-center space-y-4">
-              <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
-              <p className="text-muted-foreground">Ready to Amplify</p>
-              <Button onClick={() => navigate("/forge")}>Create in Composer</Button>
-            </Card>
-          ) : (
-            <>
-              {/* Compact Search + Sort */}
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search content..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 h-9"
-                  />
-                </div>
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-[140px] h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background">
-                    <SelectItem value="newest">Newest</SelectItem>
-                    <SelectItem value="oldest">Oldest</SelectItem>
-                    <SelectItem value="week">By Week</SelectItem>
-                    <SelectItem value="title">A-Z</SelectItem>
-                    <SelectItem value="type">By Type</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Master Content Grid */}
-              {sortedContent.length === 0 ? (
-                <Card className="p-6 text-center">
-                  <p className="text-sm text-muted-foreground">No matches found</p>
-                </Card>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                  {sortedContent.map((master) => (
-                    <MasterContentCard
-                      key={master.id}
-                      content={master}
-                      isSelected={selectedMaster?.id === master.id}
-                      onClick={() => handleSelectMaster(master)}
-                      onArchive={() => handleArchiveMaster(master.id)}
-                      onDelete={() => confirmDelete('master', master.id, master.title)}
-                    />
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Derivatives Section */}
-        <div className="space-y-4">
-          {selectedMaster ? (
-            <>
-              {/* Compact Selected Content Header */}
-              <div className="flex items-start justify-between gap-4 p-4 bg-muted/20 rounded-lg border">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h2 className="text-lg font-serif text-foreground">Derivative Assets</h2>
-                    <Badge variant="outline" className="text-xs">
-                      {selectedMaster.content_type.replace(/_/g, " ")}
-                    </Badge>
-                  </div>
-                  <h3 className="font-medium text-sm mb-1">{selectedMaster.title}</h3>
-                  <p className="text-xs text-muted-foreground line-clamp-2">
-                    {selectedMaster.full_content}
-                  </p>
-                </div>
-                {derivatives.length > 0 && (
-                  <div className="flex flex-col items-end gap-1 min-w-[100px]">
-                    <div className="text-xs text-muted-foreground">Progress</div>
-                    <div className="text-lg font-semibold">{approvedCount}/{derivatives.length}</div>
-                    <div className="flex gap-2 text-xs">
-                      <span className="text-green-600">✓{approvedCount}</span>
-                      <span className="text-orange-600">◷{pendingCount}</span>
-                      <span className="text-muted-foreground">✕{rejectedCount}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {derivatives.length === 0 ? (
-                <Card className="p-8 text-center space-y-4">
-                  <p className="text-muted-foreground">
-                    No derivatives generated for this content yet.
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Generate derivatives using Composer's Master Content mode.
-                  </p>
-                </Card>
-              ) : (
-                <Tabs value={statusFilter} onValueChange={setStatusFilter} className="space-y-4">
-                  <TabsList className="bg-muted">
-                    <TabsTrigger value="all" className="relative">
-                      All ({derivatives.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="pending" className="relative">
-                      <span className="flex items-center gap-2">
-                        {pendingCount > 0 && <span className="w-2 h-2 rounded-full bg-antique-gold" />}
-                        Pending ({pendingCount})
-                      </span>
-                    </TabsTrigger>
-                    <TabsTrigger value="approved" className="relative">
-                      <span className="flex items-center gap-2">
-                        {approvedCount > 0 && <span className="w-2 h-2 rounded-full bg-forest-ink" />}
-                        Approved ({approvedCount})
-                      </span>
-                    </TabsTrigger>
-                    <TabsTrigger value="rejected">
-                      Rejected ({rejectedCount})
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value={statusFilter} className="space-y-4">
-                    {filteredDerivatives.length === 0 ? (
-                      <Card className="p-8 text-center">
-                        <p className="text-muted-foreground">No {statusFilter} derivatives</p>
-                      </Card>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {filteredDerivatives.map((derivative) => (
-                          <DerivativeGridCard
-                            key={derivative.id}
-                            derivative={derivative}
-                            label={DERIVATIVE_LABELS[derivative.asset_type as keyof typeof DERIVATIVE_LABELS] || derivative.asset_type}
-                            isScheduled={!!scheduledDerivatives[derivative.id]}
-                            onClick={() => handleOpenModal(derivative)}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
-                </Tabs>
-              )}
-            </>
-          ) : (
-            <Card className="p-8 text-center">
-              <p className="text-muted-foreground">
-                Select content from the left to view its derivatives
-              </p>
-            </Card>
-          )}
         </div>
       </div>
 

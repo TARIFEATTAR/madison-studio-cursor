@@ -59,6 +59,12 @@ export default {
         'deep-burgundy': "hsl(var(--deep-burgundy))",
         'forest-ink': "hsl(var(--forest-ink))",
         'midnight-blue': "hsl(var(--midnight-blue))",
+        'derivative-email': "hsl(var(--derivative-email))",
+        'derivative-instagram': "hsl(var(--derivative-instagram))",
+        'derivative-twitter': "hsl(var(--derivative-twitter))",
+        'derivative-product': "hsl(var(--derivative-product))",
+        'derivative-sms': "hsl(var(--derivative-sms))",
+        'derivative-linkedin': "hsl(var(--derivative-linkedin))",
       },
       fontFamily: {
         serif: ['Cormorant Garamond', 'serif'],

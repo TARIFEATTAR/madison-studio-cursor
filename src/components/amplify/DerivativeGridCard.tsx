@@ -12,6 +12,7 @@ interface DerivativeGridCardProps {
   label: string;
   isScheduled?: boolean;
   onClick: () => void;
+  typeColor?: string;
 }
 
 const DERIVATIVE_ICONS = {
@@ -25,11 +26,16 @@ const DERIVATIVE_ICONS = {
   email_7part: Mail,
 };
 
-export function DerivativeGridCard({ derivative, label, isScheduled, onClick }: DerivativeGridCardProps) {
+export function DerivativeGridCard({ derivative, label, isScheduled, onClick, typeColor }: DerivativeGridCardProps) {
   const Icon = DERIVATIVE_ICONS[derivative.asset_type as keyof typeof DERIVATIVE_ICONS] || FileText;
   
-  // Get status styling
+  // Get status styling with optional type color
   const getStatusStyles = () => {
+    // If typeColor provided and status is pending, use type color as accent
+    if (typeColor && derivative.approval_status === 'pending') {
+      return `border-2 bg-card hover:shadow-lg`;
+    }
+    
     switch (derivative.approval_status) {
       case 'approved':
         return 'border-forest-ink/40 bg-forest-ink/5 hover:border-forest-ink/60';
@@ -67,8 +73,11 @@ export function DerivativeGridCard({ derivative, label, isScheduled, onClick }: 
       <div className="space-y-3">
         {/* Icon and Badge Row */}
         <div className="flex items-start justify-between">
-          <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10">
-            <Icon className="h-6 w-6 text-primary" />
+          <div 
+            className="flex items-center justify-center w-12 h-12 rounded-lg"
+            style={typeColor ? { backgroundColor: `${typeColor}20`, color: typeColor } : {}}
+          >
+            <Icon className={`h-6 w-6 ${typeColor ? '' : 'text-primary'}`} />
           </div>
           <Badge variant={getStatusBadgeVariant()} className="text-xs capitalize">
             {derivative.approval_status}

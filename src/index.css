@@ -27,6 +27,14 @@
     --forest-ink: 140 13% 26%;       /* #3A4A3D - Success states */
     --midnight-blue: 210 29% 24%;    /* #2C3E50 - Info states */
     
+    /* Derivative Type Colors - Content Organization */
+    --derivative-email: 217 91% 60%;        /* #3B82F6 - Blue for email */
+    --derivative-instagram: 291 64% 42%;    /* #A855F7 - Purple for Instagram */
+    --derivative-twitter: 199 89% 48%;      /* #0EA5E9 - Sky blue for Twitter */
+    --derivative-product: 25 95% 53%;       /* #FB923C - Orange for products */
+    --derivative-sms: 142 71% 45%;          /* #22C55E - Green for SMS */
+    --derivative-linkedin: 221 83% 53%;     /* #3B82F6 - Professional blue */
+    
     /* ──────────────────────────────────────────────────────────────────────
        SEMANTIC COLOR TOKENS
        ────────────────────────────────────────────────────────────────────── */
