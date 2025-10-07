@@ -9,9 +9,11 @@ import { Button } from "@/components/ui/button";
 import { useCollections } from "@/hooks/useCollections";
 import { useWeekNames } from "@/hooks/useWeekNames";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { useProducts } from "@/hooks/useProducts";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, GripVertical, ArrowLeft } from "lucide-react";
+import { ProductsTab } from "@/components/settings/ProductsTab";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +31,7 @@ export default function Settings() {
   const { collections, loading: collectionsLoading } = useCollections();
   const { weekNames, loading: weekNamesLoading } = useWeekNames();
   const { currentOrganizationId } = useOnboarding();
+  const { products, loading: productsLoading } = useProducts();
 
   // Collections state
   const [newCollectionName, setNewCollectionName] = useState("");
@@ -163,8 +166,9 @@ export default function Settings() {
         </div>
 
         <Tabs defaultValue="collections" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="collections">Collections</TabsTrigger>
+            <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="weeks">DIP Week Names</TabsTrigger>
           </TabsList>
 
@@ -254,6 +258,11 @@ export default function Settings() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Products Tab */}
+          <TabsContent value="products">
+            <ProductsTab />
           </TabsContent>
 
           {/* Week Names Tab */}

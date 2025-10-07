@@ -167,6 +167,7 @@ export type Database = {
           organization_id: string
           product_type: string | null
           scent_family: string | null
+          sub_collection: string | null
           top_notes: string | null
           updated_at: string
         }
@@ -180,6 +181,7 @@ export type Database = {
           organization_id: string
           product_type?: string | null
           scent_family?: string | null
+          sub_collection?: string | null
           top_notes?: string | null
           updated_at?: string
         }
@@ -193,6 +195,7 @@ export type Database = {
           organization_id?: string
           product_type?: string | null
           scent_family?: string | null
+          sub_collection?: string | null
           top_notes?: string | null
           updated_at?: string
         }

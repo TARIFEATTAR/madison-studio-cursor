@@ -1,0 +1,431 @@
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Plus, Pencil, Trash2, AlertCircle } from "lucide-react";
+import { useProducts, Product } from "@/hooks/useProducts";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+export function ProductsTab() {
+  const { toast } = useToast();
+  const { products, loading } = useProducts();
+  const { currentOrganizationId } = useOnboarding();
+  
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
+  const [searchFilter, setSearchFilter] = useState("");
+
+  // Form state
+  const [formData, setFormData] = useState({
+    name: "",
+    product_type: "",
+    collection: "",
+    sub_collection: "",
+    scent_family: "",
+    top_notes: "",
+    middle_notes: "",
+    base_notes: "",
+  });
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      product_type: "",
+      collection: "",
+      sub_collection: "",
+      scent_family: "",
+      top_notes: "",
+      middle_notes: "",
+      base_notes: "",
+    });
+  };
+
+  const handleAdd = () => {
+    resetForm();
+    setShowAddDialog(true);
+  };
+
+  const handleEdit = (product: Product) => {
+    setFormData({
+      name: product.name,
+      product_type: product.product_type || "",
+      collection: product.collection || "",
+      sub_collection: product.subCollection || "",
+      scent_family: product.scentFamily || "",
+      top_notes: product.topNotes || "",
+      middle_notes: product.middleNotes || "",
+      base_notes: product.baseNotes || "",
+    });
+    setEditingProduct(product);
+  };
+
+  const handleSave = async () => {
+    if (!currentOrganizationId || !formData.name.trim()) return;
+
+    try {
+      const productData = {
+        organization_id: currentOrganizationId,
+        name: formData.name.trim(),
+        product_type: formData.product_type.trim() || null,
+        collection: formData.collection.trim() || null,
+        sub_collection: formData.sub_collection.trim() || null,
+        scent_family: formData.scent_family.trim() || null,
+        top_notes: formData.top_notes.trim() || null,
+        middle_notes: formData.middle_notes.trim() || null,
+        base_notes: formData.base_notes.trim() || null,
+      };
+
+      if (editingProduct) {
+        const { error } = await supabase
+          .from("brand_products")
+          .update(productData)
+          .eq("id", editingProduct.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Product updated",
+          description: `"${formData.name}" has been updated.`,
+        });
+      } else {
+        const { error } = await supabase
+          .from("brand_products")
+          .insert(productData);
+
+        if (error) throw error;
+
+        toast({
+          title: "Product added",
+          description: `"${formData.name}" has been added to your products.`,
+        });
+      }
+
+      setShowAddDialog(false);
+      setEditingProduct(null);
+      resetForm();
+      window.location.reload();
+    } catch (error) {
+      console.error("Error saving product:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save product. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteProductId) return;
+
+    try {
+      const { error } = await supabase
+        .from("brand_products")
+        .delete()
+        .eq("id", deleteProductId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Product deleted",
+        description: "The product has been removed.",
+      });
+
+      setDeleteProductId(null);
+      window.location.reload();
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete product. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const filteredProducts = products.filter((p) =>
+    p.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
+    (p.collection?.toLowerCase() || "").includes(searchFilter.toLowerCase()) ||
+    (p.product_type?.toLowerCase() || "").includes(searchFilter.toLowerCase())
+  );
+
+  const incompleteCount = products.filter(
+    (p) => !p.scentFamily || !p.topNotes || !p.middleNotes || !p.baseNotes
+  ).length;
+
+  const isIncomplete = (product: Product) =>
+    !product.scentFamily || !product.topNotes || !product.middleNotes || !product.baseNotes;
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Products Library</CardTitle>
+              <CardDescription>
+                {products.length} product{products.length === 1 ? "" : "s"}
+                {incompleteCount > 0 && (
+                  <span className="text-amber-600 ml-2">
+                    ({incompleteCount} incomplete)
+                  </span>
+                )}
+              </CardDescription>
+            </div>
+            <Button onClick={handleAdd} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Add Product
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Input
+            placeholder="Search products..."
+            value={searchFilter}
+            onChange={(e) => setSearchFilter(e.target.value)}
+          />
+
+          {loading ? (
+            <p className="text-muted-foreground">Loading products...</p>
+          ) : filteredProducts.length === 0 ? (
+            <p className="text-muted-foreground italic">
+              {searchFilter ? "No products match your search." : "No products yet. Add your first product above."}
+            </p>
+          ) : (
+            <div className="border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Collection</TableHead>
+                    <TableHead>Sub-Collection</TableHead>
+                    <TableHead>Scent Family</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredProducts.map((product) => (
+                    <TableRow key={product.id} className="cursor-pointer hover:bg-muted/50">
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {product.name}
+                          {isIncomplete(product) && (
+                            <AlertCircle className="w-4 h-4 text-amber-500" />
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>{product.product_type || "-"}</TableCell>
+                      <TableCell>{product.collection || "-"}</TableCell>
+                      <TableCell>{product.subCollection || "-"}</TableCell>
+                      <TableCell>
+                        {product.scentFamily ? (
+                          <Badge variant="secondary">{product.scentFamily}</Badge>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(product)}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeleteProductId(product.id)}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Add/Edit Dialog */}
+      <Dialog open={showAddDialog || !!editingProduct} onOpenChange={(open) => {
+        if (!open) {
+          setShowAddDialog(false);
+          setEditingProduct(null);
+          resetForm();
+        }
+      }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingProduct ? "Edit Product" : "Add New Product"}</DialogTitle>
+            <DialogDescription>
+              Fill in the product details. Fields marked with * are required.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Product Name *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="e.g., Honey Oudh"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="product_type">Product Type</Label>
+                <Input
+                  id="product_type"
+                  value={formData.product_type}
+                  onChange={(e) => setFormData({ ...formData, product_type: e.target.value })}
+                  placeholder="e.g., Perfume Oil, Attar..."
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="collection">Collection</Label>
+                <Input
+                  id="collection"
+                  value={formData.collection}
+                  onChange={(e) => setFormData({ ...formData, collection: e.target.value })}
+                  placeholder="e.g., Cadence"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sub_collection">Sub-Collection</Label>
+                <Input
+                  id="sub_collection"
+                  value={formData.sub_collection}
+                  onChange={(e) => setFormData({ ...formData, sub_collection: e.target.value })}
+                  placeholder="e.g., Warm, Fresh, Floral..."
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="scent_family">Scent Family</Label>
+              <Input
+                id="scent_family"
+                value={formData.scent_family}
+                onChange={(e) => setFormData({ ...formData, scent_family: e.target.value })}
+                placeholder="e.g., Warm, Fresh, Woody, Floral"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="top_notes">Top Notes</Label>
+              <Textarea
+                id="top_notes"
+                value={formData.top_notes}
+                onChange={(e) => setFormData({ ...formData, top_notes: e.target.value })}
+                placeholder="e.g., Honey & Bergamot"
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="middle_notes">Middle Notes</Label>
+              <Textarea
+                id="middle_notes"
+                value={formData.middle_notes}
+                onChange={(e) => setFormData({ ...formData, middle_notes: e.target.value })}
+                placeholder="e.g., Agarwood (Oud) & Sumatran Patchouli"
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="base_notes">Base Notes</Label>
+              <Textarea
+                id="base_notes"
+                value={formData.base_notes}
+                onChange={(e) => setFormData({ ...formData, base_notes: e.target.value })}
+                placeholder="e.g., Agarwood (Oud), Amber, Leather..."
+                rows={2}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowAddDialog(false);
+                setEditingProduct(null);
+                resetForm();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={!formData.name.trim()}>
+              {editingProduct ? "Update" : "Add"} Product
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog
+        open={!!deleteProductId}
+        onOpenChange={(open) => !open && setDeleteProductId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Product?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this product from your library.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}

@@ -5,7 +5,9 @@ import { useOnboarding } from './useOnboarding';
 export interface Product {
   id: string;
   name: string;
+  product_type: string | null;
   collection: string | null;
+  subCollection: string | null;
   scentFamily: string | null;
   topNotes: string | null;
   middleNotes: string | null;
@@ -38,7 +40,9 @@ export const useProducts = () => {
         const formattedProducts: Product[] = (data || []).map((p) => ({
           id: p.id,
           name: p.name,
+          product_type: p.product_type,
           collection: p.collection,
+          subCollection: p.sub_collection,
           scentFamily: p.scent_family,
           topNotes: p.top_notes,
           middleNotes: p.middle_notes,
