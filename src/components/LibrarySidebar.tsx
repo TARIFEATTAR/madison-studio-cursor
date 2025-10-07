@@ -253,7 +253,6 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
                                 <ChevronDown className="w-3 h-3" /> : 
                                 <ChevronRight className="w-3 h-3" />
                             )}
-                            <CollectionIcon className="w-4 h-4" />
                             {!collapsed && (
                               <span className="text-sm">{collection.name}</span>
                             )}

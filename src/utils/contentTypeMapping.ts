@@ -28,6 +28,11 @@ export const contentTypeMapping: ContentTypeMapping[] = [
     icon: Mail,
   },
   {
+    name: "Email Sequences",
+    keys: ["email", "email_3part", "email_5part", "email_7part"],
+    icon: Mail,
+  },
+  {
     name: "Product Stories",
     keys: ["product_story"],
     icon: FileText,
@@ -38,19 +43,9 @@ export const contentTypeMapping: ContentTypeMapping[] = [
     icon: Megaphone,
   },
   {
-    name: "Email Sequences",
-    keys: ["email", "email_3part", "email_5part", "email_7part"],
-    icon: Mail,
-  },
-  {
     name: "Social Media",
     keys: ["instagram", "twitter", "linkedin", "facebook"],
     icon: Instagram,
-  },
-  {
-    name: "Product Descriptions",
-    keys: ["product", "product_description"],
-    icon: ShoppingBag,
   },
   {
     name: "SMS Messages",

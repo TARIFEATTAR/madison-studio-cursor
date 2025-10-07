@@ -740,14 +740,18 @@ export type Database = {
       prompts: {
         Row: {
           archived_at: string | null
+          avg_quality_rating: number | null
           base_notes: string | null
           collection: Database["public"]["Enums"]["collection_type"]
           content_type: Database["public"]["Enums"]["content_type"]
           created_at: string | null
           created_by: string | null
           dip_week: number | null
+          effectiveness_score: number | null
           id: string
           is_archived: boolean
+          is_template: boolean | null
+          last_used_at: string | null
           meta_instructions: Json | null
           middle_notes: string | null
           organization_id: string
@@ -755,6 +759,8 @@ export type Database = {
           pillar_focus: Database["public"]["Enums"]["pillar_type"] | null
           prompt_text: string
           scent_family: Database["public"]["Enums"]["scent_family"] | null
+          tags: string[] | null
+          times_used: number | null
           title: string
           top_notes: string | null
           transparency_statement: string | null
@@ -763,14 +769,18 @@ export type Database = {
         }
         Insert: {
           archived_at?: string | null
+          avg_quality_rating?: number | null
           base_notes?: string | null
           collection: Database["public"]["Enums"]["collection_type"]
           content_type: Database["public"]["Enums"]["content_type"]
           created_at?: string | null
           created_by?: string | null
           dip_week?: number | null
+          effectiveness_score?: number | null
           id?: string
           is_archived?: boolean
+          is_template?: boolean | null
+          last_used_at?: string | null
           meta_instructions?: Json | null
           middle_notes?: string | null
           organization_id: string
@@ -778,6 +788,8 @@ export type Database = {
           pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
           prompt_text: string
           scent_family?: Database["public"]["Enums"]["scent_family"] | null
+          tags?: string[] | null
+          times_used?: number | null
           title: string
           top_notes?: string | null
           transparency_statement?: string | null
@@ -786,14 +798,18 @@ export type Database = {
         }
         Update: {
           archived_at?: string | null
+          avg_quality_rating?: number | null
           base_notes?: string | null
           collection?: Database["public"]["Enums"]["collection_type"]
           content_type?: Database["public"]["Enums"]["content_type"]
           created_at?: string | null
           created_by?: string | null
           dip_week?: number | null
+          effectiveness_score?: number | null
           id?: string
           is_archived?: boolean
+          is_template?: boolean | null
+          last_used_at?: string | null
           meta_instructions?: Json | null
           middle_notes?: string | null
           organization_id?: string
@@ -801,6 +817,8 @@ export type Database = {
           pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
           prompt_text?: string
           scent_family?: Database["public"]["Enums"]["scent_family"] | null
+          tags?: string[] | null
+          times_used?: number | null
           title?: string
           top_notes?: string | null
           transparency_statement?: string | null

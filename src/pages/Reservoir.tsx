@@ -92,8 +92,10 @@ const Reservoir = () => {
       const dipWeekCounts: Record<number, number> = {};
       
       data.forEach((item: any) => {
+        // Normalize collection name (remove " Collection" suffix for consistency)
         if (item.collection) {
-          collectionCounts[item.collection] = (collectionCounts[item.collection] || 0) + 1;
+          const normalizedCollection = item.collection.replace(' Collection', '');
+          collectionCounts[normalizedCollection] = (collectionCounts[normalizedCollection] || 0) + 1;
         }
         
         const contentType = item.content_type || item.asset_type;
