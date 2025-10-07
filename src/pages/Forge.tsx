@@ -1,7 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Sparkles, Copy, Check, Loader2, Archive, Wand2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useProducts } from "@/hooks/useProducts";
@@ -66,6 +66,7 @@ const stripMarkdown = (text: string): string => {
 const Forge = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { currentOrganizationId } = useOnboarding();
   const { products } = useProducts();
@@ -109,6 +110,35 @@ const Forge = () => {
     baseNotes: "",
     imageTemplate: "product-page" as ImagePromptType,
   });
+
+  // Handle pre-populated prompt from Prompt Library
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.prompt) {
+      const prompt = state.prompt;
+      setFormData({
+        title: prompt.title,
+        contentType: prompt.content_type,
+        collection: prompt.collection?.replace("_", " ") || "",
+        dipWeek: prompt.dip_week?.toString() || "",
+        scentFamily: prompt.scent_family || "",
+        pillar: prompt.pillar_focus || "",
+        customInstructions: "",
+        topNotes: "",
+        middleNotes: "",
+        baseNotes: "",
+        imageTemplate: "product-page",
+      });
+
+      toast({
+        title: "Prompt loaded",
+        description: `"${prompt.title}" is ready to use.`,
+      });
+
+      // Clear the location state to avoid re-loading on refresh
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, navigate, toast]);
 
   const filteredProducts = useMemo(() => {
     if (!productSearchValue) return products;

@@ -17,8 +17,14 @@ const Navigation = () => {
     { 
       path: "/library", 
       label: "Library", 
-      icon: BookOpen,
+      icon: Archive,
       description: "Browse and manage your content library"
+    },
+    { 
+      path: "/prompt-library", 
+      label: "Prompts", 
+      icon: BookOpen,
+      description: "Your collection of proven prompts"
     },
     { 
       path: "/forge", 
