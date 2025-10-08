@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Maximize2, Minimize2, Undo2, Redo2, Copy, Check, Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Heading3, AlignLeft, AlignCenter, AlignRight, AlignJustify, Indent, Outdent, FileText } from "lucide-react";
+import { Maximize2, Minimize2, Undo2, Redo2, Copy, Check, Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Heading3, AlignLeft, AlignCenter, AlignRight, AlignJustify, Indent, Outdent, FileText, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
 
 const FONT_OPTIONS = [
   { value: 'cormorant', label: 'Cormorant Garamond', family: '"Cormorant Garamond", serif' },
@@ -30,6 +31,7 @@ export const ContentEditor = ({
   className 
 }: ContentEditorProps) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const [wordCount, setWordCount] = useState(0);
   const [copied, setCopied] = useState(false);
   const [copiedFormatted, setCopiedFormatted] = useState(false);
@@ -637,6 +639,17 @@ export const ContentEditor = ({
                   </span>
 
                   <Button
+                    variant={assistantOpen ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAssistantOpen(!assistantOpen)}
+                    className="h-9 gap-2"
+                    title="Editorial Director"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    {assistantOpen ? 'Hide Director' : 'Director'}
+                  </Button>
+
+                  <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleCopy}
@@ -687,18 +700,31 @@ export const ContentEditor = ({
               </div>
             </div>
 
-            {/* Document Editor Area - Centered with max-width */}
-            <div className="flex-1 overflow-auto bg-muted/30">
-              <div className="max-w-4xl mx-auto py-12 px-8 md:px-16 lg:px-24">
-                <div
-                  ref={editableRef}
-                  contentEditable
-                  onInput={updateContentFromEditable}
-                  onKeyDown={handleKeyDown}
-                  suppressContentEditableWarning
-                  className="rte-content w-full min-h-[calc(100vh-200px)] bg-background border-none focus:outline-none text-lg leading-relaxed resize-none shadow-sm rounded-lg p-12 font-serif"
-                />
+            {/* Document Editor + Assistant */}
+            <div className={cn("flex-1 overflow-hidden bg-muted/30", assistantOpen ? "grid grid-cols-[1fr_420px]" : "")}> 
+              {/* Editor Area */}
+              <div className="overflow-auto">
+                <div className="max-w-4xl mx-auto py-12 px-8 md:px-16 lg:px-24">
+                  <div
+                    ref={editableRef}
+                    contentEditable
+                    onInput={updateContentFromEditable}
+                    onKeyDown={handleKeyDown}
+                    suppressContentEditableWarning
+                    className="rte-content w-full min-h-[calc(100vh-200px)] bg-background border-none focus:outline-none text-lg leading-relaxed resize-none shadow-sm rounded-lg p-12 font-serif"
+                  />
+                </div>
               </div>
+
+              {/* Assistant Panel */}
+              {assistantOpen && (
+                <div className="h-full overflow-hidden border-l border-border/40 bg-background">
+                  <EditorialAssistantPanel
+                    onClose={() => setAssistantOpen(false)}
+                    initialContent={(richHtml ? htmlToPlainText(richHtml) : content)}
+                  />
+                </div>
+              )}
             </div>
           </div>,
           document.body
