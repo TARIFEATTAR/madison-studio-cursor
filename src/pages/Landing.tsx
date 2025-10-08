@@ -221,57 +221,123 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section id="features" className="py-20 border-t border-border/40">
+      {/* The Scriptora System */}
+      <section id="features" className="py-20 border-t border-border/40 bg-gradient-to-b from-background to-card/30">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="text-center mb-16 codex-spacing fade-enter">
             <h2 className="text-foreground mb-4">
-              The Scriptora Workflow
+              The Scriptora System
             </h2>
             <p className="text-large text-muted-foreground max-w-2xl mx-auto">
-              Build your centralized repository of high-quality content, prompts, and brand guidelines. Then compose, amplify, plan, and track—everything you need to maintain a consistent brand voice across all your marketing channels.
+              Six seamless steps from brand guidelines to published content
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-12 fade-enter">
-            {features.map((feature, index) => {
-              const icon = feature.icon;
-              const isImageIcon = typeof icon === 'string';
-              return (
-                <div 
-                  key={index}
-                  className="group relative bg-card/50 border border-border/50 rounded-xl p-8 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:border-primary/30 cursor-default"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  {/* Step Number */}
-                  <div className="absolute top-6 right-6 text-4xl font-serif font-bold text-primary/40 group-hover:text-primary/60 transition-colors duration-300">
-                    {index + 1}
+          {/* Workflow Steps */}
+          <div className="relative">
+            {/* Connection Line */}
+            <div className="hidden lg:block absolute top-20 left-0 right-0 h-0.5 bg-border/30" style={{ left: '8%', right: '8%' }} />
+            
+            {/* Steps Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-6 fade-enter">
+              {/* Step 1 */}
+              <div className="flex flex-col items-center text-center group">
+                <div className="relative mb-6">
+                  <div className="w-32 h-32 rounded-2xl border-2 border-border/40 bg-card flex items-center justify-center group-hover:border-primary/40 group-hover:shadow-lg transition-all duration-300">
+                    <Archive className="w-12 h-12 text-primary" />
                   </div>
-                  
-                  {/* Icon */}
-                  <div className="mb-6">
-                    {isImageIcon ? (
-                      <img src={icon} alt={feature.title} className="w-24 h-24 object-contain" />
-                    ) : (
-                      (() => {
-                        const IconComponent = icon as React.ComponentType<{ className?: string }>;
-                        return <IconComponent className="w-24 h-24 text-primary" />;
-                      })()
-                    )}
-                  </div>
-                  
-                  {/* Title - Title Case */}
-                  <h3 className="font-serif text-2xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors duration-300">
-                    {feature.title}
-                  </h3>
-                  
-                  {/* Description */}
-                  <p className="text-regular text-muted-foreground leading-relaxed">
-                    {feature.description}
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">STEP 1</p>
+                  <h3 className="font-serif text-xl font-bold text-foreground">Upload Brand Docs</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Import your brand guidelines, style guides, and content examples
                   </p>
                 </div>
-              );
-            })}
+              </div>
+
+              {/* Step 2 */}
+              <div className="flex flex-col items-center text-center group">
+                <div className="relative mb-6">
+                  <div className="w-32 h-32 rounded-2xl border-2 border-border/40 bg-card flex items-center justify-center group-hover:border-primary/40 group-hover:shadow-lg transition-all duration-300">
+                    <Sparkles className="w-12 h-12 text-primary" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">STEP 2</p>
+                  <h3 className="font-serif text-xl font-bold text-foreground">AI Learns Your Voice</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Claude analyzes and internalizes your brand's unique voice and rules
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div className="flex flex-col items-center text-center group">
+                <div className="relative mb-6">
+                  <div className="w-32 h-32 rounded-2xl border-2 border-border/40 bg-card flex items-center justify-center group-hover:border-primary/40 group-hover:shadow-lg transition-all duration-300">
+                    <BookOpen className="w-12 h-12 text-primary" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">STEP 3</p>
+                  <h3 className="font-serif text-xl font-bold text-foreground">Generate Content</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Create brand-consistent content across any format or channel
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 4 */}
+              <div className="flex flex-col items-center text-center group">
+                <div className="relative mb-6">
+                  <div className="w-32 h-32 rounded-2xl border-2 border-border/40 bg-card flex items-center justify-center group-hover:border-primary/40 group-hover:shadow-lg transition-all duration-300">
+                    <svg className="w-12 h-12 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">STEP 4</p>
+                  <h3 className="font-serif text-xl font-bold text-foreground">Get Director Feedback</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Receive strategic editorial counsel from your AI Director
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 5 */}
+              <div className="flex flex-col items-center text-center group">
+                <div className="relative mb-6">
+                  <div className="w-32 h-32 rounded-2xl border-2 border-border/40 bg-card flex items-center justify-center group-hover:border-primary/40 group-hover:shadow-lg transition-all duration-300">
+                    <Repeat className="w-12 h-12 text-primary" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">STEP 5</p>
+                  <h3 className="font-serif text-xl font-bold text-foreground">Amplify Everywhere</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Transform one piece into 8+ formats for all your channels
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 6 */}
+              <div className="flex flex-col items-center text-center group">
+                <div className="relative mb-6">
+                  <div className="w-32 h-32 rounded-2xl border-2 border-border/40 bg-card flex items-center justify-center group-hover:border-primary/40 group-hover:shadow-lg transition-all duration-300">
+                    <Calendar className="w-12 h-12 text-primary" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">STEP 6</p>
+                  <h3 className="font-serif text-xl font-bold text-foreground">Schedule & Track</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Plan your content calendar and measure performance
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
