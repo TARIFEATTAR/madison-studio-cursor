@@ -60,7 +60,9 @@ export type Database = {
       }
       brand_documents: {
         Row: {
+          content_preview: string | null
           created_at: string | null
+          extracted_content: string | null
           file_name: string
           file_size: number | null
           file_type: string
@@ -72,7 +74,9 @@ export type Database = {
           uploaded_by: string | null
         }
         Insert: {
+          content_preview?: string | null
           created_at?: string | null
+          extracted_content?: string | null
           file_name: string
           file_size?: number | null
           file_type: string
@@ -84,7 +88,9 @@ export type Database = {
           uploaded_by?: string | null
         }
         Update: {
+          content_preview?: string | null
           created_at?: string | null
+          extracted_content?: string | null
           file_name?: string
           file_size?: number | null
           file_type?: string

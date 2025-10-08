@@ -40,12 +40,13 @@ async function buildBrandContext(organizationId: string) {
       console.error('Error fetching organization:', orgError);
     }
     
-    // Fetch brand documents (prioritize LLM System Prompt)
+    // Fetch brand documents with extracted content
     const { data: docsData, error: docsError } = await supabase
       .from('brand_documents')
-      .select('file_name, file_url')
+      .select('file_name, file_type, extracted_content, created_at')
       .eq('organization_id', organizationId)
-      .eq('processing_status', 'complete');
+      .eq('processing_status', 'completed')
+      .order('created_at', { ascending: false });
     
     if (docsError) {
       console.error('Error fetching brand documents:', docsError);
@@ -115,14 +116,23 @@ async function buildBrandContext(organizationId: string) {
       }
     }
     
-    // Add reference to uploaded brand documents
+    // Add processed brand documents with full content
     if (docsData && docsData.length > 0) {
-      contextParts.push('\n=== UPLOADED BRAND DOCUMENTS ===');
-      contextParts.push('The following brand documents have been uploaded and analyzed:');
-      for (const doc of docsData) {
-        contextParts.push(`• ${doc.file_name}`);
-      }
-      contextParts.push('\nAll guidelines from these documents MUST be followed.');
+      contextParts.push(`\n╔════ UPLOADED BRAND DOCUMENTS ════╗`);
+      contextParts.push(`📄 ${docsData.length} brand document(s) with detailed guidelines:\n`);
+      
+      docsData.forEach((doc, index) => {
+        contextParts.push(`━━━ DOCUMENT ${index + 1}: ${doc.file_name} ━━━`);
+        if (doc.extracted_content) {
+          contextParts.push(doc.extracted_content);
+          contextParts.push(''); // Empty line for separation
+        } else {
+          contextParts.push(`   • ${doc.file_name} (${doc.file_type}) - Content not yet extracted`);
+        }
+      });
+      
+      contextParts.push(`\n⚠️ CRITICAL: All guidelines from these documents are MANDATORY and MUST be followed exactly.`);
+      contextParts.push(`╚${'═'.repeat(38)}╝\n`);
     }
     
     const fullContext = contextParts.join('\n');

@@ -217,7 +217,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
         }
 
         // Insert document record with file URL
-        const { error: insertError } = await supabase
+        const { data: docData, error: insertError } = await supabase
           .from('brand_documents')
           .insert({
             organization_id: organizationId,
@@ -226,12 +226,28 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
             file_type: file.type,
             file_size: file.size,
             file_url: filePath,
-            processing_status: 'uploaded',
-          });
+            processing_status: 'pending',
+          })
+          .select()
+          .single();
 
         if (insertError) {
           console.error('Database insert error:', insertError);
           throw insertError;
+        }
+
+        // Trigger document processing in background
+        if (docData) {
+          supabase.functions.invoke('process-brand-document', {
+            body: { documentId: docData.id }
+          }).then(({ error }) => {
+            if (error) {
+              console.error('Processing error for', file.name, ':', error);
+            } else {
+              console.log('Processing started for', file.name);
+              fetchUploadedDocuments(); // Refresh to show updated status
+            }
+          });
         }
       }
 
@@ -890,9 +906,32 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
                         {formatFileSize(doc.file_size)} • {formatDistanceToNow(new Date(doc.created_at), { addSuffix: true })}
                       </p>
                     </div>
-                    <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary capitalize flex-shrink-0">
-                      {doc.processing_status}
-                    </span>
+                    
+                    {/* Processing Status Badge */}
+                    {doc.processing_status === 'pending' && (
+                      <span className="text-xs px-2 py-1 rounded-full bg-yellow-500/10 text-yellow-700 dark:text-yellow-300 capitalize flex-shrink-0 flex items-center gap-1">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Pending
+                      </span>
+                    )}
+                    {doc.processing_status === 'processing' && (
+                      <span className="text-xs px-2 py-1 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300 capitalize flex-shrink-0 flex items-center gap-1">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Processing
+                      </span>
+                    )}
+                    {doc.processing_status === 'completed' && (
+                      <span className="text-xs px-2 py-1 rounded-full bg-green-500/10 text-green-700 dark:text-green-300 capitalize flex-shrink-0 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Ready
+                      </span>
+                    )}
+                    {doc.processing_status === 'failed' && (
+                      <span className="text-xs px-2 py-1 rounded-full bg-red-500/10 text-red-700 dark:text-red-300 capitalize flex-shrink-0 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        Failed
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 ml-4">
                     <Button

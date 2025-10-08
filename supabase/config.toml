@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.scrape-brand-website]
 verify_jwt = true
+
+[functions.process-brand-document]
+verify_jwt = true
