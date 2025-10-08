@@ -4,6 +4,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from "@/components/ui/button";
 import { MoreVertical, Archive, Trash2, Star } from "lucide-react";
 import { getCollectionIcon, normalizeCollectionName, formatCollectionDisplay } from "@/utils/collectionIcons";
+import { getContentCategoryLabel, getContentSubtypeLabel } from "@/utils/contentSubtypeLabels";
 
 interface OutputCardProps {
   output: {
@@ -79,10 +80,28 @@ export function OutputCard({
 
   return (
     <Card 
-      className="hover:shadow-md transition-shadow cursor-pointer group"
+      className="hover:shadow-md transition-shadow cursor-pointer group relative"
       onClick={handleCardClick}
     >
-      <CardHeader className="pb-3">
+      {/* Two-Tier Badge System - Top Left */}
+      <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
+        {/* Category Badge */}
+        <Badge variant="outline" className="bg-stone-100/80 dark:bg-stone-800/80 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600">
+          {getContentCategoryLabel(contentType) || 'Content'}
+        </Badge>
+        {/* Subtype Tag */}
+        {contentType && (
+          <Badge variant="outline" className="bg-stone-50/60 dark:bg-stone-900/60 text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-700 text-xs">
+            {getContentSubtypeLabel(contentType)}
+          </Badge>
+        )}
+        {/* Item Type Badge */}
+        <Badge variant="outline" className="bg-muted/60 text-muted-foreground border-border/40 text-xs">
+          Output
+        </Badge>
+      </div>
+      
+      <CardHeader className="pb-3 pt-12">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-lg truncate">
@@ -127,11 +146,6 @@ export function OutputCard({
             )}
             {!CollectionIcon && displayCollection}
           </Badge>
-          {contentType && (
-            <Badge variant="secondary">
-              {contentType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-            </Badge>
-          )}
           {output.quality_rating && (
             <Badge variant="outline" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400">
               <Star className="mr-1 h-3 w-3 fill-current" />

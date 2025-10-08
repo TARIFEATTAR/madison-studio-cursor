@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getCollectionIcon, normalizeCollectionName, formatCollectionDisplay } from "@/utils/collectionIcons";
+import { getContentCategoryLabel, getContentSubtypeLabel } from "@/utils/contentSubtypeLabels";
 
 interface PromptCardProps {
   prompt: {
@@ -110,10 +111,26 @@ const PromptCard = ({ prompt, onArchive, onDelete, onClick }: PromptCardProps) =
         </DropdownMenu>
       </div>
 
+      {/* Two-Tier Badge System - Top Left */}
+      <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
+        {/* Category Badge */}
+        <Badge variant="outline" className="bg-stone-100/80 dark:bg-stone-800/80 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600">
+          {getContentCategoryLabel(prompt.content_type) || 'Content'}
+        </Badge>
+        {/* Subtype Tag */}
+        <Badge variant="outline" className="bg-stone-50/60 dark:bg-stone-900/60 text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-700 text-xs">
+          {getContentSubtypeLabel(prompt.content_type)}
+        </Badge>
+        {/* Item Type Badge */}
+        <Badge variant="outline" className="bg-muted/60 text-muted-foreground border-border/40 text-xs">
+          Prompt
+        </Badge>
+      </div>
+
       {/* Card Content */}
       <div onClick={() => onClick?.(prompt.id)} className={onClick ? "cursor-pointer" : ""}>
         {/* Header Tags */}
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4 mt-8">
         <Badge className={collectionColors[prompt.collection] || "bg-muted"}>
           {(() => {
             const CollectionIcon = getCollectionIcon(prompt.collection);
@@ -135,9 +152,6 @@ const PromptCard = ({ prompt, onArchive, onDelete, onClick }: PromptCardProps) =
             Week {prompt.dip_week}: {dipWorld}
           </Badge>
         )}
-        <Badge variant="outline" className="border-border/60 capitalize">
-          {prompt.content_type}
-        </Badge>
       </div>
 
       {/* Title */}
