@@ -89,7 +89,7 @@ export const AppSidebar = () => {
       <SidebarContent className="p-4">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.path);
@@ -101,13 +101,13 @@ export const AppSidebar = () => {
                         <SidebarMenuButton
                           asChild
                           className={cn(
-                            "h-10 px-3 rounded-md transition-all",
+                            "h-10 px-3 py-2 rounded-md transition-all",
                             active && "bg-saffron-gold/20 border-l-3 border-saffron-gold font-medium text-foreground"
                           )}
                         >
-                          <Link to={item.path}>
+                          <Link to={item.path} className="flex items-center gap-3">
                             <Icon className="w-5 h-5 flex-shrink-0" />
-                            {!collapsed && <span className="flex-1 text-sm">{item.label}</span>}
+                            {!collapsed && <span className="flex-1 text-sm leading-none">{item.label}</span>}
                           </Link>
                         </SidebarMenuButton>
                       </TooltipTrigger>
@@ -132,11 +132,11 @@ export const AppSidebar = () => {
                 <TooltipTrigger asChild>
                   <SidebarMenuButton
                     asChild
-                    className="h-9 px-2 rounded-md hover:bg-stone-beige/50 transition-all"
+                    className="h-9 px-2 py-2 rounded-md hover:bg-stone-beige/50 transition-all"
                   >
-                    <Link to="/settings">
-                      <Settings className="w-4 h-4" />
-                      {!collapsed && <span className="flex-1 text-sm">Settings</span>}
+                    <Link to="/settings" className="flex items-center gap-2">
+                      <Settings className="w-4 h-4 flex-shrink-0" />
+                      {!collapsed && <span className="flex-1 text-sm leading-none">Settings</span>}
                     </Link>
                   </SidebarMenuButton>
                 </TooltipTrigger>
@@ -151,10 +151,10 @@ export const AppSidebar = () => {
                 <TooltipTrigger asChild>
                   <SidebarMenuButton
                     onClick={signOut}
-                    className="h-9 px-2 rounded-md hover:bg-stone-beige/50 transition-all"
+                    className="h-9 px-2 py-2 rounded-md hover:bg-stone-beige/50 transition-all flex items-center gap-2"
                   >
-                    <LogOut className="w-4 h-4" />
-                    {!collapsed && <span className="flex-1 text-sm">Sign Out</span>}
+                    <LogOut className="w-4 h-4 flex-shrink-0" />
+                    {!collapsed && <span className="flex-1 text-sm leading-none">Sign Out</span>}
                   </SidebarMenuButton>
                 </TooltipTrigger>
                 <TooltipContent side="right">

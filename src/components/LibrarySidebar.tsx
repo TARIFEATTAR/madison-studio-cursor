@@ -233,7 +233,7 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
 
           {expandedSections.contentTypes && (
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="space-y-1">
                 {contentTypeMapping.map((type) => {
                   const typeCount = getContentTypeCount(type.keys);
                   const isTypeActive = type.keys.some(key => activeFilters.contentType === key);
@@ -242,17 +242,17 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
                     <SidebarMenuItem key={type.name}>
                       <SidebarMenuButton
                         className={cn(
-                          "h-9 px-2 rounded-md transition-all",
+                          "h-9 px-2 py-2 rounded-md transition-all flex items-center gap-3",
                           isTypeActive && "bg-saffron-gold/20 border-l-3 border-saffron-gold font-medium"
                         )}
                         onClick={() => handleFilterClick("contentType", type.keys[0])}
                       >
-                        <type.icon className="w-4 h-4" />
+                        <type.icon className="w-4 h-4 flex-shrink-0" />
                         {!collapsed && (
                           <>
-                            <span className="flex-1 text-sm">{type.name}</span>
+                            <span className="flex-1 text-sm leading-none">{type.name}</span>
                             {typeCount > 0 && (
-                              <Badge variant="secondary" className="text-xs">
+                              <Badge variant="secondary" className="text-xs ml-auto">
                                 {typeCount}
                               </Badge>
                             )}
@@ -288,7 +288,7 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
 
           {expandedSections.collections && (
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="space-y-1">
                 {collections.map((collection) => {
                   const CollectionIcon = getCollectionIcon(collection.key) || collection.icon;
                   const collectionCount = getCollectionCount(collection.key);
@@ -298,20 +298,20 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
                     <SidebarMenuItem key={collection.key}>
                       <SidebarMenuButton
                         className={cn(
-                          "group flex items-center justify-between h-9 px-2 rounded-md transition-all",
+                          "group flex items-center gap-3 h-9 px-2 py-2 rounded-md transition-all",
                           isCollectionActive && "bg-saffron-gold/20 border-l-3 border-saffron-gold font-medium"
                         )}
                         onClick={() => handleFilterClick("collection", collection.key)}
                       >
-                        <div className="flex items-center gap-2">
-                          {!collapsed && (
-                            <span className="text-sm">{collection.name}</span>
-                          )}
-                        </div>
-                        {!collapsed && collectionCount > 0 && (
-                          <Badge variant="secondary" className="text-xs">
-                            {collectionCount}
-                          </Badge>
+                        {!collapsed && (
+                          <>
+                            <span className="flex-1 text-sm leading-none">{collection.name}</span>
+                            {collectionCount > 0 && (
+                              <Badge variant="secondary" className="text-xs ml-auto">
+                                {collectionCount}
+                              </Badge>
+                            )}
+                          </>
                         )}
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -343,7 +343,7 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
 
           {expandedSections.dipWeeks && (
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="space-y-1">
                 {dipWeeks.map((week) => {
                   const weekCount = (counts.prompts.byDipWeek[week.number] || 0) + 
                                       (counts.outputs.byDipWeek[week.number] || 0) + 
@@ -354,17 +354,17 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
                     <SidebarMenuItem key={week.number}>
                       <SidebarMenuButton
                         className={cn(
-                          "h-9 px-2 rounded-md transition-all",
+                          "h-9 px-2 py-2 rounded-md transition-all flex items-center gap-3",
                           isWeekActive && "bg-saffron-gold/20 border-l-3 border-saffron-gold font-medium"
                         )}
                         onClick={() => handleFilterClick("dipWeek", week.number)}
                       >
                         {!collapsed && (
                           <>
-                            <span className="flex-1 text-sm">
+                            <span className="flex-1 text-sm leading-none">
                               Week {week.number}: {week.name}
                             </span>
-                            <Badge variant="secondary" className="text-xs">
+                            <Badge variant="secondary" className="text-xs ml-auto">
                               {weekCount}
                             </Badge>
                           </>
@@ -387,20 +387,20 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
           </SidebarGroupLabel>
 
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className={cn(
-                    "h-9 px-2 rounded-md transition-all",
+                    "h-9 px-2 py-2 rounded-md transition-all flex items-center gap-3",
                     activeFilters.quickAccess === "favorites" && "bg-saffron-gold/20 border-l-3 border-saffron-gold font-medium"
                   )}
                   onClick={() => handleFilterClick("quickAccess", "favorites")}
                 >
-                  <Star className="w-4 h-4" />
+                  <Star className="w-4 h-4 flex-shrink-0" />
                   {!collapsed && (
                     <>
-                      <span className="flex-1 text-sm">Favorites</span>
-                      <Badge variant="secondary" className="text-xs">
+                      <span className="flex-1 text-sm leading-none">Favorites</span>
+                      <Badge variant="secondary" className="text-xs ml-auto">
                         {counts.favorites}
                       </Badge>
                     </>
@@ -411,16 +411,16 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className={cn(
-                    "h-9 px-2 rounded-md transition-all",
+                    "h-9 px-2 py-2 rounded-md transition-all flex items-center gap-3",
                     activeFilters.quickAccess === "recent" && "bg-saffron-gold/20 border-l-3 border-saffron-gold font-medium"
                   )}
                   onClick={() => handleFilterClick("quickAccess", "recent")}
                 >
-                  <Clock className="w-4 h-4" />
+                  <Clock className="w-4 h-4 flex-shrink-0" />
                   {!collapsed && (
                     <>
-                      <span className="flex-1 text-sm">Recent</span>
-                      <Badge variant="secondary" className="text-xs">
+                      <span className="flex-1 text-sm leading-none">Recent</span>
+                      <Badge variant="secondary" className="text-xs ml-auto">
                         {counts.recent}
                       </Badge>
                     </>
