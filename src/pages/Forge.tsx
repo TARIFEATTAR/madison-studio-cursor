@@ -267,7 +267,8 @@ const Forge = () => {
       const { data, error } = await supabase.functions.invoke('generate-with-claude', {
         body: { 
           prompt: generatedPrompt,
-          organizationId: currentOrganizationId
+          organizationId: currentOrganizationId,
+          mode: "generate"
         }
       });
 

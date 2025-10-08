@@ -116,22 +116,42 @@ serve(async (req) => {
       throw new Error('ANTHROPIC_API_KEY is not configured');
     }
 
-    const { prompt, organizationId } = await req.json();
+    const { prompt, organizationId, mode = "generate" } = await req.json();
 
     console.log('Generating content with Claude for prompt:', prompt.substring(0, 100));
+    console.log('Mode:', mode);
     if (organizationId) {
       console.log('Organization ID provided:', organizationId);
     }
 
-    // Build brand-aware system prompt
-    let systemPrompt = 'You are a professional copywriter. Always return plain text responses with no Markdown formatting. Do not use asterisks, bold, italics, headers, or any special formatting characters. Output must be clean, copy-paste ready text.';
+    // Build brand-aware system prompt based on mode
+    let systemPrompt = '';
     
     // Fetch and inject brand context if organization ID provided
     if (organizationId) {
       const brandContext = await buildBrandContext(organizationId);
       
       if (brandContext) {
-        systemPrompt = `${brandContext}
+        if (mode === "generate") {
+          // GENERATE MODE: Direct copywriting execution
+          systemPrompt = `${brandContext}
+
+=== YOUR ROLE ===
+You are a professional copywriter executing a creative brief.
+
+=== INSTRUCTIONS ===
+- Execute the brief provided by the user
+- Generate copy that aligns with the brand guidelines above
+- Do NOT ask clarifying questions—the brief contains all necessary information
+- Output clean, copy-paste ready text with no Markdown formatting
+- Follow approved vocabulary and brand voice guidelines
+- Reference brand pillars and themes as relevant
+- Always return plain text responses with no asterisks, bold, italics, headers, or any special formatting characters
+- No emojis, no excessive enthusiasm
+- Focus on delivering the requested content directly`;
+        } else if (mode === "consult") {
+          // CONSULT MODE: Strategic Editorial Director
+          systemPrompt = `${brandContext}
 
 === YOUR ROLE ===
 You are the Editorial Director at Scriptora—a seasoned professional in the tradition of David Ogilvy.
@@ -168,10 +188,14 @@ Examples of your voice:
 - Return output as plain text only with no Markdown formatting
 - No emojis, no excessive enthusiasm, no generic praise
 - Be the strategic counsel they need, not the validation they might want`;
+        }
       }
     } else {
-      // No organization context - use Editorial Director persona as fallback
-      systemPrompt = `You are the Editorial Director at Scriptora—a seasoned professional in the tradition of David Ogilvy.
+      // No organization context - fallback prompts
+      if (mode === "generate") {
+        systemPrompt = 'You are a professional copywriter. Always return plain text responses with no Markdown formatting. Do not use asterisks, bold, italics, headers, or any special formatting characters. Output must be clean, copy-paste ready text.';
+      } else {
+        systemPrompt = `You are the Editorial Director at Scriptora—a seasoned professional in the tradition of David Ogilvy.
 
 You guide marketers with precision, strategic rigor, and timeless craft principles.
 
@@ -189,6 +213,7 @@ AVOID:
 - Rushed, surface-level suggestions
 
 Return plain text only with no Markdown formatting. No asterisks, bold, italics, or headers.`;
+      }
     }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {

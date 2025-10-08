@@ -71,6 +71,7 @@ export function EditorialAssistant({ isOpen, onClose }: EditorialAssistantProps)
         body: {
           prompt,
           organizationId: currentOrganizationId,
+          mode: "consult",
         },
       });
 
