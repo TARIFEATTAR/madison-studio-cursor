@@ -128,12 +128,12 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-20">
           <div className="text-center max-w-4xl mx-auto codex-spacing fade-enter">
             <h1 className="text-white mb-6">
-              Your Brand Intelligence,
-              <span className="text-primary block mt-2">Simplified</span>
+              Your Brand Voice,
+              <span className="text-primary block mt-2">Enforced by AI</span>
             </h1>
             <p className="text-large text-white/90 mb-12 leading-relaxed">
-              Scriptora transforms content marketing from chaos to clarity. Build your prompt library, 
-              generate on-brand content, and orchestrate multi-channel campaigns—all in one elegant platform.
+              Upload your brand guidelines. Generate content that sounds exactly like your team wrote it. 
+              Amplify across every channel. Scriptora turns your brand knowledge into your competitive advantage.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" variant="brass">
