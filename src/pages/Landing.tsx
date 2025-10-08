@@ -223,7 +223,7 @@ const Landing = () => {
 
 
       {/* Comparison Section */}
-      <section className="py-20 border-t relative overflow-hidden bg-ink-black">
+      <section className="py-20 border-t relative overflow-hidden bg-black">
         {/* Decorative brass borders */}
         <div className="absolute left-0 top-0 bottom-0 w-1 opacity-50" style={{ background: 'linear-gradient(180deg, transparent 0%, hsl(38 33% 56%) 50%, transparent 100%)' }} />
         <div className="absolute right-0 top-0 bottom-0 w-1 opacity-50" style={{ background: 'linear-gradient(180deg, transparent 0%, hsl(38 33% 56%) 50%, transparent 100%)' }} />
