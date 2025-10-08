@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, GripVertical, ArrowLeft } from "lucide-react";
 import { ProductsTab } from "@/components/settings/ProductsTab";
+import { BrandGuidelinesTab } from "@/components/settings/BrandGuidelinesTab";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -165,12 +166,18 @@ export default function Settings() {
           </p>
         </div>
 
-        <Tabs defaultValue="collections" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="brand" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="brand">Brand</TabsTrigger>
             <TabsTrigger value="collections">Collections</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
-            <TabsTrigger value="weeks">DIP Week Names</TabsTrigger>
+            <TabsTrigger value="weeks">DIP Weeks</TabsTrigger>
           </TabsList>
+
+          {/* Brand Guidelines Tab */}
+          <TabsContent value="brand">
+            <BrandGuidelinesTab />
+          </TabsContent>
 
           {/* Collections Tab */}
           <TabsContent value="collections" className="space-y-6">
