@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { Upload, X, Printer, Check } from "lucide-react";
+import { useIndustryConfig } from "@/hooks/useIndustryConfig";
 
 interface BrandConfig {
   logo_url?: string;
@@ -17,6 +18,7 @@ interface BrandConfig {
 export function BrandGuidelinesTab() {
   const { toast } = useToast();
   const { currentOrganizationId } = useOnboarding();
+  const { industryConfig } = useIndustryConfig(currentOrganizationId);
   const [brandConfig, setBrandConfig] = useState<BrandConfig>({
     brand_colors: ["#B8956A", "#FFFFFF", "#000000", "#F5F5F5"],
   });
@@ -316,6 +318,46 @@ export function BrandGuidelinesTab() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Industry-Specific Fields Section */}
+      {industryConfig && (
+        <Card className="print:border-2 print:border-foreground">
+          <CardHeader>
+            <CardTitle>Industry-Specific Fields</CardTitle>
+            <CardDescription>Custom fields for your {industryConfig.name} products</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Industry</Label>
+              <p className="text-base text-foreground">{industryConfig.name}</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Section Title</Label>
+              <p className="text-base text-foreground">{industryConfig.section_title}</p>
+            </div>
+
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Field Labels</Label>
+              <div className="space-y-2">
+                {industryConfig.fields.map((field, index) => (
+                  <div key={field.id} className="flex items-center gap-3 p-3 bg-muted/20 rounded-md border border-border/20">
+                    <span className="text-sm text-muted-foreground w-16">Field {index + 1}</span>
+                    <span className="text-base text-foreground font-medium">{field.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-border/20">
+              <p className="text-xs text-muted-foreground">
+                These fields are used throughout Forge and the Product Library to organize your content.
+                To change your industry, please contact support.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Print-only footer */}
       <div className="hidden print:block mt-8 pt-4 border-t border-foreground/20">

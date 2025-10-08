@@ -1,6 +1,18 @@
 import { IMAGE_PROMPT_TEMPLATES, type ImagePromptType } from "@/config/imagePromptGuidelines";
 import { generateBlogPrompt, type BlogPostType } from "@/config/blogPostGuidelines";
 
+export interface IndustryFieldConfig {
+  id: string;
+  label: string;
+}
+
+export interface IndustryConfig {
+  id: string;
+  name: string;
+  section_title: string;
+  fields: IndustryFieldConfig[];
+}
+
 export interface FormData {
   title: string;
   contentType: string;
@@ -24,7 +36,7 @@ export interface BlogData {
   blogProductConnection: string;
 }
 
-export function generatePromptText(formData: FormData, blogData?: BlogData): string {
+export function generatePromptText(formData: FormData, blogData?: BlogData, industryConfig?: IndustryConfig): string {
   const parts = [];
   
   // For blog posts, use specialized blog prompt generator
@@ -101,21 +113,25 @@ export function generatePromptText(formData: FormData, blogData?: BlogData): str
     parts.push(`Scent Family: ${formData.scentFamily}`);
   }
   
-  // Add fragrance notes if available
-  const fragranceNotes = [];
+  // Add industry-specific fields with labeled context
+  const productDetails = [];
   if (formData.topNotes) {
-    fragranceNotes.push(`Top Notes: ${formData.topNotes}`);
+    const label = industryConfig?.fields[0]?.label || "Top Notes";
+    productDetails.push(`${label}: ${formData.topNotes}`);
   }
   if (formData.middleNotes) {
-    fragranceNotes.push(`Middle Notes: ${formData.middleNotes}`);
+    const label = industryConfig?.fields[1]?.label || "Middle Notes";
+    productDetails.push(`${label}: ${formData.middleNotes}`);
   }
   if (formData.baseNotes) {
-    fragranceNotes.push(`Base Notes: ${formData.baseNotes}`);
+    const label = industryConfig?.fields[2]?.label || "Base Notes";
+    productDetails.push(`${label}: ${formData.baseNotes}`);
   }
   
-  if (fragranceNotes.length > 0) {
-    parts.push(`\nFragrance Profile:\n${fragranceNotes.join('\n')}`);
-    parts.push(`\nIMPORTANT: Reference these specific fragrance notes in your copy to create vivid, sensory descriptions.`);
+  if (productDetails.length > 0) {
+    const sectionTitle = industryConfig?.section_title || "Product Details";
+    parts.push(`\n${sectionTitle}:\n${productDetails.join('\n')}`);
+    parts.push(`\nIMPORTANT: Reference these specific details in your copy to create vivid, contextual descriptions.`);
   }
   
   if (formData.pillar) {

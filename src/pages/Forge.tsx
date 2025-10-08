@@ -7,6 +7,7 @@ import { useOnboarding } from "@/hooks/useOnboarding";
 import { useProducts } from "@/hooks/useProducts";
 import { useCollections } from "@/hooks/useCollections";
 import { useWeekNames } from "@/hooks/useWeekNames";
+import type { IndustryConfig } from "@/hooks/usePromptGeneration";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -118,6 +119,9 @@ const Forge = () => {
   // Editorial Assistant Panel state
   const [showAssistantPanel, setShowAssistantPanel] = useState(false);
   
+  // Industry configuration state
+  const [industryConfig, setIndustryConfig] = useState<IndustryConfig | null>(null);
+  
   const [formData, setFormData] = useState({
     title: "",
     contentType: "",
@@ -160,6 +164,32 @@ const Forge = () => {
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state, navigate, toast]);
+
+  // Load industry configuration from organization
+  useEffect(() => {
+    const loadIndustryConfig = async () => {
+      if (!currentOrganizationId) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from("organizations")
+          .select("brand_config")
+          .eq("id", currentOrganizationId)
+          .single();
+        
+        if (error) throw error;
+        
+        const config = (data?.brand_config as any)?.industry_config;
+        if (config) {
+          setIndustryConfig(config);
+        }
+      } catch (error) {
+        console.error("Error loading industry config:", error);
+      }
+    };
+    
+    loadIndustryConfig();
+  }, [currentOrganizationId]);
 
   const filteredProducts = useMemo(() => {
     if (!productSearchValue) return products;
@@ -942,39 +972,45 @@ const Forge = () => {
 
                 <div className="space-y-4 pt-4 border-t border-border/40">
                   <div>
-                    <Label className="text-base">Fragrance Notes</Label>
+                    <Label className="text-base">{industryConfig?.section_title || "Product Details"}</Label>
                     <p className="text-xs text-muted-foreground mt-1">
                       Auto-filled from product selection, editable for updates
                     </p>
                   </div>
                   <div className="space-y-3">
                     <div className="space-y-2">
-                      <Label htmlFor="topNotes" className="text-sm text-muted-foreground">Top Notes</Label>
+                      <Label htmlFor="topNotes" className="text-sm text-muted-foreground">
+                        {industryConfig?.fields[0]?.label || "Field 1"}
+                      </Label>
                       <Input
                         id="topNotes"
                         value={formData.topNotes}
                         onChange={(e) => setFormData({ ...formData, topNotes: e.target.value })}
-                        placeholder="e.g., Bergamot, Lemon, Fresh Citrus"
+                        placeholder={`e.g., ${industryConfig?.fields[0]?.label || "Field 1"}`}
                         className="bg-background/50"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="middleNotes" className="text-sm text-muted-foreground">Middle Notes</Label>
+                      <Label htmlFor="middleNotes" className="text-sm text-muted-foreground">
+                        {industryConfig?.fields[1]?.label || "Field 2"}
+                      </Label>
                       <Input
                         id="middleNotes"
                         value={formData.middleNotes}
                         onChange={(e) => setFormData({ ...formData, middleNotes: e.target.value })}
-                        placeholder="e.g., Rose, Jasmine, Floral Bouquet"
+                        placeholder={`e.g., ${industryConfig?.fields[1]?.label || "Field 2"}`}
                         className="bg-background/50"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="baseNotes" className="text-sm text-muted-foreground">Base Notes</Label>
+                      <Label htmlFor="baseNotes" className="text-sm text-muted-foreground">
+                        {industryConfig?.fields[2]?.label || "Field 3"}
+                      </Label>
                       <Input
                         id="baseNotes"
                         value={formData.baseNotes}
                         onChange={(e) => setFormData({ ...formData, baseNotes: e.target.value })}
-                        placeholder="e.g., Sandalwood, Musk, Woody Accord"
+                        placeholder={`e.g., ${industryConfig?.fields[2]?.label || "Field 3"}`}
                         className="bg-background/50"
                       />
                     </div>

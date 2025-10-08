@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getIndustryOptions } from "@/config/industryTemplates";
 
 interface WelcomeModalProps {
   open: boolean;
@@ -12,18 +13,7 @@ interface WelcomeModalProps {
   onSkip?: () => void;
 }
 
-const INDUSTRIES = [
-  "Beauty & Cosmetics",
-  "Fashion & Apparel",
-  "Food & Beverage",
-  "Technology",
-  "Healthcare",
-  "Education",
-  "Real Estate",
-  "Professional Services",
-  "Retail",
-  "Other",
-];
+const INDUSTRY_OPTIONS = getIndustryOptions();
 
 export function WelcomeModal({ open, onComplete, onSkip }: WelcomeModalProps) {
   const [brandName, setBrandName] = useState("");
@@ -79,9 +69,9 @@ export function WelcomeModal({ open, onComplete, onSkip }: WelcomeModalProps) {
                 <SelectValue placeholder="Select your industry" />
               </SelectTrigger>
               <SelectContent className="bg-popover border-border/20">
-                {INDUSTRIES.map((ind) => (
-                  <SelectItem key={ind} value={ind}>
-                    {ind}
+                {INDUSTRY_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
                   </SelectItem>
                 ))}
               </SelectContent>

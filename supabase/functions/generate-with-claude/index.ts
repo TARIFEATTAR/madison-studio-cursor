@@ -114,6 +114,19 @@ async function buildBrandContext(organizationId: string) {
           contextParts.push(`Typography: ${JSON.stringify(config.typography)}`);
         }
       }
+      
+      // Add industry schema instructions
+      if (config.industry_config) {
+        const industryConfig = config.industry_config;
+        contextParts.push('\n╔════ INDUSTRY CONTEXT ════╗');
+        contextParts.push(`Industry: ${industryConfig.name}`);
+        contextParts.push(`\nWhen you see the following fields in the brief, understand them in the context of ${industryConfig.name}:`);
+        industryConfig.fields?.forEach((field: any, index: number) => {
+          contextParts.push(`  • ${field.label}: This describes the product's ${field.label.toLowerCase()}`);
+        });
+        contextParts.push(`\nThese fields replace generic product details and should be interpreted accordingly.`);
+        contextParts.push('╚' + '═'.repeat(26) + '╝\n');
+      }
     }
     
     // Add processed brand documents with full content

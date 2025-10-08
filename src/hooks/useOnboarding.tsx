@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { getIndustryTemplate } from "@/config/industryTemplates";
 
 type OnboardingStep = "welcome_pending" | "document_pending" | "first_generation_pending" | "completed";
 
@@ -173,7 +174,10 @@ export function useOnboarding() {
     if (!user || !currentOrganizationId) return;
 
     try {
-      // Update organization with brand info
+      // Get industry template configuration
+      const industryTemplate = getIndustryTemplate(data.industry);
+      
+      // Update organization with brand info and industry configuration
       await supabase
         .from("organizations")
         .update({
@@ -181,6 +185,12 @@ export function useOnboarding() {
           brand_config: {
             industry: data.industry,
             primaryColor: data.primaryColor,
+            industry_config: {
+              id: industryTemplate.id,
+              name: industryTemplate.name,
+              section_title: industryTemplate.section_title,
+              fields: industryTemplate.fields,
+            },
           },
         })
         .eq("id", currentOrganizationId);

@@ -36,11 +36,13 @@ import { useProducts, Product } from "@/hooks/useProducts";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useIndustryConfig } from "@/hooks/useIndustryConfig";
 
 export function ProductsTab() {
   const { toast } = useToast();
   const { products, loading, refetch } = useProducts();
   const { currentOrganizationId } = useOnboarding();
+  const { industryConfig } = useIndustryConfig(currentOrganizationId);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -416,34 +418,34 @@ export function ProductsTab() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="top_notes">Top Notes</Label>
+              <Label htmlFor="top_notes">{industryConfig?.fields[0]?.label || "Field 1"}</Label>
               <Textarea
                 id="top_notes"
                 value={formData.top_notes}
                 onChange={(e) => setFormData({ ...formData, top_notes: e.target.value })}
-                placeholder="e.g., Honey & Bergamot"
+                placeholder={`e.g., ${industryConfig?.fields[0]?.label || "Field 1"}`}
                 rows={2}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="middle_notes">Middle Notes</Label>
+              <Label htmlFor="middle_notes">{industryConfig?.fields[1]?.label || "Field 2"}</Label>
               <Textarea
                 id="middle_notes"
                 value={formData.middle_notes}
                 onChange={(e) => setFormData({ ...formData, middle_notes: e.target.value })}
-                placeholder="e.g., Agarwood (Oud) & Sumatran Patchouli"
+                placeholder={`e.g., ${industryConfig?.fields[1]?.label || "Field 2"}`}
                 rows={2}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="base_notes">Base Notes</Label>
+              <Label htmlFor="base_notes">{industryConfig?.fields[2]?.label || "Field 3"}</Label>
               <Textarea
                 id="base_notes"
                 value={formData.base_notes}
                 onChange={(e) => setFormData({ ...formData, base_notes: e.target.value })}
-                placeholder="e.g., Agarwood (Oud), Amber, Leather..."
+                placeholder={`e.g., ${industryConfig?.fields[2]?.label || "Field 3"}`}
                 rows={2}
               />
             </div>
