@@ -1078,7 +1078,25 @@ const Forge = () => {
               {generatedOutput && (
                 <div className="mt-6 space-y-4">
                   <div className="brass-divider"></div>
-                  <h3 className="text-lg font-serif mb-3">First Proof</h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-serif">First Proof</h3>
+                    <Button
+                      onClick={() => {
+                        setContentMode("master");
+                        setMasterContentText(generatedOutput);
+                        toast({
+                          title: "Content transferred",
+                          description: "Your edited content is now in the Master Manuscript.",
+                        });
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                    >
+                      <Copy className="w-4 h-4" />
+                      Use as Master Content
+                    </Button>
+                  </div>
                   <div className="manuscript-frame">
                     <ContentEditor
                       content={generatedOutput}
