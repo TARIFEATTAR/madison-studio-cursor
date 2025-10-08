@@ -13,6 +13,7 @@ import { CompleteBrandBanner } from "@/components/onboarding/CompleteBrandBanner
 import { BrandKnowledgeCenter } from "@/components/onboarding/BrandKnowledgeCenter";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { DailyBriefBanner } from "@/components/dashboard/DailyBriefBanner";
 
 const Index = () => {
   console.log("[Index] Rendering Index page...");
@@ -56,6 +57,7 @@ const Index = () => {
       {/* <WelcomeModal open={showWelcome} onComplete={completeWelcome} onSkip={skipWelcome} /> */}
       
       <div className="min-h-screen bg-gradient-to-b from-card to-background">
+        <DailyBriefBanner />
         {/* Hero Section */}
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent" />
