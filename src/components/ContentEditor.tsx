@@ -703,9 +703,9 @@ export const ContentEditor = ({
             </div>
 
             {/* Document Editor + Assistant */}
-            <div className={cn("flex-1 overflow-hidden bg-muted/30", assistantOpen ? "grid grid-cols-[1fr_420px]" : "")}> 
+            <div className={cn("flex-1 bg-muted/30", assistantOpen ? "grid grid-cols-[1fr_420px] overflow-hidden" : "overflow-hidden")}> 
               {/* Editor Area */}
-              <div className="overflow-auto">
+              <div className="h-full overflow-y-auto">
                 <div className="max-w-4xl mx-auto py-12 px-8 md:px-16 lg:px-24">
                   <div
                     ref={editableRef}
