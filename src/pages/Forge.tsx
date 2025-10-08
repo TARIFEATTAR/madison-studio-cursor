@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Sparkles, Copy, Check, Loader2, Archive, Wand2 } from "lucide-react";
+import { Sparkles, Copy, Check, Loader2, Archive, Wand2, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import QualityRating from "@/components/QualityRating";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -22,6 +23,7 @@ import { ChevronsUpDown } from "lucide-react";
 import { IMAGE_PROMPT_TEMPLATES, type ImagePromptType } from "@/config/imagePromptGuidelines";
 import { BLOG_POST_TYPES, BLOG_REPURPOSE_TARGETS, generateBlogPrompt, validateBlogVoice, type BlogPostType } from "@/config/blogPostGuidelines";
 import { ContentEditor } from "@/components/ContentEditor";
+import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
 
 // Helpers to map display labels to database enum values
 const toEnum = (v?: string | null) => (v ? v.toLowerCase().replace(/\s+/g, '_') : null);
@@ -96,6 +98,9 @@ const Forge = () => {
   const [blogProductConnection, setBlogProductConnection] = useState("");
   const [blogWordCount, setBlogWordCount] = useState(1200);
   const [voiceValidation, setVoiceValidation] = useState<ReturnType<typeof validateBlogVoice> | null>(null);
+  
+  // Editorial Assistant Panel state
+  const [showAssistantPanel, setShowAssistantPanel] = useState(false);
   
   const [formData, setFormData] = useState({
     title: "",
@@ -584,17 +589,29 @@ const Forge = () => {
 
   return (
     <div className="min-h-screen py-8 px-6 md:px-12 paper-overlay">
-      <div className="max-w-7xl mx-auto codex-spacing">
+      <div className={showAssistantPanel ? "mx-auto codex-spacing" : "max-w-7xl mx-auto codex-spacing"}>
         {/* Editorial Masthead */}
         <div className="fade-enter mb-12">
           <div className="brass-divider mb-8"></div>
-          <h1 className="text-foreground mb-3 font-serif tracking-wide">The Editorial Desk</h1>
-          <p className="text-muted-foreground text-lg max-w-3xl font-serif leading-relaxed">
-            {contentMode === "single" 
-              ? "Craft precision copy for individual touchpoints. Select a subject from your catalogue and define the parameters of your commission."
-              : "Author foundational narratives for multi-channel deployment. Write once, repurpose strategically across all brand touchpoints."
-            }
-          </p>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h1 className="text-foreground mb-3 font-serif tracking-wide">The Editorial Desk</h1>
+              <p className="text-muted-foreground text-lg max-w-3xl font-serif leading-relaxed">
+                {contentMode === "single" 
+                  ? "Craft precision copy for individual touchpoints. Select a subject from your catalogue and define the parameters of your commission."
+                  : "Author foundational narratives for multi-channel deployment. Write once, repurpose strategically across all brand touchpoints."
+                }
+              </p>
+            </div>
+            <Button
+              onClick={() => setShowAssistantPanel(!showAssistantPanel)}
+              variant={showAssistantPanel ? "default" : "outline"}
+              className="ml-4 gap-2"
+            >
+              <MessageSquare className="w-4 h-4" />
+              {showAssistantPanel ? "Hide" : "Show"} Editorial Director
+            </Button>
+          </div>
         </div>
 
         {/* Edition Selector */}
@@ -620,7 +637,12 @@ const Forge = () => {
 
         {contentMode === "single" ? (
           /* SINGLE COMMISSION MODE */
-          <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-8">
+          <div className={cn(
+            "grid gap-8 transition-all duration-300",
+            showAssistantPanel 
+              ? "grid-cols-1 xl:grid-cols-[40%_35%_25%]" 
+              : "grid-cols-1 lg:grid-cols-[60%_40%]"
+          )}>
             {/* Left: The Manuscript - Form Builder */}
             <div className="fade-enter space-y-6">
               <div className="card-editorial">
@@ -1106,6 +1128,16 @@ const Forge = () => {
               </div>
             </div>
           </div>
+          
+          {/* Editorial Assistant Panel */}
+          {showAssistantPanel && (
+            <div className="fade-enter h-[calc(100vh-12rem)] sticky top-8">
+              <EditorialAssistantPanel
+                onClose={() => setShowAssistantPanel(false)}
+                initialContent={generatedOutput}
+              />
+            </div>
+          )}
         </div>
         ) : (
           /* MASTER CONTENT MODE */
