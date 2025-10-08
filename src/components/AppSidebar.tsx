@@ -89,7 +89,7 @@ export const AppSidebar = () => {
       <SidebarContent className="p-4">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+            <SidebarMenu className="flex flex-col gap-1.5">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.path);
@@ -101,13 +101,13 @@ export const AppSidebar = () => {
                         <SidebarMenuButton
                           asChild
                           className={cn(
-                            "h-10 px-3 py-2 rounded-md transition-all",
+                            "min-h-10 px-3 py-2 rounded-md transition-all hover:bg-stone-beige/50",
                             active && "bg-saffron-gold/20 border-l-3 border-saffron-gold font-medium text-foreground"
                           )}
                         >
                           <Link to={item.path} className="flex items-center gap-3">
                             <Icon className="w-5 h-5 flex-shrink-0" />
-                            {!collapsed && <span className="flex-1 text-sm leading-none">{item.label}</span>}
+                            {!collapsed && <span className="flex-1 text-sm leading-tight">{item.label}</span>}
                           </Link>
                         </SidebarMenuButton>
                       </TooltipTrigger>
@@ -136,7 +136,7 @@ export const AppSidebar = () => {
                   >
                     <Link to="/settings" className="flex items-center gap-2">
                       <Settings className="w-4 h-4 flex-shrink-0" />
-                      {!collapsed && <span className="flex-1 text-sm leading-none">Settings</span>}
+                      {!collapsed && <span className="flex-1 text-sm leading-tight">Settings</span>}
                     </Link>
                   </SidebarMenuButton>
                 </TooltipTrigger>
@@ -154,7 +154,7 @@ export const AppSidebar = () => {
                     className="h-9 px-2 py-2 rounded-md hover:bg-stone-beige/50 transition-all flex items-center gap-2"
                   >
                     <LogOut className="w-4 h-4 flex-shrink-0" />
-                    {!collapsed && <span className="flex-1 text-sm leading-none">Sign Out</span>}
+                    {!collapsed && <span className="flex-1 text-sm leading-tight">Sign Out</span>}
                   </SidebarMenuButton>
                 </TooltipTrigger>
                 <TooltipContent side="right">
