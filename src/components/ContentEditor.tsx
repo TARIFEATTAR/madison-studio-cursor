@@ -644,29 +644,24 @@ export const ContentEditor = ({
                     variant={assistantOpen ? "default" : "outline"}
                     size="sm"
                     onClick={() => setAssistantOpen(!assistantOpen)}
-                    className="h-9 gap-2"
+                    className="h-9 px-3"
                     title="Editorial Director"
                   >
                     <MessageSquare className="w-4 h-4" />
-                    {assistantOpen ? 'Hide Director' : 'Director'}
+                    <span className="ml-2 hidden lg:inline">{assistantOpen ? 'Hide' : 'Director'}</span>
                   </Button>
 
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleCopy}
-                    className="h-9 gap-2"
+                    className="h-9 px-3"
+                    title="Copy Text"
                   >
                     {copied ? (
-                      <>
-                        <Check className="w-4 h-4" />
-                        Copied
-                      </>
+                      <Check className="w-4 h-4" />
                     ) : (
-                      <>
-                        <Copy className="w-4 h-4" />
-                        Copy Text
-                      </>
+                      <Copy className="w-4 h-4" />
                     )}
                   </Button>
 
@@ -674,26 +669,23 @@ export const ContentEditor = ({
                     variant="ghost"
                     size="sm"
                     onClick={handleCopyFormatted}
-                    className="h-9 gap-2"
+                    className="h-9 px-3"
+                    title="Copy Formatted"
                   >
                     {copiedFormatted ? (
-                      <>
-                        <Check className="w-4 h-4" />
-                        Copied
-                      </>
+                      <Check className="w-4 h-4" />
                     ) : (
-                      <>
-                        <FileText className="w-4 h-4" />
-                        Copy Formatted
-                      </>
+                      <FileText className="w-4 h-4" />
                     )}
                   </Button>
+
+                  <div className="h-6 w-px bg-border/40 mx-1" />
 
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleToggleFullScreen}
-                    className="h-9 gap-2"
+                    className="h-9 gap-2 flex-shrink-0"
                   >
                     <Minimize2 className="w-4 h-4" />
                     Exit
