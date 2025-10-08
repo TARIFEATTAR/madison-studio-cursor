@@ -127,7 +127,7 @@ const Landing = () => {
         {/* Content */}
         <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-20">
           <div className="text-left max-w-3xl codex-spacing fade-enter">
-            <h1 className="text-white mb-6 text-5xl md:text-6xl lg:text-7xl" style={{ textShadow: '0 2px 20px rgba(0,0,0,0.8)' }}>
+            <h1 className="text-white mb-6 text-4xl md:text-5xl lg:text-6xl" style={{ textShadow: '0 2px 20px rgba(0,0,0,0.8)' }}>
               Content That Sounds Like Your Team Wrote It—
               <span className="text-primary block mt-2">Because It Learned From Them</span>
             </h1>
