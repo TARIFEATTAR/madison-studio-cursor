@@ -158,7 +158,7 @@ const Calendar = () => {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-6 md:px-12">
+    <div className="min-h-screen pb-12 px-6 md:px-12 pt-8">
       <div className="max-w-[1920px] mx-auto">
         <CalendarHeader
           currentDate={currentDate}

@@ -7,6 +7,7 @@ import { useOnboarding } from "@/hooks/useOnboarding";
 import { useToast } from "@/hooks/use-toast";
 import { Sparkles, TrendingUp, Clock, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import PromptLibrarySidebar from "@/components/prompt-library/PromptLibrarySidebar";
 import EnhancedPromptCard from "@/components/prompt-library/EnhancedPromptCard";
 import PromptDetailModal from "@/components/prompt-library/PromptDetailModal";
@@ -194,14 +195,15 @@ const PromptLibrary = () => {
   ];
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
-      <PromptLibrarySidebar
-        filters={filters}
-        onFilterChange={setFilters}
-        promptCount={sortedPrompts.length}
-      />
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <PromptLibrarySidebar
+          filters={filters}
+          onFilterChange={setFilters}
+          promptCount={sortedPrompts.length}
+        />
 
-      <main className="flex-1 p-8">
+        <main className="flex-1 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -268,7 +270,8 @@ const PromptLibrary = () => {
           onUse={() => handleUsePrompt(selectedPrompt.id)}
         />
       )}
-    </div>
+      </div>
+    </SidebarProvider>
   );
 };
 

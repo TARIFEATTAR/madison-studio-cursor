@@ -150,16 +150,8 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-6 py-12">
+      <div className="max-w-5xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate(-1)}
-            className="mb-4 gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </Button>
           <h1 className="text-4xl font-bold text-foreground">Settings</h1>
           <p className="text-muted-foreground mt-2">
             Manage your collections, week names, and brand preferences

@@ -432,20 +432,6 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      
-      {/* Footer with Settings and Sign Out */}
-      <div className="border-t border-border/40 p-4 bg-soft-ivory mt-auto">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild className="h-9 px-2 rounded-md hover:bg-stone-beige/50 transition-all">
-              <Link to="/settings">
-                <Settings className="w-4 h-4" />
-                {!collapsed && <span className="flex-1 text-sm">Settings</span>}
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </div>
     </Sidebar>
   );
 }

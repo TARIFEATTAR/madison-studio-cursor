@@ -610,8 +610,8 @@ const Repurpose = () => {
   }
 
   return (
-    <div className="min-h-screen pt-16 bg-background">
-      <div className="h-[calc(100vh-4rem)] flex w-full">
+    <div className="min-h-screen bg-background pt-8">
+      <div className="h-[calc(100vh-6rem)] flex w-full">
         {/* Left Sidebar - Folder Navigation */}
         <div className="w-80 flex-shrink-0 hidden lg:block">
           <DerivativeFolderSidebar

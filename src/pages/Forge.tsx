@@ -579,7 +579,7 @@ const Forge = () => {
   };
 
   return (
-    <div className="min-h-screen py-12 px-6 md:px-12">
+    <div className="min-h-screen py-8 px-6 md:px-12">
       <div className="max-w-7xl mx-auto codex-spacing">
         <div className="fade-enter mb-12">
           <h1 className="text-foreground mb-3">Composer</h1>

@@ -519,7 +519,6 @@ const Reservoir = () => {
               <div className="max-w-7xl mx-auto">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-4">
-                    <SidebarTrigger />
                     <div>
                       <h1 className="text-foreground mb-2">Library</h1>
                       <p className="text-muted-foreground text-lg">

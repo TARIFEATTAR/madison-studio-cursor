@@ -51,12 +51,9 @@ const Index = () => {
   console.log("[Index] Showing dashboard for authenticated user");
   
   // Show dashboard/home for authenticated users
-  // TEMPORARILY DISABLE WELCOME MODAL FOR DEBUGGING
   return (
     <ErrorBoundary>
-      {/* <WelcomeModal open={showWelcome} onComplete={completeWelcome} onSkip={skipWelcome} /> */}
-      
-      <div className="min-h-screen bg-gradient-to-b from-card to-background">
+      <div className="min-h-screen bg-gradient-to-b from-card to-background p-8">
         <DailyBriefBanner />
         {/* Hero Section */}
         <section className="relative overflow-hidden">
