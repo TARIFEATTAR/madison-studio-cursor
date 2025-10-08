@@ -121,21 +121,21 @@ const Landing = () => {
           style={{ backgroundImage: `url(${penHeroImage})` }}
         />
         
-        {/* Overlay for Text Readability (temporarily disabled during debug) */}
-        <div className="absolute inset-0 bg-black/0" />
+        {/* Gradient Overlay for Text Readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
         
         {/* Content */}
         <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-20">
-          <div className="text-center max-w-4xl mx-auto codex-spacing fade-enter">
-            <h1 className="text-white mb-6">
+          <div className="text-left max-w-3xl codex-spacing fade-enter">
+            <h1 className="text-white mb-6 text-5xl md:text-6xl lg:text-7xl" style={{ textShadow: '0 2px 20px rgba(0,0,0,0.8)' }}>
               Your Brand Voice,
               <span className="text-primary block mt-2">Enforced by AI</span>
             </h1>
-            <p className="text-large text-white/90 mb-12 leading-relaxed">
+            <p className="text-large text-white/90 mb-12 leading-relaxed max-w-2xl" style={{ textShadow: '0 1px 10px rgba(0,0,0,0.6)' }}>
               Upload your brand guidelines. Generate content that sounds exactly like your team wrote it. 
               Amplify across every channel. Scriptora turns your brand knowledge into your competitive advantage.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4">
               <Button asChild size="lg" variant="brass">
                 <Link to="/auth" className="gap-2">
                   Start Creating <ArrowRight className="w-5 h-5" />
