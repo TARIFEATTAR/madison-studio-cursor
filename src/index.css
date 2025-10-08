@@ -133,7 +133,7 @@
     position: relative;
   }
 
-  /* Subtle paper texture overlay */
+  /* Subtle paper texture overlay - Enhanced */
   body::before {
     content: '';
     position: fixed;
@@ -142,10 +142,18 @@
     width: 100%;
     height: 100%;
     pointer-events: none;
-    opacity: 0.02;
+    opacity: 0.035;
+    background: 
+      radial-gradient(circle at 20% 50%, hsl(var(--aged-brass) / 0.015) 0%, transparent 50%),
+      radial-gradient(circle at 80% 50%, hsl(var(--aged-brass) / 0.015) 0%, transparent 50%),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        hsl(var(--foreground) / 0.008) 2px,
+        hsl(var(--foreground) / 0.008) 4px
+      );
     z-index: 0;
-    background-image: 
-      repeating-linear-gradient(0deg, transparent, transparent 1px, hsl(20 10% 17% / 0.02) 1px, hsl(20 10% 17% / 0.02) 2px);
   }
 
   /* Typography Hierarchy - Museum Quality */
@@ -665,8 +673,10 @@
     border-radius: 0.5rem;
     padding: 2rem;
     box-shadow: 
-      0 1px 2px rgba(0, 0, 0, 0.05),
-      0 4px 12px rgba(0, 0, 0, 0.08);
+      0 1px 3px rgba(0, 0, 0, 0.08),
+      0 4px 12px rgba(0, 0, 0, 0.1),
+      0 8px 24px rgba(0, 0, 0, 0.06),
+      0 0 0 1px hsl(var(--brass) / 0.1);
     transition: all 0.3s ease;
   }
 
@@ -674,10 +684,12 @@
   .card-editorial::after {
     content: '';
     position: absolute;
-    width: 16px;
-    height: 16px;
-    border: 2px solid hsl(var(--brass));
-    opacity: 0.6;
+    width: 20px;
+    height: 20px;
+    border: 3px solid hsl(var(--brass));
+    opacity: 0.75;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 0 4px hsl(var(--brass) / 0.3));
   }
 
   .card-editorial::before {
@@ -696,19 +708,33 @@
 
   .card-editorial:hover {
     box-shadow: 
-      0 2px 4px rgba(0, 0, 0, 0.08),
+      0 2px 4px rgba(0, 0, 0, 0.1),
       0 8px 16px rgba(0, 0, 0, 0.12),
-      0 0 0 1px hsl(var(--brass) / 0.3);
+      0 16px 32px rgba(0, 0, 0, 0.08),
+      0 0 0 1px hsl(var(--brass) / 0.4);
     transform: translateY(-2px);
   }
 
-  /* Manuscript Input Styling */
+  .card-editorial:hover::before,
+  .card-editorial:hover::after {
+    opacity: 1;
+    filter: drop-shadow(0 0 6px hsl(var(--brass) / 0.5));
+  }
+
+  /* Manuscript Input Styling with Ruled Lines */
   .input-manuscript {
-    background: linear-gradient(
-      to bottom,
-      hsl(var(--background)) 0%,
-      hsl(var(--cream-dark)) 100%
-    );
+    background: 
+      repeating-linear-gradient(
+        transparent,
+        transparent 1.79rem,
+        hsl(var(--brass) / 0.12) 1.79rem,
+        hsl(var(--brass) / 0.12) 1.8rem
+      ),
+      linear-gradient(
+        to bottom,
+        hsl(var(--background)) 0%,
+        hsl(var(--cream-dark)) 100%
+      );
     font-family: 'Cormorant Garamond', serif;
     line-height: 1.8;
     padding: 1rem;
@@ -725,18 +751,22 @@
       0 0 0 2px hsl(var(--brass) / 0.2);
   }
 
-  /* Brass Divider with Ornate Style */
+  /* Brass Divider with Ornate Style - Enhanced */
   .brass-divider {
-    height: 1px;
+    height: 2px;
     background: linear-gradient(
       to right,
       transparent 0%,
+      hsl(var(--brass) / 0.3) 10%,
       hsl(var(--brass)) 20%,
+      hsl(var(--antique-gold)) 50%,
       hsl(var(--brass)) 80%,
+      hsl(var(--brass) / 0.3) 90%,
       transparent 100%
     );
     position: relative;
     margin: 2rem 0;
+    box-shadow: 0 0 8px hsl(var(--brass) / 0.3);
   }
 
   .brass-divider::after {
@@ -746,10 +776,11 @@
     left: 50%;
     transform: translate(-50%, -50%);
     background: hsl(var(--background));
-    padding: 0 0.5rem;
+    padding: 0 0.75rem;
     color: hsl(var(--brass));
-    font-size: 0.75rem;
-    opacity: 0.7;
+    font-size: 1rem;
+    opacity: 0.9;
+    text-shadow: 0 0 4px hsl(var(--brass) / 0.5);
   }
 
   /* Edition Selector Tabs */

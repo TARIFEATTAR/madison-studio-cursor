@@ -266,7 +266,7 @@ const Forge = () => {
     try {
       const { data, error } = await supabase.functions.invoke('generate-with-claude', {
         body: { 
-          prompt: generatedPrompt,
+          prompt: `${generatedPrompt}\n\n[EXECUTE THIS BRIEF IMMEDIATELY. OUTPUT ONLY THE FINAL COPY. NO QUESTIONS OR ANALYSIS.]`,
           organizationId: currentOrganizationId,
           mode: "generate"
         }
