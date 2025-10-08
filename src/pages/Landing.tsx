@@ -342,46 +342,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="py-20 bg-gradient-to-b from-transparent to-primary/5 border-t border-border/40">
-        <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <div className="grid lg:grid-cols-2 gap-12 items-center fade-enter">
-            <div className="codex-spacing">
-              <h2 className="text-foreground mb-6">
-                Built for Modern Marketing Teams
-              </h2>
-              <p className="text-large text-muted-foreground mb-8 leading-relaxed">
-                Whether you're a solo creator or managing content for multiple brands, 
-                Scriptora adapts to your workflow. White-label ready for agencies who 
-                want to offer best-in-class content intelligence to their clients.
-              </p>
-              <ul className="space-y-4">
-                {benefits.map((benefit, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <CheckCircle2 className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-regular text-foreground/90">{benefit}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="relative">
-              <div className="card-luxury bg-gradient-to-br from-card to-primary/5 border-primary/20 p-10 shadow-level-3">
-                <div className="space-y-6">
-                  <div className="bg-background/50 rounded-lg p-6 border border-border/20 shadow-level-1 transition-all duration-300 hover:shadow-level-2">
-                    <p className="font-serif text-xl font-semibold text-foreground mb-2">"Game-changing"</p>
-                    <p className="text-regular text-muted-foreground">Cut content production time by 60% while maintaining brand consistency.</p>
-                  </div>
-                  <div className="bg-background/50 rounded-lg p-6 border border-border/20 shadow-level-1 transition-all duration-300 hover:shadow-level-2">
-                    <p className="font-serif text-xl font-semibold text-foreground mb-2">"Effortless scaling"</p>
-                    <p className="text-regular text-muted-foreground">From 2 posts per week to 20—without adding headcount.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Comparison Section */}
       <section className="py-20 border-t relative overflow-hidden bg-ink-black">
         {/* Decorative brass borders */}
@@ -402,7 +362,7 @@ const Landing = () => {
           {/* Comparison Cards */}
           <div className="grid lg:grid-cols-2 gap-8 mb-12 fade-enter">
             {/* Generic AI Tools Card */}
-            <div className="bg-card rounded-xl border-2 shadow-level-3 overflow-hidden" style={{ borderColor: 'hsl(38 33% 56% / 0.3)' }}>
+            <div className="bg-card rounded-xl border-2 shadow-level-3 overflow-hidden" style={{ borderColor: 'hsl(38 28% 42%)' }}>
               {/* Header with X icon */}
               <div className="p-6 flex items-center justify-between border-b border-border/10">
                 <h3 className="font-serif text-2xl font-bold text-foreground">Generic AI Tools</h3>
@@ -456,7 +416,7 @@ const Landing = () => {
             </div>
 
             {/* Scriptora Card */}
-            <div className="bg-card rounded-xl border-2 shadow-level-3 overflow-hidden" style={{ borderColor: 'hsl(38 33% 56% / 0.5)' }}>
+            <div className="bg-card rounded-xl border-2 shadow-level-3 overflow-hidden" style={{ borderColor: 'hsl(38 28% 42%)' }}>
               {/* Header with Checkmark icon */}
               <div className="p-6 flex items-center justify-between border-b border-border/10">
                 <h3 className="font-serif text-2xl font-bold text-foreground">Scriptora</h3>
