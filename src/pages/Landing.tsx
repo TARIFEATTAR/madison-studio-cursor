@@ -383,15 +383,15 @@ const Landing = () => {
       </section>
 
       {/* Comparison Section */}
-      <section className="py-20 border-t border-border/40 relative overflow-hidden" style={{ background: 'linear-gradient(180deg, hsl(20 10% 17%) 0%, hsl(26 6% 9%) 100%)' }}>
+      <section className="py-20 border-t relative overflow-hidden bg-ink-black">
         {/* Decorative brass borders */}
-        <div className="absolute left-0 top-0 bottom-0 w-1 opacity-40" style={{ background: 'linear-gradient(180deg, transparent 0%, hsl(38 33% 56%) 50%, transparent 100%)' }} />
-        <div className="absolute right-0 top-0 bottom-0 w-1 opacity-40" style={{ background: 'linear-gradient(180deg, transparent 0%, hsl(38 33% 56%) 50%, transparent 100%)' }} />
+        <div className="absolute left-0 top-0 bottom-0 w-1 opacity-50" style={{ background: 'linear-gradient(180deg, transparent 0%, hsl(38 33% 56%) 50%, transparent 100%)' }} />
+        <div className="absolute right-0 top-0 bottom-0 w-1 opacity-50" style={{ background: 'linear-gradient(180deg, transparent 0%, hsl(38 33% 56%) 50%, transparent 100%)' }} />
         
         <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
           {/* Header */}
           <div className="text-center mb-16 codex-spacing fade-enter">
-            <h2 className="text-parchment-white mb-6" style={{ color: 'hsl(48 100% 99%)' }}>
+            <h2 className="mb-6" style={{ color: 'hsl(48 100% 99%)' }}>
               AI That Knows the Difference Between<br />Your Brand and Everyone Else's
             </h2>
             <p className="text-large max-w-2xl mx-auto" style={{ color: 'hsl(22 4% 61%)' }}>
@@ -402,7 +402,7 @@ const Landing = () => {
           {/* Comparison Cards */}
           <div className="grid lg:grid-cols-2 gap-8 mb-12 fade-enter">
             {/* Generic AI Tools Card */}
-            <div className="bg-card rounded-xl border-2 border-border/20 shadow-level-3 overflow-hidden">
+            <div className="bg-card rounded-xl border-2 shadow-level-3 overflow-hidden" style={{ borderColor: 'hsl(38 33% 56% / 0.3)' }}>
               {/* Header with X icon */}
               <div className="p-6 flex items-center justify-between border-b border-border/10">
                 <h3 className="font-serif text-2xl font-bold text-foreground">Generic AI Tools</h3>
@@ -456,7 +456,7 @@ const Landing = () => {
             </div>
 
             {/* Scriptora Card */}
-            <div className="bg-card rounded-xl border-2 border-primary/30 shadow-level-3 overflow-hidden">
+            <div className="bg-card rounded-xl border-2 shadow-level-3 overflow-hidden" style={{ borderColor: 'hsl(38 33% 56% / 0.5)' }}>
               {/* Header with Checkmark icon */}
               <div className="p-6 flex items-center justify-between border-b border-border/10">
                 <h3 className="font-serif text-2xl font-bold text-foreground">Scriptora</h3>
