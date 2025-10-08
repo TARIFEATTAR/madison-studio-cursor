@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Maximize2, Minimize2, Undo2, Redo2, Copy, Check, Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Heading3, AlignLeft, AlignCenter, AlignRight, AlignJustify, Indent, Outdent, FileText, MessageSquare } from "lucide-react";
+import { Maximize2, Minimize2, Undo2, Redo2, Copy, Check, Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Heading3, AlignLeft, AlignCenter, AlignRight, AlignJustify, Indent, Outdent, FileText, MessageSquare, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -380,7 +380,7 @@ export const ContentEditor = ({
             <div className="border-b border-border/40 bg-background/95 backdrop-blur-sm flex-shrink-0">
               <div className="flex items-center justify-between px-6 py-3">
                 {/* Left: Font & Formatting */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                    {/* Font Selector */}
                   <Select 
                     value={selectedFont} 
@@ -637,6 +637,19 @@ export const ContentEditor = ({
                   <span className="text-sm text-muted-foreground font-medium tabular-nums">
                     {wordCount} {wordCount === 1 ? 'word' : 'words'}
                   </span>
+
+                  <div className="h-6 w-px bg-border/40 mx-2" />
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleToggleFullScreen}
+                    className="h-9 gap-2"
+                    title="Exit Editor (ESC)"
+                  >
+                    <X className="w-4 h-4" />
+                    Exit Editor
+                  </Button>
                 </div>
               </div>
 
