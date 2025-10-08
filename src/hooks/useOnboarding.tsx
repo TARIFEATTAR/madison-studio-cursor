@@ -2,12 +2,18 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
+type OnboardingStep = "welcome_pending" | "document_pending" | "first_generation_pending" | "completed";
+
 export function useOnboarding() {
   const { user } = useAuth();
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showDocumentUpload, setShowDocumentUpload] = useState(false);
+  const [showForgeGuide, setShowForgeGuide] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
   const [currentOrganizationId, setCurrentOrganizationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>("completed");
 
   useEffect(() => {
     if (!user) {
@@ -124,11 +130,21 @@ export function useOnboarding() {
 
         setCurrentOrganizationId(orgId);
 
-        // Show welcome modal if not completed
-        if (!hasCompleted) {
+        // Get onboarding step from localStorage
+        const stepKey = `onboarding_step_${user.id}`;
+        const savedStep = localStorage.getItem(stepKey) as OnboardingStep | null;
+        const currentStep = savedStep || "welcome_pending";
+        setOnboardingStep(currentStep);
+
+        // Show appropriate UI based on step
+        if (currentStep === "welcome_pending") {
           setShowWelcome(true);
-        } else {
-          // Check if user has brand knowledge
+        } else if (currentStep === "document_pending") {
+          setShowDocumentUpload(true);
+        } else if (currentStep === "first_generation_pending") {
+          setShowForgeGuide(true);
+        } else if (currentStep === "completed") {
+          // Check if user has brand knowledge for banner
           const { data: brandKnowledge } = await supabase
             .from("brand_knowledge")
             .select("id")
@@ -169,20 +185,38 @@ export function useOnboarding() {
         })
         .eq("id", currentOrganizationId);
 
-      // Mark onboarding as complete
-      localStorage.setItem(`onboarding_completed_${user.id}`, "true");
+      // Move to document upload step
+      setOnboardingStep("document_pending");
+      localStorage.setItem(`onboarding_step_${user.id}`, "document_pending");
       setShowWelcome(false);
-      setShowBanner(true);
+      setShowDocumentUpload(true);
     } catch (error) {
       console.error("Error completing welcome:", error);
     }
   };
 
-  const skipWelcome = () => {
+  const completeDocumentUpload = () => {
     if (!user) return;
-    localStorage.setItem(`onboarding_completed_${user.id}`, "true");
-    setShowWelcome(false);
-    setShowBanner(true);
+    
+    // Move to forge guide step
+    setOnboardingStep("first_generation_pending");
+    localStorage.setItem(`onboarding_step_${user.id}`, "first_generation_pending");
+    setShowDocumentUpload(false);
+    setShowForgeGuide(true);
+  };
+
+  const completeFirstGeneration = () => {
+    if (!user) return;
+    
+    // Mark onboarding as complete
+    setOnboardingStep("completed");
+    localStorage.setItem(`onboarding_step_${user.id}`, "completed");
+    setShowForgeGuide(false);
+    setShowCompleteModal(true);
+  };
+
+  const closeCompleteModal = () => {
+    setShowCompleteModal(false);
   };
 
   const dismissBanner = () => {
@@ -193,11 +227,17 @@ export function useOnboarding() {
 
   return {
     showWelcome,
+    showDocumentUpload,
+    showForgeGuide,
+    showCompleteModal,
     showBanner,
     currentOrganizationId,
     isLoading,
+    onboardingStep,
     completeWelcome,
-    skipWelcome,
+    completeDocumentUpload,
+    completeFirstGeneration,
+    closeCompleteModal,
     dismissBanner,
   };
 }

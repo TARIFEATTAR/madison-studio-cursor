@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface WelcomeModalProps {
   open: boolean;
   onComplete: (data: { brandName: string; industry: string; primaryColor: string }) => void;
-  onSkip: () => void;
 }
 
 const INDUSTRIES = [
@@ -25,25 +24,25 @@ const INDUSTRIES = [
   "Other",
 ];
 
-export function WelcomeModal({ open, onComplete, onSkip }: WelcomeModalProps) {
+export function WelcomeModal({ open, onComplete }: WelcomeModalProps) {
   const [brandName, setBrandName] = useState("");
   const [industry, setIndustry] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#B8956A");
 
   const handleSubmit = () => {
-    if (!brandName.trim()) return;
+    if (!brandName.trim() || !industry) return;
     onComplete({ brandName: brandName.trim(), industry, primaryColor });
   };
 
   return (
-    <Dialog open={open} onOpenChange={() => onSkip()}>
-      <DialogContent className="max-w-md bg-card border-border/20">
+    <Dialog open={open} onOpenChange={() => {}}>
+      <DialogContent className="max-w-md bg-card border-border/20" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl text-foreground">
             Welcome to Scriptora
           </DialogTitle>
           <p className="text-sm text-muted-foreground mt-2">
-            Let's personalize your experience. This will only take 30 seconds.
+            Step 1 of 3 • This takes 30 seconds
           </p>
         </DialogHeader>
 
@@ -63,7 +62,7 @@ export function WelcomeModal({ open, onComplete, onSkip }: WelcomeModalProps) {
 
           <div className="space-y-2">
             <Label htmlFor="industry" className="text-foreground">
-              Industry <span className="text-muted-foreground text-xs">(optional)</span>
+              Industry <span className="text-destructive">*</span>
             </Label>
             <Select value={industry} onValueChange={setIndustry}>
               <SelectTrigger className="bg-input border-border/40">
@@ -101,18 +100,12 @@ export function WelcomeModal({ open, onComplete, onSkip }: WelcomeModalProps) {
           </div>
         </div>
 
-        <div className="flex gap-3 pt-2">
-          <Button
-            variant="outline"
-            onClick={onSkip}
-            className="flex-1 border-border/40 text-muted-foreground hover:bg-muted"
-          >
-            Skip for now
-          </Button>
+        <div className="pt-2">
           <Button
             onClick={handleSubmit}
-            disabled={!brandName.trim()}
-            className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+            disabled={!brandName.trim() || !industry}
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+            size="lg"
           >
             Continue
           </Button>

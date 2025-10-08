@@ -9,27 +9,45 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
+import { OnboardingDocumentUpload } from "@/components/onboarding/OnboardingDocumentUpload";
+import { OnboardingCompleteModal } from "@/components/onboarding/OnboardingCompleteModal";
 import { CompleteBrandBanner } from "@/components/onboarding/CompleteBrandBanner";
 import { BrandKnowledgeCenter } from "@/components/onboarding/BrandKnowledgeCenter";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { DailyBriefBanner } from "@/components/dashboard/DailyBriefBanner";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const Index = () => {
   console.log("[Index] Rendering Index page...");
   
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
   console.log("[Index] Auth state - user:", !!user, "loading:", loading);
   
   const {
     showWelcome,
+    showDocumentUpload,
+    showForgeGuide,
+    showCompleteModal,
     showBanner,
     currentOrganizationId,
     isLoading: onboardingLoading,
+    onboardingStep,
     completeWelcome,
-    skipWelcome,
+    completeDocumentUpload,
+    completeFirstGeneration,
+    closeCompleteModal,
     dismissBanner,
   } = useOnboarding();
+
+  // Redirect to Forge if user is in first_generation_pending state
+  useEffect(() => {
+    if (user && onboardingStep === "first_generation_pending") {
+      navigate("/forge?onboarding=true");
+    }
+  }, [user, onboardingStep, navigate]);
   
   console.log("[Index] Onboarding state - showWelcome:", showWelcome, "loading:", onboardingLoading);
 
@@ -53,6 +71,22 @@ const Index = () => {
   // Show dashboard/home for authenticated users
   return (
     <ErrorBoundary>
+      {/* Onboarding Modals */}
+      <WelcomeModal open={showWelcome} onComplete={completeWelcome} />
+      
+      {currentOrganizationId && (
+        <OnboardingDocumentUpload
+          open={showDocumentUpload}
+          organizationId={currentOrganizationId}
+          onComplete={completeDocumentUpload}
+        />
+      )}
+
+      <OnboardingCompleteModal
+        open={showCompleteModal}
+        onClose={closeCompleteModal}
+      />
+
       <div className="min-h-screen py-8 px-6 md:px-12 paper-overlay">
         <div className="max-w-7xl mx-auto codex-spacing">
           <DailyBriefBanner />

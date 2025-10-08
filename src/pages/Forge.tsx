@@ -24,6 +24,7 @@ import { IMAGE_PROMPT_TEMPLATES, type ImagePromptType } from "@/config/imageProm
 import { BLOG_POST_TYPES, BLOG_REPURPOSE_TARGETS, generateBlogPrompt, type BlogPostType } from "@/config/blogPostGuidelines";
 import { ContentEditor } from "@/components/ContentEditor";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
+import { ForgeOnboardingGuide } from "@/components/forge/ForgeOnboardingGuide";
 
 // Helpers to map display labels to database enum values
 const toEnum = (v?: string | null) => (v ? v.toLowerCase().replace(/\s+/g, '_') : null);
@@ -70,7 +71,7 @@ const Forge = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { currentOrganizationId } = useOnboarding();
+  const { currentOrganizationId, onboardingStep, completeFirstGeneration } = useOnboarding();
   const { products } = useProducts();
   const { collections } = useCollections();
   const { getWeekName } = useWeekNames();
@@ -82,6 +83,10 @@ const Forge = () => {
   const [qualityRating, setQualityRating] = useState(0);
   const [productSearchOpen, setProductSearchOpen] = useState(false);
   const [productSearchValue, setProductSearchValue] = useState("");
+  
+  // Onboarding state
+  const isOnboarding = new URLSearchParams(location.search).get("onboarding") === "true" || onboardingStep === "first_generation_pending";
+  const [showOnboardingGuide, setShowOnboardingGuide] = useState(isOnboarding);
   
   // Master Content Mode state
   const [contentMode, setContentMode] = useState<"single" | "master">("single");
@@ -287,6 +292,12 @@ const Forge = () => {
           title: "Copy commissioned",
           description: "Your content has been generated successfully.",
         });
+
+        // Complete onboarding if this is the first generation
+        if (isOnboarding && onboardingStep === "first_generation_pending") {
+          completeFirstGeneration();
+          setShowOnboardingGuide(false);
+        }
       }
     } catch (error) {
       console.error("Error generating with Claude:", error);
@@ -574,6 +585,19 @@ const Forge = () => {
 
   return (
     <div className="min-h-screen py-8 px-6 md:px-12 paper-overlay">
+      {/* Onboarding Guide */}
+      {showOnboardingGuide && (
+        <ForgeOnboardingGuide
+          onDismiss={() => {
+            setShowOnboardingGuide(false);
+            if (isOnboarding) {
+              // Update URL to remove onboarding param
+              navigate(location.pathname, { replace: true });
+            }
+          }}
+        />
+      )}
+
       <div className={showAssistantPanel ? "mx-auto codex-spacing" : "max-w-7xl mx-auto codex-spacing"}>
         {/* Editorial Masthead */}
         <div className="fade-enter mb-12">
