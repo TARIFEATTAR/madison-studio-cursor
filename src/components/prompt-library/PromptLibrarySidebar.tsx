@@ -2,11 +2,13 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
-import { Filter, ChevronDown, ChevronRight, Star } from "lucide-react";
+import { Filter, ChevronDown, ChevronRight, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Sidebar, SidebarContent, SidebarHeader, SidebarTrigger } from "@/components/ui/sidebar";
+import { getContentTypeDisplayName } from "@/utils/contentTypeMapping";
 
 interface PromptLibrarySidebarProps {
   filters: {
@@ -91,19 +93,23 @@ const PromptLibrarySidebar = ({
     filters.templatesOnly;
 
   return (
-    <aside className="w-72 border-r border-border bg-card/30 backdrop-blur-sm">
-      <ScrollArea className="h-screen">
-        <div className="p-6">
-          {/* Header */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <Filter className="h-5 w-5 text-muted-foreground" />
-              <h2 className="text-lg font-semibold">Filters</h2>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {promptCount} prompt{promptCount !== 1 ? "s" : ""} found
-            </p>
+    <Sidebar className="w-72 border-r border-border bg-card/30 backdrop-blur-sm">
+      <SidebarHeader className="p-4 border-b border-border">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Filter className="h-5 w-5 text-muted-foreground" />
+            <h2 className="text-lg font-semibold">Filters</h2>
           </div>
+          <SidebarTrigger className="h-8 w-8" />
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {promptCount} prompt{promptCount !== 1 ? "s" : ""} found
+        </p>
+      </SidebarHeader>
+
+      <SidebarContent>
+        <ScrollArea className="h-full">
+          <div className="p-6 pt-4">
 
           {hasActiveFilters && (
             <Button
@@ -206,9 +212,9 @@ const PromptLibrarySidebar = ({
                     />
                     <label
                       htmlFor={`type-${type}`}
-                      className="text-sm cursor-pointer capitalize"
+                      className="text-sm cursor-pointer"
                     >
-                      {type.replace("_", " ")}
+                      {getContentTypeDisplayName(type)}
                     </label>
                   </div>
                 ))}
@@ -338,9 +344,10 @@ const PromptLibrarySidebar = ({
               </div>
             )}
           </div>
-        </div>
-      </ScrollArea>
-    </aside>
+          </div>
+        </ScrollArea>
+      </SidebarContent>
+    </Sidebar>
   );
 };
 
