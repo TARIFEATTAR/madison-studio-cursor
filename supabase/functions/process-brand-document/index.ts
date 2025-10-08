@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+// @deno-types="https://esm.sh/v135/@types/pdf-parse@1.1.4/index.d.ts"
+import pdfParse from "https://esm.sh/pdf-parse@1.1.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -59,30 +61,19 @@ serve(async (req) => {
 
     // Extract text based on file type
     if (document.file_type === 'application/pdf') {
-      // For PDFs, we'll use a simple text extraction approach
-      // In production, you might want to use a more robust PDF parser
-      const arrayBuffer = await fileData.arrayBuffer();
-      const decoder = new TextDecoder('utf-8');
-      const text = decoder.decode(arrayBuffer);
+      console.log('Processing PDF with enhanced parser...');
       
-      // Basic PDF text extraction (this is simplified)
-      // Extract text between common PDF text markers
-      const textMatches = text.match(/\(([^)]+)\)/g);
-      if (textMatches) {
-        extractedText = textMatches
-          .map(match => match.slice(1, -1))
-          .join(' ')
-          .replace(/\\n/g, '\n')
-          .replace(/\\/g, '');
-      }
-
-      // If basic extraction didn't work, try to get any readable text
-      if (!extractedText || extractedText.length < 100) {
-        extractedText = text
-          .replace(/[^\x20-\x7E\n]/g, ' ')
-          .split('\n')
-          .filter(line => line.trim().length > 3)
-          .join('\n');
+      try {
+        const arrayBuffer = await fileData.arrayBuffer();
+        const pdfData = await pdfParse(arrayBuffer);
+        
+        extractedText = pdfData.text;
+        
+        console.log(`PDF parsed successfully: ${pdfData.numpages} pages, ${extractedText.length} characters`);
+      } catch (pdfError) {
+        console.error('PDF parsing error:', pdfError);
+        const errMsg = pdfError instanceof Error ? pdfError.message : 'Unknown PDF parsing error';
+        throw new Error(`Failed to parse PDF: ${errMsg}`);
       }
     } else if (document.file_type.includes('text') || document.file_type.includes('markdown')) {
       extractedText = await fileData.text();
