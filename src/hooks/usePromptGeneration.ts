@@ -101,6 +101,23 @@ export function generatePromptText(formData: FormData, blogData?: BlogData): str
     parts.push(`Scent Family: ${formData.scentFamily}`);
   }
   
+  // Add fragrance notes if available
+  const fragranceNotes = [];
+  if (formData.topNotes) {
+    fragranceNotes.push(`Top Notes: ${formData.topNotes}`);
+  }
+  if (formData.middleNotes) {
+    fragranceNotes.push(`Middle Notes: ${formData.middleNotes}`);
+  }
+  if (formData.baseNotes) {
+    fragranceNotes.push(`Base Notes: ${formData.baseNotes}`);
+  }
+  
+  if (fragranceNotes.length > 0) {
+    parts.push(`\nFragrance Profile:\n${fragranceNotes.join('\n')}`);
+    parts.push(`\nIMPORTANT: Reference these specific fragrance notes in your copy to create vivid, sensory descriptions.`);
+  }
+  
   if (formData.pillar) {
     parts.push(`Focus on the ${formData.pillar} pillar.`);
   }
