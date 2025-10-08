@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, X, Sparkles, Loader2 } from "lucide-react";
+import { Send, X, Sparkles, Loader2, Copy, Check, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -31,6 +31,8 @@ export function EditorialAssistant({ isOpen, onClose }: EditorialAssistantProps)
   ]);
   const [input, setInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -104,11 +106,39 @@ export function EditorialAssistant({ isOpen, onClose }: EditorialAssistantProps)
     }
   };
 
+  const handleCopy = async (content: string, index: number) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedIndex(index);
+      toast({
+        title: "Copied to clipboard",
+        description: "Critique copied successfully",
+      });
+      setTimeout(() => setCopiedIndex(null), 2000);
+    } catch (error) {
+      toast({
+        title: "Copy failed",
+        description: "Unable to copy to clipboard",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-end p-4 pointer-events-none">
-      <div className="pointer-events-auto w-full max-w-md h-[600px] bg-background border-2 border-primary/20 shadow-2xl flex flex-col rounded-sm">
+    <div className={cn(
+      "fixed z-50 flex pointer-events-none transition-all duration-300",
+      isMaximized 
+        ? "inset-4" 
+        : "inset-0 items-end justify-end p-4"
+    )}>
+      <div className={cn(
+        "pointer-events-auto bg-background border-2 border-primary/20 shadow-2xl flex flex-col rounded-sm transition-all duration-300",
+        isMaximized 
+          ? "w-full h-full" 
+          : "w-full max-w-2xl h-[700px]"
+      )}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
           <div className="flex items-center gap-3">
@@ -120,14 +150,28 @@ export function EditorialAssistant({ isOpen, onClose }: EditorialAssistantProps)
               <p className="text-xs text-muted-foreground">Strategic Counsel</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="hover:bg-primary/10"
-          >
-            <X className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMaximized(!isMaximized)}
+              className="hover:bg-primary/10"
+            >
+              {isMaximized ? (
+                <Minimize2 className="w-4 h-4" />
+              ) : (
+                <Maximize2 className="w-4 h-4" />
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="hover:bg-primary/10"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Messages */}
@@ -146,21 +190,43 @@ export function EditorialAssistant({ isOpen, onClose }: EditorialAssistantProps)
                     <Sparkles className="w-4 h-4 text-primary" />
                   </div>
                 )}
-                <div
-                  className={cn(
-                    "max-w-[80%] rounded-sm px-4 py-3 text-sm leading-relaxed",
-                    message.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-foreground border border-primary/10"
+                <div className="flex flex-col gap-2 max-w-[85%]">
+                  <div
+                    className={cn(
+                      "rounded-sm px-4 py-3 text-sm leading-relaxed",
+                      message.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground border border-primary/10"
+                    )}
+                  >
+                    <p className="whitespace-pre-wrap select-text">{message.content}</p>
+                    <span className="text-xs opacity-60 mt-2 block">
+                      {message.timestamp.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                  {message.role === "assistant" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleCopy(message.content, index)}
+                      className="self-start text-xs hover:bg-primary/10"
+                    >
+                      {copiedIndex === index ? (
+                        <>
+                          <Check className="w-3 h-3 mr-1" />
+                          Copied
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3 mr-1" />
+                          Copy Critique
+                        </>
+                      )}
+                    </Button>
                   )}
-                >
-                  <p className="whitespace-pre-wrap">{message.content}</p>
-                  <span className="text-xs opacity-60 mt-2 block">
-                    {message.timestamp.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
                 </div>
                 {message.role === "user" && (
                   <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-1">
