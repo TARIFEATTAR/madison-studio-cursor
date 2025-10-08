@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { useAuth } from "@/hooks/useAuth";
 
 import Navigation from "./components/Navigation";
+import { AssistantTrigger } from "./components/assistant/AssistantTrigger";
 
 import Index from "./pages/Index";
 import Reservoir from "./pages/Reservoir";
@@ -47,6 +48,7 @@ const AppContent = () => {
   return (
     <>
       {user && <Navigation />}
+      {user && <AssistantTrigger />}
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/" element={<Index />} />
