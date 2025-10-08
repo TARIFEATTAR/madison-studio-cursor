@@ -47,12 +47,12 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
     }
   }, []);
 
-  // Pre-populate with initial content if provided
+  // Pre-populate with initial content if provided (only once)
   useEffect(() => {
-    if (initialContent && messages.length === 1) {
+    if (initialContent && messages.length === 1 && !input) {
       setInput(`Can you provide editorial critique on this copy?\n\n${initialContent}`);
     }
-  }, [initialContent, messages.length]);
+  }, []); // Empty dependency array - only run once on mount
 
   const handleSend = async () => {
     if (!input.trim() || isGenerating) return;

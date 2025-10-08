@@ -60,7 +60,9 @@ export const ContentEditor = ({
   // Initialize richHtml when entering full-screen
   useEffect(() => {
     if (isFullScreen && editableRef.current) {
-      // Set the content directly on the element
+      // Clear any existing content first to prevent duplication
+      editableRef.current.innerHTML = '';
+      // Then set the content
       editableRef.current.innerHTML = content.replace(/\n/g, '<br>');
       setRichHtml(editableRef.current.innerHTML);
       
@@ -712,7 +714,9 @@ export const ContentEditor = ({
                     onKeyDown={handleKeyDown}
                     suppressContentEditableWarning
                     className="rte-content w-full min-h-[calc(100vh-200px)] bg-background border-none focus:outline-none text-lg leading-relaxed resize-none shadow-sm rounded-lg p-12 font-serif"
-                  />
+                  >
+                    {/* Content is set via innerHTML in useEffect, not as children */}
+                  </div>
                 </div>
               </div>
 
