@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 
-import { ChevronRight, Star, Clock, ChevronDown, Folder } from "lucide-react";
+import { ChevronRight, Star, Clock, ChevronDown, Folder, Settings } from "lucide-react";
 import { useCollections } from "@/hooks/useCollections";
 import { useWeekNames } from "@/hooks/useWeekNames";
 import { useProducts } from "@/hooks/useProducts";
@@ -177,10 +178,18 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
   };
 
   const getCollectionCount = (collectionKey: string) => {
-    return (counts.prompts?.byCollection?.[collectionKey] || 0) +
-           (counts.outputs?.byCollection?.[collectionKey] || 0) +
-           (counts.masterContent?.byCollection?.[collectionKey] || 0) +
-           (counts.derivatives?.byCollection?.[collectionKey] || 0);
+    // Check both normalized key and the display name
+    const normalizedKey = collectionKey.toLowerCase().replace(/\s+/g, '_');
+    const displayName = collectionKey.charAt(0).toUpperCase() + collectionKey.slice(1);
+    
+    return (counts.prompts?.byCollection?.[normalizedKey] || 0) +
+           (counts.prompts?.byCollection?.[displayName] || 0) +
+           (counts.outputs?.byCollection?.[normalizedKey] || 0) +
+           (counts.outputs?.byCollection?.[displayName] || 0) +
+           (counts.masterContent?.byCollection?.[normalizedKey] || 0) +
+           (counts.masterContent?.byCollection?.[displayName] || 0) +
+           (counts.derivatives?.byCollection?.[normalizedKey] || 0) +
+           (counts.derivatives?.byCollection?.[displayName] || 0);
   };
 
   const getContentTypeCount = (keys: string[]) => {
@@ -423,6 +432,20 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      
+      {/* Footer with Settings and Sign Out */}
+      <div className="border-t border-border/40 p-4 bg-soft-ivory mt-auto">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild className="h-9 px-2 rounded-md hover:bg-stone-beige/50 transition-all">
+              <Link to="/settings">
+                <Settings className="w-4 h-4" />
+                {!collapsed && <span className="flex-1 text-sm">Settings</span>}
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </div>
     </Sidebar>
   );
 }

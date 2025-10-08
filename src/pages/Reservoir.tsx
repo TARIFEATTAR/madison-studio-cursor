@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Archive, Search, X, RotateCcw, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { LibrarySidebar } from "@/components/LibrarySidebar";
 import PromptCard from "@/components/PromptCard";
 import { OutputCard } from "@/components/OutputCard";
 import { MasterContentCard } from "@/components/MasterContentCard";
+import { ContentDetailModal } from "@/components/library/ContentDetailModal";
 import { ViewDensityToggle, ViewMode } from "@/components/library/ViewDensityToggle";
 import { SortDropdown, SortOption } from "@/components/library/SortDropdown";
 import { DateGroupHeader } from "@/components/library/DateGroupHeader";
@@ -46,6 +48,7 @@ const initialFilters = {
 const Reservoir = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { products } = useProducts();
   const [searchQuery, setSearchQuery] = useState("");
   const [prompts, setPrompts] = useState<any[]>([]);
@@ -57,6 +60,11 @@ const Reservoir = () => {
   const [sidebarFilters, setSidebarFilters] = useState<typeof initialFilters>(initialFilters);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ id: string; type: ContentCategory } | null>(null);
+  
+  // Content detail modal
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedContent, setSelectedContent] = useState<any>(null);
+  const [selectedCategory, setSelectedCategory] = useState<ContentCategory | null>(null);
   
   // New state for ADHD-friendly features
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
@@ -86,9 +94,9 @@ const Reservoir = () => {
       const dipWeekCounts: Record<number, number> = {};
       
       data.forEach((item: any) => {
-        // Normalize collection name (remove " Collection" suffix for consistency)
+        // Normalize collection name to lowercase with underscores
         if (item.collection) {
-          const normalizedCollection = item.collection.replace(' Collection', '');
+          const normalizedCollection = item.collection.toLowerCase().replace(/\s+/g, '_').replace(/_collection$/, '');
           collectionCounts[normalizedCollection] = (collectionCounts[normalizedCollection] || 0) + 1;
         }
         
@@ -302,6 +310,23 @@ const Reservoir = () => {
     }
   };
 
+  const handleContentClick = (content: any, category: ContentCategory) => {
+    setSelectedContent(content);
+    setSelectedCategory(category);
+    setDetailModalOpen(true);
+  };
+
+  const handleRepurpose = (contentId: string) => {
+    navigate(`/repurpose?contentId=${contentId}`);
+  };
+
+  const refetchData = () => {
+    fetchPrompts();
+    fetchOutputs();
+    fetchMasterContent();
+    fetchDerivatives();
+  };
+
   const handleFilterChange = (filters: typeof sidebarFilters) => {
     setSidebarFilters(filters);
   };
@@ -400,7 +425,11 @@ const Reservoir = () => {
     // Apply filters
     if (sidebarFilters.collection) {
       filtered = filtered.filter((item: any) => {
-        if (item.collection !== sidebarFilters.collection) return false;
+        // Normalize both the item's collection and the filter for comparison
+        const itemCollection = item.collection?.toLowerCase().replace(/\s+/g, '_').replace(/_collection$/, '');
+        const filterCollection = sidebarFilters.collection?.toLowerCase().replace(/\s+/g, '_');
+        
+        if (itemCollection !== filterCollection) return false;
         
         // If a scent family is selected, filter by products in that scent family
         if (sidebarFilters.scentFamily) {
@@ -597,6 +626,7 @@ const Reservoir = () => {
                                 prompt={item}
                                 onArchive={() => handleArchiveItem(item.id, "prompt")}
                                 onDelete={() => handleDeleteItem(item.id, "prompt")}
+                                onClick={() => handleContentClick(item, "prompt")}
                               />
                             );
                           } else if (item.contentCategory === 'output') {
@@ -606,6 +636,7 @@ const Reservoir = () => {
                                 output={item}
                                 onArchive={() => handleArchiveItem(item.id, "output")}
                                 onDelete={() => handleDeleteItem(item.id, "output")}
+                                onClick={() => handleContentClick(item, "output")}
                               />
                             );
                           } else if (item.contentCategory === 'master') {
@@ -615,11 +646,16 @@ const Reservoir = () => {
                                 content={item}
                                 onArchive={() => handleArchiveItem(item.id, "master")}
                                 onDelete={() => handleDeleteItem(item.id, "master")}
+                                onClick={() => handleContentClick(item, "master")}
                               />
                             );
                           } else if (item.contentCategory === 'derivative') {
                             return (
-                              <Card key={item.id} className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer border-border/40 relative group">
+                              <Card 
+                                key={item.id} 
+                                className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer border-border/40 relative group"
+                                onClick={() => handleContentClick(item, "derivative")}
+                              >
                                 {/* Two-Tier Badge System */}
                                 <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
                                   <Badge variant="outline" className="bg-stone-100/80 dark:bg-stone-800/80 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600">
@@ -716,6 +752,18 @@ const Reservoir = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Content Detail Modal */}
+        {selectedContent && selectedCategory && (
+          <ContentDetailModal
+            open={detailModalOpen}
+            onOpenChange={setDetailModalOpen}
+            content={selectedContent}
+            category={selectedCategory}
+            onUpdate={refetchData}
+            onRepurpose={handleRepurpose}
+          />
+        )}
       </div>
     </SidebarProvider>
   );

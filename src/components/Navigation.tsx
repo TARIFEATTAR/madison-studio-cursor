@@ -44,12 +44,6 @@ const Navigation = () => {
       icon: CalendarIcon,
       description: "Schedule and plan your content calendar"
     },
-    { 
-      path: "/settings", 
-      label: "Settings", 
-      icon: Settings,
-      description: "Manage collections, week names, and brand preferences"
-    },
   ];
 
   return (
