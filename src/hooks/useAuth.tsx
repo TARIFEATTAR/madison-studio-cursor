@@ -41,7 +41,23 @@ export function useAuth() {
   }, []);
 
   const signOut = async () => {
+    console.log("[useAuth] Signing out and clearing all data...");
+    
+    // Sign out from Supabase
     await supabase.auth.signOut();
+    
+    // Clear all localStorage data
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) keysToRemove.push(key);
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    
+    console.log("[useAuth] Cleared all localStorage and session data");
+    
+    // Reload to reset app state
+    window.location.href = '/';
   };
 
   return {
