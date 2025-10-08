@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface WelcomeModalProps {
   open: boolean;
   onComplete: (data: { brandName: string; industry: string; primaryColor: string }) => void;
+  onSkip?: () => void;
 }
 
 const INDUSTRIES = [
@@ -24,7 +25,7 @@ const INDUSTRIES = [
   "Other",
 ];
 
-export function WelcomeModal({ open, onComplete }: WelcomeModalProps) {
+export function WelcomeModal({ open, onComplete, onSkip }: WelcomeModalProps) {
   const [brandName, setBrandName] = useState("");
   const [industry, setIndustry] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#B8956A");
@@ -37,6 +38,15 @@ export function WelcomeModal({ open, onComplete }: WelcomeModalProps) {
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent className="max-w-md bg-card border-border/20" onPointerDownOutside={(e) => e.preventDefault()}>
+        {onSkip && (
+          <button
+            onClick={onSkip}
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Skip onboarding</span>
+          </button>
+        )}
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl text-foreground">
             Welcome to Scriptora

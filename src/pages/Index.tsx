@@ -72,7 +72,17 @@ const Index = () => {
   return (
     <ErrorBoundary>
       {/* Onboarding Modals */}
-      <WelcomeModal open={showWelcome} onComplete={completeWelcome} />
+      <WelcomeModal 
+        open={showWelcome} 
+        onComplete={completeWelcome}
+        onSkip={() => {
+          if (user) {
+            localStorage.setItem(`onboarding_step_${user.id}`, 'completed');
+            localStorage.setItem(`onboarding_completed_${user.id}`, 'true');
+            window.location.reload();
+          }
+        }}
+      />
       
       {currentOrganizationId && (
         <OnboardingDocumentUpload
