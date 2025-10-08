@@ -6,8 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { 
   X, Check, Edit, Copy, CalendarIcon, MoreVertical, 
-  Mail, Instagram, Twitter, Package, MessageSquare, FileText 
+  Mail, Instagram, Twitter, Package, MessageSquare, FileText, Sparkles 
 } from "lucide-react";
+import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,6 +74,7 @@ export function DerivativeFullModal({
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
   const [platformSpecsOpen, setPlatformSpecsOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
 
   if (!derivative) return null;
 
@@ -109,7 +112,10 @@ export function DerivativeFullModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl h-[90vh] p-0 gap-0 flex flex-col">
+      <DialogContent className={cn(
+        "h-[90vh] p-0 gap-0 flex flex-col",
+        assistantOpen ? "max-w-[95vw]" : "max-w-5xl"
+      )}>
         {/* Fixed Header */}
         <div className="flex items-center justify-between p-6 border-b bg-card">
           <div className="flex items-center gap-3">
@@ -123,18 +129,34 @@ export function DerivativeFullModal({
               </Badge>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onOpenChange(false)}
-            className="h-8 w-8"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={assistantOpen ? "default" : "outline"}
+              size="sm"
+              onClick={() => setAssistantOpen(!assistantOpen)}
+              className="gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Director
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onOpenChange(false)}
+              className="h-8 w-8"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
-        {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        {/* Main Content Area with Optional Assistant */}
+        <div className={cn(
+          "flex-1 overflow-hidden",
+          assistantOpen ? "grid grid-cols-[1fr_420px]" : ""
+        )}>
+          {/* Scrollable Content Area */}
+          <div className="h-full overflow-y-auto p-6 space-y-6">
           {/* Scheduled Banner */}
           {isScheduled && scheduledDate && (
             <div className="bg-primary/10 border border-primary/30 rounded-lg p-4 flex items-center justify-between">
@@ -230,6 +252,17 @@ export function DerivativeFullModal({
                 </div>
               </CollapsibleContent>
             </Collapsible>
+          )}
+          </div>
+
+          {/* Editorial Assistant Panel */}
+          {assistantOpen && (
+            <div className="h-full overflow-hidden border-l border-border/40 bg-background">
+              <EditorialAssistantPanel
+                onClose={() => setAssistantOpen(false)}
+                initialContent={derivative.generated_content}
+              />
+            </div>
           )}
         </div>
 
