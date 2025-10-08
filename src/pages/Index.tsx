@@ -53,133 +53,141 @@ const Index = () => {
   // Show dashboard/home for authenticated users
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gradient-to-b from-card to-background p-8">
-        <DailyBriefBanner />
-        {/* Hero Section */}
-        <section className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent" />
-          <div className="max-w-7xl mx-auto px-6 md:px-12 py-16 md:py-20 relative">
-            <div className="text-center max-w-4xl mx-auto codex-spacing fade-enter">
-              <h1 className="text-foreground mb-4">
-                Welcome to Scriptora
-              </h1>
-              <p className="text-large text-muted-foreground mb-12 leading-relaxed">
-                Your brand intelligence platform for crafting and managing content
+      <div className="min-h-screen py-8 px-6 md:px-12 paper-overlay">
+        <div className="max-w-7xl mx-auto codex-spacing">
+          <DailyBriefBanner />
+          
+          {/* Editorial Masthead */}
+          <div className="fade-enter mb-12">
+            <div className="brass-divider mb-8"></div>
+            <div className="max-w-3xl">
+              <h1 className="text-foreground mb-3 font-serif tracking-wide">The Command Center</h1>
+              <p className="text-muted-foreground text-lg font-serif leading-relaxed">
+                Direct your brand narrative from a single desk. Commission content, manage your portfolio, and orchestrate multi-channel campaigns with precision and authority.
               </p>
             </div>
           </div>
-        </section>
 
-        {/* Dashboard Cards */}
-        <section className="pb-20">
-          <div className="max-w-7xl mx-auto px-6 md:px-12">
+          {/* Dashboard Cards */}
+          <section className="fade-enter">
             {showBanner && <CompleteBrandBanner onDismiss={dismissBanner} />}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 fade-enter">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link to="/library" className="group">
-                  <div className="card-luxury h-full transition-all duration-300 hover:shadow-level-3 hover:-translate-y-1">
-                    <div className="bg-primary/10 w-14 h-14 rounded-lg flex items-center justify-center mb-5 group-hover:bg-primary/15 transition-colors">
-                      <BookOpen className="w-7 h-7 text-primary" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link to="/library" className="group">
+                    <div className="card-editorial h-full">
+                      <div className="flex items-center gap-4 mb-5">
+                        <div className="bg-brass/10 w-16 h-16 rounded-lg flex items-center justify-center group-hover:bg-brass/20 transition-colors">
+                          <BookOpen className="w-8 h-8 text-brass" />
+                        </div>
+                        <h3 className="font-serif text-3xl font-bold text-foreground">The Archives</h3>
+                      </div>
+                      <p className="text-regular text-muted-foreground leading-relaxed font-serif">
+                        Review your published works and editorial history. Every commission, every draft, catalogued with precision.
+                      </p>
                     </div>
-                    <h3 className="font-serif text-2xl font-bold text-foreground mb-3">Library</h3>
-                    <p className="text-regular text-muted-foreground leading-relaxed">
-                      Browse and manage your content library
-                    </p>
-                  </div>
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Access all your saved prompts and content</p>
-              </TooltipContent>
-            </Tooltip>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Access your complete content library</p>
+                </TooltipContent>
+              </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link to="/forge" className="group">
-                  <div className="card-luxury h-full transition-all duration-300 hover:shadow-level-3 hover:-translate-y-1">
-                    <div className="bg-primary/10 w-14 h-14 rounded-lg flex items-center justify-center mb-5 group-hover:bg-primary/15 transition-colors">
-                      <Sparkles className="w-7 h-7 text-primary" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link to="/forge" className="group">
+                    <div className="card-editorial h-full">
+                      <div className="flex items-center gap-4 mb-5">
+                        <div className="bg-brass/10 w-16 h-16 rounded-lg flex items-center justify-center group-hover:bg-brass/20 transition-colors">
+                          <Sparkles className="w-8 h-8 text-brass" />
+                        </div>
+                        <h3 className="font-serif text-3xl font-bold text-foreground">The Editorial Desk</h3>
+                      </div>
+                      <p className="text-regular text-muted-foreground leading-relaxed font-serif">
+                        Commission precision copy for any touchpoint. Single assets or foundational manuscripts ready for deployment.
+                      </p>
                     </div>
-                    <h3 className="font-serif text-2xl font-bold text-foreground mb-3">Composer</h3>
-                    <p className="text-regular text-muted-foreground leading-relaxed">
-                      Generate new content with AI assistance
-                    </p>
-                  </div>
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Create single assets or master content with AI</p>
-              </TooltipContent>
-            </Tooltip>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Generate brand-aligned content with AI</p>
+                </TooltipContent>
+              </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link to="/repurpose" className="group">
-                  <div className="card-luxury h-full transition-all duration-300 hover:shadow-level-3 hover:-translate-y-1">
-                    <div className="bg-primary/10 w-14 h-14 rounded-lg flex items-center justify-center mb-5 group-hover:bg-primary/15 transition-colors">
-                      <Repeat className="w-7 h-7 text-primary" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link to="/repurpose" className="group">
+                    <div className="card-editorial h-full">
+                      <div className="flex items-center gap-4 mb-5">
+                        <div className="bg-brass/10 w-16 h-16 rounded-lg flex items-center justify-center group-hover:bg-brass/20 transition-colors">
+                          <Repeat className="w-8 h-8 text-brass" />
+                        </div>
+                        <h3 className="font-serif text-3xl font-bold text-foreground">The Syndicate</h3>
+                      </div>
+                      <p className="text-regular text-muted-foreground leading-relaxed font-serif">
+                        Repurpose content across channels with strategic precision. One narrative, infinite adaptations.
+                      </p>
                     </div>
-                    <h3 className="font-serif text-2xl font-bold text-foreground mb-3">Amplify</h3>
-                    <p className="text-regular text-muted-foreground leading-relaxed">
-                      Repurpose content for different platforms
-                    </p>
-                  </div>
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Transform existing content for multiple channels</p>
-              </TooltipContent>
-            </Tooltip>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Multi-channel content deployment</p>
+                </TooltipContent>
+              </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link to="/archive" className="group">
-                  <div className="card-luxury h-full transition-all duration-300 hover:shadow-level-3 hover:-translate-y-1">
-                    <div className="bg-primary/10 w-14 h-14 rounded-lg flex items-center justify-center mb-5 group-hover:bg-primary/15 transition-colors">
-                      <Archive className="w-7 h-7 text-primary" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link to="/archive" className="group">
+                    <div className="card-editorial h-full">
+                      <div className="flex items-center gap-4 mb-5">
+                        <div className="bg-brass/10 w-16 h-16 rounded-lg flex items-center justify-center group-hover:bg-brass/20 transition-colors">
+                          <Archive className="w-8 h-8 text-brass" />
+                        </div>
+                        <h3 className="font-serif text-3xl font-bold text-foreground">The Vault</h3>
+                      </div>
+                      <p className="text-regular text-muted-foreground leading-relaxed font-serif">
+                        Your complete anthology of archived campaigns. A permanent record of your brand's published legacy.
+                      </p>
                     </div>
-                    <h3 className="font-serif text-2xl font-bold text-foreground mb-3">Portfolio</h3>
-                    <p className="text-regular text-muted-foreground leading-relaxed">
-                      View your archived content portfolio
-                    </p>
-                  </div>
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Review your completed and archived work</p>
-              </TooltipContent>
-            </Tooltip>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Archive of completed works</p>
+                </TooltipContent>
+              </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link to="/calendar" className="group">
-                  <div className="card-luxury h-full transition-all duration-300 hover:shadow-level-3 hover:-translate-y-1">
-                    <div className="bg-primary/10 w-14 h-14 rounded-lg flex items-center justify-center mb-5 group-hover:bg-primary/15 transition-colors">
-                      <Calendar className="w-7 h-7 text-primary" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link to="/calendar" className="group">
+                    <div className="card-editorial h-full">
+                      <div className="flex items-center gap-4 mb-5">
+                        <div className="bg-brass/10 w-16 h-16 rounded-lg flex items-center justify-center group-hover:bg-brass/20 transition-colors">
+                          <Calendar className="w-8 h-8 text-brass" />
+                        </div>
+                        <h3 className="font-serif text-3xl font-bold text-foreground">The Editorial Calendar</h3>
+                      </div>
+                      <p className="text-regular text-muted-foreground leading-relaxed font-serif">
+                        Orchestrate publication schedules and deadlines. Command your content strategy with temporal precision.
+                      </p>
                     </div>
-                    <h3 className="font-serif text-2xl font-bold text-foreground mb-3">Planner</h3>
-                    <p className="text-regular text-muted-foreground leading-relaxed">
-                      Schedule and plan your content calendar
-                    </p>
-                  </div>
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Organize content schedule and sync with Google Calendar</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-
-          {/* Brand Knowledge Center */}
-          {currentOrganizationId && (
-            <div className="mt-12" id="brand-knowledge-center">
-              <BrandKnowledgeCenter organizationId={currentOrganizationId} />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Schedule and orchestrate campaigns</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
-          )}
+
+            {/* Brand Knowledge Center */}
+            {currentOrganizationId && (
+              <div className="mt-16" id="brand-knowledge-center">
+                <div className="brass-divider mb-8"></div>
+                <BrandKnowledgeCenter organizationId={currentOrganizationId} />
+              </div>
+            )}
+          </section>
         </div>
-      </section>
-    </div>
+      </div>
     </ErrorBoundary>
   );
 };
