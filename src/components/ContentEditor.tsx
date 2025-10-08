@@ -377,10 +377,10 @@ export const ContentEditor = ({
         createPortal(
           <div className="fixed inset-0 z-[9999] bg-background w-screen h-[100dvh] flex flex-col">
             {/* Enhanced Toolbar */}
-            <div className="border-b border-border/40 bg-background/95 backdrop-blur-sm">
-              <div className="flex items-center justify-between px-6 py-3 max-w-5xl mx-auto">
+            <div className="border-b border-border/40 bg-background/95 backdrop-blur-sm flex-shrink-0">
+              <div className="flex items-center justify-between px-6 py-3">
                 {/* Left: Font & Formatting */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                    {/* Font Selector */}
                   <Select 
                     value={selectedFont} 
@@ -607,95 +607,78 @@ export const ContentEditor = ({
                     </Button>
                   </div>
 
-                  <div className="h-6 w-px bg-border/40" />
-
-                  {/* Undo/Redo */}
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleUndo}
-                      disabled={!canUndo}
-                      className="h-9 w-9 p-0"
-                      title="Undo (Ctrl+Z)"
-                    >
-                      <Undo2 className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleRedo}
-                      disabled={!canRedo}
-                      className="h-9 w-9 p-0"
-                      title="Redo (Ctrl+Y)"
-                    >
-                      <Redo2 className="w-4 h-4" />
-                    </Button>
-                  </div>
                 </div>
 
-                {/* Right: Stats & Actions */}
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-muted-foreground">
+                {/* Right: Undo/Redo + Word Count */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleUndo}
+                    disabled={!canUndo}
+                    className="h-9 w-9 p-0"
+                    title="Undo (Ctrl+Z)"
+                  >
+                    <Undo2 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRedo}
+                    disabled={!canRedo}
+                    className="h-9 w-9 p-0"
+                    title="Redo (Ctrl+Y)"
+                  >
+                    <Redo2 className="w-4 h-4" />
+                  </Button>
+                  
+                  <div className="h-6 w-px bg-border/40 mx-1" />
+                  
+                  <span className="text-sm text-muted-foreground font-medium tabular-nums">
                     {wordCount} {wordCount === 1 ? 'word' : 'words'}
                   </span>
-
-                  <Button
-                    variant={assistantOpen ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setAssistantOpen(!assistantOpen)}
-                    className="h-9 px-3"
-                    title="Editorial Director"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    <span className="ml-2 hidden lg:inline">{assistantOpen ? 'Hide' : 'Director'}</span>
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleCopy}
-                    className="h-9 px-3"
-                    title="Copy Text"
-                  >
-                    {copied ? (
-                      <Check className="w-4 h-4" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleCopyFormatted}
-                    className="h-9 px-3"
-                    title="Copy Formatted"
-                  >
-                    {copiedFormatted ? (
-                      <Check className="w-4 h-4" />
-                    ) : (
-                      <FileText className="w-4 h-4" />
-                    )}
-                  </Button>
-
-                  <div className="h-6 w-px bg-border/40 mx-1" />
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleToggleFullScreen}
-                    className="h-9 gap-2 flex-shrink-0"
-                  >
-                    <Minimize2 className="w-4 h-4" />
-                    Exit
-                  </Button>
                 </div>
+              </div>
+
+              {/* Second Row: Actions */}
+              <div className="border-t border-border/40 px-6 py-2.5 flex items-center justify-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setAssistantOpen(!assistantOpen)}
+                  className="h-9 gap-2"
+                  title="Editorial Director"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  {assistantOpen ? 'Hide Director' : 'Show Director'}
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCopy}
+                  className="h-9 gap-2"
+                  title="Copy Text"
+                >
+                  <Copy className="w-4 h-4" />
+                  Copy Text
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCopyFormatted}
+                  className="h-9 gap-2"
+                  title="Copy Page"
+                >
+                  <FileText className="w-4 h-4" />
+                  Copy Page
+                </Button>
               </div>
             </div>
 
             {/* Document Editor + Assistant */}
-            <div className={cn("flex-1 bg-muted/30", assistantOpen ? "grid grid-cols-[1fr_420px] overflow-hidden" : "overflow-hidden")}> 
+            <div className={cn("flex-1 bg-muted/30", assistantOpen ? "grid grid-cols-2 overflow-hidden" : "overflow-hidden")}> 
               {/* Editor Area */}
               <div className="h-full overflow-y-auto">
                 <div className="max-w-4xl mx-auto py-12 px-8 md:px-16 lg:px-24">
@@ -714,7 +697,7 @@ export const ContentEditor = ({
 
               {/* Assistant Panel */}
               {assistantOpen && (
-                <div className="h-full overflow-hidden border-l border-border/40 bg-background">
+                <div className="h-full overflow-hidden bg-background">
                   <EditorialAssistantPanel
                     onClose={() => setAssistantOpen(false)}
                     initialContent={(richHtml ? htmlToPlainText(richHtml) : content)}

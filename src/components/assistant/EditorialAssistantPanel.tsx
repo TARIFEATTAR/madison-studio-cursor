@@ -133,7 +133,7 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
   return (
     <div className="h-full bg-background border-l-2 border-primary/20 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-primary/20 bg-gradient-to-r from-primary/5 to-transparent flex-shrink-0">
+      <div className="flex items-center px-6 py-4 border-b border-primary/20 bg-gradient-to-r from-primary/5 to-transparent flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-primary" />
@@ -143,14 +143,6 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
             <p className="text-xs text-muted-foreground">Strategic Counsel</p>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          className="hover:bg-primary/10"
-        >
-          <X className="w-4 h-4" />
-        </Button>
       </div>
 
       {/* Messages */}
