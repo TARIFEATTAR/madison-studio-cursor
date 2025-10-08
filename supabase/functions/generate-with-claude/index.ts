@@ -155,16 +155,103 @@ serve(async (req) => {
       throw new Error('ANTHROPIC_API_KEY is not configured');
     }
 
-    const { prompt, organizationId, mode = "generate" } = await req.json();
+    const { prompt, organizationId, mode = "generate", styleOverlay = "TARIFE_NATIVE" } = await req.json();
 
     console.log('Generating content with Claude for prompt:', prompt.substring(0, 100));
     console.log('Mode:', mode);
+    console.log('Style Overlay:', styleOverlay);
     if (organizationId) {
       console.log('Organization ID provided:', organizationId);
     }
 
     // Build brand-aware system prompt based on mode
     let systemPrompt = '';
+    
+    // Build style overlay instructions
+    const styleOverlayInstructions = {
+      TARIFE_NATIVE: `
+╔══════════════════════════════════════════════════════════════════╗
+║                    STYLE OVERLAY: TARIFE NATIVE                   ║
+║                    (In-House Brand Voice)                         ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Apply the brand's authentic voice as established in the brand guidelines above.
+This is the default style—trust the brand DNA and maintain consistency.`,
+
+      JAY_PETERMAN: `
+╔══════════════════════════════════════════════════════════════════╗
+║                  STYLE OVERLAY: JAY PETERMAN                      ║
+║                      (Vignette Style)                             ║
+╚══════════════════════════════════════════════════════════════════╝
+
+VIGNETTE NARRATIVE APPROACH:
+• Open with a vivid scene or moment in time
+• Use sensory details to create immersion
+• Tell a micro-story that embodies the product's essence
+• Let the product emerge naturally from the narrative
+• Avoid direct selling—let the story do the work
+
+STRUCTURAL ELEMENTS:
+• First-person or intimate second-person perspective
+• Present tense for immediacy
+• Short, punchy sentences mixed with flowing descriptive passages
+• Cinematic imagery—what would you see, smell, hear, feel?
+
+TONE:
+• Sophisticated storytelling
+• Evocative without being flowery
+• A touch of wanderlust or nostalgia
+• Confident but never pushy`,
+
+      OGILVY: `
+╔══════════════════════════════════════════════════════════════════╗
+║                     STYLE OVERLAY: OGILVY                         ║
+║                      (Benefit + Proof)                            ║
+╚══════════════════════════════════════════════════════════════════╝
+
+OGILVY ADVERTISING APPROACH:
+• Lead with the primary benefit (what's in it for them?)
+• Support with proof points (specifics, facts, credentials)
+• Clear value proposition—no vague claims
+• Rational persuasion rooted in product truth
+
+STRUCTURAL ELEMENTS:
+• Benefit headline or opening
+• Specific product attributes that deliver the benefit
+• Credentials or provenance that add authority
+• Close with a clear next step or reinforcement of value
+
+TONE:
+• Authoritative but accessible
+• Fact-based and specific
+• No hyperbole—let the facts speak
+• Respectful of reader intelligence`,
+
+      HYBRID_JP_OGILVY: `
+╔══════════════════════════════════════════════════════════════════╗
+║                STYLE OVERLAY: HYBRID JP × OGILVY                  ║
+║                      (Scene + Proof)                              ║
+╚══════════════════════════════════════════════════════════════════╝
+
+HYBRID NARRATIVE + BENEFIT APPROACH:
+• Open with a vivid vignette or evocative scene (Jay Peterman style)
+• Transition to clear benefit statements and proof points (Ogilvy method)
+• Blend storytelling with strategic persuasion
+• Emotional engagement followed by rational validation
+
+STRUCTURAL ELEMENTS:
+• Act 1: The Scene — Immersive narrative moment
+• Act 2: The Why — Benefits and supporting details
+• Act 3: The Close — Reinforcement or call to awareness
+
+TONE:
+• Sophisticated storytelling that earns trust
+• Emotional resonance supported by product truth
+• Cinematic opening, authoritative middle, confident close
+• Balance poetry with precision`
+    };
+    
+    const selectedStyleOverlay = styleOverlayInstructions[styleOverlay as keyof typeof styleOverlayInstructions] || styleOverlayInstructions.TARIFE_NATIVE;
     
     // Fetch and inject brand context if organization ID provided
     if (organizationId) {
@@ -174,6 +261,8 @@ serve(async (req) => {
         if (mode === "generate") {
           // GENERATE MODE: Ghostwriter role with Codex v2
           systemPrompt = `${brandContext}
+
+${selectedStyleOverlay}
 
 ╔══════════════════════════════════════════════════════════════════╗
 ║                      GLOBAL SYSTEM PROMPT                         ║

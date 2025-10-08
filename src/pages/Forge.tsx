@@ -104,6 +104,17 @@ const Forge = () => {
   const [blogWordCount, setBlogWordCount] = useState(1200);
   const [voiceValidation, setVoiceValidation] = useState<null>(null);
   
+  // Style Overlay state - persist across sessions
+  const [styleOverlay, setStyleOverlay] = useState<string>(() => {
+    const saved = localStorage.getItem('forge_style_overlay');
+    return saved || "TARIFE_NATIVE";
+  });
+  
+  // Persist style overlay to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('forge_style_overlay', styleOverlay);
+  }, [styleOverlay]);
+  
   // Editorial Assistant Panel state
   const [showAssistantPanel, setShowAssistantPanel] = useState(false);
   
@@ -278,7 +289,8 @@ const Forge = () => {
         body: { 
           prompt: `${generatedPrompt}\n\n[EXECUTE THIS BRIEF IMMEDIATELY. OUTPUT ONLY THE FINAL COPY. NO QUESTIONS OR ANALYSIS.]`,
           organizationId: currentOrganizationId,
-          mode: "generate"
+          mode: "generate",
+          styleOverlay: styleOverlay
         }
       });
 
@@ -731,6 +743,27 @@ const Forge = () => {
                       <SelectItem value="blog">Editorial Article</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="styleOverlay" className="font-serif text-base">Style Overlay</Label>
+                  <Select
+                    value={styleOverlay}
+                    onValueChange={(value) => setStyleOverlay(value)}
+                  >
+                    <SelectTrigger id="styleOverlay" className="bg-background/50">
+                      <SelectValue placeholder="Select writing style..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="TARIFE_NATIVE">Tarife Native (In-house Brand Voice)</SelectItem>
+                      <SelectItem value="JAY_PETERMAN">Jay Peterman (Vignette Style)</SelectItem>
+                      <SelectItem value="OGILVY">Ogilvy (Benefit + Proof)</SelectItem>
+                      <SelectItem value="HYBRID_JP_OGILVY">Hybrid JP × Ogilvy (Scene + Proof)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Choose the writing style that best fits your content needs
+                  </p>
                 </div>
 
                 {formData.contentType === 'visual' && (
