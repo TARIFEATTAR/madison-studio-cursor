@@ -243,8 +243,8 @@ const Forge = () => {
     navigator.clipboard.writeText(generatedPrompt);
     setCopied(true);
     toast({
-      title: "Prompt copied",
-      description: "The crafted prompt has been copied to your clipboard.",
+      title: "Brief archived",
+      description: "The crafted brief has been copied to your clipboard.",
     });
     setTimeout(() => setCopied(false), 2000);
   };
@@ -252,8 +252,8 @@ const Forge = () => {
   const testWithClaude = async () => {
     if (!generatedPrompt) {
       toast({
-        title: "Needs review",
-        description: "Please craft a prompt first before testing with Claude.",
+        title: "Parameters incomplete",
+        description: "Please craft a brief first before commissioning copy.",
         variant: "destructive",
       });
       return;
@@ -294,8 +294,8 @@ const Forge = () => {
         }
         
         toast({
-          title: "Content crafted",
-          description: "Claude has generated your content successfully.",
+          title: "Copy commissioned",
+          description: "Your content has been generated successfully.",
         });
       }
     } catch (error) {
@@ -317,7 +317,7 @@ const Forge = () => {
     if (!formData.title) {
       toast({
         title: "Title required",
-        description: "Please provide a title for your prompt.",
+        description: "Please provide a subject title for your commission.",
         variant: "destructive",
       });
       return;
@@ -393,15 +393,15 @@ const Forge = () => {
       if (outputError) throw outputError;
 
       toast({
-        title: "Content saved to Library",
-        description: "Your prompt and output have been saved to the Library.",
+        title: "Published to portfolio",
+        description: "Your content has been archived in the Library.",
         action: (
           <Button
             variant="outline"
             size="sm"
             onClick={() => navigate('/library')}
           >
-            View in Library
+            View Portfolio
           </Button>
         ),
       });
@@ -583,53 +583,52 @@ const Forge = () => {
   };
 
   return (
-    <div className="min-h-screen py-8 px-6 md:px-12">
+    <div className="min-h-screen py-8 px-6 md:px-12 paper-overlay">
       <div className="max-w-7xl mx-auto codex-spacing">
+        {/* Editorial Masthead */}
         <div className="fade-enter mb-12">
-          <h1 className="text-foreground mb-3">Composer</h1>
-          <p className="text-muted-foreground text-lg max-w-2xl">
-            Craft content with precision
+          <div className="brass-divider mb-8"></div>
+          <h1 className="text-foreground mb-3 font-serif tracking-wide">The Editorial Desk</h1>
+          <p className="text-muted-foreground text-lg max-w-3xl font-serif leading-relaxed">
             {contentMode === "single" 
-              ? "Select a product from your catalogue and craft content with brand guardrails."
-              : "Create master content and repurpose it into multi-channel derivative assets."
+              ? "Craft precision copy for individual touchpoints. Select a subject from your catalogue and define the parameters of your commission."
+              : "Author foundational narratives for multi-channel deployment. Write once, repurpose strategically across all brand touchpoints."
             }
           </p>
         </div>
 
-        {/* Content Mode Toggle */}
-        <div className="fade-enter mb-8">
-          <div className="card-matte p-6 rounded-lg border border-border/40 inline-block">
-            <Label className="text-sm text-muted-foreground mb-3 block">Content Mode</Label>
-            <div className="flex gap-2">
-              <Button
-                variant={contentMode === "single" ? "default" : "outline"}
+        {/* Edition Selector */}
+        <div className="fade-enter mb-10">
+          <div className="inline-flex items-center">
+            <Label className="text-sm text-muted-foreground mr-4 font-serif">Edition:</Label>
+            <div className="flex border border-border/40 rounded-md overflow-hidden shadow-sm">
+              <button
                 onClick={() => setContentMode("single")}
-                className="transition-all"
+                className={`edition-tab ${contentMode === "single" ? "edition-tab-active" : ""}`}
               >
-                Single Asset
-              </Button>
-              <Button
-                variant={contentMode === "master" ? "default" : "outline"}
+                Single Commission
+              </button>
+              <button
                 onClick={() => setContentMode("master")}
-                className="transition-all"
+                className={`edition-tab ${contentMode === "master" ? "edition-tab-active" : ""}`}
               >
-                Master Content (Multi-Channel)
-              </Button>
+                Master Manuscript
+              </button>
             </div>
           </div>
         </div>
 
         {contentMode === "single" ? (
-          /* EXISTING SINGLE ASSET MODE */
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left: Form Builder */}
+          /* SINGLE COMMISSION MODE */
+          <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-8">
+            {/* Left: The Manuscript - Form Builder */}
             <div className="fade-enter space-y-6">
-              <div className="card-matte p-8 rounded-lg border border-border/40">
-                <h2 className="mb-6 text-2xl">Prompt Elements</h2>
+              <div className="card-editorial">
+                <h2 className="mb-6 text-2xl font-serif">Brief Parameters</h2>
 
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="productName">Product Name *</Label>
+                    <Label htmlFor="productName" className="font-serif text-base">Subject *</Label>
                   <Popover open={productSearchOpen} onOpenChange={setProductSearchOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -685,20 +684,20 @@ const Forge = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="contentType">Content Type *</Label>
+                  <Label htmlFor="contentType" className="font-serif text-base">Deliverable Format *</Label>
                   <Select
                     value={formData.contentType}
                     onValueChange={(value) => setFormData({ ...formData, contentType: value })}
                   >
                     <SelectTrigger id="contentType" className="bg-background/50">
-                      <SelectValue placeholder="Select content type..." />
+                      <SelectValue placeholder="Select format..." />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="product">Product Description</SelectItem>
                       <SelectItem value="email">Email Campaign</SelectItem>
                       <SelectItem value="social">Social Media</SelectItem>
                       <SelectItem value="visual">Visual Asset</SelectItem>
-                      <SelectItem value="blog">Blog Post</SelectItem>
+                      <SelectItem value="blog">Editorial Article</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -867,13 +866,13 @@ const Forge = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="custom">Custom Instructions</Label>
+                  <Label htmlFor="custom" className="font-serif text-base">Additional Editorial Direction</Label>
                   <Textarea
                     id="custom"
                     value={formData.customInstructions}
                     onChange={(e) => setFormData({ ...formData, customInstructions: e.target.value })}
-                    placeholder="Add specific requirements or creative direction..."
-                    className="bg-background/50 min-h-[120px]"
+                    placeholder="Provide specific requirements or creative mandates..."
+                    className="bg-background/50 min-h-[120px] input-manuscript"
                   />
                 </div>
 
@@ -945,72 +944,82 @@ const Forge = () => {
             </div>
           </div>
 
-          {/* Right: Live Preview */}
+          {/* Right: The Proof Sheet - Preview & Output */}
           <div className="fade-enter">
-            <div className="card-matte p-8 rounded-lg border border-border/40 sticky top-8">
+            <div className="card-editorial sticky top-8">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl">Generated Prompt</h2>
-                <Button
+                <h2 className="text-2xl font-serif">Crafted Brief</h2>
+                <button
                   onClick={copyToClipboard}
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
+                  className="btn-archive flex items-center gap-2"
                 >
                   {copied ? (
                     <>
                       <Check className="w-4 h-4" />
-                      Copied
+                      Archived
                     </>
                   ) : (
                     <>
                       <Copy className="w-4 h-4" />
-                      Copy
+                      Archive Brief
                     </>
                   )}
-                </Button>
+                </button>
               </div>
 
-              <div className="bg-background/50 rounded-md p-6 min-h-[400px] font-mono text-sm leading-relaxed border border-border/30">
+              <div className="manuscript-frame min-h-[400px] font-mono text-sm leading-relaxed">
                 {generatedPrompt || (
-                  <p className="text-muted-foreground italic">
-                    Your prompt will materialize here as you craft it...
+                  <p className="text-muted-foreground italic font-serif">
+                    The desk awaits your parameters. Define your commission above to preview the brief.
                   </p>
                 )}
               </div>
 
               {generatedOutput && (
                 <div className="mt-6 space-y-4">
-                  <h3 className="text-lg font-serif mb-3">Generated Output</h3>
-                  <ContentEditor
-                    content={generatedOutput}
-                    onChange={setGeneratedOutput}
-                    placeholder="Generated content will appear here..."
-                  />
+                  <div className="brass-divider"></div>
+                  <h3 className="text-lg font-serif mb-3">First Proof</h3>
+                  <div className="manuscript-frame">
+                    <ContentEditor
+                      content={generatedOutput}
+                      onChange={setGeneratedOutput}
+                      placeholder="Your commissioned copy will appear here..."
+                    />
+                  </div>
                   
                   {formData.contentType === 'blog' && voiceValidation && (
                     <div className="p-4 bg-background/30 rounded-md border border-border/40">
-                      <h4 className="text-sm font-medium mb-2">Voice Validation</h4>
+                      <h4 className="text-sm font-serif font-semibold mb-2">Editorial Notes</h4>
                       <div className="space-y-2 text-sm">
                         {voiceValidation.forbiddenWords.length > 0 && (
-                          <div className="text-destructive">
-                            ❌ Forbidden words found: {voiceValidation.forbiddenWords.join(', ')}
+                          <div className="text-destructive flex items-start gap-2">
+                            <span className="text-base">✗</span>
+                            <span>Flagged terms: {voiceValidation.forbiddenWords.join(', ')}</span>
                           </div>
                         )}
-                        <div className="text-muted-foreground">
-                          ✅ Approved vocabulary: {voiceValidation.approvedCount} instances
+                        <div className="text-muted-foreground flex items-start gap-2">
+                          <span className="text-base">✓</span>
+                          <span>Approved lexicon: {voiceValidation.approvedCount} instances</span>
                         </div>
-                        <div className="text-muted-foreground">
-                          {voiceValidation.hasEmoji ? '❌ Contains emojis' : '✅ No emojis'}
+                        <div className="text-muted-foreground flex items-start gap-2">
+                          <span className="text-base">{voiceValidation.hasEmoji ? '✗' : '✓'}</span>
+                          <span>{voiceValidation.hasEmoji ? 'Contains emojis' : 'No emojis detected'}</span>
                         </div>
-                        <div className="text-muted-foreground">
-                          Sentence variety score: {voiceValidation.sentenceVariety}%
+                        <div className="text-muted-foreground flex items-start gap-2">
+                          <span className="text-base">→</span>
+                          <span>Sentence variety: {voiceValidation.sentenceVariety}%</span>
                         </div>
                       </div>
                     </div>
                   )}
                   
                   <div className="pt-4 border-t border-border/40">
-                    <QualityRating rating={qualityRating} onRatingChange={setQualityRating} />
+                    <div className="editorial-medallion">
+                      <span className="text-xs uppercase tracking-wide">Editorial Assessment</span>
+                    </div>
+                    <div className="mt-3">
+                      <QualityRating rating={qualityRating} onRatingChange={setQualityRating} />
+                    </div>
                   </div>
                 </div>
               )}
@@ -1041,59 +1050,58 @@ const Forge = () => {
 
               <div className="mt-6 flex gap-3 flex-wrap">
                 {formData.contentType !== 'visual' && (
-                  <Button 
-                    className="btn-craft flex-1" 
+                  <button 
+                    className="btn-commission flex-1 flex items-center justify-center gap-2" 
                     onClick={testWithClaude}
                     disabled={generating || !generatedPrompt}
                   >
                     {generating ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Crafting...
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Composing...
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Test with Claude
+                        <Sparkles className="w-4 h-4" />
+                        Commission Copy
                       </>
                     )}
-                  </Button>
+                  </button>
                 )}
 
                 {formData.contentType === 'visual' && generatedPrompt && (
                   <div className="w-full p-4 bg-primary/5 border border-primary/20 rounded-md">
-                    <p className="text-sm text-foreground mb-2">
-                      <strong>Next Steps:</strong>
+                    <p className="text-sm font-serif font-semibold mb-2">
+                      Visual Asset Brief — Next Steps:
                     </p>
-                    <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                      <li>Copy the prompt above using the "Copy" button</li>
+                    <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside font-serif">
+                      <li>Archive the brief above using "Archive Brief"</li>
                       <li>Open <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google AI Studio</a></li>
-                      <li>Use Nano Banana model with your bottle reference images</li>
-                      <li>Paste the generated image URLs in the field above</li>
-                      <li>Rate the quality and archive</li>
+                      <li>Use Nano Banana model with your reference imagery</li>
+                      <li>Paste generated image URLs below</li>
+                      <li>Assess quality and publish to portfolio</li>
                     </ol>
                   </div>
                 )}
                 
                 {((generatedOutput && qualityRating > 0) || (imageUrls && qualityRating > 0)) && (
-                  <Button 
-                    variant="outline" 
-                    className="flex-1 gap-2"
+                  <button 
+                    className="btn-archive flex-1 flex items-center justify-center gap-2"
                     onClick={archiveContent}
                     disabled={saving}
                   >
                     {saving ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Saving...
+                        Publishing...
                       </>
                     ) : (
                       <>
                         <Archive className="w-4 h-4" />
-                        Save to Library
+                        Publish to Portfolio
                       </>
                     )}
-                  </Button>
+                  </button>
                 )}
               </div>
             </div>
