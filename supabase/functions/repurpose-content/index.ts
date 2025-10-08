@@ -7,6 +7,74 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to build brand context from database
+async function buildBrandContext(supabaseClient: any, organizationId: string) {
+  try {
+    console.log(`Fetching brand context for organization: ${organizationId}`);
+    
+    // Fetch brand knowledge entries
+    const { data: knowledgeData, error: knowledgeError } = await supabaseClient
+      .from('brand_knowledge')
+      .select('knowledge_type, content')
+      .eq('organization_id', organizationId)
+      .eq('is_active', true);
+    
+    if (knowledgeError) {
+      console.error('Error fetching brand knowledge:', knowledgeError);
+    }
+    
+    // Fetch organization brand config
+    const { data: orgData, error: orgError } = await supabaseClient
+      .from('organizations')
+      .select('name, brand_config')
+      .eq('id', organizationId)
+      .single();
+    
+    if (orgError) {
+      console.error('Error fetching organization:', orgError);
+    }
+    
+    // Build context string
+    const contextParts = [];
+    
+    if (orgData?.name) {
+      contextParts.push(`ORGANIZATION: ${orgData.name}`);
+    }
+    
+    // Add brand knowledge sections
+    if (knowledgeData && knowledgeData.length > 0) {
+      contextParts.push('\n=== BRAND KNOWLEDGE ===');
+      for (const entry of knowledgeData) {
+        contextParts.push(`\n--- ${entry.knowledge_type.toUpperCase()} ---`);
+        
+        // Handle JSONB content
+        if (typeof entry.content === 'object') {
+          contextParts.push(JSON.stringify(entry.content, null, 2));
+        } else {
+          contextParts.push(String(entry.content));
+        }
+      }
+    }
+    
+    // Add brand colors if available
+    if (orgData?.brand_config) {
+      const config = orgData.brand_config as any;
+      if (config.brand_colors) {
+        contextParts.push('\n=== BRAND VISUAL GUIDELINES ===');
+        contextParts.push(`Colors: ${JSON.stringify(config.brand_colors)}`);
+      }
+    }
+    
+    const fullContext = contextParts.join('\n');
+    console.log(`Built brand context (${fullContext.length} characters)`);
+    
+    return fullContext;
+  } catch (error) {
+    console.error('Error building brand context:', error);
+    return '';
+  }
+}
+
 const TRANSFORMATION_PROMPTS = {
   email: `Transform this master content into an email newsletter while maintaining Tarife Attar's "Confident Whisper" voice.
 
@@ -517,6 +585,9 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
+    // Fetch brand context for consistent voice
+    const brandContext = await buildBrandContext(supabaseClient, masterContentRecord.organization_id);
+
     const results: any[] = [];
 
     // Generate each derivative type
@@ -545,6 +616,22 @@ serve(async (req) => {
 \n${contextInfo}
 \nIMPORTANT OUTPUT RULES:\n- Return PLAIN TEXT only.\n- Do NOT use any Markdown or markup (no **bold**, *italics*, # headings, lists, or backticks).\n- Keep labels like SLIDE 1:, TWEET 1:, SUBJECT LINE 1: as plain text when applicable.\n\nMASTER CONTENT:\n${masterContent.full_content}\n\nGenerate the ${derivativeType} version now.`;
 
+      // Build brand-aware system prompt
+      let systemPrompt = 'You are a precise editorial assistant. Follow instructions exactly and return clean text.';
+      
+      if (brandContext) {
+        systemPrompt = `${brandContext}
+
+=== YOUR ROLE ===
+You are the official editorial assistant for this organization. You have deep knowledge of their brand voice, values, and aesthetic as detailed above.
+
+=== INSTRUCTIONS ===
+- Always adhere to the brand voice guidelines provided
+- Use approved vocabulary and avoid forbidden terms as specified
+- Maintain tone consistency with the brand personality
+- Follow instructions exactly and return clean text`;
+      }
+
       // Call Lovable AI Gateway (default to Gemini 2.5 Flash)
       const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
@@ -556,7 +643,7 @@ serve(async (req) => {
           // During promo period, Gemini models are free
           model: 'google/gemini-2.5-flash',
           messages: [
-            { role: 'system', content: 'You are a precise editorial assistant. Follow instructions exactly. Keep the brand voice "Confident Whisper" and return clean text.' },
+            { role: 'system', content: systemPrompt },
             { role: 'user', content: fullPrompt }
           ]
         }),

@@ -4,12 +4,107 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Helper function to build brand context from database
+async function buildBrandContext(organizationId: string) {
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  
+  try {
+    console.log(`Fetching brand context for organization: ${organizationId}`);
+    
+    // Fetch brand knowledge entries
+    const { data: knowledgeData, error: knowledgeError } = await supabase
+      .from('brand_knowledge')
+      .select('knowledge_type, content')
+      .eq('organization_id', organizationId)
+      .eq('is_active', true);
+    
+    if (knowledgeError) {
+      console.error('Error fetching brand knowledge:', knowledgeError);
+    }
+    
+    // Fetch organization brand config
+    const { data: orgData, error: orgError } = await supabase
+      .from('organizations')
+      .select('name, brand_config')
+      .eq('id', organizationId)
+      .single();
+    
+    if (orgError) {
+      console.error('Error fetching organization:', orgError);
+    }
+    
+    // Fetch brand documents (prioritize LLM System Prompt)
+    const { data: docsData, error: docsError } = await supabase
+      .from('brand_documents')
+      .select('file_name, file_url')
+      .eq('organization_id', organizationId)
+      .eq('processing_status', 'complete');
+    
+    if (docsError) {
+      console.error('Error fetching brand documents:', docsError);
+    }
+    
+    // Build context string
+    const contextParts = [];
+    
+    if (orgData?.name) {
+      contextParts.push(`ORGANIZATION: ${orgData.name}`);
+    }
+    
+    // Add brand knowledge sections
+    if (knowledgeData && knowledgeData.length > 0) {
+      contextParts.push('\n=== BRAND KNOWLEDGE ===');
+      for (const entry of knowledgeData) {
+        contextParts.push(`\n--- ${entry.knowledge_type.toUpperCase()} ---`);
+        
+        // Handle JSONB content
+        if (typeof entry.content === 'object') {
+          contextParts.push(JSON.stringify(entry.content, null, 2));
+        } else {
+          contextParts.push(String(entry.content));
+        }
+      }
+    }
+    
+    // Add brand colors and typography if available
+    if (orgData?.brand_config) {
+      const config = orgData.brand_config as any;
+      if (config.brand_colors || config.typography) {
+        contextParts.push('\n=== BRAND VISUAL GUIDELINES ===');
+        if (config.brand_colors) {
+          contextParts.push(`Colors: ${JSON.stringify(config.brand_colors)}`);
+        }
+        if (config.typography) {
+          contextParts.push(`Typography: ${JSON.stringify(config.typography)}`);
+        }
+      }
+    }
+    
+    // Add reference to uploaded brand documents
+    if (docsData && docsData.length > 0) {
+      contextParts.push('\n=== REFERENCE DOCUMENTS ===');
+      contextParts.push('The following brand documents have been uploaded and should inform all content:');
+      for (const doc of docsData) {
+        contextParts.push(`- ${doc.file_name}`);
+      }
+    }
+    
+    const fullContext = contextParts.join('\n');
+    console.log(`Built brand context (${fullContext.length} characters)`);
+    
+    return fullContext;
+  } catch (error) {
+    console.error('Error building brand context:', error);
+    return '';
+  }
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -17,19 +112,40 @@ serve(async (req) => {
   }
 
   try {
-    // Public access: Authorization optional
-    const authHeader = req.headers.get('Authorization');
-    if (authHeader) {
-      console.log('Authorization header received');
-    }
-
     if (!ANTHROPIC_API_KEY) {
       throw new Error('ANTHROPIC_API_KEY is not configured');
     }
 
-    const { prompt } = await req.json();
+    const { prompt, organizationId } = await req.json();
 
     console.log('Generating content with Claude for prompt:', prompt.substring(0, 100));
+    if (organizationId) {
+      console.log('Organization ID provided:', organizationId);
+    }
+
+    // Build brand-aware system prompt
+    let systemPrompt = 'You are a professional copywriter. Always return plain text responses with no Markdown formatting. Do not use asterisks, bold, italics, headers, or any special formatting characters. Output must be clean, copy-paste ready text.';
+    
+    // Fetch and inject brand context if organization ID provided
+    if (organizationId) {
+      const brandContext = await buildBrandContext(organizationId);
+      
+      if (brandContext) {
+        systemPrompt = `${brandContext}
+
+=== YOUR ROLE ===
+You are the official copywriter for this organization. You have deep knowledge of their brand voice, values, and aesthetic as detailed above.
+
+=== INSTRUCTIONS ===
+- Always adhere to the brand voice guidelines provided
+- Use approved vocabulary and avoid forbidden terms as specified
+- Maintain tone consistency with the brand personality
+- Reference brand pillars and themes when relevant
+- Follow all visual and content guidelines provided
+- Return output as plain text only with no Markdown formatting (no asterisks, bold, italics, headers, etc.)
+- Output must be clean, copy-paste ready text`;
+      }
+    }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -41,7 +157,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4096,
-        system: 'You are a professional copywriter. Always return plain text responses with no Markdown formatting. Do not use asterisks, bold, italics, headers, or any special formatting characters. Output must be clean, copy-paste ready text.',
+        system: systemPrompt,
         messages: [
           {
             role: 'user',
