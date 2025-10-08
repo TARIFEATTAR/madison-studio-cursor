@@ -76,26 +76,21 @@ async function buildBrandContext(supabaseClient: any, organizationId: string) {
 }
 
 const TRANSFORMATION_PROMPTS = {
-  email: `Transform this master content into an email newsletter while maintaining Tarife Attar's "Confident Whisper" voice.
+  email: `Transform this master content into an email newsletter.
 
 TRANSFORMATION REQUIREMENTS:
 - Condense to 30-40% of original length (target: 400-500 words)
-- Add personalized opening: "You asked about..." or "In our conversation about..."
-- Convert headings into bold sentences (no formal headers)
-- Add email-specific CTA at end using invitation language
-- Emphasize intimate, never promotional tone
+- Add personalized opening that engages the reader
+- Convert headings into flowing sentences (no formal headers)
+- Add clear call-to-action at the end
+- Maintain brand voice and tone throughout
 
 STRUCTURE:
-1. Personal greeting (reference reader's journey)
+1. Personal greeting
 2. Hook (main concept from master content)
 3. 2-3 key insights (condensed from master)
-4. Gentle CTA: "Read the full exploration →" or "Continue the journey →"
-5. Signature: "In quiet rebellion, The Tarife Attar Custodians"
-
-CONSTRAINTS:
-- Avoid: perfume, cologne, loud, broadcast
-- Include: presence, movement, cadence (where natural)
-- Tone: Intimate, never promotional
+4. Clear CTA with next step
+5. Signature line
 
 Generate 3 subject line options in this format at the start:
 SUBJECT LINE 1: [question format]
@@ -112,23 +107,20 @@ TRANSFORMATION REQUIREMENTS:
 - Extract 4-5 key concepts that work as standalone slides
 - Slide 1: Visual hook (one powerful statement, max 10 words)
 - Slides 2-4: One insight per slide (max 30 words each, punchy)
-- Slide 5: CTA using gentle invitation language
-- Caption: Condensed narrative version (150 words max) with allegorical opening
-- Hashtags: ONLY use from approved list
+- Slide 5: Clear call-to-action
+- Caption: Condensed narrative version (150 words max)
+- Include relevant hashtags based on content theme
 
 SLIDE DESIGN NOTES:
-- Each slide must stop the scroll on its own
-- Use short sentences, ample white space
+- Each slide must capture attention on its own
+- Use short sentences for clarity
 - Build narrative: Slide 1 hooks → 2-4 develop → 5 invites action
 
 CAPTION STRUCTURE:
-1. Allegorical opening
+1. Engaging opening
 2. Core message (condensed from master)
-3. Gentle invitation
-4. Approved hashtags only
-
-APPROVED HASHTAGS (use 3-5):
-#IntimateLuxury #TheCadence #QuietRebellion #AttarLife #ScentAnchor #PresenceNotProjection
+3. Call to action
+4. Relevant hashtags (3-5)
 
 Format your response as:
 SLIDE 1: [text]
@@ -150,18 +142,16 @@ THREAD REQUIREMENTS:
 
 THREAD STRUCTURE:
 1. Hook (provocation or question)
-2-3. Problem/villain (trophy perfume culture)
-4-6. Solution/philosophy (your approach)
-7-9. Proof/deepening (pillars, benefits)
+2-3. Problem statement or context
+4-6. Solution or key insights
+7-9. Supporting evidence or benefits
 10. Summary
 11. CTA + link
 
 CONSTRAINTS:
-- Avoid forbidden vocabulary (perfume, cologne, loud, broadcast)
-- Use approved allegorical terms naturally
+- Maintain brand voice throughout
 - Each tweet builds momentum
-- Maintain Confident Whisper tone
-- No hashtags in thread
+- No hashtags in thread body
 - Link only in final tweet
 
 Format as:
@@ -169,27 +159,18 @@ TWEET 1: [text]
 TWEET 2: [text]
 etc.`,
 
-  product: `Adapt this content into a product description following the 3-step hierarchy.
+  product: `Adapt this content into a compelling product description.
 
 TRANSFORMATION REQUIREMENTS:
-Follow strict Hierarchy of Description:
-1. Philosophy/Emotion (2-3 sentences from essence of content)
-2. Notes Integration using allegorical terminology:
-   - Top Notes = "The Opening Cadence" or "The Initial Whisper"
-   - Middle Notes = "The Heart of the Journey" or "The Narrative Core"
-   - Base Notes = "The Deep Anchor" or "The Persistent Foundation"
-3. Emotional/ritual context (1-2 sentences)
+Follow this structure:
+1. Opening statement (2-3 sentences capturing product essence)
+2. Key features and benefits
+3. Emotional or experiential context (1-2 sentences)
 
-STRICT CONSTRAINTS:
+CONSTRAINTS:
 - Max 150 words total
-- Extract the most product-relevant philosophical content
-- Maintain Confident Whisper voice
-
-STANDARD DETAILS FOOTER:
-- 8-10 hours of intimate presence
-- Wears close to the skin—noticed in embrace, not across a room
-- Alcohol-free, vegan, cruelty-free
-- Hand-decanted in Union City, California
+- Extract the most product-relevant content
+- Maintain brand voice and tone
 
 Generate product description now.`,
 
@@ -198,44 +179,33 @@ Generate product description now.`,
 REQUIREMENTS:
 - Extract ONE most powerful concept
 - Include clear CTA with link placeholder [LINK]
-- Maintain Confident Whisper tone despite brevity
-- Must feel intentional, not rushed
+- Maintain brand voice despite brevity
+- Must feel authentic and compelling
 
 FORMAT:
 [Core concept in 8-12 words]. [CTA + link].
 
-EXAMPLES OF GOOD SMS TONE:
-✓ "Presence, not projection. Begin your quiet rebellion: [LINK]"
-✓ "Luxury meant for living, not shelves: [LINK]"
-✓ "Your signature awaits. Discover the Cadence: [LINK]"
-
-AVOID:
-✗ "Amazing deals on perfume!" (too loud)
-✗ "Click here now!" (aggressive)
-✗ "Limited time offer!" (creates panic)
-
 Generate 3 SMS options, each under 160 chars.`,
 
-  linkedin: `Adapt this content for LinkedIn with a more professional tone while maintaining core philosophy.
+  linkedin: `Adapt this content for LinkedIn with a professional tone.
 
 TRANSFORMATION REQUIREMENTS:
 - Condense to 40% of original length (target: 400-600 words)
 - Opening: Professional insight or industry observation
 - Body: 2-3 paragraphs with core argument
-- Tone: Slightly more professional, less allegorical than blog
-- Closing: Professional takeaway + link
+- Tone: Professional yet authentic
+- Closing: Clear takeaway + link
 
 STRUCTURE:
-1. First line: Provocative hook (professional context)
+1. First line: Engaging hook (professional context)
 2. 2-3 paragraphs: Core argument from master content
-3. Closing: Professional insight
+3. Closing: Key insight or call to action
 4. Link: "Read more: [URL]"
 
 CONSTRAINTS:
-- Maintain brand philosophy
+- Maintain brand voice
 - Avoid corporate jargon
-- Keep Confident Whisper essence but professional wrapper
-- No hashtags (diminishes sophistication)
+- Keep content professional yet engaging
 - Word count: 400-600 words
 
 Generate LinkedIn post now.`,
@@ -246,7 +216,7 @@ SEQUENCE STRUCTURE:
 EMAIL 1 - THE WELCOME (Day 1):
 - Subject: Warm, intriguing introduction
 - Body: Establish relationship, set expectations, hint at journey ahead
-- Tone: Intimate greeting, "You've arrived at something different"
+- Tone: Welcoming and engaging
 - CTA: "Tomorrow, we explore [key concept]"
 - Length: 300-400 words
 
@@ -258,9 +228,9 @@ EMAIL 2 - THE VALUE (Day 3):
 - Length: 400-500 words
 
 EMAIL 3 - THE INVITATION (Day 5):
-- Subject: Gentle call to action
+- Subject: Clear call to action
 - Body: Synthesize journey, extend invitation to engage further
-- Tone: "You're ready now" confidence without pressure
+- Tone: Confident without pressure
 - CTA: Clear next step (visit collection, read full post, etc.)
 - Length: 300-400 words
 
@@ -268,11 +238,10 @@ SEQUENCE CONSISTENCY:
 - Maintain narrative thread across all 3 emails
 - Each email must stand alone but build on previous
 - Reference previous emails: "As I mentioned..." "Remember when..."
-- Use Confident Whisper tone throughout
-- Each email ends with signature: "In quiet rebellion, The Tarife Attar Custodians"
+- Use consistent brand voice throughout
 
 TIMING NOTES:
-- Day 1, Day 3, Day 5 (2-day gaps for contemplation)
+- Day 1, Day 3, Day 5 (2-day gaps between emails)
 
 OUTPUT FORMAT:
 EMAIL 1:
@@ -298,12 +267,12 @@ SEQUENCE STRUCTURE:
 EMAIL 1 - THE OPENING (Day 1):
 - Subject: Provocative question or observation
 - Body: Hook reader, promise transformation of understanding
-- Tone: "Something's off in this industry, you've felt it too"
+- Tone: Engaging and thought-provoking
 - CTA: "Tomorrow: Why this matters to you"
 - Length: 250-350 words
 
 EMAIL 2 - THE PROBLEM (Day 2):
-- Subject: Name the villain (Trophy Perfume culture)
+- Subject: Identify the challenge or pain point
 - Body: Articulate what's broken in current paradigm
 - Tone: Empathetic critique, not angry rant
 - CTA: "There's another way..."
@@ -319,14 +288,14 @@ EMAIL 3 - THE SOLUTION (Day 4):
 EMAIL 4 - THE PROOF (Day 6):
 - Subject: Evidence, testimonial, deeper dive
 - Body: Expand on one key pillar or benefit from master content
-- Tone: "See it in action" confidence
+- Tone: Confident and evidence-based
 - CTA: "One final insight tomorrow"
 - Length: 350-450 words
 
 EMAIL 5 - THE INVITATION (Day 8):
 - Subject: Clear next step
 - Body: Synthesize journey, extend specific invitation
-- Tone: "You're ready now" + gentle urgency
+- Tone: Confident with clear value proposition
 - CTA: Clear action (visit collection, book consultation, etc.)
 - Length: 300-400 words
 
@@ -334,8 +303,7 @@ SEQUENCE CONSISTENCY:
 - Build narrative tension: problem → solution → proof → invitation
 - Reference previous emails to create continuity
 - Each email must deliver standalone value
-- Maintain Confident Whisper throughout
-- Signature on each: "In quiet rebellion, The Tarife Attar Custodians"
+- Maintain consistent brand voice throughout
 
 TIMING NOTES:
 - Days 1, 2, 4, 6, 8 (varied spacing for rhythm)
@@ -372,9 +340,9 @@ Generate the complete 5-part sequence now.`,
 
 SEQUENCE STRUCTURE:
 EMAIL 1 - THE ARRIVAL (Day 1):
-- Subject: "You've landed somewhere different"
+- Subject: "Welcome to something different"
 - Body: Welcome, set expectations for 2-week journey
-- Tone: Intimate, conspiratorial
+- Tone: Welcoming and engaging
 - CTA: "Tomorrow: A question to ponder"
 - Length: 200-300 words
 
@@ -388,7 +356,7 @@ EMAIL 2 - THE QUESTION (Day 2):
 EMAIL 3 - THE CONTEXT (Day 4):
 - Subject: Historical/cultural background
 - Body: "How did we get here?" - Set up the problem
-- Tone: Editorial, contemplative
+- Tone: Editorial and informative
 - CTA: "Next: The turning point"
 - Length: 400-500 words
 
@@ -401,22 +369,22 @@ EMAIL 4 - THE PHILOSOPHY (Day 6):
 
 EMAIL 5 - THE PRACTICE (Day 8):
 - Subject: Practical application
-- Body: "Here's how to live this philosophy"
-- Tone: Instructive but poetic
+- Body: "Here's how to apply this philosophy"
+- Tone: Instructive and helpful
 - CTA: "Tomorrow: Real-world proof"
 - Length: 400-500 words
 
 EMAIL 6 - THE EVIDENCE (Day 10):
 - Subject: Testimonials, case studies, deeper dive
 - Body: Social proof + expanded pillar content
-- Tone: "See it in others, imagine it for yourself"
+- Tone: Evidence-based and inspiring
 - CTA: "Final invitation tomorrow"
 - Length: 350-450 words
 
 EMAIL 7 - THE THRESHOLD (Day 12):
-- Subject: "You're standing at the threshold"
-- Body: Synthesize entire journey, clear call to cross over
-- Tone: Confident invitation, gentle urgency
+- Subject: "Ready to take the next step?"
+- Body: Synthesize entire journey, clear call to action
+- Tone: Confident invitation with clear value
 - CTA: Specific next step (visit collection, consultation, etc.)
 - Length: 300-400 words
 
@@ -424,12 +392,11 @@ SEQUENCE CONSISTENCY:
 - Arc from curiosity → understanding → action
 - Rich narrative through-line across all 7 emails
 - Each email references previous journey steps
-- Deep philosophical exploration (not surface tactics)
-- Maintain Confident Whisper throughout
-- Signature on each: "In quiet rebellion, The Tarife Attar Custodians"
+- Deep exploration of key concepts
+- Maintain consistent brand voice throughout
 
 TIMING NOTES:
-- Days 1, 2, 4, 6, 8, 10, 12 (2-day gaps after Email 2 for contemplation)
+- Days 1, 2, 4, 6, 8, 10, 12 (2-day gaps after Email 2)
 
 OUTPUT FORMAT:
 EMAIL 1:

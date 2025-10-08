@@ -8,59 +8,40 @@ export const BLOG_POST_TYPES = {
     label: 'Philosophy Post',
     description: 'Establish thought leadership through contemplative exploration',
     wordCountRange: [1200, 1800],
-    structure: 'Philosophical exploration with 3 perspectives',
+    structure: 'Philosophical exploration with multiple perspectives',
     pillars: ['Identity', 'Remembrance'],
   },
   origin: {
     label: 'Origin Story',
-    description: 'Build brand mythology through narrative journey',
+    description: 'Build brand narrative through storytelling',
     wordCountRange: [1000, 1500],
-    structure: 'Journey from discovery to present understanding',
+    structure: 'Journey-based narrative structure',
     pillars: ['Memory', 'Remembrance'],
   },
   craft: {
     label: 'Craft Deep-Dive',
-    description: 'Demonstrate expertise through technical reverence',
+    description: 'Demonstrate expertise through detailed exploration',
     wordCountRange: [1500, 2000],
-    structure: 'Technical detail made poetic',
+    structure: 'Technical detail with narrative flow',
     pillars: ['Remembrance'],
   },
   commentary: {
     label: 'Cultural Commentary',
-    description: 'Position against Trophy Perfume culture',
+    description: 'Position brand perspective on cultural topics',
     wordCountRange: [800, 1200],
-    structure: 'Cultural critique with empathy',
+    structure: 'Cultural analysis with brand perspective',
     pillars: ['Identity', 'Memory'],
   },
   guide: {
     label: 'Practical Guide',
-    description: 'Provide genuine utility with thoughtful approach',
+    description: 'Provide actionable guidance and utility',
     wordCountRange: [1000, 1500],
-    structure: 'Step-by-step thoughtful approach',
+    structure: 'Step-by-step approach with examples',
     pillars: ['Identity'],
   },
 } as const;
 
 export type BlogPostType = keyof typeof BLOG_POST_TYPES;
-
-export const APPROVED_VOCABULARY = {
-  always: [
-    'presence', 'movement', 'cadence',
-    'intimate', 'close', 'personal',
-    'companion', 'anchor', 'vessel',
-    'ritual', 'practice', 'intention',
-    'gather', 'unfold', 'persist',
-    'contemplative', 'quiet', 'restrained',
-  ],
-  forbidden: [
-    'amazing', 'incredible', 'awesome',
-    'game-changer', 'revolutionary',
-    'must-have', "can't live without",
-    'trending', 'viral', 'hot',
-    'hacks', 'tips & tricks', 'secrets',
-    'click here', 'check out', "don't miss",
-  ],
-};
 
 export const BLOG_STRUCTURE_TEMPLATE = `
 ACT I: THE HOOK (15% of word count)
@@ -89,48 +70,6 @@ export const BLOG_REPURPOSE_TARGETS = [
   { value: 'email_5part', label: '5-Part Email Sequence', description: 'Extended nurture sequence (5 days)' },
   { value: 'email_7part', label: '7-Part Email Sequence', description: 'Deep dive journey (7 days)' },
 ];
-
-/**
- * Validate blog post content against brand voice rules
- */
-export function validateBlogVoice(content: string): {
-  forbiddenWords: string[];
-  approvedCount: number;
-  hasEmoji: boolean;
-  sentenceVariety: number;
-} {
-  const lowerContent = content.toLowerCase();
-  
-  // Check forbidden words
-  const forbiddenWords = APPROVED_VOCABULARY.forbidden.filter(word => 
-    lowerContent.includes(word.toLowerCase())
-  );
-  
-  // Count approved vocabulary usage
-  const approvedCount = APPROVED_VOCABULARY.always.filter(word =>
-    lowerContent.includes(word.toLowerCase())
-  ).length;
-  
-  // Check for emojis (simple regex)
-  const hasEmoji = /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u.test(content);
-  
-  // Calculate sentence variety (basic heuristic)
-  const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
-  const avgLength = sentences.reduce((sum, s) => sum + s.split(' ').length, 0) / sentences.length;
-  const variance = sentences.map(s => {
-    const len = s.split(' ').length;
-    return Math.abs(len - avgLength);
-  }).reduce((sum, v) => sum + v, 0) / sentences.length;
-  
-  const sentenceVariety = Math.min(100, Math.round((variance / avgLength) * 100));
-  
-  return {
-    forbiddenWords,
-    approvedCount,
-    hasEmoji,
-    sentenceVariety,
-  };
-}
 
 /**
  * Generate blog post prompt based on user inputs
@@ -170,30 +109,26 @@ ${params.productConnection ? `PRODUCT CONNECTION:\n${params.productConnection}\n
 STRUCTURE INSTRUCTIONS:
 
 ACT I - THE HOOK (150-300 words):
-- Opening line must ${params.postType === 'philosophy' ? 'question assumption' : params.postType === 'origin' ? 'paint vivid scene' : 'make unexpected observation'}
-- Establish emotional stakes
-- Promise transformation of understanding
+- Opening line should ${params.postType === 'philosophy' ? 'question assumptions' : params.postType === 'origin' ? 'set the scene' : 'make an observation'}
+- Establish context and relevance
+- Promise value to the reader
 
 ACT II - THE EXPLORATION (${Math.round(params.wordCount * 0.7)} words approx):
 - Use ${typeInfo.structure} approach
 - Include 2-3 main sections with H2 subheadings
-- Draw metaphors from craftsmanship, ritual, nature, architecture
-- Maintain "Confident Whisper" tone throughout
+- Provide concrete examples and insights
+- Maintain consistent brand voice throughout
 
 ACT III - THE RESOLUTION (150-250 words):
 - Synthesize key insights
-- Gentle CTA connecting to ${params.productConnection || 'brand philosophy'}
-- Memorable closing line that echoes opening
+- Clear call to action connecting to ${params.productConnection || 'next steps'}
+- Strong closing statement
 
-TONE REQUIREMENTS:
-- Sophisticated, contemplative, editorial
-- No superlatives, no sales language
-- Vary sentence length deliberately
-- Use present tense for immediacy
-
-VOCABULARY MANDATE:
-- Always use: presence, intimate, companion, ritual, cadence
-- Never use: amazing, game-changer, must-have, click here
+STRUCTURE NOTES:
+- Adapt to your brand's unique voice and tone
+- Use formatting that enhances readability
+- Include relevant examples and evidence
+- Maintain consistency with brand guidelines
 
 IMPORTANT: Return output as clean text with proper paragraph breaks. Use H2 headers (##) for main sections. No excessive formatting.
 

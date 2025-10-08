@@ -4,7 +4,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import QualityRating from "@/components/QualityRating";
 import { ContentEditor } from "@/components/ContentEditor";
-import { validateBlogVoice } from "@/config/blogPostGuidelines";
 
 interface ContentOutputProps {
   contentType: string;
@@ -12,7 +11,7 @@ interface ContentOutputProps {
   imageUrls: string;
   qualityRating: number;
   saving: boolean;
-  voiceValidation: ReturnType<typeof validateBlogVoice> | null;
+  voiceValidation: null;
   onOutputChange: (value: string) => void;
   onImageUrlsChange: (value: string) => void;
   onRatingChange: (value: number) => void;
@@ -42,27 +41,6 @@ export function ContentOutput({
             placeholder="Generated content will appear here..."
           />
           
-          {contentType === 'blog' && voiceValidation && (
-            <div className="p-4 bg-background/30 rounded-md border border-border/40">
-              <h4 className="text-sm font-medium mb-2">Voice Validation</h4>
-              <div className="space-y-2 text-sm">
-                {voiceValidation.forbiddenWords.length > 0 && (
-                  <div className="text-destructive">
-                    ❌ Forbidden words found: {voiceValidation.forbiddenWords.join(', ')}
-                  </div>
-                )}
-                <div className="text-muted-foreground">
-                  ✅ Approved vocabulary: {voiceValidation.approvedCount} instances
-                </div>
-                <div className="text-muted-foreground">
-                  {voiceValidation.hasEmoji ? '❌ Contains emojis' : '✅ No emojis'}
-                </div>
-                <div className="text-muted-foreground">
-                  Sentence variety score: {voiceValidation.sentenceVariety}%
-                </div>
-              </div>
-            </div>
-          )}
           
           <div className="pt-4 border-t border-border/40">
             <QualityRating rating={qualityRating} onRatingChange={onRatingChange} />

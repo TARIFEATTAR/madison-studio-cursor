@@ -21,7 +21,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronsUpDown } from "lucide-react";
 import { IMAGE_PROMPT_TEMPLATES, type ImagePromptType } from "@/config/imagePromptGuidelines";
-import { BLOG_POST_TYPES, BLOG_REPURPOSE_TARGETS, generateBlogPrompt, validateBlogVoice, type BlogPostType } from "@/config/blogPostGuidelines";
+import { BLOG_POST_TYPES, BLOG_REPURPOSE_TARGETS, generateBlogPrompt, type BlogPostType } from "@/config/blogPostGuidelines";
 import { ContentEditor } from "@/components/ContentEditor";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
 
@@ -97,7 +97,7 @@ const Forge = () => {
   const [blogTakeaway, setBlogTakeaway] = useState("");
   const [blogProductConnection, setBlogProductConnection] = useState("");
   const [blogWordCount, setBlogWordCount] = useState(1200);
-  const [voiceValidation, setVoiceValidation] = useState<ReturnType<typeof validateBlogVoice> | null>(null);
+  const [voiceValidation, setVoiceValidation] = useState<null>(null);
   
   // Editorial Assistant Panel state
   const [showAssistantPanel, setShowAssistantPanel] = useState(false);
@@ -282,21 +282,6 @@ const Forge = () => {
       if (data?.generatedContent) {
         const cleanContent = stripMarkdown(data.generatedContent);
         setGeneratedOutput(cleanContent);
-        
-        // If this is a blog post, validate voice
-        if (formData.contentType === 'blog') {
-          const validation = validateBlogVoice(cleanContent);
-          setVoiceValidation(validation);
-          
-          // Show warnings if needed
-          if (validation.forbiddenWords.length > 0) {
-            toast({
-              title: "Voice validation warning",
-              description: `Found ${validation.forbiddenWords.length} forbidden words. Review output for brand voice compliance.`,
-              variant: "destructive",
-            });
-          }
-        }
         
         toast({
           title: "Copy commissioned",
@@ -1009,31 +994,6 @@ const Forge = () => {
                     />
                   </div>
                   
-                  {formData.contentType === 'blog' && voiceValidation && (
-                    <div className="p-4 bg-background/30 rounded-md border border-border/40">
-                      <h4 className="text-sm font-serif font-semibold mb-2">Editorial Notes</h4>
-                      <div className="space-y-2 text-sm">
-                        {voiceValidation.forbiddenWords.length > 0 && (
-                          <div className="text-destructive flex items-start gap-2">
-                            <span className="text-base">✗</span>
-                            <span>Flagged terms: {voiceValidation.forbiddenWords.join(', ')}</span>
-                          </div>
-                        )}
-                        <div className="text-muted-foreground flex items-start gap-2">
-                          <span className="text-base">✓</span>
-                          <span>Approved lexicon: {voiceValidation.approvedCount} instances</span>
-                        </div>
-                        <div className="text-muted-foreground flex items-start gap-2">
-                          <span className="text-base">{voiceValidation.hasEmoji ? '✗' : '✓'}</span>
-                          <span>{voiceValidation.hasEmoji ? 'Contains emojis' : 'No emojis detected'}</span>
-                        </div>
-                        <div className="text-muted-foreground flex items-start gap-2">
-                          <span className="text-base">→</span>
-                          <span>Sentence variety: {voiceValidation.sentenceVariety}%</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                   
                   <div className="pt-4 border-t border-border/40">
                     <div className="editorial-medallion">
