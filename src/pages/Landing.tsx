@@ -382,6 +382,136 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Comparison Section */}
+      <section className="py-20 border-t border-border/40 relative overflow-hidden" style={{ background: 'linear-gradient(180deg, hsl(20 10% 17%) 0%, hsl(26 6% 9%) 100%)' }}>
+        {/* Decorative brass borders */}
+        <div className="absolute left-0 top-0 bottom-0 w-1 opacity-40" style={{ background: 'linear-gradient(180deg, transparent 0%, hsl(38 33% 56%) 50%, transparent 100%)' }} />
+        <div className="absolute right-0 top-0 bottom-0 w-1 opacity-40" style={{ background: 'linear-gradient(180deg, transparent 0%, hsl(38 33% 56%) 50%, transparent 100%)' }} />
+        
+        <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
+          {/* Header */}
+          <div className="text-center mb-16 codex-spacing fade-enter">
+            <h2 className="text-parchment-white mb-6" style={{ color: 'hsl(48 100% 99%)' }}>
+              AI That Knows the Difference Between<br />Your Brand and Everyone Else's
+            </h2>
+            <p className="text-large max-w-2xl mx-auto" style={{ color: 'hsl(22 4% 61%)' }}>
+              Stop settling for generic AI output. See how Scriptora enforces your unique brand voice.
+            </p>
+          </div>
+
+          {/* Comparison Cards */}
+          <div className="grid lg:grid-cols-2 gap-8 mb-12 fade-enter">
+            {/* Generic AI Tools Card */}
+            <div className="bg-card rounded-xl border-2 border-border/20 shadow-level-3 overflow-hidden">
+              {/* Header with X icon */}
+              <div className="p-6 flex items-center justify-between border-b border-border/10">
+                <h3 className="font-serif text-2xl font-bold text-foreground">Generic AI Tools</h3>
+                <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Sample Output */}
+              <div className="p-6 border-b border-border/10">
+                <p className="text-sm font-semibold text-muted-foreground mb-3">Product Description Output:</p>
+                <div className="bg-muted/30 rounded-lg p-4 space-y-3 text-sm text-foreground/80">
+                  <p>✨ Introducing our AMAZING new fragrance! ✨</p>
+                  <p>This incredible scent will make you feel absolutely fantastic! 😍 Perfect for any occasion, it's a game-changer that you absolutely NEED in your life!</p>
+                  <p>✨ Features fresh notes and a long-lasting formula that everyone will love! Don't miss out on this awesome product! 🎉</p>
+                </div>
+              </div>
+
+              {/* Problems List */}
+              <div className="p-6 space-y-3">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <p className="text-sm text-muted-foreground">Generic marketing clichés and emoji overload</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <p className="text-sm text-muted-foreground">No brand-specific vocabulary or tone</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <p className="text-sm text-muted-foreground">Vague descriptions that could apply to any product</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <p className="text-sm text-muted-foreground">Ignores your brand guidelines and style rules</p>
+                </div>
+                <p className="text-xs italic text-muted-foreground/70 pt-3 border-t border-border/10">
+                  *Suggestions* that are easily ignored, resulting in off-brand content
+                </p>
+              </div>
+            </div>
+
+            {/* Scriptora Card */}
+            <div className="bg-card rounded-xl border-2 border-primary/30 shadow-level-3 overflow-hidden">
+              {/* Header with Checkmark icon */}
+              <div className="p-6 flex items-center justify-between border-b border-border/10">
+                <h3 className="font-serif text-2xl font-bold text-foreground">Scriptora</h3>
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <CheckCircle2 className="w-6 h-6 text-primary" />
+                </div>
+              </div>
+
+              {/* Sample Output */}
+              <div className="p-6 border-b border-border/10">
+                <p className="text-sm font-semibold text-muted-foreground mb-3">Product Description Output:</p>
+                <div className="bg-muted/30 rounded-lg p-4 space-y-3 text-sm text-foreground/90 leading-relaxed">
+                  <p>Attar Noir opens with the deep, resinous warmth of aged oud, layered with whispers of cardamom and saffron.</p>
+                  <p>The heart reveals a complex interplay of Damascus rose absolute and Indonesian patchouli, while the base settles into a sophisticated blend of amber, sandalwood, and subtle leather undertones.</p>
+                  <p>This composition embodies our commitment to traditional distillation methods and rare, ethically-sourced ingredients—a modern interpretation of classical perfumery.</p>
+                </div>
+              </div>
+
+              {/* Benefits List */}
+              <div className="p-6 space-y-3">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-muted-foreground">Uses brand-specific fragrance vocabulary and terminology</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-muted-foreground">Maintains sophisticated, editorial tone throughout</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-muted-foreground">References actual notes, methods, and brand values</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-muted-foreground">Enforces brand guidelines as mandatory rules</p>
+                </div>
+                <p className="text-sm font-medium text-primary pt-3 border-t border-primary/20">
+                  Mandatory enforcement ensures every word aligns with your brand
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer Message */}
+          <div className="text-center fade-enter">
+            <div className="inline-flex items-center gap-3 bg-card/90 backdrop-blur-sm rounded-full px-6 py-4 border border-primary/20 shadow-level-2">
+              <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+              <p className="text-regular font-medium text-foreground">
+                Your brand voice is sacred. We protect it with enforcement, not suggestions.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 border-t border-border/40">
         <div className="max-w-4xl mx-auto px-6 md:px-12 text-center fade-enter codex-spacing">
