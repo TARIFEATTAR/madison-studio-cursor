@@ -135,7 +135,7 @@ export function BrandGuidelinesTab() {
       const { error } = await supabase
         .from("organizations")
         .update({
-          brand_config: config || brandConfig,
+          brand_config: (config || brandConfig) as any,
         })
         .eq("id", currentOrganizationId);
 

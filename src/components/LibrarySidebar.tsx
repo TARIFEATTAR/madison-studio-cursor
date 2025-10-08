@@ -73,8 +73,8 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
   const { products } = useProducts();
   
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    collections: true,
-    contentTypes: false,
+    collections: false,
+    contentTypes: true,
     dipWeeks: false,
   });
   const [expandedCollections, setExpandedCollections] = useState<string[]>(['cadence']);
@@ -203,102 +203,8 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
       collapsible="icon"
     >
       <SidebarContent className="p-4">
-        {/* BY COLLECTION */}
-        <SidebarGroup>
-          <SidebarGroupLabel
-            className="flex items-center justify-between cursor-pointer hover:bg-stone-beige/50 rounded-md px-2 py-1.5 transition-colors"
-            onClick={() => toggleSection("collections")}
-          >
-            <span className="text-xs font-medium text-deep-charcoal uppercase tracking-wide">
-              {!collapsed && "By Collection"}
-            </span>
-            {!collapsed && (
-              <ChevronRight
-                className={cn(
-                  "w-3 h-3 transition-transform text-deep-charcoal",
-                  expandedSections.collections && "rotate-90"
-                )}
-              />
-            )}
-          </SidebarGroupLabel>
-
-          {expandedSections.collections && (
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {collections.map((collection) => {
-                  const CollectionIcon = getCollectionIcon(collection.key) || collection.icon;
-                  const collectionCount = getCollectionCount(collection.key);
-                  const isCollectionExpanded = expandedCollections.includes(collection.key);
-                  const showScentFamilies = collection.key === 'cadence' && collectionHierarchy[collection.key]?.scentFamilies && Object.keys(collectionHierarchy[collection.key].scentFamilies).length > 0;
-                  const isCollectionActive = activeFilters.collection === collection.key && !activeFilters.scentFamily;
-
-                  return (
-                    <div key={collection.key}>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton
-                          className={cn(
-                            "group flex items-center justify-between h-9 px-2 rounded-md transition-all",
-                            isCollectionActive && "bg-saffron-gold/20 border-l-3 border-saffron-gold font-medium"
-                          )}
-                          onClick={() => {
-                            if (showScentFamilies) {
-                              toggleCollection(collection.key);
-                            }
-                            handleFilterClick("collection", collection.key);
-                          }}
-                        >
-                          <div className="flex items-center gap-2">
-                            {showScentFamilies && !collapsed && (
-                              isCollectionExpanded ? 
-                                <ChevronDown className="w-3 h-3" /> : 
-                                <ChevronRight className="w-3 h-3" />
-                            )}
-                            {!collapsed && (
-                              <span className="text-sm">{collection.name}</span>
-                            )}
-                          </div>
-                          {!collapsed && collectionCount > 0 && (
-                            <Badge variant="secondary" className="text-xs">
-                              {collectionCount}
-                            </Badge>
-                          )}
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-
-                      {/* Scent Family Subcollections - Only for Cadence */}
-                      {showScentFamilies && isCollectionExpanded && !collapsed && (
-                        <div className="ml-6 mt-1 space-y-1">
-                          {Object.entries(collectionHierarchy[collection.key].scentFamilies)
-                            .sort(([a], [b]) => a.localeCompare(b))
-                            .map(([scentFamily, count]) => (
-                              <SidebarMenuItem key={`${collection.key}-${scentFamily}`}>
-                                <SidebarMenuButton
-                                  onClick={() => handleFilterClick("collection", collection.key, scentFamily)}
-                                  className={cn(
-                                    "h-8 px-2 rounded-md transition-all text-sm",
-                                    isActive("collection", collection.key, scentFamily) && 
-                                      "bg-saffron-gold/20 border-l-3 border-saffron-gold font-medium"
-                                  )}
-                                >
-                                  <span className="flex-1 capitalize">{scentFamily}</span>
-                                  <Badge variant="outline" className="text-xs">
-                                    {count}
-                                  </Badge>
-                                </SidebarMenuButton>
-                              </SidebarMenuItem>
-                            ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          )}
-        </SidebarGroup>
-
         {/* BY CONTENT TYPE */}
-        <SidebarGroup className="mt-4">
+        <SidebarGroup>
           <SidebarGroupLabel
             className="flex items-center justify-between cursor-pointer hover:bg-stone-beige/50 rounded-md px-2 py-1.5 transition-colors"
             onClick={() => toggleSection("contentTypes")}
@@ -342,6 +248,61 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
                               </Badge>
                             )}
                           </>
+                        )}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          )}
+        </SidebarGroup>
+
+        {/* BY COLLECTION */}
+        <SidebarGroup className="mt-4">
+          <SidebarGroupLabel
+            className="flex items-center justify-between cursor-pointer hover:bg-stone-beige/50 rounded-md px-2 py-1.5 transition-colors"
+            onClick={() => toggleSection("collections")}
+          >
+            <span className="text-xs font-medium text-deep-charcoal uppercase tracking-wide">
+              {!collapsed && "By Collection"}
+            </span>
+            {!collapsed && (
+              <ChevronRight
+                className={cn(
+                  "w-3 h-3 transition-transform text-deep-charcoal",
+                  expandedSections.collections && "rotate-90"
+                )}
+              />
+            )}
+          </SidebarGroupLabel>
+
+          {expandedSections.collections && (
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {collections.map((collection) => {
+                  const CollectionIcon = getCollectionIcon(collection.key) || collection.icon;
+                  const collectionCount = getCollectionCount(collection.key);
+                  const isCollectionActive = activeFilters.collection === collection.key;
+
+                  return (
+                    <SidebarMenuItem key={collection.key}>
+                      <SidebarMenuButton
+                        className={cn(
+                          "group flex items-center justify-between h-9 px-2 rounded-md transition-all",
+                          isCollectionActive && "bg-saffron-gold/20 border-l-3 border-saffron-gold font-medium"
+                        )}
+                        onClick={() => handleFilterClick("collection", collection.key)}
+                      >
+                        <div className="flex items-center gap-2">
+                          {!collapsed && (
+                            <span className="text-sm">{collection.name}</span>
+                          )}
+                        </div>
+                        {!collapsed && collectionCount > 0 && (
+                          <Badge variant="secondary" className="text-xs">
+                            {collectionCount}
+                          </Badge>
                         )}
                       </SidebarMenuButton>
                     </SidebarMenuItem>

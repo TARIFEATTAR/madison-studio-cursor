@@ -18,18 +18,13 @@ export interface ContentTypeMapping {
 
 export const contentTypeMapping: ContentTypeMapping[] = [
   {
-    name: "Blog Posts",
+    name: "Blog",
     keys: ["blog_post"],
     icon: BookOpen,
   },
   {
-    name: "Email Newsletters",
-    keys: ["email_newsletter"],
-    icon: Mail,
-  },
-  {
-    name: "Email Sequences",
-    keys: ["email", "email_3part", "email_5part", "email_7part"],
+    name: "Email",
+    keys: ["email_newsletter", "email", "email_3part", "email_5part", "email_7part"],
     icon: Mail,
   },
   {
@@ -43,17 +38,17 @@ export const contentTypeMapping: ContentTypeMapping[] = [
     icon: Megaphone,
   },
   {
-    name: "Social Media",
+    name: "Social",
     keys: ["instagram", "twitter", "linkedin", "facebook"],
     icon: Instagram,
   },
   {
-    name: "SMS Messages",
+    name: "SMS",
     keys: ["sms"],
     icon: MessageSquare,
   },
   {
-    name: "Visual Assets",
+    name: "Visual",
     keys: ["image", "visual", "graphic"],
     icon: Image,
   },
