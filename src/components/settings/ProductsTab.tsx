@@ -36,7 +36,7 @@ import { useProducts, Product } from "@/hooks/useProducts";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useIndustryConfig } from "@/hooks/useIndustryConfig";
+import { useIndustryConfig, isFragranceIndustry } from "@/hooks/useIndustryConfig";
 
 export function ProductsTab() {
   const { toast } = useToast();
@@ -101,7 +101,9 @@ export function ProductsTab() {
         name: formData.name.trim(),
         product_type: formData.product_type.trim() || null,
         collection: formData.collection.trim() || null,
-        scent_family: formData.scent_family.trim() || null,
+        scent_family: isFragranceIndustry(industryConfig?.id) 
+          ? (formData.scent_family.trim() || null) 
+          : null,
         top_notes: formData.top_notes.trim() || null,
         middle_notes: formData.middle_notes.trim() || null,
         base_notes: formData.base_notes.trim() || null,
@@ -239,12 +241,18 @@ export function ProductsTab() {
     (p.product_type?.toLowerCase() || "").includes(searchFilter.toLowerCase())
   );
 
-  const incompleteCount = products.filter(
-    (p) => !p.scentFamily || !p.topNotes || !p.middleNotes || !p.baseNotes
-  ).length;
+  const incompleteCount = isFragranceIndustry(industryConfig?.id)
+    ? products.filter(
+        (p) => !p.scentFamily || !p.topNotes || !p.middleNotes || !p.baseNotes
+      ).length
+    : 0;
 
-  const isIncomplete = (product: Product) =>
-    !product.scentFamily || !product.topNotes || !product.middleNotes || !product.baseNotes;
+  const isIncomplete = (product: Product) => {
+    if (isFragranceIndustry(industryConfig?.id)) {
+      return !product.scentFamily || !product.topNotes || !product.middleNotes || !product.baseNotes;
+    }
+    return false;
+  };
 
   return (
     <div className="space-y-6">
@@ -307,7 +315,9 @@ export function ProductsTab() {
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Collection</TableHead>
-                  <TableHead>Scent Family</TableHead>
+                  {isFragranceIndustry(industryConfig?.id) && (
+                    <TableHead>Scent Family</TableHead>
+                  )}
                   <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -324,13 +334,15 @@ export function ProductsTab() {
                       </TableCell>
                       <TableCell>{product.product_type || "-"}</TableCell>
                       <TableCell>{product.collection || "-"}</TableCell>
-                      <TableCell>
-                        {product.scentFamily ? (
-                          <Badge variant="secondary">{product.scentFamily}</Badge>
-                        ) : (
-                          "-"
-                        )}
-                      </TableCell>
+                      {isFragranceIndustry(industryConfig?.id) && (
+                        <TableCell>
+                          {product.scentFamily ? (
+                            <Badge variant="secondary">{product.scentFamily}</Badge>
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
+                      )}
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button
@@ -406,15 +418,17 @@ export function ProductsTab() {
                   placeholder="e.g., Cadence"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="scent_family">Scent Family</Label>
-                <Input
-                  id="scent_family"
-                  value={formData.scent_family}
-                  onChange={(e) => setFormData({ ...formData, scent_family: e.target.value })}
-                  placeholder="e.g., Warm, Fresh, Woody, Floral"
-                />
-              </div>
+              {isFragranceIndustry(industryConfig?.id) && (
+                <div className="space-y-2">
+                  <Label htmlFor="scent_family">Scent Family</Label>
+                  <Input
+                    id="scent_family"
+                    value={formData.scent_family}
+                    onChange={(e) => setFormData({ ...formData, scent_family: e.target.value })}
+                    placeholder="e.g., Warm, Fresh, Woody, Floral"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

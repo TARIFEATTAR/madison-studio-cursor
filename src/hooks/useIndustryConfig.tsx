@@ -38,3 +38,6 @@ export function useIndustryConfig(organizationId: string | null) {
 
   return { industryConfig, loading };
 }
+
+export const isFragranceIndustry = (industryId: string | undefined) => 
+  industryId === "fragrance";
