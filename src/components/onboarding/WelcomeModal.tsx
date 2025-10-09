@@ -26,7 +26,7 @@ export function WelcomeModal({ open, onComplete, onSkip }: WelcomeModalProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
+    <Dialog open={open} onOpenChange={(open) => !open && onSkip?.()}>
       <DialogContent className="max-w-md bg-card border-border/20" onPointerDownOutside={(e) => e.preventDefault()}>
         {onSkip && (
           <button
