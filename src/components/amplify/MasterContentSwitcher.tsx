@@ -164,7 +164,7 @@ export function MasterContentSwitcher({
               <p className="text-sm text-muted-foreground">
                 {searchQuery || typeFilter !== "all"
                   ? "Try adjusting your filters"
-                  : "Create your first master content in Composer"}
+                  : "Create your first master content in Create"}
               </p>
             </div>
           ) : (

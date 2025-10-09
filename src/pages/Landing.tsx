@@ -28,8 +28,8 @@ const steps = [
   },
   {
     number: "3",
-    title: "Amplify Everywhere",
-    description: "Turn one piece of content into dozens of variations. Automatically repurpose for different channels, formats, and audiences while maintaining perfect brand consistency.",
+    title: "Multiply Everywhere",
+    description: "Turn one piece of content into dozens of variations. Automatically multiply for different channels, formats, and audiences while maintaining perfect brand consistency.",
     icon: Calendar,
   }
 ];
@@ -48,11 +48,11 @@ const Landing = () => {
     {
       icon: composeIcon,
       title: "Compose with Intelligence",
-      description: "Generate content with AI assistance, then perfect it in our rich editor. Move polished content to repurposing—all in one seamless workflow."
+      description: "Generate content with AI assistance, then perfect it in our rich editor. Move polished content to multiplication—all in one seamless workflow."
     },
     {
       icon: amplifyIcon,
-      title: "Amplify & Repurpose",
+      title: "Multiply & Adapt",
       description: "Transform your content into multiple formats and extend its reach across different platforms and audiences."
     },
     {
@@ -62,7 +62,7 @@ const Landing = () => {
     },
     {
       icon: portfolioIcon,
-      title: "Track Your Portfolio",
+      title: "Track Your Library",
       description: "Monitor all your published content in one organized archive with instant access to your complete content library."
     },
     {
@@ -75,9 +75,9 @@ const Landing = () => {
   const benefits = [
     "White-label ready for agency deployment",
     "Centralized prompt and template library",
-    "AI-powered content generation and repurposing",
+    "AI-powered content generation and multiplication",
     "Integrated calendar planning and scheduling",
-    "Organized content portfolio management"
+    "Organized content library management"
   ];
 
   return (
@@ -132,7 +132,7 @@ const Landing = () => {
               <span className="text-primary block mt-2">Because It Learned From Them</span>
             </h1>
             <p className="text-large text-white/90 mb-12 leading-relaxed max-w-2xl" style={{ textShadow: '0 1px 10px rgba(0,0,0,0.6)' }}>
-              Upload your brand docs. Scriptora learns your voice. Generate perfectly on-brand content. Amplify it everywhere.
+              Upload your brand docs. Scriptora learns your voice. Generate perfectly on-brand content. Multiply it everywhere.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button asChild size="lg" variant="brass">

@@ -395,7 +395,7 @@ const Repurpose = () => {
 
       toast({
         title: "Content archived",
-        description: "Master content has been moved to Portfolio.",
+        description: "Master content has been moved to Library.",
       });
     } catch (error: any) {
       toast({
@@ -422,7 +422,7 @@ const Repurpose = () => {
 
       toast({
         title: "Asset archived",
-        description: "Derivative has been moved to Portfolio.",
+        description: "Derivative has been moved to Library.",
       });
     } catch (error: any) {
       toast({
@@ -628,7 +628,7 @@ const Repurpose = () => {
           <div className="container mx-auto px-6 py-6 space-y-6 max-w-7xl">
             {/* Page Header */}
             <div className="space-y-1">
-              <h1 className="text-2xl font-serif text-foreground">Amplify</h1>
+              <h1 className="text-2xl font-serif text-foreground">Multiply</h1>
               <p className="text-sm text-muted-foreground">
                 {selectedMaster 
                   ? `${selectedMaster.title} • ${derivatives.length} derivative${derivatives.length !== 1 ? 's' : ''}`
@@ -670,7 +670,7 @@ const Repurpose = () => {
                       <div>
                         <h3 className="text-lg font-medium mb-2">No Derivatives Yet</h3>
                         <p className="text-muted-foreground text-sm">
-                          This master content hasn't been repurposed yet
+                          This master content hasn't been multiplied yet
                         </p>
                       </div>
                       <Button variant="outline" onClick={() => navigate("/create")}>

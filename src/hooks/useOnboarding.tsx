@@ -204,7 +204,7 @@ export function useOnboarding() {
   const completeDocumentUpload = () => {
     if (!user) return;
     
-    // Move to forge guide step
+    // Move to create guide step
     setOnboardingStep("first_generation_pending");
     localStorage.setItem(`onboarding_step_${user.id}`, "first_generation_pending");
     setShowDocumentUpload(false);

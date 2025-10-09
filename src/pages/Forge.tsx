@@ -137,7 +137,7 @@ const Forge = () => {
     imageTemplate: "product-page" as ImagePromptType,
   });
 
-  // Handle pre-populated prompt from Prompt Library
+  // Handle pre-populated prompt from Templates
   useEffect(() => {
     const state = location.state as any;
     if (state?.prompt) {
@@ -667,8 +667,8 @@ const Forge = () => {
       }
 
       toast({
-        title: "Content repurposed successfully",
-        description: `Generated ${repurposeData.derivatives?.length || selectedDerivatives.length} derivative assets. View them in Repurpose.`,
+        title: "Content multiplied successfully",
+        description: `Generated ${repurposeData.derivatives?.length || selectedDerivatives.length} derivative assets. View them in Multiply.`,
         action: (
           <Button
             variant="outline"
@@ -701,8 +701,8 @@ const Forge = () => {
     } catch (error) {
       console.error('Error repurposing content:', error);
       toast({
-        title: "Repurposing failed",
-        description: error instanceof Error ? error.message : "Failed to repurpose content.",
+        title: "Multiplication failed",
+        description: error instanceof Error ? error.message : "Failed to multiply content.",
         variant: "destructive",
       });
     } finally {
@@ -731,11 +731,11 @@ const Forge = () => {
           <div className="brass-divider mb-8"></div>
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h1 className="text-foreground mb-3 font-serif tracking-wide">The Editorial Desk</h1>
+              <h1 className="text-foreground mb-3 font-serif tracking-wide">Create</h1>
               <p className="text-muted-foreground text-lg max-w-3xl font-serif leading-relaxed">
                 {contentMode === "single" 
                   ? "Craft precision copy for individual touchpoints. Select a subject from your catalogue and define the parameters of your commission."
-                  : "Author foundational narratives for multi-channel deployment. Write once, repurpose strategically across all brand touchpoints."
+                  : "Author foundational narratives for multi-channel deployment. Write once, multiply strategically across all brand touchpoints."
                 }
               </p>
             </div>
@@ -1257,7 +1257,7 @@ const Forge = () => {
                       <li>Open <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google AI Studio</a></li>
                       <li>Use Nano Banana model with your reference imagery</li>
                       <li>Paste generated image URLs below</li>
-                      <li>Assess quality and publish to portfolio</li>
+                      <li>Assess quality and publish to library</li>
                     </ol>
                   </div>
                 )}

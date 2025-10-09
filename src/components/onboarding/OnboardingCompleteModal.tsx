@@ -81,7 +81,7 @@ export function OnboardingCompleteModal({ open, onClose }: OnboardingCompleteMod
             </div>
             <div>
               <p className="font-medium text-ink">Full access to all features</p>
-              <p className="text-sm text-charcoal/70">Library, calendar, repurposing, and more</p>
+              <p className="text-sm text-charcoal/70">Library, schedule, multiply, and more</p>
             </div>
           </motion.div>
         </div>

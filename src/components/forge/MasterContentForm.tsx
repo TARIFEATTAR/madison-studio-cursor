@@ -176,7 +176,7 @@ export function MasterContentForm({
       <div className="space-y-3 border-t border-border/40 pt-6">
         <Label className="text-base">Select Derivative Asset Types</Label>
         <p className="text-sm text-muted-foreground">
-          Choose which formats to automatically repurpose this content into
+          Choose which formats to automatically multiply this content into
         </p>
         <div className="grid grid-cols-1 gap-3">
           {BLOG_REPURPOSE_TARGETS.map((target) => (

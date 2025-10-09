@@ -13,7 +13,7 @@ export function ForgeOnboardingGuide({ onDismiss }: ForgeOnboardingGuideProps) {
 
   const tips = [
     {
-      title: "Welcome to The Editorial Desk!",
+      title: "Welcome to Create!",
       description: "This is where you create content in your brand voice. Let's generate your first piece.",
       icon: Sparkles,
     },

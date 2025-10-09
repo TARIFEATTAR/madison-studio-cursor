@@ -109,7 +109,7 @@ const Index = () => {
             <div className="max-w-3xl">
               <h1 className="text-foreground mb-3 font-serif tracking-wide">The Command Center</h1>
               <p className="text-muted-foreground text-lg font-serif leading-relaxed">
-                Direct your brand narrative from a single desk. Commission content, manage your portfolio, and orchestrate multi-channel campaigns with precision and authority.
+                Direct your brand narrative from a single desk. Commission content, manage your library, and orchestrate multi-channel campaigns with precision and authority.
               </p>
             </div>
           </div>
@@ -147,7 +147,7 @@ const Index = () => {
                         <div className="bg-brass/10 w-16 h-16 rounded-lg flex items-center justify-center group-hover:bg-brass/20 transition-colors">
                           <Sparkles className="w-8 h-8 text-brass" />
                         </div>
-                        <h3 className="font-serif text-3xl font-bold text-foreground">The Editorial Desk</h3>
+                        <h3 className="font-serif text-3xl font-bold text-foreground">Create</h3>
                       </div>
                       <p className="text-regular text-muted-foreground leading-relaxed font-serif">
                         Commission precision copy for any touchpoint. Single assets or foundational manuscripts ready for deployment.
@@ -168,10 +168,10 @@ const Index = () => {
                         <div className="bg-brass/10 w-16 h-16 rounded-lg flex items-center justify-center group-hover:bg-brass/20 transition-colors">
                           <Repeat className="w-8 h-8 text-brass" />
                         </div>
-                        <h3 className="font-serif text-3xl font-bold text-foreground">The Syndicate</h3>
+                        <h3 className="font-serif text-3xl font-bold text-foreground">Multiply</h3>
                       </div>
                       <p className="text-regular text-muted-foreground leading-relaxed font-serif">
-                        Repurpose content across channels with strategic precision. One narrative, infinite adaptations.
+                        Multiply content across channels with strategic precision. One narrative, infinite adaptations.
                       </p>
                     </div>
                   </Link>
@@ -210,7 +210,7 @@ const Index = () => {
                         <div className="bg-brass/10 w-16 h-16 rounded-lg flex items-center justify-center group-hover:bg-brass/20 transition-colors">
                           <Calendar className="w-8 h-8 text-brass" />
                         </div>
-                        <h3 className="font-serif text-3xl font-bold text-foreground">The Editorial Calendar</h3>
+                        <h3 className="font-serif text-3xl font-bold text-foreground">Schedule</h3>
                       </div>
                       <p className="text-regular text-muted-foreground leading-relaxed font-serif">
                         Orchestrate publication schedules and deadlines. Command your content strategy with temporal precision.

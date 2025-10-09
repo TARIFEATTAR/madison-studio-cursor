@@ -105,7 +105,7 @@ export function OnboardingDocumentUpload({
         description: "Processing in background. Let's create your first content!",
       });
 
-      // Auto-redirect to Forge after 2 seconds
+      // Auto-redirect to Create after 2 seconds
       setTimeout(() => {
         onComplete();
       }, 2000);
@@ -256,7 +256,7 @@ export function OnboardingDocumentUpload({
                   Uploading...
                 </>
               ) : (
-                "Continue to The Editorial Desk"
+                "Continue to Create"
               )}
             </Button>
 

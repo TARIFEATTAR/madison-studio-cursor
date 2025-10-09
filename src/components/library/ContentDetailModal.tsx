@@ -195,7 +195,7 @@ export function ContentDetailModal({
                   size="sm"
                 >
                   <Send className="w-4 h-4 mr-2" />
-                  Repurpose
+                  Multiply
                 </Button>
               )}
             </div>
