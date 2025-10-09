@@ -8,9 +8,12 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("[useAuth] Initializing auth hook");
     // Safety timeout to avoid getting stuck on a blank loading screen
     const safetyTimeout = setTimeout(() => {
       console.warn("[useAuth] Safety timeout reached. Proceeding without session.");
+      setSession(null);
+      setUser(null);
       setLoading(false);
     }, 3000);
 
@@ -26,13 +29,27 @@ export function useAuth() {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("[useAuth] getSession resolved", { hasUser: !!session?.user });
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      clearTimeout(safetyTimeout);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session }, error }) => {
+        if (error) {
+          console.error("[useAuth] getSession error:", error);
+          setSession(null);
+          setUser(null);
+        } else {
+          console.log("[useAuth] getSession resolved", { hasUser: !!session?.user });
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+        setLoading(false);
+        clearTimeout(safetyTimeout);
+      })
+      .catch((err) => {
+        console.error("[useAuth] getSession exception:", err);
+        setSession(null);
+        setUser(null);
+        setLoading(false);
+        clearTimeout(safetyTimeout);
+      });
 
     return () => {
       subscription.unsubscribe();

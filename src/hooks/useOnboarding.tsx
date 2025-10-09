@@ -18,10 +18,12 @@ export function useOnboarding() {
 
   useEffect(() => {
     if (!user) {
+      console.log("[useOnboarding] No user, setting loading to false");
       setIsLoading(false);
       return;
     }
 
+    console.log("[useOnboarding] Starting onboarding check for user:", user.id);
     const checkOnboardingStatus = async () => {
       try {
         // Get or create user's organization
@@ -153,13 +155,26 @@ export function useOnboarding() {
           }
         }
       } catch (error) {
-        console.error("Error checking onboarding status:", error);
+        console.error("[useOnboarding] Error checking onboarding status:", error);
+        // Still mark as loaded even on error - don't block the app
+        setOnboardingStep("completed");
       } finally {
+        console.log("[useOnboarding] Onboarding check complete, setting loading to false");
         setIsLoading(false);
       }
     };
 
-    checkOnboardingStatus();
+    // Add safety timeout
+    const safetyTimeout = setTimeout(() => {
+      console.warn("[useOnboarding] Safety timeout reached, forcing loading to false");
+      setIsLoading(false);
+    }, 3000);
+
+    checkOnboardingStatus().finally(() => {
+      clearTimeout(safetyTimeout);
+    });
+
+    return () => clearTimeout(safetyTimeout);
   }, [user]);
 
   const completeWelcome = async (data: {

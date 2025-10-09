@@ -48,12 +48,26 @@ const Index = () => {
     if (user && onboardingStep === "first_generation_pending") {
       navigate("/create?onboarding=true");
     }
-  }, [user, onboardingStep, navigate]);
+  }, [user, onboardingStep]); // navigate is stable from react-router-dom
   
   console.log("[Index] Onboarding state - showWelcome:", showWelcome, "loading:", onboardingLoading);
 
+  // Safety timeout - force render Landing page if loading takes too long
+  useEffect(() => {
+    if (loading || onboardingLoading) {
+      const forceRenderTimeout = setTimeout(() => {
+        console.warn("[Index] Loading timeout reached - forcing Landing page render");
+        if (!user) {
+          // Force show landing page
+          window.location.href = '/';
+        }
+      }, 5000);
+      return () => clearTimeout(forceRenderTimeout);
+    }
+  }, [loading, onboardingLoading, user]);
+
   if (loading || onboardingLoading) {
-    console.log("[Index] Showing loading state");
+    console.log("[Index] Showing loading state - loading:", loading, "onboardingLoading:", onboardingLoading);
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-foreground text-xl">Loading Scriptora...</div>
