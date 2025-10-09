@@ -37,6 +37,7 @@ const Index = () => {
     onboardingStep,
     completeWelcome,
     completeDocumentUpload,
+    skipDocumentUpload,
     completeFirstGeneration,
     closeCompleteModal,
     dismissBanner,
@@ -89,6 +90,7 @@ const Index = () => {
           open={showDocumentUpload}
           organizationId={currentOrganizationId}
           onComplete={completeDocumentUpload}
+          onSkip={skipDocumentUpload}
         />
       )}
 

@@ -215,6 +215,16 @@ export function useOnboarding() {
     setShowForgeGuide(true);
   };
 
+  const skipDocumentUpload = () => {
+    if (!user) return;
+    
+    // Move to first_generation_pending (same as completeDocumentUpload)
+    setOnboardingStep("first_generation_pending");
+    localStorage.setItem(`onboarding_step_${user.id}`, "first_generation_pending");
+    setShowDocumentUpload(false);
+    setShowForgeGuide(true);
+  };
+
   const completeFirstGeneration = () => {
     if (!user) return;
     
@@ -246,6 +256,7 @@ export function useOnboarding() {
     onboardingStep,
     completeWelcome,
     completeDocumentUpload,
+    skipDocumentUpload,
     completeFirstGeneration,
     closeCompleteModal,
     dismissBanner,

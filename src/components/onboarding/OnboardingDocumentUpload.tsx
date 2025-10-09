@@ -12,12 +12,14 @@ interface OnboardingDocumentUploadProps {
   open: boolean;
   organizationId: string;
   onComplete: () => void;
+  onSkip: () => void;
 }
 
 export function OnboardingDocumentUpload({
   open,
   organizationId,
   onComplete,
+  onSkip,
 }: OnboardingDocumentUploadProps) {
   const { toast } = useToast();
   const [isDragging, setIsDragging] = useState(false);
@@ -146,8 +148,8 @@ export function OnboardingDocumentUpload({
   };
 
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="max-w-2xl" onPointerDownOutside={(e) => e.preventDefault()}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onSkip()}>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl text-center mb-2">
             Add Your Brand Knowledge
@@ -256,6 +258,15 @@ export function OnboardingDocumentUpload({
               ) : (
                 "Continue to The Editorial Desk"
               )}
+            </Button>
+
+            {/* Skip Button */}
+            <Button
+              onClick={onSkip}
+              variant="ghost"
+              className="w-full text-charcoal/70 hover:text-charcoal"
+            >
+              Skip for Now - I'll Add This Later
             </Button>
           </div>
         )}
