@@ -105,7 +105,7 @@ serve(async (req) => {
 
       if (error) {
         console.error('OAuth error:', error);
-        return Response.redirect(`https://the-whispered-codex.lovable.app/calendar?error=access_denied`);
+        return Response.redirect(`${appOrigin}/schedule?error=access_denied`);
       }
 
       if (!code || !state) {
@@ -186,8 +186,8 @@ serve(async (req) => {
 
       console.log('Successfully stored tokens for user:', userId);
 
-      // Redirect back to calendar page with success
-      return Response.redirect(`${appOrigin}/calendar?connected=true`);
+      // Redirect back to schedule page with success
+      return Response.redirect(`${appOrigin}/schedule?connected=true`);
     }
 
     return new Response(JSON.stringify({ error: 'Invalid endpoint' }), {
