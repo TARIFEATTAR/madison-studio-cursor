@@ -1,9 +1,13 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "react-router-dom";
-import { Sparkles, ArrowRight, Columns3, PenTool, Layers, CalendarDays, CheckCircle2, PlayCircle } from "lucide-react";
+import { Sparkles, ArrowRight, CheckCircle2, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import archivesIcon from "@/assets/archives-icon.png";
+import createIcon from "@/assets/create-icon.png";
+import multiplyIcon from "@/assets/multiply-icon.png";
+import scheduleIcon from "@/assets/schedule-icon.png";
 
 const Landing = () => {
   const { user } = useAuth();
@@ -109,8 +113,8 @@ const Landing = () => {
             <div className="grid md:grid-cols-2 gap-6">
               <Card className="bg-parchment-white border-aged-brass/20 hover:shadow-level-2 transition-all duration-300 hover:-translate-y-1">
                 <CardContent className="p-8 space-y-4">
-                  <div className="w-16 h-16 flex items-center justify-center">
-                    <Columns3 className="w-12 h-12 text-aged-brass" strokeWidth={1.5} />
+                  <div className="w-20 h-20 flex items-center justify-center">
+                    <img src={archivesIcon} alt="The Archives" className="w-full h-full object-contain" />
                   </div>
                   <h3 className="text-2xl font-serif text-ink-black">The Archives</h3>
                   <p className="text-charcoal/80 leading-relaxed">
@@ -121,8 +125,8 @@ const Landing = () => {
 
               <Card className="bg-parchment-white border-aged-brass/20 hover:shadow-level-2 transition-all duration-300 hover:-translate-y-1">
                 <CardContent className="p-8 space-y-4">
-                  <div className="w-16 h-16 flex items-center justify-center">
-                    <PenTool className="w-12 h-12 text-aged-brass" strokeWidth={1.5} />
+                  <div className="w-20 h-20 flex items-center justify-center">
+                    <img src={createIcon} alt="Create" className="w-full h-full object-contain" />
                   </div>
                   <h3 className="text-2xl font-serif text-ink-black">Create</h3>
                   <p className="text-charcoal/80 leading-relaxed">
@@ -133,8 +137,8 @@ const Landing = () => {
 
               <Card className="bg-parchment-white border-aged-brass/20 hover:shadow-level-2 transition-all duration-300 hover:-translate-y-1">
                 <CardContent className="p-8 space-y-4">
-                  <div className="w-16 h-16 flex items-center justify-center">
-                    <Layers className="w-12 h-12 text-aged-brass" strokeWidth={1.5} />
+                  <div className="w-20 h-20 flex items-center justify-center">
+                    <img src={multiplyIcon} alt="Multiply" className="w-full h-full object-contain" />
                   </div>
                   <h3 className="text-2xl font-serif text-ink-black">Multiply</h3>
                   <p className="text-charcoal/80 leading-relaxed">
@@ -145,8 +149,8 @@ const Landing = () => {
 
               <Card className="bg-parchment-white border-aged-brass/20 hover:shadow-level-2 transition-all duration-300 hover:-translate-y-1">
                 <CardContent className="p-8 space-y-4">
-                  <div className="w-16 h-16 flex items-center justify-center">
-                    <CalendarDays className="w-12 h-12 text-aged-brass" strokeWidth={1.5} />
+                  <div className="w-20 h-20 flex items-center justify-center">
+                    <img src={scheduleIcon} alt="Schedule" className="w-full h-full object-contain" />
                   </div>
                   <h3 className="text-2xl font-serif text-ink-black">Schedule</h3>
                   <p className="text-charcoal/80 leading-relaxed">
