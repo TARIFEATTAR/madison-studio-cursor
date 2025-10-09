@@ -24,10 +24,6 @@ export function useOnboarding() {
 
     const checkOnboardingStatus = async () => {
       try {
-        // Check if user has completed onboarding
-        const hasCompletedKey = `onboarding_completed_${user.id}`;
-        const hasCompleted = localStorage.getItem(hasCompletedKey);
-
         // Get or create user's organization
         const { data: existingOrgs } = await supabase
           .from("organization_members")
@@ -131,6 +127,32 @@ export function useOnboarding() {
 
         setCurrentOrganizationId(orgId);
 
+        // Check if user already has brand documents (auto-complete onboarding if so)
+        const { data: existingDocs } = await supabase
+          .from("brand_documents")
+          .select("id")
+          .eq("organization_id", orgId)
+          .limit(1);
+
+        const { data: existingKnowledge } = await supabase
+          .from("brand_knowledge")
+          .select("id")
+          .eq("organization_id", orgId)
+          .limit(1);
+
+        const hasBrandData = (existingDocs && existingDocs.length > 0) || (existingKnowledge && existingKnowledge.length > 0);
+
+        // If user has brand data, mark onboarding as complete
+        if (hasBrandData) {
+          const completedKey = `onboarding_completed_${user.id}`;
+          const stepKey = `onboarding_step_${user.id}`;
+          localStorage.setItem(completedKey, "true");
+          localStorage.setItem(stepKey, "completed");
+          setOnboardingStep("completed");
+          setIsLoading(false);
+          return;
+        }
+
         // Get onboarding step from localStorage
         const stepKey = `onboarding_step_${user.id}`;
         const savedStep = localStorage.getItem(stepKey) as OnboardingStep | null;
@@ -231,6 +253,7 @@ export function useOnboarding() {
     // Mark onboarding as complete
     setOnboardingStep("completed");
     localStorage.setItem(`onboarding_step_${user.id}`, "completed");
+    localStorage.setItem(`onboarding_completed_${user.id}`, "true");
     setShowForgeGuide(false);
     setShowCompleteModal(true);
   };
