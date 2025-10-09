@@ -1,106 +1,42 @@
-import { Link } from "react-router-dom";
-import { BookOpen, Sparkles, Repeat, Archive, Calendar, ArrowRight, CheckCircle2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import penHeroImage from "@/assets/pen-hero.jpg";
-import calendarWatch from "@/assets/calendar-watch-v2.png";
-import penNibIcon from "@/assets/pen-nib-icon.png";
-import bookIcon from "@/assets/book-icon.png";
-import portfolioIcon from "@/assets/portfolio-icon.png";
-import calendarIcon from "@/assets/calendar-icon.png";
-import amplifyIcon from "@/assets/amplify-icon.png";
-import composeIcon from "@/assets/compose-icon.png";
-import libraryIcon from "@/assets/library-icon.png";
-import analyticsIcon from "@/assets/analytics-icon.png";
-
-const steps = [
-  {
-    number: "1",
-    title: "Upload Brand Documents",
-    description: "Import your brand guidelines, tone of voice, product catalogs, and content examples. Scriptora learns what makes your brand unique—from writing style to messaging pillars.",
-    icon: BookOpen,
-  },
-  {
-    number: "2",
-    title: "Generate Content",
-    description: "Create on-brand content powered by AI that actually knows your voice. From blog posts to social captions, every word reflects your brand's authentic personality.",
-    icon: Sparkles,
-  },
-  {
-    number: "3",
-    title: "Multiply Everywhere",
-    description: "Turn one piece of content into dozens of variations. Automatically multiply for different channels, formats, and audiences while maintaining perfect brand consistency.",
-    icon: Calendar,
-  }
-];
+import { Link } from "react-router-dom";
+import { Sparkles, ArrowRight, Columns3, PenTool, Layers, CalendarDays, CheckCircle2, PlayCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const Landing = () => {
-  console.log("[Landing] Rendering Landing page...");
   const { user } = useAuth();
-  console.log("[Landing] User state:", !!user);
-
-  const features = [
-    {
-      icon: libraryIcon,
-      title: "Build Your Repository",
-      description: "Create a centralized library of high-quality content, prompts, and brand guidelines that power a consistent brand voice across all your marketing channels."
-    },
-    {
-      icon: composeIcon,
-      title: "Compose with Intelligence",
-      description: "Generate content with AI assistance, then perfect it in our rich editor. Move polished content to multiplication—all in one seamless workflow."
-    },
-    {
-      icon: amplifyIcon,
-      title: "Multiply & Adapt",
-      description: "Transform your content into multiple formats and extend its reach across different platforms and audiences."
-    },
-    {
-      icon: calendarIcon,
-      title: "Plan Strategically",
-      description: "Schedule content across your calendar, sync with Google Calendar, and never miss a publishing deadline."
-    },
-    {
-      icon: portfolioIcon,
-      title: "Track Your Library",
-      description: "Monitor all your published content in one organized archive with instant access to your complete content library."
-    },
-    {
-      icon: analyticsIcon,
-      title: "Measure Performance",
-      description: "Analyze content performance with comprehensive analytics. Track engagement, reach, and ROI to continuously improve your content strategy."
-    }
-  ];
-
-  const benefits = [
-    "White-label ready for agency deployment",
-    "Centralized prompt and template library",
-    "AI-powered content generation and multiplication",
-    "Integrated calendar planning and scheduling",
-    "Organized content library management"
-  ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm sticky top-0 z-50 shadow-level-1">
-        <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <div className="flex items-center justify-between h-20">
-            <div className="flex items-center">
-              <img 
-                src="/logo.png" 
-                alt="Scriptora - Brand Intelligence" 
-                className="h-14 w-auto transition-transform duration-300 hover:scale-105"
-              />
+    <div className="min-h-screen bg-vellum">
+      {/* Navigation Header */}
+      <header className="border-b border-charcoal/10 bg-parchment-white/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-6 py-4">
+          <nav className="flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg border-2 border-aged-brass/30 bg-parchment-white flex items-center justify-center">
+                <span className="text-xl font-serif font-bold text-aged-brass">S</span>
+              </div>
+              <div>
+                <div className="font-serif font-bold text-lg text-ink-black">Scriptora</div>
+                <div className="text-xs text-charcoal/60 tracking-wider uppercase">Brand Intelligence</div>
+              </div>
+            </Link>
+
+            <div className="hidden md:flex items-center gap-8">
+              <a href="#features" className="text-charcoal hover:text-aged-brass transition-colors">Features</a>
+              <a href="#how-it-works" className="text-charcoal hover:text-aged-brass transition-colors">How It Works</a>
             </div>
-            <div className="flex items-center gap-4">
+
+            <div className="flex items-center gap-3">
               {user ? (
                 <Button asChild variant="brass">
-                  <Link to="/library">Go to App</Link>
+                  <Link to="/dashboard">Go to App</Link>
                 </Button>
               ) : (
                 <>
-                  <Button asChild variant="ghost">
+                  <Button asChild variant="ghost" className="hidden sm:inline-flex">
                     <Link to="/auth">Sign In</Link>
                   </Button>
                   <Button asChild variant="brass">
@@ -109,281 +45,280 @@ const Landing = () => {
                 </>
               )}
             </div>
-          </div>
+          </nav>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 md:py-32">
-        {/* Background Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat" 
-          style={{ backgroundImage: `url(${penHeroImage})` }}
-        />
-        
-        {/* Gradient Overlay for Text Readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
-        
-        {/* Content */}
-        <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-20">
-          <div className="text-left max-w-3xl codex-spacing fade-enter">
-            <h1 className="text-white mb-6 text-4xl md:text-5xl lg:text-6xl" style={{ textShadow: '0 2px 20px rgba(0,0,0,0.8)' }}>
-              Content That Sounds Like Your Team Wrote It—
-              <span className="text-primary block mt-2">Because It Learned From Them</span>
+      <section className="py-20 md:py-32">
+        <div className="container mx-auto px-6">
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            <Badge className="bg-aged-brass/10 text-aged-brass border-aged-brass/20 hover:bg-aged-brass/20">
+              <Sparkles className="w-3 h-3 mr-1" />
+              AI-Powered Brand Intelligence
+            </Badge>
+
+            <h1 className="text-5xl md:text-7xl font-serif leading-tight">
+              <span className="text-ink-black">Your Brand's</span>
+              <br />
+              <span className="text-aged-brass">Editorial Command Center</span>
             </h1>
-            <p className="text-large text-white/90 mb-12 leading-relaxed max-w-2xl" style={{ textShadow: '0 1px 10px rgba(0,0,0,0.6)' }}>
-              Upload your brand docs. Scriptora learns your voice. Generate perfectly on-brand content. Multiply it everywhere.
+
+            <p className="text-lg md:text-xl text-charcoal/80 max-w-3xl mx-auto leading-relaxed">
+              Scriptora transforms how you create, manage, and distribute content. Maintain your brand voice across every channel while generating content 10x faster with intelligent AI assistance.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button asChild size="lg" variant="brass">
-                <Link to="/auth" className="gap-2">
-                  Start Creating <ArrowRight className="w-5 h-5" />
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button asChild variant="brass" size="lg" className="gap-2">
+                <Link to="/auth">
+                  Start Creating <ArrowRight className="w-4 h-4" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="bg-white/10 text-white border-white/20 hover:bg-white/20">
-                <Link to="#features">
-                  Explore Features
-                </Link>
+              <Button asChild variant="outline" size="lg" className="gap-2">
+                <a href="#how-it-works">
+                  <PlayCircle className="w-4 h-4" /> Watch Tutorial
+                </a>
               </Button>
+            </div>
+
+            <div className="flex items-center justify-center gap-6 text-sm text-charcoal/60">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-aged-brass" />
+                No credit card required
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-aged-brass" />
+                2-minute setup
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* How It Works - 3 Steps */}
-      <section className="py-20 border-t border-border/40 bg-gradient-to-b from-background to-card/30">
-        <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <div className="text-center mb-16 codex-spacing fade-enter">
-            <h2 className="text-foreground mb-4">
-              How It Works
-            </h2>
-            <p className="text-large text-muted-foreground max-w-2xl mx-auto">
-              Three simple steps to streamline your content workflow
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 fade-enter">
-            {steps.map((step, index) => {
-              const Icon = step.icon;
-              const isScheduleStep = step.number === "3";
-              const isCreateStep = step.number === "2";
-              
-              return (
-                <div 
-                  key={index}
-                  className="relative card-luxury text-center group cursor-default overflow-hidden"
-                >
-                  {/* Large Corner Number */}
-                  <div className="absolute top-3 left-4 pointer-events-none">
-                    <span className="font-serif text-[72px] leading-none text-foreground/[0.12] select-none">
-                      {step.number}
-                    </span>
-                  </div>
-                  
-                  <div className="pt-6 relative z-10">
-                    {isScheduleStep ? (
-                      <div className="w-32 h-32 flex items-center justify-center mb-4 mx-auto">
-                        <img 
-                          src={calendarWatch} 
-                          alt="Schedule and automate" 
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                    ) : isCreateStep ? (
-                      <div className="w-32 h-32 flex items-center justify-center mb-4 mx-auto">
-                        <img 
-                          src={penNibIcon} 
-                          alt="Create and generate content" 
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-32 h-32 flex items-center justify-center mb-4 mx-auto">
-                        <img 
-                          src={bookIcon} 
-                          alt="Build your library" 
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                    )}
-                    <h3 className="font-serif text-2xl font-bold text-foreground mb-3">
-                      {step.title}
-                    </h3>
-                    <p className="text-regular text-muted-foreground leading-relaxed">
-                      {step.description}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-
-      {/* Comparison Section */}
-      <section className="py-20 border-t relative overflow-hidden bg-black">
-        {/* Decorative brass borders */}
-        <div className="absolute left-0 top-0 bottom-0 w-1 opacity-50" style={{ background: 'linear-gradient(180deg, transparent 0%, hsl(38 33% 56%) 50%, transparent 100%)' }} />
-        <div className="absolute right-0 top-0 bottom-0 w-1 opacity-50" style={{ background: 'linear-gradient(180deg, transparent 0%, hsl(38 33% 56%) 50%, transparent 100%)' }} />
-        
-        <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
-          {/* Header */}
-          <div className="text-center mb-16 codex-spacing fade-enter">
-            <h2 className="mb-6" style={{ color: 'hsl(48 100% 99%)' }}>
-              AI That Knows the Difference Between<br />Your Brand and Everyone Else's
-            </h2>
-            <p className="text-large max-w-2xl mx-auto" style={{ color: 'hsl(22 4% 61%)' }}>
-              Stop settling for generic AI output. See how Scriptora enforces your unique brand voice.
-            </p>
-          </div>
-
-          {/* Comparison Cards */}
-          <div className="grid lg:grid-cols-2 gap-8 mb-12 fade-enter">
-            {/* Generic AI Tools Card */}
-            <div className="bg-card rounded-xl border-2 shadow-level-3 overflow-hidden" style={{ borderColor: 'hsl(38 28% 42%)' }}>
-              {/* Header with X icon */}
-              <div className="p-6 flex items-center justify-between border-b border-border/10">
-                <h3 className="font-serif text-2xl font-bold text-foreground">Generic AI Tools</h3>
-                <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </div>
-              </div>
-
-              {/* Sample Output */}
-              <div className="p-6 border-b border-border/10">
-                <p className="text-sm font-semibold text-muted-foreground mb-3">Product Description Output:</p>
-                <div className="bg-muted/30 rounded-lg p-4 space-y-3 text-sm text-foreground/80">
-                  <p>✨ Introducing our AMAZING new fragrance! ✨</p>
-                  <p>This incredible scent will make you feel absolutely fantastic! 😍 Perfect for any occasion, it's a game-changer that you absolutely NEED in your life!</p>
-                  <p>✨ Features fresh notes and a long-lasting formula that everyone will love! Don't miss out on this awesome product! 🎉</p>
-                </div>
-              </div>
-
-              {/* Problems List */}
-              <div className="p-6 space-y-3">
-                <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  <p className="text-sm text-muted-foreground">Generic marketing clichés and emoji overload</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  <p className="text-sm text-muted-foreground">No brand-specific vocabulary or tone</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  <p className="text-sm text-muted-foreground">Vague descriptions that could apply to any product</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  <p className="text-sm text-muted-foreground">Ignores your brand guidelines and style rules</p>
-                </div>
-                <p className="text-xs italic text-muted-foreground/70 pt-3 border-t border-border/10">
-                  *Suggestions* that are easily ignored, resulting in off-brand content
-                </p>
-              </div>
-            </div>
-
-            {/* Scriptora Card */}
-            <div className="bg-card rounded-xl border-2 shadow-level-3 overflow-hidden" style={{ borderColor: 'hsl(38 28% 42%)' }}>
-              {/* Header with Checkmark icon */}
-              <div className="p-6 flex items-center justify-between border-b border-border/10">
-                <h3 className="font-serif text-2xl font-bold text-foreground">Scriptora</h3>
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <CheckCircle2 className="w-6 h-6 text-primary" />
-                </div>
-              </div>
-
-              {/* Sample Output */}
-              <div className="p-6 border-b border-border/10">
-                <p className="text-sm font-semibold text-muted-foreground mb-3">Product Description Output:</p>
-                <div className="bg-muted/30 rounded-lg p-4 space-y-3 text-sm text-foreground/90 leading-relaxed">
-                  <p>Attar Noir opens with the deep, resinous warmth of aged oud, layered with whispers of cardamom and saffron.</p>
-                  <p>The heart reveals a complex interplay of Damascus rose absolute and Indonesian patchouli, while the base settles into a sophisticated blend of amber, sandalwood, and subtle leather undertones.</p>
-                  <p>This composition embodies our commitment to traditional distillation methods and rare, ethically-sourced ingredients—a modern interpretation of classical perfumery.</p>
-                </div>
-              </div>
-
-              {/* Benefits List */}
-              <div className="p-6 space-y-3">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-muted-foreground">Uses brand-specific fragrance vocabulary and terminology</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-muted-foreground">Maintains sophisticated, editorial tone throughout</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-muted-foreground">References actual notes, methods, and brand values</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-muted-foreground">Enforces brand guidelines as mandatory rules</p>
-                </div>
-                <p className="text-sm font-medium text-primary pt-3 border-t border-primary/20">
-                  Mandatory enforcement ensures every word aligns with your brand
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer Message */}
-          <div className="text-center fade-enter">
-            <div className="inline-flex items-center gap-3 bg-card/90 backdrop-blur-sm rounded-full px-6 py-4 border border-primary/20 shadow-level-2">
-              <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-              <p className="text-regular font-medium text-foreground">
-                Your brand voice is sacred. We protect it with enforcement, not suggestions.
+      {/* Four-Tool Ecosystem Section */}
+      <section id="features" className="py-20 bg-ink-black text-parchment-white">
+        <div className="container mx-auto px-6">
+          <div className="max-w-6xl mx-auto space-y-12">
+            <div className="text-center space-y-4">
+              <h2 className="text-4xl md:text-5xl font-serif">Your Complete Content Ecosystem</h2>
+              <p className="text-lg text-parchment-white/70 max-w-2xl mx-auto">
+                Four powerful tools working together to transform your content creation workflow
               </p>
             </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card className="bg-parchment-white border-aged-brass/20 hover:shadow-level-2 transition-all duration-300 hover:-translate-y-1">
+                <CardContent className="p-8 space-y-4">
+                  <div className="w-16 h-16 flex items-center justify-center">
+                    <Columns3 className="w-12 h-12 text-aged-brass" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-2xl font-serif text-ink-black">The Archives</h3>
+                  <p className="text-charcoal/80 leading-relaxed">
+                    Your brand's content library, organized and searchable. Every piece of content, from blog posts to social media, preserved and accessible.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-parchment-white border-aged-brass/20 hover:shadow-level-2 transition-all duration-300 hover:-translate-y-1">
+                <CardContent className="p-8 space-y-4">
+                  <div className="w-16 h-16 flex items-center justify-center">
+                    <PenTool className="w-12 h-12 text-aged-brass" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-2xl font-serif text-ink-black">Create</h3>
+                  <p className="text-charcoal/80 leading-relaxed">
+                    AI-powered content creation that understands your brand voice. Generate on-brand content with intelligent guidance and real-time feedback.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-parchment-white border-aged-brass/20 hover:shadow-level-2 transition-all duration-300 hover:-translate-y-1">
+                <CardContent className="p-8 space-y-4">
+                  <div className="w-16 h-16 flex items-center justify-center">
+                    <Layers className="w-12 h-12 text-aged-brass" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-2xl font-serif text-ink-black">Multiply</h3>
+                  <p className="text-charcoal/80 leading-relaxed">
+                    Transform master content into channel-specific derivatives. One blog post becomes Instagram carousels, email sequences, and more.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-parchment-white border-aged-brass/20 hover:shadow-level-2 transition-all duration-300 hover:-translate-y-1">
+                <CardContent className="p-8 space-y-4">
+                  <div className="w-16 h-16 flex items-center justify-center">
+                    <CalendarDays className="w-12 h-12 text-aged-brass" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-2xl font-serif text-ink-black">Schedule</h3>
+                  <p className="text-charcoal/80 leading-relaxed">
+                    Schedule and coordinate your content calendar. Visualize your content strategy across all channels and platforms.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 border-t border-border/40">
-        <div className="max-w-4xl mx-auto px-6 md:px-12 text-center fade-enter codex-spacing">
-          <h2 className="text-foreground mb-6">
-            Ready to Transform Your Content Workflow?
-          </h2>
-          <p className="text-large text-muted-foreground mb-10 max-w-2xl mx-auto">
-            Join forward-thinking teams who've simplified their content operations with Scriptora.
-          </p>
-          <Button asChild size="lg" variant="brass">
-            <Link to="/auth" className="gap-2">
-              Get Started Free <ArrowRight className="w-5 h-5" />
-            </Link>
-          </Button>
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-20">
+        <div className="container mx-auto px-6">
+          <div className="max-w-6xl mx-auto space-y-12">
+            <div className="text-center space-y-4">
+              <h2 className="text-4xl md:text-5xl font-serif text-ink-black">How Scriptora Works</h2>
+              <p className="text-lg text-charcoal/70">
+                From brand setup to content distribution in three simple steps
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8 items-start">
+              <Card className="bg-parchment-white border-aged-brass/10 relative">
+                <CardContent className="p-8 space-y-4">
+                  <div className="w-12 h-12 rounded-full bg-aged-brass text-parchment-white flex items-center justify-center text-xl font-bold">
+                    1
+                  </div>
+                  <h3 className="text-xl font-serif text-ink-black">Establish Your Brand</h3>
+                  <p className="text-charcoal/80 leading-relaxed">
+                    Upload brand guidelines, define your voice, and set your visual identity. Scriptora learns what makes your brand unique.
+                  </p>
+                </CardContent>
+                <ArrowRight className="hidden md:block absolute -right-4 top-1/2 -translate-y-1/2 text-aged-brass w-8 h-8" />
+              </Card>
+
+              <Card className="bg-parchment-white border-aged-brass/10 relative">
+                <CardContent className="p-8 space-y-4">
+                  <div className="w-12 h-12 rounded-full bg-aged-brass text-parchment-white flex items-center justify-center text-xl font-bold">
+                    2
+                  </div>
+                  <h3 className="text-xl font-serif text-ink-black">Create Master Content</h3>
+                  <p className="text-charcoal/80 leading-relaxed">
+                    Use The Editorial Desk to craft high-quality content with AI assistance. Your brand guidelines ensure every word is on-brand.
+                  </p>
+                </CardContent>
+                <ArrowRight className="hidden md:block absolute -right-4 top-1/2 -translate-y-1/2 text-aged-brass w-8 h-8" />
+              </Card>
+
+              <Card className="bg-parchment-white border-aged-brass/10">
+                <CardContent className="p-8 space-y-4">
+                  <div className="w-12 h-12 rounded-full bg-aged-brass text-parchment-white flex items-center justify-center text-xl font-bold">
+                    3
+                  </div>
+                  <h3 className="text-xl font-serif text-ink-black">Amplify & Distribute</h3>
+                  <p className="text-charcoal/80 leading-relaxed">
+                    Transform your content into channel-specific formats. Schedule across platforms and watch your reach multiply.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Key Benefits Section */}
+      <section className="py-20 bg-charcoal text-parchment-white">
+        <div className="container mx-auto px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div className="space-y-6">
+                <h2 className="text-4xl md:text-5xl font-serif leading-tight">
+                  Everything You Need to <span className="text-aged-brass">Scale Your Content</span>
+                </h2>
+                <p className="text-lg text-parchment-white/70 leading-relaxed">
+                  Scriptora brings together brand intelligence, AI-powered creation, and strategic distribution into one seamless platform.
+                </p>
+                <Button asChild variant="brass" size="lg" className="gap-2">
+                  <Link to="/auth">
+                    Get Started Free <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                {[
+                  "Maintain consistent brand voice across all channels",
+                  "Generate content 10x faster with AI assistance",
+                  "Repurpose content efficiently for maximum reach",
+                  "Centralize your brand guidelines and assets",
+                  "Schedule and plan content strategically",
+                  "Track content performance and quality"
+                ].map((benefit, index) => (
+                  <div key={index} className="flex items-start gap-3 p-4 rounded-lg bg-parchment-white/5 border border-aged-brass/20">
+                    <CheckCircle2 className="w-5 h-5 text-aged-brass flex-shrink-0 mt-0.5" />
+                    <span className="text-parchment-white/90">{benefit}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-6">
+          <Card className="max-w-4xl mx-auto bg-parchment-white border-aged-brass/20 shadow-level-2">
+            <CardContent className="p-12 text-center space-y-6">
+              <h2 className="text-3xl md:text-4xl font-serif text-ink-black">
+                Ready to Transform Your Content Workflow?
+              </h2>
+              <p className="text-lg text-charcoal/80 max-w-2xl mx-auto">
+                Join brands using Scriptora to create consistent, on-brand content at scale. Start your free trial today—no credit card required.
+              </p>
+              <div className="space-y-3">
+                <Button asChild variant="brass" size="lg" className="gap-2">
+                  <Link to="/auth">
+                    Start Your Free Trial <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </Button>
+                <p className="text-sm text-charcoal/60">Setup takes less than 2 minutes</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/40 py-12 bg-card/30">
-        <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <img src="/logo.png" alt="Scriptora" className="h-10 w-auto" />
-              <span className="text-muted-foreground text-sm">© 2025 Scriptora. All rights reserved.</span>
+      <footer className="bg-ink-black text-parchment-white py-12 border-t border-aged-brass/20">
+        <div className="container mx-auto px-6">
+          <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-8">
+            <div className="space-y-4">
+              <div>
+                <div className="font-serif font-bold text-xl">Scriptora</div>
+                <div className="text-xs text-parchment-white/60 tracking-wider uppercase">Brand Intelligence</div>
+              </div>
+              <p className="text-sm text-parchment-white/70 leading-relaxed">
+                Your editorial command center for brand-consistent content at scale.
+              </p>
             </div>
-            <div className="flex gap-8">
-              <Link to="/auth" className="text-muted-foreground hover:text-primary transition-colors">
-                Sign In
-              </Link>
-              <Link to="/auth" className="text-muted-foreground hover:text-primary transition-colors">
-                Get Started
-              </Link>
+
+            <div className="space-y-3">
+              <h4 className="font-semibold text-aged-brass uppercase text-sm tracking-wider">Product</h4>
+              <ul className="space-y-2 text-sm">
+                <li><Link to="/dashboard" className="text-parchment-white/70 hover:text-aged-brass transition-colors">The Archives</Link></li>
+                <li><Link to="/create" className="text-parchment-white/70 hover:text-aged-brass transition-colors">Create</Link></li>
+                <li><Link to="/repurpose" className="text-parchment-white/70 hover:text-aged-brass transition-colors">Multiply</Link></li>
+                <li><Link to="/schedule" className="text-parchment-white/70 hover:text-aged-brass transition-colors">Schedule</Link></li>
+              </ul>
             </div>
+
+            <div className="space-y-3">
+              <h4 className="font-semibold text-aged-brass uppercase text-sm tracking-wider">Resources</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="text-parchment-white/70 hover:text-aged-brass transition-colors">Video Tutorials</a></li>
+                <li><a href="#" className="text-parchment-white/70 hover:text-aged-brass transition-colors">Customer Journey</a></li>
+                <li><Link to="/templates" className="text-parchment-white/70 hover:text-aged-brass transition-colors">Templates</Link></li>
+              </ul>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="font-semibold text-aged-brass uppercase text-sm tracking-wider">Company</h4>
+              <ul className="space-y-2 text-sm">
+                <li><Link to="/settings" className="text-parchment-white/70 hover:text-aged-brass transition-colors">Settings</Link></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="mt-12 pt-8 border-t border-aged-brass/20 text-center text-sm text-parchment-white/60">
+            © 2024 Scriptora. All rights reserved.
           </div>
         </div>
       </footer>
