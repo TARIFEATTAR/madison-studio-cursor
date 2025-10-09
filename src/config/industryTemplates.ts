@@ -79,6 +79,16 @@ export const INDUSTRY_TEMPLATES: Record<string, IndustryTemplate> = {
       { id: "field_3", label: "Approach" },
     ],
   },
+  luxury_watches: {
+    id: "luxury_watches",
+    name: "Luxury Goods & Watches",
+    section_title: "Product Specifications",
+    fields: [
+      { id: "field_1", label: "Materials & Craftsmanship" },
+      { id: "field_2", label: "Movement & Complications" },
+      { id: "field_3", label: "Heritage & Collection" },
+    ],
+  },
   other: {
     id: "other",
     name: "Other",
