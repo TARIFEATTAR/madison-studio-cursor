@@ -103,19 +103,20 @@ serve(async (req) => {
       const state = url.searchParams.get('state');
       const error = url.searchParams.get('error');
 
+      // Parse state first to get app_origin (needed for redirects)
+      const stateData = state ? JSON.parse(atob(state)) : null;
+      const userId = stateData?.user_id;
+      const appOrigin = stateData?.app_origin || 'https://the-whispered-codex.lovable.app';
+
       if (error) {
         console.error('OAuth error:', error);
         return Response.redirect(`${appOrigin}/schedule?error=access_denied`);
       }
 
-      if (!code || !state) {
-        throw new Error('Missing code or state parameter');
+      if (!code || !state || !userId) {
+        throw new Error('Missing code, state, or user ID parameter');
       }
 
-      // Parse state to get user_id and app_origin
-      const stateData = JSON.parse(atob(state));
-      const userId = stateData.user_id;
-      const appOrigin = stateData.app_origin;
       const redirectUri = `${SUPABASE_URL}/functions/v1/google-calendar-oauth/callback`;
 
       // Exchange authorization code for tokens
