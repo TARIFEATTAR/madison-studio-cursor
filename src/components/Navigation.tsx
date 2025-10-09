@@ -21,26 +21,26 @@ const Navigation = () => {
       description: "Browse and manage your content library"
     },
     { 
-      path: "/prompt-library", 
-      label: "Prompts", 
+      path: "/templates", 
+      label: "Templates", 
       icon: BookOpen,
-      description: "Your collection of proven prompts"
+      description: "Your collection of saved templates"
     },
     { 
-      path: "/forge", 
-      label: "Composer", 
+      path: "/create", 
+      label: "Create", 
       icon: Sparkles,
       description: "Generate new content with AI assistance"
     },
     { 
-      path: "/repurpose", 
-      label: "Amplify", 
+      path: "/multiply", 
+      label: "Multiply", 
       icon: Repeat,
       description: "Repurpose content for different platforms"
     },
     { 
-      path: "/calendar", 
-      label: "Planner", 
+      path: "/schedule", 
+      label: "Schedule", 
       icon: CalendarIcon,
       description: "Schedule and plan your content calendar"
     },

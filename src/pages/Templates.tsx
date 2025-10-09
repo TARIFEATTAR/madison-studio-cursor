@@ -34,7 +34,7 @@ export interface Prompt {
 
 type SortOption = "recent" | "most-used" | "highest-rated" | "effectiveness";
 
-const PromptLibrary = () => {
+const Templates = () => {
   const { user } = useAuth();
   const { currentOrganizationId } = useOnboarding();
   const { toast } = useToast();
@@ -54,7 +54,7 @@ const PromptLibrary = () => {
 
   // Fetch prompts
   const { data: prompts = [], isLoading } = useQuery({
-    queryKey: ["prompts", currentOrganizationId, filters],
+    queryKey: ["templates", currentOrganizationId, filters],
     queryFn: async () => {
       let query = supabase
         .from("prompts")
@@ -123,16 +123,16 @@ const PromptLibrary = () => {
         .eq("id", promptId);
 
       // Invalidate query to refresh data
-      queryClient.invalidateQueries({ queryKey: ["prompts"] });
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
 
-      // Navigate to Forge with prompt data
-      navigate("/forge", {
+      // Navigate to Create with prompt data
+      navigate("/create", {
         state: { prompt },
       });
 
       toast({
-        title: "Prompt loaded",
-        description: "Ready to generate content in the Forge.",
+        title: "Template loaded",
+        description: "Ready to generate content in Create.",
       });
     } catch (error) {
       console.error("Error using prompt:", error);
@@ -151,11 +151,11 @@ const PromptLibrary = () => {
         .update({ is_archived: true })
         .eq("id", promptId);
 
-      queryClient.invalidateQueries({ queryKey: ["prompts"] });
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
 
       toast({
-        title: "Prompt archived",
-        description: "The prompt has been moved to the archive.",
+        title: "Template archived",
+        description: "The template has been moved to the archive.",
       });
     } catch (error) {
       console.error("Error archiving prompt:", error);
@@ -171,11 +171,11 @@ const PromptLibrary = () => {
     try {
       await supabase.from("prompts").delete().eq("id", promptId);
 
-      queryClient.invalidateQueries({ queryKey: ["prompts"] });
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
 
       toast({
-        title: "Prompt deleted",
-        description: "The prompt has been permanently deleted.",
+        title: "Template deleted",
+        description: "The template has been permanently deleted.",
       });
     } catch (error) {
       console.error("Error deleting prompt:", error);
@@ -207,9 +207,9 @@ const PromptLibrary = () => {
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-serif mb-2 text-foreground">Prompt Library</h1>
+            <h1 className="text-4xl font-serif mb-2 text-foreground">Templates</h1>
             <p className="text-muted-foreground">
-              Your collection of proven prompts, ready to deploy
+              Your collection of saved templates, ready to use in Create
             </p>
           </div>
 
@@ -239,9 +239,9 @@ const PromptLibrary = () => {
             </div>
           ) : sortedPrompts.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">No prompts found</p>
-              <Button onClick={() => navigate("/forge")}>
-                Create Your First Prompt
+              <p className="text-muted-foreground mb-4">No templates found yet</p>
+              <Button onClick={() => navigate("/create")}>
+                Create Content & Save as Template
               </Button>
             </div>
           ) : (
@@ -275,4 +275,4 @@ const PromptLibrary = () => {
   );
 };
 
-export default PromptLibrary;
+export default Templates;

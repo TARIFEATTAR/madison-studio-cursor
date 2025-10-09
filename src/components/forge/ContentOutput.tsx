@@ -1,9 +1,14 @@
-import { Loader2, Archive } from "lucide-react";
+import { Loader2, Archive, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import QualityRating from "@/components/QualityRating";
 import { ContentEditor } from "@/components/ContentEditor";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ContentOutputProps {
   contentType: string;
@@ -11,11 +16,13 @@ interface ContentOutputProps {
   imageUrls: string;
   qualityRating: number;
   saving: boolean;
+  savingTemplate: boolean;
   voiceValidation: null;
   onOutputChange: (value: string) => void;
   onImageUrlsChange: (value: string) => void;
   onRatingChange: (value: number) => void;
   onArchive: () => void;
+  onSaveAsTemplate: () => void;
 }
 
 export function ContentOutput({
@@ -24,11 +31,13 @@ export function ContentOutput({
   imageUrls,
   qualityRating,
   saving,
+  savingTemplate,
   voiceValidation,
   onOutputChange,
   onImageUrlsChange,
   onRatingChange,
   onArchive,
+  onSaveAsTemplate,
 }: ContentOutputProps) {
   return (
     <>
@@ -73,25 +82,58 @@ export function ContentOutput({
       )}
 
       {((generatedOutput && qualityRating > 0) || (imageUrls && qualityRating > 0)) && (
-        <div className="mt-6">
-          <Button 
-            variant="outline" 
-            className="w-full gap-2"
-            onClick={onArchive}
-            disabled={saving}
-          >
-            {saving ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Archive className="w-4 h-4" />
-                Save to Portfolio
-              </>
-            )}
-          </Button>
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="gap-2"
+                onClick={onArchive}
+                disabled={saving || savingTemplate}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Archive className="w-4 h-4" />
+                    Save to Library
+                  </>
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Save this generated content</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="default"
+                className="gap-2"
+                onClick={onSaveAsTemplate}
+                disabled={saving || savingTemplate}
+              >
+                {savingTemplate ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Star className="w-4 h-4" />
+                    Save as Template
+                  </>
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Save the prompt to reuse later</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       )}
     </>

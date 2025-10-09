@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Sparkles, Copy, Check, Loader2, Archive, Wand2, MessageSquare } from "lucide-react";
+import { Sparkles, Copy, Check, Loader2, Archive, Wand2, MessageSquare, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -79,6 +79,7 @@ const Forge = () => {
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savingTemplate, setSavingTemplate] = useState(false);
   const [generatedOutput, setGeneratedOutput] = useState("");
   const [imageUrls, setImageUrls] = useState("");
   const [qualityRating, setQualityRating] = useState(0);
@@ -387,43 +388,17 @@ const Forge = () => {
     setSaving(true);
 
     try {
-      // First, insert the prompt
-      const { data: promptData, error: promptError } = await supabase
-        .from('prompts')
-        .insert({
-          title: formData.title,
-          content_type: formData.contentType as any,
-          collection: mapCollectionToEnum(formData.collection) as any,
-          scent_family: formData.scentFamily ? (mapScentFamilyToEnum(formData.scentFamily) as any) : null,
-          dip_week: formData.dipWeek ? parseInt(formData.dipWeek) : null,
-          pillar_focus: formData.pillar ? (mapPillarToEnum(formData.pillar) as any) : null,
-          prompt_text: generatedPrompt,
-          top_notes: formData.topNotes || null,
-          middle_notes: formData.middleNotes || null,
-          base_notes: formData.baseNotes || null,
-          meta_instructions: {
-            customInstructions: formData.customInstructions,
-          },
-          created_by: user.id,
-          organization_id: currentOrganizationId!,
-          is_archived: false,
-        } as any)
-        .select()
-        .single();
-
-      if (promptError) throw promptError;
-
       // Parse image URLs (one per line)
       const imageUrlsArray = imageUrls
         .split('\n')
         .map(url => url.trim())
         .filter(url => url.length > 0);
 
-      // Then, insert the output
+      // Insert the output (without creating prompt)
       const { error: outputError } = await supabase
         .from('outputs')
         .insert({
-          prompt_id: promptData.id,
+          prompt_id: null,
           generated_content: generatedOutput,
           image_urls: imageUrlsArray,
           quality_rating: qualityRating,
@@ -436,15 +411,15 @@ const Forge = () => {
       if (outputError) throw outputError;
 
       toast({
-        title: "Published to portfolio",
-        description: "Your content has been archived in the Library.",
+        title: "Saved to Library",
+        description: "Your generated content has been saved.",
         action: (
           <Button
             variant="outline"
             size="sm"
             onClick={() => navigate('/library')}
           >
-            View Portfolio
+            View Library
           </Button>
         ),
       });
@@ -476,6 +451,116 @@ const Forge = () => {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const saveAsTemplate = async () => {
+    if (!user) return;
+    
+    if (!formData.title) {
+      toast({
+        title: "Title required",
+        description: "Please provide a title for your template.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.contentType) {
+      toast({
+        title: "Content type required",
+        description: "Please select a content type before saving template.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!generatedPrompt) {
+      toast({
+        title: "No prompt to save",
+        description: "Please complete the form before saving as template.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSavingTemplate(true);
+
+    try {
+      // Check for similar existing templates
+      const { data: existingTemplates, error: checkError } = await supabase
+        .from('prompts')
+        .select('id, title, prompt_text')
+        .eq('organization_id', currentOrganizationId!)
+        .eq('is_template', true)
+        .eq('content_type', formData.contentType as any);
+
+      if (checkError) throw checkError;
+
+      // Simple similarity check: exact match on prompt text or title
+      const similarTemplate = existingTemplates?.find(t => 
+        t.prompt_text === generatedPrompt || t.title === formData.title
+      );
+
+      if (similarTemplate) {
+        const confirmed = window.confirm(
+          "A similar template already exists. Save as new template anyway?"
+        );
+        if (!confirmed) {
+          setSavingTemplate(false);
+          return;
+        }
+      }
+
+      // Insert the template
+      const { error: templateError } = await supabase
+        .from('prompts')
+        .insert({
+          title: formData.title,
+          content_type: formData.contentType as any,
+          collection: mapCollectionToEnum(formData.collection) as any,
+          scent_family: formData.scentFamily ? (mapScentFamilyToEnum(formData.scentFamily) as any) : null,
+          dip_week: formData.dipWeek ? parseInt(formData.dipWeek) : null,
+          pillar_focus: formData.pillar ? (mapPillarToEnum(formData.pillar) as any) : null,
+          prompt_text: generatedPrompt,
+          top_notes: formData.topNotes || null,
+          middle_notes: formData.middleNotes || null,
+          base_notes: formData.baseNotes || null,
+          is_template: true,
+          meta_instructions: {
+            customInstructions: formData.customInstructions,
+            imageTemplate: formData.imageTemplate,
+          },
+          created_by: user.id,
+          organization_id: currentOrganizationId!,
+          is_archived: false,
+        } as any);
+
+      if (templateError) throw templateError;
+
+      toast({
+        title: "Saved as Template",
+        description: "Your prompt has been saved to Templates.",
+        action: (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/templates')}
+          >
+            View Templates
+          </Button>
+        ),
+      });
+
+    } catch (error) {
+      console.error("Error saving template:", error);
+      toast({
+        title: "Save error",
+        description: error instanceof Error ? error.message : "Failed to save template.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingTemplate(false);
     }
   };
 
@@ -588,7 +673,7 @@ const Forge = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate(`/repurpose?master=${masterData.id}`)}
+            onClick={() => navigate(`/multiply?master=${masterData.id}`)}
           >
             View Derivatives
           </Button>
@@ -1178,23 +1263,44 @@ const Forge = () => {
                 )}
                 
                 {((generatedOutput && qualityRating > 0) || (imageUrls && qualityRating > 0)) && (
-                  <button 
-                    className="btn-archive flex-1 flex items-center justify-center gap-2"
-                    onClick={archiveContent}
-                    disabled={saving}
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Publishing...
-                      </>
-                    ) : (
-                      <>
-                        <Archive className="w-4 h-4" />
-                        Publish to Portfolio
-                      </>
-                    )}
-                  </button>
+                  <div className="flex gap-3 w-full">
+                    <Button
+                      variant="outline"
+                      className="flex-1 gap-2"
+                      onClick={archiveContent}
+                      disabled={saving || savingTemplate}
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Archive className="w-4 h-4" />
+                          Save to Library
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="default"
+                      className="flex-1 gap-2"
+                      onClick={saveAsTemplate}
+                      disabled={saving || savingTemplate}
+                    >
+                      {savingTemplate ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Star className="w-4 h-4" />
+                          Save as Template
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>

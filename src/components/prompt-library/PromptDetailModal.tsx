@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { getCollectionIcon } from "@/utils/collectionIcons";
-import type { Prompt } from "@/pages/PromptLibrary";
+import type { Prompt } from "@/pages/Templates";
 
 interface PromptDetailModalProps {
   prompt: Prompt;
@@ -227,7 +227,7 @@ const PromptDetailModal = ({
             className="flex-1 gap-2"
           >
             <Sparkles className="w-4 h-4" />
-            Use in Forge
+            Use This Template
           </Button>
         </div>
       </DialogContent>

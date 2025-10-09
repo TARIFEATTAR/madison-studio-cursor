@@ -11,7 +11,7 @@ import Index from "./pages/Index";
 import Reservoir from "./pages/Reservoir";
 import Forge from "./pages/Forge";
 import Repurpose from "./pages/Repurpose";
-import PromptLibrary from "./pages/PromptLibrary";
+import Templates from "./pages/Templates";
 import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -61,7 +61,7 @@ const AppContent = () => {
           }
         />
         <Route
-          path="/forge"
+          path="/create"
           element={
             <ProtectedRoute>
               <Forge />
@@ -69,7 +69,7 @@ const AppContent = () => {
           }
         />
         <Route
-          path="/repurpose"
+          path="/multiply"
           element={
             <ProtectedRoute>
               <Repurpose />
@@ -77,15 +77,15 @@ const AppContent = () => {
           }
         />
         <Route
-          path="/prompt-library"
+          path="/templates"
           element={
             <ProtectedRoute>
-              <PromptLibrary />
+              <Templates />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/calendar"
+          path="/schedule"
           element={
             <ProtectedRoute>
               <Calendar />

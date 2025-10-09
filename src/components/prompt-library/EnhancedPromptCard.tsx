@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getCollectionIcon } from "@/utils/collectionIcons";
-import type { Prompt } from "@/pages/PromptLibrary";
+import type { Prompt } from "@/pages/Templates";
 
 interface EnhancedPromptCardProps {
   prompt: Prompt;
@@ -172,7 +172,7 @@ const EnhancedPromptCard = ({
           variant="default"
         >
           <Sparkles className="w-4 h-4" />
-          Use in Forge
+          Use Template
         </Button>
       </div>
     </Card>

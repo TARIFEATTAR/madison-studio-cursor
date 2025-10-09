@@ -91,7 +91,7 @@ export function OnboardingCompleteModal({ open, onClose }: OnboardingCompleteMod
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <Button
-              onClick={() => handleNavigation("/forge")}
+              onClick={() => handleNavigation("/create")}
               variant="outline"
               className="flex flex-col items-center gap-2 h-auto py-4 border-charcoal/20 hover:border-brass hover:bg-brass/5"
             >
@@ -115,7 +115,7 @@ export function OnboardingCompleteModal({ open, onClose }: OnboardingCompleteMod
             </Button>
 
             <Button
-              onClick={() => handleNavigation("/calendar")}
+              onClick={() => handleNavigation("/schedule")}
               variant="outline"
               className="flex flex-col items-center gap-2 h-auto py-4 border-charcoal/20 hover:border-brass hover:bg-brass/5"
             >

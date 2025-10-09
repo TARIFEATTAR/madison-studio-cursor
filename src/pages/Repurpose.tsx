@@ -294,7 +294,7 @@ const Repurpose = () => {
   };
 
   const handleViewOnCalendar = (scheduleDate: string) => {
-    navigate(`/calendar?date=${scheduleDate}`);
+    navigate(`/schedule?date=${scheduleDate}`);
   };
 
   const handleReject = async (derivativeId?: string) => {
@@ -649,7 +649,7 @@ const Repurpose = () => {
                     Select content from the sidebar or create new content to get started
                   </p>
                 </div>
-                <Button onClick={() => navigate("/forge")}>Create in Composer</Button>
+                <Button onClick={() => navigate("/create")}>Create Content</Button>
               </Card>
             ) : (
               <>
@@ -673,7 +673,7 @@ const Repurpose = () => {
                           This master content hasn't been repurposed yet
                         </p>
                       </div>
-                      <Button variant="outline" onClick={() => navigate("/forge")}>
+                      <Button variant="outline" onClick={() => navigate("/create")}>
                         Generate Derivatives
                       </Button>
                     </Card>

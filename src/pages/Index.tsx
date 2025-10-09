@@ -43,10 +43,10 @@ const Index = () => {
     dismissBanner,
   } = useOnboarding();
 
-  // Redirect to Forge if user is in first_generation_pending state
+  // Redirect to Create if user is in first_generation_pending state
   useEffect(() => {
     if (user && onboardingStep === "first_generation_pending") {
-      navigate("/forge?onboarding=true");
+      navigate("/create?onboarding=true");
     }
   }, [user, onboardingStep, navigate]);
   
@@ -141,7 +141,7 @@ const Index = () => {
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Link to="/forge" className="group">
+                  <Link to="/create" className="group">
                     <div className="card-editorial h-full">
                       <div className="flex items-center gap-4 mb-5">
                         <div className="bg-brass/10 w-16 h-16 rounded-lg flex items-center justify-center group-hover:bg-brass/20 transition-colors">
@@ -162,7 +162,7 @@ const Index = () => {
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Link to="/repurpose" className="group">
+                  <Link to="/multiply" className="group">
                     <div className="card-editorial h-full">
                       <div className="flex items-center gap-4 mb-5">
                         <div className="bg-brass/10 w-16 h-16 rounded-lg flex items-center justify-center group-hover:bg-brass/20 transition-colors">
@@ -204,7 +204,7 @@ const Index = () => {
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Link to="/calendar" className="group">
+                  <Link to="/schedule" className="group">
                     <div className="card-editorial h-full">
                       <div className="flex items-center gap-4 mb-5">
                         <div className="bg-brass/10 w-16 h-16 rounded-lg flex items-center justify-center group-hover:bg-brass/20 transition-colors">
