@@ -17,7 +17,7 @@ export default function DashboardNew() {
       <div className="max-w-6xl mx-auto px-8 py-10">
         
         {/* Header */}
-        <div className="mb-12">
+        <div className="mb-10">
           <div className="flex items-center justify-between mb-3">
             <h1 className="font-serif text-4xl font-medium text-ink-black">
               Welcome back, Sample Brand
@@ -34,7 +34,7 @@ export default function DashboardNew() {
 
         {/* Priority Action - HERO ELEMENT */}
         {showPriorityCard && (
-          <div className="bg-gradient-to-br from-brass to-brass-glow rounded-xl p-8 shadow-lg mb-10 relative">
+          <div className="bg-gradient-to-br from-brass to-brass-glow rounded-xl p-8 shadow-lg mb-8 relative">
             <button
               onClick={() => setShowPriorityCard(false)}
               className="absolute top-4 right-4 text-ink-black/70 hover:text-ink-black transition-colors"
@@ -82,7 +82,7 @@ export default function DashboardNew() {
 
         {/* Editorial Director - Subtle Support */}
         {showEditorialBanner && (
-          <div className="bg-parchment-white border-l-4 border-brass p-6 rounded-lg mb-10 shadow-sm relative">
+          <div className="bg-parchment-white border-l-4 border-brass p-6 rounded-lg mb-8 shadow-sm relative">
             <button
               onClick={() => setShowEditorialBanner(false)}
               className="absolute top-4 right-4 text-warm-gray hover:text-charcoal transition-colors"
@@ -106,7 +106,7 @@ export default function DashboardNew() {
         )}
 
         {/* Quick Actions Grid */}
-        <div className="grid grid-cols-3 gap-4 mb-12">
+        <div className="grid grid-cols-3 gap-4 mb-8">
           
           <button 
             onClick={() => navigate('/create')}
