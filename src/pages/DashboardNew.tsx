@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { X, Lightbulb, Calendar, Archive, Instagram, Mail, Twitter } from "lucide-react";
+import { X, Lightbulb, Calendar, Archive, Instagram, Mail, Twitter, Pencil, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { DashboardRecentActivity } from "@/components/dashboard/DashboardRecentActivity";
+import { DashboardWeeklyStats } from "@/components/dashboard/DashboardWeeklyStats";
 
 export default function DashboardNew() {
   const navigate = useNavigate();
@@ -12,9 +14,9 @@ export default function DashboardNew() {
 
   return (
     <div className="min-h-screen bg-vellum-cream">
-      <div className="max-w-7xl mx-auto px-8 py-8">
+      <div className="max-w-7xl mx-auto px-8 py-8 space-y-6">
         {/* Header with Streak */}
-        <div className="flex items-start justify-between mb-8">
+        <div className="flex items-start justify-between pb-6 border-b border-warm-gray/20">
           <div>
             <h1 className="text-5xl font-serif font-semibold text-ink-black mb-2">
               Welcome back, Sample Brand
@@ -25,6 +27,36 @@ export default function DashboardNew() {
             <span className="text-2xl">🔥</span>
             <span className="font-semibold text-ink-black">5-day streak!</span>
           </div>
+        </div>
+
+        {/* Quick Actions Toolbar */}
+        <div className="flex gap-3">
+          <Button 
+            onClick={() => navigate('/create')}
+            variant="outline"
+            className="border-aged-brass text-aged-brass hover:bg-aged-brass hover:text-ink-black transition-colors"
+          >
+            <Pencil className="w-4 h-4 mr-2" />
+            Create Content
+          </Button>
+          
+          <Button 
+            onClick={() => navigate('/schedule')}
+            variant="outline"
+            className="border-aged-brass text-aged-brass hover:bg-aged-brass hover:text-ink-black transition-colors"
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            View Calendar
+          </Button>
+          
+          <Button 
+            onClick={() => navigate('/templates')}
+            variant="outline"
+            className="border-aged-brass text-aged-brass hover:bg-aged-brass hover:text-ink-black transition-colors"
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            Browse Templates
+          </Button>
         </div>
 
         {/* Editorial Director Banner */}
@@ -168,6 +200,25 @@ export default function DashboardNew() {
             ))}
           </div>
         </Card>
+
+        {/* Recent Activity & Insights */}
+        <div className="bg-white rounded-xl border border-warm-gray/20 p-8 shadow-level-1">
+          <h2 className="text-2xl font-serif text-ink-black mb-6">
+            Recent Activity & Insights
+          </h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* Recent Content - 60% width (3 cols) */}
+            <div className="lg:col-span-3">
+              <DashboardRecentActivity />
+            </div>
+            
+            {/* Weekly Stats - 40% width (2 cols) */}
+            <div className="lg:col-span-2">
+              <DashboardWeeklyStats />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

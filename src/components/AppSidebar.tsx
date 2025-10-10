@@ -66,7 +66,7 @@ export function AppSidebar() {
   return (
     <Sidebar 
       collapsible="icon"
-      className="border-r-0"
+      className="border-r-0 w-[72px] data-[state=expanded]:w-64"
       style={{
         background: "linear-gradient(180deg, hsl(var(--ink-black)), hsl(var(--charcoal)))"
       }}
@@ -74,9 +74,11 @@ export function AppSidebar() {
       {/* Header */}
       <SidebarHeader className="border-b border-white/10 p-0">
         <div className="flex items-center gap-3 px-4 py-6">
-          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shrink-0">
-            <span className="text-ink-black text-xl font-semibold font-serif">$</span>
-          </div>
+          <img 
+            src="/logo.png" 
+            alt="Scriptora" 
+            className={`${open ? 'w-10 h-10' : 'w-8 h-8'} shrink-0 object-contain transition-all duration-200`}
+          />
           {open && (
             <div className="flex-1 min-w-0">
               <h1 className="text-white text-xl font-semibold font-serif tracking-tight">
@@ -122,15 +124,15 @@ export function AppSidebar() {
                     asChild
                     className={`
                       ${isActiveRoute 
-                        ? 'bg-aged-brass/20 text-white border border-aged-brass/30' 
-                        : 'text-white/70 hover:text-white hover:bg-white/5'
+                        ? 'border-l-4 border-aged-brass bg-white/5 text-white' 
+                        : 'text-white/60 hover:text-aged-brass hover:bg-white/5'
                       }
                       ${open ? 'h-auto py-3' : 'h-12'}
-                      transition-all duration-200
+                      transition-all duration-200 hover:drop-shadow-[0_0_8px_rgba(184,149,106,0.3)]
                     `}
                   >
                     <NavLink to={item.url}>
-                      <item.icon className={`${open ? 'w-5 h-5' : 'w-6 h-6'} shrink-0`} />
+                      <item.icon className={`w-5 h-5 shrink-0 ${isActiveRoute ? 'text-aged-brass' : ''}`} />
                       {open && (
                         <div className="flex flex-col items-start">
                           <span className="font-semibold text-sm">{item.title}</span>
@@ -153,12 +155,12 @@ export function AppSidebar() {
             <SidebarMenuItem>
               <SidebarMenuButton
                 className={`
-                  text-white/70 hover:text-white hover:bg-white/5
+                  text-white/60 hover:text-aged-brass hover:bg-white/5
                   ${open ? 'h-auto py-3' : 'h-12'}
-                  transition-all
+                  transition-all duration-200 hover:drop-shadow-[0_0_8px_rgba(184,149,106,0.3)]
                 `}
               >
-                <Video className={`${open ? 'w-5 h-5' : 'w-6 h-6'} shrink-0`} />
+                <Video className="w-5 h-5 shrink-0" />
                 {open && (
                   <div className="flex flex-col items-start">
                     <span className="font-semibold text-sm">Video Tutorials</span>
@@ -185,7 +187,7 @@ export function AppSidebar() {
           )}
           <button 
             onClick={() => navigate('/settings')}
-            className="text-white/70 hover:text-white p-2 rounded-lg hover:bg-white/5 transition-colors"
+            className="text-white/60 hover:text-aged-brass p-2 rounded-lg hover:bg-white/5 transition-all duration-200 hover:drop-shadow-[0_0_8px_rgba(184,149,106,0.3)]"
           >
             <Settings className="w-5 h-5" />
           </button>
