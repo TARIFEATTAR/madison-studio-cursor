@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Edit2, Send, Copy, Check } from "lucide-react";
+import { Edit2, Send, Copy, Check, FileDown } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,13 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { getContentSubtypeLabel } from "@/utils/contentSubtypeLabels";
+import { exportAsPDF, exportAsDocx, exportAsText } from "@/utils/exportHelpers";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type ContentCategory = "prompt" | "output" | "master" | "derivative";
 
@@ -36,6 +43,7 @@ export function ContentDetailModal({
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
   const [isCopied, setIsCopied] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const getContentText = () => {
     if (category === "prompt") return content.prompt_text;
@@ -99,6 +107,43 @@ export function ContentDetailModal({
       description: "Content has been copied to your clipboard.",
     });
     setTimeout(() => setIsCopied(false), 2000);
+  };
+
+  const handleExport = async (format: 'pdf' | 'docx' | 'txt') => {
+    setIsExporting(true);
+    try {
+      const metadata = {
+        title: content.title || 'Untitled',
+        contentType: subtypeLabel || contentType || category,
+        collection: content.collection,
+        dipWeek: content.dip_week,
+        createdAt: content.created_at,
+        wordCount: content.word_count,
+      };
+
+      const contentText = getContentText();
+
+      if (format === 'pdf') {
+        exportAsPDF(contentText, metadata);
+      } else if (format === 'docx') {
+        await exportAsDocx(contentText, metadata);
+      } else {
+        exportAsText(contentText, metadata);
+      }
+
+      toast({
+        title: "Export successful",
+        description: `Content exported as ${format.toUpperCase()}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Export failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const contentType = content.content_type || content.asset_type;
@@ -185,6 +230,27 @@ export function ContentDetailModal({
                 )}
                 {isCopied ? "Copied!" : "Copy"}
               </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" disabled={isExporting}>
+                    <FileDown className="w-4 h-4 mr-2" />
+                    {isExporting ? "Exporting..." : "Export"}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-40">
+                  <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                    Export as PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('docx')}>
+                    Export as DOCX
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('txt')}>
+                    Export as TXT
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               {(category === "master" || category === "output") && onRepurpose && (
                 <Button
                   onClick={() => {
