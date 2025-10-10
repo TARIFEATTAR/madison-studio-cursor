@@ -6,8 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useToast } from "@/hooks/use-toast";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 const FONT_OPTIONS = [
   { value: 'cormorant', label: 'Cormorant Garamond', family: '"Cormorant Garamond", serif' },
@@ -466,52 +467,66 @@ export default function ContentEditorPage() {
 
       {/* Main Content Area */}
       <div className="flex flex-1 min-h-0">
-        {/* Editor Area - Full width or 50% when assistant is open */}
-        <motion.div
-          animate={{ width: assistantOpen ? "50%" : "100%" }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-          className="overflow-auto h-full"
-          style={{ backgroundColor: "#F5F1E8" }}
-        >
-          <div className="max-w-4xl mx-auto py-16 px-8 md:px-16">
-            {/* Content Editable Area - Clean, no borders */}
-            <div
-              ref={editableRef}
-              contentEditable
-              onInput={updateContentFromEditable}
-              onKeyDown={handleKeyDown}
-              suppressContentEditableWarning
-              className="w-full min-h-[calc(100vh-200px)] focus:outline-none text-lg leading-relaxed"
-              style={{
-                fontFamily: currentFontFamily,
-                color: "#1A1816"
-              }}
-            />
-          </div>
-        </motion.div>
-
-        {/* Editorial Assistant Panel - Slides in from right */}
-        <AnimatePresence>
-          {assistantOpen && (
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="w-1/2 flex-shrink-0"
-              style={{ 
-                borderLeft: "1px solid #D4CFC8",
-                backgroundColor: "#FFFCF5",
-                height: "100%"
-              }}
-            >
-              <EditorialAssistantPanel 
-                onClose={() => setAssistantOpen(false)}
-                initialContent={editableContent}
+        {!assistantOpen ? (
+          // Full width editor when assistant is closed
+          <div className="w-full overflow-auto h-full" style={{ backgroundColor: "#F5F1E8" }}>
+            <div className="max-w-4xl mx-auto py-16 px-8 md:px-16">
+              <div
+                ref={editableRef}
+                contentEditable
+                onInput={updateContentFromEditable}
+                onKeyDown={handleKeyDown}
+                suppressContentEditableWarning
+                className="w-full min-h-[calc(100vh-200px)] focus:outline-none text-lg leading-relaxed"
+                style={{
+                  fontFamily: currentFontFamily,
+                  color: "#1A1816"
+                }}
               />
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </div>
+        ) : (
+          // Resizable panels when assistant is open
+          <ResizablePanelGroup direction="horizontal" className="w-full h-full">
+            <ResizablePanel defaultSize={50} minSize={30}>
+              <div className="w-full h-full overflow-auto" style={{ backgroundColor: "#F5F1E8" }}>
+                <div className="max-w-4xl mx-auto py-16 px-8 md:px-16">
+                  <div
+                    ref={editableRef}
+                    contentEditable
+                    onInput={updateContentFromEditable}
+                    onKeyDown={handleKeyDown}
+                    suppressContentEditableWarning
+                    className="w-full min-h-[calc(100vh-200px)] focus:outline-none text-lg leading-relaxed"
+                    style={{
+                      fontFamily: currentFontFamily,
+                      color: "#1A1816"
+                    }}
+                  />
+                </div>
+              </div>
+            </ResizablePanel>
+            
+            <ResizableHandle 
+              className="w-1 hover:w-2 transition-all"
+              style={{ backgroundColor: "#D4CFC8" }}
+            />
+            
+            <ResizablePanel defaultSize={50} minSize={25} maxSize={70}>
+              <div 
+                className="w-full h-full"
+                style={{ 
+                  backgroundColor: "#FFFCF5"
+                }}
+              >
+                <EditorialAssistantPanel 
+                  onClose={() => setAssistantOpen(false)}
+                  initialContent={editableContent}
+                />
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        )}
       </div>
     </div>
   );
