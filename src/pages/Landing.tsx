@@ -67,38 +67,41 @@ const Landing = () => {
         </div>
         
         {/* Gradient Overlay for Text Legibility */}
-        <div className="hero-overlay"></div>
+        <div className="hero-overlay md:hidden" style={{
+          background: 'linear-gradient(to bottom, rgba(26, 24, 22, 0.75) 0%, rgba(26, 24, 22, 0.65) 40%, rgba(26, 24, 22, 0.85) 100%)'
+        }}></div>
+        <div className="hero-overlay hidden md:block"></div>
         
         {/* Content Layer */}
-        <div className="hero-content">
-          <div className="hero-container">
-            <div className="hero-text-block">
-              
-              {/* Headline with brass accent */}
-              <h1 className="hero-headline">
-                Where Luxury Beauty Brands{' '}
-                <span className="headline-accent">Craft Their Narrative</span>
-              </h1>
-              
-              {/* Subheadline */}
-              <p className="hero-subheadline">
-                AI-powered content creation that honors craftsmanship, 
-                heritage, and the art of storytelling. From heritage 
-                perfume houses to artisan skincare—every word reflects 
-                your brand's soul.
-              </p>
-              
-              {/* CTA Buttons */}
-              <div className="hero-ctas">
-                <Link to="/auth" className="btn-primary-brass">
-                  Commission Your First Piece
-                </Link>
-                <Link to="/meet-madison" className="btn-secondary-ghost">
-                  Meet Your Editorial Director
-                </Link>
-              </div>
-              
+        <div className="relative z-20 h-full flex items-center justify-start pl-6 pr-6 pt-36 md:pl-[120px] md:pr-[45%] md:pt-0">
+          <div className="max-w-[650px] text-left">
+            
+            {/* Headline with brass accent */}
+            <h1 className="hero-headline text-6xl md:text-7xl leading-tight">
+              Where Luxury Beauty Brands{' '}
+              <span className="headline-accent block text-7xl md:text-8xl leading-tight">
+                Craft Their Narrative
+              </span>
+            </h1>
+            
+            {/* Subheadline */}
+            <p className="hero-subheadline text-xl leading-relaxed max-w-[580px]">
+              AI-powered content creation that honors craftsmanship, 
+              heritage, and the art of storytelling. From heritage 
+              perfume houses to artisan skincare—every word reflects 
+              your brand's soul.
+            </p>
+            
+            {/* CTA Buttons */}
+            <div className="hero-ctas">
+              <Link to="/auth" className="btn-primary-brass inline-block px-12 py-[18px] text-lg">
+                Commission Your First Piece
+              </Link>
+              <Link to="/meet-madison" className="btn-secondary-ghost inline-block px-12 py-[18px] text-lg">
+                Meet Your Editorial Director
+              </Link>
             </div>
+            
           </div>
         </div>
         
