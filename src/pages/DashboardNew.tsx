@@ -29,34 +29,33 @@ export default function DashboardNew() {
           </div>
         </div>
 
-        {/* Quick Actions Toolbar */}
-        <div className="flex gap-3">
-          <Button 
+        {/* Quick Actions Cards */}
+        <div className="grid grid-cols-3 gap-4 mb-10">
+          
+          <button 
             onClick={() => navigate('/create')}
-            variant="outline"
-            className="border-aged-brass text-aged-brass hover:bg-aged-brass hover:text-ink-black transition-colors"
+            className="bg-parchment-white border-2 border-warm-gray/20 hover:border-brass p-6 rounded-xl transition-all hover:shadow-md group"
           >
-            <Pencil className="w-4 h-4 mr-2" />
-            Create Content
-          </Button>
-          
-          <Button 
+            <PenTool className="w-8 h-8 text-brass mb-3 group-hover:scale-110 transition-transform" />
+            <div className="text-base font-medium text-charcoal">Create Content</div>
+          </button>
+
+          <button 
             onClick={() => navigate('/schedule')}
-            variant="outline"
-            className="border-aged-brass text-aged-brass hover:bg-aged-brass hover:text-ink-black transition-colors"
+            className="bg-parchment-white border-2 border-warm-gray/20 hover:border-brass p-6 rounded-xl transition-all hover:shadow-md group"
           >
-            <Calendar className="w-4 h-4 mr-2" />
-            View Calendar
-          </Button>
-          
-          <Button 
+            <Calendar className="w-8 h-8 text-brass mb-3 group-hover:scale-110 transition-transform" />
+            <div className="text-base font-medium text-charcoal">View Calendar</div>
+          </button>
+
+          <button 
             onClick={() => navigate('/templates')}
-            variant="outline"
-            className="border-aged-brass text-aged-brass hover:bg-aged-brass hover:text-ink-black transition-colors"
+            className="bg-parchment-white border-2 border-warm-gray/20 hover:border-brass p-6 rounded-xl transition-all hover:shadow-md group"
           >
-            <FileText className="w-4 h-4 mr-2" />
-            Browse Templates
-          </Button>
+            <FileText className="w-8 h-8 text-brass mb-3 group-hover:scale-110 transition-transform" />
+            <div className="text-base font-medium text-charcoal">Browse Templates</div>
+          </button>
+
         </div>
 
         {/* Editorial Director Banner */}
