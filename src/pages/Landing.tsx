@@ -56,57 +56,55 @@ const Landing = () => {
       </header>
 
       {/* Hero Section - Full Screen */}
-      <section className="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden">
+      <section className="hero-full-screen">
         {/* Background Image Layer */}
-        <div className="absolute inset-0 z-0">
+        <div className="hero-background">
           <img 
             src="/assets/editorial-desk-hero.png" 
-            alt="Editorial desk with vintage typewriter overlooking Madison Avenue"
-            className="w-full h-full object-cover"
+            alt="Editorial desk with typewriter overlooking Madison Avenue"
+            className="hero-image"
           />
         </div>
         
         {/* Gradient Overlay for Text Legibility */}
-        <div className="absolute inset-0 z-10 bg-gradient-to-r from-ink-black/80 via-ink-black/50 to-transparent" />
+        <div className="hero-overlay"></div>
         
         {/* Content Layer */}
-        <div className="relative z-20 container mx-auto px-6">
-          <div className="max-w-3xl">
-            
-            {/* Headline with brass accent */}
-            <h1 className="text-5xl md:text-7xl font-serif font-semibold text-parchment-white leading-tight mb-6">
-              Where Luxury Beauty Brands{' '}
-              <span className="block mt-2 text-aged-brass">Craft Their Narrative</span>
-            </h1>
-            
-            {/* Subheadline */}
-            <p className="text-lg md:text-xl text-parchment-white/90 leading-relaxed mb-8 max-w-2xl">
-              AI-powered content creation that honors craftsmanship, 
-              heritage, and the art of storytelling. From heritage 
-              perfume houses to artisan skincare—every word reflects 
-              your brand's soul.
-            </p>
-            
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button asChild variant="brass" size="lg">
-                <Link to="/auth">
+        <div className="hero-content">
+          <div className="hero-container">
+            <div className="hero-text-block">
+              
+              {/* Headline with brass accent */}
+              <h1 className="hero-headline">
+                Where Luxury Beauty Brands{' '}
+                <span className="headline-accent">Craft Their Narrative</span>
+              </h1>
+              
+              {/* Subheadline */}
+              <p className="hero-subheadline">
+                AI-powered content creation that honors craftsmanship, 
+                heritage, and the art of storytelling. From heritage 
+                perfume houses to artisan skincare—every word reflects 
+                your brand's soul.
+              </p>
+              
+              {/* CTA Buttons */}
+              <div className="hero-ctas">
+                <Link to="/auth" className="btn-primary-brass">
                   Commission Your First Piece
                 </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="bg-parchment-white/10 border-parchment-white/30 text-parchment-white hover:bg-parchment-white/20">
-                <Link to="/meet-madison">
+                <Link to="/meet-madison" className="btn-secondary-ghost">
                   Meet Your Editorial Director
                 </Link>
-              </Button>
+              </div>
+              
             </div>
-            
           </div>
         </div>
         
         {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 text-parchment-white/60 animate-bounce">
-          <span className="text-sm tracking-wide uppercase">Scroll to explore</span>
+        <div className="scroll-indicator">
+          <span>Scroll to explore</span>
           <ArrowRight className="w-5 h-5 rotate-90" />
         </div>
         
