@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
 
 const FONT_OPTIONS = [
   { value: 'cormorant', label: 'Cormorant Garamond', family: '"Cormorant Garamond", serif' },
@@ -22,6 +24,7 @@ export default function ContentEditorPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const editableRef = useRef<HTMLDivElement>(null);
   
   // Load content from route state, DB, or localStorage
@@ -515,52 +518,35 @@ export default function ContentEditorPage() {
 
       {/* Main Content Area */}
       <div className="flex flex-1 min-h-0">
-        {!assistantOpen ? (
-          // Full width editor when assistant is closed
-          <div className="w-full overflow-auto h-full" style={{ backgroundColor: "#F5F1E8" }}>
-            <div className="max-w-4xl mx-auto py-16 px-8 md:px-16">
-              <div
-                ref={attachEditableRef}
-                contentEditable
-                onInput={updateContentFromEditable}
-                onKeyDown={handleKeyDown}
-                suppressContentEditableWarning
-                className="w-full min-h-[calc(100vh-200px)] focus:outline-none text-lg leading-relaxed"
-                style={{
-                  fontFamily: currentFontFamily,
-                  color: "#1A1816"
-                }}
-              />
-            </div>
+        {/* Always show full-width editor */}
+        <div className="w-full overflow-auto h-full" style={{ backgroundColor: "#F5F1E8" }}>
+          <div className="max-w-4xl mx-auto py-16 px-8 md:px-16">
+            <div
+              ref={attachEditableRef}
+              contentEditable
+              onInput={updateContentFromEditable}
+              onKeyDown={handleKeyDown}
+              suppressContentEditableWarning
+              className="w-full min-h-[calc(100vh-200px)] focus:outline-none text-lg leading-relaxed"
+              style={{
+                fontFamily: currentFontFamily,
+                color: "#1A1816"
+              }}
+            />
           </div>
-        ) : (
-          // Resizable panels when assistant is open
-          <ResizablePanelGroup direction="horizontal" className="w-full h-full">
-            <ResizablePanel defaultSize={50} minSize={30}>
-              <div className="w-full h-full overflow-auto" style={{ backgroundColor: "#F5F1E8" }}>
-                <div className="max-w-4xl mx-auto py-16 px-8 md:px-16">
-                  <div
-                    ref={attachEditableRef}
-                    contentEditable
-                    onInput={updateContentFromEditable}
-                    onKeyDown={handleKeyDown}
-                    suppressContentEditableWarning
-                    className="w-full min-h-[calc(100vh-200px)] focus:outline-none text-lg leading-relaxed"
-                    style={{
-                      fontFamily: currentFontFamily,
-                      color: "#1A1816"
-                    }}
-                  />
-                </div>
-              </div>
-            </ResizablePanel>
+        </div>
+
+        {/* Desktop: Side panel assistant */}
+        {!isMobile && assistantOpen && (
+          <ResizablePanelGroup direction="horizontal" className="w-full h-full absolute inset-0 pointer-events-none">
+            <ResizablePanel defaultSize={50} minSize={30} className="pointer-events-none" />
             
             <ResizableHandle 
-              className="w-1 hover:w-2 transition-all"
+              className="w-1 hover:w-2 transition-all pointer-events-auto"
               style={{ backgroundColor: "#D4CFC8" }}
             />
             
-            <ResizablePanel defaultSize={50} minSize={25} maxSize={70}>
+            <ResizablePanel defaultSize={50} minSize={25} maxSize={70} className="pointer-events-auto">
               <div 
                 className="w-full h-full"
                 style={{ 
@@ -576,6 +562,18 @@ export default function ContentEditorPage() {
           </ResizablePanelGroup>
         )}
       </div>
+
+      {/* Mobile: Bottom drawer assistant */}
+      {isMobile && (
+        <Drawer open={assistantOpen} onOpenChange={setAssistantOpen}>
+          <DrawerContent className="h-[85vh]" style={{ backgroundColor: "#FFFCF5" }}>
+            <EditorialAssistantPanel 
+              onClose={handleToggleAssistant}
+              initialContent={editableContent}
+            />
+          </DrawerContent>
+        </Drawer>
+      )}
     </div>
   );
 }
