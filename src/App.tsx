@@ -13,6 +13,8 @@ import Index from "./pages/Index";
 import DashboardNew from "./pages/DashboardNew";
 import Reservoir from "./pages/Reservoir";
 import Forge from "./pages/Forge";
+import ForgeNew from "./pages/ForgeNew";
+import ContentEditor from "./pages/ContentEditor";
 import Repurpose from "./pages/Repurpose";
 import Templates from "./pages/Templates";
 import Calendar from "./pages/Calendar";
@@ -62,7 +64,8 @@ const AppContent = () => {
               <Routes>
                 <Route path="/" element={<ProtectedRoute><DashboardNew /></ProtectedRoute>} />
                 <Route path="/library" element={<ProtectedRoute><Reservoir /></ProtectedRoute>} />
-                <Route path="/create" element={<ProtectedRoute><Forge /></ProtectedRoute>} />
+                <Route path="/create" element={<ProtectedRoute><ForgeNew /></ProtectedRoute>} />
+                <Route path="/editor" element={<ProtectedRoute><ContentEditor /></ProtectedRoute>} />
                 <Route path="/multiply" element={<ProtectedRoute><Repurpose /></ProtectedRoute>} />
                 <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
                 <Route path="/schedule" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
@@ -77,7 +80,8 @@ const AppContent = () => {
           <Route path="/auth" element={<Auth />} />
           <Route path="/" element={<Index />} />
           <Route path="/library" element={<ProtectedRoute><Reservoir /></ProtectedRoute>} />
-          <Route path="/create" element={<ProtectedRoute><Forge /></ProtectedRoute>} />
+          <Route path="/create" element={<ProtectedRoute><ForgeNew /></ProtectedRoute>} />
+          <Route path="/editor" element={<ProtectedRoute><ContentEditor /></ProtectedRoute>} />
           <Route path="/multiply" element={<ProtectedRoute><Repurpose /></ProtectedRoute>} />
           <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
           <Route path="/schedule" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
