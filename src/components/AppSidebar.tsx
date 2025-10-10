@@ -57,8 +57,7 @@ const navItems = [
     title: "Meet Madison", 
     subtitle: "Editorial Director",
     url: "/meet-madison", 
-    icon: User,
-    special: true
+    icon: User
   },
 ];
 
@@ -172,7 +171,6 @@ export function AppSidebar() {
                         : 'text-white/60 hover:text-aged-brass hover:bg-white/5'
                       }
                       ${open ? 'h-auto py-3' : 'h-12'}
-                      ${item.special ? 'bg-brass/10' : ''}
                       transition-all duration-200 hover:drop-shadow-[0_0_8px_rgba(184,149,106,0.3)]
                     `}
                   >
