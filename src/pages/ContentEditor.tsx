@@ -266,6 +266,19 @@ export default function ContentEditorPage() {
     }
   };
 
+  // Ensure we commit the latest editor content before toggling the assistant
+  const handleToggleAssistant = () => {
+    if (editableRef.current) {
+      const html = editableRef.current.innerHTML;
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+      const plainText = htmlToPlainText(html);
+      setEditableContent(plainText);
+    }
+    setAssistantOpen((prev) => !prev);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ backgroundColor: "#F5F1E8" }}>
@@ -403,7 +416,7 @@ export default function ContentEditorPage() {
           {/* Center: Editorial Assistant */}
           <Button
             variant={assistantOpen ? "default" : "ghost"}
-            onClick={() => setAssistantOpen(!assistantOpen)}
+            onClick={handleToggleAssistant}
             className="gap-2 h-9"
             style={{
               backgroundColor: assistantOpen ? "#B8956A" : undefined,
@@ -526,7 +539,7 @@ export default function ContentEditorPage() {
                 }}
               >
                 <EditorialAssistantPanel 
-                  onClose={() => setAssistantOpen(false)}
+                  onClose={handleToggleAssistant}
                   initialContent={editableContent}
                 />
               </div>
