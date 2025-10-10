@@ -566,6 +566,7 @@ export type Database = {
           is_archived: boolean
           organization_id: string
           pillar_focus: Database["public"]["Enums"]["pillar_type"] | null
+          quality_rating: number | null
           status: string | null
           title: string
           updated_at: string | null
@@ -583,6 +584,7 @@ export type Database = {
           is_archived?: boolean
           organization_id: string
           pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
+          quality_rating?: number | null
           status?: string | null
           title: string
           updated_at?: string | null
@@ -600,6 +602,7 @@ export type Database = {
           is_archived?: boolean
           organization_id?: string
           pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
+          quality_rating?: number | null
           status?: string | null
           title?: string
           updated_at?: string | null

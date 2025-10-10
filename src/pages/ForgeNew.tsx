@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Lightbulb, FileText, PenTool, X, Send } from "lucide-react";
+import { Lightbulb, FileText, PenTool, X, Send, Loader2 } from "lucide-react";
 import { createRoot } from "react-dom/client";
 import { GeneratingLoader } from "@/components/forge/GeneratingLoader";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,7 @@ import { NameContentDialog } from "@/components/forge/NameContentDialog";
 export default function ForgeNew() {
   const navigate = useNavigate();
   const { currentOrganizationId } = useOnboarding();
+  const { toast } = useToast();
 
   // Render loading overlay when needed
   useEffect(() => {
@@ -44,6 +46,8 @@ export default function ForgeNew() {
   const [thinkModeExpanded, setThinkModeExpanded] = useState(false);
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
   const [thinkModeInput, setThinkModeInput] = useState("");
+  const [thinkModeMessages, setThinkModeMessages] = useState<Array<{role: string, content: string}>>([]);
+  const [isThinking, setIsThinking] = useState(false);
 
   const handleSubmit = () => {
     // Validate required fields
@@ -56,7 +60,6 @@ export default function ForgeNew() {
   };
 
   const handleGenerateContent = async (contentName: string) => {
-    // Save brief data to localStorage
     const briefData = {
       productId: product,
       deliverableFormat: format,
@@ -69,31 +72,44 @@ export default function ForgeNew() {
     };
     
     localStorage.setItem('scriptora-content-brief', JSON.stringify(briefData));
-
-    // Show loading overlay
     setNameDialogOpen(false);
+    
+    // Show loading overlay
     const loadingDiv = document.createElement('div');
     loadingDiv.id = 'generating-loader';
     document.body.appendChild(loadingDiv);
 
-    // Simulate generation (1.5-2 seconds)
-    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 500));
-
-    // Generate content (mock for now)
-    const mockContent = `The souk falls quiet for just a moment. Between the calls of merchants and the shuffle of silk scarves against weathered stone, you catch it—that unmistakable breath of night-blooming jasmine drifting from a hidden courtyard.
-
-You've been here before, in dreams perhaps, or in the pages of a book that transported you far from wherever you started this morning. The air carries secrets: rose petals crushed underfoot in Damascus gardens, amber warming in desert sun, the whisper of musk that clings to ancient walls.
-
-This is not just fragrance. This is passage—to places where time slows, where senses sharpen, where memory and imagination converge.
-
-${format === "product" ? "The Product—" + product + "—invites you into this journey." : ""}
-
-${goal === "storytelling" ? "This is a story told in scent, an invitation to wander beyond the familiar." : ""}
-
-Some journeys begin with a single breath.`;
-
-    // Save to database
     try {
+      // Build AI prompt from brief fields
+      const promptParts = [
+        `Product: ${product}`,
+        `Format: ${format}`,
+        audience && `Target Audience: ${audience}`,
+        goal && `Content Goal: ${goal}`,
+        additionalContext && `\nAdditional Direction: ${additionalContext}`
+      ].filter(Boolean).join('\n');
+
+      const fullPrompt = `${promptParts}\n\n[EXECUTE THIS BRIEF IMMEDIATELY. OUTPUT ONLY THE FINAL COPY. NO QUESTIONS OR ANALYSIS.]`;
+
+      console.log('Calling AI with organization:', currentOrganizationId);
+      
+      // Call real AI edge function
+      const { data, error } = await supabase.functions.invoke('generate-with-claude', {
+        body: { 
+          prompt: fullPrompt,
+          organizationId: currentOrganizationId,
+          mode: "generate",
+          styleOverlay: style.toUpperCase().replace(/-/g, '_')
+        }
+      });
+
+      if (error) throw error;
+
+      const generatedContent = data?.generatedContent || "Error: No content generated";
+      
+      console.log('AI generated content, length:', generatedContent.length);
+      
+      // Save to database
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
@@ -101,11 +117,11 @@ Some journeys begin with a single breath.`;
         throw new Error("No organization found. Please complete onboarding first.");
       }
 
-      const { data, error } = await supabase
+      const { data: savedContent, error: saveError } = await supabase
         .from('master_content')
         .insert({
           title: contentName,
-          full_content: mockContent,
+          full_content: generatedContent,
           content_type: format,
           created_by: user.id,
           organization_id: currentOrganizationId,
@@ -114,43 +130,134 @@ Some journeys begin with a single breath.`;
         .select()
         .single();
 
-      if (error) throw error;
+      if (saveError) throw saveError;
 
       // Remove loading overlay
       const loader = document.getElementById('generating-loader');
       if (loader) loader.remove();
 
-      // Navigate to editor with content ID
+      // Navigate to editor with content
       navigate("/editor", {
         state: {
-          contentId: data.id,
-          content: mockContent,
+          contentId: savedContent.id,
+          content: generatedContent,
           contentType: format,
           productName: product,
           contentName: contentName
         }
       });
+
     } catch (error) {
-      console.error("Error saving content:", error);
+      console.error("Error generating content:", error);
+      
+      // Show error toast
+      toast({
+        title: "Generation failed",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive"
+      });
+      
       // Remove loading overlay
       const loader = document.getElementById('generating-loader');
       if (loader) loader.remove();
-      
-      // Still navigate but without DB save
-      navigate("/editor", {
-        state: {
-          content: mockContent,
-          contentType: format,
-          productName: product,
-          contentName: contentName
-        }
-      });
     }
   };
 
   const handleCancel = () => {
     // Clear form or navigate back
     navigate("/dashboard");
+  };
+
+  const handleThinkModeSend = async () => {
+    if (!thinkModeInput.trim() || isThinking) return;
+    
+    const userMessage = { role: 'user', content: thinkModeInput };
+    setThinkModeMessages(prev => [...prev, userMessage]);
+    setThinkModeInput("");
+    setIsThinking(true);
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/think-mode-chat`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({ 
+            messages: [...thinkModeMessages, userMessage]
+          })
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 429 || response.status === 402) {
+          const error = await response.json();
+          toast({
+            title: "AI Unavailable",
+            description: error.error,
+            variant: "destructive"
+          });
+          setIsThinking(false);
+          return;
+        }
+        throw new Error('Failed to get AI response');
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No response body');
+      
+      const decoder = new TextDecoder();
+      let aiMessage = "";
+      let aiMessageIndex = -1;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n').filter(line => line.trim().startsWith('data:'));
+        
+        for (const line of lines) {
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') continue;
+          
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content;
+            
+            if (content) {
+              aiMessage += content;
+              
+              setThinkModeMessages(prev => {
+                const updated = [...prev];
+                
+                if (aiMessageIndex === -1) {
+                  updated.push({ role: 'assistant', content: aiMessage });
+                  aiMessageIndex = updated.length - 1;
+                } else {
+                  updated[aiMessageIndex].content = aiMessage;
+                }
+                
+                return updated;
+              });
+            }
+          } catch (parseError) {
+            console.error('Error parsing SSE:', parseError);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Think Mode error:', error);
+      toast({
+        title: "Chat error",
+        description: "Failed to connect to AI. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsThinking(false);
+    }
   };
 
   return (
@@ -229,21 +336,85 @@ Some journeys begin with a single breath.`;
                 </Button>
               </div>
 
+              {/* Input Area Wrapper */}
+              {thinkModeMessages.length > 0 && (
+                <div className="mb-6 space-y-4 max-h-96 overflow-y-auto">
+                  {thinkModeMessages.map((msg, index) => (
+                    <div 
+                      key={index} 
+                      className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div 
+                        className={`max-w-[80%] p-4 rounded-lg ${
+                          msg.role === 'user' 
+                            ? 'bg-warm-gray/10 text-ink-black' 
+                            : 'bg-brass/10 text-ink-black'
+                        }`}
+                      >
+                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {isThinking && (
+                    <div className="flex justify-start">
+                      <div className="bg-brass/10 p-4 rounded-lg">
+                        <div className="flex gap-1">
+                          <span className="w-2 h-2 bg-brass rounded-full animate-bounce" />
+                          <span className="w-2 h-2 bg-brass rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                          <span className="w-2 h-2 bg-brass rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {thinkModeMessages.length > 0 && (
+                <Button
+                  onClick={() => {
+                    setThinkModeExpanded(false);
+                    toast({
+                      title: "Fill out the brief below",
+                      description: "Use the form to finalize your content request"
+                    });
+                  }}
+                  variant="outline"
+                  className="w-full mb-4 border-brass text-brass hover:bg-brass/10"
+                >
+                  Ready to Fill Out the Brief
+                </Button>
+              )}
+
               {/* Input Area */}
               <div className="relative">
                 <Textarea
                   value={thinkModeInput}
                   onChange={(e) => setThinkModeInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleThinkModeSend();
+                    }
+                  }}
                   placeholder="Type your thoughts here..."
-                  className="min-h-[120px] pr-12 bg-vellum-cream border-warm-gray/20 text-ink-black"
+                  className="min-h-[120px] pr-12 bg-vellum-cream border-warm-gray/20 text-ink-black resize-none"
                 />
                 <Button
+                  onClick={handleThinkModeSend}
+                  disabled={!thinkModeInput.trim() || isThinking}
                   className="absolute bottom-3 right-3 bg-gradient-to-r from-brass to-brass-glow hover:opacity-90 text-white"
                   size="icon"
                 >
-                  <Send className="w-4 h-4" />
+                  {isThinking ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
                 </Button>
               </div>
+              <p className="text-xs text-warm-gray/70 mt-2">
+                Press Enter to send • Shift + Enter for new line
+              </p>
             </div>
           </div>
         )}
@@ -392,18 +563,24 @@ Some journeys begin with a single breath.`;
 
             {/* Additional Editorial Direction - Optional */}
             <div>
-              <Label htmlFor="context" className="text-base mb-2 text-ink-black">
-                Additional Editorial Direction
-              </Label>
+              <div className="flex items-center justify-between mb-2">
+                <Label htmlFor="context" className="text-base text-ink-black">
+                  Additional Editorial Direction
+                </Label>
+                <span className="text-xs text-warm-gray/70">
+                  {additionalContext.length} / 1000 characters
+                </span>
+              </div>
               <Textarea
                 id="context"
                 value={additionalContext}
                 onChange={(e) => setAdditionalContext(e.target.value)}
                 placeholder="Provide specific requirements or creative mandates..."
                 className="mt-2 min-h-[120px] bg-vellum-cream border-warm-gray/20 text-ink-black"
+                maxLength={1000}
               />
               <p className="text-xs italic mt-2 text-warm-gray/70">
-                Any specific themes, angles, seasonal notes, or key messages to include
+                Any specific themes, angles, seasonal notes, or key messages to include (max 1000 characters)
               </p>
             </div>
           </div>

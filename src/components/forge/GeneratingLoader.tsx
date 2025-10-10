@@ -25,7 +25,6 @@ export function GeneratingLoader() {
           />
         </div>
 
-        {/* Main text */}
         <h2 
           className="text-3xl font-serif mb-3" 
           style={{ color: "#1A1816" }}
@@ -38,7 +37,7 @@ export function GeneratingLoader() {
           className="text-base" 
           style={{ color: "#6B6560" }}
         >
-          This will only take a moment
+          This usually takes 10-15 seconds
         </p>
       </div>
     </motion.div>,

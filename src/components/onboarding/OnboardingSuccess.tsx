@@ -1,6 +1,8 @@
-import { Check, Sparkles, ArrowRight, BookOpen } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Check, Sparkles, ArrowRight, BookOpen, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OnboardingSuccessProps {
   brandData: any;
@@ -8,6 +10,31 @@ interface OnboardingSuccessProps {
 }
 
 export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessProps) {
+  const [sampleContent, setSampleContent] = useState<string | null>(null);
+  const [isGeneratingSample, setIsGeneratingSample] = useState(false);
+
+  useEffect(() => {
+    const generateSample = async () => {
+      setIsGeneratingSample(true);
+      try {
+        const { data } = await supabase.functions.invoke('generate-with-claude', {
+          body: {
+            prompt: `Write a 100-word brand introduction for ${brandData.brandName}, a ${brandData.industry} brand. Focus on brand essence and what makes them unique. Keep it elegant and concise.`,
+            organizationId: brandData.organizationId,
+            mode: "generate",
+            styleOverlay: "TARIFE_NATIVE"
+          }
+        });
+        if (data?.generatedContent) setSampleContent(data.generatedContent);
+      } catch (error) {
+        console.error('Sample generation error:', error);
+      } finally {
+        setIsGeneratingSample(false);
+      }
+    };
+    if (brandData.organizationId) generateSample();
+  }, [brandData]);
+
   return (
     <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
       {/* Animated Background */}
@@ -62,19 +89,28 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
         <div className="mb-12 p-8 rounded-lg border border-border/40 bg-card paper-texture">
           <div className="flex items-start justify-between mb-4">
             <Badge variant="secondary" className="bg-brass/10 text-brass">
-              Blog Post
+              {isGeneratingSample ? "Generating Sample..." : "Sample Output"}
             </Badge>
           </div>
           <h2 className="font-serif text-2xl text-foreground mb-3">
-            Welcome to {brandData.brandName}'s Content Journey
+            {brandData.brandName}
           </h2>
-          <p className="text-muted-foreground leading-relaxed mb-4">
-            Your brand's story begins here. With Scriptora's AI-powered platform, you'll create content that captures the essence of {brandData.brandName}, 
-            maintaining consistency across every channel while adapting to each platform's unique voice.
-          </p>
-          <p className="text-xs text-muted-foreground">
-            ✨ Generated using {brandData.brandName}'s brand guidelines and voice
-          </p>
+          
+          {isGeneratingSample ? (
+            <div className="flex items-center gap-2 py-4 text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin text-brass" />
+              <span className="text-sm">Generating sample content with your brand voice...</span>
+            </div>
+          ) : (
+            <>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                {sampleContent || `Your brand's story begins here. With Scriptora's AI-powered platform, you'll create content that captures the essence of ${brandData.brandName}, maintaining consistency across every channel.`}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                ✨ {sampleContent ? `Generated using ${brandData.brandName}'s brand guidelines and voice` : 'Sample content'}
+              </p>
+            </>
+          )}
         </div>
 
         {/* Quick Tips */}

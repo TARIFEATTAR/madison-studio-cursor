@@ -4,6 +4,7 @@ import { ArrowLeft, Save, Check, Loader2, MessageSquare, Bold, Italic, Underline
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
+import QualityRating from "@/components/QualityRating";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useToast } from "@/hooks/use-toast";
 import { AnimatePresence } from "framer-motion";
@@ -36,6 +37,7 @@ export default function ContentEditorPage() {
   const [selectedFont, setSelectedFont] = useState('cormorant');
   const [wordCount, setWordCount] = useState(0);
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const [qualityRating, setQualityRating] = useState(0);
 
   // Callback ref to ensure the editable div is mounted before we try to set content
   const attachEditableRef = useCallback((element: HTMLDivElement | null) => {
@@ -97,6 +99,7 @@ export default function ContentEditorPage() {
           setTitle(data.title || "Untitled Content");
           setContentType(data.content_type || "Blog Post");
           setContentId(data.id);
+          setQualityRating(data.quality_rating || 0);
           setIsLoading(false);
           return;
         } catch (error) {
@@ -233,11 +236,32 @@ export default function ContentEditorPage() {
   const canRedo = historyIndexRef.current < historyRef.current.length - 1;
 
   const handleSave = async () => {
-    await forceSave();
-    toast({
-      title: "Saved",
-      description: "Your content has been saved successfully",
-    });
+    if (contentId) {
+      const { error } = await supabase
+        .from('master_content')
+        .update({ 
+          full_content: editableContent,
+          quality_rating: qualityRating > 0 ? qualityRating : null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', contentId);
+      
+      if (error) {
+        toast({ 
+          title: "Save failed", 
+          description: error.message,
+          variant: "destructive" 
+        });
+      } else {
+        toast({ title: "Saved successfully" });
+      }
+    } else {
+      await forceSave();
+      toast({
+        title: "Saved",
+        description: "Your content has been saved successfully",
+      });
+    }
   };
 
   const handleNextToMultiply = async () => {
@@ -453,6 +477,11 @@ export default function ContentEditorPage() {
             <span className="text-sm text-muted-foreground mx-2">
               {wordCount} words
             </span>
+
+            <QualityRating 
+              rating={qualityRating} 
+              onRatingChange={setQualityRating} 
+            />
 
             <Button
               onClick={handleSave}
