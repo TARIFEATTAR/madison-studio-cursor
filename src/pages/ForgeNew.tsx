@@ -1,0 +1,346 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Lightbulb, FileText, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { ThinkModeDialog } from "@/components/forge/ThinkModeDialog";
+import { NameContentDialog } from "@/components/forge/NameContentDialog";
+
+export default function ForgeNew() {
+  const navigate = useNavigate();
+  
+  // Form state
+  const [product, setProduct] = useState("");
+  const [format, setFormat] = useState("");
+  const [audience, setAudience] = useState("");
+  const [goal, setGoal] = useState("");
+  const [style, setStyle] = useState("tarife-native");
+  const [additionalContext, setAdditionalContext] = useState("");
+  
+  // Dialog state
+  const [thinkModeOpen, setThinkModeOpen] = useState(false);
+  const [nameDialogOpen, setNameDialogOpen] = useState(false);
+
+  const handleSubmit = () => {
+    // Validate required fields
+    if (!product || !format) {
+      return;
+    }
+    
+    // Open name dialog
+    setNameDialogOpen(true);
+  };
+
+  const handleGenerateContent = (contentName: string) => {
+    // TODO: Call AI to generate content
+    const mockContent = `The souk falls quiet for just a moment. Between the calls of merchants and the shuffle of silk scarves against weathered stone, you catch it—that unmistakable breath of night-blooming jasmine drifting from a hidden courtyard.
+
+You've been here before, in dreams perhaps, or in the pages of a book that transported you far from wherever you started this morning. The air carries secrets: rose petals crushed underfoot in Damascus gardens, amber warming in desert sun, the whisper of musk that clings to ancient walls.
+
+This is not just fragrance. This is passage—to places where time slows, where senses sharpen, where memory and imagination converge.
+
+${format === "product" ? "The Product—" + product + "—invites you into this journey." : ""}
+
+${goal === "storytelling" ? "This is a story told in scent, an invitation to wander beyond the familiar." : ""}
+
+Some journeys begin with a single breath.`;
+
+    // Navigate to editor with generated content
+    navigate("/editor", {
+      state: {
+        content: mockContent,
+        contentType: format,
+        productName: product,
+        contentName: contentName
+      }
+    });
+  };
+
+  const handleCancel = () => {
+    // Clear form or navigate back
+    navigate("/dashboard");
+  };
+
+  return (
+    <div className="min-h-screen pb-20" style={{ backgroundColor: "#F5F1E8" }}>
+      <div className="max-w-5xl mx-auto px-6 py-8">
+        {/* Think Mode Banner */}
+        <div
+          className="p-6 mb-8 rounded-lg"
+          style={{
+            backgroundColor: "#F5F1E8",
+            border: "2px dashed #D4CFC8"
+          }}
+        >
+          <div className="flex items-start gap-4">
+            <Lightbulb className="w-6 h-6 flex-shrink-0 mt-1" style={{ color: "#B8956A" }} />
+            <div className="flex-1">
+              <h3 className="font-semibold text-lg mb-1" style={{ color: "#1A1816" }}>
+                Not sure where to start? Try Think Mode
+              </h3>
+              <p className="text-sm mb-3" style={{ color: "#6B6560" }}>
+                Brainstorm with AI before filling out the brief. No pressure, just ideas.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => setThinkModeOpen(true)}
+                className="gap-2"
+                style={{
+                  borderColor: "#B8956A",
+                  color: "#B8956A"
+                }}
+              >
+                <Lightbulb className="w-4 h-4" />
+                <span>Open Think Mode</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Form */}
+        <div>
+          {/* Header */}
+          <div className="mb-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: "#B8956A" }}
+              >
+                <FileText className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-serif" style={{ color: "#1A1816" }}>
+                  Commission Copy
+                </h1>
+                <p className="text-lg mt-1" style={{ color: "#6B6560" }}>
+                  Quick brief to generate your content
+                </p>
+              </div>
+            </div>
+            <p className="text-base" style={{ color: "#6B6560" }}>
+              Choose your product and format. Add optional details for more targeted content. Our AI will handle the rest.
+            </p>
+          </div>
+
+          {/* Form Container */}
+          <div
+            className="p-8 rounded-xl border space-y-6"
+            style={{
+              backgroundColor: "#FFFCF5",
+              borderColor: "#D4CFC8"
+            }}
+          >
+            {/* Product - Required */}
+            <div>
+              <Label htmlFor="product" className="text-base mb-2" style={{ color: "#1A1816" }}>
+                Product <span style={{ color: "#B8956A" }}>*</span>
+              </Label>
+              <Select value={product} onValueChange={setProduct}>
+                <SelectTrigger
+                  id="product"
+                  className="mt-2"
+                  style={{
+                    backgroundColor: "#FFFCF5",
+                    borderColor: "#D4CFC8"
+                  }}
+                >
+                  <SelectValue placeholder="Select product..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="noir-invites">Noir—Invites</SelectItem>
+                  <SelectItem value="lumiere-captures">Lumière—Captures</SelectItem>
+                  <SelectItem value="jardin-secret">Jardin Secret</SelectItem>
+                  <SelectItem value="ombre-delicat">Ombre—Délicat</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Deliverable Format - Required */}
+            <div>
+              <Label htmlFor="format" className="text-base mb-2" style={{ color: "#1A1816" }}>
+                Deliverable Format <span style={{ color: "#B8956A" }}>*</span>
+              </Label>
+              <Select value={format} onValueChange={setFormat}>
+                <SelectTrigger
+                  id="format"
+                  className="mt-2"
+                  style={{
+                    backgroundColor: "#FFFCF5",
+                    borderColor: "#D4CFC8"
+                  }}
+                >
+                  <SelectValue placeholder="Select format..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="blog-post">Blog Post</SelectItem>
+                  <SelectItem value="email">Email Newsletter</SelectItem>
+                  <SelectItem value="story">Product Story</SelectItem>
+                  <SelectItem value="social">Social Media Post</SelectItem>
+                  <SelectItem value="description">Product Description</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Target Audience - Optional */}
+            <div>
+              <Label htmlFor="audience" className="text-base mb-2" style={{ color: "#1A1816" }}>
+                Target Audience
+              </Label>
+              <Select value={audience} onValueChange={setAudience}>
+                <SelectTrigger
+                  id="audience"
+                  className="mt-2"
+                  style={{
+                    backgroundColor: "#FFFCF5",
+                    borderColor: "#D4CFC8"
+                  }}
+                >
+                  <SelectValue placeholder="Select audience..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="luxury">Luxury Consumers</SelectItem>
+                  <SelectItem value="wellness">Wellness Enthusiasts</SelectItem>
+                  <SelectItem value="gifts">Gift Shoppers</SelectItem>
+                  <SelectItem value="connoisseurs">Fragrance Connoisseurs</SelectItem>
+                  <SelectItem value="new">New Customers</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs italic mt-2" style={{ color: "#A8A39E" }}>
+                Who is this content for? Helps AI tailor message and tone
+              </p>
+            </div>
+
+            {/* Content Goal - Optional */}
+            <div>
+              <Label htmlFor="goal" className="text-base mb-2" style={{ color: "#1A1816" }}>
+                Content Goal
+              </Label>
+              <Select value={goal} onValueChange={setGoal}>
+                <SelectTrigger
+                  id="goal"
+                  className="mt-2"
+                  style={{
+                    backgroundColor: "#FFFCF5",
+                    borderColor: "#D4CFC8"
+                  }}
+                >
+                  <SelectValue placeholder="Select goal..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sales">Drive Sales</SelectItem>
+                  <SelectItem value="awareness">Build Awareness</SelectItem>
+                  <SelectItem value="educate">Educate Audience</SelectItem>
+                  <SelectItem value="nurture">Nurture Relationships</SelectItem>
+                  <SelectItem value="launch">Launch Product</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs italic mt-2" style={{ color: "#A8A39E" }}>
+                What should this content achieve? Guides AI on CTA and focus
+              </p>
+            </div>
+
+            {/* Style Overlay - Optional */}
+            <div>
+              <Label htmlFor="style" className="text-base mb-2" style={{ color: "#1A1816" }}>
+                Style Overlay
+              </Label>
+              <Select value={style} onValueChange={setStyle}>
+                <SelectTrigger
+                  id="style"
+                  className="mt-2"
+                  style={{
+                    backgroundColor: "#FFFCF5",
+                    borderColor: "#D4CFC8"
+                  }}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tarife-native">Tarife—Brand (Default)</SelectItem>
+                  <SelectItem value="poetic">Poetic & Evocative</SelectItem>
+                  <SelectItem value="direct">Direct & Practical</SelectItem>
+                  <SelectItem value="story">Storytelling & Narrative</SelectItem>
+                  <SelectItem value="minimal">Minimal & Modern</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs italic mt-2" style={{ color: "#A8A39E" }}>
+                Choose the writing style that best fits your content needs
+              </p>
+            </div>
+
+            {/* Additional Editorial Direction - Optional */}
+            <div>
+              <Label htmlFor="context" className="text-base mb-2" style={{ color: "#1A1816" }}>
+                Additional Editorial Direction
+              </Label>
+              <Textarea
+                id="context"
+                value={additionalContext}
+                onChange={(e) => setAdditionalContext(e.target.value)}
+                placeholder="Provide specific requirements or creative mandates..."
+                className="mt-2 min-h-[120px]"
+                style={{
+                  backgroundColor: "#F5F1E8",
+                  borderColor: "#D4CFC8",
+                  color: "#1A1816"
+                }}
+              />
+              <p className="text-xs italic mt-2" style={{ color: "#A8A39E" }}>
+                Any specific themes, angles, seasonal notes, or key messages to include
+              </p>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div
+            className="mt-6 pt-6 flex items-center justify-between"
+            style={{ borderTop: "1px solid #D4CFC8" }}
+          >
+            <Button
+              variant="ghost"
+              onClick={handleCancel}
+              style={{ color: "#6B6560" }}
+            >
+              Cancel
+            </Button>
+
+            <div className="text-right">
+              <Button
+                onClick={handleSubmit}
+                disabled={!product || !format}
+                className="gap-2 px-8"
+                style={{
+                  background: "linear-gradient(to-right, #B8956A, #D4AF85)",
+                  color: "#1A1816"
+                }}
+              >
+                <Sparkles className="w-5 h-5" />
+                <span className="text-base font-semibold">Commission Copy</span>
+              </Button>
+              <p className="text-xs mt-2" style={{ color: "#A8A39E" }}>
+                Headlines and subjects will be AI-generated. You'll refine in the editor.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Dialogs */}
+      <ThinkModeDialog open={thinkModeOpen} onOpenChange={setThinkModeOpen} />
+      <NameContentDialog
+        open={nameDialogOpen}
+        onOpenChange={setNameDialogOpen}
+        onConfirm={handleGenerateContent}
+      />
+    </div>
+  );
+}
