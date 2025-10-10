@@ -310,7 +310,7 @@ const Landing = () => {
               <ul className="space-y-2 text-sm">
                 <li><Link to="/dashboard" className="text-parchment-white/70 hover:text-aged-brass transition-colors">The Archives</Link></li>
                 <li><Link to="/create" className="text-parchment-white/70 hover:text-aged-brass transition-colors">Create</Link></li>
-                <li><Link to="/repurpose" className="text-parchment-white/70 hover:text-aged-brass transition-colors">Multiply</Link></li>
+                <li><Link to="/multiply" className="text-parchment-white/70 hover:text-aged-brass transition-colors">Multiply</Link></li>
                 <li><Link to="/schedule" className="text-parchment-white/70 hover:text-aged-brass transition-colors">Schedule</Link></li>
               </ul>
             </div>

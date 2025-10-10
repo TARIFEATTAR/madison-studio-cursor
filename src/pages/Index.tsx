@@ -181,22 +181,22 @@ const Index = () => {
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Link to="/archive" className="group">
+                  <Link to="/templates" className="group">
                     <div className="card-editorial h-full">
                       <div className="flex items-center gap-4 mb-5">
                         <div className="bg-brass/10 w-16 h-16 rounded-lg flex items-center justify-center group-hover:bg-brass/20 transition-colors">
-                          <Archive className="w-8 h-8 text-brass" />
+                          <FileText className="w-8 h-8 text-brass" />
                         </div>
-                        <h3 className="font-serif text-3xl font-bold text-foreground">The Vault</h3>
+                        <h3 className="font-serif text-3xl font-bold text-foreground">Templates</h3>
                       </div>
                       <p className="text-regular text-muted-foreground leading-relaxed font-serif">
-                        Your complete anthology of archived campaigns. A permanent record of your brand's published legacy.
+                        Your collection of editorial templates. Proven frameworks for every content format.
                       </p>
                     </div>
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Archive of completed works</p>
+                  <p>Content templates & frameworks</p>
                 </TooltipContent>
               </Tooltip>
 
