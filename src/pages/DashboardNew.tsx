@@ -137,66 +137,69 @@ export default function DashboardNew() {
         )}
 
         {/* Content Bank */}
-        <Card className="p-6 bg-white border border-ink-black/10 shadow-level-1">
-          <div className="flex items-center justify-between mb-6">
+        <div className="bg-parchment-white border border-warm-gray/20 rounded-xl p-6">
+          
+          {/* Header - Cleaner */}
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-warm-gray/20">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-aged-brass/10 rounded-lg flex items-center justify-center">
-                <Archive className="w-5 h-5 text-aged-brass" />
-              </div>
-              <div>
-                <h3 className="text-xl font-serif font-semibold text-ink-black">Content Bank</h3>
-                <p className="text-warm-gray text-sm">Ready to schedule or review</p>
-              </div>
+              <Archive className="w-5 h-5 text-brass" />
+              <h3 className="font-serif text-xl font-medium text-ink-black">Content Bank</h3>
             </div>
             <button 
               onClick={() => navigate('/library')}
-              className="text-aged-brass hover:text-antique-gold font-semibold text-sm transition-colors"
+              className="text-sm text-brass hover:text-brass-glow font-medium transition-colors"
             >
               View All →
             </button>
           </div>
 
-          <div className="space-y-3">
+          {/* Content Items */}
+          <div className="space-y-2">
             {[
               { 
                 icon: Instagram,
-                title: "Noir-de-Nuit-Nuil Instagram Post",
+                title: "Noir-de-Nuit Instagram Post",
                 count: "4 pieces ready",
-                color: "text-purple-600 bg-purple-50"
+                color: "bg-purple-100 text-purple-600"
               },
               { 
                 icon: Mail,
                 title: "Lumière Dusk Email Campaign",
                 count: "3 pieces ready",
-                color: "text-blue-600 bg-blue-50"
+                color: "bg-blue-100 text-blue-600"
               },
               { 
                 icon: Twitter,
                 title: "Jardin-Secret Twitter Thread",
                 count: "8 pieces ready",
-                color: "text-sky-600 bg-sky-50"
+                color: "bg-sky-100 text-sky-600"
               },
             ].map((item, index) => (
               <div 
                 key={index}
-                className="flex items-center justify-between p-4 bg-vellum-cream rounded-lg hover:bg-parchment-white transition-colors"
+                className="flex items-center gap-4 p-4 rounded-lg hover:bg-vellum-cream transition-all cursor-pointer group"
               >
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-lg ${item.color} flex items-center justify-center`}>
-                    <item.icon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-ink-black">{item.title}</p>
-                    <p className="text-sm text-warm-gray">{item.count}</p>
-                  </div>
+                
+                <div className={`w-12 h-12 rounded-lg ${item.color} flex items-center justify-center flex-shrink-0`}>
+                  <item.icon className="w-6 h-6" />
                 </div>
-                <Badge className="bg-green-500/10 text-green-700 border-green-500/20 hover:bg-green-500/20">
-                  ready
-                </Badge>
+
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium text-charcoal mb-1 group-hover:text-brass transition-colors">
+                    {item.title}
+                  </h4>
+                  <p className="text-xs text-warm-gray">{item.count}</p>
+                </div>
+
+                {/* Badge - More Subtle */}
+                <div className="px-3 py-1 bg-brass/10 text-brass text-xs font-medium rounded-full">
+                  Ready
+                </div>
+
               </div>
             ))}
           </div>
-        </Card>
+        </div>
 
         {/* Recent Activity & Insights */}
         <div className="bg-white rounded-xl border border-warm-gray/20 p-8 shadow-level-1">
