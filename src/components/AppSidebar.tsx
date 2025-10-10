@@ -1,5 +1,8 @@
-import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft } from "lucide-react";
+import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, LogOut } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import {
   Sidebar,
   SidebarContent,
@@ -56,6 +59,40 @@ export function AppSidebar() {
   const { open, toggleSidebar } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Signed out successfully",
+        description: "You have been logged out of your account",
+      });
+      navigate("/auth");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast({
+        title: "Error signing out",
+        description: "There was a problem signing you out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Get user display info
+  const getUserInitials = () => {
+    if (!user?.email) return "U";
+    return user.email.substring(0, 2).toUpperCase();
+  };
+
+  const getUserDisplay = () => {
+    if (!user?.email) return "User";
+    // Get the part before @ in email
+    const emailName = user.email.split("@")[0];
+    // Capitalize first letter
+    return emailName.charAt(0).toUpperCase() + emailName.slice(1);
+  };
 
   const isActive = (path: string) => {
     if (path === "/" && location.pathname === "/") return true;
@@ -177,20 +214,30 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-white/10 p-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-aged-brass rounded-full flex items-center justify-center text-ink-black font-bold text-sm shrink-0">
-            SB
+            {getUserInitials()}
           </div>
           {open && (
             <div className="flex-1 min-w-0">
-              <p className="text-white text-sm font-semibold truncate">Sample Brand</p>
-              <p className="text-white/60 text-xs">Premium Plan</p>
+              <p className="text-white text-sm font-semibold truncate">{getUserDisplay()}</p>
+              <p className="text-white/60 text-xs truncate">{user?.email}</p>
             </div>
           )}
           <button 
             onClick={() => navigate('/settings')}
             className="text-white/60 hover:text-aged-brass p-2 rounded-lg hover:bg-white/5 transition-all duration-200 hover:drop-shadow-[0_0_8px_rgba(184,149,106,0.3)]"
+            title="Settings"
           >
             <Settings className="w-5 h-5" />
           </button>
+          {open && (
+            <button 
+              onClick={handleSignOut}
+              className="text-white/60 hover:text-red-400 p-2 rounded-lg hover:bg-white/5 transition-all duration-200"
+              title="Sign Out"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </SidebarFooter>
     </Sidebar>
