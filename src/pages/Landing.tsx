@@ -8,6 +8,7 @@ import archivesIcon from "@/assets/archives-icon.png";
 import createIcon from "@/assets/create-icon.png";
 import multiplyIcon from "@/assets/multiply-icon.png";
 import scheduleIcon from "@/assets/schedule-icon.png";
+import scriptoraLogo from "@/assets/scriptora-logo-icon.png";
 
 const Landing = () => {
   const { user } = useAuth();
@@ -19,8 +20,8 @@ const Landing = () => {
         <div className="container mx-auto px-6 py-4">
           <nav className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg border-2 border-aged-brass/30 bg-parchment-white flex items-center justify-center">
-                <span className="text-xl font-serif font-bold text-aged-brass">S</span>
+              <div className="w-12 h-12 rounded-lg border-2 border-aged-brass/30 bg-parchment-white flex items-center justify-center p-2">
+                <img src={scriptoraLogo} alt="Scriptora" className="w-full h-full object-contain" />
               </div>
               <div>
                 <div className="font-serif font-bold text-lg text-ink-black">Scriptora</div>
