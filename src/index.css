@@ -337,55 +337,55 @@
 
 .hero-text-block {
   max-width: 640px;
+  padding-top: 40px;
   padding-right: 60px; /* Keep text away from right edge */
 }
 
 /* Headline Styling */
 .hero-headline {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 64px; /* Increased from ~48px */
+  font-size: 64px;
   font-weight: 600;
-  line-height: 1.1; /* Tighter, more editorial */
+  line-height: 1.1;
   letter-spacing: -0.02em;
   color: hsl(48, 100%, 99%); /* Parchment white */
-  margin-bottom: 20px; /* Less gap before subheadline */
+  margin-bottom: 20px;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3); /* Subtle depth */
 }
 
 .headline-accent {
   display: block;
   font-size: 72px; /* Larger than main headline */
-  color: hsl(42, 77%, 70%); /* Antique gold */
-  margin-top: 8px;
-  /* Optional: Add subtle glow effect */
+  color: hsl(42, 77%, 75%); /* Brighter gold */
+  margin-top: 4px;
   text-shadow: 
-    0 0 20px rgba(212, 175, 55, 0.4),
+    0 0 30px rgba(212, 175, 55, 0.4),
     0 2px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* Subheadline Styling */
 .hero-subheadline {
   font-family: 'Lato', sans-serif;
-  font-size: clamp(16px, 2vw, 20px);
-  line-height: 1.7;
+  font-size: 20px;
+  line-height: 1.6;
   color: hsl(48, 100%, 95%); /* Slightly off-white */
-  margin-bottom: 32px;
-  max-width: 540px;
+  margin-bottom: 36px;
+  max-width: 560px;
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4); /* Text legibility */
 }
 
 /* CTA Buttons */
 .hero-ctas {
   display: flex;
-  gap: 16px;
+  gap: 20px;
   flex-wrap: wrap;
 }
 
 .btn-primary-brass {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 600;
-  padding: 16px 40px;
+  padding: 18px 48px;
   background: linear-gradient(135deg, #B8956A 0%, #D4AF37 100%);
   color: hsl(0, 0%, 5%); /* Ink black */
   border: none;
@@ -403,9 +403,9 @@
 
 .btn-secondary-ghost {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 600;
-  padding: 16px 40px;
+  padding: 18px 48px;
   background: transparent;
   color: hsl(48, 100%, 99%);
   border: 2px solid hsl(48, 100%, 99%);
