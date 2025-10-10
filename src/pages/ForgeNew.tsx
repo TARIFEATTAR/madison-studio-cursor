@@ -263,31 +263,31 @@ export default function ForgeNew() {
   return (
     <div className="min-h-screen pb-20 bg-vellum-cream">
       <div className="max-w-5xl mx-auto px-6 py-10">
-        {/* Think Mode - Inline Expandable */}
-        {!thinkModeExpanded ? (
-          <div
-            onClick={() => setThinkModeExpanded(true)}
-            className="mb-8 rounded-xl cursor-pointer transition-all hover:opacity-90 bg-parchment-white border-2 border-dashed border-brass"
-          >
-            <div className="p-6 flex items-center gap-4">
-              <Lightbulb className="w-6 h-6 text-brass" />
-              <div>
-                <h3 className="font-semibold text-lg text-ink-black">
-                  Not sure where to start? Try Think Mode
-                </h3>
-                <p className="text-sm text-warm-gray">
-                  Brainstorm with AI before filling out the brief. No pressure, just ideas.
-                </p>
+          {/* Think Mode - Inline Expandable */}
+          {!thinkModeExpanded ? (
+            <div
+              onClick={() => setThinkModeExpanded(true)}
+              className="mb-8 rounded-xl cursor-pointer transition-all hover:opacity-90 bg-parchment-white border-2 border-dashed border-brass"
+            >
+              <div className="p-6 flex items-center gap-4">
+                <Lightbulb className="w-6 h-6 text-brass" />
+                <div>
+                  <h3 className="font-semibold text-lg text-ink-black">
+                    Not sure where to start? Ask Madison
+                  </h3>
+                  <p className="text-sm text-warm-gray">
+                    Brainstorm with your Editorial Director before filling out the brief. No pressure, just ideas.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
         ) : (
           <div className="mb-8 rounded-xl overflow-hidden border border-warm-gray/20">
             {/* Header */}
             <div className="p-4 flex items-center justify-between bg-gradient-to-r from-brass to-brass-glow">
               <div className="flex items-center gap-3">
                 <Lightbulb className="w-5 h-5 text-white" />
-                <h3 className="font-semibold text-white">Think Mode</h3>
+                <h3 className="font-semibold text-white">Think Mode with Madison</h3>
               </div>
               <button
                 onClick={() => setThinkModeExpanded(false)}
@@ -304,10 +304,10 @@ export default function ForgeNew() {
                   <Lightbulb className="w-8 h-8 text-brass" />
                 </div>
                 <h4 className="text-2xl font-serif mb-3 text-ink-black">
-                  What's on your mind?
+                  Madison's here to help
                 </h4>
                 <p className="text-base text-warm-gray">
-                  Share your ideas, questions, or creative direction. I'll help you explore and refine them.
+                  Share your ideas, questions, or creative direction. Your Editorial Director will help you explore and refine them.
                 </p>
               </div>
 

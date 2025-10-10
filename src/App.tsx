@@ -19,6 +19,7 @@ import Templates from "./pages/Templates";
 import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import MeetMadison from "./pages/MeetMadison";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -68,7 +69,8 @@ const AppContent = () => {
                 <Route path="/multiply" element={<ProtectedRoute><Repurpose /></ProtectedRoute>} />
                 <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
                 <Route path="/schedule" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
-                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/meet-madison" element={<ProtectedRoute><MeetMadison /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
