@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { IndustrySelector } from "./IndustrySelector";
 
 interface BrandGuidelines {
   brand_name?: string;
@@ -101,95 +102,99 @@ export function BrandGuidelinesTab() {
   };
 
   return (
-    <div className="bg-paper-light border border-cream-dark rounded-xl p-8">
-      <h2 className="text-2xl font-serif text-charcoal mb-6">Brand Identity</h2>
+    <div className="space-y-6">
+      <IndustrySelector />
 
-      <div className="space-y-6">
-        {/* Brand Name */}
-        <div className="space-y-2">
-          <Label htmlFor="brand-name" className="text-neutral-600">
-            Brand Name
-          </Label>
-          <Input
-            id="brand-name"
-            value={guidelines.brand_name}
-            onChange={(e) => setGuidelines({ ...guidelines, brand_name: e.target.value })}
-            className="bg-paper-light border-cream-dark"
-          />
+      <div className="bg-paper-light border border-cream-dark rounded-xl p-8">
+        <h2 className="text-2xl font-serif text-charcoal mb-6">Brand Identity</h2>
+
+        <div className="space-y-6">
+          {/* Brand Name */}
+          <div className="space-y-2">
+            <Label htmlFor="brand-name" className="text-neutral-600">
+              Brand Name
+            </Label>
+            <Input
+              id="brand-name"
+              value={guidelines.brand_name}
+              onChange={(e) => setGuidelines({ ...guidelines, brand_name: e.target.value })}
+              className="bg-paper-light border-cream-dark"
+            />
+          </div>
+
+          {/* Brand Voice & Tone */}
+          <div className="space-y-2">
+            <Label htmlFor="brand-voice" className="text-neutral-600">
+              Brand Voice & Tone
+            </Label>
+            <Textarea
+              id="brand-voice"
+              value={guidelines.brand_voice}
+              onChange={(e) => setGuidelines({ ...guidelines, brand_voice: e.target.value })}
+              placeholder="Describe your brand's voice and tone..."
+              className="min-h-[100px] bg-paper border-cream-dark resize-none"
+            />
+            <p className="text-xs text-neutral-500">
+              This guides the AI in generating on-brand content
+            </p>
+          </div>
+
+          {/* Forbidden Phrases */}
+          <div className="space-y-2">
+            <Label htmlFor="forbidden-phrases" className="text-neutral-600">
+              Forbidden Phrases
+            </Label>
+            <Textarea
+              id="forbidden-phrases"
+              value={guidelines.forbidden_phrases}
+              onChange={(e) => setGuidelines({ ...guidelines, forbidden_phrases: e.target.value })}
+              placeholder="List phrases to avoid (comma-separated)..."
+              className="min-h-[100px] bg-paper border-cream-dark resize-none"
+            />
+            <p className="text-xs text-neutral-500">
+              The AI will avoid using these phrases in generated content
+            </p>
+          </div>
+
+          {/* Brand Story */}
+          <div className="space-y-2">
+            <Label htmlFor="brand-story" className="text-neutral-600">
+              Brand Story
+            </Label>
+            <Textarea
+              id="brand-story"
+              value={guidelines.brand_story}
+              onChange={(e) => setGuidelines({ ...guidelines, brand_story: e.target.value })}
+              placeholder="Tell your brand's story..."
+              className="min-h-[150px] bg-paper border-cream-dark resize-none"
+            />
+          </div>
+
+          {/* Target Audience */}
+          <div className="space-y-2">
+            <Label htmlFor="target-audience" className="text-neutral-600">
+              Target Audience
+            </Label>
+            <Textarea
+              id="target-audience"
+              value={guidelines.target_audience}
+              onChange={(e) => setGuidelines({ ...guidelines, target_audience: e.target.value })}
+              placeholder="Describe your ideal customer..."
+              className="min-h-[100px] bg-paper border-cream-dark resize-none"
+            />
+          </div>
         </div>
 
-        {/* Brand Voice & Tone */}
-        <div className="space-y-2">
-          <Label htmlFor="brand-voice" className="text-neutral-600">
-            Brand Voice & Tone
-          </Label>
-          <Textarea
-            id="brand-voice"
-            value={guidelines.brand_voice}
-            onChange={(e) => setGuidelines({ ...guidelines, brand_voice: e.target.value })}
-            placeholder="Describe your brand's voice and tone..."
-            className="min-h-[100px] bg-paper border-cream-dark resize-none"
-          />
-          <p className="text-xs text-neutral-500">
-            This guides the AI in generating on-brand content
-          </p>
+        {/* Save Button Footer */}
+        <div className="mt-8 pt-6 border-t border-cream-dark flex justify-end">
+          <Button 
+            onClick={handleSave} 
+            disabled={isSaving}
+            className="bg-brass hover:bg-brass-light text-charcoal"
+          >
+            {isSaving ? "Saving..." : "Save Changes"}
+          </Button>
         </div>
-
-        {/* Forbidden Phrases */}
-        <div className="space-y-2">
-          <Label htmlFor="forbidden-phrases" className="text-neutral-600">
-            Forbidden Phrases
-          </Label>
-          <Textarea
-            id="forbidden-phrases"
-            value={guidelines.forbidden_phrases}
-            onChange={(e) => setGuidelines({ ...guidelines, forbidden_phrases: e.target.value })}
-            placeholder="List phrases to avoid (comma-separated)..."
-            className="min-h-[100px] bg-paper border-cream-dark resize-none"
-          />
-          <p className="text-xs text-neutral-500">
-            The AI will avoid using these phrases in generated content
-          </p>
-        </div>
-
-        {/* Brand Story */}
-        <div className="space-y-2">
-          <Label htmlFor="brand-story" className="text-neutral-600">
-            Brand Story
-          </Label>
-          <Textarea
-            id="brand-story"
-            value={guidelines.brand_story}
-            onChange={(e) => setGuidelines({ ...guidelines, brand_story: e.target.value })}
-            placeholder="Tell your brand's story..."
-            className="min-h-[150px] bg-paper border-cream-dark resize-none"
-          />
-        </div>
-
-        {/* Target Audience */}
-        <div className="space-y-2">
-          <Label htmlFor="target-audience" className="text-neutral-600">
-            Target Audience
-          </Label>
-          <Textarea
-            id="target-audience"
-            value={guidelines.target_audience}
-            onChange={(e) => setGuidelines({ ...guidelines, target_audience: e.target.value })}
-            placeholder="Describe your ideal customer..."
-            className="min-h-[100px] bg-paper border-cream-dark resize-none"
-          />
-        </div>
-      </div>
-
-      {/* Save Button Footer */}
-      <div className="mt-8 pt-6 border-t border-cream-dark flex justify-end">
-        <Button 
-          onClick={handleSave} 
-          disabled={isSaving}
-          className="bg-brass hover:bg-brass-light text-charcoal"
-        >
-          {isSaving ? "Saving..." : "Save Changes"}
-        </Button>
       </div>
     </div>
   );

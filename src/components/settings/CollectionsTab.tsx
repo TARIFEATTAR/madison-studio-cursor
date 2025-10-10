@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash2, GripVertical, Save, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Save, X, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { toast } from "@/hooks/use-toast";
+import { useIndustryConfig } from "@/hooks/useIndustryConfig";
+import { getCollectionTemplatesForIndustry } from "@/config/collectionTemplates";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,6 +20,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Collection {
   id: string;
@@ -30,11 +39,13 @@ interface Collection {
 
 export const CollectionsTab = () => {
   const { currentOrganizationId } = useOnboarding();
+  const { industryConfig } = useIndustryConfig(currentOrganizationId);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -42,6 +53,10 @@ export const CollectionsTab = () => {
     transparency_statement: "",
     color_theme: "#B8956A",
   });
+
+  const industryTemplates = industryConfig?.id 
+    ? getCollectionTemplatesForIndustry(industryConfig.id)
+    : [];
 
   useEffect(() => {
     fetchCollections();
@@ -186,6 +201,37 @@ export const CollectionsTab = () => {
     });
   };
 
+  const handleUseTemplate = async (template: any) => {
+    if (!currentOrganizationId) return;
+
+    try {
+      const { error } = await supabase.from("brand_collections").insert({
+        organization_id: currentOrganizationId,
+        name: template.name,
+        description: template.description,
+        transparency_statement: template.transparency_statement,
+        color_theme: template.color_theme,
+        sort_order: collections.length,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Collection created",
+        description: `${template.name} has been added to your collections.`,
+      });
+
+      setShowTemplates(false);
+      fetchCollections();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <Card className="bg-paper border-cream-dark">
@@ -208,13 +254,25 @@ export const CollectionsTab = () => {
               </CardDescription>
             </div>
             {!isCreating && (
-              <Button
-                onClick={() => setIsCreating(true)}
-                className="bg-brass hover:bg-brass/90 text-charcoal"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                New Collection
-              </Button>
+              <div className="flex gap-2">
+                {industryTemplates.length > 0 && (
+                  <Button
+                    onClick={() => setShowTemplates(true)}
+                    variant="outline"
+                    className="border-cream-dark"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Use Template
+                  </Button>
+                )}
+                <Button
+                  onClick={() => setIsCreating(true)}
+                  className="bg-brass hover:bg-brass/90 text-charcoal"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Collection
+                </Button>
+              </div>
             )}
           </div>
         </CardHeader>
@@ -449,6 +507,50 @@ export const CollectionsTab = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
+        <DialogContent className="bg-paper border-cream-dark max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-charcoal font-serif">Collection Templates</DialogTitle>
+            <DialogDescription>
+              Choose from pre-built collections tailored for your industry
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-4">
+            {industryTemplates.map((template, index) => (
+              <Card key={index} className="bg-paper-light border-cream-dark">
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-4">
+                    <div
+                      className="w-8 h-8 rounded flex-shrink-0 mt-1"
+                      style={{ backgroundColor: template.color_theme }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-serif text-lg text-charcoal mb-1">{template.name}</h3>
+                      <p className="text-sm text-neutral-600 mb-2">{template.description}</p>
+                      <p className="text-xs text-neutral-500 italic mb-3">
+                        Transparency: {template.transparency_statement}
+                      </p>
+                      <Button
+                        onClick={() => handleUseTemplate(template)}
+                        size="sm"
+                        className="bg-brass hover:bg-brass/90 text-charcoal"
+                      >
+                        Use This Template
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {industryTemplates.length === 0 && (
+              <p className="text-center text-neutral-600 py-8">
+                No templates available. Set your industry in Brand Guidelines first.
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

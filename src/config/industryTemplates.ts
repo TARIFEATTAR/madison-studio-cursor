@@ -79,10 +79,30 @@ export const INDUSTRY_TEMPLATES: Record<string, IndustryTemplate> = {
       { id: "field_3", label: "Approach" },
     ],
   },
+  personal_care: {
+    id: "personal_care",
+    name: "Personal Care",
+    section_title: "Product Details",
+    fields: [
+      { id: "field_1", label: "Key Ingredients" },
+      { id: "field_2", label: "Skin/Hair Type" },
+      { id: "field_3", label: "Benefits & Claims" },
+    ],
+  },
+  jewelry: {
+    id: "jewelry",
+    name: "Jewelry & Fine Accessories",
+    section_title: "Piece Specifications",
+    fields: [
+      { id: "field_1", label: "Materials & Gemstones" },
+      { id: "field_2", label: "Craftsmanship & Design" },
+      { id: "field_3", label: "Collection & Occasion" },
+    ],
+  },
   luxury_watches: {
     id: "luxury_watches",
-    name: "Luxury Goods & Watches",
-    section_title: "Product Specifications",
+    name: "Luxury Watches",
+    section_title: "Timepiece Specifications",
     fields: [
       { id: "field_1", label: "Materials & Craftsmanship" },
       { id: "field_2", label: "Movement & Complications" },
