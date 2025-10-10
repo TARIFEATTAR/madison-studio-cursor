@@ -8,9 +8,9 @@ export default function MeetMadison() {
 
   return (
     <div className="relative min-h-screen bg-vellum-cream">
-      {/* Full-page background image - more visible */}
+      {/* Full-page background image - 50% visibility */}
       <div 
-        className="fixed inset-0 opacity-30 pointer-events-none"
+        className="fixed inset-0 opacity-50 pointer-events-none"
         style={{
           backgroundImage: "url('/assets/madison-avenue-sketch.png')",
           backgroundSize: 'cover',
