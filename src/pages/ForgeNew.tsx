@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Lightbulb, FileText, Sparkles } from "lucide-react";
+import { Lightbulb, FileText, Sparkles, X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ThinkModeDialog } from "@/components/forge/ThinkModeDialog";
 import { NameContentDialog } from "@/components/forge/NameContentDialog";
 
 export default function ForgeNew() {
@@ -27,8 +26,9 @@ export default function ForgeNew() {
   const [additionalContext, setAdditionalContext] = useState("");
   
   // Dialog state
-  const [thinkModeOpen, setThinkModeOpen] = useState(false);
+  const [thinkModeExpanded, setThinkModeExpanded] = useState(false);
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
+  const [thinkModeInput, setThinkModeInput] = useState("");
 
   const handleSubmit = () => {
     // Validate required fields
@@ -73,38 +73,122 @@ Some journeys begin with a single breath.`;
   return (
     <div className="min-h-screen pb-20" style={{ backgroundColor: "#F5F1E8" }}>
       <div className="max-w-5xl mx-auto px-6 py-8">
-        {/* Think Mode Banner */}
-        <div
-          className="p-6 mb-8 rounded-lg"
-          style={{
-            backgroundColor: "#F5F1E8",
-            border: "2px dashed #D4CFC8"
-          }}
-        >
-          <div className="flex items-start gap-4">
-            <Lightbulb className="w-6 h-6 flex-shrink-0 mt-1" style={{ color: "#B8956A" }} />
-            <div className="flex-1">
-              <h3 className="font-semibold text-lg mb-1" style={{ color: "#1A1816" }}>
-                Not sure where to start? Try Think Mode
-              </h3>
-              <p className="text-sm mb-3" style={{ color: "#6B6560" }}>
-                Brainstorm with AI before filling out the brief. No pressure, just ideas.
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => setThinkModeOpen(true)}
-                className="gap-2"
-                style={{
-                  borderColor: "#B8956A",
-                  color: "#B8956A"
-                }}
-              >
-                <Lightbulb className="w-4 h-4" />
-                <span>Open Think Mode</span>
-              </Button>
+        {/* Think Mode - Inline Expandable */}
+        {!thinkModeExpanded ? (
+          <div
+            onClick={() => setThinkModeExpanded(true)}
+            className="mb-8 rounded-xl cursor-pointer overflow-hidden transition-all hover:opacity-90"
+            style={{
+              background: "linear-gradient(to-right, #B8956A, #D4AF85)"
+            }}
+          >
+            <div className="p-6 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Lightbulb className="w-6 h-6 text-white" />
+                <div>
+                  <h3 className="font-semibold text-lg text-white">
+                    Think Mode
+                  </h3>
+                  <p className="text-sm text-white/90">
+                    Let's explore your ideas together
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="mb-8 rounded-xl overflow-hidden border" style={{ borderColor: "#D4CFC8" }}>
+            {/* Header */}
+            <div
+              className="p-4 flex items-center justify-between"
+              style={{
+                background: "linear-gradient(to-right, #B8956A, #D4AF85)"
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <Lightbulb className="w-5 h-5 text-white" />
+                <h3 className="font-semibold text-white">Think Mode</h3>
+              </div>
+              <button
+                onClick={() => setThinkModeExpanded(false)}
+                className="hover:opacity-80 transition-opacity"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-8" style={{ backgroundColor: "#FFFCF5" }}>
+              <div className="text-center max-w-2xl mx-auto mb-6">
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                  style={{ backgroundColor: "#F5F1E8" }}
+                >
+                  <Lightbulb className="w-8 h-8" style={{ color: "#B8956A" }} />
+                </div>
+                <h4 className="text-2xl font-serif mb-3" style={{ color: "#1A1816" }}>
+                  What's on your mind?
+                </h4>
+                <p className="text-base" style={{ color: "#6B6560" }}>
+                  Share your ideas, questions, or creative direction. I'll help you explore and refine them.
+                </p>
+              </div>
+
+              {/* Example Prompts */}
+              <div className="flex flex-wrap gap-3 justify-center mb-6">
+                <Button
+                  variant="outline"
+                  onClick={() => setThinkModeInput("I need a blog post about seasonal fragrance trends")}
+                  className="text-sm"
+                  style={{ borderColor: "#D4CFC8", color: "#6B6560" }}
+                >
+                  "I need a blog post about seasonal fragrance trends"
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setThinkModeInput("Help me describe our new product launch")}
+                  className="text-sm"
+                  style={{ borderColor: "#D4CFC8", color: "#6B6560" }}
+                >
+                  "Help me describe our new product launch"
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setThinkModeInput("What's the best way to tell our brand story?")}
+                  className="text-sm"
+                  style={{ borderColor: "#D4CFC8", color: "#6B6560" }}
+                >
+                  "What's the best way to tell our brand story?"
+                </Button>
+              </div>
+
+              {/* Input Area */}
+              <div className="relative">
+                <Textarea
+                  value={thinkModeInput}
+                  onChange={(e) => setThinkModeInput(e.target.value)}
+                  placeholder="Type your thoughts here..."
+                  className="min-h-[120px] pr-12"
+                  style={{
+                    backgroundColor: "#F5F1E8",
+                    borderColor: "#D4CFC8",
+                    color: "#1A1816"
+                  }}
+                />
+                <Button
+                  className="absolute bottom-3 right-3"
+                  size="icon"
+                  style={{
+                    background: "linear-gradient(to-right, #B8956A, #D4AF85)",
+                    color: "white"
+                  }}
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Form */}
         <div>
@@ -119,7 +203,7 @@ Some journeys begin with a single breath.`;
               </div>
               <div>
                 <h1 className="text-4xl font-serif" style={{ color: "#1A1816" }}>
-                  Commission Copy
+                  Create Content
                 </h1>
                 <p className="text-lg mt-1" style={{ color: "#6B6560" }}>
                   Quick brief to generate your content
@@ -317,14 +401,14 @@ Some journeys begin with a single breath.`;
               <Button
                 onClick={handleSubmit}
                 disabled={!product || !format}
-                className="gap-2 px-8"
+                className="gap-2 px-8 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   background: "linear-gradient(to-right, #B8956A, #D4AF85)",
                   color: "#1A1816"
                 }}
               >
                 <Sparkles className="w-5 h-5" />
-                <span className="text-base font-semibold">Commission Copy</span>
+                <span className="text-base font-semibold">Create Content</span>
               </Button>
               <p className="text-xs mt-2" style={{ color: "#A8A39E" }}>
                 Headlines and subjects will be AI-generated. You'll refine in the editor.
@@ -335,7 +419,6 @@ Some journeys begin with a single breath.`;
       </div>
 
       {/* Dialogs */}
-      <ThinkModeDialog open={thinkModeOpen} onOpenChange={setThinkModeOpen} />
       <NameContentDialog
         open={nameDialogOpen}
         onOpenChange={setNameDialogOpen}
