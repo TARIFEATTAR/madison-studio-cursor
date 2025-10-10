@@ -341,27 +341,30 @@ export default function ContentEditorPage() {
               <X className="w-4 h-4" />
             </Button>
 
-            <div className="h-6 w-px bg-border/40 mx-1" />
+            {/* Font & Formatting - Hidden on mobile */}
+            <div className="h-6 w-px bg-border/40 mx-1 hidden md:block" />
 
-            <Select 
-              value={selectedFont} 
-              onValueChange={setSelectedFont}
-            >
-              <SelectTrigger className="w-[180px] h-9 border-none shadow-none">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-background">
-                {FONT_OPTIONS.map(font => (
-                  <SelectItem key={font.value} value={font.value}>
-                    <span style={{ fontFamily: font.family }}>{font.label}</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="hidden md:block">
+              <Select 
+                value={selectedFont} 
+                onValueChange={setSelectedFont}
+              >
+                <SelectTrigger className="w-[180px] h-9 border-none shadow-none">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background">
+                  {FONT_OPTIONS.map(font => (
+                    <SelectItem key={font.value} value={font.value}>
+                      <span style={{ fontFamily: font.family }}>{font.label}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <div className="h-6 w-px bg-border/40 mx-1" />
+            <div className="h-6 w-px bg-border/40 mx-1 hidden md:block" />
 
-            {/* Formatting Buttons */}
+            {/* Formatting Buttons - Hidden on mobile */}
             <Button
               variant="ghost"
               size="sm"
@@ -369,7 +372,7 @@ export default function ContentEditorPage() {
                 e.preventDefault();
                 handleBold();
               }}
-              className="h-9 w-9 p-0"
+              className="h-9 w-9 p-0 hidden md:flex"
               title="Bold"
             >
               <Bold className="w-4 h-4" />
@@ -381,7 +384,7 @@ export default function ContentEditorPage() {
                 e.preventDefault();
                 handleItalic();
               }}
-              className="h-9 w-9 p-0"
+              className="h-9 w-9 p-0 hidden md:flex"
               title="Italic"
             >
               <Italic className="w-4 h-4" />
@@ -393,15 +396,15 @@ export default function ContentEditorPage() {
                 e.preventDefault();
                 handleUnderline();
               }}
-              className="h-9 w-9 p-0"
+              className="h-9 w-9 p-0 hidden md:flex"
               title="Underline"
             >
               <Underline className="w-4 h-4" />
             </Button>
 
-            <div className="h-6 w-px bg-border/40 mx-1" />
+            <div className="h-6 w-px bg-border/40 mx-1 hidden md:block" />
 
-            {/* Headers */}
+            {/* Headers - Hidden on mobile */}
             <Button
               variant="ghost"
               size="sm"
@@ -409,7 +412,7 @@ export default function ContentEditorPage() {
                 e.preventDefault();
                 handleH1();
               }}
-              className="h-9 px-3 text-sm"
+              className="h-9 px-3 text-sm hidden md:flex"
               title="Heading 1"
             >
               H1
@@ -421,7 +424,7 @@ export default function ContentEditorPage() {
                 e.preventDefault();
                 handleH2();
               }}
-              className="h-9 px-3 text-sm"
+              className="h-9 px-3 text-sm hidden md:flex"
               title="Heading 2"
             >
               H2
@@ -433,7 +436,7 @@ export default function ContentEditorPage() {
                 e.preventDefault();
                 handleH3();
               }}
-              className="h-9 px-3 text-sm"
+              className="h-9 px-3 text-sm hidden md:flex"
               title="Heading 3"
             >
               H3
@@ -455,13 +458,13 @@ export default function ContentEditorPage() {
           </Button>
 
           {/* Right: Undo/Redo, Word Count, Save, Next */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleUndo}
               disabled={!canUndo}
-              className="h-9 w-9 p-0"
+              className="h-9 w-9 p-0 hidden sm:flex"
               title="Undo"
             >
               <Undo2 className="w-4 h-4" />
@@ -471,20 +474,22 @@ export default function ContentEditorPage() {
               size="sm"
               onClick={handleRedo}
               disabled={!canRedo}
-              className="h-9 w-9 p-0"
+              className="h-9 w-9 p-0 hidden sm:flex"
               title="Redo"
             >
               <Redo2 className="w-4 h-4" />
             </Button>
 
-            <span className="text-sm text-muted-foreground mx-2">
+            <span className="text-sm text-muted-foreground mx-2 hidden lg:block">
               {wordCount} words
             </span>
 
-            <QualityRating 
-              rating={qualityRating} 
-              onRatingChange={setQualityRating} 
-            />
+            <div className="hidden lg:block">
+              <QualityRating 
+                rating={qualityRating} 
+                onRatingChange={setQualityRating} 
+              />
+            </div>
 
             <Button
               onClick={handleSave}
@@ -498,7 +503,7 @@ export default function ContentEditorPage() {
               ) : (
                 <Save className="w-4 h-4" />
               )}
-              <span>Save</span>
+              <span className="hidden sm:inline">Save</span>
             </Button>
             
             <Button
@@ -509,7 +514,8 @@ export default function ContentEditorPage() {
                 color: "#FFFFFF"
               }}
             >
-              <span>Next: Multiply</span>
+              <span className="hidden sm:inline">Next: Multiply</span>
+              <span className="sm:hidden">Next</span>
               <ArrowLeft className="w-4 h-4 rotate-180" />
             </Button>
           </div>
