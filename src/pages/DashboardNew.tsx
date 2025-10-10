@@ -89,18 +89,19 @@ export default function DashboardNew() {
                   {priorityAction.description}
                 </p>
                 <div className="flex gap-3">
-                  <button 
+                  <Button 
                     onClick={() => navigate(priorityAction.actionRoute)}
                     className="px-6 py-3 bg-ink-black hover:bg-charcoal text-parchment-white font-medium rounded-lg transition-all"
                   >
                     {priorityAction.actionLabel} →
-                  </button>
-                  <button 
+                  </Button>
+                  <Button 
                     onClick={() => setShowPriorityCard(false)}
+                    variant="ghost"
                     className="px-6 py-3 bg-white/20 hover:bg-white/30 text-ink-black font-medium rounded-lg transition-all"
                   >
                     Not Now
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

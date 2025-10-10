@@ -147,7 +147,12 @@ export default function ContentEditorPage() {
     if (!isEditorReady || !editableRef.current || !editableContent) return;
     
     console.log("[ContentEditor] Setting content in editor, length:", editableContent.length);
-    editableRef.current.innerHTML = editableContent.replace(/\n/g, '<br>');
+    // Convert plain text to formatted HTML with proper paragraph spacing
+    const formattedContent = editableContent
+      .split('\n\n')
+      .map(paragraph => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`)
+      .join('');
+    editableRef.current.innerHTML = formattedContent || '<p><br></p>';
   }, [isEditorReady, editableContent]);
 
   // Calculate word count
@@ -524,40 +529,39 @@ export default function ContentEditorPage() {
 
       {/* Main Content Area */}
       <div className="flex flex-1 min-h-0">
-        {/* Always show full-width editor */}
-        <div className="w-full overflow-auto h-full" style={{ backgroundColor: "#F5F1E8" }}>
-          <div className="max-w-4xl mx-auto py-16 px-8 md:px-16">
-            <div
-              ref={attachEditableRef}
-              contentEditable
-              onInput={updateContentFromEditable}
-              onKeyDown={handleKeyDown}
-              suppressContentEditableWarning
-              className="w-full min-h-[calc(100vh-200px)] focus:outline-none text-lg leading-relaxed"
-              style={{
-                fontFamily: currentFontFamily,
-                color: "#1A1816"
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Desktop: Side panel assistant */}
-        {!isMobile && assistantOpen && (
-          <ResizablePanelGroup direction="horizontal" className="w-full h-full absolute inset-0 pointer-events-none">
-            <ResizablePanel defaultSize={50} minSize={30} className="pointer-events-none" />
+        {!isMobile && assistantOpen ? (
+          <ResizablePanelGroup direction="horizontal" className="w-full h-full">
+            {/* Content Editor Panel */}
+            <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
+              <div className="w-full overflow-auto h-full" style={{ backgroundColor: "#F5F1E8" }}>
+                <div className="max-w-4xl mx-auto py-16 px-8 md:px-16">
+                  <div
+                    ref={attachEditableRef}
+                    contentEditable
+                    onInput={updateContentFromEditable}
+                    onKeyDown={handleKeyDown}
+                    suppressContentEditableWarning
+                    className="w-full min-h-[calc(100vh-200px)] focus:outline-none prose prose-lg max-w-none"
+                    style={{
+                      fontFamily: currentFontFamily,
+                      color: "#1A1816",
+                      lineHeight: "1.8"
+                    }}
+                  />
+                </div>
+              </div>
+            </ResizablePanel>
             
+            {/* Resizable Handle */}
             <ResizableHandle 
-              className="w-1 hover:w-2 transition-all pointer-events-auto"
-              style={{ backgroundColor: "#D4CFC8" }}
+              className="w-1 hover:w-2 transition-all bg-warm-gray/20 hover:bg-aged-brass/40"
             />
             
-            <ResizablePanel defaultSize={50} minSize={25} maxSize={70} className="pointer-events-auto">
+            {/* Madison Assistant Panel */}
+            <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
               <div 
                 className="w-full h-full"
-                style={{ 
-                  backgroundColor: "#FFFCF5"
-                }}
+                style={{ backgroundColor: "#FFFCF5" }}
               >
                 <EditorialAssistantPanel 
                   onClose={handleToggleAssistant}
@@ -566,6 +570,25 @@ export default function ContentEditorPage() {
               </div>
             </ResizablePanel>
           </ResizablePanelGroup>
+        ) : (
+          /* Full-width editor when Madison is closed */
+          <div className="w-full overflow-auto h-full" style={{ backgroundColor: "#F5F1E8" }}>
+            <div className="max-w-4xl mx-auto py-16 px-8 md:px-16">
+              <div
+                ref={attachEditableRef}
+                contentEditable
+                onInput={updateContentFromEditable}
+                onKeyDown={handleKeyDown}
+                suppressContentEditableWarning
+                className="w-full min-h-[calc(100vh-200px)] focus:outline-none prose prose-lg max-w-none"
+                style={{
+                  fontFamily: currentFontFamily,
+                  color: "#1A1816",
+                  lineHeight: "1.8"
+                }}
+              />
+            </div>
+          </div>
         )}
       </div>
 
