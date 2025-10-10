@@ -56,56 +56,49 @@ const Landing = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="py-20 md:py-32 relative overflow-hidden bg-ink-black">
-        {/* Background Image */}
-        <div 
-          className="absolute inset-0 opacity-40"
-          style={{
-            backgroundImage: `url(${heroImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center right',
-            backgroundRepeat: 'no-repeat'
-          }}
-        />
-        
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-ink-black via-ink-black/80 to-transparent" />
-
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
-            <h1 className="text-5xl md:text-7xl font-serif leading-tight">
-              <span className="text-parchment-white">Your Brand's</span>
-              <br />
-              <span className="text-aged-brass">Editorial Command Center</span>
-            </h1>
-
-            <p className="text-lg md:text-xl text-parchment-white/80 max-w-3xl mx-auto leading-relaxed">
-              Scriptora transforms how you create, manage, and distribute content. Maintain your brand voice across every channel while generating content 10x faster with intelligent AI assistance.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button asChild variant="brass" size="lg" className="gap-2">
-                <Link to="/auth">
-                  Start Creating <ArrowRight className="w-4 h-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="gap-2 bg-parchment-white/10 border-parchment-white/20 text-parchment-white hover:bg-parchment-white/20">
-                <a href="#how-it-works">
-                  <PlayCircle className="w-4 h-4" /> Watch Tutorial
-                </a>
-              </Button>
-            </div>
-
-            <div className="flex items-center justify-center gap-6 text-sm text-parchment-white/60">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-aged-brass" />
-                No credit card required
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-aged-brass" />
-                2-minute setup
+      <section className="hero-section bg-vellum-cream">
+        <div className="hero-container max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-8 items-center min-h-[600px]">
+            
+            {/* Left Column: Text (2 columns) */}
+            <div className="col-span-1 md:col-span-2 px-6 md:px-12 py-12 md:py-0">
+              <h1 className="font-serif text-4xl md:text-6xl font-semibold text-ink-black leading-tight mb-6">
+                Where Luxury Beauty Brands 
+                <span className="block mt-2 text-aged-brass">
+                  Craft Their Narrative
+                </span>
+              </h1>
+              
+              <p className="text-base md:text-lg text-charcoal leading-relaxed mb-8 max-w-md">
+                AI-powered content creation that honors craftsmanship, 
+                heritage, and the art of storytelling. From heritage 
+                perfume houses to artisan skincare—every word reflects 
+                your brand's soul.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button asChild variant="brass" size="lg">
+                  <Link to="/auth">
+                    Commission Your First Piece
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link to="/meet-madison">
+                    Meet Your Editorial Director
+                  </Link>
+                </Button>
               </div>
             </div>
+            
+            {/* Right Column: Image (3 columns) */}
+            <div className="col-span-1 md:col-span-3">
+              <img 
+                src="/assets/editorial-desk-hero.png"
+                alt="Vintage typewriter on Madison Avenue creative director's desk"
+                className="w-full h-auto"
+              />
+            </div>
+            
           </div>
         </div>
       </section>
