@@ -129,7 +129,7 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
   };
 
   return (
-    <div className="h-full flex flex-col" style={{ backgroundColor: "#FFFCF5" }}>
+    <div className="h-full flex flex-col max-w-full overflow-hidden" style={{ backgroundColor: "#FFFCF5" }}>
       {/* Header */}
       <div 
         className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0"
@@ -234,17 +234,17 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
 
       {/* Input */}
       <div 
-        className="border-t p-4 flex-shrink-0"
+        className="border-t p-3 sm:p-4 flex-shrink-0"
         style={{ borderColor: "#E5E0D8" }}
       >
-        <div className="flex gap-2 items-end">
+        <div className="flex gap-1.5 sm:gap-2 items-end">
           <Textarea
             ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask for feedback or suggestions..."
-            className="min-h-[60px] max-h-[160px] resize-none border flex-1"
+            className="min-h-[52px] sm:min-h-[60px] max-h-[160px] resize-none border flex-1"
             style={{
               backgroundColor: "#FFFFFF",
               borderColor: "#D4CFC8",
@@ -255,7 +255,7 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
           <Button
             onClick={handleSend}
             disabled={!input.trim() || isGenerating}
-            className="h-[60px] w-[60px] flex-shrink-0 bg-gradient-to-r from-aged-brass to-antique-gold hover:opacity-90"
+            className="h-[52px] w-[52px] sm:h-[60px] sm:w-[60px] flex-shrink-0 bg-gradient-to-r from-aged-brass to-antique-gold hover:opacity-90"
             style={{ color: "#1A1816" }}
           >
             {isGenerating ? (

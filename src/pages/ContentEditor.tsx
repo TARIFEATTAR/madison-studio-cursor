@@ -606,8 +606,8 @@ export default function ContentEditorPage() {
           )}
           
           <Drawer open={assistantOpen} onOpenChange={setAssistantOpen}>
-            <DrawerContent className="h-[85vh]" style={{ backgroundColor: "#FFFCF5" }}>
-              <EditorialAssistantPanel 
+            <DrawerContent className="h-[85vh] max-w-full" style={{ backgroundColor: "#FFFCF5" }}>
+              <EditorialAssistantPanel
                 onClose={handleToggleAssistant}
                 initialContent={editableContent}
               />
