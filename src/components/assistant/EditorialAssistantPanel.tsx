@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, X, Sparkles, Loader2, Copy, Check } from "lucide-react";
+import { Send, X, FileText, Loader2, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -25,7 +25,7 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Let's focus. What strategic challenge are we addressing today?",
+      content: "Your content is ready. I'm here to help you refine it. What would you like to improve?",
       timestamp: new Date(),
     },
   ]);
@@ -47,12 +47,10 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
     }
   }, []);
 
-  // Pre-populate with initial content if provided (only once)
+  // Don't auto-populate - let user initiate the conversation
   useEffect(() => {
-    if (initialContent && messages.length === 1 && !input) {
-      setInput(`Can you provide editorial critique on this copy?\n\n${initialContent}`);
-    }
-  }, []); // Empty dependency array - only run once on mount
+    // Removed auto-population to match new UX
+  }, []);
 
   const handleSend = async () => {
     if (!input.trim() || isGenerating) return;
@@ -131,90 +129,103 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
   };
 
   return (
-    <div className="h-full bg-background border-l-2 border-primary/20 flex flex-col">
+    <div className="h-full flex flex-col" style={{ backgroundColor: "#FFFCF5" }}>
       {/* Header */}
-      <div className="flex items-center px-6 py-4 border-b border-primary/20 bg-gradient-to-r from-primary/5 to-transparent flex-shrink-0">
+      <div 
+        className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0"
+        style={{ borderColor: "#E5E0D8" }}
+      >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-primary" />
+          <div 
+            className="w-10 h-10 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: "#B8956A" }}
+          >
+            <FileText className="w-5 h-5" style={{ color: "#FFFFFF" }} />
           </div>
           <div>
-            <h3 className="font-serif text-lg font-semibold text-foreground">Editorial Director</h3>
-            <p className="text-xs text-muted-foreground">Strategic Counsel</p>
+            <h3 className="font-serif text-lg font-semibold" style={{ color: "#1A1816" }}>
+              Editorial Director
+            </h3>
+            <p className="text-xs" style={{ color: "#6B6560" }}>Strategic Counsel</p>
           </div>
         </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+          className="h-8 w-8 p-0"
+        >
+          <X className="w-4 h-4" />
+        </Button>
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 px-6 py-4" ref={scrollRef}>
-        <div className="space-y-6">
+      <ScrollArea className="flex-1 px-6 py-6" ref={scrollRef}>
+        <div className="space-y-4">
           {messages.map((message, index) => (
-            <div
-              key={index}
-              className={cn(
-                "flex gap-3",
-                message.role === "user" ? "justify-end" : "justify-start"
-              )}
-            >
-              {message.role === "assistant" && (
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                </div>
-              )}
-              <div className="flex flex-col gap-2 max-w-[85%]">
-                <div
-                  className={cn(
-                    "rounded-sm px-4 py-3 text-sm leading-relaxed",
-                    message.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-foreground border border-primary/10"
-                  )}
+            <div key={index} className="space-y-2">
+              {/* Timestamp */}
+              <div className="flex items-center gap-2">
+                <div 
+                  className="w-6 h-6 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: "#B8956A" }}
                 >
-                  <p className="whitespace-pre-wrap select-text">{message.content}</p>
-                  <span className="text-xs opacity-60 mt-2 block">
-                    {message.timestamp.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
+                  <FileText className="w-3 h-3" style={{ color: "#FFFFFF" }} />
                 </div>
-                {message.role === "assistant" && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleCopy(message.content, index)}
-                    className="self-start text-xs hover:bg-primary/10"
-                  >
-                    {copiedIndex === index ? (
-                      <>
-                        <Check className="w-3 h-3 mr-1" />
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3 h-3 mr-1" />
-                        Copy Critique
-                      </>
-                    )}
-                  </Button>
-                )}
+                <span className="text-xs" style={{ color: "#6B6560" }}>
+                  {message.timestamp.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true
+                  })}
+                </span>
               </div>
-              {message.role === "user" && (
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-1">
-                  <span className="text-xs font-semibold text-primary-foreground">
-                    YOU
-                  </span>
-                </div>
+              
+              {/* Message Content */}
+              <div
+                className="rounded-lg px-4 py-3 text-sm leading-relaxed"
+                style={{
+                  backgroundColor: message.role === "user" ? "#E8DCC8" : "#F5EFE3",
+                  color: "#1A1816"
+                }}
+              >
+                <p className="whitespace-pre-wrap select-text">{message.content}</p>
+              </div>
+              
+              {/* Copy Critique Button for assistant messages */}
+              {message.role === "assistant" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleCopy(message.content, index)}
+                  className="text-xs h-8 gap-1"
+                  style={{ color: "#6B6560" }}
+                >
+                  {copiedIndex === index ? (
+                    <>
+                      <Check className="w-3 h-3" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3" />
+                      Copy Critique
+                    </>
+                  )}
+                </Button>
               )}
             </div>
           ))}
           {isGenerating && (
-            <div className="flex gap-3 justify-start">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                <Loader2 className="w-4 h-4 text-primary animate-spin" />
-              </div>
-              <div className="max-w-[80%] rounded-sm px-4 py-3 bg-muted text-muted-foreground border border-primary/10">
-                <p className="text-sm italic">Considering...</p>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div 
+                  className="w-6 h-6 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: "#B8956A" }}
+                >
+                  <Loader2 className="w-3 h-3 animate-spin" style={{ color: "#FFFFFF" }} />
+                </div>
+                <span className="text-xs" style={{ color: "#6B6560" }}>Thinking...</span>
               </div>
             </div>
           )}
@@ -222,22 +233,31 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
       </ScrollArea>
 
       {/* Input */}
-      <div className="border-t border-primary/20 p-4 bg-gradient-to-t from-primary/5 to-transparent flex-shrink-0">
+      <div 
+        className="border-t p-4 flex-shrink-0"
+        style={{ borderColor: "#E5E0D8" }}
+      >
         <div className="flex gap-2">
           <Textarea
             ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="State your challenge clearly..."
-            className="min-h-[80px] max-h-[160px] resize-none bg-background border-primary/20 focus:border-primary"
+            placeholder="Ask for feedback or suggestions..."
+            className="min-h-[60px] max-h-[160px] resize-none border"
+            style={{
+              backgroundColor: "#FFFFFF",
+              borderColor: "#D4CFC8",
+              color: "#1A1816"
+            }}
             disabled={isGenerating}
           />
           <Button
             onClick={handleSend}
             disabled={!input.trim() || isGenerating}
             size="icon"
-            className="h-[80px] w-[60px] flex-shrink-0"
+            className="h-[60px] w-[60px] flex-shrink-0 bg-gradient-to-r from-aged-brass to-antique-gold hover:opacity-90"
+            style={{ color: "#1A1816" }}
           >
             {isGenerating ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -246,7 +266,7 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
             )}
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground mt-2 text-center">
+        <p className="text-xs mt-2 text-center" style={{ color: "#A8A39E" }}>
           Press Enter to send • Shift + Enter for new line
         </p>
       </div>
