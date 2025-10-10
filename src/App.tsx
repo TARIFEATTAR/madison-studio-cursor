@@ -11,6 +11,7 @@ import { AppSidebar } from "./components/AppSidebar";
 import Index from "./pages/Index";
 import DashboardNew from "./pages/DashboardNew";
 import Reservoir from "./pages/Reservoir";
+import Library from "./pages/Library";
 import Forge from "./pages/Forge";
 import ForgeNew from "./pages/ForgeNew";
 import ContentEditor from "./pages/ContentEditor";
@@ -63,7 +64,8 @@ const AppContent = () => {
             <main className="flex-1 overflow-auto">
               <Routes>
                 <Route path="/" element={<ProtectedRoute><DashboardNew /></ProtectedRoute>} />
-                <Route path="/library" element={<ProtectedRoute><Reservoir /></ProtectedRoute>} />
+                <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
+                <Route path="/reservoir" element={<ProtectedRoute><Reservoir /></ProtectedRoute>} />
                 <Route path="/create" element={<ProtectedRoute><ForgeNew /></ProtectedRoute>} />
                 <Route path="/editor" element={<ProtectedRoute><ContentEditor /></ProtectedRoute>} />
                 <Route path="/multiply" element={<ProtectedRoute><Repurpose /></ProtectedRoute>} />
