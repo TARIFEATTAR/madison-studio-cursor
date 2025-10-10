@@ -95,7 +95,7 @@ export default function Library() {
               <p className="text-muted-foreground">Your content library and repository</p>
             </div>
             <Button
-              onClick={() => navigate("/forge")}
+              onClick={() => navigate("/create")}
               className="bg-gradient-to-r from-brass to-brass-dark text-foreground hover:opacity-90"
             >
               <Plus className="w-4 h-4 mr-2" />

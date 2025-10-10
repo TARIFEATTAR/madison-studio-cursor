@@ -98,7 +98,7 @@ export function usePriorityAction() {
             title: "Amplify Your Master Content",
             description: `You have ${needsDerivatives.length} master content piece${needsDerivatives.length > 1 ? 's' : ''} ready to be repurposed. Let's multiply their reach across different platforms.`,
             actionLabel: "Multiply Content",
-            actionRoute: "/amplify",
+            actionRoute: "/multiply",
             estimatedTime: "10 min",
             count: needsDerivatives.length,
           };
@@ -110,7 +110,7 @@ export function usePriorityAction() {
         title: "Create Your Next Masterpiece",
         description: "Ready to craft compelling content? Use Forge to generate on-brand material that resonates with your audience.",
         actionLabel: "Start Creating",
-        actionRoute: "/forge",
+        actionRoute: "/create",
         estimatedTime: "15 min",
       };
     },

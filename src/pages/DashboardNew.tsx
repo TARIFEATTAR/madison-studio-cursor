@@ -136,7 +136,7 @@ export default function DashboardNew() {
         <div className="grid grid-cols-3 gap-4 mb-8">
           
           <button 
-            onClick={() => navigate('/forge')}
+            onClick={() => navigate('/create')}
             className="bg-parchment-white border-2 border-transparent hover:border-brass p-6 rounded-xl transition-all hover:shadow-[0_4px_12px_rgba(184,149,106,0.1)] group"
           >
             <PenTool className="w-8 h-8 text-brass mb-3 group-hover:scale-110 transition-transform" />
