@@ -262,10 +262,10 @@ export default function ContentEditorPage() {
   const currentFontFamily = FONT_OPTIONS.find(f => f.value === selectedFont)?.family || FONT_OPTIONS[0].family;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#F5F1E8" }}>
+    <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: "#F5F1E8" }}>
       {/* Top Toolbar - Clean & Minimal */}
       <div 
-        className="border-b sticky top-0 z-10 flex-shrink-0"
+        className="border-b z-10 flex-shrink-0"
         style={{ 
           backgroundColor: "#FFFCF5",
           borderColor: "#E5E0D8"
@@ -443,12 +443,12 @@ export default function ContentEditorPage() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0">
         {/* Editor Area - Full width or 50% when assistant is open */}
         <motion.div
           animate={{ width: assistantOpen ? "50%" : "100%" }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
-          className="overflow-auto"
+          className="overflow-auto h-full"
           style={{ backgroundColor: "#F5F1E8" }}
         >
           <div className="max-w-4xl mx-auto py-16 px-8 md:px-16">
@@ -476,10 +476,11 @@ export default function ContentEditorPage() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="w-1/2 h-full overflow-hidden"
+              className="w-1/2 flex-shrink-0"
               style={{ 
                 borderLeft: "1px solid #D4CFC8",
-                backgroundColor: "#FFFCF5"
+                backgroundColor: "#FFFCF5",
+                height: "100%"
               }}
             >
               <EditorialAssistantPanel 
