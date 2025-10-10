@@ -416,13 +416,17 @@ Some journeys begin with a single breath.`;
               <Button
                 onClick={handleSubmit}
                 disabled={!product || !format}
-                className="gap-2 px-8 bg-gradient-to-r from-brass to-brass-glow hover:opacity-90 text-ink-black font-semibold disabled:opacity-50"
+                className="gap-2 px-8 bg-gradient-to-r from-brass to-brass-glow hover:opacity-90 text-ink-black font-semibold disabled:from-warm-gray/20 disabled:to-warm-gray/20 disabled:text-warm-gray disabled:cursor-not-allowed transition-all"
               >
                 <PenTool className="w-5 h-5" />
                 <span className="text-base">Create Content</span>
               </Button>
               <p className="text-xs mt-2 text-warm-gray/70">
-                Headlines and subjects will be AI-generated. You'll refine in the editor.
+                {!product || !format ? (
+                  <span className="text-brass">Select product and format to continue</span>
+                ) : (
+                  "Headlines and subjects will be AI-generated. You'll refine in the editor."
+                )}
               </p>
             </div>
           </div>
