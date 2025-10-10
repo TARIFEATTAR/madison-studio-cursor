@@ -47,8 +47,8 @@ const AppContent = () => {
   const { user } = useAuth();
   const location = useLocation();
 
-  // Show sidebar for authenticated users on all pages except /auth
-  const showSidebar = user && location.pathname !== "/auth";
+  // Show sidebar for authenticated users on all pages except /auth and /editor
+  const showSidebar = user && location.pathname !== "/auth" && location.pathname !== "/editor";
 
   return (
     <>

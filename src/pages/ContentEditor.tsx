@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Check, Loader2, MessageSquare, Bold, Italic, Underline, Undo2, Redo2 } from "lucide-react";
+import { ArrowLeft, Save, Check, Loader2, MessageSquare, Bold, Italic, Underline, Undo2, Redo2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
@@ -52,18 +52,27 @@ export default function ContentEditorPage() {
   // Load content on mount
   useEffect(() => {
     const loadContent = async () => {
+      console.log("[ContentEditor] Loading content...", { 
+        hasLocationState: !!location.state, 
+        content: location.state?.content?.substring(0, 100)
+      });
+
       if (location.state?.content) {
         const content = location.state.content;
+        console.log("[ContentEditor] Loading from location.state, content length:", content.length);
         setEditableContent(content);
         setTitle(location.state.contentName || "Untitled Content");
         setContentType(location.state.contentType || "Blog Post");
         setProductName(location.state.productName || "Product");
         setContentId(location.state.contentId);
         
-        // Set content in editable div
-        if (editableRef.current) {
-          editableRef.current.innerHTML = content.replace(/\n/g, '<br>');
-        }
+        // Set content in editable div with a small delay to ensure ref is attached
+        setTimeout(() => {
+          if (editableRef.current) {
+            editableRef.current.innerHTML = content.replace(/\n/g, '<br>');
+            console.log("[ContentEditor] Content set in editable div");
+          }
+        }, 0);
         
         setIsLoading(false);
         return;
@@ -272,8 +281,21 @@ export default function ContentEditorPage() {
         }}
       >
         <div className="flex items-center justify-between px-4 py-2">
-          {/* Left: Font & Formatting */}
+          {/* Left: Exit Button + Font & Formatting */}
           <div className="flex items-center gap-2">
+            {/* Exit Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/")}
+              className="h-9 w-9 p-0"
+              title="Exit Editor"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+
+            <div className="h-6 w-px bg-border/40 mx-1" />
+
             <Select 
               value={selectedFont} 
               onValueChange={setSelectedFont}
