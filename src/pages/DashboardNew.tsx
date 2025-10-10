@@ -48,7 +48,7 @@ export default function DashboardNew() {
                     5 min
                   </span>
                 </div>
-                <h2 className="font-serif text-3xl font-medium text-ink-black mb-3 leading-tight">
+                <h2 className="font-serif text-[32px] font-medium text-ink-black mb-3 leading-tight tracking-tight">
                   Schedule Your Noir de-Nuit Launch Campaign
                 </h2>
                 <p className="text-base text-ink-black/80 mb-6 leading-relaxed">
