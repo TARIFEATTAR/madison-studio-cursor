@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, Check, Loader2, MessageSquare, Bold, Italic, Underline, Undo2, Redo2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ export default function ContentEditorPage() {
   
   // Load content from route state, DB, or localStorage
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditorReady, setIsEditorReady] = useState(false);
   const [contentId, setContentId] = useState<string | undefined>(location.state?.contentId);
   const [editableContent, setEditableContent] = useState("");
   const [title, setTitle] = useState("");
@@ -35,6 +36,15 @@ export default function ContentEditorPage() {
   const [selectedFont, setSelectedFont] = useState('cormorant');
   const [wordCount, setWordCount] = useState(0);
   const [assistantOpen, setAssistantOpen] = useState(false);
+
+  // Callback ref to ensure the editable div is mounted before we try to set content
+  const attachEditableRef = useCallback((element: HTMLDivElement | null) => {
+    if (element) {
+      editableRef.current = element;
+      setIsEditorReady(true);
+      console.log("[ContentEditor] Editor ref attached and ready");
+    }
+  }, []);
   
   // History for undo/redo
   const historyRef = useRef<string[]>([]);
@@ -66,15 +76,6 @@ export default function ContentEditorPage() {
         setContentType(location.state.contentType || "Blog Post");
         setProductName(location.state.productName || "Product");
         setContentId(location.state.contentId);
-        
-        // Set content in editable div with a small delay to ensure ref is attached
-        setTimeout(() => {
-          if (editableRef.current) {
-            editableRef.current.innerHTML = content.replace(/\n/g, '<br>');
-            console.log("[ContentEditor] Content set in editable div");
-          }
-        }, 0);
-        
         setIsLoading(false);
         return;
       }
@@ -96,15 +97,15 @@ export default function ContentEditorPage() {
           setTitle(data.title || "Untitled Content");
           setContentType(data.content_type || "Blog Post");
           setContentId(data.id);
-          
-          if (editableRef.current) {
-            editableRef.current.innerHTML = content.replace(/\n/g, '<br>');
-          }
-          
           setIsLoading(false);
           return;
         } catch (error) {
-          console.error("Error loading from DB:", error);
+          console.error("[ContentEditor] Error loading from DB:", error);
+          toast({
+            title: "Failed to load content",
+            description: "Unable to load content from database. Please try again.",
+            variant: "destructive"
+          });
         }
       }
 
@@ -116,21 +117,17 @@ export default function ContentEditorPage() {
           setEditableContent(content);
           setTitle(draft.title || "Untitled Content");
           setContentId(draft.id);
-          
-          if (editableRef.current) {
-            editableRef.current.innerHTML = content.replace(/\n/g, '<br>');
-          }
-          
           setIsLoading(false);
           return;
         } catch (error) {
-          console.error("Error loading from localStorage:", error);
+          console.error("[ContentEditor] Error loading from localStorage:", error);
         }
       }
 
+      console.error("[ContentEditor] No content source found");
       toast({
         title: "No content found",
-        description: "Redirecting to content creation...",
+        description: "No content available to edit. Redirecting to content creation...",
         variant: "destructive"
       });
       setTimeout(() => navigate("/create"), 1500);
@@ -138,6 +135,14 @@ export default function ContentEditorPage() {
 
     loadContent();
   }, [location.state, location.search, navigate, toast]);
+
+  // Set content in editor when both editor is ready and content is available
+  useEffect(() => {
+    if (!isEditorReady || !editableRef.current || !editableContent) return;
+    
+    console.log("[ContentEditor] Setting content in editor, length:", editableContent.length);
+    editableRef.current.innerHTML = editableContent.replace(/\n/g, '<br>');
+  }, [isEditorReady, editableContent]);
 
   // Calculate word count
   useEffect(() => {
@@ -263,8 +268,9 @@ export default function ContentEditorPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#F5F1E8" }}>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ backgroundColor: "#F5F1E8" }}>
         <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#B8956A" }} />
+        <p className="text-sm" style={{ color: "#6B6662" }}>Loading your content...</p>
       </div>
     );
   }
@@ -472,7 +478,7 @@ export default function ContentEditorPage() {
           <div className="w-full overflow-auto h-full" style={{ backgroundColor: "#F5F1E8" }}>
             <div className="max-w-4xl mx-auto py-16 px-8 md:px-16">
               <div
-                ref={editableRef}
+                ref={attachEditableRef}
                 contentEditable
                 onInput={updateContentFromEditable}
                 onKeyDown={handleKeyDown}
@@ -492,7 +498,7 @@ export default function ContentEditorPage() {
               <div className="w-full h-full overflow-auto" style={{ backgroundColor: "#F5F1E8" }}>
                 <div className="max-w-4xl mx-auto py-16 px-8 md:px-16">
                   <div
-                    ref={editableRef}
+                    ref={attachEditableRef}
                     contentEditable
                     onInput={updateContentFromEditable}
                     onKeyDown={handleKeyDown}
