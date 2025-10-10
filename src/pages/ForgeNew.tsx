@@ -77,22 +77,21 @@ Some journeys begin with a single breath.`;
         {!thinkModeExpanded ? (
           <div
             onClick={() => setThinkModeExpanded(true)}
-            className="mb-8 rounded-xl cursor-pointer overflow-hidden transition-all hover:opacity-90"
+            className="mb-8 rounded-xl cursor-pointer transition-all hover:opacity-90"
             style={{
-              backgroundImage: "linear-gradient(to right, #B8956A, #D4AF85)"
+              backgroundColor: "#F5F1E8",
+              border: "2px dashed #B8956A"
             }}
           >
-            <div className="p-6 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Lightbulb className="w-6 h-6" style={{ color: "#FFFFFF" }} />
-                <div>
-                  <h3 className="font-semibold text-lg" style={{ color: "#FFFFFF" }}>
-                    Think Mode
-                  </h3>
-                  <p className="text-sm" style={{ color: "#FFFFFF" }}>
-                    Let's explore your ideas together
-                  </p>
-                </div>
+            <div className="p-6 flex items-center gap-4">
+              <Lightbulb className="w-6 h-6" style={{ color: "#B8956A" }} />
+              <div>
+                <h3 className="font-semibold text-lg" style={{ color: "#1A1816" }}>
+                  Not sure where to start? Try Think Mode
+                </h3>
+                <p className="text-sm" style={{ color: "#6B6560" }}>
+                  Brainstorm with AI before filling out the brief. No pressure, just ideas.
+                </p>
               </div>
             </div>
           </div>
@@ -401,11 +400,10 @@ Some journeys begin with a single breath.`;
               <Button
                 onClick={handleSubmit}
                 disabled={!product || !format}
+                variant="brass"
                 className="gap-2 px-8 disabled:cursor-not-allowed"
                 style={{
-                  backgroundImage: "linear-gradient(to right, #B8956A, #D4AF85)",
-                  color: "#1A1816",
-                  opacity: (!product || !format) ? 0.5 : 1
+                  backgroundImage: "linear-gradient(to right, #B8956A, #D4AF85)"
                 }}
               >
                 <Sparkles className="w-5 h-5" />
