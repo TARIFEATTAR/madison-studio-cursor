@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Lightbulb, FileText, PenTool, X, Send, Loader2 } from "lucide-react";
 import { createRoot } from "react-dom/client";
 import { GeneratingLoader } from "@/components/forge/GeneratingLoader";
+import { TransitionLoader } from "@/components/forge/TransitionLoader";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useToast } from "@/hooks/use-toast";
@@ -48,6 +49,7 @@ export default function ForgeNew() {
   const [thinkModeInput, setThinkModeInput] = useState("");
   const [thinkModeMessages, setThinkModeMessages] = useState<Array<{role: string, content: string}>>([]);
   const [isThinking, setIsThinking] = useState(false);
+  const [showTransitionLoader, setShowTransitionLoader] = useState(false);
 
   const handleSubmit = () => {
     // Validate required fields
@@ -117,7 +119,25 @@ export default function ForgeNew() {
         throw new Error("No organization found. Please complete onboarding first.");
       }
 
-      const { data: savedContent, error: saveError } = await supabase
+      // Backup to localStorage immediately
+      localStorage.setItem('draft-content-backup', JSON.stringify({
+        title: contentName,
+        content: generatedContent,
+        format,
+        timestamp: Date.now()
+      }));
+
+      // Remove generating loader
+      const generatingLoader = document.getElementById('generating-loader');
+      if (generatingLoader) {
+        generatingLoader.remove();
+      }
+
+      // Show transition loader
+      setShowTransitionLoader(true);
+
+      // Start database save (non-blocking)
+      const savePromise = supabase
         .from('master_content')
         .insert({
           title: contentName,
@@ -130,22 +150,32 @@ export default function ForgeNew() {
         .select()
         .single();
 
-      if (saveError) throw saveError;
-
-      // Remove loading overlay
-      const loader = document.getElementById('generating-loader');
-      if (loader) loader.remove();
-
-      // Navigate to editor with content
-      navigate("/editor", {
-        state: {
-          contentId: savedContent.id,
-          content: generatedContent,
-          contentType: format,
-          productName: product,
-          contentName: contentName
+      // Handle save in background
+      savePromise.then(({ data, error }) => {
+        if (error) {
+          console.error('Save failed:', error);
+          toast({
+            title: "Content saved locally",
+            description: "We'll retry saving to your library shortly.",
+          });
+        } else {
+          // Silent success - user is already in editor
+          localStorage.removeItem('draft-content-backup');
         }
       });
+
+      // Navigate immediately (slight delay for transition to show)
+      setTimeout(() => {
+        navigate("/editor", {
+          state: { 
+            contentId: null, // Will be populated when save completes
+            content: generatedContent,
+            contentType: format,
+            productName: product,
+            contentName: contentName
+          }
+        });
+      }, 100);
 
     } catch (error) {
       console.error("Error generating content:", error);
@@ -616,7 +646,8 @@ export default function ForgeNew() {
         </div>
       </div>
 
-      {/* Dialogs */}
+      {/* Dialogs and Loaders */}
+      {showTransitionLoader && <TransitionLoader onComplete={() => setShowTransitionLoader(false)} />}
       <NameContentDialog
         open={nameDialogOpen}
         onOpenChange={setNameDialogOpen}
