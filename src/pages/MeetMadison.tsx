@@ -1,28 +1,47 @@
 import { User, Lightbulb, BookOpen, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 
 export default function MeetMadison() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-vellum-cream">
-      <div className="max-w-4xl mx-auto px-6 py-12">
-        {/* Header */}
-        <div className="mb-12 text-center">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-brass to-brass-glow mx-auto mb-6 flex items-center justify-center">
+    <div className="relative min-h-screen bg-vellum-cream">
+      {/* Full-page background image - very subtle */}
+      <div 
+        className="fixed inset-0 opacity-10 pointer-events-none"
+        style={{
+          backgroundImage: "url('/assets/madison-avenue-sketch.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          zIndex: 0
+        }}
+      />
+      
+      {/* Content wrapper */}
+      <div className="relative z-10 max-w-6xl mx-auto px-6 py-16">
+        {/* Profile icon - OUTSIDE card, on cream background */}
+        <div className="flex justify-center mb-6">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-brass to-brass-glow flex items-center justify-center shadow-md">
             <User className="w-12 h-12 text-white" />
           </div>
-          <h1 className="text-5xl font-serif font-medium text-ink-black mb-4">
+        </div>
+        
+        {/* Header text - OUTSIDE card */}
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-serif font-semibold text-ink-black mb-2">
             Meet Madison
           </h1>
           <p className="text-xl text-warm-gray">
             Your Editorial Director at Scriptora
           </p>
         </div>
-
-        {/* Main Content */}
-        <div className="bg-parchment-white rounded-xl border border-warm-gray/20 p-8 mb-8">
+        
+        {/* Solid white content card */}
+        <Card className="max-w-4xl mx-auto bg-white shadow-xl border border-warm-gray/20">
+          <CardContent className="p-8 space-y-8">
           {/* Origin Story */}
           <section className="mb-10">
             <h2 className="text-2xl font-serif font-medium text-ink-black mb-4 flex items-center gap-2">
@@ -153,10 +172,11 @@ export default function MeetMadison() {
               </p>
             </div>
           </section>
-        </div>
-
-        {/* CTA */}
-        <div className="text-center">
+          </CardContent>
+        </Card>
+        
+        {/* CTA - OUTSIDE card */}
+        <div className="text-center mt-12">
           <Button
             onClick={() => navigate("/create")}
             className="bg-gradient-to-r from-brass to-brass-glow hover:opacity-90 text-white px-8 py-6 text-lg"
