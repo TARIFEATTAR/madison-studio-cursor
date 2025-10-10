@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import archivesIcon from "@/assets/archives-icon.png";
 import createIcon from "@/assets/create-icon.png";
 import multiplyIcon from "@/assets/multiply-icon.png";
-import scheduleIcon from "@/assets/schedule-icon.png";
+import calendarIcon from "@/assets/calendar-icon.png";
 import scriptoraLogo from "@/assets/scriptora-logo-icon.png";
 import heroImage from "@/assets/scriptora-hero.jpg";
 
@@ -161,7 +161,7 @@ const Landing = () => {
               <Card className="bg-parchment-white border-aged-brass/20 hover:shadow-level-2 transition-all duration-300 hover:-translate-y-1">
                 <CardContent className="p-8 space-y-4">
                   <div className="w-20 h-20 flex items-center justify-center">
-                    <img src={scheduleIcon} alt="Schedule" className="w-full h-full object-contain" />
+                    <img src={calendarIcon} alt="Schedule" className="w-full h-full object-contain" />
                   </div>
                   <h3 className="text-2xl font-serif text-ink-black">Schedule</h3>
                   <p className="text-charcoal/80 leading-relaxed">
