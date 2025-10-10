@@ -345,10 +345,10 @@
   font-family: 'Cormorant Garamond', serif;
   font-size: 64px; /* Increased from ~48px */
   font-weight: 600;
-  line-height: 1.1;
+  line-height: 1.1; /* Tighter, more editorial */
   letter-spacing: -0.02em;
   color: hsl(48, 100%, 99%); /* Parchment white */
-  margin-bottom: 24px;
+  margin-bottom: 20px; /* Less gap before subheadline */
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3); /* Subtle depth */
 }
 
