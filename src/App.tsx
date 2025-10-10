@@ -5,7 +5,6 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { useAuth } from "@/hooks/useAuth";
 
 import Navigation from "./components/Navigation";
-import { AssistantTrigger } from "./components/assistant/AssistantTrigger";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./components/AppSidebar";
 
@@ -54,7 +53,6 @@ const AppContent = () => {
   return (
     <>
       {!showSidebar && user && <Navigation />}
-      {user && <AssistantTrigger />}
       
       {showSidebar ? (
         <SidebarProvider>
