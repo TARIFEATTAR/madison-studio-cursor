@@ -277,7 +277,6 @@
   height: 100vh;
   min-height: 700px;
   overflow: hidden;
-  background-color: hsl(45, 29%, 95%); /* Vellum fallback */
 }
 
 /* Background Image - Full Coverage */
@@ -290,8 +289,8 @@
 .hero-image {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* Covers entire viewport */
-  object-position: center; /* Centers the desk/typewriter */
+  object-fit: cover;
+  object-position: center;
 }
 
 /* Gradient Overlay - Dark left, transparent right */
@@ -301,21 +300,11 @@
   z-index: 1;
   background: linear-gradient(
     to right,
-    rgba(26, 24, 22, 0.85) 0%,      /* Dark ink black - left side */
-    rgba(26, 24, 22, 0.65) 25%,     /* Medium dark */
-    rgba(26, 24, 22, 0.35) 45%,     /* Light overlay */
-    rgba(26, 24, 22, 0.15) 60%,     /* Very light */
+    rgba(26, 24, 22, 0.88) 0%,      /* Dark ink black - left side */
+    rgba(26, 24, 22, 0.68) 25%,     /* Medium dark */
+    rgba(26, 24, 22, 0.38) 45%,     /* Light overlay */
+    rgba(26, 24, 22, 0.18) 60%,     /* Very light */
     transparent 75%                  /* Fully transparent right */
-  );
-}
-
-/* Alternative: Radial gradient for centered text */
-.hero-overlay-radial {
-  background: radial-gradient(
-    ellipse at 30% 50%,
-    rgba(26, 24, 22, 0.85) 0%,
-    rgba(26, 24, 22, 0.45) 40%,
-    transparent 70%
   );
 }
 
@@ -326,8 +315,9 @@
   height: 100%;
   display: flex;
   align-items: center;
-  padding-left: 10%; /* More left margin */
-  padding-right: 20%; /* More right space */
+  padding-left: 8%;        /* LEFT POSITIONING */
+  padding-right: 15%;      /* RIGHT MARGIN */
+  justify-content: flex-start; /* LEFT ALIGNMENT */
 }
 
 .hero-container {
@@ -337,9 +327,9 @@
 }
 
 .hero-text-block {
-  max-width: 560px; /* Slightly narrower for better readability */
-  padding-top: 40px;
-  padding-right: 60px; /* Keep text away from right edge */
+  max-width: 600px;        /* CONSTRAINS WIDTH */
+  padding-top: 60px;       /* VERTICAL POSITION */
+  padding-right: 60px;
 }
 
 /* Headline Styling */
@@ -349,33 +339,30 @@
   font-weight: 600;
   line-height: 1.1;
   letter-spacing: -0.02em;
-  color: hsl(48, 100%, 99%); /* Parchment white */
+  color: hsl(48, 100%, 99%);
   margin-bottom: 20px;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3); /* Subtle depth */
 }
 
+/* Gold "Craft Their Narrative" */
 .headline-accent {
   display: block;
-  font-size: 72px; /* Larger than main headline */
-  color: hsl(42, 77%, 75%); /* Brighter gold */
+  font-size: 72px;
+  color: hsl(42, 77%, 75%);
   margin-top: 4px;
-  text-shadow: 
-    0 0 30px rgba(212, 175, 55, 0.4),
-    0 2px 12px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
 }
 
-/* Subheadline Styling */
+/* Subheadline */
 .hero-subheadline {
   font-family: 'Lato', sans-serif;
   font-size: 20px;
   line-height: 1.6;
-  color: hsl(48, 100%, 95%); /* Slightly off-white */
+  color: hsl(48, 100%, 95%);
   margin-bottom: 36px;
   max-width: 560px;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4); /* Text legibility */
 }
 
-/* CTA Buttons */
+/* Buttons */
 .hero-ctas {
   display: flex;
   gap: 20px;
@@ -383,14 +370,14 @@
 }
 
 .btn-primary-brass {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 19px;
-  font-weight: 600;
   padding: 18px 48px;
+  font-size: 19px;
   background: linear-gradient(135deg, #B8956A 0%, #D4AF37 100%);
-  color: hsl(0, 0%, 5%); /* Ink black */
+  color: hsl(0, 0%, 5%);
   border: none;
   border-radius: 8px;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(184, 149, 106, 0.3);
@@ -403,24 +390,17 @@
 }
 
 .btn-secondary-ghost {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 19px;
-  font-weight: 600;
   padding: 18px 48px;
+  font-size: 19px;
   background: transparent;
   color: hsl(48, 100%, 99%);
   border: 2px solid hsl(48, 100%, 99%);
   border-radius: 8px;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   backdrop-filter: blur(8px);
-}
-
-.btn-secondary-ghost:hover {
-  background: rgba(255, 252, 245, 0.15);
-  border-color: hsl(42, 77%, 70%);
-  color: hsl(42, 77%, 70%);
-  transform: translateY(-2px);
 }
 
 /* Scroll Indicator */
