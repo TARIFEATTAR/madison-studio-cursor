@@ -440,11 +440,11 @@ export default function ContentEditorPage() {
             </Button>
           </div>
 
-          {/* Center: Editorial Assistant */}
+          {/* Center: Editorial Assistant - Hidden on mobile */}
           <Button
             variant={assistantOpen ? "default" : "ghost"}
             onClick={handleToggleAssistant}
-            className="gap-2 h-9"
+            className="gap-2 h-9 hidden md:flex"
             style={{
               backgroundColor: assistantOpen ? "#B8956A" : undefined,
               color: assistantOpen ? "#FFFFFF" : undefined
@@ -565,14 +565,55 @@ export default function ContentEditorPage() {
 
       {/* Mobile: Bottom drawer assistant */}
       {isMobile && (
-        <Drawer open={assistantOpen} onOpenChange={setAssistantOpen}>
-          <DrawerContent className="h-[85vh]" style={{ backgroundColor: "#FFFCF5" }}>
-            <EditorialAssistantPanel 
-              onClose={handleToggleAssistant}
-              initialContent={editableContent}
-            />
-          </DrawerContent>
-        </Drawer>
+        <>
+          {/* Floating Madison Button - Mobile Only */}
+          {!assistantOpen && (
+            <button
+              onClick={handleToggleAssistant}
+              className="fixed bottom-6 right-6 z-50 group"
+              style={{
+                width: '64px',
+                height: '64px',
+                background: 'linear-gradient(135deg, #B8956A 0%, #8B7355 100%)',
+                borderRadius: '16px 16px 16px 4px',
+                boxShadow: '0 8px 24px rgba(184, 149, 106, 0.4), inset 0 -2px 8px rgba(0, 0, 0, 0.15)',
+                border: '2px solid rgba(139, 115, 85, 0.3)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+              }}
+              aria-label="Open Editorial Assistant"
+            >
+              <div className="relative w-full h-full flex items-center justify-center">
+                {/* Engraved M */}
+                <span 
+                  className="font-serif text-3xl font-bold"
+                  style={{
+                    color: '#F5F1E8',
+                    textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 -1px 2px rgba(255, 255, 255, 0.1)',
+                    transform: 'translateY(-1px)'
+                  }}
+                >
+                  M
+                </span>
+                {/* Subtle shine effect */}
+                <div 
+                  className="absolute inset-0 rounded-[14px] opacity-20 pointer-events-none"
+                  style={{
+                    background: 'linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%)'
+                  }}
+                />
+              </div>
+            </button>
+          )}
+          
+          <Drawer open={assistantOpen} onOpenChange={setAssistantOpen}>
+            <DrawerContent className="h-[85vh]" style={{ backgroundColor: "#FFFCF5" }}>
+              <EditorialAssistantPanel 
+                onClose={handleToggleAssistant}
+                initialContent={editableContent}
+              />
+            </DrawerContent>
+          </Drawer>
+        </>
       )}
     </div>
   );
