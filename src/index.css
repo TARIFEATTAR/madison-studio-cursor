@@ -343,9 +343,9 @@
 /* Headline Styling */
 .hero-headline {
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(48px, 6vw, 72px); /* Responsive sizing */
+  font-size: 64px; /* Increased from ~48px */
   font-weight: 600;
-  line-height: 1.15;
+  line-height: 1.1;
   letter-spacing: -0.02em;
   color: hsl(48, 100%, 99%); /* Parchment white */
   margin-bottom: 24px;
@@ -354,6 +354,7 @@
 
 .headline-accent {
   display: block;
+  font-size: 72px; /* Larger than main headline */
   color: hsl(42, 77%, 70%); /* Antique gold */
   margin-top: 8px;
   /* Optional: Add subtle glow effect */
