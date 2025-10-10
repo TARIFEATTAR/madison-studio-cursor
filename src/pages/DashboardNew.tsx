@@ -89,12 +89,7 @@ export default function DashboardNew() {
 
         {/* Priority Action Card */}
         {showPriorityCard && (
-          <Card 
-            className="p-8 mb-6 border-none shadow-level-2 relative"
-            style={{
-              background: "linear-gradient(135deg, hsl(var(--aged-brass)), hsl(var(--antique-gold)))"
-            }}
-          >
+          <div className="bg-gradient-to-br from-aged-brass to-antique-gold rounded-xl p-8 shadow-lg mb-10 relative">
             <button
               onClick={() => setShowPriorityCard(false)}
               className="absolute top-4 right-4 text-ink-black/70 hover:text-ink-black transition-colors"
@@ -103,8 +98,8 @@ export default function DashboardNew() {
             </button>
             
             <div className="flex items-start gap-6">
-              <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center shrink-0 shadow-level-1">
-                <Calendar className="w-8 h-8 text-ink-black" />
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
+                <Calendar className="w-8 h-8 text-white" />
               </div>
               
               <div className="flex-1">
@@ -139,7 +134,7 @@ export default function DashboardNew() {
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
         )}
 
         {/* Content Bank */}
