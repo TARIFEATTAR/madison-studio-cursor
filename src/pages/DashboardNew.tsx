@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { X, Lightbulb, Calendar, Archive, Instagram, Mail, Twitter } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export default function DashboardNew() {
+  const navigate = useNavigate();
   const [showEditorialBanner, setShowEditorialBanner] = useState(true);
   const [showPriorityCard, setShowPriorityCard] = useState(true);
 
@@ -86,10 +88,17 @@ export default function DashboardNew() {
                 </p>
                 
                 <div className="flex gap-3">
-                  <Button className="bg-ink-black hover:bg-charcoal text-white font-semibold px-6 py-3 h-auto">
+                  <Button 
+                    onClick={() => navigate('/schedule')}
+                    className="bg-ink-black hover:bg-charcoal text-white font-semibold px-6 py-3 h-auto"
+                  >
                     Schedule Now
                   </Button>
-                  <Button variant="outline" className="bg-white/50 hover:bg-white text-ink-black border-ink-black/20 font-semibold px-6 py-3 h-auto">
+                  <Button 
+                    onClick={() => setShowPriorityCard(false)}
+                    variant="outline" 
+                    className="bg-white/50 hover:bg-white text-ink-black border-ink-black/20 font-semibold px-6 py-3 h-auto"
+                  >
                     Not Now
                   </Button>
                 </div>
@@ -110,7 +119,10 @@ export default function DashboardNew() {
                 <p className="text-warm-gray text-sm">Ready to schedule or review</p>
               </div>
             </div>
-            <button className="text-aged-brass hover:text-antique-gold font-semibold text-sm transition-colors">
+            <button 
+              onClick={() => navigate('/library')}
+              className="text-aged-brass hover:text-antique-gold font-semibold text-sm transition-colors"
+            >
               View All →
             </button>
           </div>

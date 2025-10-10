@@ -1,5 +1,5 @@
-import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
+import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft } from "lucide-react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -8,6 +8,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
@@ -52,8 +53,9 @@ const navItems = [
 ];
 
 export function AppSidebar() {
-  const { open } = useSidebar();
+  const { open, toggleSidebar } = useSidebar();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const isActive = (path: string) => {
     if (path === "/" && location.pathname === "/") return true;
@@ -89,11 +91,21 @@ export function AppSidebar() {
         
         {open && (
           <div className="px-4 pb-4">
-            <button className="w-full bg-aged-brass hover:bg-antique-gold transition-colors text-ink-black font-semibold py-2.5 px-4 rounded-lg text-sm">
+            <button 
+              onClick={toggleSidebar}
+              className="w-full bg-aged-brass hover:bg-antique-gold transition-colors text-ink-black font-semibold py-2.5 px-4 rounded-lg text-sm"
+            >
               <span className="flex items-center justify-center gap-2">
+                <ChevronLeft className="w-4 h-4" />
                 <span>Collapse</span>
               </span>
             </button>
+          </div>
+        )}
+        
+        {!open && (
+          <div className="px-2 pb-4">
+            <SidebarTrigger className="w-full h-10 hover:bg-white/5" />
           </div>
         )}
       </SidebarHeader>
@@ -171,7 +183,10 @@ export function AppSidebar() {
               <p className="text-white/60 text-xs">Premium Plan</p>
             </div>
           )}
-          <button className="text-white/70 hover:text-white p-2 rounded-lg hover:bg-white/5 transition-colors">
+          <button 
+            onClick={() => navigate('/settings')}
+            className="text-white/70 hover:text-white p-2 rounded-lg hover:bg-white/5 transition-colors"
+          >
             <Settings className="w-5 h-5" />
           </button>
         </div>
