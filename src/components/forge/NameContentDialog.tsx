@@ -83,13 +83,10 @@ export function NameContentDialog({ open, onOpenChange, onConfirm }: NameContent
           <Button
             onClick={handleConfirm}
             disabled={!contentName.trim()}
-            className="gap-2"
-            style={{
-              background: "linear-gradient(to-right, #B8956A, #D4AF85)",
-              color: "#1A1816"
-            }}
+            variant="brass"
+            className="gap-2 bg-gradient-to-r from-aged-brass to-antique-gold text-ink-black disabled:opacity-100"
           >
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="w-4 h-4 text-ink-black" />
             <span>Generate Content</span>
           </Button>
         </DialogFooter>
