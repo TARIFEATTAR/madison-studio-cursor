@@ -241,12 +241,6 @@ Some journeys begin with a single breath.`;
                   <SelectItem value="educate">Educate Audience</SelectItem>
                   <SelectItem value="nurture">Nurture Relationships</SelectItem>
                   <SelectItem value="launch">Launch Product</SelectItem>
-                <SelectContent>
-                  <SelectItem value="sales">Drive Sales</SelectItem>
-                  <SelectItem value="awareness">Build Awareness</SelectItem>
-                  <SelectItem value="educate">Educate Audience</SelectItem>
-                  <SelectItem value="nurture">Nurture Relationships</SelectItem>
-                  <SelectItem value="launch">Launch Product</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs italic mt-2" style={{ color: "#A8A39E" }}>
