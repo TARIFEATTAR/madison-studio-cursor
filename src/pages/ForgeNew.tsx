@@ -41,6 +41,7 @@ export default function ForgeNew() {
   const [thinkModeMessages, setThinkModeMessages] = useState<Array<{role: string, content: string}>>([]);
   const [isThinking, setIsThinking] = useState(false);
   const [showTransitionLoader, setShowTransitionLoader] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleSubmit = () => {
     // Validate required fields
@@ -66,6 +67,7 @@ export default function ForgeNew() {
     
     localStorage.setItem('scriptora-content-brief', JSON.stringify(briefData));
     setNameDialogOpen(false);
+    setIsGenerating(true);
     
     // Show loading overlay
     const loadingDiv = document.createElement('div');
@@ -187,6 +189,7 @@ export default function ForgeNew() {
       loaderRoot.unmount();
       const loader = document.getElementById('generating-loader');
       if (loader) loader.remove();
+      setIsGenerating(false);
     }
   };
 
@@ -289,7 +292,7 @@ export default function ForgeNew() {
 
   return (
     <div className="min-h-screen pb-20 bg-vellum-cream">
-      <div className="max-w-5xl mx-auto px-6 py-10">
+      <div className={`max-w-5xl mx-auto px-6 py-10 transition-opacity duration-300 ${isGenerating ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
           {/* Think Mode - Inline Expandable */}
           {!thinkModeExpanded ? (
             <div
