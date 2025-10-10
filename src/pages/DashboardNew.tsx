@@ -89,7 +89,7 @@ export default function DashboardNew() {
 
         {/* Priority Action Card */}
         {showPriorityCard && (
-          <div className="bg-gradient-to-br from-aged-brass to-antique-gold rounded-xl p-8 shadow-lg mb-10 relative">
+          <div className="bg-gradient-to-br from-brass to-brass-glow rounded-xl p-8 shadow-lg mb-10 relative">
             <button
               onClick={() => setShowPriorityCard(false)}
               className="absolute top-4 right-4 text-ink-black/70 hover:text-ink-black transition-colors"

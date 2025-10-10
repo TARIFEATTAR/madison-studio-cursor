@@ -22,6 +22,8 @@
     
     /* Accents - The Details */
     --aged-brass: 38 33% 56%;        /* #B8956A - Primary accent */
+    --brass: 38 33% 56%;             /* #B8956A - Alias for aged-brass */
+    --brass-glow: 43 65% 52%;        /* #D4AF37 - Lighter brass variant */
     --antique-gold: 43 65% 52%;      /* #D4AF37 - Secondary accent */
     --deep-burgundy: 345 44% 30%;    /* #6B2C3E - Error states */
     --forest-ink: 140 13% 26%;       /* #3A4A3D - Success states */

@@ -55,6 +55,8 @@ export default {
         'vellum-cream': "hsl(var(--vellum-cream))",
         'parchment-white': "hsl(var(--parchment-white))",
         'aged-brass': "hsl(var(--aged-brass))",
+        'brass': "hsl(var(--brass))",
+        'brass-glow': "hsl(var(--brass-glow))",
         'antique-gold': "hsl(var(--antique-gold))",
         'deep-burgundy': "hsl(var(--deep-burgundy))",
         'forest-ink': "hsl(var(--forest-ink))",
