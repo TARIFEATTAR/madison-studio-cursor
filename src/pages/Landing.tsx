@@ -57,11 +57,6 @@ const Landing = () => {
       <section className="py-20 md:py-32">
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-center space-y-8">
-            <Badge className="bg-aged-brass/10 text-aged-brass border-aged-brass/20 hover:bg-aged-brass/20">
-              <Sparkles className="w-3 h-3 mr-1" />
-              AI-Powered Brand Intelligence
-            </Badge>
-
             <h1 className="text-5xl md:text-7xl font-serif leading-tight">
               <span className="text-ink-black">Your Brand's</span>
               <br />
