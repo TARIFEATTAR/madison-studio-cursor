@@ -1,143 +1,84 @@
-import { useState, useEffect, useRef } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useOnboarding } from "@/hooks/useOnboarding";
-import { Upload, X, Printer, Check } from "lucide-react";
-import { useIndustryConfig } from "@/hooks/useIndustryConfig";
 
-interface BrandConfig {
-  logo_url?: string;
-  brand_colors?: string[];
-  typography_font?: string;
+interface BrandGuidelines {
+  brand_name?: string;
+  brand_voice?: string;
+  forbidden_phrases?: string;
+  brand_story?: string;
+  target_audience?: string;
 }
 
 export function BrandGuidelinesTab() {
   const { toast } = useToast();
   const { currentOrganizationId } = useOnboarding();
-  const { industryConfig } = useIndustryConfig(currentOrganizationId);
-  const [brandConfig, setBrandConfig] = useState<BrandConfig>({
-    brand_colors: ["#B8956A", "#FFFFFF", "#000000", "#F5F5F5"],
-  });
-  const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const logoInputRef = useRef<HTMLInputElement>(null);
+  const [guidelines, setGuidelines] = useState<BrandGuidelines>({
+    brand_name: "Scriptora",
+    brand_voice: "",
+    forbidden_phrases: "",
+    brand_story: "",
+    target_audience: "",
+  });
 
   useEffect(() => {
-    loadBrandConfig();
+    loadBrandGuidelines();
   }, [currentOrganizationId]);
 
-  const loadBrandConfig = async () => {
+  const loadBrandGuidelines = async () => {
     if (!currentOrganizationId) return;
 
     try {
       const { data, error } = await supabase
         .from("organizations")
-        .select("brand_config")
+        .select("settings")
         .eq("id", currentOrganizationId)
         .single();
 
       if (error) throw error;
 
-      const config = (data?.brand_config as any) || {};
-      setBrandConfig({
-        logo_url: config.logo_url,
-        brand_colors: config.brand_colors || ["#B8956A", "#FFFFFF", "#000000", "#F5F5F5"],
-        typography_font: config.typography_font || "Inter",
+      const settings = (data?.settings as any) || {};
+      const saved = settings.brand_guidelines || {};
+      setGuidelines({
+        brand_name: saved.brand_name || "Scriptora",
+        brand_voice: saved.brand_voice || "",
+        forbidden_phrases: saved.forbidden_phrases || "",
+        brand_story: saved.brand_story || "",
+        target_audience: saved.target_audience || "",
       });
     } catch (error) {
-      console.error("Error loading brand config:", error);
+      console.error("Error loading brand guidelines:", error);
     }
   };
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !currentOrganizationId) return;
-
-    // Validate file type
-    const validTypes = ["image/png", "image/jpeg", "image/svg+xml", "image/webp"];
-    if (!validTypes.includes(file.type)) {
-      toast({
-        title: "Invalid file type",
-        description: "Please upload a PNG, JPG, SVG, or WebP image.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate file size (5MB)
-    if (file.size > 5242880) {
-      toast({
-        title: "File too large",
-        description: "Logo must be under 5MB.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${currentOrganizationId}/logo.${fileExt}`;
-
-      // Delete old logo if exists
-      if (brandConfig.logo_url) {
-        const oldPath = brandConfig.logo_url.split("/").slice(-2).join("/");
-        await supabase.storage.from("brand-assets").remove([oldPath]);
-      }
-
-      // Upload new logo
-      const { error: uploadError } = await supabase.storage
-        .from("brand-assets")
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from("brand-assets")
-        .getPublicUrl(fileName);
-
-      // Update brand config
-      const newConfig = { ...brandConfig, logo_url: publicUrl };
-      setBrandConfig(newConfig);
-
-      await saveBrandConfig(newConfig);
-
-      toast({
-        title: "Logo uploaded",
-        description: "Your brand logo has been saved.",
-      });
-    } catch (error) {
-      console.error("Error uploading logo:", error);
-      toast({
-        title: "Upload failed",
-        description: "Could not upload logo. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const handleColorChange = (index: number, color: string) => {
-    const newColors = [...(brandConfig.brand_colors || [])];
-    newColors[index] = color;
-    setBrandConfig({ ...brandConfig, brand_colors: newColors });
-  };
-
-  const saveBrandConfig = async (config?: BrandConfig) => {
+  const handleSave = async () => {
     if (!currentOrganizationId) return;
 
     setIsSaving(true);
     try {
+      // First get current settings
+      const { data: orgData } = await supabase
+        .from("organizations")
+        .select("settings")
+        .eq("id", currentOrganizationId)
+        .single();
+
+      const currentSettings = (orgData?.settings as any) || {};
+
+      // Update with brand guidelines
       const { error } = await supabase
         .from("organizations")
         .update({
-          brand_config: (config || brandConfig) as any,
+          settings: {
+            ...currentSettings,
+            brand_guidelines: guidelines,
+          } as any,
         })
         .eq("id", currentOrganizationId);
 
@@ -148,7 +89,7 @@ export function BrandGuidelinesTab() {
         description: "Your brand guidelines have been updated.",
       });
     } catch (error) {
-      console.error("Error saving brand config:", error);
+      console.error("Error saving brand guidelines:", error);
       toast({
         title: "Save failed",
         description: "Could not save changes. Please try again.",
@@ -159,211 +100,96 @@ export function BrandGuidelinesTab() {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   return (
-    <div className="space-y-6">
-      {/* Header with Print Button */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold text-foreground">Brand Guidelines</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Define your visual identity - logo, colors, and typography
+    <div className="bg-paper-light border border-cream-dark rounded-xl p-8">
+      <h2 className="text-2xl font-serif text-charcoal mb-6">Brand Identity</h2>
+
+      <div className="space-y-6">
+        {/* Brand Name */}
+        <div className="space-y-2">
+          <Label htmlFor="brand-name" className="text-neutral-600">
+            Brand Name
+          </Label>
+          <Input
+            id="brand-name"
+            value={guidelines.brand_name}
+            onChange={(e) => setGuidelines({ ...guidelines, brand_name: e.target.value })}
+            className="bg-paper-light border-cream-dark"
+          />
+        </div>
+
+        {/* Brand Voice & Tone */}
+        <div className="space-y-2">
+          <Label htmlFor="brand-voice" className="text-neutral-600">
+            Brand Voice & Tone
+          </Label>
+          <Textarea
+            id="brand-voice"
+            value={guidelines.brand_voice}
+            onChange={(e) => setGuidelines({ ...guidelines, brand_voice: e.target.value })}
+            placeholder="Describe your brand's voice and tone..."
+            className="min-h-[100px] bg-paper border-cream-dark resize-none"
+          />
+          <p className="text-xs text-neutral-500">
+            This guides the AI in generating on-brand content
           </p>
         </div>
-        <Button onClick={handlePrint} variant="outline" className="gap-2">
-          <Printer className="w-4 h-4" />
-          Print Guidelines
-        </Button>
+
+        {/* Forbidden Phrases */}
+        <div className="space-y-2">
+          <Label htmlFor="forbidden-phrases" className="text-neutral-600">
+            Forbidden Phrases
+          </Label>
+          <Textarea
+            id="forbidden-phrases"
+            value={guidelines.forbidden_phrases}
+            onChange={(e) => setGuidelines({ ...guidelines, forbidden_phrases: e.target.value })}
+            placeholder="List phrases to avoid (comma-separated)..."
+            className="min-h-[100px] bg-paper border-cream-dark resize-none"
+          />
+          <p className="text-xs text-neutral-500">
+            The AI will avoid using these phrases in generated content
+          </p>
+        </div>
+
+        {/* Brand Story */}
+        <div className="space-y-2">
+          <Label htmlFor="brand-story" className="text-neutral-600">
+            Brand Story
+          </Label>
+          <Textarea
+            id="brand-story"
+            value={guidelines.brand_story}
+            onChange={(e) => setGuidelines({ ...guidelines, brand_story: e.target.value })}
+            placeholder="Tell your brand's story..."
+            className="min-h-[150px] bg-paper border-cream-dark resize-none"
+          />
+        </div>
+
+        {/* Target Audience */}
+        <div className="space-y-2">
+          <Label htmlFor="target-audience" className="text-neutral-600">
+            Target Audience
+          </Label>
+          <Textarea
+            id="target-audience"
+            value={guidelines.target_audience}
+            onChange={(e) => setGuidelines({ ...guidelines, target_audience: e.target.value })}
+            placeholder="Describe your ideal customer..."
+            className="min-h-[100px] bg-paper border-cream-dark resize-none"
+          />
+        </div>
       </div>
 
-      {/* Logo Section */}
-      <Card className="print:border-2 print:border-foreground">
-        <CardHeader>
-          <CardTitle>Brand Logo</CardTitle>
-          <CardDescription>Upload your primary brand logo (PNG, JPG, SVG, or WebP, max 5MB)</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {brandConfig.logo_url ? (
-            <div className="relative inline-block">
-              <img
-                src={brandConfig.logo_url}
-                alt="Brand Logo"
-                className="max-h-32 object-contain border border-border/40 rounded-lg p-4 bg-card"
-              />
-              <Button
-                size="sm"
-                variant="ghost"
-                className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full bg-destructive hover:bg-destructive/90 text-destructive-foreground print:hidden"
-                onClick={() => {
-                  setBrandConfig({ ...brandConfig, logo_url: undefined });
-                  saveBrandConfig({ ...brandConfig, logo_url: undefined });
-                }}
-              >
-                <X className="w-3 h-3" />
-              </Button>
-            </div>
-          ) : (
-            <div
-              onClick={() => logoInputRef.current?.click()}
-              className="border-2 border-dashed border-border/60 rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors print:hidden"
-            >
-              <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Click to upload your logo</p>
-            </div>
-          )}
-          <input
-            ref={logoInputRef}
-            type="file"
-            accept="image/png,image/jpeg,image/svg+xml,image/webp"
-            onChange={handleLogoUpload}
-            className="hidden"
-          />
-          {brandConfig.logo_url && (
-            <Button
-              variant="outline"
-              onClick={() => logoInputRef.current?.click()}
-              disabled={isUploading}
-              className="gap-2 print:hidden"
-            >
-              <Upload className="w-4 h-4" />
-              {isUploading ? "Uploading..." : "Replace Logo"}
-            </Button>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Color Palette Section */}
-      <Card className="print:border-2 print:border-foreground">
-        <CardHeader>
-          <CardTitle>Color Palette</CardTitle>
-          <CardDescription>Define up to 4 core brand colors</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {[0, 1, 2, 3].map((index) => (
-              <div key={index} className="space-y-3">
-                <Label className="text-sm font-medium">
-                  {index === 0 ? "Primary Color" : index === 1 ? "Secondary Color" : `Accent Color ${index - 1}`}
-                </Label>
-                <div className="flex gap-3 items-center">
-                  <div
-                    className="h-20 w-20 rounded-lg border-2 border-border/40 flex-shrink-0 shadow-sm print:border-foreground"
-                    style={{ backgroundColor: brandConfig.brand_colors?.[index] }}
-                  />
-                  <div className="flex-1 space-y-2">
-                    <input
-                      type="color"
-                      value={brandConfig.brand_colors?.[index] || "#FFFFFF"}
-                      onChange={(e) => handleColorChange(index, e.target.value)}
-                      className="h-10 w-full rounded border border-border/40 cursor-pointer print:hidden"
-                    />
-                    <Input
-                      value={brandConfig.brand_colors?.[index] || "#FFFFFF"}
-                      onChange={(e) => handleColorChange(index, e.target.value)}
-                      placeholder="#000000"
-                      className="bg-input border-border/40 font-mono text-sm"
-                      readOnly={typeof window !== 'undefined' && window.matchMedia('print').matches}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <Button onClick={() => saveBrandConfig()} disabled={isSaving} className="gap-2 print:hidden">
-            <Check className="w-4 h-4" />
-            {isSaving ? "Saving..." : "Save Colors"}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Typography Section */}
-      <Card className="print:border-2 print:border-foreground">
-        <CardHeader>
-          <CardTitle>Typography</CardTitle>
-          <CardDescription>Your brand's font family</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Font Family</Label>
-            <Input
-              value={brandConfig.typography_font || "Inter"}
-              onChange={(e) => setBrandConfig({ ...brandConfig, typography_font: e.target.value })}
-              placeholder="Inter, Cormorant Garamond, etc."
-              className="bg-input border-border/40"
-            />
-          </div>
-
-          {/* Typography Sample */}
-          <div className="border border-border/40 rounded-lg p-6 bg-card print:border-2 print:border-foreground">
-            <div style={{ fontFamily: brandConfig.typography_font || "Inter" }} className="space-y-4">
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Alphabet</p>
-                <p className="text-2xl">ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
-                <p className="text-2xl">abcdefghijklmnopqrstuvwxyz</p>
-                <p className="text-2xl">0123456789</p>
-              </div>
-              <div className="pt-4 border-t border-border/20">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Sample Text</p>
-                <p className="text-lg">The quick brown fox jumps over the lazy dog</p>
-              </div>
-            </div>
-          </div>
-
-          <Button onClick={() => saveBrandConfig()} disabled={isSaving} className="gap-2 print:hidden">
-            <Check className="w-4 h-4" />
-            {isSaving ? "Saving..." : "Save Typography"}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Industry-Specific Fields Section */}
-      {industryConfig && (
-        <Card className="print:border-2 print:border-foreground">
-          <CardHeader>
-            <CardTitle>Industry-Specific Fields</CardTitle>
-            <CardDescription>Custom fields for your {industryConfig.name} products</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Industry</Label>
-              <p className="text-base text-foreground">{industryConfig.name}</p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Section Title</Label>
-              <p className="text-base text-foreground">{industryConfig.section_title}</p>
-            </div>
-
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">Field Labels</Label>
-              <div className="space-y-2">
-                {industryConfig.fields.map((field, index) => (
-                  <div key={field.id} className="flex items-center gap-3 p-3 bg-muted/20 rounded-md border border-border/20">
-                    <span className="text-sm text-muted-foreground w-16">Field {index + 1}</span>
-                    <span className="text-base text-foreground font-medium">{field.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="pt-3 border-t border-border/20">
-              <p className="text-xs text-muted-foreground">
-                These fields are used throughout Forge and the Product Library to organize your content.
-                To change your industry, please contact support.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Print-only footer */}
-      <div className="hidden print:block mt-8 pt-4 border-t border-foreground/20">
-        <p className="text-sm text-muted-foreground text-center">
-          Brand Guidelines · Generated from Scriptora
-        </p>
+      {/* Save Button Footer */}
+      <div className="mt-8 pt-6 border-t border-cream-dark flex justify-end">
+        <Button 
+          onClick={handleSave} 
+          disabled={isSaving}
+          className="bg-brass hover:bg-brass-light text-charcoal"
+        >
+          {isSaving ? "Saving..." : "Save Changes"}
+        </Button>
       </div>
     </div>
   );
