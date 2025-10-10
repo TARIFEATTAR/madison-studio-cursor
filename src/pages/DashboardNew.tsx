@@ -14,23 +14,99 @@ export default function DashboardNew() {
 
   return (
     <div className="min-h-screen bg-vellum-cream">
-      <div className="max-w-7xl mx-auto px-8 py-8 space-y-6">
-        {/* Header with Streak */}
-        <div className="flex items-start justify-between pb-6 border-b border-warm-gray/20">
-          <div>
-            <h1 className="text-5xl font-serif font-semibold text-ink-black mb-2">
+      <div className="max-w-6xl mx-auto px-8 py-10">
+        
+        {/* Header */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-3">
+            <h1 className="font-serif text-4xl font-medium text-ink-black">
               Welcome back, Sample Brand
             </h1>
-            <p className="text-warm-gray text-lg">Your editorial command center</p>
+            <div className="flex items-center gap-2 px-4 py-2 bg-parchment-white rounded-lg border border-warm-gray/20">
+              <span className="text-2xl">🔥</span>
+              <span className="font-medium text-sm text-charcoal">5-day streak!</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-aged-brass/20 shadow-level-1">
-            <span className="text-2xl">🔥</span>
-            <span className="font-semibold text-ink-black">5-day streak!</span>
-          </div>
+          <p className="text-warm-gray text-base">
+            Your editorial command center
+          </p>
         </div>
 
-        {/* Quick Actions Cards */}
-        <div className="grid grid-cols-3 gap-4 mb-10">
+        {/* Priority Action - HERO ELEMENT */}
+        {showPriorityCard && (
+          <div className="bg-gradient-to-br from-brass to-brass-glow rounded-xl p-8 shadow-lg mb-10 relative">
+            <button
+              onClick={() => setShowPriorityCard(false)}
+              className="absolute top-4 right-4 text-ink-black/70 hover:text-ink-black transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-start gap-6">
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
+                <Calendar className="w-8 h-8 text-ink-black" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-ink-black/70">
+                    Priority Action
+                  </span>
+                  <span className="px-2 py-1 bg-white/20 rounded-full text-xs font-medium text-ink-black">
+                    5 min
+                  </span>
+                </div>
+                <h2 className="font-serif text-3xl font-medium text-ink-black mb-3 leading-tight">
+                  Schedule Your Noir de-Nuit Launch Campaign
+                </h2>
+                <p className="text-base text-ink-black/80 mb-6 leading-relaxed">
+                  You have 4 beautiful Instagram posts showcasing your new evening fragrance. 
+                  Let's get them scheduled for the week ahead to build anticipation for the launch.
+                </p>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => navigate('/schedule')}
+                    className="px-6 py-3 bg-ink-black hover:bg-charcoal text-parchment-white font-medium rounded-lg transition-all"
+                  >
+                    Schedule Now →
+                  </button>
+                  <button 
+                    onClick={() => setShowPriorityCard(false)}
+                    className="px-6 py-3 bg-white/20 hover:bg-white/30 text-ink-black font-medium rounded-lg transition-all"
+                  >
+                    Not Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Editorial Director - Subtle Support */}
+        {showEditorialBanner && (
+          <div className="bg-parchment-white border-l-4 border-brass p-6 rounded-lg mb-10 shadow-sm relative">
+            <button
+              onClick={() => setShowEditorialBanner(false)}
+              className="absolute top-4 right-4 text-warm-gray hover:text-charcoal transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-brass/10 rounded-full flex items-center justify-center flex-shrink-0">
+                <PenTool className="w-6 h-6 text-brass" />
+              </div>
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wider text-brass mb-1">
+                  Editorial Director
+                </div>
+                <p className="text-sm text-charcoal leading-relaxed">
+                  Welcome! I'll guide you through your content journey and help you make the most of your work.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Actions Grid */}
+        <div className="grid grid-cols-3 gap-4 mb-12">
           
           <button 
             onClick={() => navigate('/create')}
@@ -57,84 +133,6 @@ export default function DashboardNew() {
           </button>
 
         </div>
-
-        {/* Editorial Director Banner */}
-        {showEditorialBanner && (
-          <div className="bg-parchment-white border-l-4 border-aged-brass p-6 rounded-lg mb-8 shadow-sm relative">
-            <button
-              onClick={() => setShowEditorialBanner(false)}
-              className="absolute top-4 right-4 text-warm-gray hover:text-charcoal transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-4">
-              {/* Brass circle with pen icon */}
-              <div className="w-14 h-14 bg-aged-brass/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <PenTool className="w-6 h-6 text-aged-brass" />
-              </div>
-              
-              {/* Content */}
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wider text-aged-brass mb-1">
-                  Editorial Director
-                </div>
-                <p className="text-sm text-charcoal leading-relaxed">
-                  Welcome! I'll guide you through your content journey and help you make the most of your work.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Priority Action Card */}
-        {showPriorityCard && (
-          <div className="bg-gradient-to-br from-brass to-brass-glow rounded-xl p-8 shadow-lg mb-10 relative">
-            <button
-              onClick={() => setShowPriorityCard(false)}
-              className="absolute top-4 right-4 text-ink-black/70 hover:text-ink-black transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            
-            <div className="flex items-start gap-6">
-              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
-                <Calendar className="w-8 h-8 text-white" />
-              </div>
-              
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-4">
-                  <p className="text-ink-black text-sm font-bold uppercase tracking-wide">
-                    PRIORITY ACTION 1 OF 3 • 5 MIN
-                  </p>
-                </div>
-                
-                <h2 className="text-3xl font-serif font-semibold text-ink-black mb-3">
-                  Schedule Your Noir de-Nuit Launch Campaign
-                </h2>
-                
-                <p className="text-ink-black/80 text-lg mb-6">
-                  You have 4 beautiful Instagram posts showcasing your new evening fragrance. Let's get them scheduled for the week ahead to build anticipation for the launch.
-                </p>
-                
-                <div className="flex gap-3">
-                  <Button 
-                    onClick={() => navigate('/schedule')}
-                    className="bg-ink-black hover:bg-charcoal text-white font-semibold px-6 py-3 h-auto"
-                  >
-                    Schedule Now
-                  </Button>
-                  <Button 
-                    onClick={() => setShowPriorityCard(false)}
-                    variant="outline" 
-                    className="bg-white/50 hover:bg-white text-ink-black border-ink-black/20 font-semibold px-6 py-3 h-auto"
-                  >
-                    Not Now
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Content Bank */}
         <div className="bg-parchment-white border border-warm-gray/20 rounded-xl p-6">
