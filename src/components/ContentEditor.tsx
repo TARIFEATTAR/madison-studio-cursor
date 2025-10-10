@@ -1,12 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Maximize2, Minimize2, Undo2, Redo2, Copy, Check, Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Heading3, AlignLeft, AlignCenter, AlignRight, AlignJustify, Indent, Outdent, FileText, MessageSquare, X } from "lucide-react";
+import { Maximize2, Minimize2, Undo2, Redo2, Copy, Check, Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Heading3, AlignLeft, AlignCenter, AlignRight, AlignJustify, Indent, Outdent, FileText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
 
 const FONT_OPTIONS = [
   { value: 'cormorant', label: 'Cormorant Garamond', family: '"Cormorant Garamond", serif' },
@@ -21,6 +20,8 @@ interface ContentEditorProps {
   onSave?: () => void;
   placeholder?: string;
   className?: string;
+  initialFullScreen?: boolean;
+  onAssistantToggle?: (open: boolean) => void;
 }
 
 export const ContentEditor = ({ 
@@ -28,10 +29,11 @@ export const ContentEditor = ({
   onChange, 
   onSave,
   placeholder = "Generated content will appear here...",
-  className 
+  className,
+  initialFullScreen = false,
+  onAssistantToggle
 }: ContentEditorProps) => {
-  const [isFullScreen, setIsFullScreen] = useState(false);
-  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(initialFullScreen);
   const [wordCount, setWordCount] = useState(0);
   const [copied, setCopied] = useState(false);
   const [copiedFormatted, setCopiedFormatted] = useState(false);
@@ -305,6 +307,28 @@ export const ContentEditor = ({
   const handleOutdent = () => execCommand('outdent');
 
   const currentFontFamily = FONT_OPTIONS.find(f => f.value === selectedFont)?.family || FONT_OPTIONS[0].family;
+
+  // If initialFullScreen is true, skip the normal view entirely
+  if (initialFullScreen) {
+    return (
+      <div 
+        className="rounded-lg border p-6"
+        style={{
+          backgroundColor: "#FFFCF5",
+          borderColor: "#D4CFC8"
+        }}
+      >
+        <Textarea
+          ref={textareaRef}
+          value={content}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          className="min-h-[400px] bg-background/50 leading-relaxed font-serif text-lg"
+        />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -658,17 +682,6 @@ export const ContentEditor = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setAssistantOpen(!assistantOpen)}
-                  className="h-9 gap-2"
-                  title="Editorial Director"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  {assistantOpen ? 'Hide Director' : 'Show Director'}
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
                   onClick={handleCopy}
                   className="h-9 gap-2"
                   title="Copy Text"
@@ -690,8 +703,8 @@ export const ContentEditor = ({
               </div>
             </div>
 
-            {/* Document Editor + Assistant */}
-            <div className={cn("flex-1 bg-muted/30", assistantOpen ? "grid grid-cols-2 overflow-hidden" : "overflow-hidden")}> 
+            {/* Document Editor */}
+            <div className="flex-1 bg-muted/30 overflow-hidden"> 
               {/* Editor Area */}
               <div className="h-full overflow-y-auto">
                 <div className="max-w-4xl mx-auto py-12 px-8 md:px-16 lg:px-24">
@@ -707,16 +720,6 @@ export const ContentEditor = ({
                   </div>
                 </div>
               </div>
-
-              {/* Assistant Panel */}
-              {assistantOpen && (
-                <div className="h-full overflow-hidden bg-background">
-                  <EditorialAssistantPanel
-                    onClose={() => setAssistantOpen(false)}
-                    initialContent={(richHtml ? htmlToPlainText(richHtml) : content)}
-                  />
-                </div>
-              )}
             </div>
           </div>,
           document.body

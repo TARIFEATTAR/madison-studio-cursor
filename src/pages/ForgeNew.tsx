@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lightbulb, FileText, Sparkles, X, Send } from "lucide-react";
+import { createRoot } from "react-dom/client";
+import { GeneratingLoader } from "@/components/forge/GeneratingLoader";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +19,16 @@ import { NameContentDialog } from "@/components/forge/NameContentDialog";
 
 export default function ForgeNew() {
   const navigate = useNavigate();
+
+  // Render loading overlay when needed
+  useEffect(() => {
+    const loaderDiv = document.getElementById('generating-loader');
+    if (loaderDiv) {
+      const root = createRoot(loaderDiv);
+      root.render(<GeneratingLoader />);
+      return () => root.unmount();
+    }
+  }, []);
   
   // Form state
   const [product, setProduct] = useState("");
@@ -40,8 +53,31 @@ export default function ForgeNew() {
     setNameDialogOpen(true);
   };
 
-  const handleGenerateContent = (contentName: string) => {
-    // TODO: Call AI to generate content
+  const handleGenerateContent = async (contentName: string) => {
+    // Save brief data to localStorage
+    const briefData = {
+      productId: product,
+      deliverableFormat: format,
+      targetAudience: audience,
+      contentGoal: goal,
+      styleOverlay: style,
+      additionalContext,
+      contentName,
+      timestamp: Date.now()
+    };
+    
+    localStorage.setItem('scriptora-content-brief', JSON.stringify(briefData));
+
+    // Show loading overlay
+    setNameDialogOpen(false);
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'generating-loader';
+    document.body.appendChild(loadingDiv);
+
+    // Simulate generation (1.5-2 seconds)
+    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 500));
+
+    // Generate content (mock for now)
     const mockContent = `The souk falls quiet for just a moment. Between the calls of merchants and the shuffle of silk scarves against weathered stone, you catch it—that unmistakable breath of night-blooming jasmine drifting from a hidden courtyard.
 
 You've been here before, in dreams perhaps, or in the pages of a book that transported you far from wherever you started this morning. The air carries secrets: rose petals crushed underfoot in Damascus gardens, amber warming in desert sun, the whisper of musk that clings to ancient walls.
@@ -54,15 +90,56 @@ ${goal === "storytelling" ? "This is a story told in scent, an invitation to wan
 
 Some journeys begin with a single breath.`;
 
-    // Navigate to editor with generated content
-    navigate("/editor", {
-      state: {
-        content: mockContent,
-        contentType: format,
-        productName: product,
-        contentName: contentName
-      }
-    });
+    // Save to database
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase
+        .from('master_content')
+        .insert({
+          title: contentName,
+          full_content: mockContent,
+          content_type: format,
+          created_by: user.id,
+          organization_id: user.id, // Temporary - should use actual org ID
+          status: 'draft'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Remove loading overlay
+      const loader = document.getElementById('generating-loader');
+      if (loader) loader.remove();
+
+      // Navigate to editor with content ID
+      navigate("/editor", {
+        state: {
+          contentId: data.id,
+          content: mockContent,
+          contentType: format,
+          productName: product,
+          contentName: contentName
+        }
+      });
+    } catch (error) {
+      console.error("Error saving content:", error);
+      // Remove loading overlay
+      const loader = document.getElementById('generating-loader');
+      if (loader) loader.remove();
+      
+      // Still navigate but without DB save
+      navigate("/editor", {
+        state: {
+          content: mockContent,
+          contentType: format,
+          productName: product,
+          contentName: contentName
+        }
+      });
+    }
   };
 
   const handleCancel = () => {
