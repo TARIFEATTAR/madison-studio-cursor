@@ -52,7 +52,7 @@ const AppContent = () => {
 
   return (
     <>
-      {!showSidebar && user && <Navigation />}
+      {!showSidebar && user && location.pathname !== "/editor" && <Navigation />}
       
       {showSidebar ? (
         <SidebarProvider>
