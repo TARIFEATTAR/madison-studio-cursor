@@ -4,6 +4,7 @@ import { Lightbulb, FileText, PenTool, X, Send } from "lucide-react";
 import { createRoot } from "react-dom/client";
 import { GeneratingLoader } from "@/components/forge/GeneratingLoader";
 import { supabase } from "@/integrations/supabase/client";
+import { useOnboarding } from "@/hooks/useOnboarding";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,7 @@ import { NameContentDialog } from "@/components/forge/NameContentDialog";
 
 export default function ForgeNew() {
   const navigate = useNavigate();
+  const { currentOrganizationId } = useOnboarding();
 
   // Render loading overlay when needed
   useEffect(() => {
@@ -95,6 +97,10 @@ Some journeys begin with a single breath.`;
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      if (!currentOrganizationId) {
+        throw new Error("No organization found. Please complete onboarding first.");
+      }
+
       const { data, error } = await supabase
         .from('master_content')
         .insert({
@@ -102,7 +108,7 @@ Some journeys begin with a single breath.`;
           full_content: mockContent,
           content_type: format,
           created_by: user.id,
-          organization_id: user.id, // Temporary - should use actual org ID
+          organization_id: currentOrganizationId,
           status: 'draft'
         })
         .select()
