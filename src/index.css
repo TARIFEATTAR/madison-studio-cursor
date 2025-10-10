@@ -326,7 +326,8 @@
   height: 100%;
   display: flex;
   align-items: center;
-  padding: 0 5%;
+  padding-left: 10%; /* More left margin */
+  padding-right: 20%; /* More right space */
 }
 
 .hero-container {
@@ -336,7 +337,7 @@
 }
 
 .hero-text-block {
-  max-width: 640px;
+  max-width: 560px; /* Slightly narrower for better readability */
   padding-top: 40px;
   padding-right: 60px; /* Keep text away from right edge */
 }
