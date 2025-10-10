@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Edit2, Send, Copy, Check, FileDown } from "lucide-react";
 import {
   Dialog,
@@ -44,6 +44,11 @@ export function ContentDetailModal({
   const [editedContent, setEditedContent] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [orgData, setOrgData] = useState<{
+    name?: string;
+    brandColor?: string;
+    logoBase64?: string;
+  }>({});
 
   const contentType = content.content_type || content.asset_type;
   const subtypeLabel = contentType ? getContentSubtypeLabel(contentType) : null;
@@ -112,6 +117,48 @@ export function ContentDetailModal({
     setTimeout(() => setIsCopied(false), 2000);
   };
 
+  // Fetch organization data when modal opens
+  useEffect(() => {
+    if (open && content?.organization_id) {
+      supabase
+        .from("organizations")
+        .select("name, brand_config")
+        .eq("id", content.organization_id)
+        .single()
+        .then(async ({ data }) => {
+          if (data) {
+            // Safely parse brand_config
+            let brandColor: string | undefined;
+            if (data.brand_config && typeof data.brand_config === 'object') {
+              const config = data.brand_config as Record<string, any>;
+              brandColor = config.primaryColor as string | undefined;
+            }
+            
+            // Try to load logo as base64
+            let logoBase64: string | undefined;
+            try {
+              const logoPath = window.location.origin + "/logo-full.png";
+              const response = await fetch(logoPath);
+              const blob = await response.blob();
+              logoBase64 = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.readAsDataURL(blob);
+              });
+            } catch (error) {
+              console.error("Error loading logo:", error);
+            }
+
+            setOrgData({
+              name: data.name,
+              brandColor,
+              logoBase64,
+            });
+          }
+        });
+    }
+  }, [open, content?.organization_id]);
+
   const handleExport = async (format: 'pdf' | 'docx' | 'txt') => {
     setIsExporting(true);
     try {
@@ -122,6 +169,9 @@ export function ContentDetailModal({
         dipWeek: content.dip_week,
         createdAt: content.created_at,
         wordCount: content.word_count,
+        organizationName: orgData.name,
+        brandColor: orgData.brandColor,
+        logoBase64: orgData.logoBase64,
       };
 
       const contentText = getContentText();

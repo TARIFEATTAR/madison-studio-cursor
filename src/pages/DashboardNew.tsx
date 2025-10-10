@@ -1,16 +1,46 @@
-import { useState } from "react";
-import { X, PenTool, Calendar, Archive, Instagram, Mail, Twitter, Pencil, FileText } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, PenTool, Calendar, Archive, FileText, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { DashboardRecentActivity } from "@/components/dashboard/DashboardRecentActivity";
 import { DashboardWeeklyStats } from "@/components/dashboard/DashboardWeeklyStats";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { usePriorityAction } from "@/hooks/usePriorityAction";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function DashboardNew() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: stats, isLoading: statsLoading } = useDashboardStats();
+  const { data: priorityAction, isLoading: priorityLoading } = usePriorityAction();
   const [showEditorialBanner, setShowEditorialBanner] = useState(true);
   const [showPriorityCard, setShowPriorityCard] = useState(true);
+  const [organizationName, setOrganizationName] = useState<string>("");
+
+  // Fetch organization name
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from("organization_members")
+        .select("organization_id, organizations(name)")
+        .eq("user_id", user.id)
+        .single()
+        .then(({ data }) => {
+          if (data && data.organizations) {
+            setOrganizationName((data.organizations as any).name);
+          }
+        });
+    }
+  }, [user]);
+
+  if (statsLoading || priorityLoading) {
+    return (
+      <div className="min-h-screen bg-vellum-cream flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-brass" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-vellum-cream">
@@ -20,12 +50,16 @@ export default function DashboardNew() {
         <div className="mb-10">
           <div className="flex items-center justify-between mb-3">
             <h1 className="font-serif text-4xl font-medium text-ink-black">
-              Welcome back, Sample Brand
+              Welcome back, {organizationName || "Creator"}
             </h1>
-            <div className="flex items-center gap-2 px-4 py-2 bg-parchment-white rounded-lg border border-warm-gray/20">
-              <span className="text-2xl">🔥</span>
-              <span className="font-medium text-sm text-charcoal">5-day streak!</span>
-            </div>
+            {stats && stats.streakDays > 0 && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-parchment-white rounded-lg border border-warm-gray/20">
+                <span className="text-2xl">🔥</span>
+                <span className="font-medium text-sm text-charcoal">
+                  {stats.streakDays}-day streak!
+                </span>
+              </div>
+            )}
           </div>
           <p className="text-warm-gray text-base">
             Your editorial command center
@@ -33,7 +67,7 @@ export default function DashboardNew() {
         </div>
 
         {/* Priority Action - HERO ELEMENT */}
-        {showPriorityCard && (
+        {showPriorityCard && priorityAction && (
           <div className="bg-gradient-to-br from-brass to-brass-glow rounded-xl p-8 shadow-lg mb-8">
             <div className="flex items-start gap-6">
               <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
@@ -45,22 +79,21 @@ export default function DashboardNew() {
                     Priority Action
                   </span>
                   <span className="px-2 py-1 bg-white/20 rounded-full text-xs font-medium text-ink-black">
-                    5 min
+                    {priorityAction.estimatedTime}
                   </span>
                 </div>
                 <h2 className="font-serif text-[32px] font-medium text-ink-black mb-3 leading-tight tracking-tight">
-                  Schedule Your Noir de-Nuit Launch Campaign
+                  {priorityAction.title}
                 </h2>
                 <p className="text-base text-ink-black/80 mb-6 leading-relaxed">
-                  You have 4 beautiful Instagram posts showcasing your new evening fragrance. 
-                  Let's get them scheduled for the week ahead to build anticipation for the launch.
+                  {priorityAction.description}
                 </p>
                 <div className="flex gap-3">
                   <button 
-                    onClick={() => navigate('/schedule')}
+                    onClick={() => navigate(priorityAction.actionRoute)}
                     className="px-6 py-3 bg-ink-black hover:bg-charcoal text-parchment-white font-medium rounded-lg transition-all"
                   >
-                    Schedule Now →
+                    {priorityAction.actionLabel} →
                   </button>
                   <button 
                     onClick={() => setShowPriorityCard(false)}
@@ -103,7 +136,7 @@ export default function DashboardNew() {
         <div className="grid grid-cols-3 gap-4 mb-8">
           
           <button 
-            onClick={() => navigate('/create')}
+            onClick={() => navigate('/forge')}
             className="bg-parchment-white border-2 border-transparent hover:border-brass p-6 rounded-xl transition-all hover:shadow-[0_4px_12px_rgba(184,149,106,0.1)] group"
           >
             <PenTool className="w-8 h-8 text-brass mb-3 group-hover:scale-110 transition-transform" />
@@ -111,7 +144,7 @@ export default function DashboardNew() {
           </button>
 
           <button 
-            onClick={() => navigate('/schedule')}
+            onClick={() => navigate('/calendar')}
             className="bg-parchment-white border-2 border-transparent hover:border-brass p-6 rounded-xl transition-all hover:shadow-[0_4px_12px_rgba(184,149,106,0.1)] group"
           >
             <Calendar className="w-8 h-8 text-brass mb-3 group-hover:scale-110 transition-transform" />
@@ -119,11 +152,11 @@ export default function DashboardNew() {
           </button>
 
           <button 
-            onClick={() => navigate('/templates')}
+            onClick={() => navigate('/library')}
             className="bg-parchment-white border-2 border-transparent hover:border-brass p-6 rounded-xl transition-all hover:shadow-[0_4px_12px_rgba(184,149,106,0.1)] group"
           >
             <FileText className="w-8 h-8 text-brass mb-3 group-hover:scale-110 transition-transform" />
-            <div className="text-base font-medium text-charcoal">Browse Templates</div>
+            <div className="text-base font-medium text-charcoal">Browse Library</div>
           </button>
 
         </div>
@@ -145,51 +178,35 @@ export default function DashboardNew() {
             </button>
           </div>
 
-          {/* Content Items */}
-          <div className="space-y-2">
-            {[
-              { 
-                icon: Instagram,
-                title: "Noir-de-Nuit Instagram Post",
-                count: "4 pieces ready",
-                color: "bg-purple-100 text-purple-600"
-              },
-              { 
-                icon: Mail,
-                title: "Lumière Dusk Email Campaign",
-                count: "3 pieces ready",
-                color: "bg-blue-100 text-blue-600"
-              },
-              { 
-                icon: Twitter,
-                title: "Jardin-Secret Twitter Thread",
-                count: "8 pieces ready",
-                color: "bg-sky-100 text-sky-600"
-              },
-            ].map((item, index) => (
-              <div 
-                key={index}
-                className="flex items-center gap-4 p-4 rounded-lg hover:bg-vellum-cream transition-all cursor-pointer group"
-              >
-                
-                <div className={`w-12 h-12 rounded-lg ${item.color} flex items-center justify-center flex-shrink-0`}>
-                  <item.icon className="w-6 h-6" />
-                </div>
-
-                <div className="flex-1">
-                  <h4 className="text-sm font-medium text-charcoal mb-1 group-hover:text-brass transition-colors">
-                    {item.title}
-                  </h4>
-                  <p className="text-xs text-warm-gray">{item.count}</p>
-                </div>
-
-                {/* Badge - More Subtle */}
-                <div className="px-3 py-1 bg-brass/10 text-brass text-xs font-medium rounded-full">
-                  Ready
-                </div>
-
+          {/* Content Summary */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center p-4 bg-vellum-cream rounded-lg">
+                <p className="text-2xl font-serif font-semibold text-ink-black">
+                  {stats?.totalContent || 0}
+                </p>
+                <p className="text-xs text-warm-gray mt-1">Total Pieces</p>
               </div>
-            ))}
+              <div className="text-center p-4 bg-vellum-cream rounded-lg">
+                <p className="text-2xl font-serif font-semibold text-ink-black">
+                  {stats?.piecesCreatedThisWeek || 0}
+                </p>
+                <p className="text-xs text-warm-gray mt-1">This Week</p>
+              </div>
+              <div className="text-center p-4 bg-vellum-cream rounded-lg">
+                <p className="text-2xl font-serif font-semibold text-ink-black">
+                  {stats?.piecesScheduled || 0}
+                </p>
+                <p className="text-xs text-warm-gray mt-1">Scheduled</p>
+              </div>
+            </div>
+            
+            <button
+              onClick={() => navigate('/library')}
+              className="w-full py-3 text-sm text-brass hover:text-brass-glow font-medium transition-colors"
+            >
+              View All Content →
+            </button>
           </div>
         </div>
 

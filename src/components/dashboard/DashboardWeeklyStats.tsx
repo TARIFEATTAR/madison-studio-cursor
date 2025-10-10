@@ -1,39 +1,42 @@
 import { TrendingUp, CheckCircle, Target, Calendar } from "lucide-react";
-
-const stats = [
-  {
-    id: 1,
-    label: "Pieces Created",
-    value: "12",
-    icon: TrendingUp,
-  },
-  {
-    id: 2,
-    label: "Pieces Published",
-    value: "8",
-    icon: CheckCircle,
-  },
-  {
-    id: 3,
-    label: "On-Brand Score",
-    value: "95%",
-    icon: Target,
-  },
-  {
-    id: 4,
-    label: "Pieces Scheduled",
-    value: "4",
-    icon: Calendar,
-  },
-];
+import { useDashboardStats } from "@/hooks/useDashboardStats";
 
 export function DashboardWeeklyStats() {
+  const { data: stats } = useDashboardStats();
+
+  const weeklyStats = [
+    {
+      id: 1,
+      label: "Pieces Created",
+      value: stats?.piecesCreatedThisWeek?.toString() || "0",
+      icon: TrendingUp,
+    },
+    {
+      id: 2,
+      label: "Pieces Published",
+      value: stats?.piecesPublished?.toString() || "0",
+      icon: CheckCircle,
+    },
+    {
+      id: 3,
+      label: "On-Brand Score",
+      value: `${stats?.onBrandScore || 0}%`,
+      icon: Target,
+    },
+    {
+      id: 4,
+      label: "Pieces Scheduled",
+      value: stats?.piecesScheduled?.toString() || "0",
+      icon: Calendar,
+    },
+  ];
+
   return (
     <div className="bg-white rounded-lg border-t-4 border-aged-brass shadow-sm p-6">
       <h3 className="text-xl font-serif text-ink-black mb-5">This Week's Stats</h3>
       
       <div className="space-y-4">
-        {stats.map((stat) => {
+        {weeklyStats.map((stat) => {
           const Icon = stat.icon;
           return (
             <div key={stat.id} className="flex items-center gap-3">

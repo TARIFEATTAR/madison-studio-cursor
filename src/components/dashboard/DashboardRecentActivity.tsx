@@ -1,48 +1,38 @@
-import { FileText, Image, Video, Calendar } from "lucide-react";
+import { FileText, Image, Video, Calendar, FileOutput, Boxes } from "lucide-react";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
 
-const recentActivities = [
-  {
-    id: 1,
-    type: "blog",
-    title: "Spring Collection Launch Campaign",
-    action: "Created",
-    time: "3h ago",
-    icon: FileText,
-  },
-  {
-    id: 2,
-    type: "visual",
-    title: "Lumière Product Photography Series",
-    action: "Edited",
-    time: "5h ago",
-    icon: Image,
-  },
-  {
-    id: 3,
-    type: "social",
-    title: "Noir Campaign Social Posts",
-    action: "Scheduled",
-    time: "Yesterday",
-    icon: Calendar,
-  },
-  {
-    id: 4,
-    type: "video",
-    title: "Behind the Scenes: Craftsmanship",
-    action: "Published",
-    time: "2 days ago",
-    icon: Video,
-  },
-];
+const getIconForType = (type: string) => {
+  if (type.includes('blog') || type.includes('article')) return FileText;
+  if (type.includes('image') || type.includes('visual')) return Image;
+  if (type.includes('video')) return Video;
+  if (type.includes('social') || type.includes('post')) return Calendar;
+  if (type === 'output') return FileOutput;
+  if (type === 'derivative') return Boxes;
+  return FileText;
+};
 
 export function DashboardRecentActivity() {
+  const { data: stats } = useDashboardStats();
+  const recentActivity = stats?.recentActivity || [];
+
+  if (recentActivity.length === 0) {
+    return (
+      <div className="bg-white rounded-lg border border-warm-gray/20 p-6">
+        <h3 className="text-xl font-serif text-ink-black mb-4">Recent Content</h3>
+        <p className="text-sm text-warm-gray text-center py-8">
+          No recent activity yet. Start creating content!
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg border border-warm-gray/20 p-6">
       <h3 className="text-xl font-serif text-ink-black mb-4">Recent Content</h3>
       
       <div className="space-y-3">
-        {recentActivities.map((activity) => {
-          const Icon = activity.icon;
+        {recentActivity.map((activity) => {
+          const Icon = getIconForType(activity.type);
           return (
             <div
               key={activity.id}
