@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Lightbulb, Calendar, Archive, Instagram, Mail, Twitter, Pencil, FileText } from "lucide-react";
+import { X, PenTool, Calendar, Archive, Instagram, Mail, Twitter, Pencil, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -61,27 +61,30 @@ export default function DashboardNew() {
 
         {/* Editorial Director Banner */}
         {showEditorialBanner && (
-          <Card className="bg-ink-black text-white p-6 mb-6 border-none shadow-level-2">
+          <div className="bg-parchment-white border-l-4 border-aged-brass p-6 rounded-lg mb-8 shadow-sm relative">
             <button
               onClick={() => setShowEditorialBanner(false)}
-              className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
+              className="absolute top-4 right-4 text-warm-gray hover:text-charcoal transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-aged-brass rounded-full flex items-center justify-center shrink-0">
-                <Lightbulb className="w-6 h-6 text-ink-black" />
+            <div className="flex items-center gap-4">
+              {/* Brass circle with pen icon */}
+              <div className="w-14 h-14 bg-aged-brass/10 rounded-full flex items-center justify-center flex-shrink-0">
+                <PenTool className="w-6 h-6 text-aged-brass" />
               </div>
+              
+              {/* Content */}
               <div>
-                <p className="text-aged-brass text-xs font-bold uppercase tracking-wide mb-2">
-                  EDITORIAL DIRECTOR
-                </p>
-                <p className="text-white/90 text-lg">
-                  Welcome! I'm your Editorial Director. I'll guide you through your content journey and help you make the most of your work.
+                <div className="text-xs font-semibold uppercase tracking-wider text-aged-brass mb-1">
+                  Editorial Director
+                </div>
+                <p className="text-sm text-charcoal leading-relaxed">
+                  Welcome! I'll guide you through your content journey and help you make the most of your work.
                 </p>
               </div>
             </div>
-          </Card>
+          </div>
         )}
 
         {/* Priority Action Card */}
