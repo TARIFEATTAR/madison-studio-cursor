@@ -6,8 +6,11 @@ import { useAuth } from "@/hooks/useAuth";
 
 import Navigation from "./components/Navigation";
 import { AssistantTrigger } from "./components/assistant/AssistantTrigger";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "./components/AppSidebar";
 
 import Index from "./pages/Index";
+import DashboardNew from "./pages/DashboardNew";
 import Reservoir from "./pages/Reservoir";
 import Forge from "./pages/Forge";
 import Repurpose from "./pages/Repurpose";
@@ -17,6 +20,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -38,70 +42,49 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AppContent = () => {
-  console.log("[AppContent] Rendering...");
-  const location = useLocation();
-  console.log("[AppContent] Current location:", location.pathname);
-  
+  console.log("[App-Con]");
   const { user } = useAuth();
-  console.log("[AppContent] User state:", user ? "logged in" : "logged out");
+  const location = useLocation();
+
+  // Show sidebar for authenticated users on all pages except /auth
+  const showSidebar = user && location.pathname !== "/auth";
 
   return (
     <>
-      {user && <Navigation />}
+      {!showSidebar && user && <Navigation />}
       {user && <AssistantTrigger />}
-      <Routes>
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/" element={<Index />} />
-        <Route
-          path="/library"
-          element={
-            <ProtectedRoute>
-              <Reservoir />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/create"
-          element={
-            <ProtectedRoute>
-              <Forge />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/multiply"
-          element={
-            <ProtectedRoute>
-              <Repurpose />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/templates"
-          element={
-            <ProtectedRoute>
-              <Templates />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/schedule"
-          element={
-            <ProtectedRoute>
-              <Calendar />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <Settings />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      
+      {showSidebar ? (
+        <SidebarProvider>
+          <div className="flex min-h-screen w-full">
+            <AppSidebar />
+            <main className="flex-1 overflow-auto">
+              <Routes>
+                <Route path="/" element={<ProtectedRoute><DashboardNew /></ProtectedRoute>} />
+                <Route path="/library" element={<ProtectedRoute><Reservoir /></ProtectedRoute>} />
+                <Route path="/create" element={<ProtectedRoute><Forge /></ProtectedRoute>} />
+                <Route path="/multiply" element={<ProtectedRoute><Repurpose /></ProtectedRoute>} />
+                <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
+                <Route path="/schedule" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+          </div>
+        </SidebarProvider>
+      ) : (
+        <Routes>
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/" element={<Index />} />
+          <Route path="/library" element={<ProtectedRoute><Reservoir /></ProtectedRoute>} />
+          <Route path="/create" element={<ProtectedRoute><Forge /></ProtectedRoute>} />
+          <Route path="/multiply" element={<ProtectedRoute><Repurpose /></ProtectedRoute>} />
+          <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
+          <Route path="/schedule" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      )}
     </>
   );
 };

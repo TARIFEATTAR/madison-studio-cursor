@@ -1,0 +1,181 @@
+import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings } from "lucide-react";
+import { NavLink, useLocation } from "react-router-dom";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
+
+const navItems = [
+  { 
+    title: "Dashboard", 
+    subtitle: "Overview & Actions",
+    url: "/", 
+    icon: Home 
+  },
+  { 
+    title: "The Archives", 
+    subtitle: "Content Library",
+    url: "/library", 
+    icon: Archive 
+  },
+  { 
+    title: "Create", 
+    subtitle: "Content Creation",
+    url: "/create", 
+    icon: Pencil 
+  },
+  { 
+    title: "Multiply", 
+    subtitle: "Repurpose Content",
+    url: "/multiply", 
+    icon: Share2 
+  },
+  { 
+    title: "Schedule", 
+    subtitle: "Content Calendar",
+    url: "/schedule", 
+    icon: Calendar 
+  },
+  { 
+    title: "Templates", 
+    subtitle: "Prompt Library",
+    url: "/templates", 
+    icon: FileText 
+  },
+];
+
+export function AppSidebar() {
+  const { open } = useSidebar();
+  const location = useLocation();
+
+  const isActive = (path: string) => {
+    if (path === "/" && location.pathname === "/") return true;
+    if (path !== "/" && location.pathname.startsWith(path)) return true;
+    return false;
+  };
+
+  return (
+    <Sidebar 
+      collapsible="icon"
+      className="border-r-0"
+      style={{
+        background: "linear-gradient(180deg, hsl(var(--ink-black)), hsl(var(--charcoal)))"
+      }}
+    >
+      {/* Header */}
+      <SidebarHeader className="border-b border-white/10 p-0">
+        <div className="flex items-center gap-3 px-4 py-6">
+          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shrink-0">
+            <span className="text-ink-black text-xl font-semibold font-serif">$</span>
+          </div>
+          {open && (
+            <div className="flex-1 min-w-0">
+              <h1 className="text-white text-xl font-semibold font-serif tracking-tight">
+                Scriptora
+              </h1>
+              <p className="text-aged-brass text-[10px] font-sans uppercase tracking-wider">
+                BRAND INTELLIGENCE
+              </p>
+            </div>
+          )}
+        </div>
+        
+        {open && (
+          <div className="px-4 pb-4">
+            <button className="w-full bg-aged-brass hover:bg-antique-gold transition-colors text-ink-black font-semibold py-2.5 px-4 rounded-lg text-sm">
+              <span className="flex items-center justify-center gap-2">
+                <span>Collapse</span>
+              </span>
+            </button>
+          </div>
+        )}
+      </SidebarHeader>
+
+      {/* Main Navigation */}
+      <SidebarContent>
+        <div className="px-2 py-4">
+          <SidebarMenu>
+            {navItems.map((item) => {
+              const isActiveRoute = isActive(item.url);
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    className={`
+                      ${isActiveRoute 
+                        ? 'bg-aged-brass/20 text-white border border-aged-brass/30' 
+                        : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }
+                      ${open ? 'h-auto py-3' : 'h-12'}
+                      transition-all duration-200
+                    `}
+                  >
+                    <NavLink to={item.url}>
+                      <item.icon className={`${open ? 'w-5 h-5' : 'w-6 h-6'} shrink-0`} />
+                      {open && (
+                        <div className="flex flex-col items-start">
+                          <span className="font-semibold text-sm">{item.title}</span>
+                          <span className="text-xs text-white/60">{item.subtitle}</span>
+                        </div>
+                      )}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
+          </SidebarMenu>
+        </div>
+
+        <Separator className="mx-4 bg-white/10" />
+
+        {/* Video Tutorials */}
+        <div className="px-2 py-4">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                className={`
+                  text-white/70 hover:text-white hover:bg-white/5
+                  ${open ? 'h-auto py-3' : 'h-12'}
+                  transition-all
+                `}
+              >
+                <Video className={`${open ? 'w-5 h-5' : 'w-6 h-6'} shrink-0`} />
+                {open && (
+                  <div className="flex flex-col items-start">
+                    <span className="font-semibold text-sm">Video Tutorials</span>
+                    <span className="text-xs text-white/60">Learn & Get Help</span>
+                  </div>
+                )}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </div>
+      </SidebarContent>
+
+      {/* Footer */}
+      <SidebarFooter className="border-t border-white/10 p-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-aged-brass rounded-full flex items-center justify-center text-ink-black font-bold text-sm shrink-0">
+            SB
+          </div>
+          {open && (
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-sm font-semibold truncate">Sample Brand</p>
+              <p className="text-white/60 text-xs">Premium Plan</p>
+            </div>
+          )}
+          <button className="text-white/70 hover:text-white p-2 rounded-lg hover:bg-white/5 transition-colors">
+            <Settings className="w-5 h-5" />
+          </button>
+        </div>
+      </SidebarFooter>
+    </Sidebar>
+  );
+}
