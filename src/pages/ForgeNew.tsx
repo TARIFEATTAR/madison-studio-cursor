@@ -25,15 +25,6 @@ export default function ForgeNew() {
   const { currentOrganizationId } = useOnboarding();
   const { toast } = useToast();
 
-  // Render loading overlay when needed
-  useEffect(() => {
-    const loaderDiv = document.getElementById('generating-loader');
-    if (loaderDiv) {
-      const root = createRoot(loaderDiv);
-      root.render(<GeneratingLoader />);
-      return () => root.unmount();
-    }
-  }, []);
   
   // Form state
   const [product, setProduct] = useState("");
@@ -80,6 +71,10 @@ export default function ForgeNew() {
     const loadingDiv = document.createElement('div');
     loadingDiv.id = 'generating-loader';
     document.body.appendChild(loadingDiv);
+    
+    // Render the loader component immediately
+    const loaderRoot = createRoot(loadingDiv);
+    loaderRoot.render(<GeneratingLoader />);
 
     try {
       // Build AI prompt from brief fields
@@ -128,6 +123,7 @@ export default function ForgeNew() {
       }));
 
       // Remove generating loader
+      loaderRoot.unmount();
       const generatingLoader = document.getElementById('generating-loader');
       if (generatingLoader) {
         generatingLoader.remove();
@@ -188,6 +184,7 @@ export default function ForgeNew() {
       });
       
       // Remove loading overlay
+      loaderRoot.unmount();
       const loader = document.getElementById('generating-loader');
       if (loader) loader.remove();
     }
