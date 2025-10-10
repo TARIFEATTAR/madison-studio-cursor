@@ -400,13 +400,15 @@ Some journeys begin with a single breath.`;
               <Button
                 onClick={handleSubmit}
                 disabled={!product || !format}
-                variant="brass"
-                className="gap-2 px-8 disabled:cursor-not-allowed"
+                className="gap-2 px-8 disabled:cursor-not-allowed disabled:pointer-events-none"
                 style={{
-                  backgroundImage: "linear-gradient(to right, #B8956A, #D4AF85)"
+                  backgroundImage: "linear-gradient(to right, #B8956A, #D4AF85)",
+                  color: "#1A1816",
+                  opacity: (!product || !format) ? 0.6 : 1,
+                  fontWeight: 600
                 }}
               >
-                <Sparkles className="w-5 h-5" />
+                <Sparkles className="w-5 h-5" style={{ color: "#1A1816" }} />
                 <span className="text-base font-semibold">Create Content</span>
               </Button>
               <p className="text-xs mt-2" style={{ color: "#A8A39E" }}>
