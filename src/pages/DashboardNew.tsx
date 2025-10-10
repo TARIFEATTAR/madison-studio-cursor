@@ -34,13 +34,7 @@ export default function DashboardNew() {
 
         {/* Priority Action - HERO ELEMENT */}
         {showPriorityCard && (
-          <div className="bg-gradient-to-br from-brass to-brass-glow rounded-xl p-8 shadow-lg mb-8 relative">
-            <button
-              onClick={() => setShowPriorityCard(false)}
-              className="absolute top-4 right-4 text-ink-black/70 hover:text-ink-black transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+          <div className="bg-gradient-to-br from-brass to-brass-glow rounded-xl p-8 shadow-lg mb-8">
             <div className="flex items-start gap-6">
               <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
                 <Calendar className="w-8 h-8 text-ink-black" />
