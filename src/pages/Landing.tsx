@@ -77,10 +77,12 @@ const Landing = () => {
           <div className="max-w-[650px] text-left">
             
             {/* Headline with brass accent */}
-            <h1 className="hero-headline text-6xl md:text-7xl leading-tight">
-              Where Luxury Beauty Brands{' '}
-              <span className="headline-accent block text-7xl md:text-8xl leading-tight">
-                Craft Their Narrative
+            <h1 className="font-serif font-semibold mb-5">
+              <span className="block text-5xl md:text-6xl lg:text-7xl text-parchment-white leading-tight">
+                Where Luxury Beauty Brands Craft Their
+              </span>
+              <span className="block text-6xl md:text-7xl lg:text-8xl leading-tight mt-2" style={{ color: 'hsl(42, 77%, 70%)' }}>
+                Narrative
               </span>
             </h1>
             
