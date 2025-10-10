@@ -104,7 +104,7 @@ export default function DashboardNew() {
           
           <button 
             onClick={() => navigate('/create')}
-            className="bg-parchment-white border-2 border-warm-gray/20 hover:border-brass p-6 rounded-xl transition-all hover:shadow-md group"
+            className="bg-parchment-white border-2 border-transparent hover:border-brass p-6 rounded-xl transition-all hover:shadow-[0_4px_12px_rgba(184,149,106,0.1)] group"
           >
             <PenTool className="w-8 h-8 text-brass mb-3 group-hover:scale-110 transition-transform" />
             <div className="text-base font-medium text-charcoal">Create Content</div>
@@ -112,7 +112,7 @@ export default function DashboardNew() {
 
           <button 
             onClick={() => navigate('/schedule')}
-            className="bg-parchment-white border-2 border-warm-gray/20 hover:border-brass p-6 rounded-xl transition-all hover:shadow-md group"
+            className="bg-parchment-white border-2 border-transparent hover:border-brass p-6 rounded-xl transition-all hover:shadow-[0_4px_12px_rgba(184,149,106,0.1)] group"
           >
             <Calendar className="w-8 h-8 text-brass mb-3 group-hover:scale-110 transition-transform" />
             <div className="text-base font-medium text-charcoal">View Calendar</div>
@@ -120,7 +120,7 @@ export default function DashboardNew() {
 
           <button 
             onClick={() => navigate('/templates')}
-            className="bg-parchment-white border-2 border-warm-gray/20 hover:border-brass p-6 rounded-xl transition-all hover:shadow-md group"
+            className="bg-parchment-white border-2 border-transparent hover:border-brass p-6 rounded-xl transition-all hover:shadow-[0_4px_12px_rgba(184,149,106,0.1)] group"
           >
             <FileText className="w-8 h-8 text-brass mb-3 group-hover:scale-110 transition-transform" />
             <div className="text-base font-medium text-charcoal">Browse Templates</div>
