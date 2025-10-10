@@ -45,6 +45,9 @@ export function ContentDetailModal({
   const [isCopied, setIsCopied] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
+  const contentType = content.content_type || content.asset_type;
+  const subtypeLabel = contentType ? getContentSubtypeLabel(contentType) : null;
+
   const getContentText = () => {
     if (category === "prompt") return content.prompt_text;
     if (category === "output") return content.generated_content;
@@ -145,9 +148,6 @@ export function ContentDetailModal({
       setIsExporting(false);
     }
   };
-
-  const contentType = content.content_type || content.asset_type;
-  const subtypeLabel = contentType ? getContentSubtypeLabel(contentType) : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
