@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Lightbulb, FileText, Sparkles, X, Send } from "lucide-react";
+import { Lightbulb, FileText, PenTool, X, Send } from "lucide-react";
 import { createRoot } from "react-dom/client";
 import { GeneratingLoader } from "@/components/forge/GeneratingLoader";
 import { supabase } from "@/integrations/supabase/client";
@@ -148,64 +148,52 @@ Some journeys begin with a single breath.`;
   };
 
   return (
-    <div className="min-h-screen pb-20" style={{ backgroundColor: "#F5F1E8" }}>
-      <div className="max-w-5xl mx-auto px-6 py-8">
+    <div className="min-h-screen pb-20 bg-vellum-cream">
+      <div className="max-w-5xl mx-auto px-6 py-10">
         {/* Think Mode - Inline Expandable */}
         {!thinkModeExpanded ? (
           <div
             onClick={() => setThinkModeExpanded(true)}
-            className="mb-8 rounded-xl cursor-pointer transition-all hover:opacity-90"
-            style={{
-              backgroundColor: "#F5F1E8",
-              border: "2px dashed #B8956A"
-            }}
+            className="mb-8 rounded-xl cursor-pointer transition-all hover:opacity-90 bg-parchment-white border-2 border-dashed border-brass"
           >
             <div className="p-6 flex items-center gap-4">
-              <Lightbulb className="w-6 h-6" style={{ color: "#B8956A" }} />
+              <Lightbulb className="w-6 h-6 text-brass" />
               <div>
-                <h3 className="font-semibold text-lg" style={{ color: "#1A1816" }}>
+                <h3 className="font-semibold text-lg text-ink-black">
                   Not sure where to start? Try Think Mode
                 </h3>
-                <p className="text-sm" style={{ color: "#6B6560" }}>
+                <p className="text-sm text-warm-gray">
                   Brainstorm with AI before filling out the brief. No pressure, just ideas.
                 </p>
               </div>
             </div>
           </div>
         ) : (
-          <div className="mb-8 rounded-xl overflow-hidden border" style={{ borderColor: "#D4CFC8" }}>
+          <div className="mb-8 rounded-xl overflow-hidden border border-warm-gray/20">
             {/* Header */}
-            <div
-              className="p-4 flex items-center justify-between"
-              style={{
-                backgroundImage: "linear-gradient(to right, #B8956A, #D4AF85)"
-              }}
-            >
+            <div className="p-4 flex items-center justify-between bg-gradient-to-r from-brass to-brass-glow">
               <div className="flex items-center gap-3">
-                <Lightbulb className="w-5 h-5" style={{ color: "#FFFFFF" }} />
-                <h3 className="font-semibold" style={{ color: "#FFFFFF" }}>Think Mode</h3>
+                <Lightbulb className="w-5 h-5 text-white" />
+                <h3 className="font-semibold text-white">Think Mode</h3>
               </div>
               <button
                 onClick={() => setThinkModeExpanded(false)}
                 className="hover:opacity-80 transition-opacity"
               >
-                <X className="w-5 h-5" style={{ color: "#FFFFFF" }} />
+                <X className="w-5 h-5 text-white" />
               </button>
             </div>
 
             {/* Content */}
-            <div className="p-8" style={{ backgroundColor: "#FFFCF5" }}>
+            <div className="p-8 bg-parchment-white">
               <div className="text-center max-w-2xl mx-auto mb-6">
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                  style={{ backgroundColor: "#F5F1E8" }}
-                >
-                  <Lightbulb className="w-8 h-8" style={{ color: "#B8956A" }} />
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-brass/10">
+                  <Lightbulb className="w-8 h-8 text-brass" />
                 </div>
-                <h4 className="text-2xl font-serif mb-3" style={{ color: "#1A1816" }}>
+                <h4 className="text-2xl font-serif mb-3 text-ink-black">
                   What's on your mind?
                 </h4>
-                <p className="text-base" style={{ color: "#6B6560" }}>
+                <p className="text-base text-warm-gray">
                   Share your ideas, questions, or creative direction. I'll help you explore and refine them.
                 </p>
               </div>
@@ -215,24 +203,21 @@ Some journeys begin with a single breath.`;
                 <Button
                   variant="outline"
                   onClick={() => setThinkModeInput("I need a blog post about seasonal fragrance trends")}
-                  className="text-sm"
-                  style={{ borderColor: "#D4CFC8", color: "#6B6560" }}
+                  className="text-sm border-warm-gray/20 text-warm-gray hover:border-brass hover:text-brass"
                 >
                   "I need a blog post about seasonal fragrance trends"
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => setThinkModeInput("Help me describe our new product launch")}
-                  className="text-sm"
-                  style={{ borderColor: "#D4CFC8", color: "#6B6560" }}
+                  className="text-sm border-warm-gray/20 text-warm-gray hover:border-brass hover:text-brass"
                 >
                   "Help me describe our new product launch"
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => setThinkModeInput("What's the best way to tell our brand story?")}
-                  className="text-sm"
-                  style={{ borderColor: "#D4CFC8", color: "#6B6560" }}
+                  className="text-sm border-warm-gray/20 text-warm-gray hover:border-brass hover:text-brass"
                 >
                   "What's the best way to tell our brand story?"
                 </Button>
@@ -244,20 +229,11 @@ Some journeys begin with a single breath.`;
                   value={thinkModeInput}
                   onChange={(e) => setThinkModeInput(e.target.value)}
                   placeholder="Type your thoughts here..."
-                  className="min-h-[120px] pr-12"
-                  style={{
-                    backgroundColor: "#F5F1E8",
-                    borderColor: "#D4CFC8",
-                    color: "#1A1816"
-                  }}
+                  className="min-h-[120px] pr-12 bg-vellum-cream border-warm-gray/20 text-ink-black"
                 />
                 <Button
-                  className="absolute bottom-3 right-3"
+                  className="absolute bottom-3 right-3 bg-gradient-to-r from-brass to-brass-glow hover:opacity-90 text-white"
                   size="icon"
-                  style={{
-                    backgroundImage: "linear-gradient(to right, #B8956A, #D4AF85)",
-                    color: "#FFFFFF"
-                  }}
                 >
                   <Send className="w-4 h-4" />
                 </Button>
@@ -269,49 +245,36 @@ Some journeys begin with a single breath.`;
         {/* Main Form */}
         <div>
           {/* Header */}
-          <div className="mb-6">
+          <div className="mb-8">
             <div className="flex items-center gap-4 mb-4">
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: "#B8956A" }}
-              >
+              <div className="w-16 h-16 rounded-full flex items-center justify-center bg-brass">
                 <FileText className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-4xl font-serif" style={{ color: "#1A1816" }}>
+                <h1 className="text-4xl font-serif font-medium text-ink-black">
                   Create Content
                 </h1>
-                <p className="text-lg mt-1" style={{ color: "#6B6560" }}>
+                <p className="text-lg mt-1 text-warm-gray">
                   Quick brief to generate your content
                 </p>
               </div>
             </div>
-            <p className="text-base" style={{ color: "#6B6560" }}>
+            <p className="text-base text-warm-gray">
               Choose your product and format. Add optional details for more targeted content. Our AI will handle the rest.
             </p>
           </div>
 
           {/* Form Container */}
-          <div
-            className="p-8 rounded-xl border space-y-6"
-            style={{
-              backgroundColor: "#FFFCF5",
-              borderColor: "#D4CFC8"
-            }}
-          >
+          <div className="p-8 rounded-xl border border-warm-gray/20 space-y-6 bg-parchment-white">
             {/* Product - Required */}
             <div>
-              <Label htmlFor="product" className="text-base mb-2" style={{ color: "#1A1816" }}>
-                Product <span style={{ color: "#B8956A" }}>*</span>
+              <Label htmlFor="product" className="text-base mb-2 text-ink-black">
+                Product <span className="text-brass">*</span>
               </Label>
               <Select value={product} onValueChange={setProduct}>
                 <SelectTrigger
                   id="product"
-                  className="mt-2"
-                  style={{
-                    backgroundColor: "#FFFCF5",
-                    borderColor: "#D4CFC8"
-                  }}
+                  className="mt-2 bg-parchment-white border-warm-gray/20"
                 >
                   <SelectValue placeholder="Select product..." />
                 </SelectTrigger>
@@ -326,17 +289,13 @@ Some journeys begin with a single breath.`;
 
             {/* Deliverable Format - Required */}
             <div>
-              <Label htmlFor="format" className="text-base mb-2" style={{ color: "#1A1816" }}>
-                Deliverable Format <span style={{ color: "#B8956A" }}>*</span>
+              <Label htmlFor="format" className="text-base mb-2 text-ink-black">
+                Deliverable Format <span className="text-brass">*</span>
               </Label>
               <Select value={format} onValueChange={setFormat}>
                 <SelectTrigger
                   id="format"
-                  className="mt-2"
-                  style={{
-                    backgroundColor: "#FFFCF5",
-                    borderColor: "#D4CFC8"
-                  }}
+                  className="mt-2 bg-parchment-white border-warm-gray/20"
                 >
                   <SelectValue placeholder="Select format..." />
                 </SelectTrigger>
@@ -352,17 +311,13 @@ Some journeys begin with a single breath.`;
 
             {/* Target Audience - Optional */}
             <div>
-              <Label htmlFor="audience" className="text-base mb-2" style={{ color: "#1A1816" }}>
+              <Label htmlFor="audience" className="text-base mb-2 text-ink-black">
                 Target Audience
               </Label>
               <Select value={audience} onValueChange={setAudience}>
                 <SelectTrigger
                   id="audience"
-                  className="mt-2"
-                  style={{
-                    backgroundColor: "#FFFCF5",
-                    borderColor: "#D4CFC8"
-                  }}
+                  className="mt-2 bg-parchment-white border-warm-gray/20"
                 >
                   <SelectValue placeholder="Select audience..." />
                 </SelectTrigger>
@@ -374,24 +329,20 @@ Some journeys begin with a single breath.`;
                   <SelectItem value="new">New Customers</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs italic mt-2" style={{ color: "#A8A39E" }}>
+              <p className="text-xs italic mt-2 text-warm-gray/70">
                 Who is this content for? Helps AI tailor message and tone
               </p>
             </div>
 
             {/* Content Goal - Optional */}
             <div>
-              <Label htmlFor="goal" className="text-base mb-2" style={{ color: "#1A1816" }}>
+              <Label htmlFor="goal" className="text-base mb-2 text-ink-black">
                 Content Goal
               </Label>
               <Select value={goal} onValueChange={setGoal}>
                 <SelectTrigger
                   id="goal"
-                  className="mt-2"
-                  style={{
-                    backgroundColor: "#FFFCF5",
-                    borderColor: "#D4CFC8"
-                  }}
+                  className="mt-2 bg-parchment-white border-warm-gray/20"
                 >
                   <SelectValue placeholder="Select goal..." />
                 </SelectTrigger>
@@ -403,24 +354,20 @@ Some journeys begin with a single breath.`;
                   <SelectItem value="launch">Launch Product</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs italic mt-2" style={{ color: "#A8A39E" }}>
+              <p className="text-xs italic mt-2 text-warm-gray/70">
                 What should this content achieve? Guides AI on CTA and focus
               </p>
             </div>
 
             {/* Style Overlay - Optional */}
             <div>
-              <Label htmlFor="style" className="text-base mb-2" style={{ color: "#1A1816" }}>
+              <Label htmlFor="style" className="text-base mb-2 text-ink-black">
                 Style Overlay
               </Label>
               <Select value={style} onValueChange={setStyle}>
                 <SelectTrigger
                   id="style"
-                  className="mt-2"
-                  style={{
-                    backgroundColor: "#FFFCF5",
-                    borderColor: "#D4CFC8"
-                  }}
+                  className="mt-2 bg-parchment-white border-warm-gray/20"
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -432,14 +379,14 @@ Some journeys begin with a single breath.`;
                   <SelectItem value="minimal">Minimal & Modern</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs italic mt-2" style={{ color: "#A8A39E" }}>
+              <p className="text-xs italic mt-2 text-warm-gray/70">
                 Choose the writing style that best fits your content needs
               </p>
             </div>
 
             {/* Additional Editorial Direction - Optional */}
             <div>
-              <Label htmlFor="context" className="text-base mb-2" style={{ color: "#1A1816" }}>
+              <Label htmlFor="context" className="text-base mb-2 text-ink-black">
                 Additional Editorial Direction
               </Label>
               <Textarea
@@ -447,28 +394,20 @@ Some journeys begin with a single breath.`;
                 value={additionalContext}
                 onChange={(e) => setAdditionalContext(e.target.value)}
                 placeholder="Provide specific requirements or creative mandates..."
-                className="mt-2 min-h-[120px]"
-                style={{
-                  backgroundColor: "#F5F1E8",
-                  borderColor: "#D4CFC8",
-                  color: "#1A1816"
-                }}
+                className="mt-2 min-h-[120px] bg-vellum-cream border-warm-gray/20 text-ink-black"
               />
-              <p className="text-xs italic mt-2" style={{ color: "#A8A39E" }}>
+              <p className="text-xs italic mt-2 text-warm-gray/70">
                 Any specific themes, angles, seasonal notes, or key messages to include
               </p>
             </div>
           </div>
 
           {/* Actions */}
-          <div
-            className="mt-6 pt-6 flex items-center justify-between"
-            style={{ borderTop: "1px solid #D4CFC8" }}
-          >
+          <div className="mt-8 pt-6 flex items-center justify-between border-t border-warm-gray/20">
             <Button
               variant="ghost"
               onClick={handleCancel}
-              style={{ color: "#6B6560" }}
+              className="text-warm-gray hover:text-charcoal"
             >
               Cancel
             </Button>
@@ -477,13 +416,12 @@ Some journeys begin with a single breath.`;
               <Button
                 onClick={handleSubmit}
                 disabled={!product || !format}
-                variant="brass"
-                className="gap-2 px-8 bg-gradient-to-r from-aged-brass to-antique-gold text-ink-black disabled:opacity-100"
+                className="gap-2 px-8 bg-gradient-to-r from-brass to-brass-glow hover:opacity-90 text-ink-black font-semibold disabled:opacity-50"
               >
-                <Sparkles className="w-5 h-5 text-ink-black" />
-                <span className="text-base font-semibold">Create Content</span>
+                <PenTool className="w-5 h-5" />
+                <span className="text-base">Create Content</span>
               </Button>
-              <p className="text-xs mt-2" style={{ color: "#A8A39E" }}>
+              <p className="text-xs mt-2 text-warm-gray/70">
                 Headlines and subjects will be AI-generated. You'll refine in the editor.
               </p>
             </div>
