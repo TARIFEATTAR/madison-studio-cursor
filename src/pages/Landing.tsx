@@ -9,6 +9,7 @@ import createIcon from "@/assets/create-icon.png";
 import multiplyIcon from "@/assets/multiply-icon.png";
 import scheduleIcon from "@/assets/schedule-icon.png";
 import scriptoraLogo from "@/assets/scriptora-logo-icon.png";
+import heroImage from "@/assets/scriptora-hero.jpg";
 
 const Landing = () => {
   const { user } = useAuth();
@@ -55,16 +56,30 @@ const Landing = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="py-20 md:py-32">
-        <div className="container mx-auto px-6">
+      <section className="py-20 md:py-32 relative overflow-hidden bg-ink-black">
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 opacity-40"
+          style={{
+            backgroundImage: `url(${heroImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center right',
+            backgroundRepeat: 'no-repeat'
+          }}
+        />
+        
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-ink-black via-ink-black/80 to-transparent" />
+
+        <div className="container mx-auto px-6 relative z-10">
           <div className="max-w-4xl mx-auto text-center space-y-8">
             <h1 className="text-5xl md:text-7xl font-serif leading-tight">
-              <span className="text-ink-black">Your Brand's</span>
+              <span className="text-parchment-white">Your Brand's</span>
               <br />
               <span className="text-aged-brass">Editorial Command Center</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-charcoal/80 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl text-parchment-white/80 max-w-3xl mx-auto leading-relaxed">
               Scriptora transforms how you create, manage, and distribute content. Maintain your brand voice across every channel while generating content 10x faster with intelligent AI assistance.
             </p>
 
@@ -74,14 +89,14 @@ const Landing = () => {
                   Start Creating <ArrowRight className="w-4 h-4" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="gap-2">
+              <Button asChild variant="outline" size="lg" className="gap-2 bg-parchment-white/10 border-parchment-white/20 text-parchment-white hover:bg-parchment-white/20">
                 <a href="#how-it-works">
                   <PlayCircle className="w-4 h-4" /> Watch Tutorial
                 </a>
               </Button>
             </div>
 
-            <div className="flex items-center justify-center gap-6 text-sm text-charcoal/60">
+            <div className="flex items-center justify-center gap-6 text-sm text-parchment-white/60">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-aged-brass" />
                 No credit card required
