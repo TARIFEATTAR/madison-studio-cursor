@@ -66,7 +66,7 @@ export function AppSidebar() {
   return (
     <Sidebar 
       collapsible="icon"
-      className="border-r-0 w-[72px] data-[state=expanded]:w-64"
+      className="border-r-0"
       style={{
         background: "linear-gradient(180deg, hsl(var(--ink-black)), hsl(var(--charcoal)))"
       }}
