@@ -83,7 +83,7 @@ const AppContent = () => {
           <Route path="/auth" element={<Auth />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/" element={<Index />} />
-          <Route path="/library" element={<ProtectedRoute><Reservoir /></ProtectedRoute>} />
+          <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
           <Route path="/create" element={<ProtectedRoute><ForgeNew /></ProtectedRoute>} />
           <Route path="/editor" element={<ProtectedRoute><ContentEditor /></ProtectedRoute>} />
           <Route path="/multiply" element={<ProtectedRoute><Repurpose /></ProtectedRoute>} />

@@ -6,23 +6,24 @@ import { ContentCard } from "@/components/library/ContentCard";
 import { ContentDetailModal } from "@/components/library/ContentDetailModal";
 import { EmptyState } from "@/components/library/EmptyState";
 import { SortOption } from "@/components/library/SortDropdown";
-import { mockLibraryContent, LibraryContent } from "@/data/mockLibraryContent";
+import { useLibraryContent, LibraryContentItem } from "@/hooks/useLibraryContent";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 export default function Library() {
   const navigate = useNavigate();
+  const { data: libraryContent = [], isLoading, refetch } = useLibraryContent();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedContentType, setSelectedContentType] = useState("all");
   const [selectedCollection, setSelectedCollection] = useState("all");
   const [sortBy, setSortBy] = useState<SortOption>("recent");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showArchived, setShowArchived] = useState(false);
-  const [selectedContent, setSelectedContent] = useState<LibraryContent | null>(null);
+  const [selectedContent, setSelectedContent] = useState<LibraryContentItem | null>(null);
 
   // Filtering and sorting logic
   const filteredContent = useMemo(() => {
-    let filtered = [...mockLibraryContent];
+    let filtered = [...libraryContent];
 
     // Filter by archived status
     filtered = filtered.filter(c => showArchived ? c.archived : !c.archived);
@@ -32,7 +33,7 @@ export default function Library() {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(c =>
         c.title.toLowerCase().includes(query) ||
-        c.content.toLowerCase().includes(query)
+        (c.content && c.content.toLowerCase().includes(query))
       );
     }
 
@@ -63,7 +64,7 @@ export default function Library() {
     });
 
     return filtered;
-  }, [searchQuery, selectedContentType, selectedCollection, sortBy, showArchived]);
+  }, [libraryContent, searchQuery, selectedContentType, selectedCollection, sortBy, showArchived]);
 
   const handleClearFilters = () => {
     setSearchQuery("");
@@ -122,15 +123,21 @@ export default function Library() {
 
       {/* Content Grid */}
       <div className="container mx-auto px-6 py-8">
-        {/* Result Count */}
-        {filteredContent.length > 0 && (
-          <p className="text-sm text-muted-foreground mb-6">
-            {filteredContent.length} {filteredContent.length === 1 ? "piece" : "pieces"} of content
-          </p>
-        )}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-muted-foreground">Loading your content...</div>
+          </div>
+        ) : (
+          <>
+            {/* Result Count */}
+            {filteredContent.length > 0 && (
+              <p className="text-sm text-muted-foreground mb-6">
+                {filteredContent.length} {filteredContent.length === 1 ? "piece" : "pieces"} of content
+              </p>
+            )}
 
-        {/* Content Display */}
-        {filteredContent.length === 0 ? (
+            {/* Content Display */}
+            {filteredContent.length === 0 ? (
           <EmptyState
             hasSearch={!!searchQuery}
             hasFilters={hasFilters}
@@ -155,6 +162,8 @@ export default function Library() {
             ))}
           </div>
         )}
+          </>
+        )}
       </div>
 
       {/* Detail Modal */}
@@ -174,9 +183,9 @@ export default function Library() {
             quality_rating: selectedContent.rating,
             collection: selectedContent.collection,
           }}
-          category="output"
+          category={selectedContent.sourceTable === "master_content" ? "master" : selectedContent.sourceTable === "outputs" ? "output" : "derivative"}
           onUpdate={() => {
-            // Refresh would happen here with real data
+            refetch();
             setSelectedContent(null);
           }}
           onRepurpose={(id) => {
