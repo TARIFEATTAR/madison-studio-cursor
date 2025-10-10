@@ -1,10 +1,11 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Package, Users, Bell, CreditCard } from "lucide-react";
+import { Building2, Package, Users, Bell, CreditCard, FolderKanban } from "lucide-react";
 import { ProductsTab } from "@/components/settings/ProductsTab";
 import { BrandGuidelinesTab } from "@/components/settings/BrandGuidelinesTab";
 import { TeamTab } from "@/components/settings/TeamTab";
 import { NotificationsTab } from "@/components/settings/NotificationsTab";
 import { BillingTab } from "@/components/settings/BillingTab";
+import { CollectionsTab } from "@/components/settings/CollectionsTab";
 
 export default function Settings() {
   return (
@@ -21,13 +22,20 @@ export default function Settings() {
         {/* Tabs Section */}
         <div className="px-8 py-6">
           <Tabs defaultValue="brand" className="space-y-6">
-            <TabsList className="bg-paper-light border border-cream-dark p-1 w-full justify-start">
+            <TabsList className="bg-paper-light border border-cream-dark p-1 w-full justify-start flex-wrap">
               <TabsTrigger 
                 value="brand" 
                 className="data-[state=active]:bg-brass data-[state=active]:text-charcoal gap-2"
               >
                 <Building2 className="w-4 h-4" />
                 Brand Guidelines
+              </TabsTrigger>
+              <TabsTrigger 
+                value="collections"
+                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal gap-2"
+              >
+                <FolderKanban className="w-4 h-4" />
+                Collections
               </TabsTrigger>
               <TabsTrigger 
                 value="products"
@@ -61,6 +69,10 @@ export default function Settings() {
 
             <TabsContent value="brand">
               <BrandGuidelinesTab />
+            </TabsContent>
+
+            <TabsContent value="collections">
+              <CollectionsTab />
             </TabsContent>
 
             <TabsContent value="products">
