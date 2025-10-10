@@ -72,7 +72,7 @@ export default function Library() {
     setShowArchived(false);
   };
 
-  const hasFilters = searchQuery || selectedContentType !== "all" || selectedCollection !== "all";
+  const hasFilters = !!searchQuery || selectedContentType !== "all" || selectedCollection !== "all";
 
   return (
     <div className="min-h-screen bg-background">
