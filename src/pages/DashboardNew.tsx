@@ -84,7 +84,7 @@ export default function DashboardNew() {
               <X className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-brass/10 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 bg-brass/15 rounded-lg flex items-center justify-center flex-shrink-0">
                 <PenTool className="w-6 h-6 text-brass" />
               </div>
               <div>
