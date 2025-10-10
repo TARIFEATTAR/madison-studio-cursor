@@ -244,6 +244,55 @@ export const CollectionsTab = () => {
 
   return (
     <div className="space-y-6">
+      {/* Industry Templates Section */}
+      {industryTemplates.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-brass" />
+              Industry Templates for {industryConfig?.name}
+            </CardTitle>
+            <CardDescription>
+              Quick-start your collections with pre-configured templates tailored to your industry
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {industryTemplates.map((template, index) => (
+                <div
+                  key={index}
+                  className="p-4 rounded-lg border border-border/40 hover:border-brass/40 transition-colors"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <h4 className="font-semibold text-foreground">{template.name}</h4>
+                    <div
+                      className="w-6 h-6 rounded-full border border-border/40"
+                      style={{ backgroundColor: template.color_theme }}
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">{template.description}</p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setFormData({
+                        name: template.name,
+                        description: template.description,
+                        transparency_statement: template.transparency_statement,
+                        color_theme: template.color_theme,
+                      });
+                      setIsCreating(true);
+                    }}
+                    className="w-full"
+                  >
+                    Use Template
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
       <Card className="bg-paper border-cream-dark">
         <CardHeader>
           <div className="flex items-start justify-between">

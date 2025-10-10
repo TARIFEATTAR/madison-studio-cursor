@@ -25,6 +25,16 @@ const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   console.log("[Index] Auth state - user:", !!user, "loading:", loading);
+
+  // Check if onboarding is completed for authenticated users
+  useEffect(() => {
+    if (user && !loading) {
+      const onboardingCompleted = localStorage.getItem('scriptora-onboarding-completed');
+      if (!onboardingCompleted) {
+        navigate('/onboarding', { replace: true });
+      }
+    }
+  }, [user, loading, navigate]);
   
   const {
     showWelcome,
@@ -86,32 +96,6 @@ const Index = () => {
   // Show dashboard/home for authenticated users
   return (
     <ErrorBoundary>
-      {/* Onboarding Modals */}
-      <WelcomeModal 
-        open={showWelcome} 
-        onComplete={completeWelcome}
-        onSkip={() => {
-          if (user) {
-            localStorage.setItem(`onboarding_step_${user.id}`, 'completed');
-            localStorage.setItem(`onboarding_completed_${user.id}`, 'true');
-            window.location.reload();
-          }
-        }}
-      />
-      
-      {currentOrganizationId && (
-        <OnboardingDocumentUpload
-          open={showDocumentUpload}
-          organizationId={currentOrganizationId}
-          onComplete={completeDocumentUpload}
-          onSkip={skipDocumentUpload}
-        />
-      )}
-
-      <OnboardingCompleteModal
-        open={showCompleteModal}
-        onClose={closeCompleteModal}
-      />
 
       <div className="min-h-screen py-8 px-6 md:px-12 paper-overlay">
         <div className="max-w-7xl mx-auto codex-spacing">

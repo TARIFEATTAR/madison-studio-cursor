@@ -20,6 +20,7 @@ import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import Onboarding from "./pages/Onboarding";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient();
@@ -47,8 +48,8 @@ const AppContent = () => {
   const { user } = useAuth();
   const location = useLocation();
 
-  // Show sidebar for authenticated users on all pages except /auth and /editor
-  const showSidebar = user && location.pathname !== "/auth" && location.pathname !== "/editor";
+  // Show sidebar for authenticated users on all pages except /auth, /editor, and /onboarding
+  const showSidebar = user && location.pathname !== "/auth" && location.pathname !== "/editor" && location.pathname !== "/onboarding";
 
   return (
     <>
@@ -76,6 +77,7 @@ const AppContent = () => {
       ) : (
         <Routes>
           <Route path="/auth" element={<Auth />} />
+          <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/" element={<Index />} />
           <Route path="/library" element={<ProtectedRoute><Reservoir /></ProtectedRoute>} />
           <Route path="/create" element={<ProtectedRoute><ForgeNew /></ProtectedRoute>} />
