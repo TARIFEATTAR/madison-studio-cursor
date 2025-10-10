@@ -79,17 +79,17 @@ Some journeys begin with a single breath.`;
             onClick={() => setThinkModeExpanded(true)}
             className="mb-8 rounded-xl cursor-pointer overflow-hidden transition-all hover:opacity-90"
             style={{
-              background: "linear-gradient(to-right, #B8956A, #D4AF85)"
+              backgroundImage: "linear-gradient(to right, #B8956A, #D4AF85)"
             }}
           >
             <div className="p-6 flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <Lightbulb className="w-6 h-6 text-white" />
+                <Lightbulb className="w-6 h-6" style={{ color: "#FFFFFF" }} />
                 <div>
-                  <h3 className="font-semibold text-lg text-white">
+                  <h3 className="font-semibold text-lg" style={{ color: "#FFFFFF" }}>
                     Think Mode
                   </h3>
-                  <p className="text-sm text-white/90">
+                  <p className="text-sm" style={{ color: "#FFFFFF" }}>
                     Let's explore your ideas together
                   </p>
                 </div>
@@ -102,18 +102,18 @@ Some journeys begin with a single breath.`;
             <div
               className="p-4 flex items-center justify-between"
               style={{
-                background: "linear-gradient(to-right, #B8956A, #D4AF85)"
+                backgroundImage: "linear-gradient(to right, #B8956A, #D4AF85)"
               }}
             >
               <div className="flex items-center gap-3">
-                <Lightbulb className="w-5 h-5 text-white" />
-                <h3 className="font-semibold text-white">Think Mode</h3>
+                <Lightbulb className="w-5 h-5" style={{ color: "#FFFFFF" }} />
+                <h3 className="font-semibold" style={{ color: "#FFFFFF" }}>Think Mode</h3>
               </div>
               <button
                 onClick={() => setThinkModeExpanded(false)}
                 className="hover:opacity-80 transition-opacity"
               >
-                <X className="w-5 h-5 text-white" />
+                <X className="w-5 h-5" style={{ color: "#FFFFFF" }} />
               </button>
             </div>
 
@@ -179,8 +179,8 @@ Some journeys begin with a single breath.`;
                   className="absolute bottom-3 right-3"
                   size="icon"
                   style={{
-                    background: "linear-gradient(to-right, #B8956A, #D4AF85)",
-                    color: "white"
+                    backgroundImage: "linear-gradient(to right, #B8956A, #D4AF85)",
+                    color: "#FFFFFF"
                   }}
                 >
                   <Send className="w-4 h-4" />
@@ -401,10 +401,11 @@ Some journeys begin with a single breath.`;
               <Button
                 onClick={handleSubmit}
                 disabled={!product || !format}
-                className="gap-2 px-8 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="gap-2 px-8 disabled:cursor-not-allowed"
                 style={{
-                  background: "linear-gradient(to-right, #B8956A, #D4AF85)",
-                  color: "#1A1816"
+                  backgroundImage: "linear-gradient(to right, #B8956A, #D4AF85)",
+                  color: "#1A1816",
+                  opacity: (!product || !format) ? 0.5 : 1
                 }}
               >
                 <Sparkles className="w-5 h-5" />
