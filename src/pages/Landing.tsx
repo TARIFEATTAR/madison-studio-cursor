@@ -91,9 +91,8 @@ const Landing = () => {
         }}></div>
         <div className="hero-overlay hidden md:block"></div>
         
-        {/* Content Layer */}
-        <div className="relative z-20 h-full flex items-center justify-start pl-6 pr-6 pt-36 md:pl-[120px] md:pr-[45%] md:pt-0">
-          <div className="max-w-[650px] text-left">
+        <div className="relative z-20 h-full flex items-center justify-start pl-6 pr-6 pt-28 md:pl-[120px] md:pr-[45%] md:pt-0">
+          <div className="max-w-[650px] text-left -mt-5 md:mt-0">
             
             {/* Headline with brass accent */}
             <h1 className="font-serif font-semibold mb-4 md:mb-5">
