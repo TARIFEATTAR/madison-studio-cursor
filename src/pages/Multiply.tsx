@@ -13,12 +13,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  Sparkles, Archive, Mail, Instagram, Tag, MessageSquare, 
+  Sparkles, Archive, Mail, Instagram, MessageSquare, 
   FileText, CheckCircle2, XCircle, ChevronDown, ChevronRight, Copy, 
   Calendar, Edit, Loader2, AlertCircle, Video 
 } from "lucide-react";
 import { EditorialDirectorSplitScreen } from "@/components/multiply/EditorialDirectorSplitScreen";
 import fannedPagesImage from "@/assets/fanned-pages-new.png";
+import ticketIcon from "@/assets/ticket-icon.png";
+import envelopeIcon from "@/assets/envelope-icon.png";
 
 // Derivative type definitions
 interface DerivativeType {
@@ -64,7 +66,7 @@ const TOP_DERIVATIVE_TYPES: DerivativeType[] = [
     id: "email_3part",
     name: "3-Part Email Series",
     description: "Sequential email nurture campaign",
-    icon: Mail,
+    icon: envelopeIcon,
     iconColor: "#8B7355",
     isSequence: true,
   },
@@ -80,7 +82,7 @@ const TOP_DERIVATIVE_TYPES: DerivativeType[] = [
     id: "product",
     name: "Product Description",
     description: "Product page descriptions",
-    icon: Tag,
+    icon: ticketIcon,
     iconColor: "#3A4A3D",
     charLimit: 500,
   },
