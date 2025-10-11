@@ -484,7 +484,7 @@ export default function Multiply() {
                     <img 
                       src={fannedPagesImage} 
                       alt="Fanned pages illustration" 
-                      className="w-32 h-32 object-contain opacity-80"
+                      className="w-40 h-40 object-contain opacity-80"
                     />
                   </div>
                   <h3 className="text-lg font-serif font-semibold mb-2" style={{ color: "#1A1816" }}>
