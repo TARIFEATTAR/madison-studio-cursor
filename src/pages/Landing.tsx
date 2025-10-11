@@ -183,7 +183,14 @@ const Landing = () => {
             </h1>
             
             {/* Subheadline */}
-            <p className="hero-subheadline text-base sm:text-lg md:text-xl leading-relaxed max-w-[580px]">
+            <p 
+              className="text-base sm:text-lg md:text-xl max-w-[580px]"
+              style={{
+                color: 'rgba(255, 252, 245, 0.95)',
+                textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                lineHeight: '1.7'
+              }}
+            >
               AI-powered content creation that honors craftsmanship, 
               heritage, and the art of storytelling. From heritage 
               perfume houses to artisan skincare—every word reflects 
@@ -192,10 +199,41 @@ const Landing = () => {
             
             {/* CTA Buttons */}
             <div className="hero-ctas">
-              <Link to="/auth" className="btn-primary-brass inline-block px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-[18px] text-sm sm:text-base md:text-lg">
+              <Link 
+                to="/auth" 
+                className="inline-block px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-[18px] text-sm sm:text-base md:text-lg font-serif font-semibold text-ink-black rounded-lg transition-all duration-300"
+                style={{
+                  background: 'linear-gradient(135deg, #B8956A 0%, #D4AF37 100%)',
+                  boxShadow: '0 4px 16px rgba(184, 149, 106, 0.35)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 24px rgba(184, 149, 106, 0.45)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(184, 149, 106, 0.35)';
+                }}
+              >
                 Commission Your First Piece
               </Link>
-              <Link to="/meet-madison" className="btn-secondary-ghost inline-block px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-[18px] text-sm sm:text-base md:text-lg">
+              <Link 
+                to="/meet-madison" 
+                className="inline-block px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-[18px] text-sm sm:text-base md:text-lg font-sans font-medium rounded-lg transition-all duration-300"
+                style={{
+                  border: '2px solid rgba(255, 252, 245, 0.8)',
+                  color: 'rgba(255, 252, 245, 0.95)',
+                  backdropFilter: 'blur(4px)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 252, 245, 0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 252, 245, 1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = 'rgba(255, 252, 245, 0.8)';
+                }}
+              >
                 Meet Your Editorial Director
               </Link>
             </div>
