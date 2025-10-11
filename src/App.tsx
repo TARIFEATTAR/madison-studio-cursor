@@ -12,9 +12,7 @@ import { AppSidebar } from "./components/AppSidebar";
 
 import Index from "./pages/Index";
 import DashboardNew from "./pages/DashboardNew";
-import Reservoir from "./pages/Reservoir";
 import Library from "./pages/Library";
-import Forge from "./pages/Forge";
 import ForgeNew from "./pages/ForgeNew";
 import ContentEditor from "./pages/ContentEditor";
 import Repurpose from "./pages/Repurpose";
@@ -88,7 +86,6 @@ const AppContent = () => {
                 <Routes>
                   <Route path="/" element={<ProtectedRoute><RootRoute /></ProtectedRoute>} />
                   <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
-                  <Route path="/reservoir" element={<ProtectedRoute><Reservoir /></ProtectedRoute>} />
                   <Route path="/create" element={<ProtectedRoute><ForgeNew /></ProtectedRoute>} />
                   <Route path="/editor" element={<ProtectedRoute><ContentEditor /></ProtectedRoute>} />
                   <Route path="/multiply" element={<ProtectedRoute><Multiply /></ProtectedRoute>} />
@@ -96,7 +93,9 @@ const AppContent = () => {
                   <Route path="/schedule" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                   <Route path="/meet-madison" element={<ProtectedRoute><MeetMadison /></ProtectedRoute>} />
+                  {/* Legacy route redirects */}
                   <Route path="/forge" element={<Navigate to="/create" replace />} />
+                  <Route path="/reservoir" element={<Navigate to="/library" replace />} />
                   <Route path="/amplify" element={<Navigate to="/multiply" replace />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
@@ -118,7 +117,9 @@ const AppContent = () => {
             <Route path="/schedule" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/meet-madison" element={<ProtectedRoute><MeetMadison /></ProtectedRoute>} />
+            {/* Legacy route redirects */}
             <Route path="/forge" element={<Navigate to="/create" replace />} />
+            <Route path="/reservoir" element={<Navigate to="/library" replace />} />
             <Route path="/amplify" element={<Navigate to="/multiply" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -271,7 +271,7 @@ export default function Library() {
           <div className="flex items-start justify-between">
             <div>
               <h1 className="font-serif text-4xl text-foreground mb-2">The Archives</h1>
-              <p className="text-muted-foreground">Your content library and repository</p>
+              <p className="text-muted-foreground">Your editorial repository</p>
             </div>
             <Button
               onClick={() => navigate("/create")}
