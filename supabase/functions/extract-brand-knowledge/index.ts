@@ -27,14 +27,12 @@ serve(async (req) => {
     console.log(`Extracting brand knowledge from ${documentName || 'document'} for org: ${organizationId}`);
 
     // Extraction prompt for Claude
-    const extractionPrompt = `You are a brand strategist analyzing brand guidelines to extract structured knowledge for AI-powered content generation.
+    const extractionPrompt = `You are a brand strategist analyzing brand guidelines for a luxury beauty brand to extract structured knowledge.
 
-Analyze the following brand document and extract:
-
-1. **BRAND VOICE PROFILE**: Tone attributes, personality traits, writing style patterns
-2. **VOCABULARY RULES**: Approved terms, forbidden phrases, industry-specific terminology
-3. **WRITING EXAMPLES**: Good examples (on-brand), bad examples (off-brand) with analysis
-4. **STRUCTURAL GUIDELINES**: Sentence patterns, paragraph style, punctuation preferences
+Analyze the following brand document and detect if it contains category-specific information for:
+- **Personal Fragrance**: Perfume oils, sprays, attars, essential oils, solid perfumes
+- **Home Fragrance**: Incense, bakhoor, oud wood chips, candles, reed diffusers, room sprays
+- **Skincare**: Serums, creams, cleansers, toners, masks
 
 DOCUMENT TO ANALYZE:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -45,47 +43,63 @@ Return your analysis as a JSON object with this exact structure:
 
 {
   "voice": {
-    "toneAttributes": ["sophisticated", "warm", "knowledgeable"],
-    "personalityTraits": ["confident", "authentic", "refined"],
+    "toneAttributes": ["sophisticated", "warm"],
+    "personalityTraits": ["confident", "authentic"],
     "writingStyle": "description of overall writing approach",
-    "keyCharacteristics": ["concise sentences", "sensory language", "etc"]
+    "keyCharacteristics": ["concise sentences", "sensory language"]
   },
   "vocabulary": {
     "approvedTerms": ["fragrance", "composition", "notes"],
-    "forbiddenPhrases": ["game-changing", "must-have", "revolutionary"],
-    "industryTerminology": ["olfactory", "sillage", "longevity"],
-    "preferredPhrasing": {
-      "use_this": "not_that",
-      "composition": "formula"
-    }
+    "forbiddenPhrases": ["game-changing", "must-have"],
+    "industryTerminology": ["olfactory", "sillage"],
+    "preferredPhrasing": {"composition": "formula"}
   },
   "examples": {
     "goodExamples": [
       {
-        "text": "Example of on-brand copy from the document",
-        "analysis": "Why this works: uses sensory language, avoids clichés, maintains sophistication"
+        "text": "Example of on-brand copy",
+        "analysis": "Why this works"
       }
     ],
     "badExamples": [
       {
-        "text": "Example of what to avoid",
-        "analysis": "Why to avoid: uses generic marketing speak, lacks brand voice"
+        "text": "Example to avoid",
+        "analysis": "Why to avoid"
       }
     ]
   },
   "structure": {
-    "sentenceStructure": "Mix of short declarative and flowing descriptive",
-    "paragraphLength": "Short to medium (3-5 sentences)",
-    "punctuationStyle": "Strategic use of em-dashes and semicolons",
-    "rhythmPatterns": "Varied cadence with emphasis on sensory beats"
+    "sentenceStructure": "Mix of short and flowing",
+    "paragraphLength": "Short to medium",
+    "punctuationStyle": "Strategic use of em-dashes",
+    "rhythmPatterns": "Varied cadence"
+  },
+  "categories": {
+    "personal_fragrance": {
+      "detected": true,
+      "vocabulary": ["wearable", "skin chemistry", "projection"],
+      "product_types": ["oil", "spray", "attar", "essential_oil", "solid_perfume"],
+      "copy_style_notes": "How to write for personal fragrances"
+    },
+    "home_fragrance": {
+      "detected": false,
+      "vocabulary": [],
+      "product_types": [],
+      "copy_style_notes": ""
+    },
+    "skincare": {
+      "detected": false,
+      "vocabulary": [],
+      "product_types": [],
+      "copy_style_notes": ""
+    }
   }
 }
 
 CRITICAL INSTRUCTIONS:
-- Extract ONLY what is explicitly present in the document
-- If a section has no relevant information, use empty arrays or "Not specified"
-- For examples, pull direct quotes from the document
-- Be specific and actionable—avoid vague descriptions
+- Set "detected": true ONLY if the document explicitly mentions that category
+- Extract category-specific vocabulary and product types
+- For undetected categories, set detected: false with empty arrays
 - Return ONLY valid JSON, no additional commentary`;
 
     // Call Lovable AI (Claude)
@@ -156,7 +170,8 @@ CRITICAL INSTRUCTIONS:
         voice: parsedKnowledge.voice,
         vocabulary: parsedKnowledge.vocabulary,
         examples: parsedKnowledge.examples,
-        structure: parsedKnowledge.structure
+        structure: parsedKnowledge.structure,
+        categories: parsedKnowledge.categories || {}
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
