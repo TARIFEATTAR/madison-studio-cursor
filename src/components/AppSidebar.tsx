@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import penNibLogo from "@/assets/pen-nib-logo.png";
 import leatherTexture from "@/assets/leather-texture-black.png";
-import brassClip from "@/assets/brass-clip.png";
+import brassClip from "@/assets/brass-clip-transparent.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
