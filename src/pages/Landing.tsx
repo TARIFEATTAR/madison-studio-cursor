@@ -38,8 +38,9 @@ const Landing = () => {
     <div className="min-h-screen bg-vellum">
       {/* Navigation Header */}
       <header 
-        className="sticky top-0 w-full z-[1000] bg-vellum border-b border-aged-brass/15 transition-all duration-300"
+        className="sticky top-0 w-full z-[1000] border-b border-aged-brass/15 transition-all duration-300"
         style={{ 
+          backgroundColor: '#F5F1E8',
           padding: '20px 40px',
           boxShadow: '0 2px 8px rgba(26, 24, 22, 0.08)'
         }}
