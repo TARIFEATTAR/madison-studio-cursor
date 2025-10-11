@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { OnboardingWelcome } from "@/components/onboarding/OnboardingWelcome";
 import { OnboardingBrandUpload } from "@/components/onboarding/OnboardingBrandUpload";
 import { OnboardingSuccess } from "@/components/onboarding/OnboardingSuccess";
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState<any>({});
 
@@ -51,8 +53,15 @@ export default function Onboarding() {
   };
 
   const handleComplete = (destination: string) => {
+    if (!user) return;
+    
+    // Clean up old progress
     localStorage.removeItem('scriptora-onboarding-progress');
-    localStorage.setItem('scriptora-onboarding-completed', 'true');
+    
+    // Mark onboarding as complete using user-specific key
+    localStorage.setItem(`onboarding_step_${user.id}`, 'completed');
+    localStorage.setItem(`onboarding_completed_${user.id}`, 'true');
+    
     navigate(destination, { replace: true });
   };
 
