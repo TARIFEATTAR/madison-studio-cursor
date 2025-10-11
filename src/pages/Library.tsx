@@ -224,8 +224,8 @@ export default function Library() {
           </div>
         ) : (
           <>
-            {/* Bulk Actions Toolbar - Only show when viewing archived items */}
-            {showArchived && filteredContent.length > 0 && (
+            {/* Bulk Actions Toolbar - Always available when there's content */}
+            {filteredContent.length > 0 && (
               <div className="mb-6 flex items-center justify-between gap-4 p-4 bg-card/80 backdrop-blur-sm border border-border/40 rounded-lg">
                 <div className="flex items-center gap-4">
                   <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -298,7 +298,7 @@ export default function Library() {
                 content={content}
                 onClick={() => setSelectedContent(content)}
                 viewMode={viewMode}
-                selectable={showArchived}
+                selectable={true}
                 selected={selectedItems.has(content.id)}
                 onToggleSelect={() => handleToggleSelection(content.id)}
               />
