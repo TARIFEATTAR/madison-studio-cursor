@@ -19,6 +19,9 @@ const Landing = () => {
   const rotatingWords = ["Narrative", "Story", "Voice", "Message", "Identity", "Legacy"];
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  // Scroll state for header background
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -27,18 +30,34 @@ const Landing = () => {
       setTimeout(() => {
         setCurrentWordIndex((prev) => (prev + 1) % rotatingWords.length);
         setIsTransitioning(false);
-      }, 400); // Reduced from 600ms
-    }, 2500); // Reduced from 3500ms
+      }, 400);
+    }, 2500);
 
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
     <div className="min-h-screen bg-vellum">
       {/* Navigation Header */}
-      <header className="sticky top-0 z-50 bg-ink-black" style={{
-        padding: '16px 48px'
-      }}>
+      <header 
+        className="sticky top-0 z-50 transition-all duration-300"
+        style={{
+          background: isScrolled ? 'hsla(45, 29%, 95%, 0.95)' : 'transparent',
+          backdropFilter: isScrolled ? 'blur(12px)' : 'none',
+          WebkitBackdropFilter: isScrolled ? 'blur(12px)' : 'none',
+          borderBottom: isScrolled ? '1px solid rgba(184, 149, 106, 0.2)' : 'none',
+          padding: '16px 48px'
+        }}
+      >
         <div className="container mx-auto">
           <nav className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-3">
@@ -46,15 +65,25 @@ const Landing = () => {
                 <img src={scriptoraLogo} alt="Scriptora" className="w-full h-full object-contain" />
               </div>
               <div>
-                <div className="font-serif font-bold text-parchment-white" style={{ fontSize: '24px' }}>
+                <div 
+                  className="font-serif font-bold transition-all duration-300" 
+                  style={{ 
+                    fontSize: '24px',
+                    color: isScrolled ? 'hsl(0, 0%, 5%)' : 'hsl(48, 100%, 99%)',
+                    textShadow: isScrolled ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.4)'
+                  }}
+                >
                   Scriptora
                 </div>
-                <div className="font-sans uppercase" style={{ 
-                  fontSize: '11px',
-                  color: 'hsl(42, 77%, 70%)',
-                  letterSpacing: '0.08em',
-                  fontWeight: 500
-                }}>
+                <div 
+                  className="font-sans uppercase transition-all duration-300" 
+                  style={{ 
+                    fontSize: '11px',
+                    color: 'hsl(42, 77%, 70%)',
+                    letterSpacing: '0.08em',
+                    fontWeight: 500
+                  }}
+                >
                   Editorial Intelligence
                 </div>
               </div>
@@ -63,23 +92,31 @@ const Landing = () => {
             <div className="hidden md:flex items-center gap-8">
               <a 
                 href="#features" 
-                className="text-parchment-white hover:text-[hsl(42,77%,70%)] transition-colors duration-300 font-sans"
+                className="font-sans transition-all duration-300"
                 style={{
                   fontSize: '15px',
                   fontWeight: 500,
-                  letterSpacing: '0.02em'
+                  letterSpacing: '0.02em',
+                  color: isScrolled ? 'hsl(22, 4%, 38%)' : 'hsl(48, 100%, 99%)',
+                  textShadow: isScrolled ? 'none' : '0 2px 4px rgba(0, 0, 0, 0.3)'
                 }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(42, 77%, 70%)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = isScrolled ? 'hsl(22, 4%, 38%)' : 'hsl(48, 100%, 99%)'}
               >
                 Features
               </a>
               <a 
                 href="#how-it-works" 
-                className="text-parchment-white hover:text-[hsl(42,77%,70%)] transition-colors duration-300 font-sans"
+                className="font-sans transition-all duration-300"
                 style={{
                   fontSize: '15px',
                   fontWeight: 500,
-                  letterSpacing: '0.02em'
+                  letterSpacing: '0.02em',
+                  color: isScrolled ? 'hsl(22, 4%, 38%)' : 'hsl(48, 100%, 99%)',
+                  textShadow: isScrolled ? 'none' : '0 2px 4px rgba(0, 0, 0, 0.3)'
                 }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(42, 77%, 70%)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = isScrolled ? 'hsl(22, 4%, 38%)' : 'hsl(48, 100%, 99%)'}
               >
                 How It Works
               </a>
@@ -92,21 +129,22 @@ const Landing = () => {
                 </Button>
               ) : (
                 <>
-                  <Button 
-                    asChild 
-                    variant="ghost" 
-                    className="hidden sm:inline-flex hover:bg-transparent font-sans"
+                  <Link
+                    to="/auth"
+                    className="hidden sm:inline-flex font-sans transition-all duration-300"
                     style={{
-                      color: 'rgba(255, 252, 245, 0.75)',
                       fontSize: '15px',
                       fontWeight: 500,
-                      letterSpacing: '0.02em'
+                      letterSpacing: '0.02em',
+                      color: isScrolled ? 'hsl(22, 4%, 38%)' : 'hsl(48, 100%, 99%)',
+                      textShadow: isScrolled ? 'none' : '0 2px 4px rgba(0, 0, 0, 0.3)',
+                      padding: '8px 16px'
                     }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(42, 77%, 70%)'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = isScrolled ? 'hsl(22, 4%, 38%)' : 'hsl(48, 100%, 99%)'}
                   >
-                    <Link to="/auth" className="hover:text-[hsl(42,77%,70%)] transition-colors duration-300">
-                      Sign In
-                    </Link>
-                  </Button>
+                    Sign In
+                  </Link>
                   <Button 
                     asChild 
                     className="text-ink-black font-sans font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(184,149,106,0.6)]" 
