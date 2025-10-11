@@ -93,10 +93,6 @@ const AppContent = () => {
                   <Route path="/schedule" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                   <Route path="/meet-madison" element={<ProtectedRoute><MeetMadison /></ProtectedRoute>} />
-                  {/* Legacy route redirects */}
-                  <Route path="/forge" element={<Navigate to="/create" replace />} />
-                  <Route path="/reservoir" element={<Navigate to="/library" replace />} />
-                  <Route path="/amplify" element={<Navigate to="/multiply" replace />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>
@@ -117,10 +113,6 @@ const AppContent = () => {
             <Route path="/schedule" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/meet-madison" element={<ProtectedRoute><MeetMadison /></ProtectedRoute>} />
-            {/* Legacy route redirects */}
-            <Route path="/forge" element={<Navigate to="/create" replace />} />
-            <Route path="/reservoir" element={<Navigate to="/library" replace />} />
-            <Route path="/amplify" element={<Navigate to="/multiply" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </>
