@@ -145,7 +145,7 @@ export default function DashboardNew() {
           </button>
 
           <button 
-            onClick={() => navigate('/calendar')}
+            onClick={() => navigate('/schedule')}
             className="bg-parchment-white border-2 border-transparent hover:border-brass p-6 rounded-xl transition-all hover:shadow-[0_4px_12px_rgba(184,149,106,0.1)] group"
           >
             <Calendar className="w-8 h-8 text-brass mb-3 group-hover:scale-110 transition-transform" />
