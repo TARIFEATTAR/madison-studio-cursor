@@ -170,7 +170,7 @@ export function AppSidebar() {
                   style={{
                     background: 'linear-gradient(135deg, #B8956A 0%, #D4AF37 100%)',
                     boxShadow: '2px 2px 6px rgba(0,0,0,0.3)',
-                    marginRight: '-32px'
+                    marginRight: '-22px'
                   }}
                 >
                   <ChevronLeft className="w-4 h-4 text-ink-black" />
