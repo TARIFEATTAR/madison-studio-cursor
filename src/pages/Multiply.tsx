@@ -526,7 +526,7 @@ export default function Multiply() {
                             style={{ backgroundColor: `${typeInfo.iconColor}15`, color: typeInfo.iconColor }}
                           >
                             {typeInfo.iconImage ? (
-                              <img src={typeInfo.iconImage} alt="" className="w-4 h-4 object-contain" />
+                              <img src={typeInfo.iconImage} alt="" className="w-6 h-6 object-contain" />
                             ) : (
                               <Icon className="w-4 h-4" />
                             )}
@@ -697,16 +697,18 @@ export default function Multiply() {
                           <div className="flex items-start gap-3">
                             <Checkbox checked={isSelected} className="mt-1" />
                           <div className="flex-1 min-w-0">
-                            <div 
-                              className="w-10 h-10 rounded-lg flex items-center justify-center mb-3"
-                              style={{ backgroundColor: `${type.iconColor}15` }}
-                            >
-                              {type.iconImage ? (
-                                <img src={type.iconImage} alt="" className="w-6 h-6 object-contain" />
-                              ) : (
+                            {type.iconImage ? (
+                              <div className="w-12 h-12 flex items-center justify-center mb-3">
+                                <img src={type.iconImage} alt="" className="w-10 h-10 object-contain" />
+                              </div>
+                            ) : (
+                              <div 
+                                className="w-10 h-10 rounded-lg flex items-center justify-center mb-3"
+                                style={{ backgroundColor: `${type.iconColor}15` }}
+                              >
                                 <Icon className="w-5 h-5" style={{ color: type.iconColor }} />
-                              )}
-                            </div>
+                              </div>
+                            )}
                             <h4 className="font-semibold mb-1" style={{ color: "#1A1816" }}>
                               {type.name}
                             </h4>
@@ -753,16 +755,18 @@ export default function Multiply() {
                         <div className="flex items-start gap-3">
                           <Checkbox checked={isSelected} className="mt-1" />
                           <div className="flex-1 min-w-0">
-                            <div 
-                              className="w-10 h-10 rounded-lg flex items-center justify-center mb-3"
-                              style={{ backgroundColor: `${type.iconColor}15` }}
-                            >
-                              {type.iconImage ? (
-                                <img src={type.iconImage} alt="" className="w-6 h-6 object-contain" />
-                              ) : (
+                            {type.iconImage ? (
+                              <div className="w-12 h-12 flex items-center justify-center mb-3">
+                                <img src={type.iconImage} alt="" className="w-10 h-10 object-contain" />
+                              </div>
+                            ) : (
+                              <div 
+                                className="w-10 h-10 rounded-lg flex items-center justify-center mb-3"
+                                style={{ backgroundColor: `${type.iconColor}15` }}
+                              >
                                 <Icon className="w-5 h-5" style={{ color: type.iconColor }} />
-                              )}
-                            </div>
+                              </div>
+                            )}
                             <h4 className="font-semibold mb-1" style={{ color: "#1A1816" }}>
                               {type.name}
                             </h4>
