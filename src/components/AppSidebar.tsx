@@ -22,7 +22,7 @@ const navItems = [
   { 
     title: "Dashboard", 
     subtitle: "Overview & Actions",
-    url: "/", 
+    url: "/dashboard", 
     icon: Home 
   },
   { 

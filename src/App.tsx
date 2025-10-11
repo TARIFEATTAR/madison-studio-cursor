@@ -85,6 +85,7 @@ const AppContent = () => {
               <div className="pt-16 md:pt-0">
                 <Routes>
                   <Route path="/" element={<ProtectedRoute><RootRoute /></ProtectedRoute>} />
+                  <Route path="/dashboard" element={<ProtectedRoute><DashboardNew /></ProtectedRoute>} />
                   <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
                   <Route path="/create" element={<ProtectedRoute><ForgeNew /></ProtectedRoute>} />
                   <Route path="/editor" element={<ProtectedRoute><ContentEditor /></ProtectedRoute>} />
@@ -105,6 +106,7 @@ const AppContent = () => {
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route path="/" element={<Index />} />
+            <Route path="/dashboard" element={<ProtectedRoute><DashboardNew /></ProtectedRoute>} />
             <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><ForgeNew /></ProtectedRoute>} />
             <Route path="/editor" element={<ProtectedRoute><ContentEditor /></ProtectedRoute>} />
