@@ -60,20 +60,20 @@ interface MasterContent {
 // Top 3 most common derivatives (shown first for easier decision making)
 const TOP_DERIVATIVE_TYPES: DerivativeType[] = [
   {
+    id: "email_3part",
+    name: "3-Part Email Series",
+    description: "Sequential email nurture campaign",
+    icon: Mail,
+    iconColor: "#8B7355",
+    isSequence: true,
+  },
+  {
     id: "instagram",
     name: "Instagram",
     description: "Instagram posts and captions",
     icon: Instagram,
     iconColor: "#E4405F",
     charLimit: 2200,
-  },
-  {
-    id: "email",
-    name: "Email",
-    description: "Email marketing campaigns",
-    icon: Mail,
-    iconColor: "#B8956A",
-    charLimit: 2000,
   },
   {
     id: "product",
@@ -87,6 +87,14 @@ const TOP_DERIVATIVE_TYPES: DerivativeType[] = [
 
 // Additional derivatives (shown below with separation)
 const ADDITIONAL_DERIVATIVE_TYPES: DerivativeType[] = [
+  {
+    id: "email",
+    name: "Email",
+    description: "Newsletter-style email",
+    icon: Mail,
+    iconColor: "#B8956A",
+    charLimit: 2000,
+  },
   {
     id: "pinterest",
     name: "Pinterest",
@@ -112,17 +120,9 @@ const ADDITIONAL_DERIVATIVE_TYPES: DerivativeType[] = [
     charLimit: 300,
   },
   {
-    id: "email_3part",
-    name: "3-Part Email Series",
-    description: "3-email nurture sequence",
-    icon: Mail,
-    iconColor: "#8B7355",
-    isSequence: true,
-  },
-  {
     id: "email_5part",
     name: "5-Part Email Series",
-    description: "5-email nurture sequence",
+    description: "Extended email sequence",
     icon: Mail,
     iconColor: "#A0826D",
     isSequence: true,
@@ -130,7 +130,7 @@ const ADDITIONAL_DERIVATIVE_TYPES: DerivativeType[] = [
   {
     id: "email_7part",
     name: "7-Part Email Series",
-    description: "7-email nurture sequence",
+    description: "Comprehensive email journey",
     icon: Mail,
     iconColor: "#6B5D52",
     isSequence: true,
@@ -661,7 +661,7 @@ export default function Multiply() {
                   <div className="flex items-center gap-2 mb-3">
                     <div className="h-px flex-1" style={{ backgroundColor: "#D4CFC8" }} />
                     <span className="text-xs font-medium px-3" style={{ color: "#A8A39E" }}>
-                      MOST COMMON
+                      START HERE - MOST COMMON USE CASES
                     </span>
                     <div className="h-px flex-1" style={{ backgroundColor: "#D4CFC8" }} />
                   </div>
@@ -713,7 +713,7 @@ export default function Multiply() {
                   <div className="flex items-center gap-2 mb-3">
                     <div className="h-px flex-1" style={{ backgroundColor: "#D4CFC8" }} />
                     <span className="text-xs font-medium px-3" style={{ color: "#A8A39E" }}>
-                      MORE OPTIONS
+                      SPECIALIZED FORMATS
                     </span>
                     <div className="h-px flex-1" style={{ backgroundColor: "#D4CFC8" }} />
                   </div>
