@@ -5,12 +5,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, TrendingUp, Clock, Star } from "lucide-react";
+import { Sparkles, TrendingUp, Clock, Star, Plus, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import PromptLibrarySidebar from "@/components/prompt-library/PromptLibrarySidebar";
 import EnhancedPromptCard from "@/components/prompt-library/EnhancedPromptCard";
 import PromptDetailModal from "@/components/prompt-library/PromptDetailModal";
+import { QuickStartModal } from "@/components/prompt-library/QuickStartModal";
+import { PromptWizard, WizardData } from "@/components/prompt-library/PromptWizard";
+import { ImportDialog } from "@/components/prompt-library/ImportDialog";
+import { OrganizationGuide } from "@/components/prompt-library/OrganizationGuide";
+import { MadisonPanel } from "@/components/prompt-library/MadisonPanel";
 
 export interface Prompt {
   id: string;
@@ -41,12 +47,20 @@ const Templates = () => {
 
   const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("recent");
+  const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
     collection: null as string | null,
     contentType: null as string | null,
     scentFamily: null as string | null,
     templatesOnly: false,
   });
+
+  // Modal states
+  const [showQuickStart, setShowQuickStart] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+  const [showMadison, setShowMadison] = useState(false);
 
   // Fetch prompts
   const { data: prompts = [], isLoading } = useQuery({
@@ -78,9 +92,21 @@ const Templates = () => {
     enabled: !!currentOrganizationId,
   });
 
+  // Filter prompts by search query
+  const searchFilteredPrompts = useMemo(() => {
+    if (!searchQuery.trim()) return prompts;
+    const query = searchQuery.toLowerCase();
+    return prompts.filter(
+      (p) =>
+        p.title.toLowerCase().includes(query) ||
+        p.prompt_text.toLowerCase().includes(query) ||
+        p.tags?.some((tag) => tag.toLowerCase().includes(query))
+    );
+  }, [prompts, searchQuery]);
+
   // Sort prompts
   const sortedPrompts = useMemo(() => {
-    const sorted = [...prompts];
+    const sorted = [...searchFilteredPrompts];
     
     switch (sortBy) {
       case "most-used":
@@ -96,7 +122,54 @@ const Templates = () => {
           new Date(a.updated_at || a.created_at).getTime()
         );
     }
-  }, [prompts, sortBy]);
+  }, [searchFilteredPrompts, sortBy]);
+
+  const handleWizardComplete = async (wizardData: WizardData) => {
+    // Generate prompt from wizard data
+    const generatedPrompt = generatePromptFromWizard(wizardData);
+    
+    try {
+      const { error } = await supabase.from("prompts").insert({
+        title: `${wizardData.contentType} - ${wizardData.tone}`,
+        prompt_text: generatedPrompt,
+        content_type: wizardData.contentType as any,
+        collection: "cadence" as any,
+        organization_id: currentOrganizationId!,
+        created_by: user?.id,
+        is_template: false,
+      });
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+      toast({
+        title: "Prompt created",
+        description: "Your custom prompt has been generated successfully!",
+      });
+    } catch (error) {
+      console.error("Error creating prompt:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create prompt",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const generatePromptFromWizard = (data: WizardData): string => {
+    const parts = [];
+    
+    parts.push(`Create ${data.contentType} content with the following specifications:`);
+    parts.push(`\nPurpose: ${data.purpose}`);
+    parts.push(`\nTone: ${data.tone}`);
+    parts.push(`\nKey Elements to Include: ${data.keyElements}`);
+    
+    if (data.constraints) {
+      parts.push(`\nConstraints: ${data.constraints}`);
+    }
+    
+    return parts.join("\n");
+  };
 
   const handleUsePrompt = async (promptId: string) => {
     const prompt = prompts.find(p => p.id === promptId);
@@ -197,10 +270,47 @@ const Templates = () => {
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-serif mb-2 text-foreground">Templates</h1>
-            <p className="text-muted-foreground">
-              Your collection of saved templates, ready to use in Create
-            </p>
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h1 className="text-4xl font-serif mb-2 text-foreground">Prompt Library</h1>
+                <p className="text-muted-foreground">
+                  Your prompts, perfectly organized • No more scattered spreadsheets
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowGuide(true)}
+                  className="gap-2"
+                >
+                  <HelpCircle className="w-4 h-4" />
+                  How it Works
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowMadison(true)}
+                  className="gap-2"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Ask Madison
+                </Button>
+                <Button
+                  onClick={() => setShowQuickStart(true)}
+                  className="gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  New Prompt
+                </Button>
+              </div>
+            </div>
+
+            {/* Search Bar */}
+            <Input
+              placeholder="Search prompts by title, description, tags, or content..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="max-w-2xl"
+            />
           </div>
 
           {/* Sort Controls */}
@@ -250,6 +360,43 @@ const Templates = () => {
           )}
         </div>
       </main>
+
+      {/* Modals */}
+      <QuickStartModal
+        open={showQuickStart}
+        onOpenChange={setShowQuickStart}
+        onStartWizard={() => {
+          setShowQuickStart(false);
+          setShowWizard(true);
+        }}
+        onShowTemplates={() => {
+          setShowQuickStart(false);
+          // Templates are already shown on main page
+        }}
+        onShowImport={() => {
+          setShowQuickStart(false);
+          setShowImport(true);
+        }}
+      />
+
+      <PromptWizard
+        open={showWizard}
+        onOpenChange={setShowWizard}
+        onComplete={handleWizardComplete}
+      />
+
+      <ImportDialog
+        open={showImport}
+        onOpenChange={setShowImport}
+        onImport={(prompts) => {
+          // TODO: Handle imported prompts
+          console.log("Imported prompts:", prompts);
+        }}
+      />
+
+      <OrganizationGuide open={showGuide} onOpenChange={setShowGuide} />
+
+      <MadisonPanel open={showMadison} onOpenChange={setShowMadison} />
 
       {/* Detail Modal */}
       {selectedPrompt && (
