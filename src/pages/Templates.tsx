@@ -5,11 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useToast } from "@/hooks/use-toast";
-import { HelpCircle, Plus } from "lucide-react";
+import { HelpCircle, Plus, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 import PromptLibrarySidebar from "@/components/prompt-library/PromptLibrarySidebar";
 import EnhancedPromptCard from "@/components/prompt-library/EnhancedPromptCard";
 import PromptDetailModal from "@/components/prompt-library/PromptDetailModal";
@@ -44,12 +47,15 @@ const Templates = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { state, isMobile: isMobileNav } = useSidebar();
+  const isMobile = useIsMobile();
 
   const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedQuickAccess, setSelectedQuickAccess] = useState<string | null>(null);
   const [selectedCollection, setSelectedCollection] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Modal states
   const [showQuickStart, setShowQuickStart] = useState(false);
@@ -57,6 +63,13 @@ const Templates = () => {
   const [showImport, setShowImport] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [showMadison, setShowMadison] = useState(false);
+
+  // Compute dynamic left offset for the filter sidebar
+  const navOffset = isMobileNav 
+    ? "0px" 
+    : state === "collapsed" 
+      ? "var(--sidebar-width-icon)" 
+      : "var(--sidebar-width)";
 
   // Fetch prompts
   const { data: allPrompts = [], isLoading } = useQuery({
@@ -274,19 +287,24 @@ const Templates = () => {
         {/* Global Navigation */}
         <AppSidebar />
 
-        {/* Prompt Library Sidebar - positioned after AppSidebar */}
-        <div className="fixed left-[var(--sidebar-width)] top-0 h-screen z-[5]">
-          <PromptLibrarySidebar
-            onQuickAccessSelect={setSelectedQuickAccess}
-            onCollectionSelect={setSelectedCollection}
-            onCategorySelect={setSelectedCategory}
-            selectedQuickAccess={selectedQuickAccess}
-            selectedCollection={selectedCollection}
-            selectedCategory={selectedCategory}
-          />
-        </div>
+        {/* Desktop: Fixed Filter Sidebar */}
+        {!isMobile && (
+          <div 
+            className="fixed top-0 h-screen z-[10] w-80 transition-[left] duration-200 ease-linear"
+            style={{ left: navOffset }}
+          >
+            <PromptLibrarySidebar
+              onQuickAccessSelect={setSelectedQuickAccess}
+              onCollectionSelect={setSelectedCollection}
+              onCategorySelect={setSelectedCategory}
+              selectedQuickAccess={selectedQuickAccess}
+              selectedCollection={selectedCollection}
+              selectedCategory={selectedCategory}
+            />
+          </div>
+        )}
 
-        <main className="flex-1 p-8 ml-80">{/* 320px for PromptLibrarySidebar width */}
+        <main className={cn("flex-1 p-8", !isMobile && "ml-80")}>
           <div className="max-w-6xl mx-auto">
             {/* Header */}
             <div className="mb-6">
@@ -298,6 +316,38 @@ const Templates = () => {
                   </p>
                 </div>
                 <div className="flex gap-3">
+                  {/* Mobile: Filters Button */}
+                  {isMobile && (
+                    <Drawer open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+                      <DrawerTrigger asChild>
+                        <Button variant="outline" size="icon" className="rounded-full">
+                          <Filter className="w-5 h-5" />
+                        </Button>
+                      </DrawerTrigger>
+                      <DrawerContent className="h-[85vh]">
+                        <div className="overflow-y-auto h-full">
+                          <PromptLibrarySidebar
+                            onQuickAccessSelect={(value) => {
+                              setSelectedQuickAccess(value);
+                              setMobileFiltersOpen(false);
+                            }}
+                            onCollectionSelect={(value) => {
+                              setSelectedCollection(value);
+                              setMobileFiltersOpen(false);
+                            }}
+                            onCategorySelect={(value) => {
+                              setSelectedCategory(value);
+                              setMobileFiltersOpen(false);
+                            }}
+                            selectedQuickAccess={selectedQuickAccess}
+                            selectedCollection={selectedCollection}
+                            selectedCategory={selectedCategory}
+                          />
+                        </div>
+                      </DrawerContent>
+                    </Drawer>
+                  )}
+                  
                   <Button
                     variant="ghost"
                     size="icon"
@@ -323,6 +373,36 @@ const Templates = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+
+            {/* Active Filters Display (Mobile) */}
+            {isMobile && (selectedQuickAccess || selectedCollection || selectedCategory) && (
+              <div className="mb-4 flex gap-2 flex-wrap">
+                {selectedQuickAccess && (
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted rounded-full text-sm">
+                    <span>{selectedQuickAccess}</span>
+                    <button onClick={() => setSelectedQuickAccess(null)} className="hover:text-destructive">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
+                {selectedCollection && (
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted rounded-full text-sm">
+                    <span>{selectedCollection}</span>
+                    <button onClick={() => setSelectedCollection(null)} className="hover:text-destructive">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
+                {selectedCategory && (
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted rounded-full text-sm">
+                    <span>{selectedCategory}</span>
+                    <button onClick={() => setSelectedCategory(null)} className="hover:text-destructive">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Prompt count */}
             <p className="text-sm text-muted-foreground mb-6">
