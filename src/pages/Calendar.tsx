@@ -208,7 +208,6 @@ const Calendar = () => {
                     <WeekView
                       currentDate={currentDate}
                       scheduledItems={scheduledItems}
-                      dipWeekInfo={dipWeekInfo}
                       onItemClick={handleItemClick}
                     />
                   )}

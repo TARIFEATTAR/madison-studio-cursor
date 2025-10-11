@@ -6,7 +6,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useProducts } from "@/hooks/useProducts";
 import { useCollections } from "@/hooks/useCollections";
-import { useWeekNames } from "@/hooks/useWeekNames";
 import type { IndustryConfig } from "@/hooks/usePromptGeneration";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,7 +75,6 @@ const Forge = () => {
   const { currentOrganizationId, onboardingStep, completeFirstGeneration } = useOnboarding();
   const { products } = useProducts();
   const { collections } = useCollections();
-  const { getWeekName } = useWeekNames();
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);

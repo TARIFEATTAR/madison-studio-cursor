@@ -10,7 +10,6 @@ export interface LibraryContentItem {
   content: string;
   createdAt: Date;
   updatedAt: Date;
-  dipWeek: number | null;
   rating: number | null;
   wordCount: number | null;
   archived: boolean;
@@ -46,7 +45,6 @@ export const useLibraryContent = () => {
             content: item.full_content,
             createdAt: new Date(item.created_at),
             updatedAt: new Date(item.updated_at),
-            dipWeek: item.dip_week,
             rating: item.quality_rating,
             wordCount: item.word_count,
             archived: item.is_archived,
@@ -59,7 +57,7 @@ export const useLibraryContent = () => {
       // Fetch outputs
       const { data: outputs, error: outputsError } = await supabase
         .from("outputs")
-        .select("*, prompts(title, content_type, collection, dip_week)")
+        .select("*, prompts(title, content_type, collection)")
         .order("created_at", { ascending: false });
 
       if (outputsError) {
@@ -74,7 +72,6 @@ export const useLibraryContent = () => {
             content: item.generated_content,
             createdAt: new Date(item.created_at),
             updatedAt: new Date(item.created_at),
-            dipWeek: item.prompts?.dip_week || null,
             rating: item.quality_rating,
             wordCount: item.generated_content?.split(/\s+/).length || 0,
             archived: item.is_archived,
@@ -87,7 +84,7 @@ export const useLibraryContent = () => {
       // Fetch derivative assets
       const { data: derivatives, error: derivativesError } = await supabase
         .from("derivative_assets")
-        .select("*, master_content(title, collection, dip_week)")
+        .select("*, master_content(title, collection)")
         .order("created_at", { ascending: false });
 
       if (derivativesError) {
@@ -102,7 +99,6 @@ export const useLibraryContent = () => {
             content: item.generated_content || "",
             createdAt: new Date(item.created_at),
             updatedAt: new Date(item.created_at),
-            dipWeek: item.master_content?.dip_week || null,
             rating: item.quality_rating,
             wordCount: item.generated_content?.split(/\s+/).length || 0,
             archived: item.is_archived,

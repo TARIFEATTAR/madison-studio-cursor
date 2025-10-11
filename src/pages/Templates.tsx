@@ -17,7 +17,6 @@ export interface Prompt {
   title: string;
   collection: string;
   scent_family: string | null;
-  dip_week: number | null;
   content_type: string;
   prompt_text: string;
   created_at: string;
@@ -29,7 +28,6 @@ export interface Prompt {
   tags: string[] | null;
   is_template: boolean;
   effectiveness_score: number | null;
-  pillar_focus: string | null;
 }
 
 type SortOption = "recent" | "most-used" | "highest-rated" | "effectiveness";
@@ -47,8 +45,6 @@ const Templates = () => {
     collection: null as string | null,
     contentType: null as string | null,
     scentFamily: null as string | null,
-    pillar: null as string | null,
-    dipWeek: null as number | null,
     templatesOnly: false,
   });
 
@@ -70,12 +66,6 @@ const Templates = () => {
       }
       if (filters.scentFamily) {
         query = query.eq("scent_family", filters.scentFamily as any);
-      }
-      if (filters.pillar) {
-        query = query.eq("pillar_focus", filters.pillar as any);
-      }
-      if (filters.dipWeek) {
-        query = query.eq("dip_week", filters.dipWeek);
       }
       if (filters.templatesOnly) {
         query = query.eq("is_template", true);

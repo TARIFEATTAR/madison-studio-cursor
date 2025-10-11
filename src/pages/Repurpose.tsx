@@ -43,8 +43,6 @@ interface MasterContent {
   full_content: string;
   word_count: number;
   collection: string | null;
-  dip_week: number | null;
-  pillar_focus: string | null;
   created_at: string;
 }
 
@@ -562,8 +560,7 @@ const Repurpose = () => {
     return (
       master.title.toLowerCase().includes(query) ||
       master.content_type.toLowerCase().includes(query) ||
-      (master.collection?.toLowerCase() || "").includes(query) ||
-      (master.pillar_focus?.toLowerCase() || "").includes(query)
+      (master.collection?.toLowerCase() || "").includes(query)
     );
   });
 
@@ -572,9 +569,7 @@ const Repurpose = () => {
     switch(sortBy) {
       case "oldest": 
         return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      case "week": 
-        return (a.dip_week || 999) - (b.dip_week || 999);
-      case "title": 
+      case "title":
         return a.title.localeCompare(b.title);
       case "type": 
         return a.content_type.localeCompare(b.content_type);

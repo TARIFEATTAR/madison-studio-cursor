@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 
 import { ChevronRight, Star, Clock, ChevronDown, Folder, Settings } from "lucide-react";
 import { useCollections } from "@/hooks/useCollections";
-import { useWeekNames } from "@/hooks/useWeekNames";
 import { useProducts } from "@/hooks/useProducts";
 import { getCollectionIcon, normalizeCollectionName } from "@/utils/collectionIcons";
 import { contentTypeMapping } from "@/utils/contentTypeMapping";
@@ -70,13 +69,11 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { collections: brandCollections } = useCollections();
-  const { getWeekName } = useWeekNames();
   const { products } = useProducts();
   
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     collections: false,
     contentTypes: true,
-    dipWeeks: false,
   });
   const [expandedCollections, setExpandedCollections] = useState<string[]>(['cadence']);
   
@@ -162,13 +159,6 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
     key: col.name.toLowerCase().replace(/\s+/g, '_'),
     icon: Folder,
   }));
-
-  const dipWeeks = [
-    { number: 1, name: getWeekName(1) },
-    { number: 2, name: getWeekName(2) },
-    { number: 3, name: getWeekName(3) },
-    { number: 4, name: getWeekName(4) },
-  ];
 
   const isActive = (filterType: string, value: string | number, scentFamily?: string) => {
     if (scentFamily) {
@@ -311,62 +301,6 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
                                 {collectionCount}
                               </Badge>
                             )}
-                          </>
-                        )}
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          )}
-        </SidebarGroup>
-
-        {/* BY DIP WEEK */}
-        <SidebarGroup className="mt-4 pt-3 border-t border-border/40">
-          <SidebarGroupLabel
-            className="flex items-center justify-between cursor-pointer hover:bg-stone-beige/50 rounded-md px-2 py-1.5 transition-colors mb-1.5"
-            onClick={() => toggleSection("dipWeeks")}
-          >
-            <span className="text-xs font-medium text-deep-charcoal uppercase tracking-wide">
-              {!collapsed && "By DIP Week"}
-            </span>
-            {!collapsed && (
-              <ChevronRight
-                className={cn(
-                  "w-3 h-3 transition-transform text-deep-charcoal",
-                  expandedSections.dipWeeks && "rotate-90"
-                )}
-              />
-            )}
-          </SidebarGroupLabel>
-
-          {expandedSections.dipWeeks && (
-            <SidebarGroupContent>
-              <SidebarMenu className="flex flex-col gap-1.5">
-                {dipWeeks.map((week) => {
-                  const weekCount = (counts.prompts.byDipWeek[week.number] || 0) + 
-                                      (counts.outputs.byDipWeek[week.number] || 0) + 
-                                      (counts.masterContent.byDipWeek[week.number] || 0);
-                  const isWeekActive = activeFilters.dipWeek === week.number;
-
-                  return (
-                    <SidebarMenuItem key={week.number}>
-                      <SidebarMenuButton
-                        className={cn(
-                          "min-h-10 px-2 py-1.5 rounded-md transition-all flex items-center gap-3 hover:bg-stone-beige/50",
-                          isWeekActive && "bg-saffron-gold/20 border-l-3 border-saffron-gold font-medium"
-                        )}
-                        onClick={() => handleFilterClick("dipWeek", week.number)}
-                      >
-                        {!collapsed && (
-                          <>
-                            <span className="flex-1 text-sm leading-tight">
-                              Week {week.number}: {week.name}
-                            </span>
-                            <Badge variant="secondary" className="text-xs ml-auto">
-                              {weekCount}
-                            </Badge>
                           </>
                         )}
                       </SidebarMenuButton>

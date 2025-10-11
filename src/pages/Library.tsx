@@ -59,8 +59,6 @@ export default function Library() {
           return b.createdAt.getTime() - a.createdAt.getTime();
         case "alphabetical":
           return a.title.localeCompare(b.title);
-        case "dipWeek":
-          return (b.dipWeek || 0) - (a.dipWeek || 0);
         case "mostUsed":
           return (b.rating || 0) - (a.rating || 0);
         default:
@@ -446,7 +444,6 @@ export default function Library() {
             generated_content: selectedContent.content,
             created_at: selectedContent.createdAt.toISOString(),
             word_count: selectedContent.wordCount,
-            dip_week: selectedContent.dipWeek,
             quality_rating: selectedContent.rating,
             collection: selectedContent.collection,
           }}

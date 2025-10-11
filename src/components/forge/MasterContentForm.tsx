@@ -5,7 +5,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { BLOG_REPURPOSE_TARGETS } from "@/config/blogPostGuidelines";
 import { useCollections } from "@/hooks/useCollections";
-import { useWeekNames } from "@/hooks/useWeekNames";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -44,7 +43,6 @@ export function MasterContentForm({
   onDerivativesChange,
 }: MasterContentFormProps) {
   const { collections } = useCollections();
-  const { getWeekName } = useWeekNames();
   
   const toggleDerivative = (type: string) => {
     if (selectedDerivatives.includes(type)) {
@@ -85,31 +83,6 @@ export function MasterContentForm({
 
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <Label htmlFor="dipWeek">DIP Week</Label>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="w-4 h-4 text-muted-foreground cursor-help" />
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs">
-              <p>DIP (Deep Immersion Period) weeks help structure your content calendar. Customize these names in Settings.</p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
-        <Select value={dipWeek} onValueChange={onDipWeekChange}>
-          <SelectTrigger id="dipWeek" className="bg-background/50">
-            <SelectValue placeholder="Select week..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1">Week 1: {getWeekName(1)}</SelectItem>
-            <SelectItem value="2">Week 2: {getWeekName(2)}</SelectItem>
-            <SelectItem value="3">Week 3: {getWeekName(3)}</SelectItem>
-            <SelectItem value="4">Week 4: {getWeekName(4)}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
           <Label htmlFor="collection">Collection (Optional)</Label>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -142,21 +115,6 @@ export function MasterContentForm({
             </Link>
           </p>
         )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="pillarMaster">Pillar Focus (Optional)</Label>
-        <Select value={pillar} onValueChange={onPillarChange}>
-          <SelectTrigger id="pillarMaster" className="bg-background/50">
-            <SelectValue placeholder="Select pillar..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Identity">Identity / The Anchor</SelectItem>
-            <SelectItem value="Memory">Memory / The Journey</SelectItem>
-            <SelectItem value="Remembrance">Remembrance / The Craft</SelectItem>
-            <SelectItem value="Cadence">Cadence / The Practice</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <div className="space-y-2">
