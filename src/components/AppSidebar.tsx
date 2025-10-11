@@ -158,7 +158,7 @@ export function AppSidebar() {
           </div>
           
           {open && (
-            <div className="px-4 pb-4 flex justify-center">
+            <div className="px-4 pb-4 flex justify-end">
               <button 
                 onClick={toggleSidebar}
                 className="bg-aged-brass hover:bg-antique-gold transition-colors text-ink-black font-semibold py-1.5 px-3 rounded-md text-xs flex items-center gap-2"
