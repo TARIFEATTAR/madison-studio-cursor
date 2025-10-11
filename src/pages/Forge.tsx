@@ -26,6 +26,7 @@ import { BLOG_POST_TYPES, BLOG_REPURPOSE_TARGETS, generateBlogPrompt, type BlogP
 import { ContentEditor } from "@/components/ContentEditor";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
 import { ForgeOnboardingGuide } from "@/components/forge/ForgeOnboardingGuide";
+import ScriptoraLoadingAnimation from "@/components/forge/ScriptoraLoadingAnimation";
 
 // Helpers to map display labels to database enum values
 const toEnum = (v?: string | null) => (v ? v.toLowerCase().replace(/\s+/g, '_') : null);
@@ -712,6 +713,9 @@ const Forge = () => {
 
   return (
     <div className="min-h-screen py-8 px-6 md:px-12 paper-overlay">
+      {/* Loading Animation */}
+      {(generating || repurposing) && <ScriptoraLoadingAnimation />}
+      
       {/* Onboarding Guide */}
       {showOnboardingGuide && (
         <ForgeOnboardingGuide
