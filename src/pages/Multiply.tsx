@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import penNibIcon from "@/assets/pen-nib-icon-multiply.png";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,9 +13,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  Sparkles, Archive, Mail, Instagram, Twitter, Tag, MessageSquare, 
+  Sparkles, Archive, Mail, Instagram, Tag, MessageSquare, 
   FileText, CheckCircle2, XCircle, ChevronDown, ChevronRight, Copy, 
-  Calendar, Edit, Loader2, AlertCircle 
+  Calendar, Edit, Loader2, AlertCircle, Video 
 } from "lucide-react";
 import { EditorialDirectorSplitScreen } from "@/components/multiply/EditorialDirectorSplitScreen";
 
@@ -76,14 +75,6 @@ const DERIVATIVE_TYPES: DerivativeType[] = [
     charLimit: 2000,
   },
   {
-    id: "email_3part",
-    name: "3-Part Email Series",
-    description: "3-email nurture sequence",
-    icon: Mail,
-    iconColor: "#8B7355",
-    isSequence: true,
-  },
-  {
     id: "pinterest",
     name: "Pinterest",
     description: "Pinterest pin descriptions",
@@ -108,6 +99,22 @@ const DERIVATIVE_TYPES: DerivativeType[] = [
     charLimit: 160,
   },
   {
+    id: "tiktok",
+    name: "TikTok",
+    description: "TikTok video scripts",
+    icon: Video,
+    iconColor: "#000000",
+    charLimit: 300,
+  },
+  {
+    id: "email_3part",
+    name: "3-Part Email Series",
+    description: "3-email nurture sequence",
+    icon: Mail,
+    iconColor: "#8B7355",
+    isSequence: true,
+  },
+  {
     id: "email_5part",
     name: "5-Part Email Series",
     description: "5-email nurture sequence",
@@ -122,14 +129,6 @@ const DERIVATIVE_TYPES: DerivativeType[] = [
     icon: Mail,
     iconColor: "#6B5D52",
     isSequence: true,
-  },
-  {
-    id: "tiktok",
-    name: "TikTok",
-    description: "TikTok video scripts",
-    icon: Twitter, // We'll use Twitter icon temporarily, can update with a video icon
-    iconColor: "#000000",
-    charLimit: 300,
   },
 ];
 
@@ -356,21 +355,13 @@ export default function Multiply() {
     <div className="min-h-screen" style={{ backgroundColor: "#F5F1E8" }}>
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
-        <div className="mb-8 flex items-start gap-6">
-          <img 
-            src={penNibIcon} 
-            alt="Pen Nib" 
-            className="w-16 h-auto flex-shrink-0"
-            style={{ marginTop: "-2px" }}
-          />
-          <div>
-            <h1 className="text-4xl font-serif font-bold leading-tight mb-1" style={{ color: "#1A1816" }}>
-              Repurpose Content
-            </h1>
-            <p className="text-lg leading-tight" style={{ color: "#6B6560" }}>
-              Transform master content into channel-specific derivatives
-            </p>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-4xl font-serif font-bold leading-tight mb-1" style={{ color: "#1A1816" }}>
+            Repurpose Content
+          </h1>
+          <p className="text-lg leading-tight" style={{ color: "#6B6560" }}>
+            Transform master content into channel-specific derivatives
+          </p>
         </div>
 
         {/* User Content Alert */}

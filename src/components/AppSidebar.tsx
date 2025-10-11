@@ -1,6 +1,7 @@
 import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, LogOut, User, Menu } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import penNibIcon from "@/assets/pen-nib-sidebar.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -140,7 +141,7 @@ export function AppSidebar() {
         <SidebarHeader className="border-b border-white/10 p-0">
           <div className="flex items-center gap-3 px-4 py-6">
             <img 
-              src="/logo.png" 
+              src={penNibIcon} 
               alt="Scriptora" 
               className={`${open ? 'w-10 h-10' : 'w-8 h-8'} shrink-0 object-contain transition-all duration-200`}
             />
