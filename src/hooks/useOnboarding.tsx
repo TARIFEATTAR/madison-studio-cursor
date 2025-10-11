@@ -125,7 +125,8 @@ export function useOnboarding() {
         // Get onboarding step from localStorage (user-specific)
         const stepKey = `onboarding_step_${user.id}`;
         const savedStep = localStorage.getItem(stepKey) as OnboardingStep | null;
-        const currentStep = savedStep || "welcome_pending";
+        // Default to 'completed' to avoid blocking users with legacy onboarding
+        const currentStep = savedStep || "completed";
         setOnboardingStep(currentStep);
 
         // Show appropriate UI based on step

@@ -69,15 +69,10 @@ const AppContent = () => {
     closeCompleteModal,
   } = useOnboarding();
 
-  // Redirect users to /onboarding for any incomplete step
+  // Do not force-redirect to onboarding; allow free navigation in the new UI
   useEffect(() => {
-    if (!user) return;
-    
-    if (onboardingStep && onboardingStep !== "completed" && location.pathname !== "/onboarding" && location.pathname !== "/create") {
-      console.log("[App] Redirecting to onboarding, step:", onboardingStep);
-      navigate("/onboarding", { replace: true });
-    }
-  }, [user, onboardingStep, navigate, location.pathname]);
+    // Reserved for future analytics; intentionally no redirect
+  }, []);
   
   // Show sidebar for authenticated users on all pages except /auth, /editor, and /onboarding
   const showSidebar = user && location.pathname !== "/auth" && location.pathname !== "/editor" && location.pathname !== "/onboarding";
