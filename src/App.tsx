@@ -18,6 +18,7 @@ import Forge from "./pages/Forge";
 import ForgeNew from "./pages/ForgeNew";
 import ContentEditor from "./pages/ContentEditor";
 import Repurpose from "./pages/Repurpose";
+import Multiply from "./pages/Multiply";
 import Templates from "./pages/Templates";
 import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
@@ -94,7 +95,7 @@ const AppContent = () => {
                   <Route path="/reservoir" element={<ProtectedRoute><Reservoir /></ProtectedRoute>} />
                   <Route path="/create" element={<ProtectedRoute><ForgeNew /></ProtectedRoute>} />
                   <Route path="/editor" element={<ProtectedRoute><ContentEditor /></ProtectedRoute>} />
-                  <Route path="/multiply" element={<ProtectedRoute><Repurpose /></ProtectedRoute>} />
+                  <Route path="/multiply" element={<ProtectedRoute><Multiply /></ProtectedRoute>} />
                   <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
                   <Route path="/schedule" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
@@ -116,7 +117,7 @@ const AppContent = () => {
             <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><ForgeNew /></ProtectedRoute>} />
             <Route path="/editor" element={<ProtectedRoute><ContentEditor /></ProtectedRoute>} />
-            <Route path="/multiply" element={<ProtectedRoute><Repurpose /></ProtectedRoute>} />
+            <Route path="/multiply" element={<ProtectedRoute><Multiply /></ProtectedRoute>} />
             <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
             <Route path="/schedule" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
