@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { cn } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   role: "user" | "assistant";
@@ -143,16 +144,19 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
       >
         <div className="flex items-center gap-3">
           <div 
-            className="w-10 h-10 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: "#B8956A" }}
+            className="w-10 h-10 rounded-full flex items-center justify-center font-serif text-2xl font-bold"
+            style={{ 
+              backgroundColor: "#B8956A",
+              color: "#FFFCF5"
+            }}
           >
-            <FileText className="w-5 h-5" style={{ color: "#FFFFFF" }} />
+            M
           </div>
           <div>
             <h3 className="font-serif text-lg font-semibold" style={{ color: "#1A1816" }}>
-              Editorial Director
+              Madison
             </h3>
-            <p className="text-xs" style={{ color: "#6B6560" }}>Strategic Counsel</p>
+            <p className="text-xs" style={{ color: "#6B6560" }}>Editorial Director</p>
           </div>
         </div>
         <Button
@@ -173,10 +177,13 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
               {/* Timestamp */}
               <div className="flex items-center gap-2">
                 <div 
-                  className="w-6 h-6 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: "#B8956A" }}
+                  className="w-6 h-6 rounded-full flex items-center justify-center font-serif text-sm font-bold"
+                  style={{ 
+                    backgroundColor: message.role === "assistant" ? "#B8956A" : "#D4CFC8",
+                    color: message.role === "assistant" ? "#FFFCF5" : "#1A1816"
+                  }}
                 >
-                  <FileText className="w-3 h-3" style={{ color: "#FFFFFF" }} />
+                  {message.role === "assistant" ? "M" : "U"}
                 </div>
                 <span className="text-xs" style={{ color: "#6B6560" }}>
                   {message.timestamp.toLocaleTimeString([], {
@@ -189,13 +196,31 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
               
               {/* Message Content */}
               <div
-                className="rounded-lg px-4 py-3 text-sm leading-relaxed"
+                className="rounded-lg px-4 py-3 text-sm leading-relaxed prose prose-sm max-w-none"
                 style={{
                   backgroundColor: message.role === "user" ? "#E8DCC8" : "#F5EFE3",
                   color: "#1A1816"
                 }}
               >
-                <p className="whitespace-pre-wrap select-text">{message.content}</p>
+                {message.role === "assistant" ? (
+                  <ReactMarkdown
+                    components={{
+                      p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
+                      strong: ({ children }) => <strong className="font-semibold" style={{ color: "#1A1816" }}>{children}</strong>,
+                      em: ({ children }) => <em className="italic">{children}</em>,
+                      ul: ({ children }) => <ul className="list-disc pl-4 mb-3 space-y-1">{children}</ul>,
+                      ol: ({ children }) => <ol className="list-decimal pl-4 mb-3 space-y-1">{children}</ol>,
+                      li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                      h1: ({ children }) => <h1 className="text-lg font-serif font-bold mb-2 mt-4 first:mt-0">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-base font-serif font-bold mb-2 mt-3 first:mt-0">{children}</h2>,
+                      h3: ({ children }) => <h3 className="text-sm font-serif font-semibold mb-2 mt-3 first:mt-0">{children}</h3>,
+                    }}
+                  >
+                    {message.content}
+                  </ReactMarkdown>
+                ) : (
+                  <p className="whitespace-pre-wrap select-text">{message.content}</p>
+                )}
               </div>
               
               {/* Copy Critique Button for assistant messages */}
@@ -229,9 +254,9 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
                   className="w-6 h-6 rounded-full flex items-center justify-center"
                   style={{ backgroundColor: "#B8956A" }}
                 >
-                  <Loader2 className="w-3 h-3 animate-spin" style={{ color: "#FFFFFF" }} />
+                  <Loader2 className="w-3 h-3 animate-spin" style={{ color: "#FFFCF5" }} />
                 </div>
-                <span className="text-xs" style={{ color: "#6B6560" }}>Thinking...</span>
+                <span className="text-xs" style={{ color: "#6B6560" }}>Madison is thinking...</span>
               </div>
             </div>
           )}
