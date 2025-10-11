@@ -71,8 +71,6 @@ const AppContent = () => {
 
   return (
     <>
-      {!showSidebar && user && location.pathname !== "/editor" && <Navigation />}
-      
       {showSidebar ? (
         <SidebarProvider>
           <div className="flex min-h-screen w-full">
