@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LibraryFilters } from "@/components/library/LibraryFilters";
 import { ContentCard } from "@/components/library/ContentCard";
@@ -9,9 +9,12 @@ import { SortOption } from "@/components/library/SortDropdown";
 import { useLibraryContent, LibraryContentItem } from "@/hooks/useLibraryContent";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Library() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { data: libraryContent = [], isLoading, refetch } = useLibraryContent();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedContentType, setSelectedContentType] = useState("all");
@@ -20,6 +23,8 @@ export default function Library() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showArchived, setShowArchived] = useState(false);
   const [selectedContent, setSelectedContent] = useState<LibraryContentItem | null>(null);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Filtering and sorting logic
   const filteredContent = useMemo(() => {
@@ -71,6 +76,96 @@ export default function Library() {
     setSelectedContentType("all");
     setSelectedCollection("all");
     setShowArchived(false);
+  };
+
+  const handleToggleSelection = (id: string) => {
+    setSelectedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedItems.size === filteredContent.length) {
+      setSelectedItems(new Set());
+    } else {
+      setSelectedItems(new Set(filteredContent.map(c => c.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedItems.size === 0) return;
+
+    setIsDeleting(true);
+    try {
+      // Group items by source table
+      const itemsByTable = {
+        master_content: [] as string[],
+        outputs: [] as string[],
+        derivative_assets: [] as string[]
+      };
+
+      selectedItems.forEach(id => {
+        const item = libraryContent.find(c => c.id === id);
+        if (item) {
+          itemsByTable[item.sourceTable as keyof typeof itemsByTable].push(id);
+        }
+      });
+
+      // Delete from each table
+      const deletePromises = [];
+
+      if (itemsByTable.master_content.length > 0) {
+        deletePromises.push(
+          supabase
+            .from('master_content')
+            .delete()
+            .in('id', itemsByTable.master_content)
+        );
+      }
+
+      if (itemsByTable.outputs.length > 0) {
+        deletePromises.push(
+          supabase
+            .from('outputs')
+            .delete()
+            .in('id', itemsByTable.outputs)
+        );
+      }
+
+      if (itemsByTable.derivative_assets.length > 0) {
+        deletePromises.push(
+          supabase
+            .from('derivative_assets')
+            .delete()
+            .in('id', itemsByTable.derivative_assets)
+        );
+      }
+
+      await Promise.all(deletePromises);
+
+      toast({
+        title: "Items deleted",
+        description: `Successfully deleted ${selectedItems.size} item${selectedItems.size > 1 ? 's' : ''}`,
+      });
+
+      setSelectedItems(new Set());
+      refetch();
+    } catch (error) {
+      console.error('Error deleting items:', error);
+      toast({
+        title: "Delete failed",
+        description: "Failed to delete selected items. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const hasFilters = !!searchQuery || selectedContentType !== "all" || selectedCollection !== "all";
@@ -129,6 +224,51 @@ export default function Library() {
           </div>
         ) : (
           <>
+            {/* Bulk Actions Toolbar - Only show when viewing archived items */}
+            {showArchived && filteredContent.length > 0 && (
+              <div className="mb-6 flex items-center justify-between gap-4 p-4 bg-card/80 backdrop-blur-sm border border-border/40 rounded-lg">
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={selectedItems.size === filteredContent.length && filteredContent.length > 0}
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 rounded border-border text-brass focus:ring-brass"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      {selectedItems.size > 0 
+                        ? `${selectedItems.size} selected` 
+                        : 'Select all'}
+                    </span>
+                  </label>
+                </div>
+
+                {selectedItems.size > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedItems(new Set())}
+                      className="gap-2"
+                    >
+                      <X className="w-4 h-4" />
+                      Clear
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleBulkDelete}
+                      disabled={isDeleting}
+                      className="gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {isDeleting ? 'Deleting...' : `Delete ${selectedItems.size} item${selectedItems.size > 1 ? 's' : ''}`}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Result Count */}
             {filteredContent.length > 0 && (
               <p className="text-sm text-muted-foreground mb-6">
@@ -158,6 +298,9 @@ export default function Library() {
                 content={content}
                 onClick={() => setSelectedContent(content)}
                 viewMode={viewMode}
+                selectable={showArchived}
+                selected={selectedItems.has(content.id)}
+                onToggleSelect={() => handleToggleSelection(content.id)}
               />
             ))}
           </div>

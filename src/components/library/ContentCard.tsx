@@ -21,9 +21,19 @@ interface ContentCardProps {
   };
   onClick: () => void;
   viewMode?: "grid" | "list";
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
 }
 
-export function ContentCard({ content, onClick, viewMode = "grid" }: ContentCardProps) {
+export function ContentCard({ 
+  content, 
+  onClick, 
+  viewMode = "grid",
+  selectable = false,
+  selected = false,
+  onToggleSelect 
+}: ContentCardProps) {
   const contentTypeInfo = contentTypes.find(ct => ct.id === content.contentType);
   const collectionInfo = collections.find(c => c.id === content.collection);
   
@@ -32,12 +42,18 @@ export function ContentCard({ content, onClick, viewMode = "grid" }: ContentCard
 
   return (
     <Card
-      onClick={onClick}
+      onClick={(e) => {
+        // Don't trigger card click if clicking checkbox
+        if (!(e.target as HTMLElement).closest('input[type="checkbox"]')) {
+          onClick();
+        }
+      }}
       className={cn(
         "cursor-pointer transition-all duration-300 hover:border-brass hover:shadow-lg bg-card/50 backdrop-blur-sm",
-        "border-border/20",
+        "border-border/20 relative",
         viewMode === "list" && "flex flex-row items-start gap-6",
-        content.archived && "opacity-60"
+        content.archived && "opacity-60",
+        selected && "ring-2 ring-brass border-brass"
       )}
       style={{
         backgroundImage: `
@@ -46,6 +62,21 @@ export function ContentCard({ content, onClick, viewMode = "grid" }: ContentCard
         `
       }}
     >
+      {/* Selection Checkbox - only show when selectable */}
+      {selectable && (
+        <div className="absolute top-4 right-4 z-10">
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={(e) => {
+              e.stopPropagation();
+              onToggleSelect?.();
+            }}
+            className="w-5 h-5 rounded border-border text-brass focus:ring-brass cursor-pointer"
+          />
+        </div>
+      )}
+
       <div className="p-6 space-y-4">
         <div className="space-y-3">
           <h3 className="font-serif text-xl text-foreground group-hover:text-brass transition-colors line-clamp-2">
