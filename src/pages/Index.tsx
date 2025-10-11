@@ -25,16 +25,6 @@ const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   console.log("[Index] Auth state - user:", !!user, "loading:", loading);
-
-  // Check if onboarding is completed for authenticated users
-  useEffect(() => {
-    if (user && !loading) {
-      const onboardingCompleted = localStorage.getItem('scriptora-onboarding-completed');
-      if (!onboardingCompleted) {
-        navigate('/onboarding', { replace: true });
-      }
-    }
-  }, [user, loading, navigate]);
   
   const {
     showWelcome,
