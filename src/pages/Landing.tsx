@@ -45,7 +45,7 @@ const Landing = () => {
               </div>
               <div>
                 <div className="font-serif font-bold text-lg text-ink-black">Scriptora</div>
-                <div className="text-xs text-charcoal/60 tracking-wider uppercase">Brand Intelligence</div>
+                <div className="text-xs text-charcoal/60 tracking-wider uppercase">Editorial Intelligence</div>
               </div>
             </Link>
 
@@ -333,7 +333,7 @@ const Landing = () => {
             <div className="space-y-4">
               <div>
                 <div className="font-serif font-bold text-xl">Scriptora</div>
-                <div className="text-xs text-parchment-white/60 tracking-wider uppercase">Brand Intelligence</div>
+                <div className="text-xs text-parchment-white/60 tracking-wider uppercase">Editorial Intelligence</div>
               </div>
               <p className="text-sm text-parchment-white/70 leading-relaxed">
                 Your editorial command center for brand-consistent content at scale.

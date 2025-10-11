@@ -128,7 +128,7 @@ export function AppSidebar() {
                 Scriptora
               </h1>
               <p className="text-aged-brass text-[10px] font-sans uppercase tracking-wider">
-                BRAND INTELLIGENCE
+                EDITORIAL INTELLIGENCE
               </p>
             </div>
           )}
