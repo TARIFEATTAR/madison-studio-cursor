@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lightbulb, FileText, PenTool, X, Send, Loader2 } from "lucide-react";
+import penNibIcon from "@/assets/pen-nib-icon-multiply.png";
 import { createRoot } from "react-dom/client";
 import { GeneratingLoader } from "@/components/forge/GeneratingLoader";
 import { TransitionLoader } from "@/components/forge/TransitionLoader";
@@ -457,6 +458,11 @@ export default function ForgeNew() {
               <div className="w-16 h-16 rounded-full flex items-center justify-center bg-brass">
                 <FileText className="w-8 h-8 text-white" />
               </div>
+              <img 
+                src={penNibIcon} 
+                alt="Pen nib icon" 
+                className="w-20 h-20 object-contain"
+              />
               <div>
                 <h1 className="text-4xl font-serif font-medium text-ink-black">
                   Create Content
