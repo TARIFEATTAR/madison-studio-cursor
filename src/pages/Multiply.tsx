@@ -18,7 +18,7 @@ import {
   Calendar, Edit, Loader2, AlertCircle, Video 
 } from "lucide-react";
 import { EditorialDirectorSplitScreen } from "@/components/multiply/EditorialDirectorSplitScreen";
-import fannedPagesImage from "@/assets/fanned-pages.png";
+import fannedPagesImage from "@/assets/fanned-pages-new.png";
 
 // Derivative type definitions
 interface DerivativeType {
