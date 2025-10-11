@@ -59,47 +59,127 @@ async function buildBrandContext(organizationId: string) {
       contextParts.push(`ORGANIZATION: ${orgData.name}`);
     }
     
-    // Add brand knowledge sections with clear priority
+    // Add structured brand knowledge with enhanced formatting
     if (knowledgeData && knowledgeData.length > 0) {
       contextParts.push('\n╔═══════════════════════════════════════════════════════════╗');
       contextParts.push('║          MANDATORY BRAND GUIDELINES - FOLLOW EXACTLY      ║');
       contextParts.push('╚═══════════════════════════════════════════════════════════╝');
       
-      for (const entry of knowledgeData) {
-        contextParts.push(`\n━━━ ${entry.knowledge_type.toUpperCase().replace('_', ' ')} ━━━`);
+      // Organize by knowledge type for better prompt structure
+      const voiceData = knowledgeData.find(k => k.knowledge_type === 'brand_voice')?.content as any;
+      const vocabularyData = knowledgeData.find(k => k.knowledge_type === 'vocabulary')?.content as any;
+      const examplesData = knowledgeData.find(k => k.knowledge_type === 'writing_examples')?.content as any;
+      const structureData = knowledgeData.find(k => k.knowledge_type === 'structural_guidelines')?.content as any;
+      
+      // BRAND VOICE PROFILE
+      if (voiceData) {
+        contextParts.push('\n━━━ BRAND VOICE PROFILE ━━━');
         
-        // Handle JSONB content with better formatting
-        if (typeof entry.content === 'object') {
-          const content = entry.content as any;
+        if (voiceData.toneAttributes && voiceData.toneAttributes.length > 0) {
+          contextParts.push(`\n✦ TONE ATTRIBUTES (mandatory):`);
+          contextParts.push(`   ${voiceData.toneAttributes.join(' • ')}`);
+        }
+        
+        if (voiceData.personalityTraits && voiceData.personalityTraits.length > 0) {
+          contextParts.push(`\n✦ PERSONALITY TRAITS:`);
+          contextParts.push(`   ${voiceData.personalityTraits.join(' • ')}`);
+        }
+        
+        if (voiceData.writingStyle) {
+          contextParts.push(`\n✦ WRITING STYLE:`);
+          contextParts.push(`   ${voiceData.writingStyle}`);
+        }
+        
+        if (voiceData.keyCharacteristics && voiceData.keyCharacteristics.length > 0) {
+          contextParts.push(`\n✦ KEY CHARACTERISTICS:`);
+          voiceData.keyCharacteristics.forEach((char: string) => {
+            contextParts.push(`   • ${char}`);
+          });
+        }
+      }
+      
+      // VOCABULARY RULES
+      if (vocabularyData) {
+        contextParts.push('\n━━━ VOCABULARY RULES ━━━');
+        
+        if (vocabularyData.approvedTerms && vocabularyData.approvedTerms.length > 0) {
+          contextParts.push(`\n✦ APPROVED TERMS (use naturally):`);
+          contextParts.push(`   ${vocabularyData.approvedTerms.join(', ')}`);
+        }
+        
+        if (vocabularyData.industryTerminology && vocabularyData.industryTerminology.length > 0) {
+          contextParts.push(`\n✦ INDUSTRY TERMINOLOGY:`);
+          contextParts.push(`   ${vocabularyData.industryTerminology.join(', ')}`);
+        }
+        
+        if (vocabularyData.forbiddenPhrases && vocabularyData.forbiddenPhrases.length > 0) {
+          contextParts.push(`\n✦ FORBIDDEN PHRASES (NEVER USE):`);
+          vocabularyData.forbiddenPhrases.forEach((phrase: string) => {
+            contextParts.push(`   ✗ "${phrase}"`);
+          });
+        }
+        
+        if (vocabularyData.preferredPhrasing) {
+          contextParts.push(`\n✦ PREFERRED PHRASING:`);
+          Object.entries(vocabularyData.preferredPhrasing).forEach(([preferred, avoid]) => {
+            contextParts.push(`   ✓ Use "${preferred}" NOT "${avoid}"`);
+          });
+        }
+      }
+      
+      // WRITING EXAMPLES (Few-Shot Learning)
+      if (examplesData) {
+        if (examplesData.goodExamples && examplesData.goodExamples.length > 0) {
+          contextParts.push('\n━━━ ON-BRAND WRITING EXAMPLES ━━━');
+          contextParts.push('Study these examples of excellent brand voice:');
           
-          // Format different knowledge types appropriately
-          if (entry.knowledge_type === 'brand_voice') {
-            contextParts.push('\n✦ VOICE CHARACTERISTICS:');
-            if (content.voice_characteristics) {
-              contextParts.push(JSON.stringify(content.voice_characteristics, null, 2));
+          examplesData.goodExamples.forEach((example: any, i: number) => {
+            contextParts.push(`\n📝 EXAMPLE ${i + 1}:`);
+            contextParts.push(`"${example.text}"`);
+            if (example.analysis) {
+              contextParts.push(`Why it works: ${example.analysis}`);
             }
-            if (content.tone_guidelines) {
-              contextParts.push('\n✦ TONE GUIDELINES:');
-              contextParts.push(JSON.stringify(content.tone_guidelines, null, 2));
+          });
+        }
+        
+        if (examplesData.badExamples && examplesData.badExamples.length > 0) {
+          contextParts.push('\n━━━ EXAMPLES TO AVOID ━━━');
+          
+          examplesData.badExamples.forEach((example: any, i: number) => {
+            contextParts.push(`\n❌ BAD EXAMPLE ${i + 1}:`);
+            contextParts.push(`"${example.text}"`);
+            if (example.analysis) {
+              contextParts.push(`Why to avoid: ${example.analysis}`);
             }
-          } else if (entry.knowledge_type === 'vocabulary') {
-            contextParts.push('\n✦ APPROVED VOCABULARY (USE THESE):');
-            if (content.approved_words || content.preferred_terms) {
-              contextParts.push(JSON.stringify(content.approved_words || content.preferred_terms, null, 2));
-            }
-            contextParts.push('\n✦ FORBIDDEN VOCABULARY (NEVER USE):');
-            if (content.forbidden_words || content.avoid_terms) {
-              contextParts.push(JSON.stringify(content.forbidden_words || content.avoid_terms, null, 2));
-            }
-          } else {
-            contextParts.push(JSON.stringify(content, null, 2));
-          }
-        } else {
-          contextParts.push(String(entry.content));
+          });
+        }
+      }
+      
+      // STRUCTURAL GUIDELINES
+      if (structureData) {
+        contextParts.push('\n━━━ STRUCTURAL GUIDELINES ━━━');
+        
+        if (structureData.sentenceStructure) {
+          contextParts.push(`\n✦ SENTENCE STRUCTURE: ${structureData.sentenceStructure}`);
+        }
+        
+        if (structureData.paragraphLength) {
+          contextParts.push(`✦ PARAGRAPH LENGTH: ${structureData.paragraphLength}`);
+        }
+        
+        if (structureData.punctuationStyle) {
+          contextParts.push(`✦ PUNCTUATION STYLE: ${structureData.punctuationStyle}`);
+        }
+        
+        if (structureData.rhythmPatterns) {
+          contextParts.push(`✦ RHYTHM PATTERNS: ${structureData.rhythmPatterns}`);
         }
       }
       
       contextParts.push('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      contextParts.push('⚠️ CRITICAL: Every sentence you write must embody these guidelines.');
+      contextParts.push('Write AS the brand, not FOR the brand.');
+      contextParts.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     }
     
     // Add brand colors and typography if available

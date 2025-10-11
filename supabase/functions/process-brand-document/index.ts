@@ -90,6 +90,87 @@ serve(async (req) => {
     // Create content preview (first 500 chars)
     const contentPreview = extractedText.slice(0, 500) + (extractedText.length > 500 ? '...' : '');
 
+    // NEW: Extract structured brand knowledge using Claude
+    console.log('Extracting structured brand knowledge with AI...');
+    const { data: extractionData, error: extractionError } = await supabase.functions.invoke(
+      'extract-brand-knowledge',
+      {
+        body: { 
+          extractedText,
+          organizationId: document.organization_id,
+          documentName: document.file_name
+        }
+      }
+    );
+
+    if (extractionError) {
+      console.error('Brand knowledge extraction failed:', extractionError);
+      // Continue with basic save, don't fail entire process
+    } else if (extractionData?.success) {
+      console.log('Successfully extracted structured brand knowledge');
+      
+      // Save structured knowledge to brand_knowledge table
+      const knowledgeInserts = [];
+      
+      if (extractionData.voice) {
+        knowledgeInserts.push({
+          organization_id: document.organization_id,
+          document_id: documentId,
+          knowledge_type: 'brand_voice',
+          content: extractionData.voice,
+          is_active: true,
+          version: 1
+        });
+      }
+      
+      if (extractionData.vocabulary) {
+        knowledgeInserts.push({
+          organization_id: document.organization_id,
+          document_id: documentId,
+          knowledge_type: 'vocabulary',
+          content: extractionData.vocabulary,
+          is_active: true,
+          version: 1
+        });
+      }
+      
+      if (extractionData.examples) {
+        knowledgeInserts.push({
+          organization_id: document.organization_id,
+          document_id: documentId,
+          knowledge_type: 'writing_examples',
+          content: extractionData.examples,
+          is_active: true,
+          version: 1
+        });
+      }
+      
+      if (extractionData.structure) {
+        knowledgeInserts.push({
+          organization_id: document.organization_id,
+          document_id: documentId,
+          knowledge_type: 'structural_guidelines',
+          content: extractionData.structure,
+          is_active: true,
+          version: 1
+        });
+      }
+      
+      if (knowledgeInserts.length > 0) {
+        const { error: insertError } = await supabase
+          .from('brand_knowledge')
+          .insert(knowledgeInserts);
+        
+        if (insertError) {
+          console.error('Failed to save brand knowledge:', insertError);
+        } else {
+          console.log(`✓ Saved ${knowledgeInserts.length} structured brand knowledge entries`);
+        }
+      }
+    } else {
+      console.warn('Brand knowledge extraction returned no data');
+    }
+
     // Save extracted content
     const { error: updateError } = await supabase
       .from('brand_documents')

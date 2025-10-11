@@ -21,5 +21,8 @@ verify_jwt = true
 [functions.process-brand-document]
 verify_jwt = true
 
+[functions.extract-brand-knowledge]
+verify_jwt = true
+
 [functions.think-mode-chat]
 verify_jwt = false
