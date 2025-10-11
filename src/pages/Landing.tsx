@@ -49,14 +49,12 @@ const Landing = () => {
     <div className="min-h-screen bg-vellum">
       {/* Navigation Header */}
       <header 
-        className="sticky top-0 z-50 transition-all duration-300"
-        style={{
-          background: isScrolled ? 'hsla(45, 29%, 95%, 0.95)' : 'transparent',
-          backdropFilter: isScrolled ? 'blur(12px)' : 'none',
-          WebkitBackdropFilter: isScrolled ? 'blur(12px)' : 'none',
-          borderBottom: isScrolled ? '1px solid rgba(184, 149, 106, 0.2)' : 'none',
-          padding: '16px 48px'
-        }}
+        className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+          isScrolled 
+            ? 'bg-[hsl(45,29%,95%)] bg-opacity-95 backdrop-blur-md border-b border-aged-brass/20' 
+            : 'bg-transparent'
+        }`}
+        style={{ padding: '16px 48px' }}
       >
         <div className="container mx-auto">
           <nav className="flex items-center justify-between">
@@ -66,22 +64,23 @@ const Landing = () => {
               </div>
               <div>
                 <div 
-                  className="font-serif font-bold transition-all duration-300" 
+                  className={`font-serif font-bold transition-all duration-300 ${
+                    isScrolled ? 'text-ink-black' : 'text-white'
+                  }`}
                   style={{ 
                     fontSize: '24px',
-                    color: isScrolled ? 'hsl(0, 0%, 5%)' : 'hsl(48, 100%, 99%)',
                     textShadow: isScrolled ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.4)'
                   }}
                 >
                   Scriptora
                 </div>
                 <div 
-                  className="font-sans uppercase transition-all duration-300" 
+                  className="font-sans uppercase text-[hsl(42,77%,70%)] transition-all duration-300" 
                   style={{ 
                     fontSize: '11px',
-                    color: 'hsl(42, 77%, 70%)',
                     letterSpacing: '0.08em',
-                    fontWeight: 500
+                    fontWeight: 500,
+                    textShadow: isScrolled ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.4)'
                   }}
                 >
                   Editorial Intelligence
@@ -92,31 +91,29 @@ const Landing = () => {
             <div className="hidden md:flex items-center gap-8">
               <a 
                 href="#features" 
-                className="font-sans transition-all duration-300"
+                className={`font-sans transition-all duration-300 hover:text-[hsl(42,77%,70%)] ${
+                  isScrolled ? 'text-[hsl(22,4%,38%)]' : 'text-white'
+                }`}
                 style={{
                   fontSize: '15px',
                   fontWeight: 500,
                   letterSpacing: '0.02em',
-                  color: isScrolled ? 'hsl(22, 4%, 38%)' : 'hsl(48, 100%, 99%)',
                   textShadow: isScrolled ? 'none' : '0 2px 4px rgba(0, 0, 0, 0.3)'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(42, 77%, 70%)'}
-                onMouseLeave={(e) => e.currentTarget.style.color = isScrolled ? 'hsl(22, 4%, 38%)' : 'hsl(48, 100%, 99%)'}
               >
                 Features
               </a>
               <a 
                 href="#how-it-works" 
-                className="font-sans transition-all duration-300"
+                className={`font-sans transition-all duration-300 hover:text-[hsl(42,77%,70%)] ${
+                  isScrolled ? 'text-[hsl(22,4%,38%)]' : 'text-white'
+                }`}
                 style={{
                   fontSize: '15px',
                   fontWeight: 500,
                   letterSpacing: '0.02em',
-                  color: isScrolled ? 'hsl(22, 4%, 38%)' : 'hsl(48, 100%, 99%)',
                   textShadow: isScrolled ? 'none' : '0 2px 4px rgba(0, 0, 0, 0.3)'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(42, 77%, 70%)'}
-                onMouseLeave={(e) => e.currentTarget.style.color = isScrolled ? 'hsl(22, 4%, 38%)' : 'hsl(48, 100%, 99%)'}
               >
                 How It Works
               </a>
@@ -131,17 +128,16 @@ const Landing = () => {
                 <>
                   <Link
                     to="/auth"
-                    className="hidden sm:inline-flex font-sans transition-all duration-300"
+                    className={`hidden sm:inline-flex font-sans transition-all duration-300 hover:text-[hsl(42,77%,70%)] ${
+                      isScrolled ? 'text-[hsl(22,4%,38%)]' : 'text-white opacity-90'
+                    }`}
                     style={{
                       fontSize: '15px',
                       fontWeight: 500,
                       letterSpacing: '0.02em',
-                      color: isScrolled ? 'hsl(22, 4%, 38%)' : 'hsl(48, 100%, 99%)',
                       textShadow: isScrolled ? 'none' : '0 2px 4px rgba(0, 0, 0, 0.3)',
                       padding: '8px 16px'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(42, 77%, 70%)'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = isScrolled ? 'hsl(22, 4%, 38%)' : 'hsl(48, 100%, 99%)'}
                   >
                     Sign In
                   </Link>
@@ -164,6 +160,77 @@ const Landing = () => {
           </nav>
         </div>
       </header>
+
+      {/* Hero Section - Full Screen */}
+      <section className="hero-full-screen">
+        {/* Background Image Layer */}
+        <div className="hero-background">
+          <img 
+            src={heroImage} 
+            alt="Luxury vanity mirror with perfume and makeup brushes"
+            className="hero-image"
+          />
+        </div>
+        
+        {/* Gradient Overlay for Text Legibility */}
+        <div className="hero-overlay md:hidden" style={{
+          background: 'linear-gradient(to bottom, rgba(26, 24, 22, 0.75) 0%, rgba(26, 24, 22, 0.65) 40%, rgba(26, 24, 22, 0.85) 100%)'
+        }}></div>
+        <div className="hero-overlay hidden md:block"></div>
+        
+        <div className="relative z-20 h-full flex items-center justify-start pl-6 pr-6 pt-28 md:pl-[120px] md:pr-[45%] md:pt-0">
+          <div className="max-w-[650px] text-left -mt-5 md:mt-0">
+            
+            {/* Headline with brass accent */}
+            <h1 className="font-serif font-semibold mb-4 md:mb-5">
+              <span className="block text-3xl sm:text-4xl md:text-6xl lg:text-7xl text-parchment-white leading-tight">
+                Where Luxury Beauty Brands Craft Their
+              </span>
+              <span 
+                className="block text-4xl sm:text-5xl md:text-7xl lg:text-8xl leading-tight mt-1 md:mt-2 transition-all duration-[400ms]"
+                style={{ 
+                  color: 'hsl(42, 77%, 70%)',
+                  textShadow: '0 0 30px rgba(212, 175, 55, 0.4)',
+                  opacity: isTransitioning ? 0 : 1,
+                  transform: isTransitioning ? 'translateY(-16px)' : 'translateY(0)',
+                  filter: isTransitioning ? 'blur(2px)' : 'blur(0)',
+                  minWidth: '280px',
+                  display: 'inline-block',
+                  willChange: 'opacity, transform'
+                }}
+              >
+                {rotatingWords[currentWordIndex]}
+              </span>
+            </h1>
+            
+            {/* Subheadline */}
+            <p className="hero-subheadline text-base sm:text-lg md:text-xl leading-relaxed max-w-[580px]">
+              AI-powered content creation that honors craftsmanship, 
+              heritage, and the art of storytelling. From heritage 
+              perfume houses to artisan skincare—every word reflects 
+              your brand's soul.
+            </p>
+            
+            {/* CTA Buttons */}
+            <div className="hero-ctas">
+              <Link to="/auth" className="btn-primary-brass inline-block px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-[18px] text-sm sm:text-base md:text-lg">
+                Commission Your First Piece
+              </Link>
+              <Link to="/meet-madison" className="btn-secondary-ghost inline-block px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-[18px] text-sm sm:text-base md:text-lg">
+                Meet Your Editorial Director
+              </Link>
+            </div>
+            
+          </div>
+        </div>
+        
+        {/* Scroll Indicator */}
+        <div className="scroll-indicator">
+          <span>Scroll to explore</span>
+          <ArrowRight className="w-5 h-5 rotate-90" />
+        </div>
+        
+      </section>
 
       {/* Hero Section - Full Screen */}
       <section className="hero-full-screen">
