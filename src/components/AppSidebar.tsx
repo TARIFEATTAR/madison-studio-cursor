@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import penNibLogo from "@/assets/pen-nib-logo.png";
 import leatherTexture from "@/assets/leather-texture-black.png";
-import brassClip from "@/assets/brass-clip-square.png";
+import brassClip from "@/assets/scriptora-brass-clip.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -179,7 +179,7 @@ export function AppSidebar() {
                 <img 
                   src={brassClip} 
                   alt="Collapse" 
-                  className="w-10 h-10 object-contain transition-transform duration-200 group-hover:scale-110 group-active:scale-95"
+                  className="w-8 h-12 object-contain transition-transform duration-200 group-hover:scale-110 group-active:scale-95"
                   style={{
                     filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
                   }}
