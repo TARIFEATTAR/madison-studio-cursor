@@ -5,7 +5,7 @@ import { Sparkles, ArrowRight, CheckCircle2, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import archivesIcon from "@/assets/archives-icon.png";
+import archivesIcon from "@/assets/archives-icon-new.png";
 import createIcon from "@/assets/create-icon.png";
 import multiplyIcon from "@/assets/multiply-icon.png";
 import calendarIcon from "@/assets/calendar-icon.png";
