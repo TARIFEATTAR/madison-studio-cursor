@@ -170,11 +170,11 @@ export function AppSidebar() {
                 aria-label="Collapse sidebar"
               >
                 <div
-                  className="w-16 h-8 rounded-r-md flex items-center justify-center transition-all duration-200 group-hover:w-[68px]"
+                  className="w-20 h-8 rounded-r-md flex items-center justify-center transition-all duration-200 group-hover:brightness-110"
                   style={{
                     background: 'linear-gradient(135deg, #B8956A 0%, #D4AF37 100%)',
                     boxShadow: '2px 2px 6px rgba(0,0,0,0.3)',
-                    marginRight: '-16px'
+                    marginRight: '-32px'
                   }}
                 >
                   <ChevronLeft className="w-4 h-4 text-ink-black" />
