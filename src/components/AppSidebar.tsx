@@ -135,11 +135,7 @@ export function AppSidebar() {
         collapsible="icon"
         className="border-r-0"
         style={{
-          backgroundImage: `url(${leatherTexture})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundBlendMode: "overlay",
-          backgroundColor: "rgba(26, 24, 22, 0.6)"
+          backgroundColor: "#0A0A0A"
         }}
       >
         {/* Header */}
