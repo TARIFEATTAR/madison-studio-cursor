@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import penNibIcon from "@/assets/pen-nib-icon-multiply.png";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -331,13 +332,21 @@ export default function Multiply() {
     <div className="min-h-screen" style={{ backgroundColor: "#F5F1E8" }}>
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-serif font-bold mb-2" style={{ color: "#1A1816" }}>
-            Repurpose Content
-          </h1>
-          <p className="text-lg" style={{ color: "#6B6560" }}>
-            Transform master content into channel-specific derivatives
-          </p>
+        <div className="mb-8 flex items-start gap-6">
+          <img 
+            src={penNibIcon} 
+            alt="Pen Nib" 
+            className="w-16 h-auto flex-shrink-0"
+            style={{ marginTop: "-2px" }}
+          />
+          <div>
+            <h1 className="text-4xl font-serif font-bold leading-tight mb-1" style={{ color: "#1A1816" }}>
+              Repurpose Content
+            </h1>
+            <p className="text-lg leading-tight" style={{ color: "#6B6560" }}>
+              Transform master content into channel-specific derivatives
+            </p>
+          </div>
         </div>
 
         {/* User Content Alert */}
