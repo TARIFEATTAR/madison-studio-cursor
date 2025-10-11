@@ -158,8 +158,6 @@ serve(async (req) => {
         .from('google_calendar_tokens')
         .upsert({
           user_id: userId,
-          access_token: '', // Keep for migration, will be removed later
-          refresh_token: '', // Keep for migration, will be removed later
           encrypted_access_token: encryptedAccess.encrypted,
           access_token_iv: encryptedAccess.iv,
           encrypted_refresh_token: encryptedRefresh.encrypted,
