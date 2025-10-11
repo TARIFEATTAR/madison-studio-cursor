@@ -11,7 +11,6 @@ interface ScheduledItem {
   scheduled_date: string;
   scheduled_time: string | null;
   platform: string | null;
-  pillar: string | null;
   status: string;
   google_event_id: string | null;
   notes: string | null;

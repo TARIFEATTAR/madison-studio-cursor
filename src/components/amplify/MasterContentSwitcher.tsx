@@ -14,8 +14,6 @@ interface MasterContent {
   full_content: string;
   word_count: number;
   collection: string | null;
-  dip_week: number | null;
-  pillar_focus: string | null;
   created_at: string;
 }
 
@@ -70,8 +68,6 @@ export function MasterContentSwitcher({
       switch(sortBy) {
         case "oldest": 
           return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-        case "week": 
-          return (a.dip_week || 999) - (b.dip_week || 999);
         case "title": 
           return a.title.localeCompare(b.title);
         case "type": 
@@ -147,7 +143,6 @@ export function MasterContentSwitcher({
               <SelectContent className="bg-background">
                 <SelectItem value="newest">Newest First</SelectItem>
                 <SelectItem value="oldest">Oldest First</SelectItem>
-                <SelectItem value="week">By Week</SelectItem>
                 <SelectItem value="title">A-Z</SelectItem>
                 <SelectItem value="type">By Type</SelectItem>
               </SelectContent>

@@ -17,13 +17,6 @@ export const mapScentFamilyToEnum = (label?: string | null) => {
   return toEnum(label) as any;
 };
 
-export const mapPillarToEnum = (label?: string | null) => {
-  if (!label) return null;
-  const v = label.toLowerCase();
-  if (['identity', 'memory', 'remembrance', 'cadence'].includes(v)) return v as any;
-  return toEnum(label) as any;
-};
-
 export const stripMarkdown = (text: string): string => {
   return text
     .replace(/(\*\*|__)(.*?)\1/g, '$2')

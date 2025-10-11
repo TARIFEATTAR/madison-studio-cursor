@@ -166,7 +166,6 @@ export function ContentDetailModal({
         title: content.title || 'Untitled',
         contentType: subtypeLabel || contentType || category,
         collection: content.collection,
-        dipWeek: content.dip_week,
         createdAt: content.created_at,
         wordCount: content.word_count,
         organizationName: orgData.name,
@@ -222,11 +221,6 @@ export function ContentDetailModal({
                 {content.collection && (
                   <Badge variant="secondary">
                     {content.collection}
-                  </Badge>
-                )}
-                {content.dip_week && (
-                  <Badge variant="secondary">
-                    Week {content.dip_week}
                   </Badge>
                 )}
               </div>

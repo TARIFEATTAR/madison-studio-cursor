@@ -134,18 +134,6 @@ const PromptDetailModal = ({
                   <div className="font-medium capitalize">{prompt.scent_family}</div>
                 </div>
               )}
-              {prompt.pillar_focus && (
-                <div>
-                  <div className="text-muted-foreground mb-1">Pillar</div>
-                  <div className="font-medium capitalize">{prompt.pillar_focus}</div>
-                </div>
-              )}
-              {prompt.dip_week && (
-                <div>
-                  <div className="text-muted-foreground mb-1">DIP Week</div>
-                  <div className="font-medium">Week {prompt.dip_week}</div>
-                </div>
-              )}
               <div>
                 <div className="text-muted-foreground mb-1">Created</div>
                 <div className="font-medium text-xs">{formatDate(prompt.created_at)}</div>

@@ -16,8 +16,6 @@ interface MasterContent {
   full_content: string;
   word_count: number;
   collection: string | null;
-  dip_week: number | null;
-  pillar_focus: string | null;
   created_at: string;
 }
 
@@ -93,11 +91,6 @@ export function MasterContentCard({
         <Badge variant="outline" className="text-xs">
           {(content.content_type || "").replace(/_/g, " ") || "Content"}
         </Badge>
-        {content.dip_week && (
-          <Badge variant="secondary" className="text-xs">
-            Week {content.dip_week}
-          </Badge>
-        )}
         {derivativeCount > 0 && (
           <Badge variant="default" className="text-xs bg-primary/90">
             {derivativeCount} {derivativeCount === 1 ? 'derivative' : 'derivatives'}

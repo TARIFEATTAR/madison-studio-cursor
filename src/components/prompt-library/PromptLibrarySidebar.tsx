@@ -15,8 +15,6 @@ interface PromptLibrarySidebarProps {
     collection: string | null;
     contentType: string | null;
     scentFamily: string | null;
-    pillar: string | null;
-    dipWeek: number | null;
     templatesOnly: boolean;
   };
   onFilterChange: (filters: any) => void;
@@ -33,8 +31,6 @@ const PromptLibrarySidebar = ({
     collection: true,
     contentType: true,
     scentFamily: false,
-    pillar: false,
-    dipWeek: false,
   });
 
   // Fetch available filter options from prompts
@@ -43,7 +39,7 @@ const PromptLibrarySidebar = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("prompts")
-        .select("collection, content_type, scent_family, pillar_focus, dip_week")
+        .select("collection, content_type, scent_family")
         .eq("organization_id", currentOrganizationId!)
         .eq("is_archived", false);
 
@@ -52,15 +48,11 @@ const PromptLibrarySidebar = ({
       const collections = [...new Set(data.map(d => d.collection).filter(Boolean))];
       const contentTypes = [...new Set(data.map(d => d.content_type).filter(Boolean))];
       const scentFamilies = [...new Set(data.map(d => d.scent_family).filter(Boolean))];
-      const pillars = [...new Set(data.map(d => d.pillar_focus).filter(Boolean))];
-      const dipWeeks = [...new Set(data.map(d => d.dip_week).filter(Boolean))].sort((a, b) => a - b);
 
       return {
         collections,
         contentTypes,
         scentFamilies,
-        pillars,
-        dipWeeks,
       };
     },
     enabled: !!currentOrganizationId,
@@ -78,8 +70,6 @@ const PromptLibrarySidebar = ({
       collection: null,
       contentType: null,
       scentFamily: null,
-      pillar: null,
-      dipWeek: null,
       templatesOnly: false,
     });
   };
@@ -88,8 +78,6 @@ const PromptLibrarySidebar = ({
     filters.collection ||
     filters.contentType ||
     filters.scentFamily ||
-    filters.pillar ||
-    filters.dipWeek ||
     filters.templatesOnly;
 
   return (

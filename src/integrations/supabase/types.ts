@@ -255,11 +255,9 @@ export type Database = {
           end_date: string
           id: string
           organization_id: string | null
-          pillar: Database["public"]["Enums"]["pillar_type"]
           prompts_scheduled: string[] | null
           start_date: string
           updated_at: string | null
-          visual_world: Database["public"]["Enums"]["visual_world"]
           week_number: number
         }
         Insert: {
@@ -269,11 +267,9 @@ export type Database = {
           end_date: string
           id?: string
           organization_id?: string | null
-          pillar: Database["public"]["Enums"]["pillar_type"]
           prompts_scheduled?: string[] | null
           start_date: string
           updated_at?: string | null
-          visual_world: Database["public"]["Enums"]["visual_world"]
           week_number: number
         }
         Update: {
@@ -283,11 +279,9 @@ export type Database = {
           end_date?: string
           id?: string
           organization_id?: string | null
-          pillar?: Database["public"]["Enums"]["pillar_type"]
           prompts_scheduled?: string[] | null
           start_date?: string
           updated_at?: string | null
-          visual_world?: Database["public"]["Enums"]["visual_world"]
           week_number?: number
         }
         Relationships: [
@@ -448,39 +442,6 @@ export type Database = {
           },
         ]
       }
-      dip_week_calendar: {
-        Row: {
-          core_lexicon: string[] | null
-          created_at: string | null
-          end_date: string
-          id: string
-          pillar: string
-          start_date: string
-          visual_world: string
-          week_number: number
-        }
-        Insert: {
-          core_lexicon?: string[] | null
-          created_at?: string | null
-          end_date: string
-          id?: string
-          pillar: string
-          start_date: string
-          visual_world: string
-          week_number: number
-        }
-        Update: {
-          core_lexicon?: string[] | null
-          created_at?: string | null
-          end_date?: string
-          id?: string
-          pillar?: string
-          start_date?: string
-          visual_world?: string
-          week_number?: number
-        }
-        Relationships: []
-      }
       google_calendar_sync: {
         Row: {
           calendar_id: string | null
@@ -554,12 +515,10 @@ export type Database = {
           content_type: string
           created_at: string | null
           created_by: string | null
-          dip_week: number | null
           full_content: string
           id: string
           is_archived: boolean
           organization_id: string
-          pillar_focus: Database["public"]["Enums"]["pillar_type"] | null
           quality_rating: number | null
           status: string | null
           title: string
@@ -572,12 +531,10 @@ export type Database = {
           content_type: string
           created_at?: string | null
           created_by?: string | null
-          dip_week?: number | null
           full_content: string
           id?: string
           is_archived?: boolean
           organization_id: string
-          pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
           quality_rating?: number | null
           status?: string | null
           title: string
@@ -590,12 +547,10 @@ export type Database = {
           content_type?: string
           created_at?: string | null
           created_by?: string | null
-          dip_week?: number | null
           full_content?: string
           id?: string
           is_archived?: boolean
           organization_id?: string
-          pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
           quality_rating?: number | null
           status?: string | null
           title?: string
@@ -752,7 +707,6 @@ export type Database = {
           content_type: Database["public"]["Enums"]["content_type"]
           created_at: string | null
           created_by: string | null
-          dip_week: number | null
           effectiveness_score: number | null
           id: string
           is_archived: boolean
@@ -762,7 +716,6 @@ export type Database = {
           middle_notes: string | null
           organization_id: string
           parent_prompt_id: string | null
-          pillar_focus: Database["public"]["Enums"]["pillar_type"] | null
           prompt_text: string
           scent_family: Database["public"]["Enums"]["scent_family"] | null
           tags: string[] | null
@@ -781,7 +734,6 @@ export type Database = {
           content_type: Database["public"]["Enums"]["content_type"]
           created_at?: string | null
           created_by?: string | null
-          dip_week?: number | null
           effectiveness_score?: number | null
           id?: string
           is_archived?: boolean
@@ -791,7 +743,6 @@ export type Database = {
           middle_notes?: string | null
           organization_id: string
           parent_prompt_id?: string | null
-          pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
           prompt_text: string
           scent_family?: Database["public"]["Enums"]["scent_family"] | null
           tags?: string[] | null
@@ -810,7 +761,6 @@ export type Database = {
           content_type?: Database["public"]["Enums"]["content_type"]
           created_at?: string | null
           created_by?: string | null
-          dip_week?: number | null
           effectiveness_score?: number | null
           id?: string
           is_archived?: boolean
@@ -820,7 +770,6 @@ export type Database = {
           middle_notes?: string | null
           organization_id?: string
           parent_prompt_id?: string | null
-          pillar_focus?: Database["public"]["Enums"]["pillar_type"] | null
           prompt_text?: string
           scent_family?: Database["public"]["Enums"]["scent_family"] | null
           tags?: string[] | null
@@ -895,12 +844,10 @@ export type Database = {
           content_type: string
           created_at: string | null
           derivative_id: string | null
-          dip_week: number | null
           google_event_id: string | null
           id: string
           notes: string | null
           organization_id: string | null
-          pillar: string | null
           platform: string | null
           prompt_id: string | null
           scheduled_date: string
@@ -916,12 +863,10 @@ export type Database = {
           content_type: string
           created_at?: string | null
           derivative_id?: string | null
-          dip_week?: number | null
           google_event_id?: string | null
           id?: string
           notes?: string | null
           organization_id?: string | null
-          pillar?: string | null
           platform?: string | null
           prompt_id?: string | null
           scheduled_date: string
@@ -937,12 +882,10 @@ export type Database = {
           content_type?: string
           created_at?: string | null
           derivative_id?: string | null
-          dip_week?: number | null
           google_event_id?: string | null
           id?: string
           notes?: string | null
           organization_id?: string | null
-          pillar?: string | null
           platform?: string | null
           prompt_id?: string | null
           scheduled_date?: string
@@ -984,33 +927,6 @@ export type Database = {
           },
         ]
       }
-      vocabulary_library: {
-        Row: {
-          created_at: string | null
-          id: string
-          is_forbidden: boolean | null
-          pillar: Database["public"]["Enums"]["pillar_type"]
-          suggested_alternatives: string[] | null
-          term: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          is_forbidden?: boolean | null
-          pillar: Database["public"]["Enums"]["pillar_type"]
-          suggested_alternatives?: string[] | null
-          term: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          is_forbidden?: boolean | null
-          pillar?: Database["public"]["Enums"]["pillar_type"]
-          suggested_alternatives?: string[] | null
-          term?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
@@ -1033,13 +949,7 @@ export type Database = {
       collection_type: "cadence" | "reserve" | "purity" | "sacred_space"
       content_type: "product" | "email" | "social" | "visual" | "blog"
       organization_role: "owner" | "admin" | "member"
-      pillar_type: "identity" | "memory" | "remembrance" | "cadence"
       scent_family: "warm" | "floral" | "fresh" | "woody"
-      visual_world:
-        | "silk_road"
-        | "maritime_voyage"
-        | "imperial_garden"
-        | "royal_court"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1170,14 +1080,7 @@ export const Constants = {
       collection_type: ["cadence", "reserve", "purity", "sacred_space"],
       content_type: ["product", "email", "social", "visual", "blog"],
       organization_role: ["owner", "admin", "member"],
-      pillar_type: ["identity", "memory", "remembrance", "cadence"],
       scent_family: ["warm", "floral", "fresh", "woody"],
-      visual_world: [
-        "silk_road",
-        "maritime_voyage",
-        "imperial_garden",
-        "royal_court",
-      ],
     },
   },
 } as const
