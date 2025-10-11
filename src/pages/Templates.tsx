@@ -5,10 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, TrendingUp, Clock, Star, Plus, HelpCircle } from "lucide-react";
+import { HelpCircle, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 import PromptLibrarySidebar from "@/components/prompt-library/PromptLibrarySidebar";
 import EnhancedPromptCard from "@/components/prompt-library/EnhancedPromptCard";
 import PromptDetailModal from "@/components/prompt-library/PromptDetailModal";
@@ -17,7 +18,6 @@ import { PromptWizard, WizardData } from "@/components/prompt-library/PromptWiza
 import { ImportDialog } from "@/components/prompt-library/ImportDialog";
 import { OrganizationGuide } from "@/components/prompt-library/OrganizationGuide";
 import { MadisonPanel } from "@/components/prompt-library/MadisonPanel";
-
 export interface Prompt {
   id: string;
   title: string;
@@ -271,6 +271,10 @@ const Templates = () => {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">
+        {/* Global Navigation */}
+        <AppSidebar />
+
+        {/* Prompt Library Sidebar */}
         <PromptLibrarySidebar
           onQuickAccessSelect={setSelectedQuickAccess}
           onCollectionSelect={setSelectedCollection}
