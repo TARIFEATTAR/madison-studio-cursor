@@ -45,7 +45,9 @@ export default function Onboarding() {
   };
 
   const handleSkip = () => {
-    navigate('/library', { replace: true });
+    localStorage.removeItem('scriptora-onboarding-progress');
+    // DO NOT mark as completed when skipping
+    navigate('/library');
   };
 
   const handleComplete = (destination: string) => {
