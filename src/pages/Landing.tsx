@@ -10,6 +10,7 @@ import createIcon from "@/assets/create-icon.png";
 import multiplyIcon from "@/assets/multiply-icon.png";
 import calendarIcon from "@/assets/calendar-icon.png";
 import scriptoraLogo from "@/assets/scriptora-logo-icon.png";
+import scriptoraIcon from "@/assets/scriptora-icon.png";
 import heroImage from "@/assets/hero-mirror.png";
 
 const Landing = () => {
@@ -58,13 +59,13 @@ const Landing = () => {
       >
         <div className="container mx-auto">
           <nav className="flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-4">
               <div className="w-10 h-10 flex items-center justify-center">
-                <img src={scriptoraLogo} alt="Scriptora" className="w-full h-full object-contain" />
+                <img src={scriptoraIcon} alt="Scriptora Icon" className="w-full h-full object-contain" />
               </div>
-              <div>
+              <div className="flex flex-col">
                 <div 
-                  className={`font-serif font-bold transition-all duration-300 ${
+                  className={`font-serif font-semibold transition-all duration-300 ${
                     isScrolled ? 'text-ink-black' : 'text-white'
                   }`}
                   style={{ 
@@ -78,8 +79,8 @@ const Landing = () => {
                   className="font-sans uppercase text-[hsl(42,77%,70%)] transition-all duration-300" 
                   style={{ 
                     fontSize: '11px',
-                    letterSpacing: '0.08em',
-                    fontWeight: 500,
+                    letterSpacing: '0.1em',
+                    fontWeight: 400,
                     textShadow: isScrolled ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.4)'
                   }}
                 >
