@@ -148,11 +148,11 @@ export default function ContentEditorPage() {
     
     console.log("[ContentEditor] Setting content in editor, length:", editableContent.length);
     // Convert plain text to formatted HTML with proper paragraph spacing
-    const formattedContent = editableContent
-      .split('\n\n')
-      .map(paragraph => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`)
-      .join('');
-    editableRef.current.innerHTML = formattedContent || '<p><br></p>';
+    const formattedContent = plainTextToHtml(editableContent);
+    editableRef.current.innerHTML = formattedContent;
+    
+    // Set default paragraph separator to 'p' for consistent Enter key behavior
+    document.execCommand('defaultParagraphSeparator', false, 'p');
   }, [isEditorReady, editableContent]);
 
   // Calculate word count
@@ -183,7 +183,52 @@ export default function ContentEditorPage() {
   const htmlToPlainText = (html: string): string => {
     const temp = document.createElement('div');
     temp.innerHTML = html;
-    return temp.innerText;
+    
+    // Convert block elements to proper line breaks
+    // Convert <p> and <div> to double line breaks for paragraphs
+    let text = temp.innerHTML
+      .replace(/<\/p>/gi, '\n\n')
+      .replace(/<p[^>]*>/gi, '')
+      .replace(/<\/div>/gi, '\n\n')
+      .replace(/<div[^>]*>/gi, '')
+      // Convert <br> to single line break
+      .replace(/<br\s*\/?>/gi, '\n')
+      // Convert headings with spacing
+      .replace(/<\/h[1-6]>/gi, '\n\n')
+      .replace(/<h[1-6][^>]*>/gi, '')
+      // Convert list items
+      .replace(/<\/li>/gi, '\n')
+      .replace(/<li[^>]*>/gi, '• ')
+      // Remove all other HTML tags
+      .replace(/<[^>]+>/g, '');
+    
+    // Clean up the text
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = text;
+    text = tempDiv.textContent || tempDiv.innerText || '';
+    
+    // Clean up excessive line breaks (more than 2 consecutive)
+    text = text.replace(/\n{3,}/g, '\n\n');
+    
+    return text.trim();
+  };
+
+  const plainTextToHtml = (text: string): string => {
+    if (!text) return '<p><br></p>';
+    
+    // Split by double line breaks for paragraphs
+    const paragraphs = text.split(/\n\n+/);
+    
+    return paragraphs
+      .map(para => {
+        // Handle empty paragraphs
+        if (!para.trim()) return '<p><br></p>';
+        
+        // Replace single line breaks within paragraphs with <br>
+        const content = para.replace(/\n/g, '<br>');
+        return `<p>${content}</p>`;
+      })
+      .join('');
   };
 
   const updateContentFromEditable = () => {
@@ -208,7 +253,7 @@ export default function ContentEditorPage() {
       const prevContent = historyRef.current[historyIndexRef.current];
       setEditableContent(prevContent);
       if (editableRef.current) {
-        editableRef.current.innerHTML = prevContent.replace(/\n/g, '<br>');
+        editableRef.current.innerHTML = plainTextToHtml(prevContent);
       }
     }
   };
@@ -220,7 +265,7 @@ export default function ContentEditorPage() {
       const nextContent = historyRef.current[historyIndexRef.current];
       setEditableContent(nextContent);
       if (editableRef.current) {
-        editableRef.current.innerHTML = nextContent.replace(/\n/g, '<br>');
+        editableRef.current.innerHTML = plainTextToHtml(nextContent);
       }
     }
   };
@@ -289,12 +334,28 @@ export default function ContentEditorPage() {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Handle undo/redo shortcuts
     if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
       e.preventDefault();
       handleUndo();
+      return;
     } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
       e.preventDefault();
       handleRedo();
+      return;
+    }
+    
+    // Ensure Enter key creates proper <p> tags
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      
+      // Insert a new paragraph
+      document.execCommand('insertParagraph', false);
+      
+      // Ensure we're using <p> tags
+      document.execCommand('defaultParagraphSeparator', false, 'p');
+      
+      updateContentFromEditable();
     }
   };
 
