@@ -48,7 +48,7 @@ const Landing = () => {
         <div className="container mx-auto">
           <nav className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-4">
-              <div className="w-10 h-10 flex-shrink-0">
+              <div className="w-20 h-20 flex-shrink-0">
                 <img src={scriptoraIcon} alt="Scriptora Icon" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col gap-0.5">
