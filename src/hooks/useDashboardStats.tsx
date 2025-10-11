@@ -186,7 +186,7 @@ export function useDashboardStats() {
     },
     enabled: !!user,
     retry: 0,
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 60 * 2, // Increased to 2 minutes to reduce refetches
   });
 }
 

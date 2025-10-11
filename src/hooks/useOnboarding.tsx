@@ -164,11 +164,11 @@ export function useOnboarding() {
       }
     };
 
-    // Add safety timeout
+    // Reduced safety timeout for faster initial load
     const safetyTimeout = setTimeout(() => {
       console.warn("[useOnboarding] Safety timeout reached, forcing loading to false");
       setIsLoading(false);
-    }, 3000);
+    }, 2000); // Reduced from 3000ms
 
     checkOnboardingStatus().finally(() => {
       clearTimeout(safetyTimeout);

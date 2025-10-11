@@ -9,13 +9,13 @@ export function useAuth() {
 
   useEffect(() => {
     console.log("[useAuth] Initializing auth hook");
-    // Safety timeout to avoid getting stuck on a blank loading screen
+    // Reduced safety timeout to avoid long loading states
     const safetyTimeout = setTimeout(() => {
       console.warn("[useAuth] Safety timeout reached. Proceeding without session.");
       setSession(null);
       setUser(null);
       setLoading(false);
-    }, 3000);
+    }, 2000); // Reduced from 3000ms
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(

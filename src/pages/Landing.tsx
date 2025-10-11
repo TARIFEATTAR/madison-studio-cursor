@@ -27,8 +27,8 @@ const Landing = () => {
       setTimeout(() => {
         setCurrentWordIndex((prev) => (prev + 1) % rotatingWords.length);
         setIsTransitioning(false);
-      }, 600);
-    }, 3500);
+      }, 400); // Reduced from 600ms
+    }, 2500); // Reduced from 3500ms
 
     return () => clearInterval(interval);
   }, []);
@@ -101,15 +101,16 @@ const Landing = () => {
                 Where Luxury Beauty Brands Craft Their
               </span>
               <span 
-                className="block text-6xl md:text-7xl lg:text-8xl leading-tight mt-2 transition-all duration-[600ms]"
+                className="block text-6xl md:text-7xl lg:text-8xl leading-tight mt-2 transition-all duration-[400ms]"
                 style={{ 
                   color: 'hsl(42, 77%, 70%)',
                   textShadow: '0 0 30px rgba(212, 175, 55, 0.4)',
                   opacity: isTransitioning ? 0 : 1,
-                  transform: isTransitioning ? 'translateY(-24px)' : 'translateY(0)',
-                  filter: isTransitioning ? 'blur(4px)' : 'blur(0)',
+                  transform: isTransitioning ? 'translateY(-16px)' : 'translateY(0)', // Reduced movement
+                  filter: isTransitioning ? 'blur(2px)' : 'blur(0)', // Reduced blur
                   minWidth: '280px',
-                  display: 'inline-block'
+                  display: 'inline-block',
+                  willChange: 'opacity, transform' // GPU acceleration hint
                 }}
               >
                 {rotatingWords[currentWordIndex]}
