@@ -36,48 +36,88 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-vellum">
       {/* Navigation Header */}
-      <header className="sticky top-0 z-50" style={{
-        background: 'rgba(245, 241, 232, 0.85)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(184, 149, 106, 0.2)'
+      <header className="sticky top-0 z-50 bg-ink-black" style={{
+        padding: '16px 48px'
       }}>
-        <div className="container mx-auto px-6 py-4">
+        <div className="container mx-auto">
           <nav className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center p-2" style={{
-                background: 'rgba(255, 255, 255, 0.6)',
-                backdropFilter: 'blur(8px)',
-                WebkitBackdropFilter: 'blur(8px)',
-                border: '1px solid rgba(184, 149, 106, 0.15)',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
-              }}>
+              <div className="w-10 h-10 flex items-center justify-center">
                 <img src={scriptoraLogo} alt="Scriptora" className="w-full h-full object-contain" />
               </div>
               <div>
-                <div className="font-serif font-bold text-lg text-ink-black">Scriptora</div>
-                <div className="text-xs text-charcoal/60 tracking-wider uppercase">Editorial Intelligence</div>
+                <div className="font-serif font-bold text-parchment-white" style={{ fontSize: '24px' }}>
+                  Scriptora
+                </div>
+                <div className="font-sans uppercase" style={{ 
+                  fontSize: '11px',
+                  color: 'hsl(42, 77%, 70%)',
+                  letterSpacing: '0.08em',
+                  fontWeight: 500
+                }}>
+                  Editorial Intelligence
+                </div>
               </div>
             </Link>
 
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-ink-black hover:text-aged-brass transition-colors duration-300">Features</a>
-              <a href="#how-it-works" className="text-ink-black hover:text-aged-brass transition-colors duration-300">How It Works</a>
+              <a 
+                href="#features" 
+                className="text-parchment-white hover:text-[hsl(42,77%,70%)] transition-colors duration-300 font-sans"
+                style={{
+                  fontSize: '15px',
+                  fontWeight: 500,
+                  letterSpacing: '0.02em'
+                }}
+              >
+                Features
+              </a>
+              <a 
+                href="#how-it-works" 
+                className="text-parchment-white hover:text-[hsl(42,77%,70%)] transition-colors duration-300 font-sans"
+                style={{
+                  fontSize: '15px',
+                  fontWeight: 500,
+                  letterSpacing: '0.02em'
+                }}
+              >
+                How It Works
+              </a>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               {user ? (
                 <Button asChild variant="brass">
                   <Link to="/dashboard">Go to App</Link>
                 </Button>
               ) : (
                 <>
-                  <Button asChild variant="ghost" className="hidden sm:inline-flex text-ink-black hover:text-aged-brass">
-                    <Link to="/auth">Sign In</Link>
+                  <Button 
+                    asChild 
+                    variant="ghost" 
+                    className="hidden sm:inline-flex hover:bg-transparent font-sans"
+                    style={{
+                      color: 'rgba(255, 252, 245, 0.75)',
+                      fontSize: '15px',
+                      fontWeight: 500,
+                      letterSpacing: '0.02em'
+                    }}
+                  >
+                    <Link to="/auth" className="hover:text-[hsl(42,77%,70%)] transition-colors duration-300">
+                      Sign In
+                    </Link>
                   </Button>
-                  <Button asChild variant="brass" className="px-8 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_24px_rgba(184,149,106,0.5)]" style={{
-                    boxShadow: '0 4px 16px rgba(184, 149, 106, 0.3)'
-                  }}>
+                  <Button 
+                    asChild 
+                    className="text-ink-black font-sans font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(184,149,106,0.6)]" 
+                    style={{
+                      background: 'linear-gradient(135deg, #B8956A 0%, #D4AF37 100%)',
+                      padding: '14px 36px',
+                      boxShadow: '0 4px 12px rgba(184, 149, 106, 0.4)',
+                      fontSize: '15px',
+                      letterSpacing: '0.02em'
+                    }}
+                  >
                     <Link to="/auth">Get Started</Link>
                   </Button>
                 </>
