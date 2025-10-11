@@ -10,7 +10,7 @@ import createIcon from "@/assets/create-icon.png";
 import multiplyIcon from "@/assets/multiply-icon.png";
 import calendarIcon from "@/assets/calendar-icon.png";
 import scriptoraLogo from "@/assets/scriptora-logo-icon.png";
-import heroImage from "@/assets/scriptora-hero.jpg";
+import heroImage from "@/assets/hero-mirror.png";
 
 const Landing = () => {
   const { user } = useAuth();
@@ -79,8 +79,8 @@ const Landing = () => {
         {/* Background Image Layer */}
         <div className="hero-background">
           <img 
-            src="/assets/editorial-desk-hero.png" 
-            alt="Editorial desk with typewriter overlooking Madison Avenue"
+            src={heroImage} 
+            alt="Luxury vanity mirror with perfume and makeup brushes"
             className="hero-image"
           />
         </div>
