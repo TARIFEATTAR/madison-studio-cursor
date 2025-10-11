@@ -76,12 +76,12 @@ const DERIVATIVE_TYPES: DerivativeType[] = [
     charLimit: 2000,
   },
   {
-    id: "twitter",
-    name: "Twitter",
-    description: "Twitter/X posts",
-    icon: Twitter,
-    iconColor: "#1DA1F2",
-    charLimit: 280,
+    id: "email_3part",
+    name: "3-Part Email Series",
+    description: "3-email nurture sequence",
+    icon: Mail,
+    iconColor: "#8B7355",
+    isSequence: true,
   },
   {
     id: "pinterest",
@@ -106,6 +106,30 @@ const DERIVATIVE_TYPES: DerivativeType[] = [
     icon: MessageSquare,
     iconColor: "#6B2C3E",
     charLimit: 160,
+  },
+  {
+    id: "email_5part",
+    name: "5-Part Email Series",
+    description: "5-email nurture sequence",
+    icon: Mail,
+    iconColor: "#A0826D",
+    isSequence: true,
+  },
+  {
+    id: "email_7part",
+    name: "7-Part Email Series",
+    description: "7-email nurture sequence",
+    icon: Mail,
+    iconColor: "#6B5D52",
+    isSequence: true,
+  },
+  {
+    id: "tiktok",
+    name: "TikTok",
+    description: "TikTok video scripts",
+    icon: Twitter, // We'll use Twitter icon temporarily, can update with a video icon
+    iconColor: "#000000",
+    charLimit: 300,
   },
 ];
 

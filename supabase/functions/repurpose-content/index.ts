@@ -435,6 +435,74 @@ PREVIEW: [40-60 chars]
 BODY: [email content]
 
 Generate the complete 7-part sequence now.`,
+
+  tiktok: `Transform this master content into a TikTok video script (30-60 seconds).
+
+TRANSFORMATION REQUIREMENTS:
+- Write as a spoken script (natural, conversational speech)
+- Hook in first 3 seconds (question, surprising fact, or bold statement)
+- Keep total script under 300 characters for 60-second video
+- Visual cues in brackets [like this] for editor
+- Maintain brand voice while being authentic and engaging
+
+SCRIPT STRUCTURE:
+1. HOOK (0-3 sec): Attention-grabbing opening
+2. SETUP (3-15 sec): Context or problem statement
+3. CONTENT (15-45 sec): Core insight from master content
+4. CTA (45-60 sec): Clear next step or invitation
+
+TONE GUIDELINES:
+- Authentic, not overly produced
+- Conversational but still on-brand
+- Can be educational, inspirational, or storytelling
+- NO corporate speak or jargon
+
+VISUAL NOTES:
+- Include [VISUAL: description] for key moments
+- Suggest text overlays where helpful
+- Note any product shots or b-roll needs
+
+OUTPUT FORMAT:
+HOOK: [first 3 seconds]
+[VISUAL: ...]
+
+SETUP: [context]
+[VISUAL: ...]
+
+CONTENT: [main message]
+[VISUAL: ...]
+
+CTA: [call to action]
+[VISUAL: ...]
+
+Generate the TikTok script now.`,
+
+  pinterest: `Adapt this content into a compelling Pinterest pin description.
+
+TRANSFORMATION REQUIREMENTS:
+- Extract the most visually compelling angle from master content
+- Front-load the most important information (first 50 chars visible)
+- Include relevant keywords naturally for search
+- Target length: 300-500 characters
+- Add subtle CTA to click through
+
+DESCRIPTION STRUCTURE:
+1. Opening (first 50 chars): Most compelling visual/benefit hook
+2. Middle: Expand on the concept, add context or details
+3. Closing: Gentle CTA with link invitation
+
+PINTEREST BEST PRACTICES:
+- Think visual-first: what would make someone stop scrolling?
+- Use natural keywords (not hashtags on Pinterest)
+- Emphasize inspiration, education, or aspiration
+- Keep brand voice but optimize for discovery
+
+TONE:
+- Inspirational yet practical
+- Authentic and relatable
+- Avoid hard selling
+
+Generate the Pinterest pin description now.`,
 };
 
 // Utility: strip Markdown and common formatting to plain text
