@@ -36,11 +36,22 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-vellum">
       {/* Navigation Header */}
-      <header className="border-b border-charcoal/10 bg-parchment-white/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="sticky top-0 z-50" style={{
+        background: 'rgba(245, 241, 232, 0.85)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(184, 149, 106, 0.2)'
+      }}>
         <div className="container mx-auto px-6 py-4">
           <nav className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg border-2 border-aged-brass/30 bg-parchment-white flex items-center justify-center p-2">
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center p-2" style={{
+                background: 'rgba(255, 255, 255, 0.6)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                border: '1px solid rgba(184, 149, 106, 0.15)',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
+              }}>
                 <img src={scriptoraLogo} alt="Scriptora" className="w-full h-full object-contain" />
               </div>
               <div>
@@ -50,8 +61,8 @@ const Landing = () => {
             </Link>
 
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-charcoal hover:text-aged-brass transition-colors">Features</a>
-              <a href="#how-it-works" className="text-charcoal hover:text-aged-brass transition-colors">How It Works</a>
+              <a href="#features" className="text-ink-black hover:text-aged-brass transition-colors duration-300">Features</a>
+              <a href="#how-it-works" className="text-ink-black hover:text-aged-brass transition-colors duration-300">How It Works</a>
             </div>
 
             <div className="flex items-center gap-3">
@@ -61,10 +72,12 @@ const Landing = () => {
                 </Button>
               ) : (
                 <>
-                  <Button asChild variant="ghost" className="hidden sm:inline-flex">
+                  <Button asChild variant="ghost" className="hidden sm:inline-flex text-ink-black hover:text-aged-brass">
                     <Link to="/auth">Sign In</Link>
                   </Button>
-                  <Button asChild variant="brass">
+                  <Button asChild variant="brass" className="px-8 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_24px_rgba(184,149,106,0.5)]" style={{
+                    boxShadow: '0 4px 16px rgba(184, 149, 106, 0.3)'
+                  }}>
                     <Link to="/auth">Get Started</Link>
                   </Button>
                 </>
