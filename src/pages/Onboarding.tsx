@@ -9,7 +9,7 @@ export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState<any>({});
 
-  // Load saved progress on mount
+  // Load saved progress on mount and align storage keys
   useEffect(() => {
     const savedProgress = localStorage.getItem('scriptora-onboarding-progress');
     if (savedProgress) {

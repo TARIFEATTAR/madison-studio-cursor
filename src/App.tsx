@@ -69,12 +69,15 @@ const AppContent = () => {
     closeCompleteModal,
   } = useOnboarding();
 
-  // Redirect users to Create when in first_generation_pending
+  // Redirect users to /onboarding for any incomplete step
   useEffect(() => {
-    if (user && onboardingStep === "first_generation_pending") {
-      navigate("/create?onboarding=true");
+    if (!user) return;
+    
+    if (onboardingStep && onboardingStep !== "completed" && location.pathname !== "/onboarding" && location.pathname !== "/create") {
+      console.log("[App] Redirecting to onboarding, step:", onboardingStep);
+      navigate("/onboarding", { replace: true });
     }
-  }, [user, onboardingStep, navigate]);
+  }, [user, onboardingStep, navigate, location.pathname]);
   
   // Show sidebar for authenticated users on all pages except /auth, /editor, and /onboarding
   const showSidebar = user && location.pathname !== "/auth" && location.pathname !== "/editor" && location.pathname !== "/onboarding";

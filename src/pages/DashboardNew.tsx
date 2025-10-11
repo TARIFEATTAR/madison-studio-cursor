@@ -17,6 +17,7 @@ export default function DashboardNew() {
   const [showEditorialBanner, setShowEditorialBanner] = useState(true);
   const [showPriorityCard, setShowPriorityCard] = useState(true);
   const [organizationName, setOrganizationName] = useState<string>("");
+  const [longLoad, setLongLoad] = useState(false);
 
   // Fetch organization name
   useEffect(() => {
@@ -34,10 +35,37 @@ export default function DashboardNew() {
     }
   }, [user]);
 
-  if (statsLoading || priorityLoading) {
+  // Safety timeout for long loads
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setLongLoad(true);
+    }, 2500);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  // Show spinner initially
+  if ((statsLoading || priorityLoading) && !longLoad) {
     return (
       <div className="min-h-screen bg-vellum-cream flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-brass" />
+      </div>
+    );
+  }
+
+  // Show fallback if loading too long
+  if ((statsLoading || priorityLoading) && longLoad) {
+    return (
+      <div className="min-h-screen bg-vellum-cream flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin text-brass mx-auto" />
+          <div className="text-charcoal text-sm">Setting up your workspace…</div>
+          <Button 
+            onClick={() => navigate("/onboarding")} 
+            className="bg-ink-black hover:bg-charcoal text-parchment-white"
+          >
+            Continue Onboarding
+          </Button>
+        </div>
       </div>
     );
   }

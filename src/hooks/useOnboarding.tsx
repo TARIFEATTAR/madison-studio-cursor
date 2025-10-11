@@ -156,8 +156,12 @@ export function useOnboarding() {
         }
       } catch (error) {
         console.error("[useOnboarding] Error checking onboarding status:", error);
-        // Still mark as loaded even on error - don't block the app
-        setOnboardingStep("completed");
+        // On error, default to welcome step instead of marking complete
+        setOnboardingStep("welcome_pending");
+        if (user) {
+          localStorage.setItem(`onboarding_step_${user.id}`, "welcome_pending");
+        }
+        setShowWelcome(true);
       } finally {
         console.log("[useOnboarding] Onboarding check complete, setting loading to false");
         setIsLoading(false);
