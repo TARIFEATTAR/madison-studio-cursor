@@ -48,8 +48,16 @@ export default function ContentEditorPage() {
       editableRef.current = element;
       setIsEditorReady(true);
       console.log("[ContentEditor] Editor ref attached and ready");
+      
+      // HOTFIX: Rehydrate content immediately when ref is attached (prevents disappearing text on assistant toggle)
+      if (editableContent) {
+        const formattedContent = plainTextToHtml(editableContent);
+        element.innerHTML = formattedContent;
+        document.execCommand('defaultParagraphSeparator', false, 'p');
+        console.log("[ContentEditor] Rehydrated content into newly mounted editor");
+      }
     }
-  }, []);
+  }, [editableContent]);
   
   // History for undo/redo
   const historyRef = useRef<string[]>([]);
@@ -583,12 +591,12 @@ export default function ContentEditorPage() {
         </div>
       </div>
 
-      {/* Main Content Area */}
+      {/* Main Content Area - Stable layout that doesn't remount editor */}
       <div className="flex flex-1 min-h-0">
-        {!isMobile && assistantOpen ? (
+        {!isMobile ? (
           <ResizablePanelGroup direction="horizontal" className="w-full h-full">
-            {/* Content Editor Panel */}
-            <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
+            {/* Content Editor Panel - Always rendered */}
+            <ResizablePanel defaultSize={assistantOpen ? 50 : 100} minSize={30} maxSize={assistantOpen ? 70 : 100}>
               <div className="w-full overflow-auto h-full" style={{ backgroundColor: "#F5F1E8" }}>
                 <div className="max-w-4xl mx-auto py-16 px-8 md:px-16">
                   <div
@@ -608,26 +616,30 @@ export default function ContentEditorPage() {
               </div>
             </ResizablePanel>
             
-            {/* Resizable Handle */}
-            <ResizableHandle 
-              className="w-1 hover:w-2 transition-all bg-warm-gray/20 hover:bg-aged-brass/40"
-            />
-            
-            {/* Madison Assistant Panel */}
-            <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
-              <div 
-                className="w-full h-full"
-                style={{ backgroundColor: "#FFFCF5" }}
-              >
-                <EditorialAssistantPanel 
-                  onClose={handleToggleAssistant}
-                  initialContent={editableContent}
+            {/* Resizable Handle - Only when assistant is open */}
+            {assistantOpen && (
+              <>
+                <ResizableHandle 
+                  className="w-1 hover:w-2 transition-all bg-warm-gray/20 hover:bg-aged-brass/40"
                 />
-              </div>
-            </ResizablePanel>
+                
+                {/* Madison Assistant Panel */}
+                <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
+                  <div 
+                    className="w-full h-full"
+                    style={{ backgroundColor: "#FFFCF5" }}
+                  >
+                    <EditorialAssistantPanel 
+                      onClose={handleToggleAssistant}
+                      initialContent={editableContent}
+                    />
+                  </div>
+                </ResizablePanel>
+              </>
+            )}
           </ResizablePanelGroup>
         ) : (
-          /* Full-width editor when Madison is closed */
+          /* Mobile: Full-width editor only */
           <div className="w-full overflow-auto h-full" style={{ backgroundColor: "#F5F1E8" }}>
             <div className="max-w-4xl mx-auto py-16 px-8 md:px-16">
               <div
