@@ -143,7 +143,7 @@ export function AppSidebar() {
             <img 
               src={penNibIcon} 
               alt="Scriptora" 
-              className={`${open ? 'w-10 h-10' : 'w-8 h-8'} shrink-0 object-contain transition-all duration-200`}
+              className={`${open ? 'w-20 h-20' : 'w-16 h-16'} shrink-0 object-contain transition-all duration-200`}
             />
             {open && (
               <div className="flex-1 min-w-0">

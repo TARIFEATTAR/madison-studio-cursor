@@ -57,7 +57,8 @@ interface MasterContent {
   charCount: number;
 }
 
-const DERIVATIVE_TYPES: DerivativeType[] = [
+// Top 3 most common derivatives (shown first for easier decision making)
+const TOP_DERIVATIVE_TYPES: DerivativeType[] = [
   {
     id: "instagram",
     name: "Instagram",
@@ -75,19 +76,23 @@ const DERIVATIVE_TYPES: DerivativeType[] = [
     charLimit: 2000,
   },
   {
-    id: "pinterest",
-    name: "Pinterest",
-    description: "Pinterest pin descriptions",
-    icon: FileText,
-    iconColor: "#E60023",
-    charLimit: 500,
-  },
-  {
     id: "product",
     name: "Product Description",
     description: "Product page descriptions",
     icon: Tag,
     iconColor: "#3A4A3D",
+    charLimit: 500,
+  },
+];
+
+// Additional derivatives (shown below with separation)
+const ADDITIONAL_DERIVATIVE_TYPES: DerivativeType[] = [
+  {
+    id: "pinterest",
+    name: "Pinterest",
+    description: "Pinterest pin descriptions",
+    icon: FileText,
+    iconColor: "#E60023",
     charLimit: 500,
   },
   {
@@ -131,6 +136,9 @@ const DERIVATIVE_TYPES: DerivativeType[] = [
     isSequence: true,
   },
 ];
+
+// Combined array for processing
+const DERIVATIVE_TYPES = [...TOP_DERIVATIVE_TYPES, ...ADDITIONAL_DERIVATIVE_TYPES];
 
 // Sample master content for fallback
 const SAMPLE_CONTENT: MasterContent = {
@@ -620,9 +628,14 @@ export default function Multiply() {
             <Card className="mb-6 border" style={{ backgroundColor: "#FFFCF5", borderColor: "#D4CFC8" }}>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-semibold" style={{ color: "#1A1816" }}>
-                    {Object.keys(derivativesByType).length > 0 ? 'Generate More Derivatives' : 'Select derivative types to generate:'}
-                  </h3>
+                  <div>
+                    <h3 className="text-base font-semibold mb-1" style={{ color: "#1A1816" }}>
+                      {Object.keys(derivativesByType).length > 0 ? 'Generate More Derivatives' : 'Select derivative types to generate:'}
+                    </h3>
+                    <p className="text-sm" style={{ color: "#6B6560" }}>
+                      Most common options shown first
+                    </p>
+                  </div>
                   <div className="flex gap-2">
                     <Button
                       variant="ghost"
@@ -643,8 +656,69 @@ export default function Multiply() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 mb-4">
-                  {DERIVATIVE_TYPES.map((type) => {
+                {/* Top 3 Most Common */}
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-px flex-1" style={{ backgroundColor: "#D4CFC8" }} />
+                    <span className="text-xs font-medium px-3" style={{ color: "#A8A39E" }}>
+                      MOST COMMON
+                    </span>
+                    <div className="h-px flex-1" style={{ backgroundColor: "#D4CFC8" }} />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                    {TOP_DERIVATIVE_TYPES.map((type) => {
+                      const isSelected = selectedTypes.has(type.id);
+                      const Icon = type.icon;
+
+                      return (
+                        <button
+                          key={type.id}
+                          onClick={() => toggleTypeSelection(type.id)}
+                          className="p-4 rounded-lg border-2 transition-all text-left hover:shadow-md"
+                          style={{
+                            backgroundColor: isSelected ? "#FFFCF5" : "#F5F1E8",
+                            borderColor: isSelected ? "#B8956A" : "#D4CFC8",
+                          }}
+                        >
+                          <div className="flex items-start gap-3">
+                            <Checkbox checked={isSelected} className="mt-1" />
+                            <div className="flex-1 min-w-0">
+                              <div 
+                                className="w-10 h-10 rounded-lg flex items-center justify-center mb-3"
+                                style={{ backgroundColor: `${type.iconColor}15` }}
+                              >
+                                <Icon className="w-5 h-5" style={{ color: type.iconColor }} />
+                              </div>
+                              <h4 className="font-semibold mb-1" style={{ color: "#1A1816" }}>
+                                {type.name}
+                              </h4>
+                              <p className="text-xs mb-2" style={{ color: "#6B6560" }}>
+                                {type.description}
+                              </p>
+                              {type.charLimit && (
+                                <p className="text-xs" style={{ color: "#A8A39E" }}>
+                                  Max: {type.charLimit} chars
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Additional Options */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-px flex-1" style={{ backgroundColor: "#D4CFC8" }} />
+                    <span className="text-xs font-medium px-3" style={{ color: "#A8A39E" }}>
+                      MORE OPTIONS
+                    </span>
+                    <div className="h-px flex-1" style={{ backgroundColor: "#D4CFC8" }} />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 mb-4">
+                    {ADDITIONAL_DERIVATIVE_TYPES.map((type) => {
                     const isSelected = selectedTypes.has(type.id);
                     const Icon = type.icon;
 
@@ -683,6 +757,7 @@ export default function Multiply() {
                       </button>
                     );
                   })}
+                  </div>
                 </div>
 
                 <div className="flex justify-end">
