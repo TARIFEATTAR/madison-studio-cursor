@@ -18,6 +18,7 @@ import {
   Calendar, Edit, Loader2, AlertCircle, Video 
 } from "lucide-react";
 import { EditorialDirectorSplitScreen } from "@/components/multiply/EditorialDirectorSplitScreen";
+import fannedPagesImage from "@/assets/fanned-pages.png";
 
 // Derivative type definitions
 interface DerivativeType {
@@ -479,8 +480,12 @@ export default function Multiply() {
             {Object.keys(derivativesByType).length === 0 ? (
               <Card className="mb-6 border" style={{ backgroundColor: "#FFFCF5", borderColor: "#D4CFC8" }}>
                 <div className="p-12 text-center">
-                  <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: "rgba(184, 149, 106, 0.1)" }}>
-                    <Sparkles className="w-8 h-8" style={{ color: "#B8956A" }} />
+                  <div className="mx-auto mb-4 flex items-center justify-center">
+                    <img 
+                      src={fannedPagesImage} 
+                      alt="Fanned pages illustration" 
+                      className="w-32 h-32 object-contain opacity-80"
+                    />
                   </div>
                   <h3 className="text-lg font-serif font-semibold mb-2" style={{ color: "#1A1816" }}>
                     No Derivatives Yet
