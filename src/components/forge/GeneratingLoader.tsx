@@ -37,7 +37,7 @@ export function GeneratingLoader() {
           className="text-base" 
           style={{ color: "#6B6560" }}
         >
-          This usually takes 10-15 seconds
+          This usually takes 20-30 seconds
         </p>
       </div>
     </motion.div>,

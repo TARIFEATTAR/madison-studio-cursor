@@ -237,14 +237,14 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
         className="border-t p-3 sm:p-4 flex-shrink-0"
         style={{ borderColor: "#E5E0D8" }}
       >
-        <div className="flex gap-1.5 sm:gap-2 items-end">
+        <div className="flex gap-1.5 sm:gap-2 items-end max-w-full">
           <Textarea
             ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask for feedback or suggestions..."
-            className="min-h-[52px] sm:min-h-[60px] max-h-[160px] resize-none border flex-1"
+            className="min-h-[52px] sm:min-h-[60px] max-h-[160px] resize-none border flex-1 min-w-0"
             style={{
               backgroundColor: "#FFFFFF",
               borderColor: "#D4CFC8",
@@ -265,7 +265,7 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
             )}
           </Button>
         </div>
-        <p className="text-xs mt-2 text-center" style={{ color: "#A8A39E" }}>
+        <p className="text-xs mt-2 text-center px-1 break-words" style={{ color: "#A8A39E" }}>
           Press Enter to send • Shift + Enter for new line
         </p>
       </div>
