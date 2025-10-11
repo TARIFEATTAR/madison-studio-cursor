@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "react-router-dom";
 import { Sparkles, ArrowRight, CheckCircle2, PlayCircle } from "lucide-react";
@@ -13,6 +14,24 @@ import heroImage from "@/assets/scriptora-hero.jpg";
 
 const Landing = () => {
   const { user } = useAuth();
+  
+  // Rotating word animation state
+  const rotatingWords = ["Narrative", "Story", "Voice", "Message", "Identity", "Legacy"];
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsTransitioning(true);
+      
+      setTimeout(() => {
+        setCurrentWordIndex((prev) => (prev + 1) % rotatingWords.length);
+        setIsTransitioning(false);
+      }, 600);
+    }, 3500);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen bg-vellum">
@@ -81,8 +100,19 @@ const Landing = () => {
               <span className="block text-5xl md:text-6xl lg:text-7xl text-parchment-white leading-tight">
                 Where Luxury Beauty Brands Craft Their
               </span>
-              <span className="block text-6xl md:text-7xl lg:text-8xl leading-tight mt-2" style={{ color: 'hsl(42, 77%, 70%)' }}>
-                Narrative
+              <span 
+                className="block text-6xl md:text-7xl lg:text-8xl leading-tight mt-2 transition-all duration-[600ms]"
+                style={{ 
+                  color: 'hsl(42, 77%, 70%)',
+                  textShadow: '0 0 30px rgba(212, 175, 55, 0.4)',
+                  opacity: isTransitioning ? 0 : 1,
+                  transform: isTransitioning ? 'translateY(-24px)' : 'translateY(0)',
+                  filter: isTransitioning ? 'blur(4px)' : 'blur(0)',
+                  minWidth: '280px',
+                  display: 'inline-block'
+                }}
+              >
+                {rotatingWords[currentWordIndex]}
               </span>
             </h1>
             
