@@ -359,15 +359,10 @@ export default function ContentEditorPage() {
     }
   };
 
-  // Ensure we commit the latest editor content before toggling the assistant
+  // Toggle the assistant without modifying content
   const handleToggleAssistant = () => {
-    if (editableRef.current) {
-      const html = editableRef.current.innerHTML;
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current);
-      }
-      const plainText = htmlToPlainText(html);
-      setEditableContent(plainText);
+    if (editableRef.current && updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
     }
     setAssistantOpen((prev) => !prev);
   };
