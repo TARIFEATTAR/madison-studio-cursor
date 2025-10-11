@@ -38,10 +38,7 @@ const Index = () => {
     return <Landing />;
   }
 
-  console.log("[Index] Redirecting authenticated user to dashboard");
-  // Authenticated users should be in DashboardNew via App.tsx routing
-  // This is a fallback that shouldn't normally be reached
-  navigate("/", { replace: true });
+  // Authenticated users will be handled by App.tsx routing
   return null;
 };
 

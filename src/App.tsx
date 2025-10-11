@@ -50,18 +50,20 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const RootRoute = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [hasChecked, setHasChecked] = React.useState(false);
   
   React.useEffect(() => {
     if (!hasChecked) {
       const isOnboardingCompleted = localStorage.getItem('scriptora-onboarding-completed') === 'true';
       
-      if (!isOnboardingCompleted) {
+      if (!isOnboardingCompleted && location.pathname !== "/onboarding") {
+        console.log("[RootRoute] Navigating to onboarding");
         navigate('/onboarding', { replace: true });
       }
       setHasChecked(true);
     }
-  }, [hasChecked, navigate]);
+  }, [hasChecked, navigate, location.pathname]);
   
   return <DashboardNew />;
 };

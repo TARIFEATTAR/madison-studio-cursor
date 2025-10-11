@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import scriptoraLogo from "@/assets/scriptora-logo.png";
 const Auth = () => {
   console.log("[Auth] Rendering Auth page...");
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
@@ -19,13 +20,24 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [resetMode, setResetMode] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const hasNavigated = useRef(false);
+
+  // Safe navigation helper to prevent loops
+  const safeGoHome = () => {
+    if (hasNavigated.current) return;
+    if (location.pathname !== "/") {
+      console.log("[Auth] Navigating to home");
+      hasNavigated.current = true;
+      navigate("/", { replace: true });
+    }
+  };
 
   useEffect(() => {
     // Listen for auth changes FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser(session.user);
-        navigate("/", { replace: true });
+        safeGoHome();
       } else {
         setUser(null);
       }
@@ -56,7 +68,7 @@ const Auth = () => {
           });
         } else {
           toast({ title: "Signed in", description: "Welcome back." });
-          navigate("/", { replace: true });
+          safeGoHome();
         }
       });
     } else if (code) {
@@ -68,7 +80,7 @@ const Auth = () => {
             variant: "destructive",
           });
         } else {
-          navigate("/", { replace: true });
+          safeGoHome();
         }
       });
     } else {
@@ -76,13 +88,13 @@ const Auth = () => {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session?.user) {
           setUser(session.user);
-          navigate("/", { replace: true });
+          safeGoHome();
         }
       });
     }
 
     return () => subscription.unsubscribe();
-  }, [navigate, toast]);
+  }, [navigate, toast, location.pathname]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
