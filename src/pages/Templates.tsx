@@ -46,14 +46,10 @@ const Templates = () => {
   const queryClient = useQueryClient();
 
   const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null);
-  const [sortBy, setSortBy] = useState<SortOption>("recent");
   const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState({
-    collection: null as string | null,
-    contentType: null as string | null,
-    scentFamily: null as string | null,
-    templatesOnly: false,
-  });
+  const [selectedQuickAccess, setSelectedQuickAccess] = useState<string | null>(null);
+  const [selectedCollection, setSelectedCollection] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Modal states
   const [showQuickStart, setShowQuickStart] = useState(false);
@@ -63,66 +59,63 @@ const Templates = () => {
   const [showMadison, setShowMadison] = useState(false);
 
   // Fetch prompts
-  const { data: prompts = [], isLoading } = useQuery({
-    queryKey: ["templates", currentOrganizationId, filters],
+  const { data: allPrompts = [], isLoading } = useQuery({
+    queryKey: ["templates", currentOrganizationId],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from("prompts")
         .select("*")
         .eq("organization_id", currentOrganizationId!)
-        .eq("is_archived", false);
+        .eq("is_archived", false)
+        .order("updated_at", { ascending: false });
 
-      if (filters.collection) {
-        query = query.eq("collection", filters.collection as any);
-      }
-      if (filters.contentType) {
-        query = query.eq("content_type", filters.contentType as any);
-      }
-      if (filters.scentFamily) {
-        query = query.eq("scent_family", filters.scentFamily as any);
-      }
-      if (filters.templatesOnly) {
-        query = query.eq("is_template", true);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
       return data as Prompt[];
     },
     enabled: !!currentOrganizationId,
   });
 
+  // Apply filters based on sidebar selections
+  const filteredPrompts = useMemo(() => {
+    let filtered = allPrompts;
+
+    // Quick Access filters
+    if (selectedQuickAccess === "favorites") {
+      filtered = filtered.filter(p => p.is_template);
+    } else if (selectedQuickAccess === "recently-used") {
+      filtered = filtered.filter(p => p.last_used_at).sort((a, b) => 
+        new Date(b.last_used_at!).getTime() - new Date(a.last_used_at!).getTime()
+      );
+    } else if (selectedQuickAccess === "most-used") {
+      filtered = filtered.filter(p => p.times_used > 0).sort((a, b) => 
+        (b.times_used || 0) - (a.times_used || 0)
+      );
+    }
+
+    // Collection filter
+    if (selectedCollection) {
+      filtered = filtered.filter(p => p.collection === selectedCollection);
+    }
+
+    // Category filter
+    if (selectedCategory) {
+      filtered = filtered.filter(p => p.content_type === selectedCategory);
+    }
+
+    return filtered;
+  }, [allPrompts, selectedQuickAccess, selectedCollection, selectedCategory]);
+
   // Filter prompts by search query
-  const searchFilteredPrompts = useMemo(() => {
-    if (!searchQuery.trim()) return prompts;
+  const displayedPrompts = useMemo(() => {
+    if (!searchQuery.trim()) return filteredPrompts;
     const query = searchQuery.toLowerCase();
-    return prompts.filter(
+    return filteredPrompts.filter(
       (p) =>
         p.title.toLowerCase().includes(query) ||
         p.prompt_text.toLowerCase().includes(query) ||
         p.tags?.some((tag) => tag.toLowerCase().includes(query))
     );
-  }, [prompts, searchQuery]);
-
-  // Sort prompts
-  const sortedPrompts = useMemo(() => {
-    const sorted = [...searchFilteredPrompts];
-    
-    switch (sortBy) {
-      case "most-used":
-        return sorted.sort((a, b) => (b.times_used || 0) - (a.times_used || 0));
-      case "highest-rated":
-        return sorted.sort((a, b) => (b.avg_quality_rating || 0) - (a.avg_quality_rating || 0));
-      case "effectiveness":
-        return sorted.sort((a, b) => (b.effectiveness_score || 0) - (a.effectiveness_score || 0));
-      case "recent":
-      default:
-        return sorted.sort((a, b) => 
-          new Date(b.updated_at || b.created_at).getTime() - 
-          new Date(a.updated_at || a.created_at).getTime()
-        );
-    }
-  }, [searchFilteredPrompts, sortBy]);
+  }, [filteredPrompts, searchQuery]);
 
   const handleWizardComplete = async (wizardData: WizardData) => {
     // Generate prompt from wizard data
@@ -172,7 +165,7 @@ const Templates = () => {
   };
 
   const handleUsePrompt = async (promptId: string) => {
-    const prompt = prompts.find(p => p.id === promptId);
+    const prompt = allPrompts.find(p => p.id === promptId);
     if (!prompt) return;
 
     try {
@@ -250,116 +243,113 @@ const Templates = () => {
     }
   };
 
-  const sortOptions = [
-    { value: "recent", label: "Recently Updated", icon: Clock },
-    { value: "most-used", label: "Most Used", icon: TrendingUp },
-    { value: "highest-rated", label: "Highest Rated", icon: Star },
-    { value: "effectiveness", label: "Most Effective", icon: Sparkles },
-  ];
+  const handleToggleFavorite = async (promptId: string) => {
+    const prompt = allPrompts.find(p => p.id === promptId);
+    if (!prompt) return;
+
+    try {
+      await supabase
+        .from("prompts")
+        .update({ is_template: !prompt.is_template })
+        .eq("id", promptId);
+
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+
+      toast({
+        title: prompt.is_template ? "Removed from favorites" : "Added to favorites",
+      });
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update favorite status.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">
         <PromptLibrarySidebar
-          filters={filters}
-          onFilterChange={setFilters}
-          promptCount={sortedPrompts.length}
+          onQuickAccessSelect={setSelectedQuickAccess}
+          onCollectionSelect={setSelectedCollection}
+          onCategorySelect={setSelectedCategory}
+          selectedQuickAccess={selectedQuickAccess}
+          selectedCollection={selectedCollection}
+          selectedCategory={selectedCategory}
         />
 
         <main className="flex-1 p-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h1 className="text-4xl font-serif mb-2 text-foreground">Prompt Library</h1>
-                <p className="text-muted-foreground">
-                  Your prompts, perfectly organized • No more scattered spreadsheets
-                </p>
+          <div className="max-w-6xl mx-auto">
+            {/* Header */}
+            <div className="mb-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h1 className="text-3xl font-serif mb-2 text-foreground">Prompt Library</h1>
+                  <p className="text-muted-foreground">
+                    Your prompts, perfectly organized • No more scattered spreadsheets
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowGuide(true)}
+                    className="rounded-full"
+                  >
+                    <HelpCircle className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    onClick={() => setShowQuickStart(true)}
+                    className="gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    New Prompt
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowGuide(true)}
-                  className="gap-2"
-                >
-                  <HelpCircle className="w-4 h-4" />
-                  How it Works
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowMadison(true)}
-                  className="gap-2"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  Ask Madison
-                </Button>
-                <Button
-                  onClick={() => setShowQuickStart(true)}
-                  className="gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  New Prompt
+
+              {/* Search Bar */}
+              <Input
+                placeholder="Search prompts by title, description, tags, or content..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Prompt count */}
+            <p className="text-sm text-muted-foreground mb-6">
+              {displayedPrompts.length} prompt{displayedPrompts.length !== 1 ? "s" : ""}
+            </p>
+
+            {/* Prompts Grid */}
+            {isLoading ? (
+              <div className="text-center py-12 text-muted-foreground">
+                Loading prompts...
+              </div>
+            ) : displayedPrompts.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground mb-4">No prompts found</p>
+                <Button onClick={() => setShowQuickStart(true)}>
+                  Create Your First Prompt
                 </Button>
               </div>
-            </div>
-
-            {/* Search Bar */}
-            <Input
-              placeholder="Search prompts by title, description, tags, or content..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-2xl"
-            />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {displayedPrompts.map((prompt) => (
+                  <EnhancedPromptCard
+                    key={prompt.id}
+                    prompt={prompt}
+                    onUse={() => handleUsePrompt(prompt.id)}
+                    onToggleFavorite={() => handleToggleFavorite(prompt.id)}
+                    isFavorite={prompt.is_template}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-
-          {/* Sort Controls */}
-          <div className="flex items-center gap-3 mb-6">
-            <span className="text-sm text-muted-foreground">Sort by:</span>
-            <div className="flex gap-2">
-              {sortOptions.map((option) => (
-                <Button
-                  key={option.value}
-                  variant={sortBy === option.value ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSortBy(option.value as SortOption)}
-                  className="gap-2"
-                >
-                  <option.icon className="h-4 w-4" />
-                  {option.label}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Prompts Grid */}
-          {isLoading ? (
-            <div className="text-center py-12 text-muted-foreground">
-              Loading prompts...
-            </div>
-          ) : sortedPrompts.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">No templates found yet</p>
-              <Button onClick={() => navigate("/create")}>
-                Create Content & Save as Template
-              </Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedPrompts.map((prompt) => (
-                <EnhancedPromptCard
-                  key={prompt.id}
-                  prompt={prompt}
-                  onUse={() => handleUsePrompt(prompt.id)}
-                  onViewDetails={() => setSelectedPrompt(prompt)}
-                  onArchive={() => handleArchive(prompt.id)}
-                  onDelete={() => handleDelete(prompt.id)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </main>
+        </main>
 
       {/* Modals */}
       <QuickStartModal

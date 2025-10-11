@@ -1,179 +1,108 @@
-import { Star, TrendingUp, Sparkles, Clock, MoreVertical, Archive, Trash2, Eye } from "lucide-react";
+import { useState } from "react";
+import { Star, ChevronDown, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { getCollectionIcon } from "@/utils/collectionIcons";
 import type { Prompt } from "@/pages/Templates";
 
 interface EnhancedPromptCardProps {
   prompt: Prompt;
   onUse: () => void;
-  onViewDetails: () => void;
-  onArchive?: () => void;
-  onDelete?: () => void;
+  onToggleFavorite?: () => void;
+  isFavorite?: boolean;
 }
-
-const collectionColors: Record<string, string> = {
-  cadence: "bg-saffron-gold/20 text-saffron-gold border-saffron-gold/30",
-  reserve: "bg-golden-brown/20 text-golden-brown border-golden-brown/30",
-  purity: "bg-soft-ivory/80 text-deep-charcoal border-sandstone",
-  sacred_space: "bg-stone-beige/60 text-deep-charcoal border-sandstone",
-};
 
 const EnhancedPromptCard = ({
   prompt,
   onUse,
-  onViewDetails,
-  onArchive,
-  onDelete,
+  onToggleFavorite,
+  isFavorite = false,
 }: EnhancedPromptCardProps) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return "Today";
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7) return `${diffDays}d ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  const preview = prompt.prompt_text?.substring(0, 150) || "";
-  const CollectionIcon = getCollectionIcon(prompt.collection);
+  const preview = prompt.prompt_text?.substring(0, 200) || "";
+  const fullText = prompt.prompt_text || "";
 
   return (
-    <Card className="card-matte p-6 hover:shadow-elegant transition-all duration-300 border border-border/40 group relative">
-      {/* Actions Menu */}
-      <div className="absolute top-4 right-4 z-10">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={onViewDetails} className="cursor-pointer">
-              <Eye className="mr-2 h-4 w-4" />
-              View Details
-            </DropdownMenuItem>
-            {onArchive && (
-              <DropdownMenuItem onClick={onArchive} className="cursor-pointer">
-                <Archive className="mr-2 h-4 w-4" />
-                Archive
-              </DropdownMenuItem>
-            )}
-            {onDelete && (
-              <DropdownMenuItem
-                onClick={onDelete}
-                className="cursor-pointer text-destructive focus:text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+    <Card className="p-6 hover:shadow-md transition-all duration-200 border border-border bg-background relative">
+      {/* Favorite Star */}
+      <button
+        onClick={onToggleFavorite}
+        className="absolute top-4 right-4 z-10 hover:scale-110 transition-transform"
+      >
+        <Star
+          className={`h-5 w-5 ${
+            isFavorite ? "fill-saffron-gold text-saffron-gold" : "text-muted-foreground hover:text-saffron-gold"
+          }`}
+        />
+      </button>
 
-      {/* Card Content */}
       <div className="space-y-4">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-2 pr-8">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <Badge className={collectionColors[prompt.collection] || "bg-muted"}>
-                {CollectionIcon && <CollectionIcon className="w-3 h-3 mr-1" />}
-                {prompt.collection.replace("_", " ")}
-              </Badge>
-              {prompt.is_template && (
-                <Badge variant="outline" className="border-primary/50 text-primary">
-                  <Star className="w-3 h-3 mr-1 fill-primary" />
-                  Template
-                </Badge>
-              )}
-            </div>
-            <h3 className="text-lg font-medium text-foreground group-hover:text-primary transition-colors truncate">
-              {prompt.title}
-            </h3>
-          </div>
+        {/* Title */}
+        <div className="pr-8">
+          <h3 className="text-lg font-medium text-foreground mb-1">
+            {prompt.title}
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {prompt.prompt_text?.substring(0, 100) || "No description"}
+          </p>
         </div>
 
-        {/* Preview */}
-        <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
-          {preview}...
-        </p>
-
-        {/* Stats */}
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-          {prompt.times_used > 0 && (
-            <div className="flex items-center gap-1">
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>{prompt.times_used} uses</span>
-            </div>
-          )}
-          {prompt.avg_quality_rating && (
-            <div className="flex items-center gap-1">
-              <Star className="w-3.5 h-3.5 fill-current" />
-              <span>{prompt.avg_quality_rating.toFixed(1)}</span>
-            </div>
-          )}
-          {prompt.effectiveness_score && (
-            <div className="flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>{prompt.effectiveness_score}%</span>
-            </div>
-          )}
-          <div className="flex items-center gap-1 ml-auto">
-            <Clock className="w-3.5 h-3.5" />
-            <span>{formatDate(prompt.last_used_at || prompt.updated_at || prompt.created_at)}</span>
-          </div>
-        </div>
-
-        {/* Tags */}
-        {prompt.tags && prompt.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {prompt.tags.slice(0, 3).map((tag) => (
-              <Badge
-                key={tag}
-                variant="outline"
-                className="text-xs border-border/40 text-muted-foreground"
+        {/* Expandable Preview */}
+        {fullText && (
+          <div className="bg-muted/30 rounded-md p-3 text-sm text-muted-foreground border border-border/40">
+            <p className={isExpanded ? "" : "line-clamp-3"}>
+              {fullText}
+            </p>
+            {fullText.length > 200 && (
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="flex items-center gap-1 mt-2 text-xs text-primary hover:underline"
               >
-                {tag}
-              </Badge>
-            ))}
-            {prompt.tags.length > 3 && (
-              <Badge
-                variant="outline"
-                className="text-xs border-border/40 text-muted-foreground"
-              >
-                +{prompt.tags.length - 3}
-              </Badge>
+                {isExpanded ? (
+                  <>
+                    <ChevronUp className="h-3 w-3" />
+                    Show less
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-3 w-3" />
+                    Show more
+                  </>
+                )}
+              </button>
             )}
           </div>
         )}
 
-        {/* Use Now Button */}
-        <Button
-          onClick={onUse}
-          className="w-full gap-2"
-          variant="default"
-        >
-          <Sparkles className="w-4 h-4" />
-          Use Template
-        </Button>
+        {/* Tags */}
+        {prompt.tags && prompt.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {prompt.tags.map((tag) => (
+              <Badge
+                key={tag}
+                variant="outline"
+                className="text-xs font-normal"
+              >
+                #{tag}
+              </Badge>
+            ))}
+          </div>
+        )}
+
+        {/* Footer: Usage count + Use Template button */}
+        <div className="flex items-center justify-between pt-2">
+          <span className="text-sm text-muted-foreground">
+            Used {prompt.times_used || 0} times
+          </span>
+          <Button
+            onClick={onUse}
+            size="sm"
+            className="gap-2"
+          >
+            Use Template
+          </Button>
+        </div>
       </div>
     </Card>
   );

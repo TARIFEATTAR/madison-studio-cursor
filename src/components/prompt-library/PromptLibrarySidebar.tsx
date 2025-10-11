@@ -2,57 +2,77 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
-import { Filter, ChevronDown, ChevronRight, Star, X } from "lucide-react";
+import { Star, Clock, TrendingUp, ChevronDown, ChevronRight, Plus, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Sidebar, SidebarContent, SidebarHeader, SidebarTrigger } from "@/components/ui/sidebar";
-import { getContentTypeDisplayName } from "@/utils/contentTypeMapping";
+import { Sidebar, SidebarContent, SidebarHeader } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 
 interface PromptLibrarySidebarProps {
-  filters: {
-    collection: string | null;
-    contentType: string | null;
-    scentFamily: string | null;
-    templatesOnly: boolean;
-  };
-  onFilterChange: (filters: any) => void;
-  promptCount: number;
+  onQuickAccessSelect: (type: "favorites" | "recently-used" | "most-used") => void;
+  onCollectionSelect: (collection: string | null) => void;
+  onCategorySelect: (category: string | null) => void;
+  selectedQuickAccess: string | null;
+  selectedCollection: string | null;
+  selectedCategory: string | null;
 }
 
 const PromptLibrarySidebar = ({
-  filters,
-  onFilterChange,
-  promptCount,
+  onQuickAccessSelect,
+  onCollectionSelect,
+  onCategorySelect,
+  selectedQuickAccess,
+  selectedCollection,
+  selectedCategory,
 }: PromptLibrarySidebarProps) => {
   const { currentOrganizationId } = useOnboarding();
   const [expandedSections, setExpandedSections] = useState({
-    collection: true,
-    contentType: true,
-    scentFamily: false,
+    collections: true,
+    categories: true,
   });
 
-  // Fetch available filter options from prompts
-  const { data: filterOptions } = useQuery({
-    queryKey: ["prompt-filter-options", currentOrganizationId],
+  // Fetch counts for each section
+  const { data: counts } = useQuery({
+    queryKey: ["prompt-counts", currentOrganizationId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("prompts")
-        .select("collection, content_type, scent_family")
+        .select("collection, content_type, is_template, times_used, last_used_at")
         .eq("organization_id", currentOrganizationId!)
         .eq("is_archived", false);
 
       if (error) throw error;
 
-      const collections = [...new Set(data.map(d => d.collection).filter(Boolean))];
-      const contentTypes = [...new Set(data.map(d => d.content_type).filter(Boolean))];
-      const scentFamilies = [...new Set(data.map(d => d.scent_family).filter(Boolean))];
+      // Calculate Quick Access counts
+      const favorites = data.filter(p => p.is_template).length;
+      const recentlyUsed = data.filter(p => p.last_used_at).length;
+      const mostUsed = data.filter(p => p.times_used > 0).length;
+
+      // Count by collection
+      const collectionCounts: Record<string, number> = {};
+      data.forEach(p => {
+        if (p.collection) {
+          collectionCounts[p.collection] = (collectionCounts[p.collection] || 0) + 1;
+        }
+      });
+
+      // Count by category (content_type)
+      const categoryCounts: Record<string, number> = {};
+      data.forEach(p => {
+        if (p.content_type) {
+          categoryCounts[p.content_type] = (categoryCounts[p.content_type] || 0) + 1;
+        }
+      });
 
       return {
-        collections,
-        contentTypes,
-        scentFamilies,
+        total: data.length,
+        favorites,
+        recentlyUsed,
+        mostUsed,
+        collections: collectionCounts,
+        categories: categoryCounts,
       };
     },
     enabled: !!currentOrganizationId,
@@ -65,191 +85,187 @@ const PromptLibrarySidebar = ({
     }));
   };
 
-  const clearFilters = () => {
-    onFilterChange({
-      collection: null,
-      contentType: null,
-      scentFamily: null,
-      templatesOnly: false,
-    });
+  const collectionLabels: Record<string, { icon: string; label: string }> = {
+    cadence: { icon: "🚀", label: "Product Launches" },
+    reserve: { icon: "📱", label: "Social Media" },
+    purity: { icon: "✉️", label: "Email Campaigns" },
+    sacred_space: { icon: "🌸", label: "Seasonal Content" },
   };
 
-  const hasActiveFilters =
-    filters.collection ||
-    filters.contentType ||
-    filters.scentFamily ||
-    filters.templatesOnly;
+  const categoryLabels: Record<string, string> = {
+    product: "Product",
+    email: "Email",
+    social: "Social",
+    blog: "Editorial",
+    visual: "Visual",
+  };
 
   return (
-    <Sidebar className="w-72 border-r border-border bg-card/30 backdrop-blur-sm">
-      <SidebarHeader className="p-4 border-b border-border">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <Filter className="h-5 w-5 text-muted-foreground" />
-            <h2 className="text-lg font-semibold">Filters</h2>
-          </div>
-          <SidebarTrigger className="h-8 w-8" />
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {promptCount} prompt{promptCount !== 1 ? "s" : ""} found
-        </p>
-      </SidebarHeader>
-
+    <Sidebar className="w-80 border-r border-border bg-background">
       <SidebarContent>
         <ScrollArea className="h-full">
-          <div className="p-6 pt-4">
-
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="w-full mb-4"
-            >
-              Clear all filters
-            </Button>
-          )}
-
-          {/* Templates Only */}
-          <div className="mb-6 flex items-center gap-2">
-            <Checkbox
-              id="templates-only"
-              checked={filters.templatesOnly}
-              onCheckedChange={(checked) =>
-                onFilterChange({ ...filters, templatesOnly: !!checked })
-              }
-            />
-            <label
-              htmlFor="templates-only"
-              className="text-sm cursor-pointer flex items-center gap-1.5"
-            >
-              <Star className="h-4 w-4 text-primary" />
-              Templates Only
-            </label>
-          </div>
-
-          <Separator className="mb-4" />
-
-          {/* Collection Filter */}
-          <div className="mb-4">
-            <button
-              onClick={() => toggleSection("collection")}
-              className="flex items-center justify-between w-full text-sm font-medium mb-2 hover:text-primary transition-colors"
-            >
-              Collection
-              {expandedSections.collection ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </button>
-            {expandedSections.collection && (
-              <div className="space-y-2 ml-4">
-                {filterOptions?.collections.map((collection) => (
-                  <div key={collection} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`collection-${collection}`}
-                      checked={filters.collection === collection}
-                      onCheckedChange={(checked) =>
-                        onFilterChange({
-                          ...filters,
-                          collection: checked ? collection : null,
-                        })
-                      }
-                    />
-                    <label
-                      htmlFor={`collection-${collection}`}
-                      className="text-sm cursor-pointer capitalize"
-                    >
-                      {collection.replace("_", " ")}
-                    </label>
-                  </div>
-                ))}
+          <div className="p-6 space-y-6">
+            {/* Quick Access */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Star className="h-4 w-4 text-saffron-gold" />
+                <h3 className="font-semibold text-sm">Quick Access</h3>
               </div>
-            )}
-          </div>
-
-          <Separator className="my-4" />
-
-          {/* Content Type Filter */}
-          <div className="mb-4">
-            <button
-              onClick={() => toggleSection("contentType")}
-              className="flex items-center justify-between w-full text-sm font-medium mb-2 hover:text-primary transition-colors"
-            >
-              Content Type
-              {expandedSections.contentType ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </button>
-            {expandedSections.contentType && (
-              <div className="space-y-2 ml-4">
-                {filterOptions?.contentTypes.map((type) => (
-                  <div key={type} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`type-${type}`}
-                      checked={filters.contentType === type}
-                      onCheckedChange={(checked) =>
-                        onFilterChange({
-                          ...filters,
-                          contentType: checked ? type : null,
-                        })
-                      }
-                    />
-                    <label
-                      htmlFor={`type-${type}`}
-                      className="text-sm cursor-pointer"
-                    >
-                      {getContentTypeDisplayName(type)}
-                    </label>
-                  </div>
-                ))}
+              <div className="space-y-1">
+                <button
+                  onClick={() => onQuickAccessSelect("favorites")}
+                  className={cn(
+                    "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
+                    selectedQuickAccess === "favorites"
+                      ? "bg-accent text-accent-foreground"
+                      : "hover:bg-accent/50"
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    ⭐ Favorites
+                  </span>
+                  <Badge variant="secondary" className="text-xs">
+                    {counts?.favorites || 0}
+                  </Badge>
+                </button>
+                <button
+                  onClick={() => onQuickAccessSelect("recently-used")}
+                  className={cn(
+                    "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
+                    selectedQuickAccess === "recently-used"
+                      ? "bg-accent text-accent-foreground"
+                      : "hover:bg-accent/50"
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Recently Used
+                  </span>
+                  <Badge variant="secondary" className="text-xs">
+                    {counts?.recentlyUsed || 0}
+                  </Badge>
+                </button>
+                <button
+                  onClick={() => onQuickAccessSelect("most-used")}
+                  className={cn(
+                    "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
+                    selectedQuickAccess === "most-used"
+                      ? "bg-accent text-accent-foreground"
+                      : "hover:bg-accent/50"
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" />
+                    Most Used
+                  </span>
+                  <Badge variant="secondary" className="text-xs">
+                    {counts?.mostUsed || 0}
+                  </Badge>
+                </button>
               </div>
-            )}
-          </div>
+            </div>
 
-          <Separator className="my-4" />
+            <Separator />
 
-          {/* Scent Family Filter */}
-          <div className="mb-4">
-            <button
-              onClick={() => toggleSection("scentFamily")}
-              className="flex items-center justify-between w-full text-sm font-medium mb-2 hover:text-primary transition-colors"
-            >
-              Scent Family
-              {expandedSections.scentFamily ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </button>
-            {expandedSections.scentFamily && (
-              <div className="space-y-2 ml-4">
-                {filterOptions?.scentFamilies.map((family) => (
-                  <div key={family} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`scent-${family}`}
-                      checked={filters.scentFamily === family}
-                      onCheckedChange={(checked) =>
-                        onFilterChange({
-                          ...filters,
-                          scentFamily: checked ? family : null,
-                        })
-                      }
-                    />
-                    <label
-                      htmlFor={`scent-${family}`}
-                      className="text-sm cursor-pointer capitalize"
+            {/* Collections */}
+            <div>
+              <button
+                onClick={() => toggleSection("collections")}
+                className="w-full flex items-center justify-between mb-3 hover:text-primary transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 text-muted-foreground">📁</div>
+                  <h3 className="font-semibold text-sm">Collections</h3>
+                </div>
+                {expandedSections.collections ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </button>
+              {expandedSections.collections && (
+                <div className="space-y-1">
+                  {Object.entries(collectionLabels).map(([key, { icon, label }]) => (
+                    <button
+                      key={key}
+                      onClick={() => onCollectionSelect(selectedCollection === key ? null : key)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
+                        selectedCollection === key
+                          ? "bg-accent text-accent-foreground"
+                          : "hover:bg-accent/50"
+                      )}
                     >
-                      {family}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                      <span className="flex items-center gap-2">
+                        {icon} {label}
+                      </span>
+                      <Badge variant="secondary" className="text-xs">
+                        {counts?.collections[key] || 0}
+                      </Badge>
+                    </button>
+                  ))}
+                  <button className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
+                    <Plus className="h-4 w-4" />
+                    New Collection
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Categories */}
+            <div>
+              <button
+                onClick={() => toggleSection("categories")}
+                className="w-full flex items-center justify-between mb-3 hover:text-primary transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Hash className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="font-semibold text-sm">Categories</h3>
+                </div>
+                {expandedSections.categories ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </button>
+              {expandedSections.categories && (
+                <div className="space-y-1">
+                  <button
+                    onClick={() => onCategorySelect(null)}
+                    className={cn(
+                      "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
+                      selectedCategory === null
+                        ? "bg-accent text-accent-foreground"
+                        : "hover:bg-accent/50"
+                    )}
+                  >
+                    <span>All Prompts</span>
+                    <Badge variant="secondary" className="text-xs">
+                      {counts?.total || 0}
+                    </Badge>
+                  </button>
+                  {Object.entries(categoryLabels).map(([key, label]) => (
+                    <button
+                      key={key}
+                      onClick={() => onCategorySelect(selectedCategory === key ? null : key)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
+                        selectedCategory === key
+                          ? "bg-accent text-accent-foreground"
+                          : "hover:bg-accent/50"
+                      )}
+                    >
+                      <span>{label}</span>
+                      <Badge variant="secondary" className="text-xs">
+                        {counts?.categories[key] || 0}
+                      </Badge>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </ScrollArea>
       </SidebarContent>
