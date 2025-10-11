@@ -67,10 +67,10 @@ export default function DashboardNew() {
           <Loader2 className="w-8 h-8 animate-spin text-brass mx-auto" />
           <div className="text-charcoal text-sm">Setting up your workspace…</div>
           <Button 
-            onClick={() => navigate("/onboarding")} 
+            onClick={() => navigate("/create")} 
             className="bg-ink-black hover:bg-charcoal text-parchment-white"
           >
-            Continue Onboarding
+            Start Creating
           </Button>
         </div>
       </div>

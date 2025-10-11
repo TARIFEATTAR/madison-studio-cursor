@@ -26,9 +26,6 @@ import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
-import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
-import { OnboardingDocumentUpload } from "@/components/onboarding/OnboardingDocumentUpload";
-import { OnboardingCompleteModal } from "@/components/onboarding/OnboardingCompleteModal";
 
 const queryClient = new QueryClient();
 
@@ -50,29 +47,24 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const RootRoute = () => {
+  const isOnboardingCompleted = localStorage.getItem('scriptora-onboarding-completed') === 'true';
+  
+  if (!isOnboardingCompleted) {
+    return <Navigate to="/onboarding" replace />;
+  }
+  
+  return <DashboardNew />;
+};
+
 const AppContent = () => {
   console.log("[App-Con]");
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Initialize onboarding globally so it runs right after login (creates org, shows modals)
-  const {
-    showWelcome,
-    showDocumentUpload,
-    showCompleteModal,
-    currentOrganizationId,
-    onboardingStep,
-    completeWelcome,
-    completeDocumentUpload,
-    skipDocumentUpload,
-    closeCompleteModal,
-  } = useOnboarding();
-
-  // Do not force-redirect to onboarding; allow free navigation in the new UI
-  useEffect(() => {
-    // Reserved for future analytics; intentionally no redirect
-  }, []);
+  // Initialize onboarding for org creation only (no modals shown globally)
+  useOnboarding();
   
   // Show sidebar for authenticated users on all pages except /auth, /editor, and /onboarding
   const showSidebar = user && location.pathname !== "/auth" && location.pathname !== "/editor" && location.pathname !== "/onboarding";
@@ -87,7 +79,7 @@ const AppContent = () => {
             <AppSidebar />
             <main className="flex-1 overflow-auto">
               <Routes>
-                <Route path="/" element={<ProtectedRoute><DashboardNew /></ProtectedRoute>} />
+                <Route path="/" element={<ProtectedRoute><RootRoute /></ProtectedRoute>} />
                 <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
                 <Route path="/reservoir" element={<ProtectedRoute><Reservoir /></ProtectedRoute>} />
                 <Route path="/create" element={<ProtectedRoute><ForgeNew /></ProtectedRoute>} />
@@ -101,22 +93,6 @@ const AppContent = () => {
                 <Route path="/amplify" element={<Navigate to="/multiply" replace />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-
-              {/* Onboarding Modals (global) */}
-              {showWelcome && (
-                <WelcomeModal open={showWelcome} onComplete={completeWelcome} onSkip={skipDocumentUpload} />
-              )}
-              {showDocumentUpload && currentOrganizationId && (
-                <OnboardingDocumentUpload
-                  open={showDocumentUpload}
-                  organizationId={currentOrganizationId}
-                  onComplete={completeDocumentUpload}
-                  onSkip={skipDocumentUpload}
-                />
-              )}
-              {showCompleteModal && (
-                <OnboardingCompleteModal open={showCompleteModal} onClose={closeCompleteModal} />
-              )}
             </main>
           </div>
         </SidebarProvider>
@@ -124,7 +100,7 @@ const AppContent = () => {
         <>
           <Routes>
             <Route path="/auth" element={<Auth />} />
-            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route path="/" element={<Index />} />
             <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><ForgeNew /></ProtectedRoute>} />
@@ -138,22 +114,6 @@ const AppContent = () => {
             <Route path="/amplify" element={<Navigate to="/multiply" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-
-          {/* Onboarding Modals (global) */}
-          {showWelcome && (
-            <WelcomeModal open={showWelcome} onComplete={completeWelcome} onSkip={skipDocumentUpload} />
-          )}
-          {showDocumentUpload && currentOrganizationId && (
-            <OnboardingDocumentUpload
-              open={showDocumentUpload}
-              organizationId={currentOrganizationId}
-              onComplete={completeDocumentUpload}
-              onSkip={skipDocumentUpload}
-            />
-          )}
-          {showCompleteModal && (
-            <OnboardingCompleteModal open={showCompleteModal} onClose={closeCompleteModal} />
-          )}
         </>
       )}
     </>
