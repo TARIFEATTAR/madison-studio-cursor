@@ -25,7 +25,7 @@ const Auth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser(session.user);
-        navigate("/");
+        navigate("/onboarding");
       } else {
         setUser(null);
       }
@@ -56,7 +56,7 @@ const Auth = () => {
           });
         } else {
           toast({ title: "Signed in", description: "Welcome back." });
-          navigate("/");
+          navigate("/onboarding");
         }
       });
     } else if (code) {
@@ -68,7 +68,7 @@ const Auth = () => {
             variant: "destructive",
           });
         } else {
-          navigate("/");
+          navigate("/onboarding");
         }
       });
     } else {
@@ -76,7 +76,7 @@ const Auth = () => {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session?.user) {
           setUser(session.user);
-          navigate("/");
+          navigate("/onboarding");
         }
       });
     }
