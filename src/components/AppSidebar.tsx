@@ -1,7 +1,7 @@
 import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, LogOut, User, Menu } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import scriptoraFullLogo from "@/assets/scriptora-full-logo.png";
+import penNibLogo from "@/assets/pen-nib-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -139,12 +139,22 @@ export function AppSidebar() {
       >
         {/* Header */}
         <SidebarHeader className="border-b border-white/10 p-0">
-          <div className="flex items-center justify-center px-4 py-6">
+          <div className="flex items-center gap-3 px-4 py-6">
             <img 
-              src={scriptoraFullLogo} 
-              alt="Scriptora Editorial Intelligence" 
-              className={`${open ? 'h-16 w-auto' : 'h-12 w-auto'} object-contain transition-all duration-200`}
+              src={penNibLogo} 
+              alt="Scriptora" 
+              className={`${open ? 'w-16 h-16' : 'w-12 h-12'} shrink-0 object-contain transition-all duration-200`}
             />
+            {open && (
+              <div className="flex-1 min-w-0">
+                <h1 className="text-white text-2xl font-serif tracking-tight">
+                  Scriptora
+                </h1>
+                <p className="text-aged-brass text-[10px] font-sans uppercase tracking-wider">
+                  EDITORIAL INTELLIGENCE
+                </p>
+              </div>
+            )}
           </div>
           
           {open && (
