@@ -853,6 +853,7 @@ export type Database = {
           created_at: string | null
           id: string
           is_active: boolean | null
+          organization_id: string | null
           platform_constraints: Json | null
           source_type: string
           target_type: string
@@ -862,6 +863,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_active?: boolean | null
+          organization_id?: string | null
           platform_constraints?: Json | null
           source_type: string
           target_type: string
@@ -871,12 +873,21 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_active?: boolean | null
+          organization_id?: string | null
           platform_constraints?: Json | null
           source_type?: string
           target_type?: string
           transformation_prompt?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "repurposing_rules_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scheduled_content: {
         Row: {
