@@ -274,17 +274,19 @@ const Templates = () => {
         {/* Global Navigation */}
         <AppSidebar />
 
-        {/* Prompt Library Sidebar */}
-        <PromptLibrarySidebar
-          onQuickAccessSelect={setSelectedQuickAccess}
-          onCollectionSelect={setSelectedCollection}
-          onCategorySelect={setSelectedCategory}
-          selectedQuickAccess={selectedQuickAccess}
-          selectedCollection={selectedCollection}
-          selectedCategory={selectedCategory}
-        />
+        {/* Prompt Library Sidebar - positioned after AppSidebar */}
+        <div className="fixed left-[var(--sidebar-width)] top-0 h-screen z-[5]">
+          <PromptLibrarySidebar
+            onQuickAccessSelect={setSelectedQuickAccess}
+            onCollectionSelect={setSelectedCollection}
+            onCategorySelect={setSelectedCategory}
+            selectedQuickAccess={selectedQuickAccess}
+            selectedCollection={selectedCollection}
+            selectedCategory={selectedCategory}
+          />
+        </div>
 
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-8 ml-80">{/* 320px for PromptLibrarySidebar width */}
           <div className="max-w-6xl mx-auto">
             {/* Header */}
             <div className="mb-6">
