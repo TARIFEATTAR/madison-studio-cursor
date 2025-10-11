@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
+import React from "react";
 
 import Navigation from "./components/Navigation";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -48,11 +49,19 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const RootRoute = () => {
-  const isOnboardingCompleted = localStorage.getItem('scriptora-onboarding-completed') === 'true';
+  const navigate = useNavigate();
+  const [hasChecked, setHasChecked] = React.useState(false);
   
-  if (!isOnboardingCompleted) {
-    return <Navigate to="/onboarding" replace />;
-  }
+  React.useEffect(() => {
+    if (!hasChecked) {
+      const isOnboardingCompleted = localStorage.getItem('scriptora-onboarding-completed') === 'true';
+      
+      if (!isOnboardingCompleted) {
+        navigate('/onboarding', { replace: true });
+      }
+      setHasChecked(true);
+    }
+  }, [hasChecked, navigate]);
   
   return <DashboardNew />;
 };
