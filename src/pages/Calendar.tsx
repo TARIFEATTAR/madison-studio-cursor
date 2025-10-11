@@ -9,7 +9,7 @@ import { CalendarSidebar } from "@/components/calendar/CalendarSidebar";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useDipWeekCalculation } from "@/hooks/useDipWeekCalculation";
+
 import { toast } from "@/hooks/use-toast";
 import {
   Tooltip,
@@ -27,7 +27,7 @@ const Calendar = () => {
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const dipWeekInfo = useDipWeekCalculation(currentDate);
+  
 
   useEffect(() => {
     fetchScheduledContent();
