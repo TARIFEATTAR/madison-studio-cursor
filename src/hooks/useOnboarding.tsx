@@ -29,7 +29,7 @@ export function useOnboarding() {
         // Get or create user's organization
         const { data: existingOrgs } = await supabase
           .from("organization_members")
-          .select("organization_id, organizations(id, name, brand_config)")
+          .select("organization_id")
           .eq("user_id", user.id)
           .limit(1)
           .maybeSingle();

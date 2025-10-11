@@ -24,12 +24,19 @@ export default function DashboardNew() {
     if (user) {
       supabase
         .from("organization_members")
-        .select("organization_id, organizations(name)")
+        .select("organization_id")
         .eq("user_id", user.id)
         .maybeSingle()
-        .then(({ data }) => {
-          if (data && data.organizations) {
-            setOrganizationName((data.organizations as any).name);
+        .then(async ({ data }) => {
+          if (data?.organization_id) {
+            const { data: org } = await supabase
+              .from("organizations")
+              .select("name")
+              .eq("id", data.organization_id)
+              .maybeSingle();
+            if (org?.name) {
+              setOrganizationName((org as any).name);
+            }
           }
         });
     }
