@@ -11,7 +11,7 @@ import multiplyIcon from "@/assets/multiply-icon.png";
 import calendarIcon from "@/assets/calendar-icon.png";
 import scriptoraLogo from "@/assets/scriptora-logo-icon.png";
 import scriptoraIcon from "@/assets/scriptora-icon-transparent.png";
-import heroImage from "@/assets/hero-mirror.png";
+import heroImage from "@/assets/vanity-table-hero.png";
 
 const Landing = () => {
   const { user } = useAuth();
