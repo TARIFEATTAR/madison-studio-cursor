@@ -52,28 +52,21 @@ export function useOnboarding() {
             orgId = userOrgs.id;
             console.log("Found existing organization:", orgId);
             
-            // Try to add them as a member if not already
-            const { data: existingMember } = await supabase
+            // Use upsert to avoid conflicts - will insert if not exists, update if exists
+            const { error: memberError } = await supabase
               .from("organization_members")
-              .select("id")
-              .eq("organization_id", orgId)
-              .eq("user_id", user.id)
-              .maybeSingle();
-              
-            if (!existingMember) {
-              console.log("Adding user as member of existing organization");
-              const { error: memberError } = await supabase
-                .from("organization_members")
-                .insert({
-                  organization_id: orgId,
-                  user_id: user.id,
-                  role: "owner",
-                });
-              
-              if (memberError) {
-                console.error("Failed to add user as organization member:", memberError);
-                throw memberError;
-              }
+              .upsert({
+                organization_id: orgId,
+                user_id: user.id,
+                role: "owner",
+              }, {
+                onConflict: 'user_id,organization_id',
+                ignoreDuplicates: true
+              });
+            
+            if (memberError) {
+              console.error("Failed to ensure user is organization member:", memberError);
+              // Don't throw - this shouldn't block the app
             }
           } else {
             // Create personal organization
@@ -156,12 +149,11 @@ export function useOnboarding() {
         }
       } catch (error) {
         console.error("[useOnboarding] Error checking onboarding status:", error);
-        // On error, default to welcome step instead of marking complete
-        setOnboardingStep("welcome_pending");
+        // On error, mark as completed to not block the user
+        setOnboardingStep("completed");
         if (user) {
-          localStorage.setItem(`onboarding_step_${user.id}`, "welcome_pending");
+          localStorage.setItem(`onboarding_step_${user.id}`, "completed");
         }
-        setShowWelcome(true);
       } finally {
         console.log("[useOnboarding] Onboarding check complete, setting loading to false");
         setIsLoading(false);
