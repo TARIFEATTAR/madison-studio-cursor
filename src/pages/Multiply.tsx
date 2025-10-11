@@ -13,7 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  Sparkles, Archive, Mail, Instagram, MessageSquare, Tag,
+  Sparkles, Archive, Mail, MessageSquare, Tag,
   FileText, CheckCircle2, XCircle, ChevronDown, ChevronRight, Copy, 
   Calendar, Edit, Loader2, AlertCircle, Video 
 } from "lucide-react";
@@ -21,6 +21,7 @@ import { EditorialDirectorSplitScreen } from "@/components/multiply/EditorialDir
 import fannedPagesImage from "@/assets/fanned-pages-new.png";
 import ticketIcon from "@/assets/ticket-icon.png";
 import envelopeIcon from "@/assets/envelope-icon.png";
+import instagramIcon from "@/assets/instagram-icon-clean.png";
 
 // Derivative type definitions
 interface DerivativeType {
@@ -76,7 +77,8 @@ const TOP_DERIVATIVE_TYPES: DerivativeType[] = [
     id: "instagram",
     name: "Instagram",
     description: "Instagram posts and captions",
-    icon: Instagram,
+    icon: null,
+    iconImage: instagramIcon,
     iconColor: "#E4405F",
     charLimit: 2200,
   },
