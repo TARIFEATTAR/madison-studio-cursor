@@ -333,7 +333,7 @@ export default function Multiply() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-serif font-bold mb-2" style={{ color: "#1A1816" }}>
-            The Syndicate
+            Repurpose Content
           </h1>
           <p className="text-lg" style={{ color: "#6B6560" }}>
             Transform master content into channel-specific derivatives
@@ -376,14 +376,14 @@ export default function Multiply() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Master Content Panel (2/5) */}
           <div className="lg:col-span-2">
-            <Card className="sticky top-6" style={{ backgroundColor: "#FFFCF5" }}>
+            <h2 className="text-xl font-serif font-bold mb-4" style={{ color: "#1A1816" }}>
+              Master Content
+            </h2>
+            <Card className="sticky top-6 border" style={{ backgroundColor: "#FFFCF5", borderColor: "#D4CFC8" }}>
               <div className="p-6">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <h2 className="text-xl font-serif font-bold mb-2" style={{ color: "#1A1816" }}>
-                      Master Content
-                    </h2>
                     <Badge 
                       variant="secondary" 
                       className="mb-2"
@@ -445,7 +445,7 @@ export default function Multiply() {
 
             {/* Empty State or Generated Derivatives */}
             {Object.keys(derivativesByType).length === 0 ? (
-              <Card className="mb-6" style={{ backgroundColor: "#FFFCF5" }}>
+              <Card className="mb-6 border" style={{ backgroundColor: "#FFFCF5", borderColor: "#D4CFC8" }}>
                 <div className="p-12 text-center">
                   <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: "rgba(184, 149, 106, 0.1)" }}>
                     <Sparkles className="w-8 h-8" style={{ color: "#B8956A" }} />
@@ -467,7 +467,7 @@ export default function Multiply() {
                   const Icon = typeInfo.icon;
 
                   return (
-                    <Card key={typeId} style={{ backgroundColor: "#FFFCF5" }}>
+                    <Card key={typeId} className="border" style={{ backgroundColor: "#FFFCF5", borderColor: "#D4CFC8" }}>
                       <button
                         onClick={() => toggleExpanded(typeId)}
                         className="w-full p-4 flex items-center justify-between hover:bg-black/5 transition-colors"
@@ -593,7 +593,7 @@ export default function Multiply() {
             )}
 
             {/* Derivative Type Selector */}
-            <Card className="mb-6" style={{ backgroundColor: "#FFFCF5" }}>
+            <Card className="mb-6 border" style={{ backgroundColor: "#FFFCF5", borderColor: "#D4CFC8" }}>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-semibold" style={{ color: "#1A1816" }}>
