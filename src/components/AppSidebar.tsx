@@ -3,6 +3,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import penNibLogo from "@/assets/pen-nib-logo.png";
 import leatherTexture from "@/assets/leather-texture-black.png";
+import brassClip from "@/assets/brass-clip.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -166,11 +167,23 @@ export function AppSidebar() {
             <div className="px-4 pb-4 flex justify-end">
               <button 
                 onClick={toggleSidebar}
-                className="bg-aged-brass hover:bg-antique-gold transition-colors text-ink-black font-semibold py-1.5 px-3 rounded-md text-xs flex items-center gap-2"
+                className="relative group"
                 aria-label="Collapse sidebar"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer'
+                }}
               >
-                <ChevronLeft className="w-3.5 h-3.5" />
-                <span>Collapse</span>
+                <img 
+                  src={brassClip} 
+                  alt="Collapse" 
+                  className="w-10 h-10 object-contain transition-transform duration-200 group-hover:scale-110 group-active:scale-95"
+                  style={{
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+                  }}
+                />
               </button>
             </div>
           )}
