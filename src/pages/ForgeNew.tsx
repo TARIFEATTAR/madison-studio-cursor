@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lightbulb, FileText, PenTool, X, Send, Loader2 } from "lucide-react";
-import penNibIcon from "@/assets/pen-nib-icon-multiply.png";
+import penNibIcon from "@/assets/pen-nib-icon-new.png";
 import { createRoot } from "react-dom/client";
 import { GeneratingLoader } from "@/components/forge/GeneratingLoader";
 import { TransitionLoader } from "@/components/forge/TransitionLoader";
