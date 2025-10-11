@@ -53,7 +53,12 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
   }, []);
 
   const handleSend = async () => {
-    if (!input.trim() || isGenerating) return;
+    console.log('[EditorialAssistant] handleSend called, input:', input, 'trimmed:', input.trim(), 'isGenerating:', isGenerating);
+    
+    if (!input.trim() || isGenerating) {
+      console.log('[EditorialAssistant] Send blocked - empty input or generating');
+      return;
+    }
 
     const userMessage: Message = {
       role: "user",
@@ -61,6 +66,7 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
       timestamp: new Date(),
     };
 
+    console.log('[EditorialAssistant] Sending message:', userMessage.content);
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsGenerating(true);
@@ -253,9 +259,18 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
             disabled={isGenerating}
           />
           <Button
-            onClick={handleSend}
+            type="button"
+            onClick={(e) => {
+              console.log('[EditorialAssistant] Button clicked', { input, isGenerating, trimmed: input.trim() });
+              e.preventDefault();
+              handleSend();
+            }}
+            onTouchStart={(e) => {
+              console.log('[EditorialAssistant] Touch start', { input, isGenerating });
+              e.currentTarget.click();
+            }}
             disabled={!input.trim() || isGenerating}
-            className="h-[52px] w-[52px] sm:h-[60px] sm:w-[60px] flex-shrink-0 bg-gradient-to-r from-aged-brass to-antique-gold hover:opacity-90"
+            className="h-[52px] w-[52px] sm:h-[60px] sm:w-[60px] flex-shrink-0 bg-gradient-to-r from-aged-brass to-antique-gold hover:opacity-90 active:opacity-80"
             style={{ color: "#1A1816" }}
           >
             {isGenerating ? (
