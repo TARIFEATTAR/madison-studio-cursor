@@ -139,7 +139,7 @@ export function AppSidebar() {
       >
         {/* Header */}
         <SidebarHeader className="border-b border-white/10 p-0">
-          <div className="flex items-center gap-3 px-4 py-6">
+          <div className="flex items-center gap-2 px-4 py-6">
             <img 
               src={penNibIcon} 
               alt="Scriptora" 
