@@ -104,7 +104,7 @@ const PromptLibrarySidebar = ({
     <div className="w-80 border-r border-border bg-background h-screen flex flex-col">
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
-          <div className="p-6 space-y-6">
+          <div className="p-4 space-y-4">
             {/* Quick Access */}
             <div>
               <div className="flex items-center gap-2 mb-3">
