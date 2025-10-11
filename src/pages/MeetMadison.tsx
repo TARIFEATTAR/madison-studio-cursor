@@ -2,6 +2,7 @@ import { User, Lightbulb, BookOpen, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import madisonInsignia from "@/assets/madison-insignia.png";
 
 export default function MeetMadison() {
   const navigate = useNavigate();
@@ -22,11 +23,13 @@ export default function MeetMadison() {
       
       {/* Content wrapper */}
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-16">
-        {/* Profile icon - OUTSIDE card, on cream background */}
+        {/* Madison insignia - OUTSIDE card, on cream background */}
         <div className="flex justify-center mb-6">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-brass to-brass-glow flex items-center justify-center shadow-md">
-            <User className="w-12 h-12 text-white" />
-          </div>
+          <img 
+            src={madisonInsignia} 
+            alt="Madison" 
+            className="w-24 h-24 object-contain"
+          />
         </div>
         
         {/* Header text - OUTSIDE card */}
