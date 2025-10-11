@@ -52,7 +52,7 @@ const Landing = () => {
       <header 
         className={`fixed top-0 w-full z-50 transition-all duration-300 ${
           isScrolled 
-            ? 'bg-vellum bg-opacity-95 backdrop-blur-md border-b border-aged-brass/20' 
+            ? 'bg-vellum border-b border-aged-brass/20' 
             : 'bg-transparent'
         }`}
         style={{ padding: '16px 48px' }}
