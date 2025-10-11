@@ -64,7 +64,7 @@ const Navigation = () => {
             <img 
               src="/logo.png" 
               alt="Scriptora - Editorial Intelligence" 
-              className="h-12 md:h-16 w-auto transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 group-hover:drop-shadow-lg"
+              className="h-24 md:h-32 w-auto transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 group-hover:drop-shadow-lg"
               onError={(e) => {
                 console.error('Logo failed to load');
                 e.currentTarget.style.display = 'none';
