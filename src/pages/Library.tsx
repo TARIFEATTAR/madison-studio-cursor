@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2, X, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LibraryFilters } from "@/components/library/LibraryFilters";
 import { ContentCard } from "@/components/library/ContentCard";
@@ -98,8 +98,92 @@ export default function Library() {
     }
   };
 
+  const handleBulkArchive = async () => {
+    if (selectedItems.size === 0) return;
+
+    setIsDeleting(true);
+    try {
+      const itemsByTable = {
+        master_content: [] as string[],
+        outputs: [] as string[],
+        derivative_assets: [] as string[]
+      };
+
+      selectedItems.forEach(id => {
+        const item = libraryContent.find(c => c.id === id);
+        if (item) {
+          itemsByTable[item.sourceTable as keyof typeof itemsByTable].push(id);
+        }
+      });
+
+      const updatePromises = [];
+
+      if (itemsByTable.master_content.length > 0) {
+        updatePromises.push(
+          supabase
+            .from('master_content')
+            .update({ is_archived: !showArchived, archived_at: !showArchived ? new Date().toISOString() : null })
+            .in('id', itemsByTable.master_content)
+        );
+      }
+
+      if (itemsByTable.outputs.length > 0) {
+        updatePromises.push(
+          supabase
+            .from('outputs')
+            .update({ is_archived: !showArchived, archived_at: !showArchived ? new Date().toISOString() : null })
+            .in('id', itemsByTable.outputs)
+        );
+      }
+
+      if (itemsByTable.derivative_assets.length > 0) {
+        updatePromises.push(
+          supabase
+            .from('derivative_assets')
+            .update({ is_archived: !showArchived, archived_at: !showArchived ? new Date().toISOString() : null })
+            .in('id', itemsByTable.derivative_assets)
+        );
+      }
+
+      await Promise.all(updatePromises);
+
+      toast({
+        title: showArchived ? "Items unarchived" : "Items archived",
+        description: `Successfully ${showArchived ? 'unarchived' : 'archived'} ${selectedItems.size} item${selectedItems.size > 1 ? 's' : ''}`,
+      });
+
+      setSelectedItems(new Set());
+      refetch();
+    } catch (error) {
+      console.error('Error archiving items:', error);
+      toast({
+        title: "Archive failed",
+        description: "Failed to archive selected items. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleBulkDelete = async () => {
     if (selectedItems.size === 0) return;
+
+    // Check if all selected items are archived
+    const selectedContentItems = Array.from(selectedItems).map(id => 
+      libraryContent.find(c => c.id === id)
+    ).filter(Boolean);
+
+    const hasNonArchivedItems = selectedContentItems.some(item => !item?.archived);
+
+    if (hasNonArchivedItems) {
+      toast({
+        title: "Cannot delete",
+        description: "Only archived items can be deleted. Please archive items first before deleting.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setIsDeleting(true);
     try {
@@ -255,15 +339,27 @@ export default function Library() {
                       Clear
                     </Button>
                     <Button
-                      variant="destructive"
+                      variant="outline"
                       size="sm"
-                      onClick={handleBulkDelete}
+                      onClick={handleBulkArchive}
                       disabled={isDeleting}
                       className="gap-2"
                     >
-                      <Trash2 className="w-4 h-4" />
-                      {isDeleting ? 'Deleting...' : `Delete ${selectedItems.size} item${selectedItems.size > 1 ? 's' : ''}`}
+                      <Archive className="w-4 h-4" />
+                      {isDeleting ? 'Processing...' : `${showArchived ? 'Unarchive' : 'Archive'} ${selectedItems.size} item${selectedItems.size > 1 ? 's' : ''}`}
                     </Button>
+                    {showArchived && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleBulkDelete}
+                        disabled={isDeleting}
+                        className="gap-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        {isDeleting ? 'Deleting...' : `Delete ${selectedItems.size} item${selectedItems.size > 1 ? 's' : ''}`}
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
@@ -301,6 +397,34 @@ export default function Library() {
                 selectable={true}
                 selected={selectedItems.has(content.id)}
                 onToggleSelect={() => handleToggleSelection(content.id)}
+                onArchive={async () => {
+                  try {
+                    const table = content.sourceTable;
+                    const { error } = await supabase
+                      .from(table)
+                      .update({ 
+                        is_archived: !content.archived,
+                        archived_at: !content.archived ? new Date().toISOString() : null
+                      })
+                      .eq('id', content.id);
+
+                    if (error) throw error;
+
+                    toast({
+                      title: content.archived ? "Item unarchived" : "Item archived",
+                      description: `Successfully ${content.archived ? 'unarchived' : 'archived'} "${content.title}"`,
+                    });
+
+                    refetch();
+                  } catch (error) {
+                    console.error('Error archiving item:', error);
+                    toast({
+                      title: "Archive failed",
+                      description: "Failed to archive item. Please try again.",
+                      variant: "destructive"
+                    });
+                  }
+                }}
               />
             ))}
           </div>

@@ -1,7 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
-import { Star } from "lucide-react";
+import { Star, Archive, ArchiveRestore } from "lucide-react";
 import { contentTypes, collections } from "@/data/mockLibraryContent";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +25,7 @@ interface ContentCardProps {
   selectable?: boolean;
   selected?: boolean;
   onToggleSelect?: () => void;
+  onArchive?: () => void;
 }
 
 export function ContentCard({ 
@@ -32,7 +34,8 @@ export function ContentCard({
   viewMode = "grid",
   selectable = false,
   selected = false,
-  onToggleSelect 
+  onToggleSelect,
+  onArchive
 }: ContentCardProps) {
   const contentTypeInfo = contentTypes.find(ct => ct.id === content.contentType);
   const collectionInfo = collections.find(c => c.id === content.collection);
@@ -62,9 +65,27 @@ export function ContentCard({
         `
       }}
     >
-      {/* Selection Checkbox - only show when selectable */}
-      {selectable && (
-        <div className="absolute top-4 right-4 z-10">
+      {/* Action buttons - top right */}
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+        {onArchive && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onArchive();
+            }}
+            className="h-8 px-2 hover:bg-brass/10"
+            title={content.archived ? "Unarchive" : "Archive"}
+          >
+            {content.archived ? (
+              <ArchiveRestore className="w-4 h-4 text-muted-foreground hover:text-brass" />
+            ) : (
+              <Archive className="w-4 h-4 text-muted-foreground hover:text-brass" />
+            )}
+          </Button>
+        )}
+        {selectable && (
           <input
             type="checkbox"
             checked={selected}
@@ -74,8 +95,8 @@ export function ContentCard({
             }}
             className="w-5 h-5 rounded border-border text-brass focus:ring-brass cursor-pointer"
           />
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="p-6 space-y-4">
         <div className="space-y-3">

@@ -124,7 +124,7 @@ export function AppSidebar() {
           <img 
             src="/logo.png" 
             alt="Scriptora" 
-            className="h-10 w-auto"
+            className="h-8 w-auto"
           />
           
           <div className="w-10" /> {/* Spacer for centering logo */}
