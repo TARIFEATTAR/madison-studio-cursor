@@ -8,6 +8,7 @@ import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { usePriorityAction } from "@/hooks/usePriorityAction";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import madisonInsignia from "@/assets/madison-insignia.png";
 
 export default function DashboardNew() {
   const navigate = useNavigate();
@@ -153,8 +154,12 @@ export default function DashboardNew() {
               <X className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-brass/15 rounded-lg flex items-center justify-center flex-shrink-0">
-                <PenTool className="w-6 h-6 text-brass" />
+              <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
+                <img 
+                  src={madisonInsignia} 
+                  alt="Madison - Editorial Director" 
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div>
                 <div className="text-xs font-semibold uppercase tracking-wider text-brass mb-1">
