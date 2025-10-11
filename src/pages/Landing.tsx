@@ -96,12 +96,12 @@ const Landing = () => {
           <div className="max-w-[650px] text-left">
             
             {/* Headline with brass accent */}
-            <h1 className="font-serif font-semibold mb-5">
-              <span className="block text-5xl md:text-6xl lg:text-7xl text-parchment-white leading-tight">
+            <h1 className="font-serif font-semibold mb-4 md:mb-5">
+              <span className="block text-3xl sm:text-4xl md:text-6xl lg:text-7xl text-parchment-white leading-tight">
                 Where Luxury Beauty Brands Craft Their
               </span>
               <span 
-                className="block text-6xl md:text-7xl lg:text-8xl leading-tight mt-2 transition-all duration-[400ms]"
+                className="block text-4xl sm:text-5xl md:text-7xl lg:text-8xl leading-tight mt-1 md:mt-2 transition-all duration-[400ms]"
                 style={{ 
                   color: 'hsl(42, 77%, 70%)',
                   textShadow: '0 0 30px rgba(212, 175, 55, 0.4)',
@@ -118,7 +118,7 @@ const Landing = () => {
             </h1>
             
             {/* Subheadline */}
-            <p className="hero-subheadline text-xl leading-relaxed max-w-[580px]">
+            <p className="hero-subheadline text-base sm:text-lg md:text-xl leading-relaxed max-w-[580px]">
               AI-powered content creation that honors craftsmanship, 
               heritage, and the art of storytelling. From heritage 
               perfume houses to artisan skincare—every word reflects 
@@ -127,10 +127,10 @@ const Landing = () => {
             
             {/* CTA Buttons */}
             <div className="hero-ctas">
-              <Link to="/auth" className="btn-primary-brass inline-block px-12 py-[18px] text-lg">
+              <Link to="/auth" className="btn-primary-brass inline-block px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-[18px] text-sm sm:text-base md:text-lg">
                 Commission Your First Piece
               </Link>
-              <Link to="/meet-madison" className="btn-secondary-ghost inline-block px-12 py-[18px] text-lg">
+              <Link to="/meet-madison" className="btn-secondary-ghost inline-block px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-[18px] text-sm sm:text-base md:text-lg">
                 Meet Your Editorial Director
               </Link>
             </div>
