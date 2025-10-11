@@ -75,22 +75,24 @@ const AppContent = () => {
         <SidebarProvider>
           <div className="flex min-h-screen w-full">
             <AppSidebar />
-            <main className="flex-1 overflow-auto">
-              <Routes>
-                <Route path="/" element={<ProtectedRoute><RootRoute /></ProtectedRoute>} />
-                <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
-                <Route path="/reservoir" element={<ProtectedRoute><Reservoir /></ProtectedRoute>} />
-                <Route path="/create" element={<ProtectedRoute><ForgeNew /></ProtectedRoute>} />
-                <Route path="/editor" element={<ProtectedRoute><ContentEditor /></ProtectedRoute>} />
-                <Route path="/multiply" element={<ProtectedRoute><Repurpose /></ProtectedRoute>} />
-                <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
-                <Route path="/schedule" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
-                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                <Route path="/meet-madison" element={<ProtectedRoute><MeetMadison /></ProtectedRoute>} />
-                <Route path="/forge" element={<Navigate to="/create" replace />} />
-                <Route path="/amplify" element={<Navigate to="/multiply" replace />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+            <main className="flex-1 overflow-auto pt-0 md:pt-0">
+              <div className="pt-16 md:pt-0">
+                <Routes>
+                  <Route path="/" element={<ProtectedRoute><RootRoute /></ProtectedRoute>} />
+                  <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
+                  <Route path="/reservoir" element={<ProtectedRoute><Reservoir /></ProtectedRoute>} />
+                  <Route path="/create" element={<ProtectedRoute><ForgeNew /></ProtectedRoute>} />
+                  <Route path="/editor" element={<ProtectedRoute><ContentEditor /></ProtectedRoute>} />
+                  <Route path="/multiply" element={<ProtectedRoute><Repurpose /></ProtectedRoute>} />
+                  <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
+                  <Route path="/schedule" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+                  <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                  <Route path="/meet-madison" element={<ProtectedRoute><MeetMadison /></ProtectedRoute>} />
+                  <Route path="/forge" element={<Navigate to="/create" replace />} />
+                  <Route path="/amplify" element={<Navigate to="/multiply" replace />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </div>
             </main>
           </div>
         </SidebarProvider>

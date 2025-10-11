@@ -108,18 +108,28 @@ export function AppSidebar() {
 
   return (
     <>
-      {/* Mobile Trigger Button - Fixed position */}
-      {isMobile && !openMobile && (
-        <button
-          onClick={toggleSidebar}
-          className="fixed top-4 left-4 z-50 p-3 bg-aged-brass hover:bg-antique-gold text-ink-black rounded-lg shadow-lg transition-all duration-200"
-          aria-label="Open menu"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+      {/* Mobile Header - Only visible on mobile */}
+      {isMobile && (
+        <header className="fixed top-0 left-0 right-0 z-40 h-16 bg-gradient-to-r from-ink-black to-charcoal border-b border-aged-brass/20 flex items-center justify-between px-4">
+          <button
+            onClick={toggleSidebar}
+            className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu className="w-6 h-6 text-parchment-white" />
+          </button>
+          
+          <img 
+            src="/logo.png" 
+            alt="Scriptora" 
+            className="h-10 w-auto"
+          />
+          
+          <div className="w-10" /> {/* Spacer for centering logo */}
+        </header>
       )}
 
-      <Sidebar 
+      <Sidebar
         collapsible="icon"
         className="border-r-0"
         style={{
