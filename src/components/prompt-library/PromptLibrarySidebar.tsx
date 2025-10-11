@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Sidebar, SidebarContent, SidebarHeader } from "@/components/ui/sidebar";
+
 import { cn } from "@/lib/utils";
 
 interface PromptLibrarySidebarProps {
@@ -101,8 +101,8 @@ const PromptLibrarySidebar = ({
   };
 
   return (
-    <Sidebar className="w-80 border-r border-border bg-background">
-      <SidebarContent>
+    <div className="w-80 border-r border-border bg-background h-screen flex flex-col">
+      <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="p-6 space-y-6">
             {/* Quick Access */}
@@ -268,8 +268,8 @@ const PromptLibrarySidebar = ({
             </div>
           </div>
         </ScrollArea>
-      </SidebarContent>
-    </Sidebar>
+      </div>
+    </div>
   );
 };
 

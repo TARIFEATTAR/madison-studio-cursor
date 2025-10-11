@@ -50,8 +50,8 @@ const navItems = [
     icon: Calendar 
   },
   { 
-    title: "Templates", 
-    subtitle: "Prompt Library",
+    title: "Prompt Library", 
+    subtitle: "AI Prompt Templates",
     url: "/templates", 
     icon: FileText 
   },
