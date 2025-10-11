@@ -198,7 +198,7 @@ const Landing = () => {
             </p>
             
             {/* CTA Buttons */}
-            <div className="hero-ctas">
+            <div className="hero-ctas mt-8 md:mt-10">
               <Link 
                 to="/auth" 
                 className="inline-block px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-[18px] text-sm sm:text-base md:text-lg font-serif font-semibold text-ink-black rounded-lg transition-all duration-300"
