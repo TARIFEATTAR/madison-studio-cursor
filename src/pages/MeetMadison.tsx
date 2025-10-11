@@ -28,7 +28,7 @@ export default function MeetMadison() {
           <img 
             src={madisonInsignia} 
             alt="Madison" 
-            className="w-24 h-24 object-contain"
+            className="w-48 h-48 object-contain"
           />
         </div>
         
