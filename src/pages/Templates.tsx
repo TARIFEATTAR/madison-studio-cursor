@@ -64,12 +64,15 @@ const Templates = () => {
   const [showGuide, setShowGuide] = useState(false);
   const [showMadison, setShowMadison] = useState(false);
 
-  // Compute dynamic left offset for the filter sidebar
-  const navOffset = isMobileNav 
+  // Compute dynamic offsets
+  const sidebarWidth = state === "collapsed" ? 56 : 280; // AppSidebar width
+  const filterWidth = 320; // PromptLibrarySidebar width (w-80)
+
+  const filterLeftOffset = isMobileNav 
     ? "0px" 
-    : state === "collapsed" 
-      ? "var(--sidebar-width-icon)" 
-      : "var(--sidebar-width)";
+    : `${sidebarWidth}px`;
+
+  const contentLeftOffset = isMobile ? 0 : sidebarWidth + filterWidth;
 
   // Fetch prompts
   const { data: allPrompts = [], isLoading } = useQuery({
@@ -290,8 +293,8 @@ const Templates = () => {
         {/* Desktop: Fixed Filter Sidebar */}
         {!isMobile && (
           <div 
-            className="fixed top-0 h-screen z-[10] w-80 transition-[left] duration-200 ease-linear"
-            style={{ left: navOffset }}
+            className="fixed top-0 h-screen z-[10] w-80 transition-[left] duration-200 ease-linear pt-8"
+            style={{ left: filterLeftOffset }}
           >
             <PromptLibrarySidebar
               onQuickAccessSelect={setSelectedQuickAccess}
@@ -304,7 +307,10 @@ const Templates = () => {
           </div>
         )}
 
-        <main className={cn("flex-1 p-8", !isMobile && "ml-80")}>
+        <main 
+          className="flex-1 p-8" 
+          style={{ marginLeft: isMobile ? 0 : `${contentLeftOffset}px` }}
+        >
           <div className="max-w-6xl mx-auto">
             {/* Header */}
             <div className="mb-6">
