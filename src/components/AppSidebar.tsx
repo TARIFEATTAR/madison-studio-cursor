@@ -158,15 +158,14 @@ export function AppSidebar() {
           </div>
           
           {open && (
-            <div className="px-4 pb-4">
+            <div className="px-4 pb-4 flex justify-center">
               <button 
                 onClick={toggleSidebar}
-                className="w-full bg-aged-brass hover:bg-antique-gold transition-colors text-ink-black font-semibold py-2.5 px-4 rounded-lg text-sm"
+                className="bg-aged-brass hover:bg-antique-gold transition-colors text-ink-black font-semibold py-1.5 px-3 rounded-md text-xs flex items-center gap-2"
+                aria-label="Collapse sidebar"
               >
-                <span className="flex items-center justify-center gap-2">
-                  <ChevronLeft className="w-4 h-4" />
-                  <span>Collapse</span>
-                </span>
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span>Collapse</span>
               </button>
             </div>
           )}
