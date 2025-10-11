@@ -1,8 +1,9 @@
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 import Navigation from "./components/Navigation";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -24,6 +25,10 @@ import MeetMadison from "./pages/MeetMadison";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
+import { OnboardingDocumentUpload } from "@/components/onboarding/OnboardingDocumentUpload";
+import { OnboardingCompleteModal } from "@/components/onboarding/OnboardingCompleteModal";
 
 const queryClient = new QueryClient();
 
@@ -49,7 +54,28 @@ const AppContent = () => {
   console.log("[App-Con]");
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
+  // Initialize onboarding globally so it runs right after login (creates org, shows modals)
+  const {
+    showWelcome,
+    showDocumentUpload,
+    showCompleteModal,
+    currentOrganizationId,
+    onboardingStep,
+    completeWelcome,
+    completeDocumentUpload,
+    skipDocumentUpload,
+    closeCompleteModal,
+  } = useOnboarding();
+
+  // Redirect users to Create when in first_generation_pending
+  useEffect(() => {
+    if (user && onboardingStep === "first_generation_pending") {
+      navigate("/create?onboarding=true");
+    }
+  }, [user, onboardingStep, navigate]);
+  
   // Show sidebar for authenticated users on all pages except /auth, /editor, and /onboarding
   const showSidebar = user && location.pathname !== "/auth" && location.pathname !== "/editor" && location.pathname !== "/onboarding";
 
@@ -71,32 +97,66 @@ const AppContent = () => {
                 <Route path="/multiply" element={<ProtectedRoute><Repurpose /></ProtectedRoute>} />
                 <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
                 <Route path="/schedule" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/meet-madison" element={<ProtectedRoute><MeetMadison /></ProtectedRoute>} />
+                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                <Route path="/meet-madison" element={<ProtectedRoute><MeetMadison /></ProtectedRoute>} />
                 <Route path="/forge" element={<Navigate to="/create" replace />} />
                 <Route path="/amplify" element={<Navigate to="/multiply" replace />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+
+              {/* Onboarding Modals (global) */}
+              {showWelcome && (
+                <WelcomeModal open={showWelcome} onComplete={completeWelcome} onSkip={skipDocumentUpload} />
+              )}
+              {showDocumentUpload && currentOrganizationId && (
+                <OnboardingDocumentUpload
+                  open={showDocumentUpload}
+                  organizationId={currentOrganizationId}
+                  onComplete={completeDocumentUpload}
+                  onSkip={skipDocumentUpload}
+                />
+              )}
+              {showCompleteModal && (
+                <OnboardingCompleteModal open={showCompleteModal} onClose={closeCompleteModal} />
+              )}
             </main>
           </div>
         </SidebarProvider>
       ) : (
-        <Routes>
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/" element={<Index />} />
-          <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
-          <Route path="/create" element={<ProtectedRoute><ForgeNew /></ProtectedRoute>} />
-          <Route path="/editor" element={<ProtectedRoute><ContentEditor /></ProtectedRoute>} />
-          <Route path="/multiply" element={<ProtectedRoute><Repurpose /></ProtectedRoute>} />
-          <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
-          <Route path="/schedule" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-          <Route path="/meet-madison" element={<ProtectedRoute><MeetMadison /></ProtectedRoute>} />
-          <Route path="/forge" element={<Navigate to="/create" replace />} />
-          <Route path="/amplify" element={<Navigate to="/multiply" replace />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <>
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/" element={<Index />} />
+            <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
+            <Route path="/create" element={<ProtectedRoute><ForgeNew /></ProtectedRoute>} />
+            <Route path="/editor" element={<ProtectedRoute><ContentEditor /></ProtectedRoute>} />
+            <Route path="/multiply" element={<ProtectedRoute><Repurpose /></ProtectedRoute>} />
+            <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
+            <Route path="/schedule" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/meet-madison" element={<ProtectedRoute><MeetMadison /></ProtectedRoute>} />
+            <Route path="/forge" element={<Navigate to="/create" replace />} />
+            <Route path="/amplify" element={<Navigate to="/multiply" replace />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+
+          {/* Onboarding Modals (global) */}
+          {showWelcome && (
+            <WelcomeModal open={showWelcome} onComplete={completeWelcome} onSkip={skipDocumentUpload} />
+          )}
+          {showDocumentUpload && currentOrganizationId && (
+            <OnboardingDocumentUpload
+              open={showDocumentUpload}
+              organizationId={currentOrganizationId}
+              onComplete={completeDocumentUpload}
+              onSkip={skipDocumentUpload}
+            />
+          )}
+          {showCompleteModal && (
+            <OnboardingCompleteModal open={showCompleteModal} onClose={closeCompleteModal} />
+          )}
+        </>
       )}
     </>
   );
