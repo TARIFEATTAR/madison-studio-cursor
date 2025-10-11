@@ -26,7 +26,7 @@ export default function DashboardNew() {
         .from("organization_members")
         .select("organization_id, organizations(name)")
         .eq("user_id", user.id)
-        .single()
+        .maybeSingle()
         .then(({ data }) => {
           if (data && data.organizations) {
             setOrganizationName((data.organizations as any).name);
