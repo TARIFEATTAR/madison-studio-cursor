@@ -20,9 +20,6 @@ const Landing = () => {
   const rotatingWords = ["Narrative", "Story", "Voice", "Message", "Identity", "Legacy"];
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  
-  // Scroll state for header background
-  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -37,51 +34,40 @@ const Landing = () => {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   return (
     <div className="min-h-screen bg-vellum">
       {/* Navigation Header */}
       <header 
-        className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-          isScrolled 
-            ? 'bg-vellum border-b border-aged-brass/20' 
-            : 'bg-transparent'
-        }`}
-        style={{ padding: '16px 48px' }}
+        className="sticky top-0 w-full z-[1000] bg-vellum border-b border-aged-brass/15 transition-all duration-300"
+        style={{ 
+          padding: '20px 40px',
+          boxShadow: '0 2px 8px rgba(26, 24, 22, 0.08)'
+        }}
       >
         <div className="container mx-auto">
           <nav className="flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="w-[70px] h-[70px] flex items-center justify-center">
+            <Link to="/" className="flex items-center gap-4">
+              <div className="w-10 h-10 flex-shrink-0">
                 <img src={scriptoraIcon} alt="Scriptora Icon" className="w-full h-full object-contain" />
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col gap-0.5">
                 <div 
-                  className={`font-serif font-semibold transition-all duration-300 ${
-                    isScrolled ? 'text-ink-black' : 'text-white'
-                  }`}
+                  className="font-serif text-ink-black"
                   style={{ 
                     fontSize: '24px',
-                    textShadow: isScrolled ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.4)'
+                    fontWeight: 600,
+                    lineHeight: 1
                   }}
                 >
                   Scriptora
                 </div>
                 <div 
-                  className="font-sans uppercase text-[hsl(42,77%,70%)] transition-all duration-300" 
+                  className="font-sans uppercase text-aged-brass" 
                   style={{ 
                     fontSize: '11px',
-                    letterSpacing: '0.1em',
-                    fontWeight: 400,
-                    textShadow: isScrolled ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.4)'
+                    letterSpacing: '0.12em',
+                    fontWeight: 500,
+                    lineHeight: 1
                   }}
                 >
                   Editorial Intelligence
@@ -89,34 +75,28 @@ const Landing = () => {
               </div>
             </Link>
 
-            <div className="hidden md:flex items-center gap-8">
+            <div className="hidden md:flex items-center gap-12">
               <a 
                 href="#features" 
-                className={`font-sans transition-all duration-300 hover:text-[hsl(42,77%,70%)] ${
-                  isScrolled ? 'text-[hsl(22,4%,38%)]' : 'text-white'
-                }`}
+                className="nav-link-styled font-sans text-charcoal transition-all duration-300 hover:text-aged-brass relative group"
                 style={{
-                  fontSize: '15px',
-                  fontWeight: 500,
-                  letterSpacing: '0.02em',
-                  textShadow: isScrolled ? 'none' : '0 2px 4px rgba(0, 0, 0, 0.3)'
+                  fontSize: '16px',
+                  fontWeight: 400
                 }}
               >
                 Features
+                <span className="absolute bottom-[-4px] left-0 w-0 h-0.5 bg-aged-brass transition-all duration-300 group-hover:w-full"></span>
               </a>
               <a 
                 href="#how-it-works" 
-                className={`font-sans transition-all duration-300 hover:text-[hsl(42,77%,70%)] ${
-                  isScrolled ? 'text-[hsl(22,4%,38%)]' : 'text-white'
-                }`}
+                className="nav-link-styled font-sans text-charcoal transition-all duration-300 hover:text-aged-brass relative group"
                 style={{
-                  fontSize: '15px',
-                  fontWeight: 500,
-                  letterSpacing: '0.02em',
-                  textShadow: isScrolled ? 'none' : '0 2px 4px rgba(0, 0, 0, 0.3)'
+                  fontSize: '16px',
+                  fontWeight: 400
                 }}
               >
                 How It Works
+                <span className="absolute bottom-[-4px] left-0 w-0 h-0.5 bg-aged-brass transition-all duration-300 group-hover:w-full"></span>
               </a>
             </div>
 
@@ -129,14 +109,10 @@ const Landing = () => {
                 <>
                   <Link
                     to="/auth"
-                    className={`hidden sm:inline-flex font-sans transition-all duration-300 hover:text-[hsl(42,77%,70%)] ${
-                      isScrolled ? 'text-[hsl(22,4%,38%)]' : 'text-white opacity-90'
-                    }`}
+                    className="hidden sm:inline-flex font-sans text-charcoal transition-all duration-300 hover:text-aged-brass"
                     style={{
-                      fontSize: '15px',
+                      fontSize: '16px',
                       fontWeight: 500,
-                      letterSpacing: '0.02em',
-                      textShadow: isScrolled ? 'none' : '0 2px 4px rgba(0, 0, 0, 0.3)',
                       padding: '8px 16px'
                     }}
                   >
@@ -144,13 +120,14 @@ const Landing = () => {
                   </Link>
                   <Button 
                     asChild 
-                    className="text-ink-black font-sans font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(184,149,106,0.6)]" 
+                    className="text-ink-black font-serif font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(184,149,106,0.45)] active:translate-y-0 active:shadow-[0_2px_8px_rgba(184,149,106,0.3)]" 
                     style={{
                       background: 'linear-gradient(135deg, #B8956A 0%, #D4AF37 100%)',
                       padding: '14px 36px',
-                      boxShadow: '0 4px 12px rgba(184, 149, 106, 0.4)',
-                      fontSize: '15px',
-                      letterSpacing: '0.02em'
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 12px rgba(184, 149, 106, 0.3)',
+                      fontSize: '16px',
+                      fontWeight: 600
                     }}
                   >
                     <Link to="/auth">Get Started</Link>
