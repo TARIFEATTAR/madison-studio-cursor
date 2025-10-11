@@ -2,6 +2,7 @@ import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, Che
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import penNibLogo from "@/assets/pen-nib-logo.png";
+import leatherTexture from "@/assets/leather-texture.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -134,7 +135,11 @@ export function AppSidebar() {
         collapsible="icon"
         className="border-r-0"
         style={{
-          background: "linear-gradient(180deg, hsl(var(--ink-black)), hsl(var(--charcoal)))"
+          backgroundImage: `url(${leatherTexture})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundBlendMode: "overlay",
+          backgroundColor: "rgba(58, 43, 33, 0.95)"
         }}
       >
         {/* Header */}
