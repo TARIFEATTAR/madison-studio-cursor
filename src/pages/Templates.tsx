@@ -362,13 +362,13 @@ const TemplatesContent = () => {
         </div>
       </div>
 
-      {/* TWO-COLUMN LAYOUT - Grid Layout */}
+      {/* TWO-COLUMN LAYOUT - Flex Layout */}
       <div className="max-w-[1400px] mx-auto px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-[25px]">
+        <div className="flex">
           
           {/* LEFT COLUMN - 350px fixed width on desktop, filters only */}
           {!isMobile && (
-            <aside className="space-y-6">
+            <aside className="w-[350px] flex-shrink-0">
               <PromptLibrarySidebar
                 onQuickAccessSelect={setSelectedQuickAccess}
                 onCollectionSelect={setSelectedCollection}
@@ -381,7 +381,7 @@ const TemplatesContent = () => {
           )}
 
           {/* RIGHT MAIN CONTENT - Flexible width */}
-          <main>
+          <main className="flex-1">
             {/* Active Filters Display (Mobile) */}
             {isMobile && (selectedQuickAccess || selectedCollection || selectedCategory) && (
               <div className="mb-4 flex gap-2 flex-wrap">
