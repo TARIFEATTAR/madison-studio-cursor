@@ -85,7 +85,7 @@ export default function DashboardNew() {
         {/* Header */}
         <div className="mb-10">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="font-serif text-4xl font-medium text-ink-black">
+            <h1 className="font-serif text-3xl md:text-4xl font-medium text-ink-black">
               Welcome back, {organizationName || "Creator"}
             </h1>
             {stats && stats.streakDays > 0 && (
@@ -97,7 +97,7 @@ export default function DashboardNew() {
               </div>
             )}
           </div>
-          <p className="text-warm-gray text-base">
+          <p className="text-charcoal/70 text-lg">
             Your editorial command center
           </p>
         </div>
@@ -118,23 +118,23 @@ export default function DashboardNew() {
                     {priorityAction.estimatedTime}
                   </span>
                 </div>
-                <h2 className="font-serif text-[32px] font-medium text-ink-black mb-3 leading-tight tracking-tight">
+                <h2 className="font-serif text-3xl md:text-4xl font-medium text-ink-black mb-3 leading-tight tracking-normal">
                   {priorityAction.title}
                 </h2>
-                <p className="text-base text-ink-black/80 mb-6 leading-relaxed">
+                <p className="text-base md:text-lg text-ink-black/90 mb-6 leading-relaxed max-w-2xl">
                   {priorityAction.description}
                 </p>
                 <div className="flex gap-3">
                   <Button 
                     onClick={() => navigate(priorityAction.actionRoute)}
-                    className="px-6 py-3 bg-ink-black hover:bg-charcoal text-parchment-white font-medium rounded-lg transition-all"
+                    className="px-6 py-3 bg-ink-black hover:bg-charcoal text-parchment-white font-semibold tracking-wide rounded-lg transition-all"
                   >
                     {priorityAction.actionLabel} →
                   </Button>
                   <Button 
                     onClick={() => setShowPriorityCard(false)}
                     variant="ghost"
-                    className="px-6 py-3 bg-white/20 hover:bg-white/30 text-ink-black font-medium rounded-lg transition-all"
+                    className="px-6 py-3 bg-white/20 hover:bg-white/30 text-ink-black font-semibold tracking-wide rounded-lg transition-all"
                   >
                     Not Now
                   </Button>
@@ -165,7 +165,7 @@ export default function DashboardNew() {
                 <div className="text-xs font-semibold uppercase tracking-wider text-brass mb-1">
                   Editorial Director
                 </div>
-                <p className="text-sm text-charcoal leading-relaxed">
+                <p className="text-sm md:text-base text-charcoal/90 leading-relaxed">
                   Welcome! I'll guide you through your content journey and help you make the most of your work.
                 </p>
               </div>
@@ -226,19 +226,19 @@ export default function DashboardNew() {
                 <p className="text-2xl font-serif font-semibold text-ink-black">
                   {stats?.totalContent || 0}
                 </p>
-                <p className="text-xs text-warm-gray mt-1">Total Pieces</p>
+                <p className="text-xs font-medium text-charcoal/60 uppercase tracking-wide mt-1">Total Pieces</p>
               </div>
               <div className="text-center p-4 bg-vellum-cream rounded-lg">
                 <p className="text-2xl font-serif font-semibold text-ink-black">
                   {stats?.piecesCreatedThisWeek || 0}
                 </p>
-                <p className="text-xs text-warm-gray mt-1">This Week</p>
+                <p className="text-xs font-medium text-charcoal/60 uppercase tracking-wide mt-1">This Week</p>
               </div>
               <div className="text-center p-4 bg-vellum-cream rounded-lg">
                 <p className="text-2xl font-serif font-semibold text-ink-black">
                   {stats?.piecesScheduled || 0}
                 </p>
-                <p className="text-xs text-warm-gray mt-1">Scheduled</p>
+                <p className="text-xs font-medium text-charcoal/60 uppercase tracking-wide mt-1">Scheduled</p>
               </div>
             </div>
             
