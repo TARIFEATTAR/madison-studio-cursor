@@ -210,16 +210,6 @@ export async function generateWorksheet(options: WorksheetOptions = {}): Promise
   const qrXPos = pageWidth - margin - qrSize; // Position on right
   doc.addImage(qrDataUrl, 'PNG', qrXPos, yPos, qrSize, qrSize);
   
-  // Text on the left side
-  const textXPos = margin;
-  const textYPos = yPos + 8; // Vertically centered with QR code
-  
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...inkBlack);
-  doc.text('Ready to Create Your', textXPos, textYPos);
-  doc.text('Content?', textXPos, textYPos + 6);
-  
   yPos += qrSize + 8;
 
   // Instructions centered below
