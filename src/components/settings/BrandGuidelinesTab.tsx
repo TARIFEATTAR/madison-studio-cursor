@@ -3,10 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { IndustrySelector } from "./IndustrySelector";
+import { BrandKnowledgeCenter } from "@/components/onboarding/BrandKnowledgeCenter";
 
 interface BrandGuidelines {
   brand_name?: string;
@@ -102,8 +104,17 @@ export function BrandGuidelinesTab() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <IndustrySelector />
+
+      {/* Brand Knowledge Center - AI-Powered Document Processing */}
+      {currentOrganizationId && (
+        <>
+          <BrandKnowledgeCenter organizationId={currentOrganizationId} />
+          
+          <Separator className="my-8" />
+        </>
+      )}
 
       <div className="bg-paper-light border border-cream-dark rounded-xl p-8">
         <h2 className="text-2xl font-serif text-charcoal mb-6">Brand Identity</h2>
