@@ -15,9 +15,10 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Sparkles, Archive, Mail, MessageSquare, Tag,
   FileText, CheckCircle2, XCircle, ChevronDown, ChevronRight, Copy, 
-  Calendar, Edit, Loader2, AlertCircle, Video 
+  Calendar, Edit, Loader2, AlertCircle, Video, Bookmark 
 } from "lucide-react";
 import { EditorialDirectorSplitScreen } from "@/components/multiply/EditorialDirectorSplitScreen";
+import { SavePromptDialog } from "@/components/prompt-library/SavePromptDialog";
 import fannedPagesImage from "@/assets/fanned-pages-new.png";
 import ticketIcon from "@/assets/ticket-icon.png";
 import envelopeIcon from "@/assets/envelope-icon.png";
@@ -179,6 +180,7 @@ export default function Multiply() {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [saveTitle, setSaveTitle] = useState("");
   const [userContent, setUserContent] = useState<MasterContent | null>(null);
+  const [savePromptDialogOpen, setSavePromptDialogOpen] = useState(false);
 
   // Check for recent content from localStorage
   useEffect(() => {
@@ -433,15 +435,27 @@ export default function Multiply() {
                       {selectedMaster.contentType}
                     </Badge>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSaveToLibrary}
-                    style={{ borderColor: "#D4CFC8", color: "#6B6560" }}
-                  >
-                    <Archive className="w-4 h-4 mr-2" />
-                    Save
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSavePromptDialogOpen(true)}
+                      style={{ borderColor: "#B8956A", color: "#B8956A" }}
+                      title="Save as prompt template"
+                    >
+                      <Bookmark className="w-4 h-4 mr-2" />
+                      Template
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSaveToLibrary}
+                      style={{ borderColor: "#D4CFC8", color: "#6B6560" }}
+                    >
+                      <Archive className="w-4 h-4 mr-2" />
+                      Save
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Content */}
@@ -869,6 +883,14 @@ export default function Multiply() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Save Prompt Template Dialog */}
+      <SavePromptDialog
+        open={savePromptDialogOpen}
+        onOpenChange={setSavePromptDialogOpen}
+        promptText={selectedMaster.content}
+        suggestedTitle={selectedMaster.title}
+      />
     </div>
   );
 }

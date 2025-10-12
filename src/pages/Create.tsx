@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Lightbulb, FileText, PenTool, X, Send, Loader2 } from "lucide-react";
+import { Lightbulb, FileText, PenTool, X, Send, Loader2, Bookmark } from "lucide-react";
 import penNibIcon from "@/assets/pen-nib-icon-new.png";
 import { createRoot } from "react-dom/client";
 import ScriptoraLoadingAnimation from "@/components/forge/ScriptoraLoadingAnimation";
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { NameContentDialog } from "@/components/forge/NameContentDialog";
+import { SavePromptDialog } from "@/components/prompt-library/SavePromptDialog";
 
 export default function Create() {
   const navigate = useNavigate();
@@ -62,6 +63,7 @@ export default function Create() {
   const [isThinking, setIsThinking] = useState(false);
   const [showTransitionLoader, setShowTransitionLoader] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [savePromptDialogOpen, setSavePromptDialogOpen] = useState(false);
 
   const handleSubmit = () => {
     // Validate required fields
@@ -657,13 +659,26 @@ export default function Create() {
 
           {/* Actions */}
           <div className="mt-8 pt-6 flex items-center justify-between border-t border-warm-gray/20">
-            <Button
-              variant="ghost"
-              onClick={handleCancel}
-              className="text-warm-gray hover:text-charcoal"
-            >
-              Cancel
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                onClick={handleCancel}
+                className="text-warm-gray hover:text-charcoal"
+              >
+                Cancel
+              </Button>
+              
+              {additionalContext.trim() && (
+                <Button
+                  variant="outline"
+                  onClick={() => setSavePromptDialogOpen(true)}
+                  className="gap-2 border-brass text-brass hover:bg-brass/10"
+                >
+                  <Bookmark className="w-4 h-4" />
+                  Save as Template
+                </Button>
+              )}
+            </div>
 
             <div className="text-right">
               <Button
@@ -692,6 +707,12 @@ export default function Create() {
         open={nameDialogOpen}
         onOpenChange={setNameDialogOpen}
         onConfirm={handleGenerateContent}
+      />
+      <SavePromptDialog
+        open={savePromptDialogOpen}
+        onOpenChange={setSavePromptDialogOpen}
+        promptText={additionalContext}
+        suggestedTitle={`${format} - ${product}`}
       />
     </div>
   );
