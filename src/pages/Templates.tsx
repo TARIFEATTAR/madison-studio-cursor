@@ -282,39 +282,93 @@ const TemplatesContent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F1E8] p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Mobile Filter Drawer */}
-        {isMobile && (
-          <Drawer open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
-            <DrawerContent className="h-[85vh]">
-              <div className="overflow-y-auto h-full">
-                <PromptLibrarySidebar
-                  onQuickAccessSelect={(value) => {
-                    setSelectedQuickAccess(value);
-                    setMobileFiltersOpen(false);
-                  }}
-                  onCollectionSelect={(value) => {
-                    setSelectedCollection(value);
-                    setMobileFiltersOpen(false);
-                  }}
-                  onCategorySelect={(value) => {
-                    setSelectedCategory(value);
-                    setMobileFiltersOpen(false);
-                  }}
-                  selectedQuickAccess={selectedQuickAccess}
-                  selectedCollection={selectedCollection}
-                  selectedCategory={selectedCategory}
-                />
-              </div>
-            </DrawerContent>
-          </Drawer>
-        )}
+    <div className="min-h-screen bg-[#F5F1E8]">
+      {/* Mobile Filter Drawer */}
+      {isMobile && (
+        <Drawer open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+          <DrawerContent className="h-[85vh]">
+            <div className="overflow-y-auto h-full">
+              <PromptLibrarySidebar
+                onQuickAccessSelect={(value) => {
+                  setSelectedQuickAccess(value);
+                  setMobileFiltersOpen(false);
+                }}
+                onCollectionSelect={(value) => {
+                  setSelectedCollection(value);
+                  setMobileFiltersOpen(false);
+                }}
+                onCategorySelect={(value) => {
+                  setSelectedCategory(value);
+                  setMobileFiltersOpen(false);
+                }}
+                selectedQuickAccess={selectedQuickAccess}
+                selectedCollection={selectedCollection}
+                selectedCategory={selectedCategory}
+              />
+            </div>
+          </DrawerContent>
+        </Drawer>
+      )}
 
-        <div className="flex gap-6">
-          {/* Desktop: Left Column (350px fixed width) */}
+      {/* HEADER SECTION - Full width */}
+      <div className="bg-[#FFFCF5] border-b-2 border-[#D4CFC8] px-8 py-6">
+        <div className="max-w-[1400px] mx-auto">
+          {/* Title Row */}
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h1 className="text-4xl font-serif text-[#1A1816] font-semibold">
+                Prompt Library
+              </h1>
+              <p className="text-[#6B6560] font-sans mt-1">
+                Your prompts, perfectly organized • No more scattered spreadsheets
+              </p>
+            </div>
+            <div className="flex gap-3">
+              {/* Mobile: Filters Button */}
+              {isMobile && (
+                <DrawerTrigger asChild>
+                  <Button variant="outline" size="icon" className="rounded-full">
+                    <Filter className="w-5 h-5" />
+                  </Button>
+                </DrawerTrigger>
+              )}
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowGuide(true)}
+                className="rounded-full text-[#6B6560] hover:text-[#B8956A]"
+              >
+                <HelpCircle className="w-5 h-5" />
+              </Button>
+              <Button
+                onClick={() => setShowQuickStart(true)}
+                className="gap-2 bg-gradient-to-r from-[#B8956A] to-[#D4AF37] hover:from-[#D4AF37] hover:to-[#B8956A] text-white border-0"
+              >
+                <Plus className="w-4 h-4" />
+                New Prompt
+              </Button>
+            </div>
+          </div>
+          
+          {/* Search Bar */}
+          <Input
+            type="text"
+            placeholder="Search prompts by title, description, tags, or content..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-white border-2 border-[#D4CFC8] focus:border-[#B8956A] rounded-lg px-4 py-3 text-[#2F2A26] placeholder:text-[#A8A39E] transition-all"
+          />
+        </div>
+      </div>
+
+      {/* TWO-COLUMN LAYOUT - Grid Layout */}
+      <div className="max-w-[1400px] mx-auto px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-8">
+          
+          {/* LEFT SIDEBAR - 350px fixed width on desktop */}
           {!isMobile && (
-            <aside className="w-[350px] flex-shrink-0">
+            <aside className="space-y-6">
               {!isSidebarCollapsed ? (
                 <PromptLibrarySidebar
                   onQuickAccessSelect={setSelectedQuickAccess}
@@ -338,55 +392,8 @@ const TemplatesContent = () => {
             </aside>
           )}
 
-          {/* Main Content - Right Column */}
-          <main className="flex-1 min-w-0">
-            {/* Header */}
-            <div className="flex items-start justify-between mb-6">
-              <div>
-                <h1 className="text-4xl font-serif mb-2 text-[#1A1816]">Prompt Library</h1>
-                <p className="text-[#6B6560]">
-                  Your prompts, perfectly organized • No more scattered spreadsheets
-                </p>
-              </div>
-              <div className="flex gap-3">
-                {/* Mobile: Filters Button */}
-                {isMobile && (
-                  <DrawerTrigger asChild>
-                    <Button variant="outline" size="icon" className="rounded-full">
-                      <Filter className="w-5 h-5" />
-                    </Button>
-                  </DrawerTrigger>
-                )}
-                
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowGuide(true)}
-                  className="rounded-full text-[#6B6560] hover:text-[#B8956A]"
-                >
-                  <HelpCircle className="w-5 h-5" />
-                </Button>
-                <Button
-                  onClick={() => setShowQuickStart(true)}
-                  className="gap-2 bg-gradient-to-r from-[#B8956A] to-[#D4AF37] hover:from-[#D4AF37] hover:to-[#B8956A] text-white border-0"
-                >
-                  <Plus className="w-4 h-4" />
-                  New Prompt
-                </Button>
-              </div>
-            </div>
-
-            {/* Search Bar */}
-            <div className="mb-6">
-              <Input
-                placeholder="Search prompts by title, description, tags, or content..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-white border-[#D4CFC8] text-[#1A1816] placeholder:text-[#A8A39E]"
-              />
-            </div>
-
-
+          {/* RIGHT MAIN CONTENT - Flexible width */}
+          <main>
             {/* Active Filters Display (Mobile) */}
             {isMobile && (selectedQuickAccess || selectedCollection || selectedCategory) && (
               <div className="mb-4 flex gap-2 flex-wrap">
@@ -418,11 +425,13 @@ const TemplatesContent = () => {
             )}
 
             {/* Prompt count */}
-            <p className="text-sm text-[#6B6560] mb-6">
-              {displayedPrompts.length} prompt{displayedPrompts.length !== 1 ? "s" : ""}
-            </p>
-
-            {/* Prompts Grid */}
+            <div className="mb-6">
+              <p className="text-[#2F2A26] font-sans text-lg">
+                {displayedPrompts.length} prompt{displayedPrompts.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+            
+            {/* Prompts Grid - 2 columns */}
             {isLoading ? (
               <div className="text-center py-12 text-[#6B6560]">
                 Loading prompts...
@@ -438,7 +447,7 @@ const TemplatesContent = () => {
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {displayedPrompts.map((prompt) => (
                   <EnhancedPromptCard
                     key={prompt.id}
@@ -451,6 +460,7 @@ const TemplatesContent = () => {
               </div>
             )}
           </main>
+
         </div>
       </div>
 
