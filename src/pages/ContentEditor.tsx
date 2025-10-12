@@ -185,21 +185,6 @@ export default function ContentEditorPage() {
       
       hasInitialized.current = true;
       setIsEditorReady(true);
-      
-      // Focus and position cursor at end only if there's content
-      if (contentToUse) {
-        requestAnimationFrame(() => {
-          if (element) {
-            element.focus();
-            const range = document.createRange();
-            const sel = window.getSelection();
-            range.selectNodeContents(element);
-            range.collapse(false);
-            sel?.removeAllRanges();
-            sel?.addRange(range);
-          }
-        });
-      }
     }
   }, [editableContent, plainTextToHtml]);
   
