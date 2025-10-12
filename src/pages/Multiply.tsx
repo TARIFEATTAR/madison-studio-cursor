@@ -818,14 +818,14 @@ export default function Multiply() {
                               <div className="w-12 h-12 flex items-center justify-center mb-3">
                                 <img src={type.iconImage} alt="" className="w-10 h-10 object-contain" />
                               </div>
-                            ) : (
+                            ) : Icon ? (
                               <div 
                                 className="w-10 h-10 rounded-lg flex items-center justify-center mb-3"
                                 style={{ backgroundColor: `${type.iconColor}15` }}
                               >
                                 <Icon className="w-5 h-5" style={{ color: type.iconColor }} />
                               </div>
-                            )}
+                            ) : null}
                             <h4 className="font-semibold mb-1" style={{ color: "#1A1816" }}>
                               {type.name}
                             </h4>
@@ -876,14 +876,14 @@ export default function Multiply() {
                               <div className="w-12 h-12 flex items-center justify-center mb-3">
                                 <img src={type.iconImage} alt="" className="w-10 h-10 object-contain" />
                               </div>
-                            ) : (
+                            ) : Icon ? (
                               <div 
                                 className="w-10 h-10 rounded-lg flex items-center justify-center mb-3"
                                 style={{ backgroundColor: `${type.iconColor}15` }}
                               >
                                 <Icon className="w-5 h-5" style={{ color: type.iconColor }} />
                               </div>
-                            )}
+                            ) : null}
                             <h4 className="font-semibold mb-1" style={{ color: "#1A1816" }}>
                               {type.name}
                             </h4>
