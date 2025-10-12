@@ -13,6 +13,7 @@ import { contentTypeMapping } from "@/utils/contentTypeMapping";
 
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ViewDensityToggle, ViewMode } from "@/components/library/ViewDensityToggle";
 
 import PromptLibrarySidebar from "@/components/prompt-library/PromptLibrarySidebar";
 
@@ -60,6 +61,7 @@ const TemplatesContent = () => {
   const [selectedCollection, setSelectedCollection] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("comfortable");
 
   // Clear all filters
   const clearAllFilters = () => {
@@ -406,7 +408,7 @@ const TemplatesContent = () => {
             </div>
           </div>
           
-          {/* Search Bar + Button Row */}
+          {/* Search Bar + View Density Toggle */}
           <div className="flex gap-4">
             <Input
               type="text"
@@ -415,6 +417,7 @@ const TemplatesContent = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 bg-white border-2 border-[#D4CFC8] focus:border-[#B8956A] rounded-lg px-4 py-3 text-[#2F2A26] placeholder:text-[#A8A39E] transition-all"
             />
+            <ViewDensityToggle viewMode={viewMode} onChange={setViewMode} />
           </div>
         </div>
       </div>
@@ -503,11 +506,20 @@ const TemplatesContent = () => {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-8 py-8">
+            <div 
+              className={`grid gap-6 px-8 py-8 transition-all duration-300 ${
+                viewMode === "gallery" 
+                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" 
+                  : viewMode === "comfortable" 
+                  ? "grid-cols-1 md:grid-cols-2" 
+                  : "grid-cols-1"
+              }`}
+            >
               {displayedPrompts.map((prompt) => (
                 <EnhancedPromptCard
                   key={prompt.id}
                   prompt={prompt}
+                  viewMode={viewMode}
                   onUse={() => handleUsePrompt(prompt.id)}
                   onToggleFavorite={() => handleToggleFavorite(prompt.id)}
                   onEdit={() => setSelectedPrompt(prompt)}
