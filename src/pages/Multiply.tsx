@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { EditorialDirectorSplitScreen } from "@/components/multiply/EditorialDirectorSplitScreen";
 import { SavePromptDialog } from "@/components/prompt-library/SavePromptDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useOnboarding } from "@/hooks/useOnboarding";
 import fannedPagesImage from "@/assets/fanned-pages-new.png";
 import ticketIcon from "@/assets/ticket-icon.png";
 import envelopeIcon from "@/assets/envelope-icon.png";
@@ -170,6 +172,8 @@ Noir de Nuit is part of our Signature Fragrance collection, where each scent tel
 
 export default function Multiply() {
   const { toast } = useToast();
+  const location = useLocation();
+  const { currentOrganizationId } = useOnboarding();
   const [selectedMaster, setSelectedMaster] = useState<MasterContent>(SAMPLE_CONTENT);
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
   const [derivatives, setDerivatives] = useState<DerivativeContent[]>([]);
@@ -181,6 +185,28 @@ export default function Multiply() {
   const [saveTitle, setSaveTitle] = useState("");
   const [userContent, setUserContent] = useState<MasterContent | null>(null);
   const [savePromptDialogOpen, setSavePromptDialogOpen] = useState(false);
+  const [masterContentId, setMasterContentId] = useState<string | null>(null);
+
+  // Check for content from navigation state (from ContentEditor)
+  useEffect(() => {
+    if (location.state?.contentId) {
+      const contentData = {
+        id: location.state.contentId,
+        title: location.state.title || 'Untitled',
+        contentType: location.state.contentType || 'Content',
+        collection: location.state.collection,
+        content: location.state.content || '',
+        wordCount: location.state.content ? location.state.content.split(/\s+/).filter(Boolean).length : 0,
+        charCount: location.state.content?.length || 0,
+      };
+      setUserContent(contentData);
+      setSelectedMaster(contentData);
+      setMasterContentId(location.state.contentId);
+      
+      // Clear navigation state
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Check for recent content from localStorage
   useEffect(() => {
@@ -190,7 +216,7 @@ export default function Multiply() {
         const parsed = JSON.parse(savedContent);
         if (parsed && Array.isArray(parsed) && parsed.length > 0) {
           const recent = parsed[0];
-          setUserContent({
+          const masterContentData = {
             id: recent.id || 'user-1',
             title: recent.title || 'Untitled',
             contentType: recent.contentType || 'Content',
@@ -198,16 +224,13 @@ export default function Multiply() {
             content: recent.content || '',
             wordCount: recent.wordCount || 0,
             charCount: recent.content?.length || 0,
-          });
-          setSelectedMaster({
-            id: recent.id || 'user-1',
-            title: recent.title || 'Untitled',
-            contentType: recent.contentType || 'Content',
-            collection: recent.collection,
-            content: recent.content || '',
-            wordCount: recent.wordCount || 0,
-            charCount: recent.content?.length || 0,
-          });
+          };
+          setUserContent(masterContentData);
+          setSelectedMaster(masterContentData);
+          // Store the actual DB ID for API calls
+          if (recent.id && recent.id !== 'user-1') {
+            setMasterContentId(recent.id);
+          }
         }
       } catch (e) {
         console.error('Error parsing saved content:', e);
@@ -234,56 +257,115 @@ export default function Multiply() {
   };
 
   const generateDerivatives = async () => {
-    if (selectedTypes.size === 0) return;
+    if (selectedTypes.size === 0) {
+      toast({
+        title: "No derivatives selected",
+        description: "Please select at least one derivative type",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!masterContentId) {
+      toast({
+        title: "No content selected",
+        description: "Please create or select master content first",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setIsGenerating(true);
 
-    // Simulate generation delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const newDerivatives: DerivativeContent[] = [];
-    const newExpandedTypes = new Set<string>();
-
-    selectedTypes.forEach(typeId => {
-      const type = DERIVATIVE_TYPES.find(t => t.id === typeId);
-      if (!type) return;
-
-      // Generate sample content based on type
-      let content = "";
-      if (typeId === "instagram") {
-        content = `${selectedMaster.title}\n\nExperience the perfect balance of tradition and innovation. Our master perfumers have crafted something truly special.\n\n#Fragrance #Luxury #Artisan #Scent ✨`;
-      } else if (typeId === "twitter") {
-        content = "Discover the art of scent with our latest collection. Each fragrance tells a story of craftsmanship and tradition. 🌿✨";
-      } else if (typeId === "email") {
-        content = `Subject: A whisper from the past, for you.\n\nPreview: Step into a story that spans centuries.\n\nWelcome to our world. We believe that true artistry often speaks softly, revealing its depth to those who listen closely.\n\nLike the scent of incense that lingers long after a ceremony, certain impressions stay with us. Here at our atelier, we craft fragrances not just to be worn, but to resonate, to tell a story that unfolds on your skin.`;
-      } else if (typeId === "sms") {
-        content = "New fragrance alert! Experience our latest creation. Shop now: scriptora.com";
-      } else if (typeId === "product") {
-        content = `${selectedMaster.title} - A sophisticated composition that captures the essence of modern luxury. Thoughtfully crafted with ethically sourced ingredients.`;
-      } else if (typeId === "pinterest") {
-        content = "Experience the artistry of fine fragrance. Each scent in our collection tells a unique story of craftsmanship, tradition, and rare beauty. Discover your signature scent.";
-      }
-
-      newDerivatives.push({
-        id: `derivative-${typeId}-${Date.now()}`,
-        typeId,
-        content,
-        status: "pending",
-        charCount: content.length,
+    try {
+      console.log('Calling repurpose-content with:', {
+        masterContentId,
+        derivativeTypes: Array.from(selectedTypes),
+        organizationId: currentOrganizationId
       });
 
-      newExpandedTypes.add(typeId);
-    });
+      const { data, error } = await supabase.functions.invoke('repurpose-content', {
+        body: {
+          masterContentId,
+          derivativeTypes: Array.from(selectedTypes),
+          masterContent: {
+            full_content: selectedMaster.content,
+            collection: selectedMaster.collection,
+          }
+        }
+      });
 
-    setDerivatives([...derivatives, ...newDerivatives]);
-    setExpandedTypes(newExpandedTypes);
-    setSelectedTypes(new Set());
-    setIsGenerating(false);
+      if (error) {
+        console.error('Edge function error:', error);
+        throw error;
+      }
 
-    toast({
-      title: "Derivatives Generated",
-      description: `Successfully generated ${newDerivatives.length} derivative${newDerivatives.length !== 1 ? 's' : ''}`,
-    });
+      if (!data?.success) {
+        throw new Error(data?.error || 'Failed to generate derivatives');
+      }
+
+      console.log('Successfully generated derivatives:', data.derivatives);
+
+      // Parse and display derivatives
+      const newDerivatives: DerivativeContent[] = [];
+      const newExpandedTypes = new Set<string>();
+
+      data.derivatives.forEach((derivative: any) => {
+        const typeId = derivative.asset_type;
+        const isSequence = typeId.includes('email_') && (typeId.includes('3part') || typeId.includes('5part') || typeId.includes('7part'));
+        
+        if (isSequence && derivative.platform_specs?.emails) {
+          // Email sequence derivative
+          const sequenceEmails = derivative.platform_specs.emails.map((email: any, index: number) => ({
+            id: `${derivative.id}-email-${index + 1}`,
+            sequenceNumber: index + 1,
+            subject: email.subject || '',
+            preview: email.preview || '',
+            content: email.body || '',
+            charCount: (email.body || '').length,
+          }));
+
+          newDerivatives.push({
+            id: derivative.id,
+            typeId,
+            content: derivative.generated_content,
+            status: derivative.approval_status,
+            charCount: derivative.generated_content.length,
+            isSequence: true,
+            sequenceEmails,
+          });
+        } else {
+          // Regular derivative
+          newDerivatives.push({
+            id: derivative.id,
+            typeId,
+            content: derivative.generated_content,
+            status: derivative.approval_status,
+            charCount: derivative.generated_content.length,
+          });
+        }
+
+        newExpandedTypes.add(typeId);
+      });
+
+      setDerivatives([...derivatives, ...newDerivatives]);
+      setExpandedTypes(newExpandedTypes);
+      setSelectedTypes(new Set());
+
+      toast({
+        title: "Derivatives Generated",
+        description: `Successfully generated ${newDerivatives.length} derivative${newDerivatives.length !== 1 ? 's' : ''}`,
+      });
+    } catch (error: any) {
+      console.error('Error generating derivatives:', error);
+      toast({
+        title: "Generation failed",
+        description: error.message || "Failed to generate derivatives. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const toggleExpanded = (typeId: string) => {
