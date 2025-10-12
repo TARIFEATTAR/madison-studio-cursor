@@ -119,6 +119,8 @@ export default function ContentEditorPage() {
   const isUndoRedoRef = useRef(false);
   const updateTimeoutRef = useRef<NodeJS.Timeout>();
   const hasInitialized = useRef(false);
+  const currentHtmlRef = useRef<string>("");
+  const savedSelectionRef = useRef<SavedSelection | null>(null);
 
   // HTML conversion utilities - MUST be defined before attachEditableRef
   const htmlToPlainText = useCallback((html: string): string => {
@@ -172,21 +174,32 @@ export default function ContentEditorPage() {
       .join('');
   }, []);
 
-  // Callback ref - resilient to remounts
+  // Callback ref - resilient to remounts and preserves content across layout changes
   const attachEditableRef = useCallback((element: HTMLDivElement | null) => {
     if (!element) return;
 
-    // Only hydrate once to prevent cursor jumping
-    if (!hasInitialized.current) {
-      const formatted = plainTextToHtml(editableContent || "");
-      element.innerHTML = formatted;
-      document.execCommand('defaultParagraphSeparator', false, 'p');
-      hasInitialized.current = true;
-      console.debug("[ContentEditor] Initial hydration complete");
-    }
+    // Use the latest known HTML if available, otherwise hydrate from initial plain text
+    const htmlToSet = currentHtmlRef.current || plainTextToHtml(editableContent || "");
+    element.innerHTML = htmlToSet;
+    document.execCommand('defaultParagraphSeparator', false, 'p');
 
     editableRef.current = element;
     setIsEditorReady(true);
+
+    // Restore previous selection if we saved it (e.g., before opening assistant)
+    if (savedSelectionRef.current) {
+      try {
+        restoreSelection(element, savedSelectionRef.current);
+        element.focus();
+      } catch (e) {
+        console.warn("[ContentEditor] Failed to restore selection on remount:", e);
+      } finally {
+        savedSelectionRef.current = null;
+      }
+    } else {
+      // Ensure editor keeps focus for uninterrupted typing
+      element.focus();
+    }
   }, [editableContent, plainTextToHtml]);
   
   // Auto-save using ref content
@@ -291,6 +304,7 @@ export default function ContentEditorPage() {
     if (!editableRef.current || isComposing || isUndoRedoRef.current) return;
     
     const html = editableRef.current.innerHTML;
+    currentHtmlRef.current = html;
     const saved = saveSelection(editableRef.current);
     
     // Update word count immediately (cheap, doesn't cause re-render issues)
@@ -456,9 +470,14 @@ export default function ContentEditorPage() {
     }
   };
 
-  // Toggle the assistant without modifying content
+  // Toggle the assistant without modifying content and preserve editor state
   const handleToggleAssistant = () => {
-    if (editableRef.current && updateTimeoutRef.current) {
+    if (editableRef.current) {
+      // Persist latest HTML and selection before layout changes
+      currentHtmlRef.current = editableRef.current.innerHTML;
+      savedSelectionRef.current = saveSelection(editableRef.current);
+    }
+    if (updateTimeoutRef.current) {
       clearTimeout(updateTimeoutRef.current);
     }
     setAssistantOpen((prev) => !prev);
@@ -721,7 +740,7 @@ export default function ContentEditorPage() {
               >
                 <EditorialAssistantPanel 
                   onClose={handleToggleAssistant}
-                  initialContent={editableContent}
+                  initialContent={getContentForSave()}
                 />
               </div>
             </ResizablePanel>
@@ -797,7 +816,7 @@ export default function ContentEditorPage() {
             <DrawerContent className="h-[85vh] max-w-full" style={{ backgroundColor: "#FFFCF5" }}>
               <EditorialAssistantPanel
                 onClose={handleToggleAssistant}
-                initialContent={editableContent}
+                initialContent={getContentForSave()}
               />
             </DrawerContent>
           </Drawer>
