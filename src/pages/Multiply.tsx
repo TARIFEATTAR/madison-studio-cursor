@@ -518,16 +518,7 @@ export default function Multiply() {
                     </Badge>
                   </div>
                   <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSavePromptDialogOpen(true)}
-                      style={{ borderColor: "#B8956A", color: "#B8956A" }}
-                      title="Save as prompt template"
-                    >
-                      <Bookmark className="w-4 h-4 mr-2" />
-                      Template
-                    </Button>
+                    {/* Removed confusing "Template" button - master content is finished, not a prompt template */}
                     <Button
                       variant="outline"
                       size="sm"
