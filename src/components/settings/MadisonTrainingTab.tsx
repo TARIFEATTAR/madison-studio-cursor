@@ -4,8 +4,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, Loader2, Lock } from "lucide-react";
+import { Sparkles, Loader2, Lock, Upload, FileText, Trash2, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card } from "@/components/ui/card";
 
 interface MadisonConfig {
   persona?: string;
@@ -16,12 +17,23 @@ interface MadisonConfig {
   voice_spectrum?: string;
 }
 
+interface TrainingDocument {
+  id: string;
+  file_name: string;
+  file_type: string;
+  file_size: number;
+  processing_status: string;
+  created_at: string;
+}
+
 export function MadisonTrainingTab() {
   const { toast } = useToast();
   const [config, setConfig] = useState<MadisonConfig>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [documents, setDocuments] = useState<TrainingDocument[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     checkSuperAdminStatus();
@@ -50,6 +62,7 @@ export function MadisonTrainingTab() {
         setIsSuperAdmin(!!data);
         if (data) {
           loadMadisonConfig();
+          loadDocuments();
         }
       }
     } catch (error) {
@@ -85,6 +98,119 @@ export function MadisonTrainingTab() {
         forbidden_phrases: data.forbidden_phrases || '',
         quality_standards: data.quality_standards || '',
         voice_spectrum: data.voice_spectrum || '',
+      });
+    }
+  };
+
+  const loadDocuments = async () => {
+    const { data, error } = await supabase
+      .from('madison_training_documents')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error loading documents:', error);
+      return;
+    }
+
+    if (data) {
+      setDocuments(data);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (file.type !== 'application/pdf') {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a PDF document",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Upload to storage
+      const fileName = `${Date.now()}-${file.name}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('madison-training-docs')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('madison-training-docs')
+        .getPublicUrl(fileName);
+
+      // Create database record
+      const { error: dbError } = await supabase
+        .from('madison_training_documents')
+        .insert({
+          file_name: file.name,
+          file_url: publicUrl,
+          file_type: file.type,
+          file_size: file.size,
+          uploaded_by: user.id,
+        });
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: "Document uploaded",
+        description: "Training document has been added successfully",
+      });
+
+      loadDocuments();
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload training document",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      event.target.value = '';
+    }
+  };
+
+  const handleDeleteDocument = async (docId: string, fileName: string) => {
+    try {
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from('madison-training-docs')
+        .remove([fileName]);
+
+      if (storageError) throw storageError;
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('madison_training_documents')
+        .delete()
+        .eq('id', docId);
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: "Document deleted",
+        description: "Training document has been removed",
+      });
+
+      loadDocuments();
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast({
+        title: "Delete failed",
+        description: "Failed to delete training document",
+        variant: "destructive",
       });
     }
   };
@@ -276,6 +402,78 @@ export function MadisonTrainingTab() {
             className="min-h-32 font-mono text-sm"
           />
         </div>
+      </div>
+
+      {/* Training Documents Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-medium">Training Documents</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Upload PDF documents to train Madison's knowledge and writing style
+            </p>
+          </div>
+          <div>
+            <input
+              type="file"
+              id="doc-upload"
+              accept="application/pdf"
+              onChange={handleFileUpload}
+              className="hidden"
+              disabled={isUploading}
+            />
+            <Button
+              onClick={() => document.getElementById('doc-upload')?.click()}
+              disabled={isUploading}
+              variant="outline"
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload PDF
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {documents.length > 0 ? (
+          <div className="space-y-2">
+            {documents.map((doc) => (
+              <Card key={doc.id} className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 flex-1">
+                    <FileText className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{doc.file_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(doc.file_size / 1024 / 1024).toFixed(2)} MB • 
+                        {doc.processing_status === 'completed' ? ' Processed' : ' Processing...'}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteDocument(doc.id, doc.file_name)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card className="p-8 text-center">
+            <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+            <p className="text-muted-foreground">No training documents uploaded yet</p>
+          </Card>
+        )}
       </div>
 
       <div className="flex justify-end pt-4 border-t">
