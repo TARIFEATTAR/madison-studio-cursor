@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "react-router-dom";
-import { Sparkles, ArrowRight, CheckCircle2, PlayCircle } from "lucide-react";
+import { Sparkles, ArrowRight, CheckCircle2, PlayCircle, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import archivesIcon from "@/assets/archives-icon-new.png";
 import createIcon from "@/assets/create-icon.png";
 import multiplyIcon from "@/assets/multiply-icon.png";
@@ -20,6 +21,7 @@ const Landing = () => {
   const rotatingWords = ["Narrative", "Story", "Voice", "Message", "Identity", "Legacy"];
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -102,15 +104,81 @@ const Landing = () => {
             </div>
 
             <div className="flex items-center gap-4">
+              {/* Mobile Menu */}
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="md:hidden text-charcoal hover:text-aged-brass"
+                  >
+                    <Menu className="w-6 h-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="bg-vellum border-l border-aged-brass/20">
+                  <div className="flex flex-col gap-6 mt-8">
+                    {/* Navigation Links */}
+                    <a 
+                      href="#features" 
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="font-sans text-charcoal text-lg transition-all duration-300 hover:text-aged-brass"
+                    >
+                      Features
+                    </a>
+                    <a 
+                      href="#how-it-works" 
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="font-sans text-charcoal text-lg transition-all duration-300 hover:text-aged-brass"
+                    >
+                      How It Works
+                    </a>
+                    
+                    {/* Divider */}
+                    <div className="border-t border-aged-brass/20 my-4"></div>
+                    
+                    {/* Auth Buttons */}
+                    <div className="flex flex-col gap-3">
+                      {user ? (
+                        <Button asChild variant="brass" className="w-full">
+                          <Link to="/dashboard">Go to App</Link>
+                        </Button>
+                      ) : (
+                        <>
+                          <Link
+                            to="/auth"
+                            className="font-sans text-charcoal text-center py-3 transition-all duration-300 hover:text-aged-brass"
+                          >
+                            Sign In
+                          </Link>
+                          <Button 
+                            asChild 
+                            className="w-full text-ink-black font-serif font-semibold transition-all duration-300" 
+                            style={{
+                              background: 'linear-gradient(135deg, #B8956A 0%, #D4AF37 100%)',
+                              padding: '14px 36px',
+                              borderRadius: '8px',
+                              boxShadow: '0 4px 12px rgba(184, 149, 106, 0.3)'
+                            }}
+                          >
+                            <Link to="/auth">Get Started</Link>
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+
+              {/* Desktop Auth Buttons */}
               {user ? (
-                <Button asChild variant="brass">
+                <Button asChild variant="brass" className="hidden md:inline-flex">
                   <Link to="/dashboard">Go to App</Link>
                 </Button>
               ) : (
                 <>
                   <Link
                     to="/auth"
-                    className="hidden sm:inline-flex font-sans text-charcoal transition-all duration-300 hover:text-aged-brass"
+                    className="hidden md:inline-flex font-sans text-charcoal transition-all duration-300 hover:text-aged-brass"
                     style={{
                       fontSize: '16px',
                       fontWeight: 500,
@@ -121,7 +189,7 @@ const Landing = () => {
                   </Link>
                   <Button 
                     asChild 
-                    className="text-ink-black font-serif font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(184,149,106,0.45)] active:translate-y-0 active:shadow-[0_2px_8px_rgba(184,149,106,0.3)]" 
+                    className="hidden md:inline-flex text-ink-black font-serif font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(184,149,106,0.45)] active:translate-y-0 active:shadow-[0_2px_8px_rgba(184,149,106,0.3)]" 
                     style={{
                       background: 'linear-gradient(135deg, #B8956A 0%, #D4AF37 100%)',
                       padding: '14px 36px',
