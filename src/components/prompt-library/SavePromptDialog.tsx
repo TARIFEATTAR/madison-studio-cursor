@@ -7,12 +7,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { X, Bookmark } from "lucide-react";
+import { X, Bookmark, Sparkles, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useToast } from "@/hooks/use-toast";
 import { getAllCategories } from "@/config/categoryTemplates";
 import { getCollectionTemplatesForIndustry } from "@/config/collectionTemplates";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface SavePromptDialogProps {
   open: boolean;
@@ -40,9 +45,28 @@ export function SavePromptDialog({
   const [tags, setTags] = useState<string[]>([]);
   const [isTemplate, setIsTemplate] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [editedPromptText, setEditedPromptText] = useState(promptText);
+  const [showPlaceholderSuggestions, setShowPlaceholderSuggestions] = useState(false);
 
   const categories = getAllCategories();
   const [availableCollections, setAvailableCollections] = useState<any[]>([]);
+
+  // Common placeholder suggestions
+  const placeholderSuggestions = [
+    { label: "Product Name", value: "{{PRODUCT_NAME}}" },
+    { label: "Content Type", value: "{{CONTENT_TYPE}}" },
+    { label: "Tone", value: "{{TONE}}" },
+    { label: "Purpose", value: "{{PURPOSE}}" },
+    { label: "Key Elements", value: "{{KEY_ELEMENTS}}" },
+    { label: "Target Audience", value: "{{TARGET_AUDIENCE}}" },
+    { label: "Word Count", value: "{{WORD_COUNT}}" },
+    { label: "Custom Instructions", value: "{{CUSTOM_INSTRUCTIONS}}" },
+  ];
+
+  // Update edited prompt text when promptText prop changes
+  useEffect(() => {
+    setEditedPromptText(promptText);
+  }, [promptText]);
 
   // Load collections from database
   useEffect(() => {
@@ -80,8 +104,14 @@ export function SavePromptDialog({
       setTags([]);
       setTagInput("");
       setIsTemplate(true);
+      setEditedPromptText(promptText);
     }
-  }, [open]);
+  }, [open, promptText]);
+
+  const handleInsertPlaceholder = (placeholder: string) => {
+    setEditedPromptText(prev => prev + " " + placeholder);
+    setShowPlaceholderSuggestions(false);
+  };
 
   const handleAddTag = () => {
     const trimmedTag = tagInput.trim();
@@ -133,7 +163,7 @@ export function SavePromptDialog({
       // Store title in the title column and description in meta_instructions
       const promptData: any = {
         title: title.trim(),
-        prompt_text: promptText,
+        prompt_text: editedPromptText, // Use edited version with placeholders
         content_type: contentType,
         collection: selectedCollection || "cadence",
         organization_id: currentOrganizationId,
@@ -144,6 +174,7 @@ export function SavePromptDialog({
           description: description.trim() || null,
           user_created: true,
           saved_from: "manual",
+          has_placeholders: /\{\{[A-Z_]+\}\}/.test(editedPromptText),
         },
         times_used: 0,
       };
@@ -185,16 +216,55 @@ export function SavePromptDialog({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Prompt Preview */}
+          {/* Prompt Preview with Edit */}
           <div>
-            <Label className="text-sm font-medium text-ink-black mb-2 block">
-              Prompt Preview
-            </Label>
-            <div className="bg-vellum-cream border border-warm-gray/20 rounded-lg p-4 max-h-32 overflow-y-auto">
-              <p className="text-sm text-warm-gray whitespace-pre-wrap font-mono">
-                {promptText}
-              </p>
+            <div className="flex items-center justify-between mb-2">
+              <Label className="text-sm font-medium text-ink-black">
+                Prompt Text
+              </Label>
+              <Popover open={showPlaceholderSuggestions} onOpenChange={setShowPlaceholderSuggestions}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1 text-xs border-[#B8956A] text-[#B8956A] hover:bg-[#B8956A]/10"
+                  >
+                    <Plus className="w-3 h-3" />
+                    Add Placeholder
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-2 bg-[#FFFCF5]" align="end">
+                  <div className="space-y-1">
+                    <p className="text-xs text-[#6B6560] px-2 py-1 font-medium">
+                      Click to insert:
+                    </p>
+                    {placeholderSuggestions.map((suggestion) => (
+                      <button
+                        key={suggestion.value}
+                        onClick={() => handleInsertPlaceholder(suggestion.value)}
+                        className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-[#B8956A]/10 transition-colors flex items-center justify-between group"
+                      >
+                        <span className="text-[#2F2A26]">{suggestion.label}</span>
+                        <code className="text-xs text-[#B8956A] opacity-60 group-hover:opacity-100">
+                          {suggestion.value}
+                        </code>
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
+            <Textarea
+              value={editedPromptText}
+              onChange={(e) => setEditedPromptText(e.target.value)}
+              className="bg-parchment-white border-warm-gray/20 min-h-[120px] font-mono text-sm"
+              placeholder="Enter your prompt text here. Use {{PLACEHOLDER}} syntax for dynamic values."
+            />
+            <p className="text-xs text-[#6B6560] mt-1">
+              <Sparkles className="w-3 h-3 inline mr-1" />
+              Tip: Add placeholders like <code className="bg-[#B8956A]/10 px-1 rounded">{"{{PRODUCT_NAME}}"}</code> to make this template reusable
+            </p>
           </div>
 
           {/* Title */}

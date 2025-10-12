@@ -23,6 +23,7 @@ import { PromptWizard, WizardData } from "@/components/prompt-library/PromptWiza
 import { ImportDialog } from "@/components/prompt-library/ImportDialog";
 import { OrganizationGuide } from "@/components/prompt-library/OrganizationGuide";
 import { MadisonPanel } from "@/components/prompt-library/MadisonPanel";
+import { PlaceholderReplacementDialog } from "@/components/prompt-library/PlaceholderReplacementDialog";
 import { usePromptCounts } from "@/hooks/usePromptCounts";
 export interface Prompt {
   id: string;
@@ -72,6 +73,8 @@ const TemplatesContent = () => {
   const [showImport, setShowImport] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [showMadison, setShowMadison] = useState(false);
+  const [showPlaceholderDialog, setShowPlaceholderDialog] = useState(false);
+  const [pendingPrompt, setPendingPrompt] = useState<Prompt | null>(null);
 
   // Get counts for filter cards
   const { data: counts } = usePromptCounts(currentOrganizationId);
@@ -169,24 +172,58 @@ const TemplatesContent = () => {
   };
 
   const generatePromptFromWizard = (data: WizardData): string => {
+    // Generate prompt with placeholders for reusability
     const parts = [];
     
-    parts.push(`Create ${data.contentType} content with the following specifications:`);
-    parts.push(`\nPurpose: ${data.purpose}`);
-    parts.push(`\nTone: ${data.tone}`);
-    parts.push(`\nKey Elements to Include: ${data.keyElements}`);
+    // Use placeholders for dynamic content
+    parts.push(`Create {{CONTENT_TYPE}} content with the following specifications:`);
+    parts.push(`\nPurpose: {{PURPOSE}}`);
+    parts.push(`\nTone: {{TONE}}`);
+    parts.push(`\nKey Elements to Include: {{KEY_ELEMENTS}}`);
     
     if (data.constraints) {
-      parts.push(`\nConstraints: ${data.constraints}`);
+      parts.push(`\nConstraints: {{CONSTRAINTS}}`);
     }
     
-    return parts.join("\n");
+    // Store the original wizard data as default placeholder values in the prompt metadata
+    // This allows users to see what was originally specified
+    const promptWithDefaults = parts.join("\n");
+    
+    // For the initial save, we'll replace placeholders with actual values
+    // but keep the placeholder structure for future reuse
+    return promptWithDefaults
+      .replace(/\{\{CONTENT_TYPE\}\}/g, data.contentType)
+      .replace(/\{\{PURPOSE\}\}/g, data.purpose)
+      .replace(/\{\{TONE\}\}/g, data.tone)
+      .replace(/\{\{KEY_ELEMENTS\}\}/g, data.keyElements)
+      .replace(/\{\{CONSTRAINTS\}\}/g, data.constraints || "None specified");
   };
 
   const handleUsePrompt = async (promptId: string) => {
     const prompt = allPrompts.find(p => p.id === promptId);
     if (!prompt) return;
 
+    // Check if prompt contains placeholders
+    const hasPlaceholders = /\{\{[A-Z_]+\}\}/.test(prompt.prompt_text);
+    
+    if (hasPlaceholders) {
+      // Show placeholder dialog first
+      setPendingPrompt(prompt);
+      setShowPlaceholderDialog(true);
+    } else {
+      // No placeholders, proceed directly
+      await proceedWithPrompt(prompt, prompt.prompt_text);
+    }
+  };
+
+  const handlePlaceholderConfirm = async (replacedText: string, placeholderValues: Record<string, string>) => {
+    if (!pendingPrompt) return;
+
+    await proceedWithPrompt(pendingPrompt, replacedText);
+    setPendingPrompt(null);
+  };
+
+  const proceedWithPrompt = async (prompt: Prompt, finalPromptText: string) => {
     try {
       // Update usage tracking
       await supabase
@@ -195,14 +232,19 @@ const TemplatesContent = () => {
           times_used: (prompt.times_used || 0) + 1,
           last_used_at: new Date().toISOString(),
         })
-        .eq("id", promptId);
+        .eq("id", prompt.id);
 
       // Invalidate query to refresh data
       queryClient.invalidateQueries({ queryKey: ["templates"] });
 
-      // Navigate to Create with prompt data
+      // Navigate to Create with prompt data (using the replaced text)
       navigate("/create", {
-        state: { prompt },
+        state: { 
+          prompt: {
+            ...prompt,
+            prompt_text: finalPromptText // Use the customized version
+          }
+        },
       });
 
       toast({
@@ -503,6 +545,16 @@ const TemplatesContent = () => {
       <OrganizationGuide open={showGuide} onOpenChange={setShowGuide} />
 
       <MadisonPanel open={showMadison} onOpenChange={setShowMadison} />
+
+      {/* Placeholder Replacement Dialog */}
+      {pendingPrompt && (
+        <PlaceholderReplacementDialog
+          open={showPlaceholderDialog}
+          onOpenChange={setShowPlaceholderDialog}
+          promptText={pendingPrompt.prompt_text}
+          onConfirm={handlePlaceholderConfirm}
+        />
+      )}
 
       {/* Detail Modal */}
       {selectedPrompt && (

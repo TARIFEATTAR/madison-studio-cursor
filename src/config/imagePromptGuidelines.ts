@@ -106,18 +106,24 @@ export type ImagePromptType = keyof typeof IMAGE_PROMPT_TEMPLATES;
 
 /**
  * Build a complete image generation prompt based on product details and template
+ * Supports placeholders for reusability: {{PRODUCT_NAME}}, {{CUSTOM_INSTRUCTIONS}}
  */
 export function buildImagePrompt(
   productName: string,
   template: ImagePromptType,
-  customInstructions?: string
+  customInstructions?: string,
+  usePlaceholders: boolean = false
 ): string {
   const guideline = IMAGE_PROMPT_TEMPLATES[template];
   
   let prompt = guideline.prompt;
   
-  // Inject product name into the prompt
-  prompt = prompt.replace(/attar bottle/gi, `${productName} attar bottle`);
+  // Use placeholder or actual product name
+  if (usePlaceholders) {
+    prompt = prompt.replace(/attar bottle/gi, `{{PRODUCT_NAME}} attar bottle`);
+  } else {
+    prompt = prompt.replace(/attar bottle/gi, `${productName} attar bottle`);
+  }
   
   // Add technical specifications
   prompt += `\n\nAspect Ratio: ${guideline.aspectRatio}`;
@@ -125,8 +131,10 @@ export function buildImagePrompt(
   prompt += `\nComposition: ${guideline.composition}`;
   prompt += `\nStyle: ${guideline.style}`;
   
-  // Add custom instructions if provided
-  if (customInstructions) {
+  // Add custom instructions or placeholder
+  if (usePlaceholders) {
+    prompt += `\n\nAdditional Instructions: {{CUSTOM_INSTRUCTIONS}}`;
+  } else if (customInstructions) {
     prompt += `\n\nAdditional Instructions: ${customInstructions}`;
   }
   
