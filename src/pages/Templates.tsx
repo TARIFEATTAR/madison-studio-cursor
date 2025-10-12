@@ -290,12 +290,9 @@ const Templates = () => {
         {/* Global Navigation */}
         <AppSidebar />
 
-        {/* Desktop: Fixed Filter Sidebar */}
+        {/* Desktop: Filter Sidebar */}
         {!isMobile && (
-          <div 
-            className="fixed top-0 h-screen z-[10] w-80 transition-[left] duration-200 ease-linear pt-8"
-            style={{ left: filterLeftOffset }}
-          >
+          <div className="w-80 border-r border-border bg-background">
             <PromptLibrarySidebar
               onQuickAccessSelect={setSelectedQuickAccess}
               onCollectionSelect={setSelectedCollection}
@@ -307,10 +304,7 @@ const Templates = () => {
           </div>
         )}
 
-        <main 
-          className="flex-1 p-8" 
-          style={{ marginLeft: isMobile ? 0 : `${contentLeftOffset}px` }}
-        >
+        <main className="flex-1 p-8">
           <div className="max-w-6xl mx-auto">
             {/* Header */}
             <div className="mb-6">
