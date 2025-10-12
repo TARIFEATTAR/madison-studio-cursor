@@ -26,8 +26,32 @@ import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const queryClient = new QueryClient();
+
+const RouteErrorBoundary = ({ children, routeName }: { children: React.ReactNode; routeName: string }) => {
+  const navigate = useNavigate();
+  
+  return (
+    <ErrorBoundary
+      fallback={
+        <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-8">
+          <AlertCircle className="h-12 w-12 text-destructive" />
+          <h2 className="text-2xl font-bold">Error in {routeName}</h2>
+          <p className="text-muted-foreground">Something went wrong on this page.</p>
+          <div className="flex gap-3">
+            <Button onClick={() => window.location.reload()}>Reload Page</Button>
+            <Button variant="outline" onClick={() => navigate('/dashboard')}>Go to Dashboard</Button>
+          </div>
+        </div>
+      }
+    >
+      {children}
+    </ErrorBoundary>
+  );
+};
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -84,16 +108,16 @@ const AppContent = () => {
             <main className="flex-1 overflow-auto pt-0 md:pt-0">
               <div className="pt-16 md:pt-0">
                 <Routes>
-                  <Route path="/" element={<ProtectedRoute><RootRoute /></ProtectedRoute>} />
-                  <Route path="/dashboard" element={<ProtectedRoute><DashboardNew /></ProtectedRoute>} />
-                  <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
-                  <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
-                  <Route path="/editor" element={<ProtectedRoute><ContentEditor /></ProtectedRoute>} />
-                  <Route path="/multiply" element={<ProtectedRoute><Multiply /></ProtectedRoute>} />
-                  <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
-                  <Route path="/schedule" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
-                  <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                  <Route path="/meet-madison" element={<ProtectedRoute><MeetMadison /></ProtectedRoute>} />
+                  <Route path="/" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><RootRoute /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/dashboard" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><DashboardNew /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/library" element={<ProtectedRoute><RouteErrorBoundary routeName="Library"><Library /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/create" element={<ProtectedRoute><RouteErrorBoundary routeName="Create"><Create /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Editor"><ContentEditor /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/multiply" element={<ProtectedRoute><RouteErrorBoundary routeName="Multiply"><Multiply /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/templates" element={<ProtectedRoute><RouteErrorBoundary routeName="Templates"><Templates /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/meet-madison" element={<ProtectedRoute><RouteErrorBoundary routeName="Meet Madison"><MeetMadison /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>
@@ -104,17 +128,17 @@ const AppContent = () => {
         <>
           <Routes>
             <Route path="/auth" element={<Auth />} />
-            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+            <Route path="/onboarding" element={<ProtectedRoute><RouteErrorBoundary routeName="Onboarding"><Onboarding /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<ProtectedRoute><DashboardNew /></ProtectedRoute>} />
-            <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
-            <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
-            <Route path="/editor" element={<ProtectedRoute><ContentEditor /></ProtectedRoute>} />
-            <Route path="/multiply" element={<ProtectedRoute><Multiply /></ProtectedRoute>} />
-            <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
-            <Route path="/schedule" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/meet-madison" element={<ProtectedRoute><MeetMadison /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><DashboardNew /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/library" element={<ProtectedRoute><RouteErrorBoundary routeName="Library"><Library /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/create" element={<ProtectedRoute><RouteErrorBoundary routeName="Create"><Create /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Editor"><ContentEditor /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/multiply" element={<ProtectedRoute><RouteErrorBoundary routeName="Multiply"><Multiply /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/templates" element={<ProtectedRoute><RouteErrorBoundary routeName="Templates"><Templates /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/meet-madison" element={<ProtectedRoute><RouteErrorBoundary routeName="Meet Madison"><MeetMadison /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </>

@@ -16,7 +16,7 @@ const Index = () => {
       const forceRenderTimeout = setTimeout(() => {
         console.warn("[Index] Loading timeout reached - forcing Landing page render");
         if (!user) {
-          window.location.href = '/';
+          navigate('/');
         }
       }, 3000); // Reduced from 5000ms
       return () => clearTimeout(forceRenderTimeout);
