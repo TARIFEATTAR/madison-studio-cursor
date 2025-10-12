@@ -368,15 +368,17 @@ const TemplatesContent = () => {
           
           {/* LEFT COLUMN - 350px fixed width on desktop, filters only */}
           {!isMobile && (
-            <aside className="w-[350px] flex-shrink-0">
-              <PromptLibrarySidebar
-                onQuickAccessSelect={setSelectedQuickAccess}
-                onCollectionSelect={setSelectedCollection}
-                onCategorySelect={setSelectedCategory}
-                selectedQuickAccess={selectedQuickAccess}
-                selectedCollection={selectedCollection}
-                selectedCategory={selectedCategory}
-              />
+            <aside className="w-[350px] flex-shrink-0 overflow-visible">
+              <div className="space-y-6">
+                <PromptLibrarySidebar
+                  onQuickAccessSelect={setSelectedQuickAccess}
+                  onCollectionSelect={setSelectedCollection}
+                  onCategorySelect={setSelectedCategory}
+                  selectedQuickAccess={selectedQuickAccess}
+                  selectedCollection={selectedCollection}
+                  selectedCategory={selectedCategory}
+                />
+              </div>
             </aside>
           )}
 
