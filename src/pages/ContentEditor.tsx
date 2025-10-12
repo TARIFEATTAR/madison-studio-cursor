@@ -145,13 +145,65 @@ export default function ContentEditorPage() {
     }
   }, [editableContent]);
   
+  // HTML conversion utilities
+  const htmlToPlainText = useCallback((html: string): string => {
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    
+    // Convert block elements to proper line breaks
+    // Convert <p> and <div> to double line breaks for paragraphs
+    let text = temp.innerHTML
+      .replace(/<\/p>/gi, '\n\n')
+      .replace(/<p[^>]*>/gi, '')
+      .replace(/<\/div>/gi, '\n\n')
+      .replace(/<div[^>]*>/gi, '')
+      // Convert <br> to single line break
+      .replace(/<br\s*\/?>/gi, '\n')
+      // Convert headings with spacing
+      .replace(/<\/h[1-6]>/gi, '\n\n')
+      .replace(/<h[1-6][^>]*>/gi, '')
+      // Convert list items
+      .replace(/<\/li>/gi, '\n')
+      .replace(/<li[^>]*>/gi, '• ')
+      // Remove all other HTML tags
+      .replace(/<[^>]+>/g, '');
+    
+    // Clean up the text
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = text;
+    text = tempDiv.textContent || tempDiv.innerText || '';
+    
+    // Clean up excessive line breaks (more than 2 consecutive)
+    text = text.replace(/\n{3,}/g, '\n\n');
+    
+    return text.trim();
+  }, []);
+
+  const plainTextToHtml = useCallback((text: string): string => {
+    if (!text) return '<p><br></p>';
+    
+    // Split by double line breaks for paragraphs
+    const paragraphs = text.split(/\n\n+/);
+    
+    return paragraphs
+      .map(para => {
+        // Handle empty paragraphs
+        if (!para.trim()) return '<p><br></p>';
+        
+        // Replace single line breaks within paragraphs with <br>
+        const content = para.replace(/\n/g, '<br>');
+        return `<p>${content}</p>`;
+      })
+      .join('');
+  }, []);
+  
   // Auto-save using ref content
   const getContentForSave = useCallback(() => {
     if (editableRef.current) {
       return htmlToPlainText(editableRef.current.innerHTML);
     }
     return editableContent;
-  }, [editableContent]);
+  }, [editableContent, htmlToPlainText]);
   
   const { saveStatus, forceSave } = useAutoSave({
     content: getContentForSave(),
@@ -249,57 +301,6 @@ export default function ContentEditorPage() {
   }, [editableContent]);
 
   // History is now updated directly in updateContentFromEditable
-
-  const htmlToPlainText = (html: string): string => {
-    const temp = document.createElement('div');
-    temp.innerHTML = html;
-    
-    // Convert block elements to proper line breaks
-    // Convert <p> and <div> to double line breaks for paragraphs
-    let text = temp.innerHTML
-      .replace(/<\/p>/gi, '\n\n')
-      .replace(/<p[^>]*>/gi, '')
-      .replace(/<\/div>/gi, '\n\n')
-      .replace(/<div[^>]*>/gi, '')
-      // Convert <br> to single line break
-      .replace(/<br\s*\/?>/gi, '\n')
-      // Convert headings with spacing
-      .replace(/<\/h[1-6]>/gi, '\n\n')
-      .replace(/<h[1-6][^>]*>/gi, '')
-      // Convert list items
-      .replace(/<\/li>/gi, '\n')
-      .replace(/<li[^>]*>/gi, '• ')
-      // Remove all other HTML tags
-      .replace(/<[^>]+>/g, '');
-    
-    // Clean up the text
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = text;
-    text = tempDiv.textContent || tempDiv.innerText || '';
-    
-    // Clean up excessive line breaks (more than 2 consecutive)
-    text = text.replace(/\n{3,}/g, '\n\n');
-    
-    return text.trim();
-  };
-
-  const plainTextToHtml = (text: string): string => {
-    if (!text) return '<p><br></p>';
-    
-    // Split by double line breaks for paragraphs
-    const paragraphs = text.split(/\n\n+/);
-    
-    return paragraphs
-      .map(para => {
-        // Handle empty paragraphs
-        if (!para.trim()) return '<p><br></p>';
-        
-        // Replace single line breaks within paragraphs with <br>
-        const content = para.replace(/\n/g, '<br>');
-        return `<p>${content}</p>`;
-      })
-      .join('');
-  };
 
   const updateContentFromEditable = () => {
     if (!editableRef.current || isComposing || isUndoRedoRef.current) return;
