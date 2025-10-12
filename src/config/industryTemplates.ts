@@ -28,5 +28,9 @@ export function getIndustryTemplate(industryKey: string): IndustryTemplate {
 }
 
 export function getIndustryOptions() {
-  return [{ value: 'luxury_beauty', label: 'Home Fragrance' }];
+  return [
+    { value: 'skincare', label: 'Skin Care' },
+    { value: 'perfume', label: 'Perfume' },
+    { value: 'home_fragrance', label: 'Home Fragrance' }
+  ];
 }
