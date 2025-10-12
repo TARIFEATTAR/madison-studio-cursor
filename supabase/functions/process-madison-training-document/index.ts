@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
-import { encode as base64Encode } from "https://deno.land/std@0.190.0/encoding/base64.ts";
+// @ts-ignore - pdf-parse types
+import pdfParse from "https://esm.sh/pdf-parse@1.1.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -66,49 +67,31 @@ serve(async (req) => {
       throw new Error(`Unsupported file type: ${doc.file_type}`);
     }
 
+    // Extract text from PDF using pdf-parse
+    console.log("Parsing PDF to extract text...");
     const arrayBuffer = await fileData.arrayBuffer();
-    const base64 = base64Encode(arrayBuffer);
-
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
-
-    console.log("Calling Lovable AI gateway for text extraction...");
-    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: "You are a precise extractor. Return only the raw text content from the provided PDF. No commentary." },
-          {
-            role: "user",
-            content: [
-              { type: "text", text: "Extract all textual content from this PDF, preserving readable structure where possible." },
-              { type: "image_url", image_url: { url: `data:application/pdf;base64,${base64}` } },
-            ],
-          },
-        ],
-      }),
-    });
-
-    if (!aiResp.ok) {
-      const t = await aiResp.text();
-      throw new Error(`AI extraction failed: ${aiResp.status} - ${t}`);
+    const buffer = new Uint8Array(arrayBuffer);
+    
+    const pdfData = await pdfParse(buffer);
+    const extracted = pdfData.text;
+    
+    if (!extracted || extracted.trim().length < 20) {
+      throw new Error("No text content found in PDF");
     }
+    
+    console.log("PDF text extracted successfully. Characters:", extracted.length);
 
-    const aiData = await aiResp.json();
-    const extracted = aiData.choices?.[0]?.message?.content as string | undefined;
-    if (!extracted || extracted.length < 20) throw new Error("No text extracted from PDF");
-
+    // Save extracted content
     await supabase
       .from("madison_training_documents")
-      .update({ extracted_content: extracted, processing_status: "completed", updated_at: new Date().toISOString() })
+      .update({ 
+        extracted_content: extracted, 
+        processing_status: "completed", 
+        updated_at: new Date().toISOString() 
+      })
       .eq("id", documentId);
 
-    console.log("Extraction complete. Characters:", extracted.length);
+    console.log("Document processing complete!");
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
