@@ -176,11 +176,13 @@ export default function ContentEditorPage() {
   const attachEditableRef = useCallback((element: HTMLDivElement | null) => {
     if (!element) return;
 
-    // Hydrate DOM from current state if empty or different (avoids blank editor on remount)
-    const formatted = plainTextToHtml(editableContent || "");
-    if (element.innerHTML.trim() !== formatted.trim()) {
+    // Only hydrate once to prevent cursor jumping
+    if (!hasInitialized.current) {
+      const formatted = plainTextToHtml(editableContent || "");
       element.innerHTML = formatted;
       document.execCommand('defaultParagraphSeparator', false, 'p');
+      hasInitialized.current = true;
+      console.debug("[ContentEditor] Initial hydration complete");
     }
 
     editableRef.current = element;
@@ -281,14 +283,7 @@ export default function ContentEditorPage() {
 
   // NO LONGER NEEDED - content is set once in attachEditableRef
 
-  // Calculate word count
-  useEffect(() => {
-    if (editableRef.current) {
-      const text = editableRef.current.innerText;
-      const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-      setWordCount(words.length);
-    }
-  }, [editableContent]);
+  // Word count is now updated directly in updateContentFromEditable
 
   // History is now updated directly in updateContentFromEditable
 
@@ -298,28 +293,29 @@ export default function ContentEditorPage() {
     const html = editableRef.current.innerHTML;
     const saved = saveSelection(editableRef.current);
     
+    // Update word count immediately (cheap, doesn't cause re-render issues)
+    const text = editableRef.current.innerText;
+    const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+    setWordCount(words.length);
+    
     // Update history immediately (no state update during typing)
     if (!isUndoRedoRef.current) {
-      const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
-      newHistory.push({ html, selection: saved });
+      const lastEntry = historyRef.current[historyRef.current.length - 1];
       
-      if (newHistory.length > 50) {
-        newHistory.shift();
-      } else {
-        historyIndexRef.current++;
+      // Only push if content actually changed
+      if (!lastEntry || lastEntry.html !== html) {
+        const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
+        newHistory.push({ html, selection: saved });
+        
+        if (newHistory.length > 50) {
+          newHistory.shift();
+        } else {
+          historyIndexRef.current++;
+        }
+        historyRef.current = newHistory;
+        console.debug("[ContentEditor] History pushed, index:", historyIndexRef.current);
       }
-      historyRef.current = newHistory;
     }
-    
-    // Debounced state update for autosave only
-    if (updateTimeoutRef.current) {
-      clearTimeout(updateTimeoutRef.current);
-    }
-    
-    updateTimeoutRef.current = setTimeout(() => {
-      const plainText = htmlToPlainText(html);
-      setEditableContent(plainText);
-    }, 500);
   };
 
   const handleUndo = () => {
@@ -328,16 +324,16 @@ export default function ContentEditorPage() {
       historyIndexRef.current--;
       const entry = historyRef.current[historyIndexRef.current];
       
+      console.debug("[ContentEditor] Undo - setting innerHTML, index:", historyIndexRef.current);
       editableRef.current.innerHTML = entry.html;
       
       requestAnimationFrame(() => {
         if (editableRef.current && entry.selection) {
+          console.debug("[ContentEditor] Restoring selection:", entry.selection);
           restoreSelection(editableRef.current, entry.selection);
         }
         isUndoRedoRef.current = false;
       });
-      
-      setEditableContent(htmlToPlainText(entry.html));
     }
   };
 
@@ -347,16 +343,16 @@ export default function ContentEditorPage() {
       historyIndexRef.current++;
       const entry = historyRef.current[historyIndexRef.current];
       
+      console.debug("[ContentEditor] Redo - setting innerHTML, index:", historyIndexRef.current);
       editableRef.current.innerHTML = entry.html;
       
       requestAnimationFrame(() => {
         if (editableRef.current && entry.selection) {
+          console.debug("[ContentEditor] Restoring selection:", entry.selection);
           restoreSelection(editableRef.current, entry.selection);
         }
         isUndoRedoRef.current = false;
       });
-      
-      setEditableContent(htmlToPlainText(entry.html));
     }
   };
 
@@ -386,11 +382,13 @@ export default function ContentEditorPage() {
   const canRedo = historyIndexRef.current < historyRef.current.length - 1;
 
   const handleSave = async () => {
+    const contentToSave = getContentForSave();
+    
     if (contentId) {
       const { error } = await supabase
         .from('master_content')
         .update({ 
-          full_content: editableContent,
+          full_content: contentToSave,
           quality_rating: qualityRating > 0 ? qualityRating : null,
           updated_at: new Date().toISOString()
         })
@@ -419,9 +417,11 @@ export default function ContentEditorPage() {
       await forceSave();
     }
     
+    const contentToSend = getContentForSave();
+    
     navigate("/multiply", { 
       state: { 
-        content: editableContent,
+        content: contentToSend,
         title,
         contentType,
         productName,

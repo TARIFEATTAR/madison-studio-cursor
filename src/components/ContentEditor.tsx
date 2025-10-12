@@ -132,11 +132,14 @@ export const ContentEditor = ({
   // Initialize richHtml when entering full-screen
   useEffect(() => {
     if (isFullScreen && editableRef.current) {
-      // Clear any existing content first to prevent duplication
-      editableRef.current.innerHTML = '';
-      // Then set the content
-      editableRef.current.innerHTML = content.replace(/\n/g, '<br>');
-      setRichHtml(editableRef.current.innerHTML);
+      const nextHtml = content.replace(/\n/g, '<br>');
+      
+      // Only set if different to avoid unnecessary DOM changes
+      if (editableRef.current.innerHTML !== nextHtml) {
+        console.debug("[ContentEditor] Hydrating full-screen editor");
+        editableRef.current.innerHTML = nextHtml;
+        setRichHtml(nextHtml);
+      }
       
       setTimeout(() => {
         if (editableRef.current) {
@@ -334,16 +337,21 @@ export const ContentEditor = ({
       // Guard IME composition
       if (isComposing) return;
 
+      const html = editableRef.current.innerHTML;
+      
+      // Early return if content hasn't changed
+      if (html === richHtml) return;
+
       // Save selection before update
       const saved = saveSelection(editableRef.current);
       
-      const html = editableRef.current.innerHTML;
       setRichHtml(html);
       
       // Restore selection after React re-renders
       if (saved) {
         requestAnimationFrame(() => {
           if (editableRef.current) {
+            console.debug("[ContentEditor] Restoring selection after update");
             restoreSelection(editableRef.current, saved);
           }
         });
@@ -357,20 +365,26 @@ export const ContentEditor = ({
       updateTimeoutRef.current = setTimeout(() => {
         if (!isUndoRedoRef.current) {
           const plainText = htmlToPlainText(html);
-          const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
-          newHistory.push(plainText);
-          const newRichHistory = richHistoryRef.current.slice(0, historyIndexRef.current + 1);
-          newRichHistory.push(html);
           
-          if (newHistory.length > 50) {
-            newHistory.shift();
-            newRichHistory.shift();
-          } else {
-            historyIndexRef.current++;
+          // Only push if actually different from last entry
+          const lastPlainText = historyRef.current[historyRef.current.length - 1];
+          if (plainText !== lastPlainText) {
+            const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
+            newHistory.push(plainText);
+            const newRichHistory = richHistoryRef.current.slice(0, historyIndexRef.current + 1);
+            newRichHistory.push(html);
+            
+            if (newHistory.length > 50) {
+              newHistory.shift();
+              newRichHistory.shift();
+            } else {
+              historyIndexRef.current++;
+            }
+            
+            historyRef.current = newHistory;
+            richHistoryRef.current = newRichHistory;
+            console.debug("[ContentEditor] History pushed, index:", historyIndexRef.current);
           }
-          
-          historyRef.current = newHistory;
-          richHistoryRef.current = newRichHistory;
         }
       }, 500);
     }
