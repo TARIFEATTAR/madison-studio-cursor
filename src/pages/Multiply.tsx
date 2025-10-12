@@ -151,30 +151,11 @@ const ADDITIONAL_DERIVATIVE_TYPES: DerivativeType[] = [
 // Combined array for processing
 const DERIVATIVE_TYPES = [...TOP_DERIVATIVE_TYPES, ...ADDITIONAL_DERIVATIVE_TYPES];
 
-// Sample master content for fallback
-const SAMPLE_CONTENT: MasterContent = {
-  id: "sample-1",
-  title: "Noir de Nuit: The Art of Evening Fragrance",
-  contentType: "Blog Post",
-  collection: "sparkles Signature Collection",
-  content: `There's a particular magic that descends as daylight fades—when the world softens, and evening unveils its mysteries.
-
-Noir de Nuit was born from this enchantment. Our master perfumer spent two years perfecting a composition that captures the essence of twilight: black currant and pink pepper create an intriguing opening, while Turkish rose and jasmine sambac unfold like secrets whispered in candlelight.
-
-The heart is where the fragrance truly reveals its character. Iris adds a powdery elegance, while the florals deepen and darken as evening progresses. These rare ingredients were sourced from heritage suppliers—the rose from family farms in Turkey, the jasmine from traditional growers in India.
-
-As Noir de Nuit settles into its base, precious oud and sandalwood emerge, wrapped in golden amber. This is a fragrance of depth and mystery, designed for those who understand that true luxury whispers rather than shouts.
-
-Noir de Nuit is part of our Signature Fragrance collection, where each scent tells a story of craftsmanship and rare beauty. Available in 50ml and 100ml editions, presented in our signature black lacquer bottle.`,
-  wordCount: 189,
-  charCount: 1140,
-};
-
 export default function Multiply() {
   const { toast } = useToast();
   const location = useLocation();
   const { currentOrganizationId } = useOnboarding();
-  const [selectedMaster, setSelectedMaster] = useState<MasterContent>(SAMPLE_CONTENT);
+  const [selectedMaster, setSelectedMaster] = useState<MasterContent | null>(null);
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
   const [derivatives, setDerivatives] = useState<DerivativeContent[]>([]);
   const [expandedTypes, setExpandedTypes] = useState<Set<string>>(new Set());
@@ -185,7 +166,58 @@ export default function Multiply() {
   const [saveTitle, setSaveTitle] = useState("");
   const [userContent, setUserContent] = useState<MasterContent | null>(null);
   const [savePromptDialogOpen, setSavePromptDialogOpen] = useState(false);
-  const [masterContentId, setMasterContentId] = useState<string | null>(null);
+  const [masterContentList, setMasterContentList] = useState<MasterContent[]>([]);
+  const [loadingContent, setLoadingContent] = useState(true);
+
+  // Load master content from database
+  useEffect(() => {
+    const loadMasterContent = async () => {
+      if (!currentOrganizationId) return;
+      
+      setLoadingContent(true);
+      try {
+        const { data, error } = await supabase
+          .from('master_content')
+          .select('id, title, content_type, full_content, word_count, collection')
+          .eq('organization_id', currentOrganizationId)
+          .eq('is_archived', false)
+          .order('created_at', { ascending: false })
+          .limit(20);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          const formatted = data.map(item => ({
+            id: item.id,
+            title: item.title || 'Untitled',
+            contentType: item.content_type || 'Content',
+            collection: item.collection || undefined,
+            content: item.full_content || '',
+            wordCount: item.word_count || 0,
+            charCount: item.full_content?.length || 0,
+          }));
+          
+          setMasterContentList(formatted);
+          
+          // Auto-select the most recent if none selected
+          if (!selectedMaster && !location.state?.contentId) {
+            setSelectedMaster(formatted[0]);
+          }
+        }
+      } catch (e) {
+        console.error('Error loading master content:', e);
+        toast({
+          title: "Error loading content",
+          description: "Failed to load your master content",
+          variant: "destructive"
+        });
+      } finally {
+        setLoadingContent(false);
+      }
+    };
+
+    loadMasterContent();
+  }, [currentOrganizationId]);
 
   // Check for content from navigation state (from ContentEditor)
   useEffect(() => {
@@ -201,42 +233,11 @@ export default function Multiply() {
       };
       setUserContent(contentData);
       setSelectedMaster(contentData);
-      setMasterContentId(location.state.contentId);
       
       // Clear navigation state
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
-
-  // Check for recent content from localStorage
-  useEffect(() => {
-    const savedContent = localStorage.getItem('scriptora-saved-content');
-    if (savedContent) {
-      try {
-        const parsed = JSON.parse(savedContent);
-        if (parsed && Array.isArray(parsed) && parsed.length > 0) {
-          const recent = parsed[0];
-          const masterContentData = {
-            id: recent.id || 'user-1',
-            title: recent.title || 'Untitled',
-            contentType: recent.contentType || 'Content',
-            collection: recent.collection,
-            content: recent.content || '',
-            wordCount: recent.wordCount || 0,
-            charCount: recent.content?.length || 0,
-          };
-          setUserContent(masterContentData);
-          setSelectedMaster(masterContentData);
-          // Store the actual DB ID for API calls
-          if (recent.id && recent.id !== 'user-1') {
-            setMasterContentId(recent.id);
-          }
-        }
-      } catch (e) {
-        console.error('Error parsing saved content:', e);
-      }
-    }
-  }, []);
 
   const toggleTypeSelection = (typeId: string) => {
     const newSet = new Set(selectedTypes);
@@ -278,8 +279,8 @@ export default function Multiply() {
     setIsGenerating(true);
 
     try {
-      // Use masterContentId if available (from DB), otherwise use selectedMaster.id
-      const contentId = masterContentId || selectedMaster.id;
+      // Use selectedMaster.id as the content ID
+      const contentId = selectedMaster.id;
       
       console.log('Calling repurpose-content with:', {
         masterContentId: contentId,
@@ -482,21 +483,45 @@ export default function Multiply() {
           </Alert>
         )}
 
-        {/* Master Content Selector (only if no user content) */}
-        {!userContent && (
+        {/* Master Content Selector */}
+        {!loadingContent && masterContentList.length > 0 && (
           <div className="mb-6">
             <Label className="text-sm font-medium mb-2" style={{ color: "#1A1816" }}>
-              Master Content:
+              Select Master Content:
             </Label>
-            <Select value={selectedMaster.id} onValueChange={(value) => setSelectedMaster(SAMPLE_CONTENT)}>
+            <Select 
+              value={selectedMaster?.id || masterContentList[0].id} 
+              onValueChange={(value) => {
+                const selected = masterContentList.find(m => m.id === value);
+                if (selected) setSelectedMaster(selected);
+              }}
+            >
               <SelectTrigger className="w-full max-w-lg" style={{ backgroundColor: "#FFFCF5" }}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={SAMPLE_CONTENT.id}>{SAMPLE_CONTENT.title}</SelectItem>
+                {masterContentList.map(content => (
+                  <SelectItem key={content.id} value={content.id}>{content.title}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
+        )}
+
+        {loadingContent && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#B8956A" }} />
+          </div>
+        )}
+
+        {!loadingContent && masterContentList.length === 0 && !selectedMaster && (
+          <Alert className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              No master content found. Please create content in the Forge first.
+              <Link to="/forge" className="ml-2 underline">Go to Forge</Link>
+            </AlertDescription>
+          </Alert>
         )}
 
         {/* Main Content Area */}
