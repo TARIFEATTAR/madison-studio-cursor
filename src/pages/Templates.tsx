@@ -282,7 +282,7 @@ const TemplatesContent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F1E8]">
+    <div className="flex-1 min-h-screen bg-[#F5F1E8]">
       {/* Mobile Filter Drawer */}
       {isMobile && (
         <Drawer open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
@@ -312,7 +312,7 @@ const TemplatesContent = () => {
 
       {/* HEADER SECTION - Full width */}
       <div className="bg-[#FFFCF5] border-b-2 border-[#D4CFC8] px-8 py-6">
-        <div className="max-w-[1400px] mx-auto">
+        <div className="max-w-full mx-auto">
           {/* Title Row */}
           <div className="flex items-start justify-between mb-4">
             <div>
@@ -362,95 +362,89 @@ const TemplatesContent = () => {
         </div>
       </div>
 
-      {/* TWO-COLUMN LAYOUT - Flex Layout */}
-      <div className="max-w-[1400px] mx-auto px-8 py-8">
-        <div className="flex">
-          
-          {/* LEFT COLUMN - 350px fixed width on desktop, filters only */}
-          {!isMobile && (
-            <aside className="w-[350px] flex-shrink-0 overflow-visible">
-              <div className="space-y-6">
-                <PromptLibrarySidebar
-                  onQuickAccessSelect={setSelectedQuickAccess}
-                  onCollectionSelect={setSelectedCollection}
-                  onCategorySelect={setSelectedCategory}
-                  selectedQuickAccess={selectedQuickAccess}
-                  selectedCollection={selectedCollection}
-                  selectedCategory={selectedCategory}
-                />
-              </div>
-            </aside>
+      {/* PAGE CONTENT AREA - Flex layout with filter panel and main content */}
+      <div className="flex">
+        {/* FILTER PANEL - 300px fixed width, completely separate from global nav */}
+        {!isMobile && (
+          <div className="w-[300px] flex-shrink-0 bg-[#F5F1E8] px-6 py-8">
+            <PromptLibrarySidebar
+              onQuickAccessSelect={setSelectedQuickAccess}
+              onCollectionSelect={setSelectedCollection}
+              onCategorySelect={setSelectedCategory}
+              selectedQuickAccess={selectedQuickAccess}
+              selectedCollection={selectedCollection}
+              selectedCategory={selectedCategory}
+            />
+          </div>
+        )}
+
+        {/* MAIN CONTENT - Flexible width */}
+        <div className="flex-1 px-8 py-8">
+          {/* Active Filters Display (Mobile) */}
+          {isMobile && (selectedQuickAccess || selectedCollection || selectedCategory) && (
+            <div className="mb-4 flex gap-2 flex-wrap">
+              {selectedQuickAccess && (
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted rounded-full text-sm">
+                  <span>{selectedQuickAccess}</span>
+                  <button onClick={() => setSelectedQuickAccess(null)} className="hover:text-destructive">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+              {selectedCollection && (
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted rounded-full text-sm">
+                  <span>{selectedCollection}</span>
+                  <button onClick={() => setSelectedCollection(null)} className="hover:text-destructive">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+              {selectedCategory && (
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted rounded-full text-sm">
+                  <span>{selectedCategory}</span>
+                  <button onClick={() => setSelectedCategory(null)} className="hover:text-destructive">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+            </div>
           )}
 
-          {/* RIGHT MAIN CONTENT - Flexible width */}
-          <main className="flex-1">
-            {/* Active Filters Display (Mobile) */}
-            {isMobile && (selectedQuickAccess || selectedCollection || selectedCategory) && (
-              <div className="mb-4 flex gap-2 flex-wrap">
-                {selectedQuickAccess && (
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted rounded-full text-sm">
-                    <span>{selectedQuickAccess}</span>
-                    <button onClick={() => setSelectedQuickAccess(null)} className="hover:text-destructive">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                )}
-                {selectedCollection && (
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted rounded-full text-sm">
-                    <span>{selectedCollection}</span>
-                    <button onClick={() => setSelectedCollection(null)} className="hover:text-destructive">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                )}
-                {selectedCategory && (
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted rounded-full text-sm">
-                    <span>{selectedCategory}</span>
-                    <button onClick={() => setSelectedCategory(null)} className="hover:text-destructive">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Prompt count */}
-            <div className="mb-6">
-              <p className="text-[#2F2A26] font-sans text-lg">
-                {displayedPrompts.length} prompt{displayedPrompts.length !== 1 ? "s" : ""}
-              </p>
+          {/* Prompt count */}
+          <div className="mb-6">
+            <p className="text-[#2F2A26] font-sans text-lg">
+              {displayedPrompts.length} prompt{displayedPrompts.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+          
+          {/* Prompts Grid - 2 columns */}
+          {isLoading ? (
+            <div className="text-center py-12 text-[#6B6560]">
+              Loading prompts...
             </div>
-            
-            {/* Prompts Grid - 2 columns */}
-            {isLoading ? (
-              <div className="text-center py-12 text-[#6B6560]">
-                Loading prompts...
-              </div>
-            ) : displayedPrompts.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-[#6B6560] mb-4">No prompts found</p>
-                <Button 
-                  onClick={() => setShowQuickStart(true)}
-                  className="bg-gradient-to-r from-[#B8956A] to-[#D4AF37] hover:from-[#D4AF37] hover:to-[#B8956A] text-white"
-                >
-                  Create Your First Prompt
-                </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {displayedPrompts.map((prompt) => (
-                  <EnhancedPromptCard
-                    key={prompt.id}
-                    prompt={prompt}
-                    onUse={() => handleUsePrompt(prompt.id)}
-                    onToggleFavorite={() => handleToggleFavorite(prompt.id)}
-                    isFavorite={prompt.is_template}
-                  />
-                ))}
-              </div>
-            )}
-          </main>
-
+          ) : displayedPrompts.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-[#6B6560] mb-4">No prompts found</p>
+              <Button 
+                onClick={() => setShowQuickStart(true)}
+                className="bg-gradient-to-r from-[#B8956A] to-[#D4AF37] hover:from-[#D4AF37] hover:to-[#B8956A] text-white"
+              >
+                Create Your First Prompt
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {displayedPrompts.map((prompt) => (
+                <EnhancedPromptCard
+                  key={prompt.id}
+                  prompt={prompt}
+                  onUse={() => handleUsePrompt(prompt.id)}
+                  onToggleFavorite={() => handleToggleFavorite(prompt.id)}
+                  isFavorite={prompt.is_template}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
