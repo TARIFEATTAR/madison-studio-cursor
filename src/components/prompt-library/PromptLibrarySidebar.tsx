@@ -16,6 +16,7 @@ interface PromptLibrarySidebarProps {
   selectedQuickAccess: string | null;
   selectedCollection: string | null;
   selectedCategory: string | null;
+  onClearFilters?: () => void;
   className?: string;
 }
 
@@ -26,6 +27,7 @@ const PromptLibrarySidebar = ({
   selectedQuickAccess,
   selectedCollection,
   selectedCategory,
+  onClearFilters,
   className,
 }: PromptLibrarySidebarProps) => {
   const { currentOrganizationId } = useOnboarding();
@@ -104,6 +106,23 @@ const PromptLibrarySidebar = ({
   return (
     <div className={cn("h-screen overflow-y-auto bg-white", className)}>
       <div className="p-6 space-y-6">
+        {/* Active Filters Summary */}
+        {(selectedQuickAccess || selectedCollection || selectedCategory) && (
+          <div className="flex items-center justify-between p-4 bg-[#F5F1E8] rounded-xl border-2 border-[#D4CFC8]">
+            <span className="text-sm font-medium text-[#6B6560]">
+              {[selectedQuickAccess, selectedCollection, selectedCategory].filter(Boolean).length} filter(s) active
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClearFilters}
+              className="h-8 text-xs text-[#B8956A] hover:text-[#D4AF37] hover:bg-transparent"
+            >
+              Clear All
+            </Button>
+          </div>
+        )}
+
         {/* Quick Access Card */}
         <Card className="border-2 border-[#D4CFC8] bg-white shadow-md rounded-2xl">
           <CardContent className="p-6">

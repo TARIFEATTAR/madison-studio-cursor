@@ -58,6 +58,13 @@ const TemplatesContent = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSelectedQuickAccess(null);
+    setSelectedCollection(null);
+    setSelectedCategory(null);
+  };
+
   // Modal states
   const [showQuickStart, setShowQuickStart] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
@@ -302,6 +309,7 @@ const TemplatesContent = () => {
                 selectedQuickAccess={selectedQuickAccess}
                 selectedCollection={selectedCollection}
                 selectedCategory={selectedCategory}
+                onClearFilters={clearAllFilters}
               />
             </div>
           </DrawerContent>
@@ -373,6 +381,7 @@ const TemplatesContent = () => {
               selectedQuickAccess={selectedQuickAccess}
               selectedCollection={selectedCollection}
               selectedCategory={selectedCategory}
+              onClearFilters={clearAllFilters}
             />
           </div>
         )}
@@ -416,13 +425,32 @@ const TemplatesContent = () => {
             </div>
           ) : displayedPrompts.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-[#6B6560] mb-4">No prompts found</p>
-              <Button 
-                onClick={() => setShowQuickStart(true)}
-                className="bg-gradient-to-r from-[#B8956A] to-[#D4AF37] hover:from-[#D4AF37] hover:to-[#B8956A] text-white"
-              >
-                Create Your First Prompt
-              </Button>
+              <p className="text-[#6B6560] mb-2 text-lg">
+                {allPrompts.length === 0 
+                  ? "No prompts yet" 
+                  : "No prompts match your filters"}
+              </p>
+              <p className="text-[#A8A39E] mb-4 text-sm">
+                {allPrompts.length === 0
+                  ? "Create content in the Create page to automatically save prompts"
+                  : "Try adjusting your filters or clearing them"}
+              </p>
+              {allPrompts.length === 0 ? (
+                <Button 
+                  onClick={() => setShowQuickStart(true)}
+                  className="bg-gradient-to-r from-[#B8956A] to-[#D4AF37] hover:from-[#D4AF37] hover:to-[#B8956A] text-white"
+                >
+                  Create Your First Prompt
+                </Button>
+              ) : (
+                <Button 
+                  onClick={clearAllFilters}
+                  variant="outline"
+                  className="border-2 border-[#D4CFC8] text-[#1A1816] hover:bg-[#F5F1E8]"
+                >
+                  Clear All Filters
+                </Button>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-8 py-8">
