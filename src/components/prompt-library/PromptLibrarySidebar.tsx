@@ -17,6 +17,7 @@ interface PromptLibrarySidebarProps {
   selectedQuickAccess: string | null;
   selectedCollection: string | null;
   selectedCategory: string | null;
+  className?: string;
 }
 
 const PromptLibrarySidebar = ({
@@ -26,6 +27,7 @@ const PromptLibrarySidebar = ({
   selectedQuickAccess,
   selectedCollection,
   selectedCategory,
+  className,
 }: PromptLibrarySidebarProps) => {
   const { currentOrganizationId } = useOnboarding();
   const [expandedSections, setExpandedSections] = useState({
@@ -101,8 +103,8 @@ const PromptLibrarySidebar = ({
   };
 
   return (
-    <div className="h-screen flex flex-col overflow-auto">
-      <div className="p-6 space-y-6">
+    <div className={cn("h-screen border-r border-border bg-background", className)}>
+      <div className="p-6 space-y-6 overflow-y-auto h-full">
             {/* Quick Access */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 mb-4">

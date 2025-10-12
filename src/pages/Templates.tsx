@@ -64,15 +64,6 @@ const Templates = () => {
   const [showGuide, setShowGuide] = useState(false);
   const [showMadison, setShowMadison] = useState(false);
 
-  // Compute dynamic offsets
-  const sidebarWidth = state === "collapsed" ? 56 : 280; // AppSidebar width
-  const filterWidth = 320; // PromptLibrarySidebar width (w-80)
-
-  const filterLeftOffset = isMobileNav 
-    ? "0px" 
-    : `${sidebarWidth}px`;
-
-  const contentLeftOffset = isMobile ? 0 : filterWidth;
 
   // Fetch prompts
   const { data: allPrompts = [], isLoading } = useQuery({
@@ -290,10 +281,12 @@ const Templates = () => {
         {/* Global Navigation */}
         <AppSidebar />
 
-        {/* Desktop: Filter Sidebar */}
-        {!isMobile && (
-          <div className="w-80 border-r border-border bg-background">
+        {/* Unified Content Area with Flex Layout */}
+        <div className="flex flex-1 gap-6">
+          {/* Desktop: Integrated Filters Panel */}
+          {!isMobile && (
             <PromptLibrarySidebar
+              className="w-80 flex-shrink-0"
               onQuickAccessSelect={setSelectedQuickAccess}
               onCollectionSelect={setSelectedCollection}
               onCategorySelect={setSelectedCategory}
@@ -301,11 +294,11 @@ const Templates = () => {
               selectedCollection={selectedCollection}
               selectedCategory={selectedCategory}
             />
-          </div>
-        )}
+          )}
 
-        <main className="flex-1 p-8">
-          <div className="max-w-6xl mx-auto">
+          {/* Main Content */}
+          <main className="flex-1 min-w-0 p-8">
+            <div className="max-w-6xl mx-auto">
             {/* Header */}
             <div className="mb-6">
               <div className="flex items-start justify-between mb-4">
@@ -434,8 +427,10 @@ const Templates = () => {
                 ))}
               </div>
             )}
-          </div>
-        </main>
+            </div>
+          </main>
+        </div>
+      </div>
 
       {/* Modals */}
       <QuickStartModal
@@ -483,7 +478,6 @@ const Templates = () => {
           onUse={() => handleUsePrompt(selectedPrompt.id)}
         />
       )}
-      </div>
     </SidebarProvider>
   );
 };
