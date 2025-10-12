@@ -103,171 +103,173 @@ const PromptLibrarySidebar = ({
   };
 
   return (
-    <div className={cn("h-screen border-r border-border bg-background", className)}>
-      <div className="p-6 space-y-6 overflow-y-auto h-full">
-            {/* Quick Access */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 mb-4">
-                <Star className="h-4 w-4 text-saffron-gold" />
-                <h3 className="font-semibold text-sm tracking-wide uppercase text-foreground">Quick Access</h3>
-              </div>
-              <div className="space-y-1.5">
-                <button
-                  onClick={() => onQuickAccessSelect("favorites")}
-                  className={cn(
-                    "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors font-medium",
-                    selectedQuickAccess === "favorites"
-                      ? "bg-accent text-accent-foreground"
-                      : "hover:bg-accent/50 text-foreground"
-                  )}
-                >
-                  <span className="flex items-center gap-2.5">
-                    ⭐ Favorites
-                  </span>
-                  <Badge variant="secondary" className="text-xs font-semibold min-w-[24px] justify-center">
-                    {counts?.favorites || 0}
-                  </Badge>
-                </button>
-                <button
-                  onClick={() => onQuickAccessSelect("recently-used")}
-                  className={cn(
-                    "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors font-medium",
-                    selectedQuickAccess === "recently-used"
-                      ? "bg-accent text-accent-foreground"
-                      : "hover:bg-accent/50 text-foreground"
-                  )}
-                >
-                  <span className="flex items-center gap-2.5">
-                    <Clock className="h-4 w-4" />
-                    Recently Used
-                  </span>
-                  <Badge variant="secondary" className="text-xs font-semibold min-w-[24px] justify-center">
-                    {counts?.recentlyUsed || 0}
-                  </Badge>
-                </button>
-                <button
-                  onClick={() => onQuickAccessSelect("most-used")}
-                  className={cn(
-                    "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors font-medium",
-                    selectedQuickAccess === "most-used"
-                      ? "bg-accent text-accent-foreground"
-                      : "hover:bg-accent/50 text-foreground"
-                  )}
-                >
-                  <span className="flex items-center gap-2.5">
-                    <TrendingUp className="h-4 w-4" />
-                    Most Used
-                  </span>
-                  <Badge variant="secondary" className="text-xs font-semibold min-w-[24px] justify-center">
-                    {counts?.mostUsed || 0}
-                  </Badge>
-                </button>
-              </div>
+    <div className={cn("h-screen border-r border-[#D4CFC8] bg-[#FFFCF5]", className)}>
+      <ScrollArea className="h-full">
+        <div className="p-6 space-y-6">
+          {/* Quick Access */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-4">
+              <Star className="h-4 w-4 text-[#D4AF37]" />
+              <h3 className="font-semibold text-sm tracking-wide uppercase text-[#1A1816]">Quick Access</h3>
             </div>
-
-            <Separator className="my-6" />
-
-            {/* Collections */}
-            <div className="space-y-3">
+            <div className="space-y-1.5">
               <button
-                onClick={() => toggleSection("collections")}
-                className="w-full flex items-center justify-between mb-4 hover:text-primary transition-colors group"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors">📁</div>
-                  <h3 className="font-semibold text-sm tracking-wide uppercase text-foreground">Collections</h3>
-                </div>
-                {expandedSections.collections ? (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                onClick={() => onQuickAccessSelect("favorites")}
+                className={cn(
+                  "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors font-medium",
+                  selectedQuickAccess === "favorites"
+                    ? "bg-[#F5F1E8] text-[#1A1816]"
+                    : "hover:bg-[#F5F1E8]/50 text-[#6B6560]"
                 )}
+              >
+                <span className="flex items-center gap-2.5">
+                  ⭐ Favorites
+                </span>
+                <Badge variant="secondary" className="text-xs font-semibold min-w-[24px] justify-center bg-[#D4CFC8] text-[#1A1816]">
+                  {counts?.favorites || 0}
+                </Badge>
               </button>
-              {expandedSections.collections && (
-                <div className="space-y-1.5">
+              <button
+                onClick={() => onQuickAccessSelect("recently-used")}
+                className={cn(
+                  "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors font-medium",
+                  selectedQuickAccess === "recently-used"
+                    ? "bg-[#F5F1E8] text-[#1A1816]"
+                    : "hover:bg-[#F5F1E8]/50 text-[#6B6560]"
+                )}
+              >
+                <span className="flex items-center gap-2.5">
+                  <Clock className="h-4 w-4" />
+                  Recently Used
+                </span>
+                <Badge variant="secondary" className="text-xs font-semibold min-w-[24px] justify-center bg-[#D4CFC8] text-[#1A1816]">
+                  {counts?.recentlyUsed || 0}
+                </Badge>
+              </button>
+              <button
+                onClick={() => onQuickAccessSelect("most-used")}
+                className={cn(
+                  "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors font-medium",
+                  selectedQuickAccess === "most-used"
+                    ? "bg-[#F5F1E8] text-[#1A1816]"
+                    : "hover:bg-[#F5F1E8]/50 text-[#6B6560]"
+                )}
+              >
+                <span className="flex items-center gap-2.5">
+                  <TrendingUp className="h-4 w-4" />
+                  Most Used
+                </span>
+                <Badge variant="secondary" className="text-xs font-semibold min-w-[24px] justify-center bg-[#D4CFC8] text-[#1A1816]">
+                  {counts?.mostUsed || 0}
+                </Badge>
+              </button>
+            </div>
+          </div>
+
+          <Separator className="my-6 bg-[#D4CFC8]" />
+
+          {/* Collections */}
+          <div className="space-y-3">
+            <button
+              onClick={() => toggleSection("collections")}
+              className="w-full flex items-center justify-between mb-4 hover:text-[#B8956A] transition-colors group"
+            >
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-4 text-[#6B6560] group-hover:text-[#B8956A] transition-colors">📁</div>
+                <h3 className="font-semibold text-sm tracking-wide uppercase text-[#1A1816]">Collections</h3>
+              </div>
+              {expandedSections.collections ? (
+                <ChevronDown className="h-4 w-4 text-[#6B6560]" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-[#6B6560]" />
+              )}
+            </button>
+            {expandedSections.collections && (
+              <div className="space-y-1.5">
                   {Object.entries(collectionLabels).map(([key, { icon, label }]) => (
                     <button
-                      key={key}
-                      onClick={() => onCollectionSelect(selectedCollection === key ? null : key)}
-                      className={cn(
-                        "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors font-medium",
-                        selectedCollection === key
-                          ? "bg-accent text-accent-foreground"
-                          : "hover:bg-accent/50 text-foreground"
-                      )}
-                    >
-                      <span className="flex items-center gap-2.5">
-                        <span className="text-base">{icon}</span>
-                        <span>{label}</span>
-                      </span>
-                      <Badge variant="secondary" className="text-xs font-semibold min-w-[24px] justify-center">
-                        {counts?.collections[key] || 0}
-                      </Badge>
-                    </button>
-                  ))}
-                  <button className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-semibold text-saffron-gold hover:text-saffron-gold/80 hover:bg-accent/50 transition-colors mt-3">
-                    <Plus className="h-4 w-4" />
-                    New Collection
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <Separator className="my-6" />
-
-            {/* Categories */}
-            <div className="space-y-3">
-              <button
-                onClick={() => toggleSection("categories")}
-                className="w-full flex items-center justify-between mb-4 hover:text-primary transition-colors group"
-              >
-                <div className="flex items-center gap-2">
-                  <Hash className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                  <h3 className="font-semibold text-sm tracking-wide uppercase text-foreground">Categories</h3>
-                </div>
-                {expandedSections.categories ? (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                )}
+                  key={key}
+                  onClick={() => onCollectionSelect(selectedCollection === key ? null : key)}
+                  className={cn(
+                    "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors font-medium",
+                    selectedCollection === key
+                      ? "bg-[#F5F1E8] text-[#1A1816]"
+                      : "hover:bg-[#F5F1E8]/50 text-[#6B6560]"
+                  )}
+                >
+                  <span className="flex items-center gap-2.5">
+                    <span className="text-base">{icon}</span>
+                    <span>{label}</span>
+                  </span>
+                  <Badge variant="secondary" className="text-xs font-semibold min-w-[24px] justify-center bg-[#D4CFC8] text-[#1A1816]">
+                    {counts?.collections[key] || 0}
+                  </Badge>
+                </button>
+              ))}
+              <button className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-semibold text-[#B8956A] hover:text-[#D4AF37] hover:bg-[#F5F1E8]/50 transition-colors mt-3">
+                <Plus className="h-4 w-4" />
+                New Collection
               </button>
-              {expandedSections.categories && (
-                <div className="space-y-1.5">
+            </div>
+          )}
+        </div>
+
+        <Separator className="my-6 bg-[#D4CFC8]" />
+
+          {/* Categories */}
+          <div className="space-y-3">
+            <button
+              onClick={() => toggleSection("categories")}
+              className="w-full flex items-center justify-between mb-4 hover:text-[#B8956A] transition-colors group"
+            >
+              <div className="flex items-center gap-2">
+                <Hash className="h-4 w-4 text-[#6B6560] group-hover:text-[#B8956A] transition-colors" />
+                <h3 className="font-semibold text-sm tracking-wide uppercase text-[#1A1816]">Categories</h3>
+              </div>
+              {expandedSections.categories ? (
+                <ChevronDown className="h-4 w-4 text-[#6B6560]" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-[#6B6560]" />
+              )}
+            </button>
+            {expandedSections.categories && (
+              <div className="space-y-1.5">
+                <button
+                  onClick={() => onCategorySelect(null)}
+                  className={cn(
+                    "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors font-medium",
+                    selectedCategory === null
+                      ? "bg-[#F5F1E8] text-[#1A1816]"
+                      : "hover:bg-[#F5F1E8]/50 text-[#6B6560]"
+                  )}
+                >
+                  <span>All Prompts</span>
+                  <Badge variant="secondary" className="text-xs font-semibold min-w-[24px] justify-center bg-[#D4CFC8] text-[#1A1816]">
+                    {counts?.total || 0}
+                  </Badge>
+                </button>
+                {Object.entries(categoryLabels).map(([key, label]) => (
                   <button
-                    onClick={() => onCategorySelect(null)}
+                    key={key}
+                    onClick={() => onCategorySelect(selectedCategory === key ? null : key)}
                     className={cn(
                       "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors font-medium",
-                      selectedCategory === null
-                        ? "bg-accent text-accent-foreground"
-                        : "hover:bg-accent/50 text-foreground"
+                      selectedCategory === key
+                        ? "bg-[#F5F1E8] text-[#1A1816]"
+                        : "hover:bg-[#F5F1E8]/50 text-[#6B6560]"
                     )}
                   >
-                    <span>All Prompts</span>
-                    <Badge variant="secondary" className="text-xs font-semibold min-w-[24px] justify-center">
-                      {counts?.total || 0}
+                    <span>{label}</span>
+                    <Badge variant="secondary" className="text-xs font-semibold min-w-[24px] justify-center bg-[#D4CFC8] text-[#1A1816]">
+                      {counts?.categories[key] || 0}
                     </Badge>
                   </button>
-                  {Object.entries(categoryLabels).map(([key, label]) => (
-                    <button
-                      key={key}
-                      onClick={() => onCategorySelect(selectedCategory === key ? null : key)}
-                      className={cn(
-                        "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors font-medium",
-                        selectedCategory === key
-                          ? "bg-accent text-accent-foreground"
-                          : "hover:bg-accent/50 text-foreground"
-                      )}
-                    >
-                      <span>{label}</span>
-                      <Badge variant="secondary" className="text-xs font-semibold min-w-[24px] justify-center">
-                        {counts?.categories[key] || 0}
-                      </Badge>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
+      </ScrollArea>
     </div>
   );
 };

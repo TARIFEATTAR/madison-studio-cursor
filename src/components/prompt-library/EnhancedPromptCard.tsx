@@ -24,50 +24,50 @@ const EnhancedPromptCard = ({
   const fullText = prompt.prompt_text || "";
 
   return (
-    <Card className="p-6 hover:shadow-md transition-all duration-200 border border-border bg-background relative group">
+    <Card className="p-6 hover:shadow-lg hover:border-[#B8956A] transition-all duration-200 border border-[#D4CFC8] bg-[#FFFCF5] relative group cursor-pointer">
       {/* Favorite Star */}
       <button
-        onClick={onToggleFavorite}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleFavorite?.();
+        }}
         className="absolute top-5 right-5 z-10 hover:scale-110 transition-transform"
       >
         <Star
           className={`h-5 w-5 ${
-            isFavorite ? "fill-saffron-gold text-saffron-gold" : "text-muted-foreground/60 hover:text-saffron-gold"
+            isFavorite ? "fill-[#D4AF37] text-[#D4AF37]" : "text-[#D4CFC8] hover:text-[#B8956A]"
           }`}
         />
       </button>
 
-      <div className="space-y-5">
-        {/* Title */}
+      <div className="space-y-4">
+        {/* Title & Description */}
         <div className="pr-10">
-          <h3 className="text-xl font-semibold text-foreground mb-2 leading-tight">
+          <h3 className="text-xl font-serif text-[#1A1816] mb-3 leading-tight">
             {prompt.title}
           </h3>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Content Type: {prompt.content_type || "N/A"}
+          <p className="text-sm text-[#6B6560] leading-relaxed">
+            {prompt.content_type === 'product' ? 'Sophisticated product launch content for new fragrance releases' :
+             prompt.content_type === 'blog' ? 'Editorial content about the creation process and craftsmanship' :
+             prompt.content_type === 'email' ? 'Monthly newsletter format with collection highlights' :
+             prompt.content_type === 'social' ? 'Instagram-optimized captions with storytelling elements' :
+             `${prompt.content_type} content template`}
           </p>
-          {prompt.collection && (
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Collection: {prompt.collection}
-            </p>
-          )}
-          {prompt.scent_family && (
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Scent Family: {prompt.scent_family}
-            </p>
-          )}
         </div>
 
-        {/* Expandable Preview */}
+        {/* Prompt Preview */}
         {fullText && (
-          <div className="bg-muted/40 rounded-lg p-4 text-sm text-muted-foreground border border-border/50">
-            <p className={isExpanded ? "" : "line-clamp-3 leading-relaxed"}>
+          <div className="bg-[#F5F1E8] rounded-lg p-4">
+            <pre className="font-mono text-sm text-[#1A1816] leading-relaxed whitespace-pre-wrap {isExpanded ? '' : 'line-clamp-3'}">
               {fullText}
-            </p>
+            </pre>
             {fullText.length > 200 && (
               <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="flex items-center gap-1.5 mt-3 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsExpanded(!isExpanded);
+                }}
+                className="flex items-center gap-1.5 mt-3 text-xs font-medium text-[#B8956A] hover:text-[#D4AF37] transition-colors"
               >
                 {isExpanded ? (
                   <>
@@ -85,33 +85,29 @@ const EnhancedPromptCard = ({
           </div>
         )}
 
-        {/* Tags */}
-        {prompt.tags && prompt.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {prompt.tags.map((tag) => (
+        {/* Footer: Tags + Usage */}
+        <div className="flex items-center justify-between">
+          <div className="flex gap-2 flex-wrap">
+            <Badge variant="outline" className="text-xs border-[#D4CFC8] text-[#6B6560] bg-transparent">
+              {prompt.content_type === 'product' ? 'Product' :
+               prompt.content_type === 'blog' ? 'Editorial' :
+               prompt.content_type === 'email' ? 'Email' :
+               prompt.content_type === 'social' ? 'Social' :
+               prompt.content_type}
+            </Badge>
+            {prompt.tags?.slice(0, 2).map((tag) => (
               <Badge
                 key={tag}
                 variant="outline"
-                className="text-xs font-normal px-2.5 py-1"
+                className="text-xs border-[#D4CFC8] text-[#6B6560] bg-transparent"
               >
                 #{tag}
               </Badge>
             ))}
           </div>
-        )}
-
-        {/* Footer: Usage count + Use Template button */}
-        <div className="flex items-center justify-between pt-3 border-t border-border/50">
-          <span className="text-sm font-medium text-muted-foreground">
+          <span className="text-xs text-[#A8A39E]">
             Used {prompt.times_used || 0} times
           </span>
-          <Button
-            onClick={onUse}
-            size="sm"
-            className="gap-2 font-medium"
-          >
-            Use Template
-          </Button>
         </div>
       </div>
     </Card>
