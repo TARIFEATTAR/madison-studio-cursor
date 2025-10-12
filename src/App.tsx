@@ -73,16 +73,19 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const RootRoute = () => {
   const { user } = useAuth();
-  const { isLoading, onboardingStep } = useOnboarding();
+  const navigate = useNavigate();
   
-  // Show loading state while checking onboarding
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-foreground text-xl">Loading...</div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!user) return;
+    
+    // Check if user has completed onboarding
+    const onboardingCompleted = localStorage.getItem(`onboarding_completed_${user.id}`);
+    
+    // If not completed, redirect to onboarding
+    if (!onboardingCompleted) {
+      navigate('/onboarding', { replace: true });
+    }
+  }, [user, navigate]);
   
   return <DashboardNew />;
 };
