@@ -13,7 +13,7 @@ import { AppSidebar } from "./components/AppSidebar";
 import Index from "./pages/Index";
 import DashboardNew from "./pages/DashboardNew";
 import Library from "./pages/Library";
-import ForgeNew from "./pages/ForgeNew";
+import Create from "./pages/Create";
 import ContentEditor from "./pages/ContentEditor";
 import Repurpose from "./pages/Repurpose";
 import Multiply from "./pages/Multiply";
@@ -87,7 +87,7 @@ const AppContent = () => {
                   <Route path="/" element={<ProtectedRoute><RootRoute /></ProtectedRoute>} />
                   <Route path="/dashboard" element={<ProtectedRoute><DashboardNew /></ProtectedRoute>} />
                   <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
-                  <Route path="/create" element={<ProtectedRoute><ForgeNew /></ProtectedRoute>} />
+                  <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
                   <Route path="/editor" element={<ProtectedRoute><ContentEditor /></ProtectedRoute>} />
                   <Route path="/multiply" element={<ProtectedRoute><Multiply /></ProtectedRoute>} />
                   <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
@@ -108,7 +108,7 @@ const AppContent = () => {
             <Route path="/" element={<Index />} />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardNew /></ProtectedRoute>} />
             <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
-            <Route path="/create" element={<ProtectedRoute><ForgeNew /></ProtectedRoute>} />
+            <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
             <Route path="/editor" element={<ProtectedRoute><ContentEditor /></ProtectedRoute>} />
             <Route path="/multiply" element={<ProtectedRoute><Multiply /></ProtectedRoute>} />
             <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />

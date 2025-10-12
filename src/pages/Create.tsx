@@ -21,7 +21,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { NameContentDialog } from "@/components/forge/NameContentDialog";
 
-export default function ForgeNew() {
+export default function Create() {
   const navigate = useNavigate();
   const { currentOrganizationId } = useOnboarding();
   const { toast } = useToast();
