@@ -191,37 +191,34 @@ export async function generateWorksheet(options: WorksheetOptions = {}): Promise
   }
 
   // Footer Section with QR Code
-  yPos = 250; // Fixed position near bottom
+  yPos = 245; // Fixed position near bottom with more breathing room
   
-  doc.setDrawColor(...brassColor);
-  doc.setLineWidth(0.5);
-  doc.line(margin, yPos, pageWidth - margin, yPos);
-  yPos += 8;
+  yPos += 12; // Increased spacing for cleaner layout
 
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...inkBlack);
   doc.text('READY TO CREATE YOUR CONTENT?', pageWidth / 2, yPos, { align: 'center' });
   
-  yPos += 8;
+  yPos += 12; // Increased spacing before QR code
 
-  // Generate QR code
+  // Generate QR code with more breathing room
   const uploadUrl = `${window.location.origin}/create?upload=true`;
   const qrDataUrl = await QRCode.toDataURL(uploadUrl, {
     errorCorrectionLevel: 'M',
-    margin: 1,
-    width: 200,
+    margin: 2, // Increased margin for built-in white space
+    width: 280, // Increased width for better quality
     color: {
       dark: '#29231D',
       light: '#FFFFFF'
     }
   });
 
-  // Add QR code
-  const qrSize = 30;
+  // Add QR code - larger size for easier scanning
+  const qrSize = 35; // Increased from 30mm to 35mm
   doc.addImage(qrDataUrl, 'PNG', (pageWidth - qrSize) / 2, yPos, qrSize, qrSize);
   
-  yPos += qrSize + 5;
+  yPos += qrSize + 8; // Increased spacing after QR code
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
