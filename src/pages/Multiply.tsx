@@ -266,7 +266,7 @@ export default function Multiply() {
       return;
     }
 
-    if (!masterContentId) {
+    if (!selectedMaster || !selectedMaster.content) {
       toast({
         title: "No content selected",
         description: "Please create or select master content first",
@@ -278,15 +278,18 @@ export default function Multiply() {
     setIsGenerating(true);
 
     try {
+      // Use masterContentId if available (from DB), otherwise use selectedMaster.id
+      const contentId = masterContentId || selectedMaster.id;
+      
       console.log('Calling repurpose-content with:', {
-        masterContentId,
+        masterContentId: contentId,
         derivativeTypes: Array.from(selectedTypes),
         organizationId: currentOrganizationId
       });
 
       const { data, error } = await supabase.functions.invoke('repurpose-content', {
         body: {
-          masterContentId,
+          masterContentId: contentId,
           derivativeTypes: Array.from(selectedTypes),
           masterContent: {
             full_content: selectedMaster.content,
