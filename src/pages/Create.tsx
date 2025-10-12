@@ -560,18 +560,18 @@ export default function Create() {
         <div>
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
               <div className="flex items-center gap-4">
                 <img 
                   src={penNibIcon} 
                   alt="Pen nib icon" 
-                  className="w-16 h-16 object-contain"
+                  className="w-12 h-12 md:w-16 md:h-16 object-contain"
                 />
                 <div>
-                  <h1 className="text-4xl font-serif font-medium text-ink-black">
+                  <h1 className="text-3xl md:text-4xl font-serif font-medium text-ink-black">
                     Create Content
                   </h1>
-                  <p className="text-lg mt-1 text-warm-gray">
+                  <p className="text-base md:text-lg mt-1 text-warm-gray">
                     Quick brief to generate your content
                   </p>
                 </div>
@@ -579,7 +579,7 @@ export default function Create() {
               <Button
                 variant="outline"
                 onClick={() => setUploadDialogOpen(true)}
-                className="flex items-center gap-2 border-brass text-brass hover:bg-brass/10"
+                className="flex items-center justify-center gap-2 border-brass text-brass hover:bg-brass/10 w-full md:w-auto"
               >
                 <Upload className="w-4 h-4" />
                 Upload Worksheet
