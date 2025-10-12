@@ -7,6 +7,7 @@ import ScriptoraLoadingAnimation from "@/components/forge/ScriptoraLoadingAnimat
 import { TransitionLoader } from "@/components/forge/TransitionLoader";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { useProducts } from "@/hooks/useProducts";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ export default function Create() {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentOrganizationId } = useOnboarding();
+  const { products, loading: productsLoading } = useProducts();
   const { toast } = useToast();
 
   
@@ -529,20 +531,30 @@ export default function Create() {
               <Label htmlFor="product" className="text-base mb-2 text-ink-black">
                 Product <span className="text-brass">*</span>
               </Label>
-              <Select value={product} onValueChange={setProduct}>
+              <Select value={product} onValueChange={setProduct} disabled={productsLoading || products.length === 0}>
                 <SelectTrigger
                   id="product"
                   className="mt-2 bg-parchment-white border-warm-gray/20"
                 >
-                  <SelectValue placeholder="Select product..." />
+                  <SelectValue placeholder={
+                    productsLoading ? "Loading products..." : 
+                    products.length === 0 ? "No products available" : 
+                    "Select product..."
+                  } />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="noir-invites">Noir—Invites</SelectItem>
-                  <SelectItem value="lumiere-captures">Lumière—Captures</SelectItem>
-                  <SelectItem value="jardin-secret">Jardin Secret</SelectItem>
-                  <SelectItem value="ombre-delicat">Ombre—Délicat</SelectItem>
+                  {products.map((p) => (
+                    <SelectItem key={p.id} value={p.name}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+              {products.length === 0 && !productsLoading && (
+                <p className="text-xs text-brass mt-2">
+                  No products found. Add products in Settings → Products.
+                </p>
+              )}
             </div>
 
             {/* Deliverable Format - Required */}
