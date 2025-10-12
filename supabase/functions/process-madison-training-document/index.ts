@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
-// @ts-ignore - pdf-parse types
-import pdfParse from "https://esm.sh/pdf-parse@1.1.1";
+import { pdfText } from "jsr:@pdf/pdftext@1.3.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -67,13 +66,16 @@ serve(async (req) => {
       throw new Error(`Unsupported file type: ${doc.file_type}`);
     }
 
-    // Extract text from PDF using pdf-parse
+    // Extract text from PDF using Deno-native library
     console.log("Parsing PDF to extract text...");
     const arrayBuffer = await fileData.arrayBuffer();
-    const buffer = new Uint8Array(arrayBuffer);
+    const pdfBuffer = new Uint8Array(arrayBuffer);
     
-    const pdfData = await pdfParse(buffer);
-    const extracted = pdfData.text;
+    // pdfText returns an object with page numbers as keys
+    const pages = await pdfText(pdfBuffer);
+    
+    // Concatenate all pages into one string
+    const extracted = Object.values(pages).join('\n\n');
     
     if (!extracted || extracted.trim().length < 20) {
       throw new Error("No text content found in PDF");
