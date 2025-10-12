@@ -172,20 +172,19 @@ export default function ContentEditorPage() {
       .join('');
   }, []);
 
-  // Callback ref - only sets content ONCE on mount
+  // Callback ref - resilient to remounts
   const attachEditableRef = useCallback((element: HTMLDivElement | null) => {
-    if (element && !hasInitialized.current) {
-      editableRef.current = element;
-      
-      // Use content or default to empty paragraph
-      const contentToUse = editableContent || "";
-      const formattedContent = plainTextToHtml(contentToUse);
-      element.innerHTML = formattedContent;
+    if (!element) return;
+
+    // Hydrate DOM from current state if empty or different (avoids blank editor on remount)
+    const formatted = plainTextToHtml(editableContent || "");
+    if (element.innerHTML.trim() !== formatted.trim()) {
+      element.innerHTML = formatted;
       document.execCommand('defaultParagraphSeparator', false, 'p');
-      
-      hasInitialized.current = true;
-      setIsEditorReady(true);
     }
+
+    editableRef.current = element;
+    setIsEditorReady(true);
   }, [editableContent, plainTextToHtml]);
   
   // Auto-save using ref content
