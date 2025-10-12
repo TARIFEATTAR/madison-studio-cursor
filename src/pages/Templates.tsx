@@ -49,9 +49,9 @@ const TemplatesContent = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { state } = useSidebar();
+  const { open } = useSidebar();
   const isMobile = useIsMobile();
-  const isSidebarCollapsed = state === "collapsed";
+  const isSidebarCollapsed = !open;
 
   const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
