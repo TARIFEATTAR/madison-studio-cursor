@@ -200,6 +200,16 @@ export default function ContentEditorPage() {
       // Ensure editor keeps focus for uninterrupted typing
       element.focus();
     }
+    
+    // Calculate word count after editor is hydrated
+    requestAnimationFrame(() => {
+      if (element) {
+        const text = element.innerText;
+        const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+        setWordCount(words.length);
+        console.debug("[ContentEditor] Word count set in attachEditableRef:", words.length);
+      }
+    });
   }, [editableContent, plainTextToHtml]);
   
   // Auto-save using ref content
@@ -297,12 +307,17 @@ export default function ContentEditorPage() {
   // Calculate word count on initial load
   useEffect(() => {
     if (isEditorReady && editableRef.current) {
-      const text = editableRef.current.innerText;
-      const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-      setWordCount(words.length);
-      console.debug("[ContentEditor] Initial word count calculated:", words.length);
+      // Use requestAnimationFrame to ensure DOM has fully rendered
+      requestAnimationFrame(() => {
+        if (editableRef.current) {
+          const text = editableRef.current.innerText;
+          const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+          setWordCount(words.length);
+          console.debug("[ContentEditor] Initial word count calculated:", words.length, "from text:", text.substring(0, 50));
+        }
+      });
     }
-  }, [isEditorReady]);
+  }, [isEditorReady, editableContent]);
 
   // NO LONGER NEEDED - content is set once in attachEditableRef
 
@@ -516,9 +531,9 @@ export default function ContentEditorPage() {
           borderColor: "#E5E0D8"
         }}
       >
-        <div className="flex items-center justify-between px-4 py-2">
+        <div className="flex items-center justify-between px-4 py-2 gap-2 overflow-x-auto">
           {/* Left: Exit Button + Font & Formatting */}
-          <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2 overflow-x-auto">
+          <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2 flex-nowrap min-w-0">
             {/* Exit Button */}
             <Button
               variant="ghost"
