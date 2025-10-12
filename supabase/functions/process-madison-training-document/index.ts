@@ -40,15 +40,27 @@ serve(async (req) => {
       .update({ processing_status: "processing" })
       .eq("id", documentId);
 
-    // Download file from private bucket using stored path
-    const filePath: string = doc.file_url; // stored storage path like "1699999999999-My.pdf"
+    // Extract the storage path from file_url (handle both full URLs and paths)
+    let filePath: string = doc.file_url;
+    
+    // If file_url is a full URL, extract just the path after the bucket name
+    if (filePath.includes('storage/v1/object/')) {
+      const match = filePath.match(/madison-training-docs\/(.+)$/);
+      if (match && match[1]) {
+        filePath = decodeURIComponent(match[1]);
+      }
+    }
+    
     console.log("Downloading from bucket path:", filePath);
     const { data: fileData, error: dlErr } = await supabase
       .storage
       .from("madison-training-docs")
       .download(filePath);
 
-    if (dlErr || !fileData) throw new Error(`Failed to download file: ${dlErr?.message}`);
+    if (dlErr || !fileData) {
+      console.error("Download error details:", dlErr);
+      throw new Error(`Failed to download file: ${dlErr?.message || JSON.stringify(dlErr)}`);
+    }
 
     if (doc.file_type !== "application/pdf") {
       throw new Error(`Unsupported file type: ${doc.file_type}`);
