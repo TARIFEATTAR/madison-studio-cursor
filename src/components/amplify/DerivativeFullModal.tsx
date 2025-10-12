@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -75,6 +75,7 @@ export function DerivativeFullModal({
   const [editedContent, setEditedContent] = useState("");
   const [platformSpecsOpen, setPlatformSpecsOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   if (!derivative) return null;
 
@@ -97,6 +98,19 @@ export function DerivativeFullModal({
   const handleCancelEdit = () => {
     setIsEditing(false);
     setEditedContent("");
+  };
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const cursorPosition = e.target.selectionStart;
+    setEditedContent(e.target.value);
+    
+    // Preserve cursor position after state update
+    requestAnimationFrame(() => {
+      if (textareaRef.current) {
+        textareaRef.current.selectionStart = cursorPosition;
+        textareaRef.current.selectionEnd = cursorPosition;
+      }
+    });
   };
 
   const getStatusBadgeVariant = () => {
@@ -182,8 +196,9 @@ export function DerivativeFullModal({
           {isEditing ? (
             <div className="space-y-4">
               <Textarea
+                ref={textareaRef}
                 value={editedContent}
-                onChange={(e) => setEditedContent(e.target.value)}
+                onChange={handleContentChange}
                 className="min-h-[400px] font-sans text-base resize-none"
                 placeholder="Edit your content..."
               />

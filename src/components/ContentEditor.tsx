@@ -321,7 +321,16 @@ export const ContentEditor = ({
         <Textarea
           ref={textareaRef}
           value={content}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            const cursorPosition = e.target.selectionStart;
+            onChange(e.target.value);
+            requestAnimationFrame(() => {
+              if (textareaRef.current) {
+                textareaRef.current.selectionStart = cursorPosition;
+                textareaRef.current.selectionEnd = cursorPosition;
+              }
+            });
+          }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           className="min-h-[400px] bg-background/50 leading-relaxed font-serif text-lg"
@@ -388,7 +397,16 @@ export const ContentEditor = ({
           <Textarea
             ref={textareaRef}
             value={content}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => {
+              const cursorPosition = e.target.selectionStart;
+              onChange(e.target.value);
+              requestAnimationFrame(() => {
+                if (textareaRef.current) {
+                  textareaRef.current.selectionStart = cursorPosition;
+                  textareaRef.current.selectionEnd = cursorPosition;
+                }
+              });
+            }}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             className="min-h-[200px] bg-background/50 leading-relaxed font-serif"

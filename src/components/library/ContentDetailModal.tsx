@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Edit2, Send, Copy, Check, FileDown } from "lucide-react";
 import {
   Dialog,
@@ -49,6 +49,7 @@ export function ContentDetailModal({
     brandColor?: string;
     logoBase64?: string;
   }>({});
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const contentType = content.content_type || content.asset_type;
   const subtypeLabel = contentType ? getContentSubtypeLabel(contentType) : null;
@@ -115,6 +116,19 @@ export function ContentDetailModal({
       description: "Content has been copied to your clipboard.",
     });
     setTimeout(() => setIsCopied(false), 2000);
+  };
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const cursorPosition = e.target.selectionStart;
+    setEditedContent(e.target.value);
+    
+    // Preserve cursor position after state update
+    requestAnimationFrame(() => {
+      if (textareaRef.current) {
+        textareaRef.current.selectionStart = cursorPosition;
+        textareaRef.current.selectionEnd = cursorPosition;
+      }
+    });
   };
 
   // Fetch organization data when modal opens
@@ -233,8 +247,9 @@ export function ContentDetailModal({
           {isEditing ? (
             <div className="space-y-3">
               <Textarea
+                ref={textareaRef}
                 value={editedContent}
-                onChange={(e) => setEditedContent(e.target.value)}
+                onChange={handleContentChange}
                 className="min-h-[400px] font-mono text-sm"
                 placeholder="Edit your content..."
               />
