@@ -120,32 +120,7 @@ export default function ContentEditorPage() {
   const updateTimeoutRef = useRef<NodeJS.Timeout>();
   const hasInitialized = useRef(false);
 
-  // Callback ref - only sets content ONCE on mount
-  const attachEditableRef = useCallback((element: HTMLDivElement | null) => {
-    if (element && !hasInitialized.current && editableContent) {
-      editableRef.current = element;
-      
-      const formattedContent = plainTextToHtml(editableContent);
-      element.innerHTML = formattedContent;
-      document.execCommand('defaultParagraphSeparator', false, 'p');
-      
-      hasInitialized.current = true;
-      setIsEditorReady(true);
-      
-      // Focus and position cursor at end
-      requestAnimationFrame(() => {
-        element.focus();
-        const range = document.createRange();
-        const sel = window.getSelection();
-        range.selectNodeContents(element);
-        range.collapse(false);
-        sel?.removeAllRanges();
-        sel?.addRange(range);
-      });
-    }
-  }, [editableContent]);
-  
-  // HTML conversion utilities
+  // HTML conversion utilities - MUST be defined before attachEditableRef
   const htmlToPlainText = useCallback((html: string): string => {
     const temp = document.createElement('div');
     temp.innerHTML = html;
@@ -196,6 +171,37 @@ export default function ContentEditorPage() {
       })
       .join('');
   }, []);
+
+  // Callback ref - only sets content ONCE on mount
+  const attachEditableRef = useCallback((element: HTMLDivElement | null) => {
+    if (element && !hasInitialized.current) {
+      editableRef.current = element;
+      
+      // Use content or default to empty paragraph
+      const contentToUse = editableContent || "";
+      const formattedContent = plainTextToHtml(contentToUse);
+      element.innerHTML = formattedContent;
+      document.execCommand('defaultParagraphSeparator', false, 'p');
+      
+      hasInitialized.current = true;
+      setIsEditorReady(true);
+      
+      // Focus and position cursor at end only if there's content
+      if (contentToUse) {
+        requestAnimationFrame(() => {
+          if (element) {
+            element.focus();
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(element);
+            range.collapse(false);
+            sel?.removeAllRanges();
+            sel?.addRange(range);
+          }
+        });
+      }
+    }
+  }, [editableContent, plainTextToHtml]);
   
   // Auto-save using ref content
   const getContentForSave = useCallback(() => {
