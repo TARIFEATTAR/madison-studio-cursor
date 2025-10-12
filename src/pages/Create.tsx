@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Lightbulb, FileText, PenTool, X, Send, Loader2 } from "lucide-react";
 import penNibIcon from "@/assets/pen-nib-icon-new.png";
 import { createRoot } from "react-dom/client";
@@ -23,6 +23,7 @@ import { NameContentDialog } from "@/components/forge/NameContentDialog";
 
 export default function Create() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentOrganizationId } = useOnboarding();
   const { toast } = useToast();
 
@@ -34,6 +35,24 @@ export default function Create() {
   const [goal, setGoal] = useState("");
   const [style, setStyle] = useState("tarife-native");
   const [additionalContext, setAdditionalContext] = useState("");
+
+  // Load prompt from navigation state if present
+  useEffect(() => {
+    if (location.state?.prompt) {
+      const prompt = location.state.prompt;
+      // Pre-fill the form with prompt data
+      setAdditionalContext(prompt.prompt_text);
+      
+      // Show toast to confirm template loaded
+      toast({
+        title: "Template loaded",
+        description: `"${prompt.title}" is ready to use`,
+      });
+      
+      // Clear the navigation state
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, toast]);
   
   // Dialog state
   const [thinkModeExpanded, setThinkModeExpanded] = useState(false);
@@ -92,6 +111,24 @@ export default function Create() {
       const fullPrompt = `${promptParts}\n\n[EXECUTE THIS BRIEF IMMEDIATELY. OUTPUT ONLY THE FINAL COPY. NO QUESTIONS OR ANALYSIS.]`;
 
       console.log('Calling AI with organization:', currentOrganizationId);
+
+      // Save the prompt automatically to the prompt library
+      try {
+        await supabase.from("prompts").insert({
+          title: `${format} - ${product}`,
+          prompt_text: fullPrompt,
+          content_type: format.toLowerCase().includes('email') ? 'email' : 
+                       format.toLowerCase().includes('social') ? 'social' : 
+                       format.toLowerCase().includes('blog') ? 'blog' : 'product',
+          collection: "cadence",
+          organization_id: currentOrganizationId,
+          is_template: false,
+          times_used: 1
+        });
+      } catch (promptError) {
+        console.error('Error saving prompt:', promptError);
+        // Don't fail the whole operation if prompt saving fails
+      }
       
       // Call real AI edge function
       const { data, error } = await supabase.functions.invoke('generate-with-claude', {

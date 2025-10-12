@@ -46,7 +46,10 @@ const EnhancedPromptCard = ({
   };
 
   return (
-    <Card className="bg-white border-2 border-[#D4CFC8] hover:border-[#B8956A] transition-all duration-200 overflow-hidden group">
+    <Card 
+      className="bg-white border-2 border-[#D4CFC8] hover:border-[#B8956A] transition-all duration-200 overflow-hidden group cursor-pointer"
+      onClick={onEdit}
+    >
       <div className="p-6">
         {/* Header: Title + Star */}
         <div className="flex items-start justify-between mb-2">
