@@ -366,29 +366,17 @@ const TemplatesContent = () => {
       <div className="max-w-[1400px] mx-auto px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-8">
           
-          {/* LEFT SIDEBAR - 350px fixed width on desktop */}
+          {/* LEFT COLUMN - 350px fixed width on desktop, filters only */}
           {!isMobile && (
             <aside className="space-y-6">
-              {!isSidebarCollapsed ? (
-                <PromptLibrarySidebar
-                  onQuickAccessSelect={setSelectedQuickAccess}
-                  onCollectionSelect={setSelectedCollection}
-                  onCategorySelect={setSelectedCategory}
-                  selectedQuickAccess={selectedQuickAccess}
-                  selectedCollection={selectedCollection}
-                  selectedCategory={selectedCategory}
-                />
-              ) : counts ? (
-                <PromptFilterCards
-                  counts={counts}
-                  selectedQuickAccess={selectedQuickAccess}
-                  selectedCollection={selectedCollection}
-                  selectedCategory={selectedCategory}
-                  onQuickAccessSelect={setSelectedQuickAccess}
-                  onCollectionSelect={setSelectedCollection}
-                  onCategorySelect={setSelectedCategory}
-                />
-              ) : null}
+              <PromptLibrarySidebar
+                onQuickAccessSelect={setSelectedQuickAccess}
+                onCollectionSelect={setSelectedCollection}
+                onCategorySelect={setSelectedCategory}
+                selectedQuickAccess={selectedQuickAccess}
+                selectedCollection={selectedCollection}
+                selectedCategory={selectedCategory}
+              />
             </aside>
           )}
 
