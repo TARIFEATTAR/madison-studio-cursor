@@ -30,7 +30,7 @@ export function getIndustryTemplate(industryKey: string): IndustryTemplate {
 export function getIndustryOptions() {
   return [
     { value: 'skincare', label: 'Skin Care' },
-    { value: 'perfume', label: 'Perfume' },
+    { value: 'perfume', label: 'Perfumery' },
     { value: 'home_fragrance', label: 'Home Fragrance' }
   ];
 }
