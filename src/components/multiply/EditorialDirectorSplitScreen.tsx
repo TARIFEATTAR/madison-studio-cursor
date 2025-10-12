@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -74,6 +74,7 @@ export function EditorialDirectorSplitScreen({
 }: EditorialDirectorSplitScreenProps) {
   const [editedContent, setEditedContent] = useState(derivative.content);
   const [selectedDerivativeId, setSelectedDerivativeId] = useState(derivative.id);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const selectedDerivative = derivatives.find(d => d.id === selectedDerivativeId) || derivative;
   const Icon = DERIVATIVE_ICONS[selectedDerivative.typeId as keyof typeof DERIVATIVE_ICONS] || FileText;
@@ -103,6 +104,19 @@ export function EditorialDirectorSplitScreen({
     onUpdateDerivative({
       ...selectedDerivative,
       status: "rejected",
+    });
+  };
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const cursorPosition = e.target.selectionStart;
+    setEditedContent(e.target.value);
+    
+    // Preserve cursor position after state update
+    requestAnimationFrame(() => {
+      if (textareaRef.current) {
+        textareaRef.current.selectionStart = cursorPosition;
+        textareaRef.current.selectionEnd = cursorPosition;
+      }
     });
   };
 
@@ -171,8 +185,9 @@ export function EditorialDirectorSplitScreen({
                     </span>
                   </div>
                   <Textarea
+                    ref={textareaRef}
                     value={editedContent}
-                    onChange={(e) => setEditedContent(e.target.value)}
+                    onChange={handleContentChange}
                     className="min-h-64 font-sans"
                     style={{ backgroundColor: "#FFFCF5" }}
                   />
