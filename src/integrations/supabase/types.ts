@@ -1026,6 +1026,62 @@ export type Database = {
         }
         Relationships: []
       }
+      worksheet_uploads: {
+        Row: {
+          confidence_scores: Json | null
+          created_at: string | null
+          error_message: string | null
+          extracted_data: Json | null
+          file_name: string
+          file_size: number
+          file_url: string
+          id: string
+          organization_id: string
+          processing_status: string | null
+          updated_at: string | null
+          uploaded_by: string
+          used_at: string | null
+        }
+        Insert: {
+          confidence_scores?: Json | null
+          created_at?: string | null
+          error_message?: string | null
+          extracted_data?: Json | null
+          file_name: string
+          file_size: number
+          file_url: string
+          id?: string
+          organization_id: string
+          processing_status?: string | null
+          updated_at?: string | null
+          uploaded_by: string
+          used_at?: string | null
+        }
+        Update: {
+          confidence_scores?: Json | null
+          created_at?: string | null
+          error_message?: string | null
+          extracted_data?: Json | null
+          file_name?: string
+          file_size?: number
+          file_url?: string
+          id?: string
+          organization_id?: string
+          processing_status?: string | null
+          updated_at?: string | null
+          uploaded_by?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worksheet_uploads_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

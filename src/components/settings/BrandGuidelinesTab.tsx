@@ -9,6 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { IndustrySelector } from "./IndustrySelector";
 import { BrandKnowledgeCenter } from "@/components/onboarding/BrandKnowledgeCenter";
+import { downloadWorksheet } from "@/utils/worksheetGenerator";
+import { FileText, Download } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface BrandGuidelines {
   brand_name?: string;
@@ -103,9 +106,65 @@ export function BrandGuidelinesTab() {
     }
   };
 
+  const handleDownloadWorksheet = async () => {
+    try {
+      await downloadWorksheet({ organizationName: guidelines.brand_name });
+      toast({
+        title: "Worksheet downloaded",
+        description: "Fill it out and upload to the Create page to auto-fill your brief"
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: "Download failed",
+        description: "Please try again",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="space-y-8">
       <IndustrySelector />
+
+      {/* Content Brief Worksheets */}
+      <Card className="bg-paper-light border-cream-dark">
+        <CardHeader>
+          <CardTitle className="text-charcoal">Content Brief Worksheets</CardTitle>
+          <CardDescription>
+            Download fillable worksheets to plan content offline
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-start gap-4 p-4 bg-parchment-white rounded-lg">
+            <FileText className="w-5 h-5 mt-1 text-brass" />
+            <div className="flex-1">
+              <h4 className="font-medium mb-1 text-charcoal">Content Brief Worksheet</h4>
+              <p className="text-sm text-warm-gray mb-3">
+                Fill out offline and upload to auto-populate the Create form
+              </p>
+              <Button 
+                onClick={handleDownloadWorksheet}
+                className="flex items-center gap-2 bg-brass hover:bg-brass-light text-charcoal"
+              >
+                <Download className="w-4 h-4" />
+                Download Worksheet (PDF)
+              </Button>
+            </div>
+          </div>
+          
+          <div className="text-sm text-warm-gray space-y-2">
+            <p><strong>How to use:</strong></p>
+            <ol className="list-decimal list-inside space-y-1 ml-2">
+              <li>Download and print the worksheet (or fill digitally)</li>
+              <li>Complete all fields for your content brief</li>
+              <li>Scan the QR code or go to Create page</li>
+              <li>Upload your completed worksheet</li>
+              <li>Review auto-filled data and generate content</li>
+            </ol>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Brand Knowledge Center - AI-Powered Document Processing */}
       {currentOrganizationId && (

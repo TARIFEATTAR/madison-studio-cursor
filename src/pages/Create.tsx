@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Lightbulb, FileText, PenTool, X, Send, Loader2, Bookmark } from "lucide-react";
+import { Lightbulb, FileText, PenTool, X, Send, Loader2, Bookmark, Upload } from "lucide-react";
 import penNibIcon from "@/assets/pen-nib-icon-new.png";
 import { createRoot } from "react-dom/client";
 import ScriptoraLoadingAnimation from "@/components/forge/ScriptoraLoadingAnimation";
@@ -22,6 +22,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { NameContentDialog } from "@/components/forge/NameContentDialog";
 import { SavePromptDialog } from "@/components/prompt-library/SavePromptDialog";
+import { WorksheetUpload } from "@/components/forge/WorksheetUpload";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function Create() {
   const navigate = useNavigate();
@@ -56,6 +58,14 @@ export default function Create() {
       window.history.replaceState({}, document.title);
     }
   }, [location.state, toast]);
+
+  // Handle URL param for worksheet upload
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('upload') === 'true') {
+      setUploadDialogOpen(true);
+    }
+  }, [location.search]);
   
   // Dialog state
   const [thinkModeExpanded, setThinkModeExpanded] = useState(false);
@@ -66,6 +76,7 @@ export default function Create() {
   const [showTransitionLoader, setShowTransitionLoader] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [savePromptDialogOpen, setSavePromptDialogOpen] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   const handleSubmit = () => {
     // Validate required fields
@@ -238,6 +249,51 @@ export default function Create() {
   const handleCancel = () => {
     // Clear form or navigate back
     navigate("/dashboard");
+  };
+
+  const handleWorksheetUploaded = async (uploadId: string) => {
+    try {
+      // Fetch extracted data
+      const { data, error } = await supabase
+        .from('worksheet_uploads')
+        .select('extracted_data, confidence_scores')
+        .eq('id', uploadId)
+        .single();
+
+      if (error || !data) {
+        toast({
+          title: "Error loading worksheet data",
+          description: "Please try uploading again",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const extractedData = data.extracted_data as any;
+      
+      // Auto-fill form fields
+      if (extractedData.product) setProduct(extractedData.product);
+      if (extractedData.format) setFormat(extractedData.format);
+      if (extractedData.audience) setAudience(extractedData.audience);
+      if (extractedData.goal) setGoal(extractedData.goal);
+      if (extractedData.style) setStyle(extractedData.style);
+      if (extractedData.additionalContext) setAdditionalContext(extractedData.additionalContext);
+
+      setUploadDialogOpen(false);
+
+      toast({
+        title: "Worksheet loaded!",
+        description: "Review and adjust fields as needed, then create your content"
+      });
+
+    } catch (error) {
+      console.error('Worksheet load error:', error);
+      toast({
+        title: "Error loading worksheet",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleThinkModeSend = async () => {
@@ -504,20 +560,30 @@ export default function Create() {
         <div>
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center gap-4 mb-4">
-              <img 
-                src={penNibIcon} 
-                alt="Pen nib icon" 
-                className="w-16 h-16 object-contain"
-              />
-              <div>
-                <h1 className="text-4xl font-serif font-medium text-ink-black">
-                  Create Content
-                </h1>
-                <p className="text-lg mt-1 text-warm-gray">
-                  Quick brief to generate your content
-                </p>
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <div className="flex items-center gap-4">
+                <img 
+                  src={penNibIcon} 
+                  alt="Pen nib icon" 
+                  className="w-16 h-16 object-contain"
+                />
+                <div>
+                  <h1 className="text-4xl font-serif font-medium text-ink-black">
+                    Create Content
+                  </h1>
+                  <p className="text-lg mt-1 text-warm-gray">
+                    Quick brief to generate your content
+                  </p>
+                </div>
               </div>
+              <Button
+                variant="outline"
+                onClick={() => setUploadDialogOpen(true)}
+                className="flex items-center gap-2 border-brass text-brass hover:bg-brass/10"
+              >
+                <Upload className="w-4 h-4" />
+                Upload Worksheet
+              </Button>
             </div>
             <p className="text-base text-warm-gray">
               Choose your product and format. Add optional details for more targeted content. Our AI will handle the rest.
@@ -724,17 +790,37 @@ export default function Create() {
 
       {/* Dialogs and Loaders */}
       {showTransitionLoader && <TransitionLoader onComplete={() => setShowTransitionLoader(false)} />}
+      
       <NameContentDialog
         open={nameDialogOpen}
         onOpenChange={setNameDialogOpen}
         onConfirm={handleGenerateContent}
       />
+      
       <SavePromptDialog
         open={savePromptDialogOpen}
         onOpenChange={setSavePromptDialogOpen}
         promptText={additionalContext}
         suggestedTitle={`${format} - ${product}`}
       />
+
+      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Upload Content Brief Worksheet</DialogTitle>
+            <DialogDescription>
+              Upload your completed worksheet to auto-fill this form
+            </DialogDescription>
+          </DialogHeader>
+          
+          {currentOrganizationId && (
+            <WorksheetUpload
+              onUploadComplete={handleWorksheetUploaded}
+              organizationId={currentOrganizationId}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

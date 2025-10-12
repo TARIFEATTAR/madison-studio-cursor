@@ -1,0 +1,204 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { uploadId, fileUrl, organizationId } = await req.json();
+
+    if (!uploadId || !fileUrl) {
+      throw new Error('Missing required parameters');
+    }
+
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Update status to processing
+    await supabase
+      .from('worksheet_uploads')
+      .update({ processing_status: 'processing' })
+      .eq('id', uploadId);
+
+    console.log('Downloading file from storage:', fileUrl);
+
+    // Download file from storage
+    const { data: fileData, error: downloadError } = await supabase.storage
+      .from('worksheet-uploads')
+      .download(fileUrl);
+
+    if (downloadError) {
+      throw new Error(`Failed to download file: ${downloadError.message}`);
+    }
+
+    // Convert file to base64
+    const arrayBuffer = await fileData.arrayBuffer();
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const mimeType = fileUrl.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 
+                     fileUrl.toLowerCase().match(/\.(jpg|jpeg)$/i) ? 'image/jpeg' : 'image/png';
+    const dataUrl = `data:${mimeType};base64,${base64}`;
+
+    console.log('Calling Lovable AI to parse worksheet...');
+
+    // Call Lovable AI to extract data
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY not configured');
+    }
+
+    const systemPrompt = `You are a document parser for Scriptora content worksheets.
+Extract the following information from the uploaded worksheet:
+
+1. Product/Collection Name (text field)
+2. Deliverable Format (one of: Email Campaign, Blog Post, Social Media Post, Product Description, Newsletter, Website Copy)
+3. Target Audience (text description)
+4. Content Goal (text description)
+5. Style Overlay (one of: Tarife Native, Madison Editorial, Balanced)
+6. Additional Editorial Direction (text description)
+
+Return the extracted data as JSON in this exact format:
+{
+  "product": "extracted product name or null",
+  "format": "extracted format or null",
+  "audience": "extracted audience description or null",
+  "goal": "extracted goal description or null",
+  "style": "extracted style choice (tarife-native, madison-editorial, or balanced) or null",
+  "additionalContext": "extracted additional direction or null"
+}
+
+For style, convert the values to lowercase with hyphens:
+- "Tarife Native" → "tarife-native"
+- "Madison Editorial" → "madison-editorial"
+- "Balanced" → "balanced"
+
+For format, use the exact options:
+- Email Campaign, Blog Post, Social Media Post, Product Description, Newsletter, Website Copy
+
+Return confidence scores (0-1) for each field. If handwriting is unclear, return lower confidence.
+If a field is completely blank or unreadable, return null for that field and confidence of 0.`;
+
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-pro',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Please extract the data from this content brief worksheet.' },
+              { type: 'image_url', image_url: { url: dataUrl } }
+            ]
+          }
+        ],
+        response_format: { type: 'json_object' }
+      }),
+    });
+
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error('AI API error:', aiResponse.status, errorText);
+      throw new Error(`AI processing failed: ${aiResponse.status}`);
+    }
+
+    const aiData = await aiResponse.json();
+    console.log('AI response received:', JSON.stringify(aiData, null, 2));
+
+    const content = aiData.choices?.[0]?.message?.content;
+    if (!content) {
+      throw new Error('No content in AI response');
+    }
+
+    let extractedData;
+    try {
+      extractedData = JSON.parse(content);
+    } catch (parseError) {
+      console.error('Failed to parse AI response:', content);
+      throw new Error('Invalid JSON from AI');
+    }
+
+    // Generate confidence scores (simple heuristic based on field presence)
+    const confidenceScores = {
+      product: extractedData.product ? 0.9 : 0,
+      format: extractedData.format ? 0.85 : 0,
+      audience: extractedData.audience ? 0.8 : 0,
+      goal: extractedData.goal ? 0.8 : 0,
+      style: extractedData.style ? 0.9 : 0,
+      additionalContext: extractedData.additionalContext ? 0.75 : 0
+    };
+
+    console.log('Extracted data:', extractedData);
+    console.log('Confidence scores:', confidenceScores);
+
+    // Update database with extracted data
+    const { error: updateError } = await supabase
+      .from('worksheet_uploads')
+      .update({
+        extracted_data: extractedData,
+        confidence_scores: confidenceScores,
+        processing_status: 'completed'
+      })
+      .eq('id', uploadId);
+
+    if (updateError) {
+      throw new Error(`Failed to update record: ${updateError.message}`);
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        uploadId,
+        extractedData,
+        confidenceScores
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('Parse worksheet error:', error);
+
+    // Try to update status to failed if we have uploadId
+    try {
+      const { uploadId } = await req.json();
+      if (uploadId) {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        await supabase
+          .from('worksheet_uploads')
+          .update({
+            processing_status: 'failed',
+            error_message: error instanceof Error ? error.message : 'Unknown error'
+          })
+          .eq('id', uploadId);
+      }
+    } catch (updateError) {
+      console.error('Failed to update error status:', updateError);
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+  }
+});
