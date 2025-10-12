@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { HelpCircle, Plus, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
@@ -288,34 +289,6 @@ const TemplatesContent = () => {
 
   return (
     <div className="flex-1 min-h-screen bg-[#F5F1E8]">
-      {/* Mobile Filter Drawer */}
-      {isMobile && (
-        <Drawer open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
-          <DrawerContent className="h-[85vh]">
-            <div className="overflow-y-auto h-full">
-              <PromptLibrarySidebar
-                onQuickAccessSelect={(value) => {
-                  setSelectedQuickAccess(value);
-                  setMobileFiltersOpen(false);
-                }}
-                onCollectionSelect={(value) => {
-                  setSelectedCollection(value);
-                  setMobileFiltersOpen(false);
-                }}
-                onCategorySelect={(value) => {
-                  setSelectedCategory(value);
-                  setMobileFiltersOpen(false);
-                }}
-                selectedQuickAccess={selectedQuickAccess}
-                selectedCollection={selectedCollection}
-                selectedCategory={selectedCategory}
-                onClearFilters={clearAllFilters}
-              />
-            </div>
-          </DrawerContent>
-        </Drawer>
-      )}
-
       {/* HEADER SECTION - Full width */}
       <div className="bg-white border-b-2 border-[#D4CFC8] px-8 py-6">
         <div className="max-w-full mx-auto">
@@ -331,11 +304,35 @@ const TemplatesContent = () => {
             <div className="flex gap-3">
               {/* Mobile: Filters Button */}
               {isMobile && (
-                <DrawerTrigger asChild>
-                  <Button variant="outline" size="icon" className="rounded-full">
-                    <Filter className="w-5 h-5" />
-                  </Button>
-                </DrawerTrigger>
+                <Drawer open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+                  <DrawerTrigger asChild>
+                    <Button variant="outline" size="icon" className="rounded-full">
+                      <Filter className="w-5 h-5" />
+                    </Button>
+                  </DrawerTrigger>
+                  <DrawerContent className="h-[85vh]">
+                    <div className="overflow-y-auto h-full">
+                      <PromptLibrarySidebar
+                        onQuickAccessSelect={(value) => {
+                          setSelectedQuickAccess(value);
+                          setMobileFiltersOpen(false);
+                        }}
+                        onCollectionSelect={(value) => {
+                          setSelectedCollection(value);
+                          setMobileFiltersOpen(false);
+                        }}
+                        onCategorySelect={(value) => {
+                          setSelectedCategory(value);
+                          setMobileFiltersOpen(false);
+                        }}
+                        selectedQuickAccess={selectedQuickAccess}
+                        selectedCollection={selectedCollection}
+                        selectedCategory={selectedCategory}
+                        onClearFilters={clearAllFilters}
+                      />
+                    </div>
+                  </DrawerContent>
+                </Drawer>
               )}
               
               <Button
@@ -521,7 +518,21 @@ const TemplatesContent = () => {
 };
 
 const Templates = () => {
-  return <TemplatesContent />;
+  return (
+    <ErrorBoundary
+      fallback={
+        <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-8 bg-[#F5F1E8]">
+          <h2 className="text-2xl font-serif text-[#1A1816]">Unable to load Prompt Library</h2>
+          <p className="text-[#6B6560] text-center max-w-md">
+            There was an error loading your prompts. Please refresh the page or try again later.
+          </p>
+          <Button onClick={() => window.location.reload()}>Refresh Page</Button>
+        </div>
+      }
+    >
+      <TemplatesContent />
+    </ErrorBoundary>
+  );
 };
 
 export default Templates;
