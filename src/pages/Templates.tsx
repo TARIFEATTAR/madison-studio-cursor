@@ -438,6 +438,8 @@ const TemplatesContent = () => {
                   prompt={prompt}
                   onUse={() => handleUsePrompt(prompt.id)}
                   onToggleFavorite={() => handleToggleFavorite(prompt.id)}
+                  onEdit={() => setSelectedPrompt(prompt)}
+                  onDelete={() => handleDelete(prompt.id)}
                   isFavorite={prompt.is_template}
                 />
               ))}

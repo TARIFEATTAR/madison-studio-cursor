@@ -1,14 +1,17 @@
 import { useState } from "react";
-import { Star, ChevronDown, ChevronUp } from "lucide-react";
+import { Star, Copy, Edit, Trash2, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { Prompt } from "@/pages/Templates";
+import { useToast } from "@/hooks/use-toast";
 
 interface EnhancedPromptCardProps {
   prompt: Prompt;
   onUse: () => void;
   onToggleFavorite?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
   isFavorite?: boolean;
 }
 
@@ -16,98 +19,146 @@ const EnhancedPromptCard = ({
   prompt,
   onUse,
   onToggleFavorite,
+  onEdit,
+  onDelete,
   isFavorite = false,
 }: EnhancedPromptCardProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const { toast } = useToast();
 
-  const preview = prompt.prompt_text?.substring(0, 200) || "";
-  const fullText = prompt.prompt_text || "";
+  const handleCopy = () => {
+    navigator.clipboard.writeText(prompt.prompt_text);
+    toast({
+      title: "Copied to clipboard",
+      description: "Prompt template copied successfully",
+    });
+  };
+
+  // Generate description based on content type
+  const getDescription = () => {
+    const descriptions: Record<string, string> = {
+      product: "Sophisticated product launch content for new fragrance releases",
+      blog: "Editorial content about the creation process and craftsmanship",
+      email: "Monthly newsletter format with collection highlights",
+      social: "Instagram-optimized captions with storytelling elements",
+      visual: "Image generation prompts for visual assets",
+    };
+    return descriptions[prompt.content_type] || `${prompt.content_type} content template`;
+  };
 
   return (
-    <Card className="p-6 hover:shadow-lg hover:border-[#B8956A] transition-all duration-200 border border-[#D4CFC8] bg-[#FFFCF5] relative group cursor-pointer">
-      {/* Favorite Star */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggleFavorite?.();
-        }}
-        className="absolute top-5 right-5 z-10 hover:scale-110 transition-transform"
-      >
-        <Star
-          className={`h-5 w-5 ${
-            isFavorite ? "fill-[#D4AF37] text-[#D4AF37]" : "text-[#D4CFC8] hover:text-[#B8956A]"
-          }`}
-        />
-      </button>
-
-      <div className="space-y-4">
-        {/* Title & Description */}
-        <div className="pr-10">
-          <h3 className="text-xl font-serif text-[#1A1816] mb-3 leading-tight">
+    <Card className="bg-white border-2 border-[#D4CFC8] hover:border-[#B8956A] transition-all duration-200 overflow-hidden group">
+      <div className="p-6">
+        {/* Header: Title + Star */}
+        <div className="flex items-start justify-between mb-2">
+          <h3 className="text-2xl font-serif font-bold text-[#1A1816] leading-tight flex-1 pr-4">
             {prompt.title}
           </h3>
-          <p className="text-sm text-[#6B6560] leading-relaxed">
-            {prompt.content_type === 'product' ? 'Sophisticated product launch content for new fragrance releases' :
-             prompt.content_type === 'blog' ? 'Editorial content about the creation process and craftsmanship' :
-             prompt.content_type === 'email' ? 'Monthly newsletter format with collection highlights' :
-             prompt.content_type === 'social' ? 'Instagram-optimized captions with storytelling elements' :
-             `${prompt.content_type} content template`}
-          </p>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorite?.();
+            }}
+            className="flex-shrink-0 p-2 rounded-lg border-2 border-[#D4CFC8] hover:border-[#D4AF37] transition-colors"
+          >
+            <Star
+              className={`h-5 w-5 ${
+                isFavorite ? "fill-[#D4AF37] text-[#D4AF37]" : "text-[#D4CFC8]"
+              }`}
+            />
+          </button>
         </div>
 
-        {/* Prompt Preview */}
-        {fullText && (
-          <div className="bg-[#F5F1E8] rounded-lg p-4">
-            <pre className="font-mono text-sm text-[#1A1816] leading-relaxed whitespace-pre-wrap {isExpanded ? '' : 'line-clamp-3'}">
-              {fullText}
-            </pre>
-            {fullText.length > 200 && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsExpanded(!isExpanded);
-                }}
-                className="flex items-center gap-1.5 mt-3 text-xs font-medium text-[#B8956A] hover:text-[#D4AF37] transition-colors"
-              >
-                {isExpanded ? (
-                  <>
-                    <ChevronUp className="h-4 w-4" />
-                    Show less
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="h-4 w-4" />
-                    Show more
-                  </>
-                )}
-              </button>
-            )}
-          </div>
-        )}
+        {/* Description */}
+        <p className="text-[#6B6560] mb-6 leading-relaxed">
+          {getDescription()}
+        </p>
 
-        {/* Footer: Tags + Usage */}
-        <div className="flex items-center justify-between">
-          <div className="flex gap-2 flex-wrap">
-            <Badge variant="outline" className="text-xs border-[#D4CFC8] text-[#6B6560] bg-transparent">
+        {/* Prompt Template Section */}
+        <div className="mb-6">
+          <h4 className="text-sm font-semibold text-[#6B6560] mb-2">Prompt Template</h4>
+          <div className="bg-[#F5F1E8] rounded-lg p-4 border border-[#D4CFC8]">
+            <p className="text-sm text-[#1A1816] leading-relaxed whitespace-pre-wrap font-sans">
+              {prompt.prompt_text}
+            </p>
+          </div>
+        </div>
+
+        {/* Category and Usage Count Row */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-[#6B6560]">Category</span>
+            <Badge variant="outline" className="text-sm border-[#D4CFC8] text-[#1A1816] bg-white font-medium">
               {prompt.content_type === 'product' ? 'Product' :
                prompt.content_type === 'blog' ? 'Editorial' :
                prompt.content_type === 'email' ? 'Email' :
-               prompt.content_type === 'social' ? 'Social' :
+               prompt.content_type === 'social' ? 'Social Media' :
+               prompt.content_type === 'visual' ? 'Visual' :
                prompt.content_type}
             </Badge>
-            {prompt.tags?.slice(0, 2).map((tag) => (
-              <Badge
-                key={tag}
-                variant="outline"
-                className="text-xs border-[#D4CFC8] text-[#6B6560] bg-transparent"
-              >
-                #{tag}
-              </Badge>
-            ))}
           </div>
-          <span className="text-xs text-[#A8A39E]">
-            Used {prompt.times_used || 0} times
-          </span>
+          <div className="text-right">
+            <div className="text-sm font-medium text-[#6B6560]">Usage Count</div>
+            <div className="text-lg font-semibold text-[#1A1816]">{prompt.times_used || 0} times</div>
+          </div>
+        </div>
+
+        {/* Tags */}
+        {prompt.tags && prompt.tags.length > 0 && (
+          <div className="mb-6">
+            <h4 className="text-sm font-medium text-[#6B6560] mb-2">Tags</h4>
+            <div className="flex gap-2 flex-wrap">
+              {prompt.tags.map((tag) => (
+                <Badge
+                  key={tag}
+                  variant="outline"
+                  className="text-sm border-[#D4CFC8] text-[#6B6560] bg-white font-normal"
+                >
+                  #{tag}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="h-px bg-[#D4CFC8] my-6" />
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 flex-wrap">
+          <Button
+            onClick={onUse}
+            className="bg-gradient-to-r from-[#B8956A] to-[#D4AF37] hover:from-[#D4AF37] hover:to-[#B8956A] text-white font-medium gap-2 flex-1 min-w-[140px]"
+          >
+            <FileText className="h-4 w-4" />
+            Use Template
+          </Button>
+          <Button
+            onClick={handleCopy}
+            variant="outline"
+            className="border-2 border-[#D4CFC8] text-[#1A1816] hover:bg-[#F5F1E8] font-medium gap-2"
+          >
+            <Copy className="h-4 w-4" />
+            Copy Prompt
+          </Button>
+          {onEdit && (
+            <Button
+              onClick={onEdit}
+              variant="outline"
+              className="border-2 border-[#D4CFC8] text-[#1A1816] hover:bg-[#F5F1E8] font-medium gap-2"
+            >
+              <Edit className="h-4 w-4" />
+              Edit
+            </Button>
+          )}
+          {onDelete && (
+            <Button
+              onClick={onDelete}
+              variant="outline"
+              className="border-2 border-[#D4CFC8] text-[#DC2626] hover:bg-red-50 font-medium gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </Button>
+          )}
         </div>
       </div>
     </Card>
