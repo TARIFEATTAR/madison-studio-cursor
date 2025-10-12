@@ -104,13 +104,13 @@ export default function DashboardNew() {
 
         {/* Priority Action - HERO ELEMENT */}
         {showPriorityCard && priorityAction && (
-          <div className="bg-gradient-to-br from-brass to-brass-glow rounded-xl p-8 shadow-lg mb-8">
-            <div className="flex items-start gap-6">
-              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
-                <Calendar className="w-8 h-8 text-ink-black" />
+          <div className="bg-gradient-to-br from-brass to-brass-glow rounded-xl p-6 md:p-8 shadow-lg mb-8">
+            <div className="flex flex-col md:flex-row items-start gap-4 md:gap-6">
+              <div className="w-14 h-14 md:w-16 md:h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
+                <Calendar className="w-7 h-7 md:w-8 md:h-8 text-ink-black" />
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
+              <div className="flex-1 w-full">
+                <div className="flex items-center gap-2 md:gap-3 mb-3">
                   <span className="text-xs font-bold uppercase tracking-wider text-ink-black/70">
                     Priority Action
                   </span>
@@ -118,13 +118,13 @@ export default function DashboardNew() {
                     {priorityAction.estimatedTime}
                   </span>
                 </div>
-                <h2 className="font-serif text-3xl md:text-4xl font-medium text-ink-black mb-3 leading-tight tracking-normal">
+                <h2 className="font-serif text-2xl md:text-3xl lg:text-4xl font-medium text-ink-black mb-3 leading-tight">
                   {priorityAction.title}
                 </h2>
-                <p className="text-base md:text-lg text-ink-black/90 mb-6 leading-relaxed max-w-2xl">
+                <p className="text-sm md:text-base lg:text-lg text-ink-black/90 mb-6 leading-relaxed">
                   {priorityAction.description}
                 </p>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Button 
                     onClick={() => navigate(priorityAction.actionRoute)}
                     className="px-6 py-3 bg-ink-black hover:bg-charcoal text-parchment-white font-semibold tracking-wide rounded-lg transition-all"
