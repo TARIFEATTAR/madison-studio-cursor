@@ -358,6 +358,7 @@ const Templates = () => {
                   </Button>
                 </div>
               </div>
+            </div>
 
               {/* Search Bar */}
               <div className="mb-6">
