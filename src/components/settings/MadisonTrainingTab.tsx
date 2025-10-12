@@ -234,6 +234,25 @@ export function MadisonTrainingTab() {
     }
   };
 
+  const handleRetryDocument = async (doc: TrainingDocument) => {
+    try {
+      await supabase
+        .from('madison_training_documents')
+        .update({ processing_status: 'pending' })
+        .eq('id', doc.id);
+
+      await supabase.functions.invoke('process-madison-training-document', {
+        body: { documentId: doc.id },
+      });
+
+      toast({ title: 'Reprocessing started', description: `${doc.file_name} is being processed again.` });
+      loadDocuments();
+    } catch (error) {
+      console.error('Error retrying document:', error);
+      toast({ title: 'Retry failed', description: 'Could not reprocess the document.', variant: 'destructive' });
+    }
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -471,18 +490,28 @@ export function MadisonTrainingTab() {
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{doc.file_name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {(doc.file_size / 1024 / 1024).toFixed(2)} MB • 
-                        {doc.processing_status === 'completed' ? ' Processed' : ' Processing...'}
+                        {(doc.file_size / 1024 / 1024).toFixed(2)} MB • {doc.processing_status === 'completed' ? 'Processed' : doc.processing_status === 'failed' ? 'Failed' : 'Processing...'}
                       </p>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteDocument(doc)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {doc.processing_status !== 'completed' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRetryDocument(doc)}
+                      >
+                        <Sparkles className="h-4 w-4 mr-1" /> Retry
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteDocument(doc)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))}

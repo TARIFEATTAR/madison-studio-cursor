@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { encode as base64Encode } from "https://deno.land/std@0.190.0/encoding/base64.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,9 +12,12 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let docIdForFail: string | null = null;
+
   try {
     const { documentId } = await req.json();
     if (!documentId) throw new Error("documentId is required");
+    docIdForFail = documentId;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -37,9 +41,7 @@ serve(async (req) => {
       .eq("id", documentId);
 
     // Download file from private bucket using stored path
-    const fullUrl: string = doc.file_url; 
-    // Extract just the filename from the URL (e.g., "1699999999999-My.pdf")
-    const filePath = fullUrl.split('/madison-training-docs/')[1];
+    const filePath: string = doc.file_url; // stored storage path like "1699999999999-My.pdf"
     console.log("Downloading from bucket path:", filePath);
     const { data: fileData, error: dlErr } = await supabase
       .storage
@@ -53,7 +55,7 @@ serve(async (req) => {
     }
 
     const arrayBuffer = await fileData.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const base64 = base64Encode(arrayBuffer);
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
@@ -104,8 +106,7 @@ serve(async (req) => {
 
     // Attempt to mark as failed
     try {
-      const body = await req.json().catch(() => ({}));
-      if (body?.documentId) {
+      if (docIdForFail) {
         const supabase = createClient(
           Deno.env.get("SUPABASE_URL")!,
           Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -113,7 +114,7 @@ serve(async (req) => {
         await supabase
           .from("madison_training_documents")
           .update({ processing_status: "failed" })
-          .eq("id", body.documentId);
+          .eq("id", docIdForFail);
       }
     } catch (_) {}
 
