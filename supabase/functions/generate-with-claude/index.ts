@@ -67,6 +67,30 @@ async function getMadisonSystemConfig() {
     
     configParts.push('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
+    // Fetch Madison's training documents
+    const { data: trainingDocs, error: docsError } = await supabase
+      .from('madison_training_documents')
+      .select('file_name, extracted_content')
+      .eq('processing_status', 'completed')
+      .not('extracted_content', 'is', null)
+      .order('created_at', { ascending: true });
+    
+    if (!docsError && trainingDocs && trainingDocs.length > 0) {
+      configParts.push('\n╔══════════════════════════════════════════════════════════════════╗');
+      configParts.push('║           MADISON\'S CORE TRAINING DOCUMENTS                      ║');
+      configParts.push('║          (Foundational Editorial Guidelines)                     ║');
+      configParts.push('╚══════════════════════════════════════════════════════════════════╝');
+      
+      trainingDocs.forEach((doc, index) => {
+        configParts.push(`\n━━━ TRAINING DOCUMENT ${index + 1}: ${doc.file_name} ━━━`);
+        configParts.push(doc.extracted_content);
+        configParts.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      });
+      
+      configParts.push('\n⚠️ CRITICAL: These training documents define your core editorial standards.');
+      configParts.push('All responses must align with these principles and guidelines.');
+    }
+    
     return configParts.join('\n');
   } catch (error) {
     console.error('Error in getMadisonSystemConfig:', error);
@@ -529,7 +553,9 @@ YOUR ONLY JOB:
 FAILURE TO FOLLOW CODEX V2 PRINCIPLES OR BRAND GUIDELINES IS UNACCEPTABLE.`;
         } else if (mode === "consult") {
           // CONSULT MODE: Curator role with Codex v2
-          systemPrompt = `${brandContext}
+          systemPrompt = `${madisonSystemConfig}
+
+${brandContext}
 
 ╔══════════════════════════════════════════════════════════════════╗
 ║                      GLOBAL SYSTEM PROMPT                         ║
