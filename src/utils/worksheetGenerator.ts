@@ -190,43 +190,44 @@ export async function generateWorksheet(options: WorksheetOptions = {}): Promise
     yPos += 6;
   }
 
-  // Footer Section with QR Code
-  yPos = 245; // Fixed position near bottom with more breathing room
+  // Footer Section with QR Code - side-by-side layout
+  yPos = 248; // Fixed position near bottom
   
-  yPos += 12; // Increased spacing for cleaner layout
-
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...inkBlack);
-  doc.text('READY TO CREATE YOUR CONTENT?', pageWidth / 2, yPos, { align: 'center' });
-  
-  yPos += 12; // Increased spacing before QR code
-
-  // Generate QR code with more breathing room
+  // Generate QR code
   const uploadUrl = `${window.location.origin}/create?upload=true`;
   const qrDataUrl = await QRCode.toDataURL(uploadUrl, {
     errorCorrectionLevel: 'M',
-    margin: 2, // Increased margin for built-in white space
-    width: 280, // Increased width for better quality
+    margin: 1,
+    width: 200,
     color: {
       dark: '#29231D',
       light: '#FFFFFF'
     }
   });
 
-  // Add QR code - larger size for easier scanning
-  const qrSize = 35; // Increased from 30mm to 35mm
-  doc.addImage(qrDataUrl, 'PNG', (pageWidth - qrSize) / 2, yPos, qrSize, qrSize);
+  // QR code on the right side - smaller size
+  const qrSize = 25; // Smaller QR code
+  const qrXPos = pageWidth - margin - qrSize; // Position on right
+  doc.addImage(qrDataUrl, 'PNG', qrXPos, yPos, qrSize, qrSize);
   
-  yPos += qrSize + 8; // Increased spacing after QR code
+  // Text on the left side
+  const textXPos = margin;
+  const textYPos = yPos + 8; // Vertically centered with QR code
+  
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...inkBlack);
+  doc.text('Ready to Create Your', textXPos, textYPos);
+  doc.text('Content?', textXPos, textYPos + 6);
+  
+  yPos += qrSize + 8;
 
+  // Instructions centered below
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...warmGray);
-  doc.text('Scan to upload this worksheet', pageWidth / 2, yPos, { align: 'center' });
+  doc.text('Scan to upload this worksheet or visit: scriptora.app/create', pageWidth / 2, yPos, { align: 'center' });
   yPos += 5;
-  doc.text('or visit: scriptora.app/create', pageWidth / 2, yPos, { align: 'center' });
-  yPos += 6;
   doc.setFontSize(8);
   doc.text('Supported formats: PDF, JPG, PNG', pageWidth / 2, yPos, { align: 'center' });
 
