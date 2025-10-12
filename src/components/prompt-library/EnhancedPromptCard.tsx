@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Star, Copy, Edit, Trash2, FileText } from "lucide-react";
+import { Star, Copy, Edit, Trash2, FileText, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { Prompt } from "@/pages/Templates";
 import { useToast } from "@/hooks/use-toast";
+import { getContentTypeDisplayName } from "@/utils/contentTypeMapping";
+import { getContentCategoryLabel } from "@/utils/contentSubtypeLabels";
 
 interface EnhancedPromptCardProps {
   prompt: Prompt;
@@ -33,17 +35,9 @@ const EnhancedPromptCard = ({
     });
   };
 
-  // Generate description based on content type
-  const getDescription = () => {
-    const descriptions: Record<string, string> = {
-      product: "Sophisticated product launch content for new fragrance releases",
-      blog: "Editorial content about the creation process and craftsmanship",
-      email: "Monthly newsletter format with collection highlights",
-      social: "Instagram-optimized captions with storytelling elements",
-      visual: "Image generation prompts for visual assets",
-    };
-    return descriptions[prompt.content_type] || `${prompt.content_type} content template`;
-  };
+  // Get category and content type labels
+  const category = (prompt.meta_instructions as any)?.category || getContentCategoryLabel(prompt.content_type);
+  const contentTypeLabel = getContentTypeDisplayName(prompt.content_type);
 
   return (
     <Card 
@@ -71,10 +65,22 @@ const EnhancedPromptCard = ({
           </button>
         </div>
 
-        {/* Description */}
-        <p className="text-[#6B6560] mb-6 leading-relaxed">
-          {getDescription()}
-        </p>
+        {/* Category and Content Type Badges */}
+        <div className="flex items-center gap-2 mb-4">
+          {category && (
+            <Badge variant="outline" className="text-sm border-[#D4CFC8] text-[#1A1816] bg-white font-medium">
+              {category}
+            </Badge>
+          )}
+          {category && contentTypeLabel && (
+            <ArrowRight className="h-3 w-3 text-[#6B6560]" />
+          )}
+          {contentTypeLabel && (
+            <Badge variant="outline" className="text-sm border-[#B8956A] text-[#1A1816] bg-[#F5F1E8] font-medium">
+              {contentTypeLabel}
+            </Badge>
+          )}
+        </div>
 
         {/* Prompt Template Section */}
         <div className="mb-6">
@@ -86,19 +92,8 @@ const EnhancedPromptCard = ({
           </div>
         </div>
 
-        {/* Category and Usage Count Row */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-[#6B6560]">Category</span>
-            <Badge variant="outline" className="text-sm border-[#D4CFC8] text-[#1A1816] bg-white font-medium">
-              {prompt.content_type === 'product' ? 'Product' :
-               prompt.content_type === 'blog' ? 'Editorial' :
-               prompt.content_type === 'email' ? 'Email' :
-               prompt.content_type === 'social' ? 'Social Media' :
-               prompt.content_type === 'visual' ? 'Visual' :
-               prompt.content_type}
-            </Badge>
-          </div>
+        {/* Usage Count */}
+        <div className="flex justify-end mb-4">
           <div className="text-right">
             <div className="text-sm font-medium text-[#6B6560]">Usage Count</div>
             <div className="text-lg font-semibold text-[#1A1816]">{prompt.times_used || 0} times</div>

@@ -2,10 +2,13 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
-import { Star, Clock, TrendingUp, ChevronDown, ChevronRight, Plus, Hash } from "lucide-react";
+import { Star, Clock, TrendingUp, ChevronDown, ChevronRight, Plus, Hash, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { contentTypeMapping } from "@/utils/contentTypeMapping";
+import { useCollections } from "@/hooks/useCollections";
+import { getCollectionIcon, formatCollectionDisplay } from "@/utils/collectionIcons";
 
 import { cn } from "@/lib/utils";
 
@@ -31,49 +34,52 @@ const PromptLibrarySidebar = ({
   className,
 }: PromptLibrarySidebarProps) => {
   const { currentOrganizationId } = useOnboarding();
+  const { collections } = useCollections();
   const [expandedSections, setExpandedSections] = useState({
-    collections: false,
-    categories: false,
+    collections: true,
+    categories: true,
   });
 
   // Fetch counts for each section
   const { data: counts } = useQuery({
     queryKey: ["prompt-counts", currentOrganizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: prompts } = await supabase
         .from("prompts")
-        .select("collection, content_type, is_template, times_used, last_used_at")
-        .eq("organization_id", currentOrganizationId!)
+        .select("content_type, collection, times_used, is_archived, meta_instructions")
+        .eq("organization_id", currentOrganizationId)
         .eq("is_archived", false);
 
-      if (error) throw error;
+      if (!prompts) return { favorites: 0, recentlyUsed: 0, mostUsed: 0, collections: {}, categories: {} };
 
-      // Calculate Quick Access counts
-      const favorites = data.filter(p => p.is_template).length;
-      const recentlyUsed = data.filter(p => p.last_used_at).length;
-      const mostUsed = data.filter(p => p.times_used > 0).length;
-
-      // Count by collection
+      // Count prompts by collection and category
       const collectionCounts: Record<string, number> = {};
-      data.forEach(p => {
-        if (p.collection) {
-          collectionCounts[p.collection] = (collectionCounts[p.collection] || 0) + 1;
-        }
-      });
-
-      // Count by category (content_type)
       const categoryCounts: Record<string, number> = {};
-      data.forEach(p => {
-        if (p.content_type) {
-          categoryCounts[p.content_type] = (categoryCounts[p.content_type] || 0) + 1;
+
+      prompts.forEach((prompt) => {
+        // Collection counts
+        if (prompt.collection) {
+          collectionCounts[prompt.collection] = (collectionCounts[prompt.collection] || 0) + 1;
+        }
+        
+        // Category counts - use meta_instructions.category if available, otherwise map from content_type
+        const category = (prompt.meta_instructions as any)?.category;
+        if (category) {
+          categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+        } else if (prompt.content_type) {
+          // Map content_type to category for backwards compatibility
+          const mapping = contentTypeMapping.find(m => m.keys.includes(prompt.content_type));
+          if (mapping) {
+            const categoryKey = mapping.name.toLowerCase();
+            categoryCounts[categoryKey] = (categoryCounts[categoryKey] || 0) + 1;
+          }
         }
       });
 
       return {
-        total: data.length,
-        favorites,
-        recentlyUsed,
-        mostUsed,
+        favorites: 0,
+        recentlyUsed: prompts.filter(p => p.times_used && p.times_used > 0).length,
+        mostUsed: prompts.filter(p => p.times_used && p.times_used >= 5).length,
         collections: collectionCounts,
         categories: categoryCounts,
       };
@@ -86,21 +92,6 @@ const PromptLibrarySidebar = ({
       ...prev,
       [section]: !prev[section],
     }));
-  };
-
-  const collectionLabels: Record<string, { icon: string; label: string }> = {
-    cadence: { icon: "🚀", label: "Product Launches" },
-    reserve: { icon: "📱", label: "Social Media" },
-    purity: { icon: "✉️", label: "Email Campaigns" },
-    sacred_space: { icon: "🌸", label: "Seasonal Content" },
-  };
-
-  const categoryLabels: Record<string, string> = {
-    product: "Product",
-    email: "Email",
-    social: "Social",
-    blog: "Editorial",
-    visual: "Visual",
   };
 
   return (
@@ -186,7 +177,7 @@ const PromptLibrarySidebar = ({
           </CardContent>
         </Card>
 
-        {/* Collections Card - Collapsed by default */}
+        {/* Collections Card */}
         <Card className="border-2 border-[#D4CFC8] bg-white shadow-md rounded-2xl">
           <CardContent className="p-6">
             <button
@@ -194,7 +185,7 @@ const PromptLibrarySidebar = ({
               className="w-full flex items-center justify-between hover:opacity-80 transition-opacity group"
             >
               <div className="flex items-center gap-3">
-                <div className="text-2xl">📁</div>
+                <Layers className="h-6 w-6 text-[#B8956A]" />
                 <h3 className="font-semibold text-lg text-[#1A1816]">Collections</h3>
               </div>
               {expandedSections.collections ? (
@@ -205,32 +196,38 @@ const PromptLibrarySidebar = ({
             </button>
             {expandedSections.collections && (
               <div className="space-y-2 mt-4">
-                {Object.entries(collectionLabels).map(([key, { icon, label }]) => (
-                  <button
-                    key={key}
-                    onClick={() => onCollectionSelect(selectedCollection === key ? null : key)}
-                    className={cn(
-                      "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm transition-all",
-                      selectedCollection === key
-                        ? "bg-[#F5F1E8] text-[#1A1816] font-semibold shadow-sm"
-                        : "hover:bg-[#F5F1E8]/50 text-[#6B6560]"
-                    )}
-                  >
-                    <span className="flex items-center gap-3">
-                      <span className="text-base">{icon}</span>
-                      <span>{label}</span>
-                    </span>
-                    <Badge variant="secondary" className="text-xs font-bold min-w-[36px] h-7 justify-center bg-[#D4CFC8] text-[#1A1816] rounded-lg">
-                      {counts?.collections[key] || 0}
-                    </Badge>
-                  </button>
-                ))}
+                {collections.map((collection) => {
+                  const count = counts?.collections?.[collection.name.toLowerCase().replace(/ /g, '_')] || 0;
+                  const isSelected = selectedCollection === collection.name.toLowerCase().replace(/ /g, '_');
+                  const CollectionIcon = getCollectionIcon(collection.name) || Layers;
+                  
+                  return (
+                    <button
+                      key={collection.id}
+                      onClick={() => onCollectionSelect(isSelected ? null : collection.name.toLowerCase().replace(/ /g, '_'))}
+                      className={cn(
+                        "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm transition-all",
+                        isSelected
+                          ? "bg-[#F5F1E8] text-[#1A1816] font-semibold shadow-sm"
+                          : "hover:bg-[#F5F1E8]/50 text-[#6B6560]"
+                      )}
+                    >
+                      <span className="flex items-center gap-3">
+                        <CollectionIcon className={cn("h-4 w-4", isSelected ? "text-[#B8956A]" : "text-[#6B6560]")} />
+                        <span>{formatCollectionDisplay(collection.name)}</span>
+                      </span>
+                      <Badge variant="secondary" className="text-xs font-bold min-w-[36px] h-7 justify-center bg-[#D4CFC8] text-[#1A1816] rounded-lg">
+                        {count}
+                      </Badge>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Categories Card - Collapsed by default */}
+        {/* Categories Card */}
         <Card className="border-2 border-[#D4CFC8] bg-white shadow-md rounded-2xl">
           <CardContent className="p-6">
             <button
@@ -263,26 +260,37 @@ const PromptLibrarySidebar = ({
                     "text-xs font-bold min-w-[36px] h-7 justify-center rounded-lg",
                     selectedCategory === null ? "bg-white/20 text-white" : "bg-[#D4CFC8] text-[#1A1816]"
                   )}>
-                    {counts?.total || 0}
+                    {Object.values(counts?.categories || {}).reduce((a, b) => a + b, 0)}
                   </Badge>
                 </button>
-                {Object.entries(categoryLabels).map(([key, label]) => (
-                  <button
-                    key={key}
-                    onClick={() => onCategorySelect(selectedCategory === key ? null : key)}
-                    className={cn(
-                      "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm transition-all",
-                      selectedCategory === key
-                        ? "bg-[#F5F1E8] text-[#1A1816] font-semibold shadow-sm"
-                        : "hover:bg-[#F5F1E8]/50 text-[#6B6560]"
-                    )}
-                  >
-                    <span>{label}</span>
-                    <Badge variant="secondary" className="text-xs font-bold min-w-[36px] h-7 justify-center bg-[#D4CFC8] text-[#1A1816] rounded-lg">
-                      {counts?.categories[key] || 0}
-                    </Badge>
-                  </button>
-                ))}
+
+                {contentTypeMapping.map((type) => {
+                  const categoryKey = type.name.toLowerCase();
+                  const count = counts?.categories?.[categoryKey] || 0;
+                  const isSelected = selectedCategory === categoryKey;
+                  const Icon = type.icon;
+                  
+                  return (
+                    <button
+                      key={categoryKey}
+                      onClick={() => onCategorySelect(isSelected ? null : categoryKey)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm transition-all",
+                        isSelected
+                          ? "bg-[#F5F1E8] text-[#1A1816] font-semibold shadow-sm"
+                          : "hover:bg-[#F5F1E8]/50 text-[#6B6560]"
+                      )}
+                    >
+                      <span className="flex items-center gap-3">
+                        <Icon className={cn("h-4 w-4", isSelected ? "text-[#B8956A]" : "text-[#6B6560]")} />
+                        <span>{type.name}</span>
+                      </span>
+                      <Badge variant="secondary" className="text-xs font-bold min-w-[36px] h-7 justify-center bg-[#D4CFC8] text-[#1A1816] rounded-lg">
+                        {count}
+                      </Badge>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </CardContent>

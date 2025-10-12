@@ -11,6 +11,7 @@ import { X, Bookmark, Sparkles, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useToast } from "@/hooks/use-toast";
+import { contentTypeMapping, getContentTypeDisplayName } from "@/utils/contentTypeMapping";
 import { getAllCategories } from "@/config/categoryTemplates";
 import { getCollectionTemplatesForIndustry } from "@/config/collectionTemplates";
 import {
@@ -40,6 +41,7 @@ export function SavePromptDialog({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedContentType, setSelectedContentType] = useState<string>("");
   const [selectedCollection, setSelectedCollection] = useState<string>("");
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -48,7 +50,6 @@ export function SavePromptDialog({
   const [editedPromptText, setEditedPromptText] = useState(promptText);
   const [showPlaceholderSuggestions, setShowPlaceholderSuggestions] = useState(false);
 
-  const categories = getAllCategories();
   const [availableCollections, setAvailableCollections] = useState<any[]>([]);
 
   // Common placeholder suggestions
@@ -100,11 +101,13 @@ export function SavePromptDialog({
       setTitle("");
       setDescription("");
       setSelectedCategory("");
+      setSelectedContentType("");
       setSelectedCollection("");
       setTags([]);
       setTagInput("");
       setIsTemplate(true);
       setEditedPromptText(promptText);
+      setShowPlaceholderSuggestions(false);
     }
   }, [open, promptText]);
 
@@ -135,17 +138,44 @@ export function SavePromptDialog({
   const handleSave = async () => {
     if (!title.trim()) {
       toast({
-        title: "Title required",
-        description: "Please enter a title for your prompt template",
+        title: "Error",
+        description: "Please enter a title for your prompt",
         variant: "destructive",
       });
       return;
     }
 
-    if (!currentOrganizationId) {
+    if (!editedPromptText.trim()) {
       toast({
-        title: "Organization required",
-        description: "Please complete onboarding first",
+        title: "Error",
+        description: "Prompt text cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedCategory) {
+      toast({
+        title: "Error",
+        description: "Please select a category",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedContentType) {
+      toast({
+        title: "Error",
+        description: "Please select a content type",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedCollection) {
+      toast({
+        title: "Error",
+        description: "Please select a collection",
         variant: "destructive",
       });
       return;
@@ -154,47 +184,35 @@ export function SavePromptDialog({
     setIsSaving(true);
 
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Not authenticated");
-
-      // Determine content type from category
-      const contentType = selectedCategory || "product";
-
-      // Store title in the title column and description in meta_instructions
-      const promptData: any = {
+      const { error } = await supabase.from("prompts").insert({
         title: title.trim(),
-        prompt_text: editedPromptText, // Use edited version with placeholders
-        content_type: contentType,
-        collection: selectedCollection || "cadence",
-        organization_id: currentOrganizationId,
-        created_by: userData.user.id,
-        is_template: isTemplate,
+        description: description.trim() || null,
+        prompt_text: editedPromptText,
+        content_type: selectedContentType as any,
+        collection: selectedCollection as any,
         tags: tags.length > 0 ? tags : null,
+        is_template: isTemplate,
         meta_instructions: {
-          description: description.trim() || null,
-          user_created: true,
-          saved_from: "manual",
-          has_placeholders: /\{\{[A-Z_]+\}\}/.test(editedPromptText),
+          category: selectedCategory,
         },
-        times_used: 0,
-      };
-
-      const { error } = await supabase.from("prompts").insert(promptData);
+        organization_id: currentOrganizationId,
+        created_by: (await supabase.auth.getUser()).data.user?.id,
+      });
 
       if (error) throw error;
 
       toast({
-        title: "Prompt saved!",
-        description: `"${title}" has been added to your Prompt Library`,
+        title: "Success",
+        description: "Prompt template saved successfully",
       });
 
-      onOpenChange(false);
       onSaved?.();
+      onOpenChange(false);
     } catch (error) {
       console.error("Error saving prompt:", error);
       toast({
-        title: "Save failed",
-        description: error instanceof Error ? error.message : "Please try again",
+        title: "Error",
+        description: "Failed to save prompt template",
         variant: "destructive",
       });
     } finally {
@@ -295,24 +313,53 @@ export function SavePromptDialog({
             />
           </div>
 
-          {/* Category */}
+          {/* Category Selection */}
           <div>
-            <Label htmlFor="prompt-category" className="text-sm font-medium text-ink-black mb-2 block">
-              Category
+            <Label htmlFor="category" className="text-sm font-medium text-ink-black mb-2 block">
+              Category *
             </Label>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <Select 
+              value={selectedCategory} 
+              onValueChange={(value) => {
+                setSelectedCategory(value);
+                setSelectedContentType(""); // Reset content type when category changes
+              }}
+            >
               <SelectTrigger className="bg-parchment-white border-warm-gray/20">
-                <SelectValue placeholder="Select category..." />
+                <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="product">Product Description</SelectItem>
-                <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="blog">Blog Post</SelectItem>
-                <SelectItem value="social">Social Media</SelectItem>
-                <SelectItem value="visual">Visual Asset</SelectItem>
+                {contentTypeMapping.map((type) => (
+                  <SelectItem key={type.name} value={type.name.toLowerCase()}>
+                    {type.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
+
+          {/* Content Type Selection (Sub-type) */}
+          {selectedCategory && (
+            <div>
+              <Label htmlFor="contentType" className="text-sm font-medium text-ink-black mb-2 block">
+                Content Type *
+              </Label>
+              <Select value={selectedContentType} onValueChange={setSelectedContentType}>
+                <SelectTrigger className="bg-parchment-white border-warm-gray/20">
+                  <SelectValue placeholder="Select content type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {contentTypeMapping
+                    .find((type) => type.name.toLowerCase() === selectedCategory)
+                    ?.keys.map((key) => (
+                      <SelectItem key={key} value={key}>
+                        {getContentTypeDisplayName(key)}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Collection */}
           <div>

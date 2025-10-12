@@ -9,7 +9,7 @@ import { HelpCircle, Plus, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-
+import { contentTypeMapping } from "@/utils/contentTypeMapping";
 
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -41,6 +41,7 @@ export interface Prompt {
   tags: string[] | null;
   is_template: boolean;
   effectiveness_score: number | null;
+  meta_instructions?: any;
 }
 
 type SortOption = "recent" | "most-used" | "highest-rated" | "effectiveness";
@@ -119,9 +120,19 @@ const TemplatesContent = () => {
       filtered = filtered.filter(p => p.collection === selectedCollection);
     }
 
-    // Category filter
+    // Category filter - check meta_instructions.category or map from content_type
     if (selectedCategory) {
-      filtered = filtered.filter(p => p.content_type === selectedCategory);
+      filtered = filtered.filter(p => {
+        const promptCategory = (p.meta_instructions as any)?.category;
+        if (promptCategory) {
+          return promptCategory === selectedCategory;
+        } else {
+          // Fallback: map content_type to category
+          const mapping = contentTypeMapping.find(m => m.keys.includes(p.content_type));
+          const categoryKey = mapping?.name.toLowerCase();
+          return categoryKey === selectedCategory;
+        }
+      });
     }
 
     return filtered;
