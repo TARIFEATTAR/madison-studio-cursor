@@ -72,7 +72,7 @@ const Templates = () => {
     ? "0px" 
     : `${sidebarWidth}px`;
 
-  const contentLeftOffset = isMobile ? 0 : sidebarWidth + filterWidth;
+  const contentLeftOffset = isMobile ? 0 : filterWidth;
 
   // Fetch prompts
   const { data: allPrompts = [], isLoading } = useQuery({
@@ -308,7 +308,7 @@ const Templates = () => {
         )}
 
         <main 
-          className="flex-1 p-8 pl-12" 
+          className="flex-1 p-8" 
           style={{ marginLeft: isMobile ? 0 : `${contentLeftOffset}px` }}
         >
           <div className="max-w-6xl mx-auto">
