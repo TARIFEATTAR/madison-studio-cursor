@@ -436,7 +436,17 @@ export function ProductsTab() {
               <Textarea
                 id="top_notes"
                 value={formData.top_notes}
-                onChange={(e) => setFormData({ ...formData, top_notes: e.target.value })}
+                onChange={(e) => {
+                  const target = e.target;
+                  const cursorPosition = target.selectionStart;
+                  const value = target.value;
+                  setFormData({ ...formData, top_notes: value });
+                  requestAnimationFrame(() => {
+                    if (target) {
+                      target.setSelectionRange(cursorPosition, cursorPosition);
+                    }
+                  });
+                }}
                 placeholder={`e.g., ${industryConfig?.fields[0]?.label || "Field 1"}`}
                 rows={2}
               />
@@ -447,7 +457,17 @@ export function ProductsTab() {
               <Textarea
                 id="middle_notes"
                 value={formData.middle_notes}
-                onChange={(e) => setFormData({ ...formData, middle_notes: e.target.value })}
+                onChange={(e) => {
+                  const target = e.target;
+                  const cursorPosition = target.selectionStart;
+                  const value = target.value;
+                  setFormData({ ...formData, middle_notes: value });
+                  requestAnimationFrame(() => {
+                    if (target) {
+                      target.setSelectionRange(cursorPosition, cursorPosition);
+                    }
+                  });
+                }}
                 placeholder={`e.g., ${industryConfig?.fields[1]?.label || "Field 2"}`}
                 rows={2}
               />
@@ -458,7 +478,17 @@ export function ProductsTab() {
               <Textarea
                 id="base_notes"
                 value={formData.base_notes}
-                onChange={(e) => setFormData({ ...formData, base_notes: e.target.value })}
+                onChange={(e) => {
+                  const target = e.target;
+                  const cursorPosition = target.selectionStart;
+                  const value = target.value;
+                  setFormData({ ...formData, base_notes: value });
+                  requestAnimationFrame(() => {
+                    if (target) {
+                      target.setSelectionRange(cursorPosition, cursorPosition);
+                    }
+                  });
+                }}
                 placeholder={`e.g., ${industryConfig?.fields[2]?.label || "Field 3"}`}
                 rows={2}
               />

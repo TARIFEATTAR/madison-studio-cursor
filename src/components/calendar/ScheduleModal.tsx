@@ -375,7 +375,17 @@ export const ScheduleModal = ({
             <Textarea
               id="notes"
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={(e) => {
+                const target = e.target;
+                const cursorPosition = target.selectionStart;
+                const value = target.value;
+                setNotes(value);
+                requestAnimationFrame(() => {
+                  if (target) {
+                    target.setSelectionRange(cursorPosition, cursorPosition);
+                  }
+                });
+              }}
               placeholder="Add any additional notes"
               rows={3}
             />

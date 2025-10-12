@@ -130,7 +130,17 @@ export function BrandGuidelinesTab() {
             <Textarea
               id="brand-voice"
               value={guidelines.brand_voice}
-              onChange={(e) => setGuidelines({ ...guidelines, brand_voice: e.target.value })}
+              onChange={(e) => {
+                const target = e.target;
+                const cursorPosition = target.selectionStart;
+                const value = target.value;
+                setGuidelines({ ...guidelines, brand_voice: value });
+                requestAnimationFrame(() => {
+                  if (target) {
+                    target.setSelectionRange(cursorPosition, cursorPosition);
+                  }
+                });
+              }}
               placeholder="Describe your brand's voice and tone..."
               className="min-h-[100px] bg-paper border-cream-dark resize-none"
             />
@@ -147,7 +157,17 @@ export function BrandGuidelinesTab() {
             <Textarea
               id="forbidden-phrases"
               value={guidelines.forbidden_phrases}
-              onChange={(e) => setGuidelines({ ...guidelines, forbidden_phrases: e.target.value })}
+              onChange={(e) => {
+                const target = e.target;
+                const cursorPosition = target.selectionStart;
+                const value = target.value;
+                setGuidelines({ ...guidelines, forbidden_phrases: value });
+                requestAnimationFrame(() => {
+                  if (target) {
+                    target.setSelectionRange(cursorPosition, cursorPosition);
+                  }
+                });
+              }}
               placeholder="List phrases to avoid (comma-separated)..."
               className="min-h-[100px] bg-paper border-cream-dark resize-none"
             />
@@ -164,7 +184,17 @@ export function BrandGuidelinesTab() {
             <Textarea
               id="brand-story"
               value={guidelines.brand_story}
-              onChange={(e) => setGuidelines({ ...guidelines, brand_story: e.target.value })}
+              onChange={(e) => {
+                const target = e.target;
+                const cursorPosition = target.selectionStart;
+                const value = target.value;
+                setGuidelines({ ...guidelines, brand_story: value });
+                requestAnimationFrame(() => {
+                  if (target) {
+                    target.setSelectionRange(cursorPosition, cursorPosition);
+                  }
+                });
+              }}
               placeholder="Tell your brand's story..."
               className="min-h-[150px] bg-paper border-cream-dark resize-none"
             />
@@ -178,7 +208,17 @@ export function BrandGuidelinesTab() {
             <Textarea
               id="target-audience"
               value={guidelines.target_audience}
-              onChange={(e) => setGuidelines({ ...guidelines, target_audience: e.target.value })}
+              onChange={(e) => {
+                const target = e.target;
+                const cursorPosition = target.selectionStart;
+                const value = target.value;
+                setGuidelines({ ...guidelines, target_audience: value });
+                requestAnimationFrame(() => {
+                  if (target) {
+                    target.setSelectionRange(cursorPosition, cursorPosition);
+                  }
+                });
+              }}
               placeholder="Describe your ideal customer..."
               className="min-h-[100px] bg-paper border-cream-dark resize-none"
             />

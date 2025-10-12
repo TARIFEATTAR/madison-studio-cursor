@@ -69,7 +69,17 @@ export function ContentOutput({
           </div>
           <Textarea
             value={imageUrls}
-            onChange={(e) => onImageUrlsChange(e.target.value)}
+            onChange={(e) => {
+              const target = e.target;
+              const cursorPosition = target.selectionStart;
+              const value = target.value;
+              onImageUrlsChange(value);
+              requestAnimationFrame(() => {
+                if (target) {
+                  target.setSelectionRange(cursorPosition, cursorPosition);
+                }
+              });
+            }}
             placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"
             className="bg-background/50 min-h-[120px] font-mono text-sm"
           />

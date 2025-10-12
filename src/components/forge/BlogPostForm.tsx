@@ -73,7 +73,17 @@ export function BlogPostForm({
         <Textarea
           id="blogSubject"
           value={blogSubject}
-          onChange={(e) => onSubjectChange(e.target.value)}
+          onChange={(e) => {
+            const target = e.target;
+            const cursorPosition = target.selectionStart;
+            const value = target.value;
+            onSubjectChange(value);
+            requestAnimationFrame(() => {
+              if (target) {
+                target.setSelectionRange(cursorPosition, cursorPosition);
+              }
+            });
+          }}
           placeholder="Describe what the post is about in 2-3 sentences..."
           className="bg-background/50 min-h-[100px]"
         />
@@ -101,7 +111,17 @@ export function BlogPostForm({
         <Textarea
           id="blogTakeaway"
           value={blogTakeaway}
-          onChange={(e) => onTakeawayChange(e.target.value)}
+          onChange={(e) => {
+            const target = e.target;
+            const cursorPosition = target.selectionStart;
+            const value = target.value;
+            onTakeawayChange(value);
+            requestAnimationFrame(() => {
+              if (target) {
+                target.setSelectionRange(cursorPosition, cursorPosition);
+              }
+            });
+          }}
           placeholder="What should readers remember after reading?"
           className="bg-background/50 min-h-[80px]"
         />
@@ -112,7 +132,17 @@ export function BlogPostForm({
         <Textarea
           id="blogProductConnection"
           value={blogProductConnection}
-          onChange={(e) => onProductConnectionChange(e.target.value)}
+          onChange={(e) => {
+            const target = e.target;
+            const cursorPosition = target.selectionStart;
+            const value = target.value;
+            onProductConnectionChange(value);
+            requestAnimationFrame(() => {
+              if (target) {
+                target.setSelectionRange(cursorPosition, cursorPosition);
+              }
+            });
+          }}
           placeholder="How does this relate to specific products?"
           className="bg-background/50 min-h-[80px]"
         />

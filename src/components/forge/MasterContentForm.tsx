@@ -122,7 +122,17 @@ export function MasterContentForm({
         <Textarea
           id="masterContentText"
           value={masterContent}
-          onChange={(e) => onMasterContentChange(e.target.value)}
+          onChange={(e) => {
+            const target = e.target;
+            const cursorPosition = target.selectionStart;
+            const value = target.value;
+            onMasterContentChange(value);
+            requestAnimationFrame(() => {
+              if (target) {
+                target.setSelectionRange(cursorPosition, cursorPosition);
+              }
+            });
+          }}
           placeholder="Paste or write your master content here..."
           className="bg-background/50 min-h-[400px] font-serif text-base leading-relaxed"
         />

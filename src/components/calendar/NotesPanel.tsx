@@ -90,7 +90,17 @@ export const NotesPanel = () => {
       <Textarea
         placeholder="Take notes here... (auto-saves)"
         value={notes}
-        onChange={(e) => setNotes(e.target.value)}
+        onChange={(e) => {
+          const target = e.target;
+          const cursorPosition = target.selectionStart;
+          const value = target.value;
+          setNotes(value);
+          requestAnimationFrame(() => {
+            if (target) {
+              target.setSelectionRange(cursorPosition, cursorPosition);
+            }
+          });
+        }}
         className="min-h-[300px] resize-none"
       />
       <p className="text-xs text-muted-foreground mt-2">
