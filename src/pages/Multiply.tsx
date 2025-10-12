@@ -525,7 +525,8 @@ export default function Multiply() {
         )}
 
         {/* Main Content Area */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {selectedMaster ? (
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Master Content Panel (2/5) */}
           <div className="lg:col-span-2">
             <h2 className="text-xl font-serif font-bold mb-4" style={{ color: "#1A1816" }}>
@@ -929,6 +930,7 @@ export default function Multiply() {
             </Card>
           </div>
         </div>
+        ) : null}
       </div>
 
       {/* Save to Library Dialog */}
