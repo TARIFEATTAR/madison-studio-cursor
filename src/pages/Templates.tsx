@@ -8,13 +8,13 @@ import { useToast } from "@/hooks/use-toast";
 import { HelpCircle, Plus, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
+
+
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { cn } from "@/lib/utils";
+
 import PromptLibrarySidebar from "@/components/prompt-library/PromptLibrarySidebar";
-import PromptFilterCards from "@/components/prompt-library/PromptFilterCards";
+
 import EnhancedPromptCard from "@/components/prompt-library/EnhancedPromptCard";
 import PromptDetailModal from "@/components/prompt-library/PromptDetailModal";
 import { QuickStartModal } from "@/components/prompt-library/QuickStartModal";
@@ -497,16 +497,7 @@ const TemplatesContent = () => {
 };
 
 const Templates = () => {
-  return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar />
-        <div className="flex-1">
-          <TemplatesContent />
-        </div>
-      </div>
-    </SidebarProvider>
-  );
+  return <TemplatesContent />;
 };
 
 export default Templates;
