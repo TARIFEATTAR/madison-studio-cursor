@@ -311,14 +311,13 @@ const TemplatesContent = () => {
       {/* HEADER SECTION - Full width */}
       <div className="bg-white border-b-2 border-[#D4CFC8] px-8 py-6">
         <div className="max-w-full mx-auto">
-          {/* Title Row */}
-          <div className="flex items-start justify-between mb-4">
+          <div className="flex items-start justify-between mb-6">
             <div>
-              <h1 className="text-4xl font-serif text-[#1A1816] font-semibold">
+              <h1 className="text-4xl font-serif text-[#1A1816] font-semibold mb-2">
                 Prompt Library
               </h1>
-              <p className="text-[#6B6560] font-sans mt-1">
-                Your prompts, perfectly organized • No more scattered spreadsheets
+              <p className="text-[#6B6560] font-sans">
+                Your prompts, perfectly organized
               </p>
             </div>
             <div className="flex gap-3">
@@ -349,22 +348,24 @@ const TemplatesContent = () => {
             </div>
           </div>
           
-          {/* Search Bar */}
-          <Input
-            type="text"
-            placeholder="Search prompts by title, description, tags, or content..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border-2 border-[#D4CFC8] focus:border-[#B8956A] rounded-lg px-4 py-3 text-[#2F2A26] placeholder:text-[#A8A39E] transition-all"
-          />
+          {/* Search Bar + Button Row */}
+          <div className="flex gap-4">
+            <Input
+              type="text"
+              placeholder="Search prompts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 bg-white border-2 border-[#D4CFC8] focus:border-[#B8956A] rounded-lg px-4 py-3 text-[#2F2A26] placeholder:text-[#A8A39E] transition-all"
+            />
+          </div>
         </div>
       </div>
 
       {/* PAGE CONTENT AREA - Flex layout with filter panel and main content */}
-      <div className="flex">
-        {/* FILTER PANEL - 320px fixed width, completely separate from global nav */}
+      <div className="flex gap-6">
+        {/* FILTER PANEL - 320px fixed width */}
         {!isMobile && (
-          <div className="w-[320px] flex-shrink-0 bg-white border-r-2 border-[#D4CFC8]">
+          <div className="w-80 flex-shrink-0">
             <PromptLibrarySidebar
               onQuickAccessSelect={setSelectedQuickAccess}
               onCollectionSelect={setSelectedCollection}
@@ -376,11 +377,11 @@ const TemplatesContent = () => {
           </div>
         )}
 
-        {/* MAIN CONTENT - Flexible width */}
-        <div className="flex-1 px-8 py-8">
+        {/* PROMPTS GRID - Flexible width, takes remaining space */}
+        <div className="flex-1 min-w-0">
           {/* Active Filters Display (Mobile) */}
           {isMobile && (selectedQuickAccess || selectedCollection || selectedCategory) && (
-            <div className="mb-4 flex gap-2 flex-wrap">
+            <div className="mb-4 flex gap-2 flex-wrap px-8 pt-4">
               {selectedQuickAccess && (
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted rounded-full text-sm">
                   <span>{selectedQuickAccess}</span>
@@ -407,15 +408,8 @@ const TemplatesContent = () => {
               )}
             </div>
           )}
-
-          {/* Prompt count */}
-          <div className="mb-6">
-            <p className="text-[#2F2A26] font-sans text-lg">
-              {displayedPrompts.length} prompt{displayedPrompts.length !== 1 ? "s" : ""}
-            </p>
-          </div>
           
-          {/* Prompts Grid - 2 columns */}
+          {/* Prompts Grid - 2 columns with gap-6 */}
           {isLoading ? (
             <div className="text-center py-12 text-[#6B6560]">
               Loading prompts...
@@ -431,7 +425,7 @@ const TemplatesContent = () => {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-8 py-8">
               {displayedPrompts.map((prompt) => (
                 <EnhancedPromptCard
                   key={prompt.id}
