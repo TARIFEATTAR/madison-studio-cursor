@@ -11,6 +11,69 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to fetch Madison's system training
+async function getMadisonSystemConfig() {
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  
+  try {
+    const { data, error } = await supabase
+      .from('madison_system_config')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Error fetching Madison system config:', error);
+      return '';
+    }
+    
+    if (!data) return '';
+    
+    const configParts = [];
+    configParts.push('\n╔══════════════════════════════════════════════════════════════════╗');
+    configParts.push('║             MADISON\'S SYSTEM-WIDE TRAINING                       ║');
+    configParts.push('║              (Applied to All Organizations)                      ║');
+    configParts.push('╚══════════════════════════════════════════════════════════════════╝');
+    
+    if (data.persona) {
+      configParts.push('\n━━━ MADISON\'S PERSONA ━━━');
+      configParts.push(data.persona);
+    }
+    
+    if (data.editorial_philosophy) {
+      configParts.push('\n━━━ EDITORIAL PHILOSOPHY ━━━');
+      configParts.push(data.editorial_philosophy);
+    }
+    
+    if (data.writing_influences) {
+      configParts.push('\n━━━ WRITING INFLUENCES ━━━');
+      configParts.push(data.writing_influences);
+    }
+    
+    if (data.voice_spectrum) {
+      configParts.push('\n━━━ VOICE SPECTRUM ━━━');
+      configParts.push(data.voice_spectrum);
+    }
+    
+    if (data.forbidden_phrases) {
+      configParts.push('\n━━━ SYSTEM-WIDE FORBIDDEN PHRASES ━━━');
+      configParts.push(data.forbidden_phrases);
+    }
+    
+    if (data.quality_standards) {
+      configParts.push('\n━━━ QUALITY STANDARDS ━━━');
+      configParts.push(data.quality_standards);
+    }
+    
+    configParts.push('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    
+    return configParts.join('\n');
+  } catch (error) {
+    console.error('Error in getMadisonSystemConfig:', error);
+    return '';
+  }
+}
+
 // Helper function to build brand context from database
 async function buildBrandContext(organizationId: string) {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -346,6 +409,9 @@ TONE:
     
     const selectedStyleOverlay = styleOverlayInstructions[styleOverlay as keyof typeof styleOverlayInstructions] || styleOverlayInstructions.TARIFE_NATIVE;
     
+    // Fetch Madison's system-wide training first
+    const madisonSystemConfig = await getMadisonSystemConfig();
+    
     // Fetch and inject brand context if organization ID provided
     if (organizationId) {
       const brandContext = await buildBrandContext(organizationId);
@@ -353,7 +419,9 @@ TONE:
       if (brandContext) {
         if (mode === "generate") {
           // GENERATE MODE: Ghostwriter role with Codex v2
-          systemPrompt = `${brandContext}
+          systemPrompt = `${madisonSystemConfig}
+
+${brandContext}
 
 ${selectedStyleOverlay}
 

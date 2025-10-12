@@ -1,9 +1,42 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Helper function to fetch Madison's system training
+async function getMadisonSystemConfig() {
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  
+  try {
+    const { data, error } = await supabase
+      .from('madison_system_config')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+    
+    if (error || !data) return '';
+    
+    const configParts = [];
+    
+    if (data.persona) configParts.push(`PERSONA: ${data.persona}`);
+    if (data.editorial_philosophy) configParts.push(`\nEDITORIAL PHILOSOPHY: ${data.editorial_philosophy}`);
+    if (data.writing_influences) configParts.push(`\nWRITING INFLUENCES: ${data.writing_influences}`);
+    if (data.voice_spectrum) configParts.push(`\nVOICE SPECTRUM: ${data.voice_spectrum}`);
+    if (data.forbidden_phrases) configParts.push(`\nFORBIDDEN PHRASES: ${data.forbidden_phrases}`);
+    if (data.quality_standards) configParts.push(`\nQUALITY STANDARDS: ${data.quality_standards}`);
+    
+    return configParts.join('\n');
+  } catch (error) {
+    console.error('Error fetching Madison system config:', error);
+    return '';
+  }
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -20,19 +53,17 @@ serve(async (req) => {
 
     console.log('Think Mode chat request, messages:', messages.length);
 
-    // Call Lovable AI Gateway with streaming
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { 
-            role: 'system', 
-            content: `You are Madison, Editorial Director at Scriptora. You're helping users brainstorm and refine content ideas in Think Mode.
+    // Fetch Madison's system-wide training
+    const madisonSystemConfig = await getMadisonSystemConfig();
+    
+    // Build system prompt with Madison's training
+    let systemContent = `You are Madison, Editorial Director at Scriptora. You're helping users brainstorm and refine content ideas in Think Mode.`;
+    
+    if (madisonSystemConfig) {
+      systemContent += `\n\n=== YOUR CORE TRAINING ===\n${madisonSystemConfig}\n`;
+    }
+    
+    systemContent += `
 
 CORE IDENTITY:
 You're a seasoned creative professional with deep expertise in luxury fragrance, beauty, and personal care content. You learned your craft on Madison Avenue and bring decades of experience to every conversation.
@@ -73,7 +104,21 @@ Instead of accepting vague ideas, push for concrete details:
 YOUR PHILOSOPHY:
 The more facts you tell, the more you sell. Help users discover the specific, honest truths that make their content compelling. Respect their intelligence and guide them toward authentic storytelling.
 
-Remember: You're Madison—a trusted advisor helping them think through their creative challenges before they commit to the formal brief.` 
+Remember: You're Madison—a trusted advisor helping them think through their creative challenges before they commit to the formal brief.`;
+
+    // Call Lovable AI Gateway with streaming
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { 
+            role: 'system', 
+            content: systemContent
           },
           ...messages
         ],

@@ -7,6 +7,34 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to fetch Madison's system training
+async function getMadisonSystemConfig(supabaseClient: any) {
+  try {
+    const { data, error } = await supabaseClient
+      .from('madison_system_config')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+    
+    if (error || !data) return '';
+    
+    const configParts = [];
+    configParts.push('\n=== MADISON\'S SYSTEM TRAINING ===');
+    
+    if (data.persona) configParts.push(`\nPersona: ${data.persona}`);
+    if (data.editorial_philosophy) configParts.push(`\nEditorial Philosophy: ${data.editorial_philosophy}`);
+    if (data.writing_influences) configParts.push(`\nWriting Influences: ${data.writing_influences}`);
+    if (data.voice_spectrum) configParts.push(`\nVoice Spectrum: ${data.voice_spectrum}`);
+    if (data.forbidden_phrases) configParts.push(`\nForbidden Phrases: ${data.forbidden_phrases}`);
+    if (data.quality_standards) configParts.push(`\nQuality Standards: ${data.quality_standards}`);
+    
+    return configParts.join('\n');
+  } catch (error) {
+    console.error('Error fetching Madison system config:', error);
+    return '';
+  }
+}
+
 // Helper function to build brand context from database
 async function buildBrandContext(supabaseClient: any, organizationId: string) {
   try {
@@ -698,8 +726,13 @@ OUTPUT RULES:
 
 You are a precise editorial assistant following Codex v2 Universal Principles. Follow instructions exactly and return clean text.`;
       
+      // Fetch Madison's system-wide training
+      const madisonSystemConfig = await getMadisonSystemConfig(supabaseClient);
+      
       if (brandContext) {
-        systemPrompt = `${brandContext}
+        systemPrompt = `${madisonSystemConfig}
+
+${brandContext}
 
 ╔══════════════════════════════════════════════════════════════════╗
 ║                      GLOBAL SYSTEM PROMPT                         ║

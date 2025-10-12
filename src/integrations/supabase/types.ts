@@ -508,6 +508,45 @@ export type Database = {
         }
         Relationships: []
       }
+      madison_system_config: {
+        Row: {
+          created_at: string | null
+          editorial_philosophy: string | null
+          forbidden_phrases: string | null
+          id: string
+          persona: string | null
+          quality_standards: string | null
+          updated_at: string | null
+          updated_by: string | null
+          voice_spectrum: string | null
+          writing_influences: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          editorial_philosophy?: string | null
+          forbidden_phrases?: string | null
+          id?: string
+          persona?: string | null
+          quality_standards?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          voice_spectrum?: string | null
+          writing_influences?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          editorial_philosophy?: string | null
+          forbidden_phrases?: string | null
+          id?: string
+          persona?: string | null
+          quality_standards?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          voice_spectrum?: string | null
+          writing_influences?: string | null
+        }
+        Relationships: []
+      }
       master_content: {
         Row: {
           archived_at: string | null
@@ -927,6 +966,27 @@ export type Database = {
           },
         ]
       }
+      super_admins: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -942,6 +1002,10 @@ export type Database = {
       }
       is_organization_member: {
         Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_super_admin: {
+        Args: { _user_id: string }
         Returns: boolean
       }
     }

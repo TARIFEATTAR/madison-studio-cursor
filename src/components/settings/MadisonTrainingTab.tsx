@@ -4,8 +4,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useOnboarding } from "@/hooks/useOnboarding";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Loader2, Lock } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface MadisonConfig {
   persona?: string;
@@ -18,71 +18,123 @@ interface MadisonConfig {
 
 export function MadisonTrainingTab() {
   const { toast } = useToast();
-  const { currentOrganizationId } = useOnboarding();
   const [config, setConfig] = useState<MadisonConfig>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadMadisonConfig();
-  }, [currentOrganizationId]);
+    checkSuperAdminStatus();
+  }, []);
 
-  const loadMadisonConfig = async () => {
-    if (!currentOrganizationId) return;
-
+  const checkSuperAdminStatus = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setIsSuperAdmin(false);
+        setIsLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
-        .from("organizations")
-        .select("settings")
-        .eq("id", currentOrganizationId)
-        .single();
+        .from('super_admins')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (error) throw error;
-
-      const madisonConfig = (data?.settings as any)?.madison_training;
-      if (madisonConfig) {
-        setConfig(madisonConfig);
+      if (error) {
+        console.error('Error checking super admin status:', error);
+        setIsSuperAdmin(false);
+      } else {
+        setIsSuperAdmin(!!data);
+        if (data) {
+          loadMadisonConfig();
+        }
       }
     } catch (error) {
-      console.error("Error loading Madison config:", error);
+      console.error('Error in checkSuperAdminStatus:', error);
+      setIsSuperAdmin(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadMadisonConfig = async () => {
+    const { data, error } = await supabase
+      .from('madison_system_config')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error loading Madison config:', error);
+      toast({
+        title: "Error loading configuration",
+        description: "Failed to load Madison's training settings",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (data) {
+      setConfig({
+        persona: data.persona || '',
+        editorial_philosophy: data.editorial_philosophy || '',
+        writing_influences: data.writing_influences || '',
+        forbidden_phrases: data.forbidden_phrases || '',
+        quality_standards: data.quality_standards || '',
+        voice_spectrum: data.voice_spectrum || '',
+      });
     }
   };
 
   const handleSave = async () => {
-    if (!currentOrganizationId) return;
-
     setIsSaving(true);
     try {
-      // Get current settings
-      const { data: currentData } = await supabase
-        .from("organizations")
-        .select("settings")
-        .eq("id", currentOrganizationId)
-        .single();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
 
-      const currentSettings = (currentData?.settings as any) || {};
+      // Check if config already exists
+      const { data: existing } = await supabase
+        .from('madison_system_config')
+        .select('id')
+        .limit(1)
+        .maybeSingle();
 
-      // Update with Madison training
-      const { error } = await supabase
-        .from("organizations")
-        .update({
-          settings: {
-            ...currentSettings,
-            madison_training: config
-          }
-        })
-        .eq("id", currentOrganizationId);
+      if (existing) {
+        // Update existing config
+        const { error } = await supabase
+          .from('madison_system_config')
+          .update({
+            ...config,
+            updated_at: new Date().toISOString(),
+            updated_by: user.id
+          })
+          .eq('id', existing.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Insert new config
+        const { error } = await supabase
+          .from('madison_system_config')
+          .insert({
+            ...config,
+            updated_by: user.id
+          });
+
+        if (error) throw error;
+      }
 
       toast({
-        title: "Madison's training updated",
-        description: "Her personality and guidelines have been saved",
+        title: "System configuration saved",
+        description: "Madison's global training has been updated",
       });
     } catch (error) {
-      console.error("Error saving Madison config:", error);
+      console.error('Error saving Madison config:', error);
       toast({
         title: "Error saving",
-        description: "Failed to update Madison's training",
+        description: "Failed to save Madison's training settings",
         variant: "destructive",
       });
     } finally {
@@ -90,16 +142,41 @@ export function MadisonTrainingTab() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!isSuperAdmin) {
+    return (
+      <div className="space-y-6">
+        <Alert>
+          <Lock className="h-4 w-4" />
+          <AlertDescription>
+            Madison's Training is only accessible to platform administrators. This system-wide configuration affects how Madison operates across all organizations.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex items-start gap-3 p-6 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg border border-primary/20">
         <Sparkles className="w-6 h-6 text-primary mt-1 flex-shrink-0" />
         <div>
-          <h3 className="font-semibold text-lg mb-2">Train Madison's Core Personality</h3>
+          <h3 className="font-semibold text-lg mb-2">Madison's System Training (Super Admin Only)</h3>
           <p className="text-sm text-muted-foreground">
-            Define Madison's system-level training that applies across all content generation. 
-            This shapes her editorial voice, influences, and approach—separate from individual brand guidelines.
+            Configure Madison's core personality and editorial guidelines. These settings apply system-wide across all organizations.
           </p>
+          <Alert className="mt-4">
+            <AlertDescription className="text-xs">
+              🔒 Super Admin Access - Changes here affect Madison's behavior for all users across the entire platform.
+            </AlertDescription>
+          </Alert>
         </div>
       </div>
 
@@ -207,7 +284,14 @@ export function MadisonTrainingTab() {
           disabled={isSaving}
           size="lg"
         >
-          {isSaving ? "Saving..." : "Save Madison's Training"}
+          {isSaving ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Saving System Config...
+            </>
+          ) : (
+            "Save Madison's System Training"
+          )}
         </Button>
       </div>
     </div>
