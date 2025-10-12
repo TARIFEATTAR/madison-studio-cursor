@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { Upload, Link as LinkIcon, FileText, Loader2, CheckCircle2, AlertCircle, FileUp, X, Download, Trash2, Zap, ArrowRight, Sparkles } from "lucide-react";
+import { Upload, Link as LinkIcon, FileText, Loader2, CheckCircle2, AlertCircle, FileUp, X, Download, Trash2, Zap, ArrowRight, Sparkles, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -293,6 +293,44 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
       toast({ title: "Success", description: "Document opened in new tab" });
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleRetryProcessing = async (doc: UploadedDocument) => {
+    try {
+      setIsProcessing(true);
+      
+      // Update status to processing
+      await supabase
+        .from('brand_documents')
+        .update({ processing_status: 'processing' })
+        .eq('id', doc.id);
+
+      // Trigger processing
+      const { error } = await supabase.functions.invoke('process-brand-document', {
+        body: { documentId: doc.id }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Processing Started",
+        description: `Retrying processing for "${doc.file_name}"`,
+      });
+
+      // Refresh after a short delay
+      setTimeout(() => {
+        fetchUploadedDocuments();
+      }, 2000);
+    } catch (error: any) {
+      console.error('Retry error:', error);
+      toast({
+        title: "Retry Failed",
+        description: error.message || "Failed to retry processing",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -934,6 +972,19 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
                     )}
                   </div>
                   <div className="flex items-center gap-2 ml-4">
+                    {/* Retry button for pending/failed documents */}
+                    {(doc.processing_status === 'pending' || doc.processing_status === 'failed') && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRetryProcessing(doc)}
+                        disabled={isProcessing}
+                        className="hover:bg-accent text-brass hover:text-brass"
+                        title="Retry processing"
+                      >
+                        <RefreshCw className={`w-4 h-4 ${isProcessing ? 'animate-spin' : ''}`} />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"

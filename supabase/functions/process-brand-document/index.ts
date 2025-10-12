@@ -45,11 +45,12 @@ serve(async (req) => {
       .update({ processing_status: 'processing' })
       .eq('id', documentId);
 
-    // Download the file from storage
+    // Download the file from storage (use full path, not just filename)
+    console.log(`Downloading file from path: ${document.file_url}`);
     const { data: fileData, error: downloadError } = await supabase
       .storage
       .from('brand-documents')
-      .download(document.file_url.split('/').pop()!);
+      .download(document.file_url);
 
     if (downloadError || !fileData) {
       throw new Error(`Failed to download file: ${downloadError?.message}`);
