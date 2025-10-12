@@ -20,6 +20,76 @@ const FONT_OPTIONS = [
   { value: 'inter', label: 'Inter', family: '"Inter", sans-serif' },
 ];
 
+// Selection preservation utilities
+interface SavedSelection {
+  anchorPath: number[];
+  anchorOffset: number;
+  focusPath: number[];
+  focusOffset: number;
+}
+
+const getNodePath = (node: Node, root: Node): number[] => {
+  const path: number[] = [];
+  let current = node;
+  
+  while (current !== root && current.parentNode) {
+    const parent = current.parentNode;
+    const index = Array.from(parent.childNodes).indexOf(current as ChildNode);
+    path.unshift(index);
+    current = parent;
+  }
+  
+  return path;
+};
+
+const getNodeFromPath = (root: Node, path: number[]): Node | null => {
+  let current: Node | null = root;
+  
+  for (const index of path) {
+    if (!current || !current.childNodes[index]) {
+      return null;
+    }
+    current = current.childNodes[index];
+  }
+  
+  return current;
+};
+
+const saveSelection = (root: HTMLDivElement): SavedSelection | null => {
+  const selection = window.getSelection();
+  if (!selection || !selection.rangeCount) return null;
+  
+  const range = selection.getRangeAt(0);
+  
+  return {
+    anchorPath: getNodePath(range.startContainer, root),
+    anchorOffset: range.startOffset,
+    focusPath: getNodePath(range.endContainer, root),
+    focusOffset: range.endOffset
+  };
+};
+
+const restoreSelection = (root: HTMLDivElement, saved: SavedSelection | null) => {
+  if (!saved) return;
+  
+  const anchorNode = getNodeFromPath(root, saved.anchorPath);
+  const focusNode = getNodeFromPath(root, saved.focusPath);
+  
+  if (anchorNode && focusNode) {
+    const selection = window.getSelection();
+    const range = document.createRange();
+    
+    try {
+      range.setStart(anchorNode, Math.min(saved.anchorOffset, anchorNode.textContent?.length || 0));
+      range.setEnd(focusNode, Math.min(saved.focusOffset, focusNode.textContent?.length || 0));
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    } catch (e) {
+      console.warn("[ContentEditor] Failed to restore selection:", e);
+    }
+  }
+};
+
 export default function ContentEditorPage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -41,36 +111,53 @@ export default function ContentEditorPage() {
   const [wordCount, setWordCount] = useState(0);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [qualityRating, setQualityRating] = useState(0);
-
-  // Callback ref to ensure the editable div is mounted before we try to set content
-  const attachEditableRef = useCallback((element: HTMLDivElement | null) => {
-    if (element) {
-      editableRef.current = element;
-      setIsEditorReady(true);
-      console.log("[ContentEditor] Editor ref attached and ready");
-      
-      // HOTFIX: Rehydrate content immediately when ref is attached (prevents disappearing text on assistant toggle)
-      if (editableContent) {
-        const formattedContent = plainTextToHtml(editableContent);
-        element.innerHTML = formattedContent;
-        document.execCommand('defaultParagraphSeparator', false, 'p');
-        console.log("[ContentEditor] Rehydrated content into newly mounted editor");
-      }
-    }
-  }, [editableContent]);
+  const [isComposing, setIsComposing] = useState(false);
   
-  // History for undo/redo
-  const historyRef = useRef<string[]>([]);
+  // History for undo/redo (now stores both HTML and selection)
+  const historyRef = useRef<Array<{ html: string; selection: SavedSelection | null }>>([]);
   const historyIndexRef = useRef(0);
   const isUndoRedoRef = useRef(false);
   const updateTimeoutRef = useRef<NodeJS.Timeout>();
+  const hasInitialized = useRef(false);
+
+  // Callback ref - only sets content ONCE on mount
+  const attachEditableRef = useCallback((element: HTMLDivElement | null) => {
+    if (element && !hasInitialized.current && editableContent) {
+      editableRef.current = element;
+      
+      const formattedContent = plainTextToHtml(editableContent);
+      element.innerHTML = formattedContent;
+      document.execCommand('defaultParagraphSeparator', false, 'p');
+      
+      hasInitialized.current = true;
+      setIsEditorReady(true);
+      
+      // Focus and position cursor at end
+      requestAnimationFrame(() => {
+        element.focus();
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(element);
+        range.collapse(false);
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      });
+    }
+  }, [editableContent]);
   
-  // Auto-save
+  // Auto-save using ref content
+  const getContentForSave = useCallback(() => {
+    if (editableRef.current) {
+      return htmlToPlainText(editableRef.current.innerHTML);
+    }
+    return editableContent;
+  }, [editableContent]);
+  
   const { saveStatus, forceSave } = useAutoSave({
-    content: editableContent,
+    content: getContentForSave(),
     contentId,
     contentName: title,
-    delay: 3000
+    delay: 800
   });
 
   // Load content on mount
@@ -150,18 +237,7 @@ export default function ContentEditorPage() {
     loadContent();
   }, [location.state, location.search, navigate, toast]);
 
-  // Set content in editor when both editor is ready and content is available
-  useEffect(() => {
-    if (!isEditorReady || !editableRef.current || !editableContent) return;
-    
-    console.log("[ContentEditor] Setting content in editor, length:", editableContent.length);
-    // Convert plain text to formatted HTML with proper paragraph spacing
-    const formattedContent = plainTextToHtml(editableContent);
-    editableRef.current.innerHTML = formattedContent;
-    
-    // Set default paragraph separator to 'p' for consistent Enter key behavior
-    document.execCommand('defaultParagraphSeparator', false, 'p');
-  }, [isEditorReady, editableContent]);
+  // NO LONGER NEEDED - content is set once in attachEditableRef
 
   // Calculate word count
   useEffect(() => {
@@ -172,21 +248,7 @@ export default function ContentEditorPage() {
     }
   }, [editableContent]);
 
-  // Update history when content changes
-  useEffect(() => {
-    if (!isUndoRedoRef.current && editableContent !== historyRef.current[historyIndexRef.current]) {
-      const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
-      newHistory.push(editableContent);
-      
-      if (newHistory.length > 50) {
-        newHistory.shift();
-      } else {
-        historyIndexRef.current++;
-      }
-      historyRef.current = newHistory;
-    }
-    isUndoRedoRef.current = false;
-  }, [editableContent]);
+  // History is now updated directly in updateContentFromEditable
 
   const htmlToPlainText = (html: string): string => {
     const temp = document.createElement('div');
@@ -240,50 +302,86 @@ export default function ContentEditorPage() {
   };
 
   const updateContentFromEditable = () => {
-    if (editableRef.current) {
-      const html = editableRef.current.innerHTML;
+    if (!editableRef.current || isComposing || isUndoRedoRef.current) return;
+    
+    const html = editableRef.current.innerHTML;
+    const saved = saveSelection(editableRef.current);
+    
+    // Update history immediately (no state update during typing)
+    if (!isUndoRedoRef.current) {
+      const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
+      newHistory.push({ html, selection: saved });
       
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current);
+      if (newHistory.length > 50) {
+        newHistory.shift();
+      } else {
+        historyIndexRef.current++;
       }
-      
-      updateTimeoutRef.current = setTimeout(() => {
-        const plainText = htmlToPlainText(html);
-        setEditableContent(plainText);
-      }, 300);
+      historyRef.current = newHistory;
     }
+    
+    // Debounced state update for autosave only
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+    }
+    
+    updateTimeoutRef.current = setTimeout(() => {
+      const plainText = htmlToPlainText(html);
+      setEditableContent(plainText);
+    }, 500);
   };
 
   const handleUndo = () => {
-    if (historyIndexRef.current > 0) {
+    if (historyIndexRef.current > 0 && editableRef.current) {
       isUndoRedoRef.current = true;
       historyIndexRef.current--;
-      const prevContent = historyRef.current[historyIndexRef.current];
-      setEditableContent(prevContent);
-      if (editableRef.current) {
-        editableRef.current.innerHTML = plainTextToHtml(prevContent);
-      }
+      const entry = historyRef.current[historyIndexRef.current];
+      
+      editableRef.current.innerHTML = entry.html;
+      
+      requestAnimationFrame(() => {
+        if (editableRef.current && entry.selection) {
+          restoreSelection(editableRef.current, entry.selection);
+        }
+        isUndoRedoRef.current = false;
+      });
+      
+      setEditableContent(htmlToPlainText(entry.html));
     }
   };
 
   const handleRedo = () => {
-    if (historyIndexRef.current < historyRef.current.length - 1) {
+    if (historyIndexRef.current < historyRef.current.length - 1 && editableRef.current) {
       isUndoRedoRef.current = true;
       historyIndexRef.current++;
-      const nextContent = historyRef.current[historyIndexRef.current];
-      setEditableContent(nextContent);
-      if (editableRef.current) {
-        editableRef.current.innerHTML = plainTextToHtml(nextContent);
-      }
+      const entry = historyRef.current[historyIndexRef.current];
+      
+      editableRef.current.innerHTML = entry.html;
+      
+      requestAnimationFrame(() => {
+        if (editableRef.current && entry.selection) {
+          restoreSelection(editableRef.current, entry.selection);
+        }
+        isUndoRedoRef.current = false;
+      });
+      
+      setEditableContent(htmlToPlainText(entry.html));
     }
   };
 
   const execCommand = (command: string, value?: string) => {
-    if (editableRef.current) {
-      editableRef.current.focus();
-      document.execCommand(command, false, value);
+    if (!editableRef.current) return;
+    
+    const savedSelection = saveSelection(editableRef.current);
+    editableRef.current.focus();
+    document.execCommand(command, false, value);
+    
+    requestAnimationFrame(() => {
+      if (editableRef.current && savedSelection) {
+        restoreSelection(editableRef.current, savedSelection);
+      }
       updateContentFromEditable();
-    }
+    });
   };
 
   const handleBold = () => execCommand('bold');
@@ -602,7 +700,10 @@ export default function ContentEditorPage() {
                   <div
                     ref={attachEditableRef}
                     contentEditable
+                    data-testid="main-editor"
                     onInput={updateContentFromEditable}
+                    onCompositionStart={() => setIsComposing(true)}
+                    onCompositionEnd={() => setIsComposing(false)}
                     onKeyDown={handleKeyDown}
                     suppressContentEditableWarning
                     className="w-full min-h-[calc(100vh-200px)] focus:outline-none prose prose-lg max-w-none"
@@ -641,7 +742,10 @@ export default function ContentEditorPage() {
               <div
                 ref={attachEditableRef}
                 contentEditable
+                data-testid="main-editor"
                 onInput={updateContentFromEditable}
+                onCompositionStart={() => setIsComposing(true)}
+                onCompositionEnd={() => setIsComposing(false)}
                 onKeyDown={handleKeyDown}
                 suppressContentEditableWarning
                 className="w-full min-h-[calc(100vh-200px)] focus:outline-none prose prose-lg max-w-none"
