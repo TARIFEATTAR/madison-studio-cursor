@@ -3,7 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { X, Sparkles, Mail, Instagram, Twitter, Tag, MessageSquare, FileText, Save, CheckCircle2, XCircle } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { X, Sparkles, Mail, Instagram, Twitter, Tag, MessageSquare, FileText, Save, CheckCircle2, XCircle, Maximize2, Minimize2 } from "lucide-react";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
 
 interface DerivativeContent {
@@ -74,6 +77,10 @@ export function EditorialDirectorSplitScreen({
 }: EditorialDirectorSplitScreenProps) {
   const [editedContent, setEditedContent] = useState(derivative.content);
   const [selectedDerivativeId, setSelectedDerivativeId] = useState(derivative.id);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [editedSequenceEmails, setEditedSequenceEmails] = useState(
+    derivative.sequenceEmails || []
+  );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const selectedDerivative = derivatives.find(d => d.id === selectedDerivativeId) || derivative;
@@ -82,12 +89,14 @@ export function EditorialDirectorSplitScreen({
   const color = DERIVATIVE_COLORS[selectedDerivative.typeId as keyof typeof DERIVATIVE_COLORS] || "#B8956A";
   const charLimit = CHAR_LIMITS[selectedDerivative.typeId as keyof typeof CHAR_LIMITS];
   const charCount = editedContent.length;
+  const isSequence = selectedDerivative.isSequence && selectedDerivative.sequenceEmails;
 
   const handleSave = () => {
     onUpdateDerivative({
       ...selectedDerivative,
       content: editedContent,
       charCount: editedContent.length,
+      sequenceEmails: isSequence ? editedSequenceEmails : undefined,
     });
   };
 
@@ -97,6 +106,7 @@ export function EditorialDirectorSplitScreen({
       content: editedContent,
       charCount: editedContent.length,
       status: "approved",
+      sequenceEmails: isSequence ? editedSequenceEmails : undefined,
     });
   };
 
@@ -120,6 +130,22 @@ export function EditorialDirectorSplitScreen({
     });
   };
 
+  const handleSequenceEmailChange = (emailId: string, field: 'subject' | 'preview' | 'content', value: string) => {
+    setEditedSequenceEmails(prev =>
+      prev.map(email =>
+        email.id === emailId
+          ? { ...email, [field]: value, charCount: field === 'content' ? value.length : email.charCount }
+          : email
+      )
+    );
+  };
+
+  useEffect(() => {
+    if (selectedDerivative.sequenceEmails) {
+      setEditedSequenceEmails(selectedDerivative.sequenceEmails);
+    }
+  }, [selectedDerivativeId]);
+
   return (
     <div className="fixed inset-0 z-50 flex" style={{ backgroundColor: "#F5F1E8" }}>
       {/* Header Bar */}
@@ -140,14 +166,22 @@ export function EditorialDirectorSplitScreen({
           Edit Derivatives
         </h1>
 
-        <div className="w-24" /> {/* Spacer for centering */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsExpanded(!isExpanded)}
+          style={{ color: "#6B6560" }}
+        >
+          {isExpanded ? <Minimize2 className="w-4 h-4 mr-2" /> : <Maximize2 className="w-4 h-4 mr-2" />}
+          {isExpanded ? 'Collapse' : 'Expand'}
+        </Button>
       </div>
 
       {/* Main Content Area */}
       <div className="flex w-full pt-14">
         {/* Left Panel - Derivatives Editor */}
-        <div className="flex-1 overflow-y-auto border-r" style={{ borderColor: "#D4CFC8" }}>
-          <div className="p-6 max-w-3xl">
+        <div className={`${isExpanded ? 'flex-1' : 'flex-1'} overflow-y-auto border-r`} style={{ borderColor: "#D4CFC8" }}>
+          <div className={`p-6 ${isExpanded ? 'max-w-none' : 'max-w-3xl'}`}>
             <p className="text-sm mb-6" style={{ color: "#6B6560" }}>
               Review and refine your channel-specific content with the Editorial Director
             </p>
@@ -168,66 +202,175 @@ export function EditorialDirectorSplitScreen({
                 </Badge>
               </div>
 
-              {/* Content Editor */}
-              <div className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium" style={{ color: "#1A1816" }}>
-                      Content
-                    </label>
-                    <span 
-                      className="text-xs"
-                      style={{ 
-                        color: charLimit && charCount > charLimit ? "#DC2626" : "#A8A39E" 
-                      }}
-                    >
-                      {charCount}{charLimit && `/${charLimit}`} chars
-                    </span>
-                  </div>
-                  <Textarea
-                    ref={textareaRef}
-                    value={editedContent}
-                    onChange={handleContentChange}
-                    className="min-h-64 font-sans"
-                    style={{ backgroundColor: "#FFFCF5" }}
-                  />
-                </div>
+              {/* Content Editor - Email Sequence or Regular */}
+              {isSequence ? (
+                <div className="space-y-4">
+                  <Accordion type="multiple" defaultValue={editedSequenceEmails.map(e => e.id)} className="space-y-3">
+                    {editedSequenceEmails.map((email, index) => (
+                      <AccordionItem 
+                        key={email.id} 
+                        value={email.id}
+                        className="border rounded-lg overflow-hidden"
+                        style={{ borderColor: "#D4CFC8", backgroundColor: "#FFFCF5" }}
+                      >
+                        <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                          <div className="flex items-center justify-between w-full pr-4">
+                            <div className="flex items-center gap-3">
+                              <Badge variant="outline" style={{ borderColor: "#B8956A", color: "#B8956A" }}>
+                                Email {email.sequenceNumber}
+                              </Badge>
+                              <span className="text-sm font-medium" style={{ color: "#1A1816" }}>
+                                {email.subject || 'Untitled'}
+                              </span>
+                            </div>
+                            <span className="text-xs" style={{ color: "#A8A39E" }}>
+                              {email.charCount} chars
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-4 pb-4 space-y-4">
+                          <div>
+                            <Label className="text-sm font-medium mb-2" style={{ color: "#1A1816" }}>
+                              Subject Line
+                            </Label>
+                            <Input
+                              value={email.subject}
+                              onChange={(e) => handleSequenceEmailChange(email.id, 'subject', e.target.value)}
+                              placeholder="Enter subject line..."
+                              className="mt-1"
+                              style={{ backgroundColor: "#F5F1E8" }}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium mb-2" style={{ color: "#1A1816" }}>
+                              Preview Text
+                            </Label>
+                            <Input
+                              value={email.preview}
+                              onChange={(e) => handleSequenceEmailChange(email.id, 'preview', e.target.value)}
+                              placeholder="Enter preview text..."
+                              className="mt-1"
+                              style={{ backgroundColor: "#F5F1E8" }}
+                            />
+                          </div>
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <Label className="text-sm font-medium" style={{ color: "#1A1816" }}>
+                                Email Body
+                              </Label>
+                              <span className="text-xs" style={{ color: "#A8A39E" }}>
+                                {email.charCount} chars
+                              </span>
+                            </div>
+                            <Textarea
+                              value={email.content}
+                              onChange={(e) => handleSequenceEmailChange(email.id, 'content', e.target.value)}
+                              className={isExpanded ? "min-h-96" : "min-h-64"}
+                              style={{ backgroundColor: "#F5F1E8" }}
+                              placeholder="Write your email content..."
+                            />
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
 
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleSave}
-                    variant="outline"
-                    size="sm"
-                    style={{ borderColor: "#D4CFC8", color: "#6B6560" }}
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Changes
-                  </Button>
-                  {selectedDerivative.status === "pending" && (
-                    <>
-                      <Button
-                        onClick={handleApprove}
-                        variant="outline"
-                        size="sm"
-                        style={{ borderColor: "#3A4A3D", color: "#3A4A3D" }}
-                      >
-                        <CheckCircle2 className="w-4 h-4 mr-2" />
-                        Approve
-                      </Button>
-                      <Button
-                        onClick={handleReject}
-                        variant="outline"
-                        size="sm"
-                        style={{ borderColor: "#6B2C3E", color: "#6B2C3E" }}
-                      >
-                        <XCircle className="w-4 h-4 mr-2" />
-                        Reject
-                      </Button>
-                    </>
-                  )}
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      onClick={handleSave}
+                      variant="outline"
+                      size="sm"
+                      style={{ borderColor: "#D4CFC8", color: "#6B6560" }}
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Changes
+                    </Button>
+                    {selectedDerivative.status === "pending" && (
+                      <>
+                        <Button
+                          onClick={handleApprove}
+                          variant="outline"
+                          size="sm"
+                          style={{ borderColor: "#3A4A3D", color: "#3A4A3D" }}
+                        >
+                          <CheckCircle2 className="w-4 h-4 mr-2" />
+                          Approve
+                        </Button>
+                        <Button
+                          onClick={handleReject}
+                          variant="outline"
+                          size="sm"
+                          style={{ borderColor: "#6B2C3E", color: "#6B2C3E" }}
+                        >
+                          <XCircle className="w-4 h-4 mr-2" />
+                          Reject
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-sm font-medium" style={{ color: "#1A1816" }}>
+                        Content
+                      </label>
+                      <span 
+                        className="text-xs"
+                        style={{ 
+                          color: charLimit && charCount > charLimit ? "#DC2626" : "#A8A39E" 
+                        }}
+                      >
+                        {charCount}{charLimit && `/${charLimit}`} chars
+                      </span>
+                    </div>
+                    <Textarea
+                      ref={textareaRef}
+                      value={editedContent}
+                      onChange={handleContentChange}
+                      className={isExpanded ? "min-h-96 font-sans" : "min-h-64 font-sans"}
+                      style={{ backgroundColor: "#FFFCF5" }}
+                    />
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleSave}
+                      variant="outline"
+                      size="sm"
+                      style={{ borderColor: "#D4CFC8", color: "#6B6560" }}
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Changes
+                    </Button>
+                    {selectedDerivative.status === "pending" && (
+                      <>
+                        <Button
+                          onClick={handleApprove}
+                          variant="outline"
+                          size="sm"
+                          style={{ borderColor: "#3A4A3D", color: "#3A4A3D" }}
+                        >
+                          <CheckCircle2 className="w-4 h-4 mr-2" />
+                          Approve
+                        </Button>
+                        <Button
+                          onClick={handleReject}
+                          variant="outline"
+                          size="sm"
+                          style={{ borderColor: "#6B2C3E", color: "#6B2C3E" }}
+                        >
+                          <XCircle className="w-4 h-4 mr-2" />
+                          Reject
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             <Separator className="my-6" />
@@ -281,8 +424,9 @@ export function EditorialDirectorSplitScreen({
         </div>
 
         {/* Right Panel - Editorial Director */}
-        <div className="w-96 xl:w-[450px] overflow-hidden" style={{ backgroundColor: "#FFFCF5" }}>
-          <div className="h-full flex flex-col">
+        {!isExpanded && (
+          <div className="w-96 xl:w-[450px] overflow-hidden" style={{ backgroundColor: "#FFFCF5" }}>
+            <div className="h-full flex flex-col">
             <div className="p-4 border-b" style={{ borderColor: "#D4CFC8" }}>
               <div className="flex items-center gap-2 mb-2">
                 <div 
@@ -322,6 +466,7 @@ export function EditorialDirectorSplitScreen({
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );
