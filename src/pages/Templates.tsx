@@ -364,7 +364,7 @@ const TemplatesContent = () => {
 
       {/* TWO-COLUMN LAYOUT - Grid Layout */}
       <div className="max-w-[1400px] mx-auto px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-[25px]">
           
           {/* LEFT COLUMN - 350px fixed width on desktop, filters only */}
           {!isMobile && (
