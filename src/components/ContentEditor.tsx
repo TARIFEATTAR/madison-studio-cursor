@@ -14,6 +14,75 @@ const FONT_OPTIONS = [
   { value: 'inter', label: 'Inter', family: '"Inter", sans-serif' },
 ];
 
+interface SavedSelection {
+  anchorPath: number[];
+  anchorOffset: number;
+  focusPath: number[];
+  focusOffset: number;
+}
+
+const getNodePath = (root: Node, target: Node): number[] => {
+  const path: number[] = [];
+  let current = target;
+
+  while (current && current !== root) {
+    const parent = current.parentNode;
+    if (!parent) break;
+    const index = Array.from(parent.childNodes).indexOf(current as ChildNode);
+    path.unshift(index);
+    current = parent;
+  }
+
+  return path;
+};
+
+const getNodeFromPath = (root: Node, path: number[]): Node | null => {
+  let current: Node | null = root;
+  
+  for (const index of path) {
+    if (!current || !current.childNodes[index]) {
+      return null;
+    }
+    current = current.childNodes[index];
+  }
+  
+  return current;
+};
+
+const saveSelection = (root: HTMLElement): SavedSelection | null => {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return null;
+
+  const range = selection.getRangeAt(0);
+  
+  return {
+    anchorPath: getNodePath(root, range.startContainer),
+    anchorOffset: range.startOffset,
+    focusPath: getNodePath(root, range.endContainer),
+    focusOffset: range.endOffset,
+  };
+};
+
+const restoreSelection = (root: HTMLElement, saved: SavedSelection) => {
+  const anchorNode = getNodeFromPath(root, saved.anchorPath);
+  const focusNode = getNodeFromPath(root, saved.focusPath);
+
+  if (!anchorNode || !focusNode) return;
+
+  const selection = window.getSelection();
+  const range = document.createRange();
+
+  try {
+    range.setStart(anchorNode, Math.min(saved.anchorOffset, anchorNode.textContent?.length || 0));
+    range.setEnd(focusNode, Math.min(saved.focusOffset, focusNode.textContent?.length || 0));
+    
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  } catch (e) {
+    console.warn('Failed to restore selection:', e);
+  }
+};
+
 interface ContentEditorProps {
   content: string;
   onChange: (content: string) => void;
@@ -39,6 +108,7 @@ export const ContentEditor = ({
   const [copiedFormatted, setCopiedFormatted] = useState(false);
   const [selectedFont, setSelectedFont] = useState('cormorant');
   const [richHtml, setRichHtml] = useState('');
+  const [isComposing, setIsComposing] = useState(false);
   const historyRef = useRef<string[]>([]);
   const richHistoryRef = useRef<string[]>([]);
   const historyIndexRef = useRef(0);
@@ -261,8 +331,23 @@ export const ContentEditor = ({
 
   const updateContentFromEditable = () => {
     if (editableRef.current) {
+      // Guard IME composition
+      if (isComposing) return;
+
+      // Save selection before update
+      const saved = saveSelection(editableRef.current);
+      
       const html = editableRef.current.innerHTML;
       setRichHtml(html);
+      
+      // Restore selection after React re-renders
+      if (saved) {
+        requestAnimationFrame(() => {
+          if (editableRef.current) {
+            restoreSelection(editableRef.current, saved);
+          }
+        });
+      }
       
       // Debounce history updates to avoid too many entries while typing
       if (updateTimeoutRef.current) {
@@ -730,8 +815,11 @@ export const ContentEditor = ({
                     ref={editableRef}
                     contentEditable
                     onInput={updateContentFromEditable}
+                    onCompositionStart={() => setIsComposing(true)}
+                    onCompositionEnd={() => setIsComposing(false)}
                     onKeyDown={handleKeyDown}
                     suppressContentEditableWarning
+                    data-testid="fullscreen-editor"
                     className="rte-content w-full min-h-[calc(100vh-200px)] bg-background border-none focus:outline-none text-lg leading-relaxed resize-none shadow-sm rounded-lg p-12 font-serif"
                   >
                     {/* Content is set via innerHTML in useEffect, not as children */}

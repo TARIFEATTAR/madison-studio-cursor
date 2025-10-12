@@ -59,7 +59,7 @@ export default function Create() {
   const [thinkModeExpanded, setThinkModeExpanded] = useState(false);
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
   const [thinkModeInput, setThinkModeInput] = useState("");
-  const [thinkModeMessages, setThinkModeMessages] = useState<Array<{role: string, content: string}>>([]);
+  const [thinkModeMessages, setThinkModeMessages] = useState<Array<{id: string, role: string, content: string}>>([]);
   const [isThinking, setIsThinking] = useState(false);
   const [showTransitionLoader, setShowTransitionLoader] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -241,7 +241,11 @@ export default function Create() {
   const handleThinkModeSend = async () => {
     if (!thinkModeInput.trim() || isThinking) return;
     
-    const userMessage = { role: 'user', content: thinkModeInput };
+    const userMessage = { 
+      id: `think-${Date.now()}-user-${Math.random().toString(36).substr(2, 9)}`,
+      role: 'user', 
+      content: thinkModeInput 
+    };
     setThinkModeMessages(prev => [...prev, userMessage]);
     setThinkModeInput("");
     setIsThinking(true);
@@ -304,7 +308,12 @@ export default function Create() {
                 const updated = [...prev];
                 
                 if (aiMessageIndex === -1) {
-                  updated.push({ role: 'assistant', content: aiMessage });
+                  const newMsg = { 
+                    id: `think-${Date.now()}-ai-${Math.random().toString(36).substr(2, 9)}`,
+                    role: 'assistant', 
+                    content: aiMessage 
+                  };
+                  updated.push(newMsg);
                   aiMessageIndex = updated.length - 1;
                 } else {
                   updated[aiMessageIndex].content = aiMessage;
@@ -409,9 +418,9 @@ export default function Create() {
               {/* Input Area Wrapper */}
               {thinkModeMessages.length > 0 && (
                 <div className="mb-6 space-y-4 max-h-96 overflow-y-auto">
-                  {thinkModeMessages.map((msg, index) => (
+                  {thinkModeMessages.map((msg) => (
                     <div 
-                      key={index} 
+                      key={msg.id} 
                       className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                       <div 

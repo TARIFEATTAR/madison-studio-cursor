@@ -9,6 +9,7 @@ import { useOnboarding } from "@/hooks/useOnboarding";
 import { cn } from "@/lib/utils";
 
 interface Message {
+  id: string;
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
@@ -24,6 +25,7 @@ export function EditorialAssistant({ isOpen, onClose }: EditorialAssistantProps)
   const { currentOrganizationId } = useOnboarding();
   const [messages, setMessages] = useState<Message[]>([
     {
+      id: `msg-initial-${Date.now()}`,
       role: "assistant",
       content: "Let's focus. What strategic challenge are we addressing today?",
       timestamp: new Date(),
@@ -52,6 +54,7 @@ export function EditorialAssistant({ isOpen, onClose }: EditorialAssistantProps)
     if (!input.trim() || isGenerating) return;
 
     const userMessage: Message = {
+      id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       role: "user",
       content: input.trim(),
       timestamp: new Date(),
@@ -81,6 +84,7 @@ export function EditorialAssistant({ isOpen, onClose }: EditorialAssistantProps)
 
       if (data?.generatedContent) {
         const assistantMessage: Message = {
+          id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           role: "assistant",
           content: data.generatedContent,
           timestamp: new Date(),
@@ -177,9 +181,9 @@ export function EditorialAssistant({ isOpen, onClose }: EditorialAssistantProps)
         {/* Messages */}
         <ScrollArea className="flex-1 px-6 py-4" ref={scrollRef}>
           <div className="space-y-6">
-            {messages.map((message, index) => (
+            {messages.map((message) => (
               <div
-                key={index}
+                key={message.id}
                 className={cn(
                   "flex gap-3",
                   message.role === "user" ? "justify-end" : "justify-start"
@@ -211,10 +215,10 @@ export function EditorialAssistant({ isOpen, onClose }: EditorialAssistantProps)
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleCopy(message.content, index)}
+                      onClick={() => handleCopy(message.content, messages.findIndex(m => m.id === message.id))}
                       className="self-start text-xs hover:bg-primary/10"
                     >
-                      {copiedIndex === index ? (
+                      {copiedIndex === messages.findIndex(m => m.id === message.id) ? (
                         <>
                           <Check className="w-3 h-3 mr-1" />
                           Copied
