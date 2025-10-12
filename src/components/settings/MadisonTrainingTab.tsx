@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ interface MadisonConfig {
 interface TrainingDocument {
   id: string;
   file_name: string;
+  file_url: string;
   file_type: string;
   file_size: number;
   processing_status: string;
@@ -34,6 +35,20 @@ export function MadisonTrainingTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [documents, setDocuments] = useState<TrainingDocument[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const triggeredRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const pending = documents.filter((d) => d.processing_status === 'pending');
+    pending.forEach(async (d) => {
+      if (triggeredRef.current.has(d.id)) return;
+      triggeredRef.current.add(d.id);
+      try {
+        await supabase.functions.invoke('process-madison-training-document', { body: { documentId: d.id } });
+      } catch (e) {
+        console.error('Auto-process trigger failed for document', d.id, e);
+      }
+    });
+  }, [documents]);
 
   useEffect(() => {
     checkSuperAdminStatus();
@@ -145,27 +160,31 @@ export function MadisonTrainingTab() {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('madison-training-docs')
-        .getPublicUrl(fileName);
-
-      // Create database record
-      const { error: dbError } = await supabase
+      // Create database record with storage path (private bucket)
+      const { data: inserted, error: dbError } = await supabase
         .from('madison_training_documents')
         .insert({
           file_name: file.name,
-          file_url: publicUrl,
+          file_url: uploadData?.path ?? fileName,
           file_type: file.type,
           file_size: file.size,
           uploaded_by: user.id,
-        });
+        })
+        .select('id')
+        .maybeSingle();
 
       if (dbError) throw dbError;
 
+      // Trigger backend processing
+      if (inserted?.id) {
+        await supabase.functions.invoke('process-madison-training-document', {
+          body: { documentId: inserted.id },
+        });
+      }
+
       toast({
         title: "Document uploaded",
-        description: "Training document has been added successfully",
+        description: "Processing has started. This may take up to a minute.",
       });
 
       loadDocuments();
@@ -182,12 +201,12 @@ export function MadisonTrainingTab() {
     }
   };
 
-  const handleDeleteDocument = async (docId: string, fileName: string) => {
+  const handleDeleteDocument = async (doc: TrainingDocument) => {
     try {
-      // Delete from storage
+      // Delete from storage (use stored path)
       const { error: storageError } = await supabase.storage
         .from('madison-training-docs')
-        .remove([fileName]);
+        .remove([doc.file_url]);
 
       if (storageError) throw storageError;
 
@@ -195,7 +214,7 @@ export function MadisonTrainingTab() {
       const { error: dbError } = await supabase
         .from('madison_training_documents')
         .delete()
-        .eq('id', docId);
+        .eq('id', doc.id);
 
       if (dbError) throw dbError;
 
@@ -460,7 +479,7 @@ export function MadisonTrainingTab() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDeleteDocument(doc.id, doc.file_name)}
+                    onClick={() => handleDeleteDocument(doc)}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
