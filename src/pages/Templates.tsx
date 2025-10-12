@@ -312,20 +312,33 @@ const TemplatesContent = () => {
         )}
 
         <div className="flex gap-6">
-          {/* Desktop: Sidebar Filters Panel (only when expanded) */}
-          {!isMobile && !isSidebarCollapsed && (
-            <PromptLibrarySidebar
-              className="w-80 flex-shrink-0"
-              onQuickAccessSelect={setSelectedQuickAccess}
-              onCollectionSelect={setSelectedCollection}
-              onCategorySelect={setSelectedCategory}
-              selectedQuickAccess={selectedQuickAccess}
-              selectedCollection={selectedCollection}
-              selectedCategory={selectedCategory}
-            />
+          {/* Desktop: Left Column (350px fixed width) */}
+          {!isMobile && (
+            <aside className="w-[350px] flex-shrink-0">
+              {!isSidebarCollapsed ? (
+                <PromptLibrarySidebar
+                  onQuickAccessSelect={setSelectedQuickAccess}
+                  onCollectionSelect={setSelectedCollection}
+                  onCategorySelect={setSelectedCategory}
+                  selectedQuickAccess={selectedQuickAccess}
+                  selectedCollection={selectedCollection}
+                  selectedCategory={selectedCategory}
+                />
+              ) : counts ? (
+                <PromptFilterCards
+                  counts={counts}
+                  selectedQuickAccess={selectedQuickAccess}
+                  selectedCollection={selectedCollection}
+                  selectedCategory={selectedCategory}
+                  onQuickAccessSelect={setSelectedQuickAccess}
+                  onCollectionSelect={setSelectedCollection}
+                  onCategorySelect={setSelectedCategory}
+                />
+              ) : null}
+            </aside>
           )}
 
-          {/* Main Content */}
+          {/* Main Content - Right Column */}
           <main className="flex-1 min-w-0">
             {/* Header */}
             <div className="flex items-start justify-between mb-6">
@@ -373,20 +386,6 @@ const TemplatesContent = () => {
               />
             </div>
 
-            {/* Filter Cards (shown when sidebar collapsed) */}
-            {isSidebarCollapsed && !isMobile && counts && (
-              <div className="mb-6">
-                <PromptFilterCards
-                  counts={counts}
-                  selectedQuickAccess={selectedQuickAccess}
-                  selectedCollection={selectedCollection}
-                  selectedCategory={selectedCategory}
-                  onQuickAccessSelect={setSelectedQuickAccess}
-                  onCollectionSelect={setSelectedCollection}
-                  onCategorySelect={setSelectedCategory}
-                />
-              </div>
-            )}
 
             {/* Active Filters Display (Mobile) */}
             {isMobile && (selectedQuickAccess || selectedCollection || selectedCategory) && (
