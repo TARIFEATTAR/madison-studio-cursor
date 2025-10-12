@@ -319,10 +319,22 @@ export default function ContentEditorPage() {
     }
   }, [isEditorReady, editableContent]);
 
-  // NO LONGER NEEDED - content is set once in attachEditableRef
+  // Preserve selection inside the editor so toolbar actions work reliably
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const editor = editableRef.current;
+      const sel = window.getSelection();
+      if (!editor || !sel || sel.rangeCount === 0) return;
+      const node = sel.anchorNode as Node | null;
+      if (node && editor.contains(node)) {
+        savedSelectionRef.current = saveSelection(editor);
+      }
+    };
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => document.removeEventListener('selectionchange', handleSelectionChange);
+  }, []);
 
   // Word count is now updated directly in updateContentFromEditable
-
   // History is now updated directly in updateContentFromEditable
 
   const updateContentFromEditable = () => {
@@ -396,15 +408,65 @@ export default function ContentEditorPage() {
   };
 
   const execCommand = (command: string, value?: string) => {
-    if (!editableRef.current) return;
-    
-    const savedSelection = saveSelection(editableRef.current);
-    editableRef.current.focus();
+    const editor = editableRef.current;
+    if (!editor) return;
+
+    const sel = window.getSelection();
+    const withinEditor = !!(sel && sel.rangeCount > 0 && sel.anchorNode && editor.contains(sel.anchorNode));
+
+    // If toolbar click blurred the editor, restore the last saved selection
+    if (!withinEditor && savedSelectionRef.current) {
+      try {
+        editor.focus();
+        restoreSelection(editor, savedSelectionRef.current);
+      } catch {}
+    } else {
+      editor.focus();
+    }
+
     document.execCommand(command, false, value);
-    
+
+    const needsListFallback = command === 'insertUnorderedList' || command === 'insertOrderedList';
+    const ordered = command === 'insertOrderedList';
+
+    const ensureList = () => {
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+      const anchor = selection.anchorNode as Node;
+      const li = (anchor as any)?.parentElement?.closest?.('li');
+      if (li) return; // list already created
+
+      // Find nearest block element
+      let node: Node | null = anchor;
+      while (node && node !== editor && !(node instanceof HTMLElement && /^(P|DIV|H[1-6])$/.test(node.tagName))) {
+        node = node.parentNode;
+      }
+      const block = (node as HTMLElement) || editor;
+
+      const list = document.createElement(ordered ? 'ol' : 'ul');
+      const item = document.createElement('li');
+
+      while (block.firstChild) item.appendChild(block.firstChild);
+      list.appendChild(item);
+
+      if (block !== editor) {
+        block.replaceWith(list);
+      } else {
+        editor.appendChild(list);
+      }
+
+      const range = document.createRange();
+      range.selectNodeContents(item);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    };
+
     requestAnimationFrame(() => {
-      if (editableRef.current && savedSelection) {
-        restoreSelection(editableRef.current, savedSelection);
+      if (needsListFallback) {
+        const s = window.getSelection();
+        const liNow = s && s.anchorNode && (s.anchorNode as any).parentElement?.closest?.('li');
+        if (!liNow) ensureList();
       }
       updateContentFromEditable();
     });
@@ -482,17 +544,24 @@ export default function ContentEditorPage() {
       handleRedo();
       return;
     }
-    
-    // Ensure Enter key creates proper <p> tags
-    if (e.key === 'Enter' && !e.shiftKey) {
+
+    const editor = editableRef.current;
+    const sel = window.getSelection();
+    const insideList = !!(editor && sel && sel.rangeCount > 0 && sel.anchorNode && (sel.anchorNode as any).parentElement?.closest?.('li') && editor.contains(sel.anchorNode));
+
+    // Indent/outdent list items with Tab / Shift+Tab
+    if (e.key === 'Tab' && insideList) {
       e.preventDefault();
-      
-      // Insert a new paragraph
+      document.execCommand(e.shiftKey ? 'outdent' : 'indent');
+      updateContentFromEditable();
+      return;
+    }
+
+    // Ensure Enter key creates proper <p> tags only outside lists
+    if (e.key === 'Enter' && !e.shiftKey && !insideList) {
+      e.preventDefault();
       document.execCommand('insertParagraph', false);
-      
-      // Ensure we're using <p> tags
       document.execCommand('defaultParagraphSeparator', false, 'p');
-      
       updateContentFromEditable();
     }
   };
@@ -775,7 +844,7 @@ export default function ContentEditorPage() {
                     onCompositionEnd={() => setIsComposing(false)}
                     onKeyDown={handleKeyDown}
                     suppressContentEditableWarning
-                    className="w-full min-h-[calc(100vh-200px)] focus:outline-none prose prose-lg max-w-none"
+                    className="editor-content w-full min-h-[calc(100vh-200px)] focus:outline-none prose prose-lg max-w-none"
                     style={{
                       fontFamily: currentFontFamily,
                       color: "#1A1816",
@@ -817,7 +886,7 @@ export default function ContentEditorPage() {
                 onCompositionEnd={() => setIsComposing(false)}
                 onKeyDown={handleKeyDown}
                 suppressContentEditableWarning
-                className="w-full min-h-[calc(100vh-200px)] focus:outline-none prose prose-lg max-w-none"
+                className="editor-content w-full min-h-[calc(100vh-200px)] focus:outline-none prose prose-lg max-w-none"
                 style={{
                   fontFamily: currentFontFamily,
                   color: "#1A1816",
