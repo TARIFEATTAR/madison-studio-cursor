@@ -1,7 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
-// @deno-types="https://esm.sh/v135/@types/pdf-parse@1.1.4/index.d.ts"
-import pdfParse from "https://esm.sh/pdf-parse@1.1.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -62,19 +60,67 @@ serve(async (req) => {
 
     // Extract text based on file type
     if (document.file_type === 'application/pdf') {
-      console.log('Processing PDF with enhanced parser...');
+      console.log('Processing PDF with AI document understanding...');
       
       try {
+        // Convert PDF to base64 for AI processing
         const arrayBuffer = await fileData.arrayBuffer();
-        const pdfData = await pdfParse(arrayBuffer);
+        const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
         
-        extractedText = pdfData.text;
+        console.log('Sending PDF to AI for text extraction...');
         
-        console.log(`PDF parsed successfully: ${pdfData.numpages} pages, ${extractedText.length} characters`);
+        // Use Lovable AI with Gemini to extract text from PDF
+        const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+        if (!lovableApiKey) {
+          throw new Error('LOVABLE_API_KEY not configured');
+        }
+
+        const aiResponse = await fetch('https://api.lovable.app/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${lovableApiKey}`,
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              {
+                role: 'user',
+                content: [
+                  {
+                    type: 'text',
+                    text: 'Extract all text content from this PDF document. Return ONLY the extracted text, preserving formatting and structure as much as possible. Do not add any commentary or explanations.'
+                  },
+                  {
+                    type: 'image_url',
+                    image_url: {
+                      url: `data:application/pdf;base64,${base64}`
+                    }
+                  }
+                ]
+              }
+            ],
+            max_tokens: 16000,
+          }),
+        });
+
+        if (!aiResponse.ok) {
+          const errorText = await aiResponse.text();
+          throw new Error(`AI extraction failed: ${aiResponse.status} - ${errorText}`);
+        }
+
+        const aiData = await aiResponse.json();
+        extractedText = aiData.choices?.[0]?.message?.content || '';
+        
+        if (!extractedText) {
+          throw new Error('No text extracted from PDF');
+        }
+        
+        console.log(`PDF text extracted successfully: ${extractedText.length} characters`);
       } catch (pdfError) {
-        console.error('PDF parsing error:', pdfError);
+        console.error('PDF processing error:', pdfError);
         const errMsg = pdfError instanceof Error ? pdfError.message : 'Unknown PDF parsing error';
-        throw new Error(`Failed to parse PDF: ${errMsg}`);
+        throw new Error(`Failed to process PDF: ${errMsg}`);
       }
     } else if (document.file_type.includes('text') || document.file_type.includes('markdown')) {
       extractedText = await fileData.text();
