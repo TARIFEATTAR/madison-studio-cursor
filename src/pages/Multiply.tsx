@@ -963,7 +963,7 @@ export default function Multiply() {
                 className="p-3 rounded-lg border text-sm"
                 style={{ backgroundColor: "#F5F1E8", borderColor: "#D4CFC8", color: "#6B6560" }}
               >
-                {selectedMaster.content.split('\n').slice(0, 2).join('\n')}...
+                {selectedMaster?.content ? selectedMaster.content.split('\n').slice(0, 2).join('\n') + '...' : 'No content'}
               </div>
             </div>
           </div>
@@ -988,12 +988,14 @@ export default function Multiply() {
       </Dialog>
 
       {/* Save Prompt Template Dialog */}
-      <SavePromptDialog
-        open={savePromptDialogOpen}
-        onOpenChange={setSavePromptDialogOpen}
-        promptText={selectedMaster.content}
-        suggestedTitle={selectedMaster.title}
-      />
+      {selectedMaster && (
+        <SavePromptDialog
+          open={savePromptDialogOpen}
+          onOpenChange={setSavePromptDialogOpen}
+          promptText={selectedMaster.content}
+          suggestedTitle={selectedMaster.title}
+        />
+      )}
     </div>
   );
 }
