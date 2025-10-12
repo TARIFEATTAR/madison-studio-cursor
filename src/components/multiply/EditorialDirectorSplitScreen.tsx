@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X, Sparkles, Mail, Instagram, Twitter, Tag, MessageSquare, FileText, Save, CheckCircle2, XCircle, Maximize2, Minimize2 } from "lucide-react";
+import { X, Sparkles, Mail, Instagram, Twitter, Tag, MessageSquare, FileText, Save, CheckCircle2, XCircle, Maximize2, Minimize2, GripVertical } from "lucide-react";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
 
 interface DerivativeContent {
@@ -82,6 +82,12 @@ export function EditorialDirectorSplitScreen({
     derivative.sequenceEmails || []
   );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Draggable window state
+  const [windowPosition, setWindowPosition] = useState({ x: window.innerWidth - 500, y: 100 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const dragHandleRef = useRef<HTMLDivElement>(null);
 
   const selectedDerivative = derivatives.find(d => d.id === selectedDerivativeId) || derivative;
   const Icon = DERIVATIVE_ICONS[selectedDerivative.typeId as keyof typeof DERIVATIVE_ICONS] || FileText;
@@ -145,6 +151,40 @@ export function EditorialDirectorSplitScreen({
       setEditedSequenceEmails(selectedDerivative.sequenceEmails);
     }
   }, [selectedDerivativeId]);
+
+  // Draggable window handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (dragHandleRef.current?.contains(e.target as Node)) {
+      setIsDragging(true);
+      setDragStart({
+        x: e.clientX - windowPosition.x,
+        y: e.clientY - windowPosition.y,
+      });
+    }
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDragging) {
+      const newX = Math.max(0, Math.min(e.clientX - dragStart.x, window.innerWidth - 400));
+      const newY = Math.max(0, Math.min(e.clientY - dragStart.y, window.innerHeight - 200));
+      setWindowPosition({ x: newX, y: newY });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, dragStart, windowPosition]);
 
   return (
     <div className="fixed inset-0 z-50 flex" style={{ backgroundColor: "#F5F1E8" }}>
@@ -423,23 +463,41 @@ export function EditorialDirectorSplitScreen({
           </div>
         </div>
 
-        {/* Right Panel - Editorial Director */}
+        {/* Right Panel - Editorial Director (Draggable Window) */}
         {!isExpanded && (
-          <div className="w-96 xl:w-[450px] overflow-hidden" style={{ backgroundColor: "#FFFCF5" }}>
-            <div className="h-full flex flex-col">
-            <div className="p-4 border-b" style={{ borderColor: "#D4CFC8" }}>
+          <div 
+            className="fixed rounded-lg shadow-2xl overflow-hidden border-2"
+            style={{ 
+              backgroundColor: "#FFFCF5",
+              borderColor: "#B8956A",
+              left: `${windowPosition.x}px`,
+              top: `${windowPosition.y}px`,
+              width: '450px',
+              maxHeight: 'calc(100vh - 120px)',
+              zIndex: 60,
+              cursor: isDragging ? 'grabbing' : 'default'
+            }}
+            onMouseDown={handleMouseDown}
+          >
+            <div className="h-full flex flex-col max-h-[calc(100vh-120px)]">
+            <div 
+              ref={dragHandleRef}
+              className="p-4 border-b cursor-grab active:cursor-grabbing select-none" 
+              style={{ borderColor: "#D4CFC8", backgroundColor: "rgba(184, 149, 106, 0.05)" }}
+            >
               <div className="flex items-center gap-2 mb-2">
+                <GripVertical className="w-4 h-4 flex-shrink-0" style={{ color: "#B8956A" }} />
                 <div 
-                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: "rgba(184, 149, 106, 0.1)" }}
                 >
                   <Sparkles className="w-4 h-4" style={{ color: "#B8956A" }} />
                 </div>
-                <div>
+                <div className="flex-1">
                   <h2 className="font-serif font-semibold" style={{ color: "#1A1816" }}>
                     Editorial Director
                   </h2>
-                  <p className="text-xs" style={{ color: "#6B6560" }}>Strategic Counsel</p>
+                  <p className="text-xs" style={{ color: "#6B6560" }}>Drag to reposition</p>
                 </div>
               </div>
 
