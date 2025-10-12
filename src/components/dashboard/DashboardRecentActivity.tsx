@@ -1,5 +1,6 @@
 import { FileText, Image, Video, Calendar, FileOutput, Boxes } from "lucide-react";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useNavigate } from "react-router-dom";
 
 const getIconForType = (type: string) => {
   if (type.includes('blog') || type.includes('article')) return FileText;
@@ -14,6 +15,12 @@ const getIconForType = (type: string) => {
 export function DashboardRecentActivity() {
   const { data: stats } = useDashboardStats();
   const recentActivity = stats?.recentActivity || [];
+  const navigate = useNavigate();
+
+  const handleContentClick = (activity: any) => {
+    // Navigate to Library with the content selected
+    navigate(`/library?contentId=${activity.id}`);
+  };
 
   if (recentActivity.length === 0) {
     return (
@@ -36,6 +43,7 @@ export function DashboardRecentActivity() {
           return (
             <div
               key={activity.id}
+              onClick={() => handleContentClick(activity)}
               className="flex items-start gap-3 p-3 rounded-lg hover:bg-aged-brass/5 transition-colors group cursor-pointer"
             >
               <div className="w-8 h-8 rounded-lg bg-aged-brass/10 flex items-center justify-center shrink-0 group-hover:bg-aged-brass/20 transition-colors">
