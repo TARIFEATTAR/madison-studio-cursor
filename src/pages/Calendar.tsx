@@ -4,12 +4,14 @@ import { DragDropContext, DropResult } from "react-beautiful-dnd";
 import { CalendarHeader } from "@/components/calendar/CalendarHeader";
 import { MonthView } from "@/components/calendar/MonthView";
 import { WeekView } from "@/components/calendar/WeekView";
+import { AgendaView } from "@/components/calendar/AgendaView";
 import { ScheduleModal } from "@/components/calendar/ScheduleModal";
 import { CalendarSidebar } from "@/components/calendar/CalendarSidebar";
+import { MobileCalendarSheet } from "@/components/calendar/MobileCalendarSheet";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/hooks/use-toast";
 import {
   Tooltip,
@@ -18,8 +20,9 @@ import {
 } from "@/components/ui/tooltip";
 
 const Calendar = () => {
+  const isMobile = useIsMobile();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<"month" | "week">("month");
+  const [viewMode, setViewMode] = useState<"month" | "week" | "agenda">(isMobile ? "agenda" : "month");
   const [scheduledItems, setScheduledItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
@@ -158,7 +161,7 @@ const Calendar = () => {
   };
 
   return (
-    <div className="min-h-screen pb-12 px-6 md:px-12 pt-8">
+    <div className="min-h-screen pb-12 px-4 md:px-12 pt-4 md:pt-8">
       <div className="max-w-[1920px] mx-auto">
         <CalendarHeader
           currentDate={currentDate}
@@ -167,42 +170,53 @@ const Calendar = () => {
           onPreviousMonth={handlePreviousMonth}
           onNextMonth={handleNextMonth}
           onToday={handleToday}
+          isMobile={isMobile}
         />
 
-        <div className="mt-6">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button onClick={handleNewSchedule} className="gap-2">
-                <Plus className="w-4 h-4" />
-                Schedule Content
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Add new content to your calendar</p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
+        {/* Desktop Schedule Button */}
+        {!isMobile && (
+          <div className="mt-6">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button onClick={handleNewSchedule} className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Schedule Content
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Add new content to your calendar</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        )}
 
         <DragDropContext
           onDragStart={() => setIsDragging(true)}
           onDragEnd={handleDragEnd}
         >
-          <div className="mt-6 grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-6">
+          <div className={`mt-6 ${isMobile ? '' : 'grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-6'}`}>
             {/* Calendar Section */}
             <div>
               {loading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="text-muted-foreground">Loading calendar...</div>
+                  <div className="text-base text-muted-foreground">Loading calendar...</div>
                 </div>
               ) : (
                 <div>
-                  {viewMode === "month" ? (
+                  {viewMode === "agenda" ? (
+                    <AgendaView
+                      currentDate={currentDate}
+                      scheduledItems={scheduledItems}
+                      onItemClick={handleItemClick}
+                    />
+                  ) : viewMode === "month" ? (
                     <MonthView
                       currentDate={currentDate}
                       scheduledItems={scheduledItems}
                       onDayClick={handleDayClick}
                       onItemClick={handleItemClick}
                       isDragging={isDragging}
+                      isMobile={isMobile}
                     />
                   ) : (
                     <WeekView
@@ -215,12 +229,25 @@ const Calendar = () => {
               )}
             </div>
 
-            {/* Sidebar Section */}
-            <div className="lg:sticky lg:top-24 h-fit max-h-[calc(100vh-7rem)] overflow-hidden">
-              <CalendarSidebar />
-            </div>
+            {/* Sidebar Section - Hidden on Mobile */}
+            {!isMobile && (
+              <div className="lg:sticky lg:top-24 h-fit max-h-[calc(100vh-7rem)] overflow-hidden">
+                <CalendarSidebar />
+              </div>
+            )}
           </div>
         </DragDropContext>
+
+        {/* Mobile FAB */}
+        {isMobile && (
+          <Button
+            onClick={handleNewSchedule}
+            size="lg"
+            className="fixed bottom-20 right-6 h-14 w-14 rounded-full shadow-lg z-50"
+          >
+            <Plus className="w-6 h-6" />
+          </Button>
+        )}
 
         <ScheduleModal
           open={scheduleModalOpen}

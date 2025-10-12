@@ -7,11 +7,12 @@ import { useGoogleCalendarConnection } from "@/hooks/useGoogleCalendarConnection
 
 interface CalendarHeaderProps {
   currentDate: Date;
-  viewMode: "month" | "week";
-  onViewModeChange: (mode: "month" | "week") => void;
+  viewMode: "month" | "week" | "agenda";
+  onViewModeChange: (mode: "month" | "week" | "agenda") => void;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
   onToday: () => void;
+  isMobile?: boolean;
 }
 
 export const CalendarHeader = ({
@@ -21,9 +22,43 @@ export const CalendarHeader = ({
   onPreviousMonth,
   onNextMonth,
   onToday,
+  isMobile = false,
 }: CalendarHeaderProps) => {
   const { isConnected, loading, connecting, handleConnect, handleDisconnect } = useGoogleCalendarConnection();
 
+  // Mobile view
+  if (isMobile) {
+    const { MobileCalendarSheet } = require("./MobileCalendarSheet");
+    return (
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold">
+            {format(currentDate, "MMMM yyyy")}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {viewMode === "agenda" ? "List View" : viewMode === "month" ? "Month View" : "Week View"}
+          </p>
+        </div>
+        <MobileCalendarSheet
+          currentDate={currentDate}
+          viewMode={viewMode}
+          onViewModeChange={onViewModeChange}
+          onDateChange={(date: Date) => {
+            const monthsDiff = date.getMonth() - currentDate.getMonth() + 
+              (12 * (date.getFullYear() - currentDate.getFullYear()));
+            if (monthsDiff > 0) {
+              for (let i = 0; i < monthsDiff; i++) onNextMonth();
+            } else if (monthsDiff < 0) {
+              for (let i = 0; i < Math.abs(monthsDiff); i++) onPreviousMonth();
+            }
+          }}
+          onToday={onToday}
+        />
+      </div>
+    );
+  }
+
+  // Desktop view
   return (
     <div className="flex items-center justify-between fade-enter">
       <div>
@@ -88,6 +123,15 @@ export const CalendarHeader = ({
         </Button>
 
         <div className="flex items-center gap-1 border border-border/40 rounded-lg p-1">
+          <Button
+            variant={viewMode === "agenda" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => onViewModeChange("agenda")}
+            className="gap-2"
+          >
+            <List className="w-4 h-4" />
+            List
+          </Button>
           <Button
             variant={viewMode === "month" ? "secondary" : "ghost"}
             size="sm"

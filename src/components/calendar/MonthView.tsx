@@ -22,9 +22,10 @@ interface MonthViewProps {
   onDayClick: (date: Date) => void;
   onItemClick: (item: ScheduledItem) => void;
   isDragging?: boolean;
+  isMobile?: boolean;
 }
 
-export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick, isDragging }: MonthViewProps) => {
+export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick, isDragging, isMobile = false }: MonthViewProps) => {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const calendarStart = startOfWeek(monthStart);
@@ -61,14 +62,48 @@ export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7 [&>*]:min-h-[160px]">
+      <div className={cn("grid grid-cols-7", isMobile ? "[&>*]:min-h-[80px]" : "[&>*]:min-h-[160px]")}>
         {days.map((day, idx) => {
           const dayId = format(day, "yyyy-MM-dd");
           const dayItems = getItemsForDay(dayId);
           const isCurrentMonth = isSameMonth(day, currentDate);
           const isDayToday = isToday(day);
 
-          return (
+          return isMobile ? (
+            // Mobile: Simple view with dots
+            <div
+              key={dayId}
+              onClick={() => onDayClick(day)}
+              className={cn(
+                "h-full p-2 border-b border-r border-border/20 transition-all cursor-pointer",
+                !isCurrentMonth && "bg-muted/20",
+                isDayToday && "bg-accent/30 ring-1 ring-primary/40",
+                "hover:bg-accent/30 active:bg-accent"
+              )}
+            >
+              <div className={cn(
+                "text-lg font-medium mb-1",
+                !isCurrentMonth && "text-muted-foreground/50",
+                isDayToday && "text-primary font-bold"
+              )}>
+                {format(day, "d")}
+              </div>
+              <div className="flex gap-1 flex-wrap">
+                {dayItems.slice(0, 3).map((item) => (
+                  <div
+                    key={item.id}
+                    className="w-2 h-2 rounded-full bg-primary"
+                  />
+                ))}
+                {dayItems.length > 3 && (
+                  <div className="text-[10px] text-muted-foreground">
+                    +{dayItems.length - 3}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            // Desktop: Full drag-drop functionality
             <Droppable key={dayId} droppableId={dayId}>
               {(provided, snapshot) => (
                 <div
