@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import React from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 import Navigation from "./components/Navigation";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -78,13 +79,40 @@ const RootRoute = () => {
   useEffect(() => {
     if (!user) return;
     
-    // Check if user has completed onboarding
-    const onboardingCompleted = localStorage.getItem(`onboarding_completed_${user.id}`);
-    
-    // If not completed, redirect to onboarding
-    if (!onboardingCompleted) {
-      navigate('/onboarding', { replace: true });
-    }
+    const checkOnboardingStatus = async () => {
+      // Check database for organization with brand_config
+      const { data: orgMember } = await supabase
+        .from("organization_members")
+        .select("organization_id")
+        .eq("user_id", user.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (!orgMember?.organization_id) {
+        navigate('/onboarding', { replace: true });
+        return;
+      }
+
+      const { data: org } = await supabase
+        .from("organizations")
+        .select("brand_config")
+        .eq("id", orgMember.organization_id)
+        .single();
+
+      // If organization has brand info, consider onboarding complete
+      const hasBrandInfo = org?.brand_config && 
+        typeof org.brand_config === 'object' && 
+        'industry' in org.brand_config;
+
+      if (!hasBrandInfo) {
+        navigate('/onboarding', { replace: true });
+      } else {
+        // Sync localStorage with database state
+        localStorage.setItem(`onboarding_completed_${user.id}`, "true");
+      }
+    };
+
+    checkOnboardingStatus();
   }, [user, navigate]);
   
   return <DashboardNew />;
