@@ -1,11 +1,12 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Package, Users, Bell, CreditCard, FolderKanban } from "lucide-react";
+import { Building2, Package, Users, Bell, CreditCard, FolderKanban, Sparkles } from "lucide-react";
 import { ProductsTab } from "@/components/settings/ProductsTab";
 import { BrandGuidelinesTab } from "@/components/settings/BrandGuidelinesTab";
 import { TeamTab } from "@/components/settings/TeamTab";
 import { NotificationsTab } from "@/components/settings/NotificationsTab";
 import { BillingTab } from "@/components/settings/BillingTab";
 import { CollectionsTab } from "@/components/settings/CollectionsTab";
+import { MadisonTrainingTab } from "@/components/settings/MadisonTrainingTab";
 
 export default function Settings() {
   return (
@@ -29,6 +30,13 @@ export default function Settings() {
               >
                 <Building2 className="w-4 h-4" />
                 Brand Guidelines
+              </TabsTrigger>
+              <TabsTrigger 
+                value="madison"
+                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                Madison's Training
               </TabsTrigger>
               <TabsTrigger 
                 value="collections"
@@ -69,6 +77,10 @@ export default function Settings() {
 
             <TabsContent value="brand">
               <BrandGuidelinesTab />
+            </TabsContent>
+
+            <TabsContent value="madison">
+              <MadisonTrainingTab />
             </TabsContent>
 
             <TabsContent value="collections">
