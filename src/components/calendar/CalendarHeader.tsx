@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { useGoogleCalendarConnection } from "@/hooks/useGoogleCalendarConnection";
+import { MobileCalendarSheet } from "./MobileCalendarSheet";
 
 interface CalendarHeaderProps {
   currentDate: Date;
@@ -28,7 +29,6 @@ export const CalendarHeader = ({
 
   // Mobile view
   if (isMobile) {
-    const { MobileCalendarSheet } = require("./MobileCalendarSheet");
     return (
       <div className="flex items-center justify-between mb-6">
         <div>
