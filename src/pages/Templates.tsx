@@ -362,9 +362,9 @@ const TemplatesContent = () => {
 
       {/* PAGE CONTENT AREA - Flex layout with filter panel and main content */}
       <div className="flex">
-        {/* FILTER PANEL - 300px fixed width, completely separate from global nav */}
+        {/* FILTER PANEL - 320px fixed width, completely separate from global nav */}
         {!isMobile && (
-          <div className="w-[300px] flex-shrink-0 bg-[#F5F1E8] px-6 py-8">
+          <div className="w-[320px] flex-shrink-0 bg-white border-r-2 border-[#D4CFC8]">
             <PromptLibrarySidebar
               onQuickAccessSelect={setSelectedQuickAccess}
               onCollectionSelect={setSelectedCollection}
