@@ -37,7 +37,9 @@ serve(async (req) => {
       .eq("id", documentId);
 
     // Download file from private bucket using stored path
-    const filePath: string = doc.file_url; // we stored the path (e.g. 1699999999999-My.pdf)
+    const fullUrl: string = doc.file_url; 
+    // Extract just the filename from the URL (e.g., "1699999999999-My.pdf")
+    const filePath = fullUrl.split('/madison-training-docs/')[1];
     console.log("Downloading from bucket path:", filePath);
     const { data: fileData, error: dlErr } = await supabase
       .storage
