@@ -30,7 +30,7 @@ const PromptLibrarySidebar = ({
 }: PromptLibrarySidebarProps) => {
   const { currentOrganizationId } = useOnboarding();
   const [expandedSections, setExpandedSections] = useState({
-    collections: true,
+    collections: false,
     categories: false,
   });
 

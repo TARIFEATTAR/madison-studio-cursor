@@ -309,7 +309,7 @@ const TemplatesContent = () => {
       )}
 
       {/* HEADER SECTION - Full width */}
-      <div className="bg-[#FFFCF5] border-b-2 border-[#D4CFC8] px-8 py-6">
+      <div className="bg-white border-b-2 border-[#D4CFC8] px-8 py-6">
         <div className="max-w-full mx-auto">
           {/* Title Row */}
           <div className="flex items-start justify-between mb-4">
