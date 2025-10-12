@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Check, Loader2, MessageSquare, Bold, Italic, Underline, Undo2, Redo2, X } from "lucide-react";
+import { ArrowLeft, Save, Check, Loader2, MessageSquare, Bold, Italic, Underline, Undo2, Redo2, X, List, ListOrdered } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
@@ -294,6 +294,16 @@ export default function ContentEditorPage() {
     loadContent();
   }, [location.state, location.search, navigate, toast]);
 
+  // Calculate word count on initial load
+  useEffect(() => {
+    if (isEditorReady && editableRef.current) {
+      const text = editableRef.current.innerText;
+      const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+      setWordCount(words.length);
+      console.debug("[ContentEditor] Initial word count calculated:", words.length);
+    }
+  }, [isEditorReady]);
+
   // NO LONGER NEEDED - content is set once in attachEditableRef
 
   // Word count is now updated directly in updateContentFromEditable
@@ -391,6 +401,8 @@ export default function ContentEditorPage() {
   const handleH1 = () => execCommand('formatBlock', '<h1>');
   const handleH2 = () => execCommand('formatBlock', '<h2>');
   const handleH3 = () => execCommand('formatBlock', '<h3>');
+  const handleBulletList = () => execCommand('insertUnorderedList');
+  const handleNumberedList = () => execCommand('insertOrderedList');
 
   const canUndo = historyIndexRef.current > 0;
   const canRedo = historyIndexRef.current < historyRef.current.length - 1;
@@ -506,19 +518,19 @@ export default function ContentEditorPage() {
       >
         <div className="flex items-center justify-between px-4 py-2">
           {/* Left: Exit Button + Font & Formatting */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2 overflow-x-auto">
             {/* Exit Button */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate("/")}
-              className="h-9 w-9 p-0"
+              className="h-8 w-8 sm:h-9 sm:w-9 p-0 flex-shrink-0"
               title="Exit Editor"
             >
               <X className="w-4 h-4" />
             </Button>
 
-            {/* Font & Formatting - Hidden on mobile */}
+            {/* Font Selection - Desktop only */}
             <div className="h-6 w-px bg-border/40 mx-1 hidden md:block" />
 
             <div className="hidden md:block">
@@ -541,7 +553,7 @@ export default function ContentEditorPage() {
 
             <div className="h-6 w-px bg-border/40 mx-1 hidden md:block" />
 
-            {/* Formatting Buttons - Hidden on mobile */}
+            {/* Essential Formatting - Always visible */}
             <Button
               variant="ghost"
               size="sm"
@@ -549,10 +561,10 @@ export default function ContentEditorPage() {
                 e.preventDefault();
                 handleBold();
               }}
-              className="h-9 w-9 p-0 hidden md:flex"
-              title="Bold"
+              className="h-8 w-8 sm:h-9 sm:w-9 p-0 flex-shrink-0"
+              title="Bold (Ctrl+B)"
             >
-              <Bold className="w-4 h-4" />
+              <Bold className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Button>
             <Button
               variant="ghost"
@@ -561,10 +573,10 @@ export default function ContentEditorPage() {
                 e.preventDefault();
                 handleItalic();
               }}
-              className="h-9 w-9 p-0 hidden md:flex"
-              title="Italic"
+              className="h-8 w-8 sm:h-9 sm:w-9 p-0 flex-shrink-0"
+              title="Italic (Ctrl+I)"
             >
-              <Italic className="w-4 h-4" />
+              <Italic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Button>
             <Button
               variant="ghost"
@@ -573,15 +585,67 @@ export default function ContentEditorPage() {
                 e.preventDefault();
                 handleUnderline();
               }}
-              className="h-9 w-9 p-0 hidden md:flex"
-              title="Underline"
+              className="h-8 w-8 sm:h-9 sm:w-9 p-0 flex-shrink-0"
+              title="Underline (Ctrl+U)"
             >
-              <Underline className="w-4 h-4" />
+              <Underline className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </Button>
+
+            {/* List Formatting - Always visible */}
+            <div className="h-6 w-px bg-border/40 mx-0.5 sm:mx-1" />
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleBulletList();
+              }}
+              className="h-8 w-8 sm:h-9 sm:w-9 p-0 flex-shrink-0"
+              title="Bullet List"
+            >
+              <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleNumberedList();
+              }}
+              className="h-8 w-8 sm:h-9 sm:w-9 p-0 flex-shrink-0"
+              title="Numbered List"
+            >
+              <ListOrdered className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </Button>
+
+            {/* Undo/Redo - Always visible */}
+            <div className="h-6 w-px bg-border/40 mx-0.5 sm:mx-1" />
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleUndo}
+              disabled={!canUndo}
+              className="h-8 w-8 sm:h-9 sm:w-9 p-0 flex-shrink-0"
+              title="Undo (Ctrl+Z)"
+            >
+              <Undo2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRedo}
+              disabled={!canRedo}
+              className="h-8 w-8 sm:h-9 sm:w-9 p-0 flex-shrink-0"
+              title="Redo (Ctrl+Y)"
+            >
+              <Redo2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Button>
 
             <div className="h-6 w-px bg-border/40 mx-1 hidden md:block" />
 
-            {/* Headers - Hidden on mobile */}
+            {/* Headers - Desktop only */}
             <Button
               variant="ghost"
               size="sm"
@@ -634,31 +698,11 @@ export default function ContentEditorPage() {
             <span>Editorial Assistant</span>
           </Button>
 
-          {/* Right: Undo/Redo, Word Count, Save, Next */}
-          <div className="flex items-center gap-1 sm:gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleUndo}
-              disabled={!canUndo}
-              className="h-9 w-9 p-0 hidden sm:flex"
-              title="Undo"
-            >
-              <Undo2 className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleRedo}
-              disabled={!canRedo}
-              className="h-9 w-9 p-0 hidden sm:flex"
-              title="Redo"
-            >
-              <Redo2 className="w-4 h-4" />
-            </Button>
-
-            <span className="text-sm text-muted-foreground mx-2 hidden lg:block">
-              {wordCount} words
+          {/* Right: Word Count, Quality Rating, Save, Next */}
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            {/* Word Count - Compact on mobile */}
+            <span className="text-xs sm:text-sm text-muted-foreground px-1 sm:px-2">
+              {wordCount}w
             </span>
 
             <div className="hidden lg:block">
@@ -671,21 +715,21 @@ export default function ContentEditorPage() {
             <Button
               onClick={handleSave}
               disabled={saveStatus === "saving"}
-              className="gap-2 h-9 bg-gradient-to-r from-aged-brass to-antique-gold text-ink-black hover:opacity-90"
+              className="gap-1 sm:gap-2 h-8 sm:h-9 bg-gradient-to-r from-aged-brass to-antique-gold text-ink-black hover:opacity-90"
             >
               {saveStatus === "saving" ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
               ) : saveStatus === "saved" ? (
-                <Check className="w-4 h-4" />
+                <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               ) : (
-                <Save className="w-4 h-4" />
+                <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               )}
               <span className="hidden sm:inline">Save</span>
             </Button>
             
             <Button
               onClick={handleNextToMultiply}
-              className="gap-2 h-9"
+              className="gap-1 sm:gap-2 h-8 sm:h-9"
               style={{
                 backgroundColor: "#1A1816",
                 color: "#FFFFFF"
@@ -693,7 +737,7 @@ export default function ContentEditorPage() {
             >
               <span className="hidden sm:inline">Next: Multiply</span>
               <span className="sm:hidden">Next</span>
-              <ArrowLeft className="w-4 h-4 rotate-180" />
+              <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 rotate-180" />
             </Button>
           </div>
         </div>
