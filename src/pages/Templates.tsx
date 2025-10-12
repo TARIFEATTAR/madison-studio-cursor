@@ -308,7 +308,7 @@ const Templates = () => {
         )}
 
         <main 
-          className="flex-1 p-8" 
+          className="flex-1 p-8 pl-12" 
           style={{ marginLeft: isMobile ? 0 : `${contentLeftOffset}px` }}
         >
           <div className="max-w-6xl mx-auto">
