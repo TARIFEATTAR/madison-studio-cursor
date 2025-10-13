@@ -170,9 +170,9 @@ export function EditorialDirectorSplitScreen({
   };
 
   const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging) {
-      const newX = Math.max(0, Math.min(e.clientX - dragStart.x, window.innerWidth - 400));
-      const newY = Math.max(0, Math.min(e.clientY - dragStart.y, window.innerHeight - 200));
+    if (isDragging && !isResizing) {
+      const newX = Math.max(0, Math.min(e.clientX - dragStart.x, window.innerWidth - windowSize.width));
+      const newY = Math.max(0, Math.min(e.clientY - dragStart.y, window.innerHeight - 100));
       setWindowPosition({ x: newX, y: newY });
     }
   };
@@ -200,31 +200,54 @@ export function EditorialDirectorSplitScreen({
     const deltaX = e.clientX - resizeStart.x;
     const deltaY = e.clientY - resizeStart.y;
 
-    let newWidth = windowSize.width;
-    let newHeight = windowSize.height;
+    let newWidth = resizeStart.width;
+    let newHeight = resizeStart.height;
     let newX = windowPosition.x;
     let newY = windowPosition.y;
 
+    const minWidth = 350;
+    const maxWidth = 800;
+    const minHeight = 400;
+    const maxHeight = window.innerHeight - 140;
+
     // Handle horizontal resizing
     if (resizeDirection.includes('right')) {
-      newWidth = Math.max(350, Math.min(800, resizeStart.width + deltaX));
+      newWidth = Math.max(minWidth, Math.min(maxWidth, resizeStart.width + deltaX));
+      // Constrain to screen bounds
+      newWidth = Math.min(newWidth, window.innerWidth - windowPosition.x - 20);
     } else if (resizeDirection.includes('left')) {
-      const widthChange = resizeStart.width - deltaX;
-      newWidth = Math.max(350, Math.min(800, widthChange));
-      newX = windowPosition.x + (resizeStart.width - newWidth);
+      const proposedWidth = resizeStart.width - deltaX;
+      newWidth = Math.max(minWidth, Math.min(maxWidth, proposedWidth));
+      const widthDiff = resizeStart.width - newWidth;
+      newX = Math.max(0, windowPosition.x - widthDiff);
+      // Adjust width if position is constrained
+      if (windowPosition.x - widthDiff < 0) {
+        newWidth = resizeStart.width + windowPosition.x;
+        newX = 0;
+      }
     }
 
     // Handle vertical resizing
     if (resizeDirection.includes('bottom')) {
-      newHeight = Math.max(400, Math.min(window.innerHeight - 140, resizeStart.height + deltaY));
+      newHeight = Math.max(minHeight, Math.min(maxHeight, resizeStart.height + deltaY));
+      // Constrain to screen bounds
+      newHeight = Math.min(newHeight, window.innerHeight - windowPosition.y - 20);
     } else if (resizeDirection.includes('top')) {
-      const heightChange = resizeStart.height - deltaY;
-      newHeight = Math.max(400, Math.min(window.innerHeight - 140, heightChange));
-      newY = windowPosition.y + (resizeStart.height - newHeight);
+      const proposedHeight = resizeStart.height - deltaY;
+      newHeight = Math.max(minHeight, Math.min(maxHeight, proposedHeight));
+      const heightDiff = resizeStart.height - newHeight;
+      newY = Math.max(56, windowPosition.y - heightDiff); // 56 = header height
+      // Adjust height if position is constrained
+      if (windowPosition.y - heightDiff < 56) {
+        newHeight = resizeStart.height + (windowPosition.y - 56);
+        newY = 56;
+      }
     }
 
     setWindowSize({ width: newWidth, height: newHeight });
-    setWindowPosition({ x: newX, y: newY });
+    if (newX !== windowPosition.x || newY !== windowPosition.y) {
+      setWindowPosition({ x: newX, y: newY });
+    }
   };
 
   const handleResizeEnd = () => {
@@ -241,7 +264,7 @@ export function EditorialDirectorSplitScreen({
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, dragStart, windowPosition]);
+  }, [isDragging, dragStart, windowPosition, windowSize, isResizing]);
 
   useEffect(() => {
     if (isResizing) {
@@ -252,7 +275,7 @@ export function EditorialDirectorSplitScreen({
         document.removeEventListener('mouseup', handleResizeEnd);
       };
     }
-  }, [isResizing, resizeDirection, resizeStart, windowSize, windowPosition]);
+  }, [isResizing, resizeDirection, resizeStart, windowPosition]);
 
   return (
     <div className="fixed inset-0 z-50 flex" style={{ backgroundColor: "#F5F1E8" }}>
@@ -547,45 +570,45 @@ export function EditorialDirectorSplitScreen({
             }}
             onMouseDown={handleMouseDown}
           >
-            {/* Resize handles */}
+            {/* Resize handles - thicker for better UX */}
             {/* Top edge */}
             <div 
-              className="absolute top-0 left-0 right-0 h-1 hover:bg-primary/20 cursor-ns-resize"
+              className="absolute top-0 left-2 right-2 h-2 hover:bg-primary/10 cursor-ns-resize z-10"
               onMouseDown={(e) => handleResizeStart(e, 'top')}
             />
             {/* Right edge */}
             <div 
-              className="absolute top-0 right-0 bottom-0 w-1 hover:bg-primary/20 cursor-ew-resize"
+              className="absolute top-2 right-0 bottom-2 w-2 hover:bg-primary/10 cursor-ew-resize z-10"
               onMouseDown={(e) => handleResizeStart(e, 'right')}
             />
             {/* Bottom edge */}
             <div 
-              className="absolute bottom-0 left-0 right-0 h-1 hover:bg-primary/20 cursor-ns-resize"
+              className="absolute bottom-0 left-2 right-2 h-2 hover:bg-primary/10 cursor-ns-resize z-10"
               onMouseDown={(e) => handleResizeStart(e, 'bottom')}
             />
             {/* Left edge */}
             <div 
-              className="absolute top-0 left-0 bottom-0 w-1 hover:bg-primary/20 cursor-ew-resize"
+              className="absolute top-2 left-0 bottom-2 w-2 hover:bg-primary/10 cursor-ew-resize z-10"
               onMouseDown={(e) => handleResizeStart(e, 'left')}
             />
             {/* Top-left corner */}
             <div 
-              className="absolute top-0 left-0 w-3 h-3 hover:bg-primary/20 cursor-nwse-resize"
+              className="absolute top-0 left-0 w-4 h-4 hover:bg-primary/10 cursor-nwse-resize z-20"
               onMouseDown={(e) => handleResizeStart(e, 'top-left')}
             />
             {/* Top-right corner */}
             <div 
-              className="absolute top-0 right-0 w-3 h-3 hover:bg-primary/20 cursor-nesw-resize"
+              className="absolute top-0 right-0 w-4 h-4 hover:bg-primary/10 cursor-nesw-resize z-20"
               onMouseDown={(e) => handleResizeStart(e, 'top-right')}
             />
             {/* Bottom-right corner */}
             <div 
-              className="absolute bottom-0 right-0 w-3 h-3 hover:bg-primary/20 cursor-nwse-resize"
+              className="absolute bottom-0 right-0 w-4 h-4 hover:bg-primary/10 cursor-nwse-resize z-20"
               onMouseDown={(e) => handleResizeStart(e, 'bottom-right')}
             />
             {/* Bottom-left corner */}
             <div 
-              className="absolute bottom-0 left-0 w-3 h-3 hover:bg-primary/20 cursor-nesw-resize"
+              className="absolute bottom-0 left-0 w-4 h-4 hover:bg-primary/10 cursor-nesw-resize z-20"
               onMouseDown={(e) => handleResizeStart(e, 'bottom-left')}
             />
 
