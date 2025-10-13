@@ -88,6 +88,12 @@ export function EditorialDirectorSplitScreen({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const dragHandleRef = useRef<HTMLDivElement>(null);
+  
+  // Resizable window state
+  const [windowSize, setWindowSize] = useState({ width: 450, height: 600 });
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeDirection, setResizeDirection] = useState<string | null>(null);
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
   const selectedDerivative = derivatives.find(d => d.id === selectedDerivativeId) || derivative;
   const Icon = DERIVATIVE_ICONS[selectedDerivative.typeId as keyof typeof DERIVATIVE_ICONS] || FileText;
@@ -175,6 +181,57 @@ export function EditorialDirectorSplitScreen({
     setIsDragging(false);
   };
 
+  // Resize handlers
+  const handleResizeStart = (e: React.MouseEvent, direction: string) => {
+    e.stopPropagation();
+    setIsResizing(true);
+    setResizeDirection(direction);
+    setResizeStart({
+      x: e.clientX,
+      y: e.clientY,
+      width: windowSize.width,
+      height: windowSize.height,
+    });
+  };
+
+  const handleResizeMove = (e: MouseEvent) => {
+    if (!isResizing || !resizeDirection) return;
+
+    const deltaX = e.clientX - resizeStart.x;
+    const deltaY = e.clientY - resizeStart.y;
+
+    let newWidth = windowSize.width;
+    let newHeight = windowSize.height;
+    let newX = windowPosition.x;
+    let newY = windowPosition.y;
+
+    // Handle horizontal resizing
+    if (resizeDirection.includes('right')) {
+      newWidth = Math.max(350, Math.min(800, resizeStart.width + deltaX));
+    } else if (resizeDirection.includes('left')) {
+      const widthChange = resizeStart.width - deltaX;
+      newWidth = Math.max(350, Math.min(800, widthChange));
+      newX = windowPosition.x + (resizeStart.width - newWidth);
+    }
+
+    // Handle vertical resizing
+    if (resizeDirection.includes('bottom')) {
+      newHeight = Math.max(400, Math.min(window.innerHeight - 140, resizeStart.height + deltaY));
+    } else if (resizeDirection.includes('top')) {
+      const heightChange = resizeStart.height - deltaY;
+      newHeight = Math.max(400, Math.min(window.innerHeight - 140, heightChange));
+      newY = windowPosition.y + (resizeStart.height - newHeight);
+    }
+
+    setWindowSize({ width: newWidth, height: newHeight });
+    setWindowPosition({ x: newX, y: newY });
+  };
+
+  const handleResizeEnd = () => {
+    setIsResizing(false);
+    setResizeDirection(null);
+  };
+
   useEffect(() => {
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
@@ -185,6 +242,17 @@ export function EditorialDirectorSplitScreen({
       };
     }
   }, [isDragging, dragStart, windowPosition]);
+
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleResizeMove);
+      document.addEventListener('mouseup', handleResizeEnd);
+      return () => {
+        document.removeEventListener('mousemove', handleResizeMove);
+        document.removeEventListener('mouseup', handleResizeEnd);
+      };
+    }
+  }, [isResizing, resizeDirection, resizeStart, windowSize, windowPosition]);
 
   return (
     <div className="fixed inset-0 z-50 flex" style={{ backgroundColor: "#F5F1E8" }}>
@@ -463,7 +531,7 @@ export function EditorialDirectorSplitScreen({
           </div>
         </div>
 
-        {/* Right Panel - Editorial Director (Draggable Window) */}
+        {/* Right Panel - Editorial Director (Draggable & Resizable Window) */}
         {!isExpanded && (
           <div 
             className="fixed rounded-lg shadow-2xl overflow-hidden border-2"
@@ -472,58 +540,100 @@ export function EditorialDirectorSplitScreen({
               borderColor: "#B8956A",
               left: `${windowPosition.x}px`,
               top: `${windowPosition.y}px`,
-              width: '450px',
-              maxHeight: 'calc(100vh - 120px)',
+              width: `${windowSize.width}px`,
+              height: `${windowSize.height}px`,
               zIndex: 60,
               cursor: isDragging ? 'grabbing' : 'default'
             }}
             onMouseDown={handleMouseDown}
           >
-            <div className="h-full flex flex-col max-h-[calc(100vh-120px)]">
+            {/* Resize handles */}
+            {/* Top edge */}
             <div 
-              ref={dragHandleRef}
-              className="p-4 border-b cursor-grab active:cursor-grabbing select-none" 
-              style={{ borderColor: "#D4CFC8", backgroundColor: "rgba(184, 149, 106, 0.05)" }}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <GripVertical className="w-4 h-4 flex-shrink-0" style={{ color: "#B8956A" }} />
-                <div 
-                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: "rgba(184, 149, 106, 0.1)" }}
-                >
-                  <Sparkles className="w-4 h-4" style={{ color: "#B8956A" }} />
+              className="absolute top-0 left-0 right-0 h-1 hover:bg-primary/20 cursor-ns-resize"
+              onMouseDown={(e) => handleResizeStart(e, 'top')}
+            />
+            {/* Right edge */}
+            <div 
+              className="absolute top-0 right-0 bottom-0 w-1 hover:bg-primary/20 cursor-ew-resize"
+              onMouseDown={(e) => handleResizeStart(e, 'right')}
+            />
+            {/* Bottom edge */}
+            <div 
+              className="absolute bottom-0 left-0 right-0 h-1 hover:bg-primary/20 cursor-ns-resize"
+              onMouseDown={(e) => handleResizeStart(e, 'bottom')}
+            />
+            {/* Left edge */}
+            <div 
+              className="absolute top-0 left-0 bottom-0 w-1 hover:bg-primary/20 cursor-ew-resize"
+              onMouseDown={(e) => handleResizeStart(e, 'left')}
+            />
+            {/* Top-left corner */}
+            <div 
+              className="absolute top-0 left-0 w-3 h-3 hover:bg-primary/20 cursor-nwse-resize"
+              onMouseDown={(e) => handleResizeStart(e, 'top-left')}
+            />
+            {/* Top-right corner */}
+            <div 
+              className="absolute top-0 right-0 w-3 h-3 hover:bg-primary/20 cursor-nesw-resize"
+              onMouseDown={(e) => handleResizeStart(e, 'top-right')}
+            />
+            {/* Bottom-right corner */}
+            <div 
+              className="absolute bottom-0 right-0 w-3 h-3 hover:bg-primary/20 cursor-nwse-resize"
+              onMouseDown={(e) => handleResizeStart(e, 'bottom-right')}
+            />
+            {/* Bottom-left corner */}
+            <div 
+              className="absolute bottom-0 left-0 w-3 h-3 hover:bg-primary/20 cursor-nesw-resize"
+              onMouseDown={(e) => handleResizeStart(e, 'bottom-left')}
+            />
+
+            <div className="h-full flex flex-col">
+              <div 
+                ref={dragHandleRef}
+                className="p-4 border-b cursor-grab active:cursor-grabbing select-none" 
+                style={{ borderColor: "#D4CFC8", backgroundColor: "rgba(184, 149, 106, 0.05)" }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <GripVertical className="w-4 h-4 flex-shrink-0" style={{ color: "#B8956A" }} />
+                  <div 
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: "rgba(184, 149, 106, 0.1)" }}
+                  >
+                    <Sparkles className="w-4 h-4" style={{ color: "#B8956A" }} />
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="font-serif font-semibold" style={{ color: "#1A1816" }}>
+                      Editorial Director
+                    </h2>
+                    <p className="text-xs" style={{ color: "#6B6560" }}>Drag to move • Resize from edges</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h2 className="font-serif font-semibold" style={{ color: "#1A1816" }}>
-                    Editorial Director
-                  </h2>
-                  <p className="text-xs" style={{ color: "#6B6560" }}>Drag to reposition</p>
+
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="secondary"
+                    className="gap-1.5"
+                    style={{ backgroundColor: `${color}15`, color }}
+                  >
+                    <Icon className="w-3 h-3" />
+                    {label}
+                  </Badge>
+                  <span className="text-xs" style={{ color: "#A8A39E" }}>
+                    {charCount}{charLimit && `/${charLimit}`} chars
+                  </span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant="secondary"
-                  className="gap-1.5"
-                  style={{ backgroundColor: `${color}15`, color }}
-                >
-                  <Icon className="w-3 h-3" />
-                  {label}
-                </Badge>
-                <span className="text-xs" style={{ color: "#A8A39E" }}>
-                  {charCount}{charLimit && `/${charLimit}`} chars
-                </span>
+              <div className="flex-1 overflow-hidden">
+                <EditorialAssistantPanel
+                  onClose={() => {}}
+                  initialContent={editedContent}
+                />
               </div>
-            </div>
-
-            <div className="flex-1 overflow-hidden">
-              <EditorialAssistantPanel
-                onClose={() => {}}
-                initialContent={editedContent}
-              />
             </div>
           </div>
-        </div>
         )}
       </div>
     </div>
