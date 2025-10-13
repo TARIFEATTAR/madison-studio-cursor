@@ -117,10 +117,15 @@ serve(async (req) => {
         }
         
         console.log(`PDF text extracted successfully: ${extractedText.length} characters`);
-      } catch (pdfError) {
+    } catch (pdfError) {
         console.error('PDF processing error:', pdfError);
         const errMsg = pdfError instanceof Error ? pdfError.message : 'Unknown PDF parsing error';
-        throw new Error(`Failed to process PDF: ${errMsg}`);
+        
+        // Still save whatever text we got, don't fail completely
+        if (!extractedText || extractedText.length < 10) {
+          throw new Error(`Failed to process PDF: ${errMsg}`);
+        }
+        console.warn('PDF processing had errors but continuing with extracted text');
       }
     } else if (document.file_type.includes('text') || document.file_type.includes('markdown')) {
       extractedText = await fileData.text();
@@ -283,9 +288,10 @@ serve(async (req) => {
     console.error('Error processing document:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     
-    // Update status to failed if we have documentId
+    // Update status to failed - use stored documentId from request
     try {
-      const { documentId } = await req.json();
+      const requestBody = await req.json();
+      const documentId = requestBody.documentId;
       if (documentId) {
         const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
         const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -293,7 +299,10 @@ serve(async (req) => {
         
         await supabase
           .from('brand_documents')
-          .update({ processing_status: 'failed' })
+          .update({ 
+            processing_status: 'failed',
+            content_preview: `Error: ${errorMessage}`
+          })
           .eq('id', documentId);
       }
     } catch (e) {
