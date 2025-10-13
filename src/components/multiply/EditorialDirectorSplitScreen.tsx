@@ -83,14 +83,14 @@ export function EditorialDirectorSplitScreen({
   );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
-  // Draggable window state
-  const [windowPosition, setWindowPosition] = useState({ x: window.innerWidth - 500, y: 100 });
+  // Draggable window state - adjusted for larger window
+  const [windowPosition, setWindowPosition] = useState({ x: window.innerWidth - 950, y: 100 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const dragHandleRef = useRef<HTMLDivElement>(null);
   
-  // Resizable window state
-  const [windowSize, setWindowSize] = useState({ width: 450, height: 600 });
+  // Resizable window state - 3x larger default size
+  const [windowSize, setWindowSize] = useState({ width: 900, height: 800 });
   const [isResizing, setIsResizing] = useState(false);
   const [resizeDirection, setResizeDirection] = useState<string | null>(null);
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
@@ -172,7 +172,8 @@ export function EditorialDirectorSplitScreen({
   const handleMouseMove = (e: MouseEvent) => {
     if (isDragging && !isResizing) {
       const maxX = Math.max(0, window.innerWidth - windowSize.width - 20);
-      const maxY = Math.max(56, window.innerHeight - windowSize.height - 20);
+      // Allow dragging closer to bottom - keep minimum 100px visible at top
+      const maxY = Math.max(56, window.innerHeight - 100);
       const newX = Math.max(0, Math.min(e.clientX - dragStart.x, maxX));
       const newY = Math.max(56, Math.min(e.clientY - dragStart.y, maxY));
       setWindowPosition({ x: newX, y: newY });
@@ -206,10 +207,11 @@ export function EditorialDirectorSplitScreen({
     let newX = windowPosition.x;
     let newY = windowPosition.y;
 
-    const minWidth = 350;
-    const maxWidth = 800;
-    const minHeight = 400;
-    const maxHeight = window.innerHeight - 140;
+    // Allow much larger expansion
+    const minWidth = 450;
+    const maxWidth = 1400;
+    const minHeight = 500;
+    const maxHeight = window.innerHeight - 80;
 
     // Handle horizontal resizing
     if (resizeDirection.includes('right')) {
@@ -278,12 +280,13 @@ export function EditorialDirectorSplitScreen({
     }
   }, [isResizing, resizeDirection, resizeStart, windowPosition]);
 
-  // Clamp position on window resize and when size changes
+  // Clamp position on window resize and when size changes - allow more flexibility
   useEffect(() => {
     const onResize = () => {
       setWindowPosition(prev => {
         const maxX = Math.max(0, window.innerWidth - windowSize.width - 20);
-        const maxY = Math.max(56, window.innerHeight - windowSize.height - 20);
+        // Keep minimum 100px visible at top for draggability
+        const maxY = Math.max(56, window.innerHeight - 100);
         return {
           x: Math.max(0, Math.min(prev.x, maxX)),
           y: Math.max(56, Math.min(prev.y, maxY)),
@@ -670,7 +673,7 @@ export function EditorialDirectorSplitScreen({
 
               <div className="flex-1 overflow-hidden">
                 <EditorialAssistantPanel
-                  onClose={() => {}}
+                  onClose={onClose}
                   initialContent={editedContent}
                 />
               </div>

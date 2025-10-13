@@ -168,6 +168,11 @@ export default function Multiply() {
   const [savePromptDialogOpen, setSavePromptDialogOpen] = useState(false);
   const [masterContentList, setMasterContentList] = useState<MasterContent[]>([]);
   const [loadingContent, setLoadingContent] = useState(true);
+  
+  // Derivative save dialog states
+  const [derivativeSaveDialogOpen, setDerivativeSaveDialogOpen] = useState(false);
+  const [derivativeToSave, setDerivativeToSave] = useState<DerivativeContent | null>(null);
+  const [derivativeSaveTitle, setDerivativeSaveTitle] = useState("");
 
   // Load master content from database
   useEffect(() => {
@@ -483,6 +488,120 @@ export default function Multiply() {
     }
   };
 
+  // Save derivative to database
+  const saveDerivativeToDatabase = async () => {
+    if (!derivativeToSave) return;
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to save derivatives",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Get user's organization
+      const { data: orgMember } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (!orgMember) {
+        toast({
+          title: "No organization found",
+          description: "Please join or create an organization first",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Prepare data for derivative_assets table
+      const insertData: any = {
+        asset_type: derivativeToSave.typeId,
+        generated_content: derivativeToSave.content,
+        organization_id: orgMember.organization_id,
+        created_by: user.id,
+        approval_status: 'draft',
+        master_content_id: selectedMaster?.id || null,
+      };
+
+      // For email sequences, store in platform_specs
+      if (derivativeToSave.isSequence && derivativeToSave.sequenceEmails) {
+        insertData.platform_specs = {
+          title: derivativeSaveTitle,
+          emails: derivativeToSave.sequenceEmails.map(email => ({
+            sequenceNumber: email.sequenceNumber,
+            subject: email.subject,
+            preview: email.preview,
+            body: email.content,
+          }))
+        };
+      }
+
+      const { error } = await supabase
+        .from('derivative_assets')
+        .insert([insertData]);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Derivative saved!",
+        description: `"${derivativeSaveTitle}" has been saved to your content library`,
+      });
+      
+      setDerivativeSaveDialogOpen(false);
+      setDerivativeToSave(null);
+    } catch (error) {
+      console.error('Error saving derivative:', error);
+      toast({
+        title: "Error saving derivative",
+        description: error.message || "Failed to save derivative",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Auto-save derivatives to localStorage as draft backup
+  useEffect(() => {
+    if (derivatives.length > 0 && selectedMaster) {
+      const draftData = {
+        derivatives,
+        masterContent: selectedMaster,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('multiply-derivatives-draft', JSON.stringify(draftData));
+    }
+  }, [derivatives, selectedMaster]);
+
+  // Check for draft derivatives on mount
+  useEffect(() => {
+    const checkForDrafts = () => {
+      try {
+        const draft = localStorage.getItem('multiply-derivatives-draft');
+        if (draft) {
+          const { derivatives: draftDerivatives, masterContent, timestamp } = JSON.parse(draft);
+          // If less than 24 hours old, offer to restore
+          if (Date.now() - timestamp < 86400000 && draftDerivatives.length > 0) {
+            setDerivatives(draftDerivatives);
+            setSelectedMaster(masterContent);
+            toast({
+              title: "Draft restored",
+              description: "Your previous work from a previous session has been restored",
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error checking for drafts:', error);
+      }
+    };
+
+    checkForDrafts();
+  }, []);
+
   // Group derivatives by type
   const derivativesByType = derivatives.reduce((acc, derivative) => {
     if (!acc[derivative.typeId]) {
@@ -786,6 +905,18 @@ export default function Multiply() {
                                   <Copy className="w-4 h-4 mr-2" />
                                   Copy
                                 </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setDerivativeToSave(derivative);
+                                    setDerivativeSaveTitle(`${typeInfo.name} - ${selectedMaster?.title || 'Untitled'}`);
+                                    setDerivativeSaveDialogOpen(true);
+                                  }}
+                                >
+                                  <Archive className="w-4 h-4 mr-2" />
+                                  Save
+                                </Button>
                                 {derivative.status === "pending" && (
                                   <>
                                     <Button
@@ -1057,6 +1188,75 @@ export default function Multiply() {
             >
               <Archive className="w-4 h-4 mr-2" />
               Save to Library
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Save Derivative Dialog */}
+      <Dialog open={derivativeSaveDialogOpen} onOpenChange={setDerivativeSaveDialogOpen}>
+        <DialogContent style={{ backgroundColor: "#FFFCF5" }}>
+          <DialogHeader>
+            <DialogTitle style={{ color: "#1A1816" }}>Save Derivative</DialogTitle>
+            <DialogDescription style={{ color: "#6B6560" }}>
+              Save this derivative content to your library
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="derivative-name" className="mb-2" style={{ color: "#1A1816" }}>
+                Content Name
+              </Label>
+              <Input
+                id="derivative-name"
+                value={derivativeSaveTitle}
+                onChange={(e) => setDerivativeSaveTitle(e.target.value)}
+                placeholder="Enter content name..."
+                style={{ backgroundColor: "#F5F1E8" }}
+              />
+            </div>
+
+            {derivativeToSave && (
+              <div>
+                <Label className="mb-2" style={{ color: "#6B6560" }}>Preview</Label>
+                <div 
+                  className="p-3 rounded-lg border text-sm max-h-32 overflow-y-auto"
+                  style={{ backgroundColor: "#F5F1E8", borderColor: "#D4CFC8", color: "#6B6560" }}
+                >
+                  {derivativeToSave.isSequence && derivativeToSave.sequenceEmails ? (
+                    <div className="space-y-2">
+                      {derivativeToSave.sequenceEmails.map(email => (
+                        <div key={email.id}>
+                          <strong>Email {email.sequenceNumber}:</strong> {email.subject}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    derivativeToSave.content.split('\n').slice(0, 3).join('\n') + '...'
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDerivativeSaveDialogOpen(false);
+                setDerivativeToSave(null);
+              }}
+              style={{ borderColor: "#D4CFC8", color: "#6B6560" }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={saveDerivativeToDatabase}
+              style={{ backgroundColor: "#B8956A", color: "#FFFCF5" }}
+            >
+              <Archive className="w-4 h-4 mr-2" />
+              Save Derivative
             </Button>
           </div>
         </DialogContent>
