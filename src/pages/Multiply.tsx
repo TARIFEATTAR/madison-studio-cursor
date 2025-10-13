@@ -11,6 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Sparkles, Archive, Mail, MessageSquare, Tag,
@@ -175,6 +178,7 @@ export default function Multiply() {
   const [isSavingMaster, setIsSavingMaster] = useState(false);
   const [isSavingDerivative, setIsSavingDerivative] = useState(false);
   const saveInFlightRef = useRef(false);
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
 
   useEffect(() => {
     const loadMasterContent = async () => {
@@ -483,162 +487,431 @@ export default function Multiply() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-6 py-12 space-y-8">
+      <div className="container mx-auto px-6 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-serif text-4xl mb-2">Multiply</h1>
-            <p className="text-muted-foreground">Transform master content into multiple formats</p>
-          </div>
-          {selectedMaster && (
-            <Button onClick={handleSaveToLibrary} disabled={isSavingMaster} className="gap-2">
-              <Archive className="w-4 h-4" />
-              {isSavingMaster ? "Saving..." : "Save to Library"}
-            </Button>
-          )}
+        <div className="mb-6">
+          <h1 className="font-serif text-4xl mb-2">Multiply</h1>
+          <p className="text-muted-foreground">Transform master content into multiple formats</p>
         </div>
 
-        {/* Master Content Selection */}
-        <Card className="p-6">
-          <h2 className="font-serif text-2xl mb-4">Select Master Content</h2>
-          {loadingContent ? (
-            <Loader2 className="w-6 h-6 animate-spin" />
-          ) : (
-            <Select value={selectedMaster?.id || ""} onValueChange={(id) => {
-              const content = masterContentList.find(c => c.id === id);
-              if (content) setSelectedMaster(content);
-            }}>
-              <SelectTrigger><SelectValue placeholder="Select master content..." /></SelectTrigger>
-              <SelectContent>
-                {masterContentList.map((content) => (
-                  <SelectItem key={content.id} value={content.id}>
-                    {content.title} ({content.wordCount} words)
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+        {/* Master Content Selector - Full Width */}
+        <Card className="p-4 mb-6">
+          <div className="flex items-center gap-4">
+            <Label className="text-sm font-medium whitespace-nowrap">Master Content:</Label>
+            {loadingContent ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Select value={selectedMaster?.id || ""} onValueChange={(id) => {
+                const content = masterContentList.find(c => c.id === id);
+                if (content) setSelectedMaster(content);
+              }}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Select master content..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {masterContentList.map((content) => (
+                    <SelectItem key={content.id} value={content.id}>
+                      {content.title} ({content.wordCount} words)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         </Card>
 
-        {/* Derivative Selection */}
-        <Card className="p-6">
-          <div className="flex justify-between mb-4">
-            <h2 className="font-serif text-2xl">Select Derivative Types</h2>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={selectAll}>Select All</Button>
-              <Button variant="outline" size="sm" onClick={deselectAll}>Deselect All</Button>
-            </div>
-          </div>
-          <div className="grid md:grid-cols-3 gap-4">
-            {DERIVATIVE_TYPES.map((type) => (
-              <Card key={type.id} onClick={() => toggleTypeSelection(type.id)} className={`p-4 cursor-pointer ${selectedTypes.has(type.id) ? "ring-2 ring-brass" : ""}`}>
-                <div className="flex items-start gap-3">
-                  <Checkbox checked={selectedTypes.has(type.id)} />
-                  <div>
-                    <h3 className="font-medium">{type.name}</h3>
-                    <p className="text-sm text-muted-foreground">{type.description}</p>
-                  </div>
+        {/* Two-Column Resizable Layout */}
+        <div className="hidden md:block">
+          <ResizablePanelGroup direction="horizontal" className="min-h-[600px] rounded-lg border">
+            {/* Left Panel - Master Content */}
+            <ResizablePanel defaultSize={40} minSize={30}>
+              <div className="h-full p-6 flex flex-col">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-serif text-2xl">Master Content</h2>
+                  {selectedMaster && (
+                    <Button onClick={handleSaveToLibrary} disabled={isSavingMaster} size="sm" variant="outline" className="gap-2">
+                      <Archive className="w-4 h-4" />
+                      {isSavingMaster ? "Saving..." : "Save"}
+                    </Button>
+                  )}
                 </div>
-              </Card>
-            ))}
-          </div>
-          <div className="mt-6 flex justify-center">
-            <Button onClick={generateDerivatives} disabled={isGenerating || selectedTypes.size === 0} size="lg" className="gap-2">
-              {isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
-              {isGenerating ? "Generating..." : `Generate ${selectedTypes.size} Derivative${selectedTypes.size !== 1 ? "s" : ""}`}
-            </Button>
-          </div>
-        </Card>
-
-        {/* Results */}
-        {Object.keys(derivativesByType).length > 0 && (
-          <Card className="p-6">
-            <h2 className="font-serif text-2xl mb-6">Generated Derivatives</h2>
-            <div className="space-y-4">
-              {Object.entries(derivativesByType).map(([typeId, derivs]) => {
-                const type = DERIVATIVE_TYPES.find(t => t.id === typeId);
-                if (!type) return null;
-
-                const Icon = type.icon;
-                const isExpanded = expandedTypes.has(typeId);
-
-                return (
-                  <div key={typeId} className="border rounded-lg overflow-hidden">
-                    <button
-                      onClick={() => toggleExpanded(typeId)}
-                      className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        {type.iconImage ? (
-                          <img src={type.iconImage} alt={type.name} className="w-6 h-6" />
-                        ) : Icon ? (
-                          <Icon className="w-6 h-6" style={{ color: type.iconColor }} />
-                        ) : null}
-                        <div className="text-left">
-                          <h3 className="font-medium">{type.name}</h3>
-                          <p className="text-sm text-muted-foreground">{derivs.length} generated</p>
-                        </div>
+                
+                {selectedMaster ? (
+                  <Card className="flex-1 overflow-hidden flex flex-col">
+                    <div className="p-4 border-b space-y-2">
+                      <h3 className="font-semibold text-lg">{selectedMaster.title}</h3>
+                      <div className="flex gap-2">
+                        {selectedMaster.contentType && (
+                          <Badge variant="secondary">{selectedMaster.contentType}</Badge>
+                        )}
+                        {selectedMaster.collection && (
+                          <Badge variant="outline">{selectedMaster.collection}</Badge>
+                        )}
                       </div>
-                      {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-                    </button>
+                      <div className="flex gap-4 text-sm text-muted-foreground">
+                        <span>{selectedMaster.wordCount} words</span>
+                        <span>{selectedMaster.charCount} characters</span>
+                      </div>
+                    </div>
+                    <ScrollArea className="flex-1">
+                      <div className="p-4">
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{selectedMaster.content}</p>
+                      </div>
+                    </ScrollArea>
+                  </Card>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center text-muted-foreground">
+                      <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                      <p>Select master content from dropdown above</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </ResizablePanel>
 
-                    {isExpanded && (
-                      <div className="p-4 space-y-3 bg-muted/20">
-                        {derivs.map((deriv) => (
-                          <Card key={deriv.id} className="p-4">
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <Badge variant={deriv.status === "approved" ? "default" : deriv.status === "rejected" ? "destructive" : "secondary"}>
-                                  {deriv.status === "approved" && <CheckCircle2 className="w-3 h-3 mr-1" />}
-                                  {deriv.status === "rejected" && <XCircle className="w-3 h-3 mr-1" />}
-                                  {deriv.status}
-                                </Badge>
-                                <span className="text-sm text-muted-foreground">
-                                  {deriv.charCount} chars
-                                  {type.charLimit && ` / ${type.charLimit}`}
-                                </span>
+            <ResizableHandle withHandle />
+
+            {/* Right Panel - Derivative Selection & Results */}
+            <ResizablePanel defaultSize={60} minSize={40}>
+              <ScrollArea className="h-full">
+                <div className="p-6 space-y-6">
+                  <h2 className="font-serif text-2xl">Derivative Editions</h2>
+
+                  {/* Empty State or Derivative Selector */}
+                  {Object.keys(derivativesByType).length === 0 && (
+                    <div className="text-center py-8">
+                      <img src={fannedPagesImage} alt="No derivatives" className="w-20 h-20 mx-auto mb-4 opacity-50" />
+                      <h3 className="font-medium text-lg mb-2">No Derivatives Yet</h3>
+                      <p className="text-sm text-muted-foreground">Generate channel-specific versions of your master content</p>
+                    </div>
+                  )}
+
+                  {/* Derivative Type Selector */}
+                  <div className="space-y-4">
+                    <h3 className="font-medium">Select derivative types to generate:</h3>
+                    
+                    {/* Most Popular */}
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-3">MOST POPULAR</p>
+                      <div className="grid grid-cols-3 gap-3">
+                        {TOP_DERIVATIVE_TYPES.map((type) => (
+                          <Card 
+                            key={type.id} 
+                            onClick={() => toggleTypeSelection(type.id)} 
+                            className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedTypes.has(type.id) ? "ring-2 ring-brass bg-brass/5" : ""}`}
+                          >
+                            <div className="space-y-2">
+                              <div className="flex items-start justify-between">
+                                <Checkbox checked={selectedTypes.has(type.id)} className="mt-1" />
+                                {type.iconImage ? (
+                                  <img src={type.iconImage} alt={type.name} className="w-8 h-8" />
+                                ) : type.icon && (
+                                  <type.icon className="w-8 h-8" style={{ color: type.iconColor }} />
+                                )}
                               </div>
-                              <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" onClick={() => copyToClipboard(deriv.content)}>
-                                  <Copy className="w-4 h-4" />
-                                </Button>
-                                <Button variant="ghost" size="sm" onClick={() => openDirector(deriv)}>
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button variant="ghost" size="sm" onClick={() => {
-                                  setDerivativeToSave(deriv);
-                                  setDerivativeSaveTitle(type.name);
-                                  setDerivativeSaveDialogOpen(true);
-                                }}>
-                                  <Archive className="w-4 h-4" />
-                                </Button>
+                              <div>
+                                <h4 className="font-medium text-sm">{type.name}</h4>
+                                <p className="text-xs text-muted-foreground line-clamp-2">{type.description}</p>
+                                {type.charLimit && (
+                                  <p className="text-xs text-muted-foreground mt-1">Max: {type.charLimit} chars</p>
+                                )}
                               </div>
                             </div>
-                            {deriv.isSequence && deriv.sequenceEmails ? (
-                              <div className="space-y-2">
-                                {deriv.sequenceEmails.map((email) => (
-                                  <div key={email.id} className="p-3 bg-background rounded border">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <Badge variant="outline">Email {email.sequenceNumber}</Badge>
-                                      <span className="text-sm font-medium">{email.subject}</span>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground line-clamp-2">{email.content}</p>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-sm whitespace-pre-wrap line-clamp-4">{deriv.content}</p>
-                            )}
                           </Card>
                         ))}
                       </div>
-                    )}
+                    </div>
+
+                    {/* More Options - Collapsible */}
+                    <Collapsible open={showMoreOptions} onOpenChange={setShowMoreOptions}>
+                      <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                        {showMoreOptions ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                        MORE OPTIONS
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="mt-3">
+                        <div className="grid grid-cols-3 gap-3">
+                          {ADDITIONAL_DERIVATIVE_TYPES.map((type) => (
+                            <Card 
+                              key={type.id} 
+                              onClick={() => toggleTypeSelection(type.id)} 
+                              className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedTypes.has(type.id) ? "ring-2 ring-brass bg-brass/5" : ""}`}
+                            >
+                              <div className="space-y-2">
+                                <div className="flex items-start justify-between">
+                                  <Checkbox checked={selectedTypes.has(type.id)} className="mt-1" />
+                                  {type.iconImage ? (
+                                    <img src={type.iconImage} alt={type.name} className="w-8 h-8" />
+                                  ) : type.icon && (
+                                    <type.icon className="w-8 h-8" style={{ color: type.iconColor }} />
+                                  )}
+                                </div>
+                                <div>
+                                  <h4 className="font-medium text-sm">{type.name}</h4>
+                                  <p className="text-xs text-muted-foreground line-clamp-2">{type.description}</p>
+                                  {type.charLimit && (
+                                    <p className="text-xs text-muted-foreground mt-1">Max: {type.charLimit} chars</p>
+                                  )}
+                                </div>
+                              </div>
+                            </Card>
+                          ))}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center justify-between pt-4">
+                      <Button variant="outline" size="sm" onClick={selectAll}>
+                        Select All
+                      </Button>
+                      <Button 
+                        onClick={generateDerivatives} 
+                        disabled={isGenerating || selectedTypes.size === 0} 
+                        size="lg" 
+                        className="gap-2"
+                      >
+                        {isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                        {isGenerating ? "Generating..." : `Generate ${selectedTypes.size} Derivative${selectedTypes.size !== 1 ? "s" : ""}`}
+                      </Button>
+                    </div>
                   </div>
-                );
-              })}
+
+                  {/* Generated Results */}
+                  {Object.keys(derivativesByType).length > 0 && (
+                    <div className="space-y-4 pt-6 border-t">
+                      <h3 className="font-serif text-xl">Generated Derivatives</h3>
+                      <div className="space-y-4">
+                        {Object.entries(derivativesByType).map(([typeId, derivs]) => {
+                          const type = DERIVATIVE_TYPES.find(t => t.id === typeId);
+                          if (!type) return null;
+
+                          const Icon = type.icon;
+                          const isExpanded = expandedTypes.has(typeId);
+
+                          return (
+                            <div key={typeId} className="border rounded-lg overflow-hidden">
+                              <button
+                                onClick={() => toggleExpanded(typeId)}
+                                className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
+                              >
+                                <div className="flex items-center gap-3">
+                                  {type.iconImage ? (
+                                    <img src={type.iconImage} alt={type.name} className="w-6 h-6" />
+                                  ) : Icon ? (
+                                    <Icon className="w-6 h-6" style={{ color: type.iconColor }} />
+                                  ) : null}
+                                  <div className="text-left">
+                                    <h3 className="font-medium">{type.name}</h3>
+                                    <p className="text-sm text-muted-foreground">{derivs.length} generated</p>
+                                  </div>
+                                </div>
+                                {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                              </button>
+
+                              {isExpanded && (
+                                <div className="p-4 space-y-3 bg-muted/20">
+                                  {derivs.map((deriv) => (
+                                    <Card key={deriv.id} className="p-4">
+                                      <div className="flex items-start justify-between mb-3">
+                                        <div className="flex items-center gap-2">
+                                          <Badge variant={deriv.status === "approved" ? "default" : deriv.status === "rejected" ? "destructive" : "secondary"}>
+                                            {deriv.status === "approved" && <CheckCircle2 className="w-3 h-3 mr-1" />}
+                                            {deriv.status === "rejected" && <XCircle className="w-3 h-3 mr-1" />}
+                                            {deriv.status}
+                                          </Badge>
+                                          <span className="text-sm text-muted-foreground">
+                                            {deriv.charCount} chars
+                                            {type.charLimit && ` / ${type.charLimit}`}
+                                          </span>
+                                        </div>
+                                        <div className="flex gap-2">
+                                          <Button variant="ghost" size="sm" onClick={() => copyToClipboard(deriv.content)}>
+                                            <Copy className="w-4 h-4" />
+                                          </Button>
+                                          <Button variant="ghost" size="sm" onClick={() => openDirector(deriv)}>
+                                            <Edit className="w-4 h-4" />
+                                          </Button>
+                                          <Button variant="ghost" size="sm" onClick={() => {
+                                            setDerivativeToSave(deriv);
+                                            setDerivativeSaveTitle(type.name);
+                                            setDerivativeSaveDialogOpen(true);
+                                          }}>
+                                            <Archive className="w-4 h-4" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                      {deriv.isSequence && deriv.sequenceEmails ? (
+                                        <div className="space-y-2">
+                                          {deriv.sequenceEmails.map((email) => (
+                                            <div key={email.id} className="p-3 bg-background rounded border">
+                                              <div className="flex items-center gap-2 mb-2">
+                                                <Badge variant="outline">Email {email.sequenceNumber}</Badge>
+                                                <span className="text-sm font-medium">{email.subject}</span>
+                                              </div>
+                                              <p className="text-sm text-muted-foreground line-clamp-2">{email.content}</p>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <p className="text-sm whitespace-pre-wrap line-clamp-4">{deriv.content}</p>
+                                      )}
+                                    </Card>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </div>
+
+        {/* Mobile/Tablet Vertical Layout */}
+        <div className="md:hidden space-y-6">
+          {/* Master Content */}
+          {selectedMaster && (
+            <Card className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-serif text-xl">Master Content</h2>
+                <Button onClick={handleSaveToLibrary} disabled={isSavingMaster} size="sm" variant="outline">
+                  <Archive className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="space-y-3">
+                <h3 className="font-semibold">{selectedMaster.title}</h3>
+                <div className="flex gap-2 flex-wrap">
+                  {selectedMaster.contentType && <Badge variant="secondary">{selectedMaster.contentType}</Badge>}
+                  {selectedMaster.collection && <Badge variant="outline">{selectedMaster.collection}</Badge>}
+                </div>
+                <p className="text-sm text-muted-foreground">{selectedMaster.wordCount} words · {selectedMaster.charCount} characters</p>
+                <p className="text-sm line-clamp-6">{selectedMaster.content}</p>
+              </div>
+            </Card>
+          )}
+
+          {/* Derivative Selector & Results - Mobile */}
+          <Card className="p-4 space-y-4">
+            <h2 className="font-serif text-xl">Derivative Editions</h2>
+            
+            <div className="space-y-3">
+              <p className="text-sm font-medium">MOST POPULAR</p>
+              <div className="grid grid-cols-1 gap-3">
+                {TOP_DERIVATIVE_TYPES.map((type) => (
+                  <Card 
+                    key={type.id} 
+                    onClick={() => toggleTypeSelection(type.id)} 
+                    className={`p-3 cursor-pointer ${selectedTypes.has(type.id) ? "ring-2 ring-brass" : ""}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <Checkbox checked={selectedTypes.has(type.id)} />
+                      <div className="flex-1">
+                        <h4 className="font-medium text-sm">{type.name}</h4>
+                        <p className="text-xs text-muted-foreground">{type.description}</p>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
             </div>
+
+            <Collapsible open={showMoreOptions} onOpenChange={setShowMoreOptions}>
+              <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium">
+                {showMoreOptions ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                MORE OPTIONS
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-3">
+                <div className="grid grid-cols-1 gap-3">
+                  {ADDITIONAL_DERIVATIVE_TYPES.map((type) => (
+                    <Card 
+                      key={type.id} 
+                      onClick={() => toggleTypeSelection(type.id)} 
+                      className={`p-3 cursor-pointer ${selectedTypes.has(type.id) ? "ring-2 ring-brass" : ""}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <Checkbox checked={selectedTypes.has(type.id)} />
+                        <div className="flex-1">
+                          <h4 className="font-medium text-sm">{type.name}</h4>
+                          <p className="text-xs text-muted-foreground">{type.description}</p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            <div className="flex flex-col gap-2">
+              <Button variant="outline" size="sm" onClick={selectAll} className="w-full">Select All</Button>
+              <Button 
+                onClick={generateDerivatives} 
+                disabled={isGenerating || selectedTypes.size === 0} 
+                className="gap-2 w-full"
+              >
+                {isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                {isGenerating ? "Generating..." : `Generate ${selectedTypes.size} Derivative${selectedTypes.size !== 1 ? "s" : ""}`}
+              </Button>
+            </div>
+
+            {/* Mobile Results */}
+            {Object.keys(derivativesByType).length > 0 && (
+              <div className="space-y-3 pt-4 border-t">
+                <h3 className="font-medium">Generated Derivatives</h3>
+                {Object.entries(derivativesByType).map(([typeId, derivs]) => {
+                  const type = DERIVATIVE_TYPES.find(t => t.id === typeId);
+                  if (!type) return null;
+                  const isExpanded = expandedTypes.has(typeId);
+                  return (
+                    <div key={typeId} className="border rounded-lg overflow-hidden">
+                      <button
+                        onClick={() => toggleExpanded(typeId)}
+                        className="w-full p-3 flex items-center justify-between hover:bg-muted/50"
+                      >
+                        <div className="flex items-center gap-2">
+                          {type.iconImage ? (
+                            <img src={type.iconImage} alt={type.name} className="w-5 h-5" />
+                          ) : type.icon && (
+                            <type.icon className="w-5 h-5" style={{ color: type.iconColor }} />
+                          )}
+                          <div className="text-left">
+                            <p className="font-medium text-sm">{type.name}</p>
+                            <p className="text-xs text-muted-foreground">{derivs.length} generated</p>
+                          </div>
+                        </div>
+                        {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                      </button>
+                      {isExpanded && (
+                        <div className="p-3 space-y-2 bg-muted/20">
+                          {derivs.map((deriv) => (
+                            <Card key={deriv.id} className="p-3">
+                              <div className="flex justify-between mb-2">
+                                <Badge variant="secondary" className="text-xs">{deriv.status}</Badge>
+                                <div className="flex gap-1">
+                                  <Button variant="ghost" size="sm" onClick={() => copyToClipboard(deriv.content)}>
+                                    <Copy className="w-3 h-3" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" onClick={() => openDirector(deriv)}>
+                                    <Edit className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                              <p className="text-xs line-clamp-3">{deriv.content}</p>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </Card>
-        )}
+        </div>
       </div>
 
       {/* Save Master Dialog */}
