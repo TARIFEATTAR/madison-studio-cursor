@@ -406,25 +406,81 @@ export default function Multiply() {
     setSaveDialogOpen(true);
   };
 
-  const saveToLibrary = () => {
-    const library = JSON.parse(localStorage.getItem('scriptora-library') || '[]');
-    library.unshift({
-      id: Date.now().toString(),
-      title: saveTitle,
-      content: selectedMaster.content,
-      contentTypeId: selectedMaster.contentType,
-      collectionId: selectedMaster.collection,
-      wordCount: selectedMaster.wordCount,
-      createdAt: new Date().toISOString(),
-    });
-    localStorage.setItem('scriptora-library', JSON.stringify(library));
-    
-    toast({
-      title: "Content saved to The Archives!",
-      description: "Your master content has been saved successfully",
-    });
-    
-    setSaveDialogOpen(false);
+  const saveToLibrary = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to save content",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Get user's organization
+      const { data: orgMember } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (!orgMember) {
+        toast({
+          title: "No organization found",
+          description: "Please join or create an organization first",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Check for duplicate titles
+      const { data: existing } = await supabase
+        .from('master_content')
+        .select('id')
+        .eq('title', saveTitle)
+        .eq('organization_id', orgMember.organization_id)
+        .maybeSingle();
+      
+      if (existing) {
+        toast({
+          title: "Title already exists",
+          description: "Please choose a different title",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Insert into master_content table
+      const { error } = await supabase
+        .from('master_content')
+        .insert([{
+          title: saveTitle,
+          full_content: selectedMaster.content,
+          content_type: selectedMaster.contentType,
+          collection: selectedMaster.collection as any,
+          word_count: selectedMaster.wordCount,
+          organization_id: orgMember.organization_id,
+          created_by: user.id,
+          status: 'draft'
+        }]);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Content saved to The Archives!",
+        description: "Your master content has been saved successfully",
+      });
+      
+      setSaveDialogOpen(false);
+    } catch (error) {
+      console.error('Error saving content:', error);
+      toast({
+        title: "Error saving content",
+        description: error.message || "Failed to save content",
+        variant: "destructive"
+      });
+    }
   };
 
   // Group derivatives by type
