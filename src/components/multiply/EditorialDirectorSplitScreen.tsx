@@ -171,12 +171,13 @@ export function EditorialDirectorSplitScreen({
 
   const handleMouseMove = (e: MouseEvent) => {
     if (isDragging && !isResizing) {
-      const newX = Math.max(0, Math.min(e.clientX - dragStart.x, window.innerWidth - windowSize.width));
-      const newY = Math.max(0, Math.min(e.clientY - dragStart.y, window.innerHeight - 100));
+      const maxX = Math.max(0, window.innerWidth - windowSize.width - 20);
+      const maxY = Math.max(56, window.innerHeight - windowSize.height - 20);
+      const newX = Math.max(0, Math.min(e.clientX - dragStart.x, maxX));
+      const newY = Math.max(56, Math.min(e.clientY - dragStart.y, maxY));
       setWindowPosition({ x: newX, y: newY });
     }
   };
-
   const handleMouseUp = () => {
     setIsDragging(false);
   };
@@ -276,6 +277,24 @@ export function EditorialDirectorSplitScreen({
       };
     }
   }, [isResizing, resizeDirection, resizeStart, windowPosition]);
+
+  // Clamp position on window resize and when size changes
+  useEffect(() => {
+    const onResize = () => {
+      setWindowPosition(prev => {
+        const maxX = Math.max(0, window.innerWidth - windowSize.width - 20);
+        const maxY = Math.max(56, window.innerHeight - windowSize.height - 20);
+        return {
+          x: Math.max(0, Math.min(prev.x, maxX)),
+          y: Math.max(56, Math.min(prev.y, maxY)),
+        };
+      });
+    };
+
+    window.addEventListener('resize', onResize);
+    onResize();
+    return () => window.removeEventListener('resize', onResize);
+  }, [windowSize]);
 
   return (
     <div className="fixed inset-0 z-50 flex" style={{ backgroundColor: "#F5F1E8" }}>

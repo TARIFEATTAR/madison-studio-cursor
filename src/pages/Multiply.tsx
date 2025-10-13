@@ -689,9 +689,28 @@ export default function Multiply() {
                                 </span>
                               </div>
 
-                              <p className="text-sm mb-4 whitespace-pre-wrap" style={{ color: "#6B6560" }}>
-                                {derivative.content}
-                              </p>
+                              {derivative.isSequence && derivative.sequenceEmails && derivative.sequenceEmails.length > 0 ? (
+                                <div className="space-y-2 mb-4">
+                                  {derivative.sequenceEmails.slice(0, 3).map((email) => (
+                                    <div
+                                      key={email.id}
+                                      className="p-3 rounded-md border"
+                                      style={{ borderColor: "#D4CFC8", backgroundColor: "#FFFCF5" }}
+                                    >
+                                      <div className="text-sm font-medium mb-1" style={{ color: "#1A1816" }}>
+                                        Email {email.sequenceNumber}{email.subject ? ` — ${email.subject}` : ""}
+                                      </div>
+                                      <div className="text-sm text-muted-foreground line-clamp-3" style={{ color: "#6B6560" }}>
+                                        {email.content || email.preview || "No content available"}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-sm mb-4 whitespace-pre-wrap" style={{ color: "#6B6560" }}>
+                                  {derivative.content || "No content available"}
+                                </p>
+                              )}
 
                               <div className="flex flex-wrap gap-2">
                                 <Button
