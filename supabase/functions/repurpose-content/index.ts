@@ -868,11 +868,12 @@ FAILURE TO FOLLOW CODEX V2 PRINCIPLES OR BRAND GUIDELINES IS UNACCEPTABLE.`;
         const smsOptions = cleanedContent.split('\n').filter((line: string) => line.trim() && !line.startsWith('REQUIREMENTS') && !line.startsWith('FORMAT'));
         platformSpecs = { options: smsOptions.slice(0, 3) };
       } else if (derivativeType === 'email_3part' || derivativeType === 'email_5part' || derivativeType === 'email_7part') {
-        const emailMatches = cleanedContent.match(/EMAIL \d+:\s*SUBJECT: (.+?)\s*PREVIEW: (.+?)\s*BODY: ([\s\S]+?)(?=EMAIL \d+:|$)/g);
+        // More permissive regex to handle variations in formatting
+        const emailMatches = cleanedContent.match(/EMAIL\s+\d+:?\s*[\r\n]+SUBJECT:?\s*(.+?)[\r\n]+PREVIEW:?\s*(.+?)[\r\n]+BODY:?\s*([\s\S]+?)(?=EMAIL\s+\d+:|$)/gi);
         const emails = emailMatches?.map((match: string) => {
-          const subjectMatch = match.match(/SUBJECT: (.+)/);
-          const previewMatch = match.match(/PREVIEW: (.+)/);
-          const bodyMatch = match.match(/BODY: ([\s\S]+)/);
+          const subjectMatch = match.match(/SUBJECT:?\s*(.+)/i);
+          const previewMatch = match.match(/PREVIEW:?\s*(.+)/i);
+          const bodyMatch = match.match(/BODY:?\s*([\s\S]+)/i);
           return {
             subject: subjectMatch?.[1]?.trim() || '',
             preview: previewMatch?.[1]?.trim() || '',

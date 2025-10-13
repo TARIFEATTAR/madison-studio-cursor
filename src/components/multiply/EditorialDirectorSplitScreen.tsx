@@ -173,7 +173,7 @@ export function EditorialDirectorSplitScreen({
     if (isDragging && !isResizing) {
       const maxX = Math.max(0, window.innerWidth - windowSize.width - 20);
       // Allow dragging closer to bottom - keep minimum 100px visible at top
-      const maxY = Math.max(56, window.innerHeight - 100);
+      const maxY = Math.max(56, window.innerHeight - windowSize.height - 16);
       const newX = Math.max(0, Math.min(e.clientX - dragStart.x, maxX));
       const newY = Math.max(56, Math.min(e.clientY - dragStart.y, maxY));
       setWindowPosition({ x: newX, y: newY });
@@ -211,7 +211,7 @@ export function EditorialDirectorSplitScreen({
     const minWidth = 450;
     const maxWidth = 1400;
     const minHeight = 500;
-    const maxHeight = window.innerHeight - 80;
+    const maxHeight = window.innerHeight - windowPosition.y - 16;
 
     // Handle horizontal resizing
     if (resizeDirection.includes('right')) {
@@ -286,7 +286,7 @@ export function EditorialDirectorSplitScreen({
       setWindowPosition(prev => {
         const maxX = Math.max(0, window.innerWidth - windowSize.width - 20);
         // Keep minimum 100px visible at top for draggability
-        const maxY = Math.max(56, window.innerHeight - 100);
+        const maxY = Math.max(56, window.innerHeight - windowSize.height - 16);
         return {
           x: Math.max(0, Math.min(prev.x, maxX)),
           y: Math.max(56, Math.min(prev.y, maxY)),
