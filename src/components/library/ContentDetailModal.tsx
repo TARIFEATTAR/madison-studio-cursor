@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Edit2, Send, Copy, Check, FileDown } from "lucide-react";
+import { Edit2, Send, Copy, Check, FileDown, Calendar, MessageSquare } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type ContentCategory = "prompt" | "output" | "master" | "derivative";
 
@@ -29,6 +31,8 @@ interface ContentDetailModalProps {
   category: ContentCategory;
   onUpdate?: () => void;
   onRepurpose?: (contentId: string) => void;
+  onSchedule?: (content: any, category: ContentCategory) => void;
+  onEditWithMadison?: (content: any, category: ContentCategory) => void;
 }
 
 export function ContentDetailModal({
@@ -38,12 +42,15 @@ export function ContentDetailModal({
   category,
   onUpdate,
   onRepurpose,
+  onSchedule,
+  onEditWithMadison,
 }: ContentDetailModalProps) {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [madisonDialogOpen, setMadisonDialogOpen] = useState(false);
   const [orgData, setOrgData] = useState<{
     name?: string;
     brandColor?: string;
@@ -289,6 +296,29 @@ export function ContentDetailModal({
                 )}
                 {isCopied ? "Copied!" : "Copy"}
               </Button>
+
+              {onSchedule && (
+                <Button
+                  onClick={() => {
+                    onSchedule(content, category);
+                    onOpenChange(false);
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Schedule
+                </Button>
+              )}
+
+              <Button
+                onClick={() => setMadisonDialogOpen(true)}
+                variant="outline"
+                size="sm"
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Edit with Madison
+              </Button>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -341,6 +371,18 @@ export function ContentDetailModal({
           </div>
         </div>
       </DialogContent>
+
+      {/* Madison Dialog */}
+      <Dialog open={madisonDialogOpen} onOpenChange={setMadisonDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <div className="h-[85vh]">
+            <EditorialAssistantPanel
+              initialContent={getContentText()}
+              onClose={() => setMadisonDialogOpen(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

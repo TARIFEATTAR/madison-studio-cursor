@@ -11,8 +11,14 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let uploadId: string | undefined;
+  let requestBody: any;
+
   try {
-    const { uploadId, fileUrl, organizationId } = await req.json();
+    // Read request body once
+    requestBody = await req.json();
+    const { uploadId: id, fileUrl, organizationId } = requestBody;
+    uploadId = id;
 
     if (!uploadId || !fileUrl) {
       throw new Error('Missing required parameters');
@@ -170,10 +176,9 @@ If a field is completely blank or unreadable, return null for that field and con
   } catch (error) {
     console.error('Parse worksheet error:', error);
 
-    // Try to update status to failed if we have uploadId
-    try {
-      const { uploadId } = await req.json();
-      if (uploadId) {
+    // Try to update status to failed if we have uploadId (from the already-parsed request body)
+    if (uploadId) {
+      try {
         const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
         const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
         const supabase = createClient(supabaseUrl, supabaseKey);
@@ -185,9 +190,9 @@ If a field is completely blank or unreadable, return null for that field and con
             error_message: error instanceof Error ? error.message : 'Unknown error'
           })
           .eq('id', uploadId);
+      } catch (updateError) {
+        console.error('Failed to update error status:', updateError);
       }
-    } catch (updateError) {
-      console.error('Failed to update error status:', updateError);
     }
 
     return new Response(

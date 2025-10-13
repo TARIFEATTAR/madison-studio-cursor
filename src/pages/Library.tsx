@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ScheduleModal } from "@/components/calendar/ScheduleModal";
 
 export default function Library() {
   const navigate = useNavigate();
@@ -25,6 +26,11 @@ export default function Library() {
   const [selectedContent, setSelectedContent] = useState<LibraryContentItem | null>(null);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Schedule modal states
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [derivativeAssetForSchedule, setDerivativeAssetForSchedule] = useState<any>(null);
+  const [masterForSchedule, setMasterForSchedule] = useState<any>(null);
 
   // Filtering and sorting logic
   const filteredContent = useMemo(() => {
@@ -440,12 +446,14 @@ export default function Library() {
             id: selectedContent.id,
             title: selectedContent.title,
             content_type: selectedContent.contentType,
+            asset_type: selectedContent.contentType,
             full_content: selectedContent.content,
             generated_content: selectedContent.content,
             created_at: selectedContent.createdAt.toISOString(),
             word_count: selectedContent.wordCount,
             quality_rating: selectedContent.rating,
             collection: selectedContent.collection,
+            organization_id: selectedContent.sourceTable,
           }}
           category={selectedContent.sourceTable === "master_content" ? "master" : selectedContent.sourceTable === "outputs" ? "output" : "derivative"}
           onUpdate={() => {
@@ -455,8 +463,62 @@ export default function Library() {
           onRepurpose={(id) => {
             navigate(`/repurpose?content=${id}`);
           }}
+          onSchedule={async (content, category) => {
+            setSelectedContent(null);
+            
+            if (category === "derivative") {
+              // Fetch derivative asset with master content
+              const { data: derivative } = await supabase
+                .from('derivative_assets')
+                .select('*, master_content(id, title, full_content)')
+                .eq('id', content.id)
+                .single();
+              
+              if (derivative) {
+                setDerivativeAssetForSchedule(derivative);
+                setMasterForSchedule(derivative.master_content);
+                setScheduleOpen(true);
+              }
+            } else if (category === "master") {
+              // Fetch master content
+              const { data: master } = await supabase
+                .from('master_content')
+                .select('*')
+                .eq('id', content.id)
+                .single();
+              
+              if (master) {
+                setMasterForSchedule(master);
+                setDerivativeAssetForSchedule(null);
+                setScheduleOpen(true);
+              }
+            } else {
+              // For outputs, treat as generic content
+              setMasterForSchedule({
+                id: content.id,
+                title: content.title,
+                full_content: content.generated_content,
+              });
+              setDerivativeAssetForSchedule(null);
+              setScheduleOpen(true);
+            }
+          }}
         />
       )}
+
+      {/* Schedule Modal */}
+      <ScheduleModal
+        open={scheduleOpen}
+        onOpenChange={setScheduleOpen}
+        derivativeAsset={derivativeAssetForSchedule}
+        masterContent={masterForSchedule}
+        onSuccess={() => {
+          setScheduleOpen(false);
+          setDerivativeAssetForSchedule(null);
+          setMasterForSchedule(null);
+          refetch();
+        }}
+      />
     </div>
   );
 }

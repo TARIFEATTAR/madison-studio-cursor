@@ -26,8 +26,6 @@ import ticketIcon from "@/assets/ticket-icon.png";
 import envelopeIcon from "@/assets/envelope-icon.png";
 import instagramIcon from "@/assets/instagram-icon-clean.png";
 
-// Derivative type definitions
-
 interface DerivativeType {
   id: string;
   name: string;
@@ -170,17 +168,14 @@ export default function Multiply() {
   const [masterContentList, setMasterContentList] = useState<MasterContent[]>([]);
   const [loadingContent, setLoadingContent] = useState(true);
   
-  // Derivative save dialog states
   const [derivativeSaveDialogOpen, setDerivativeSaveDialogOpen] = useState(false);
   const [derivativeToSave, setDerivativeToSave] = useState<DerivativeContent | null>(null);
   const [derivativeSaveTitle, setDerivativeSaveTitle] = useState("");
 
-  // Save state guards
   const [isSavingMaster, setIsSavingMaster] = useState(false);
   const [isSavingDerivative, setIsSavingDerivative] = useState(false);
   const saveInFlightRef = useRef(false);
 
-  
   useEffect(() => {
     const loadMasterContent = async () => {
       if (!currentOrganizationId) return;
@@ -216,11 +211,6 @@ export default function Multiply() {
         }
       } catch (e) {
         console.error('Error loading master content:', e);
-        toast({
-          title: "Error loading content",
-          description: "Failed to load your master content",
-          variant: "destructive"
-        });
       } finally {
         setLoadingContent(false);
       }
@@ -289,12 +279,6 @@ export default function Multiply() {
     try {
       const contentId = selectedMaster.id;
       
-      console.log('Calling repurpose-content with:', {
-        masterContentId: contentId,
-        derivativeTypes: Array.from(selectedTypes),
-        organizationId: currentOrganizationId
-      });
-
       const { data, error } = await supabase.functions.invoke('repurpose-content', {
         body: {
           masterContentId: contentId,
@@ -306,16 +290,8 @@ export default function Multiply() {
         }
       });
 
-      if (error) {
-        console.error('Edge function error:', error);
-        throw error;
-      }
-
-      if (!data?.success) {
-        throw new Error(data?.error || 'Failed to generate derivatives');
-      }
-
-      console.log('Successfully generated derivatives:', data.derivatives);
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Failed to generate derivatives');
 
       const newDerivatives: DerivativeContent[] = [];
       const newExpandedTypes = new Set<string>();
@@ -362,37 +338,7 @@ export default function Multiply() {
         newExpandedTypes.add(typeId);
       });
 
-      setDerivatives((prev) => {
-        const enrichedDerivatives = newDerivatives.map(d => {
-          // Client-side fallback parser for email sequences
-          if ((d.asset_type === 'email_3part' || d.asset_type === 'email_5part' || d.asset_type === 'email_7part') 
-              && (!d.platformSpecs?.emails || d.platformSpecs.emails.length === 0)) {
-            const emailMatches = d.generated_content?.match(/EMAIL\s+\d+:?\s*[\r\n]+SUBJECT:?\s*(.+?)[\r\n]+PREVIEW:?\s*(.+?)[\r\n]+BODY:?\s*([\s\S]+?)(?=EMAIL\s+\d+:|$)/gi);
-            if (emailMatches && emailMatches.length > 0) {
-              const emails = emailMatches.map((match: string) => {
-                const subjectMatch = match.match(/SUBJECT:?\s*(.+)/i);
-                const previewMatch = match.match(/PREVIEW:?\s*(.+)/i);
-                const bodyMatch = match.match(/BODY:?\s*([\s\S]+)/i);
-                return {
-                  id: `${d.id}-email-${emails.length + 1}`,
-                  sequenceNumber: emails.length + 1,
-                  subject: subjectMatch?.[1]?.trim() || '',
-                  preview: previewMatch?.[1]?.trim() || '',
-                  content: bodyMatch?.[1]?.trim() || '',
-                  charCount: (bodyMatch?.[1]?.trim() || '').length,
-                };
-              });
-              return {
-                ...d,
-                sequenceEmails: emails,
-                platformSpecs: { ...d.platformSpecs, emails, emailCount: emails.length }
-              };
-            }
-          }
-          return d;
-        });
-        return [...prev, ...enrichedDerivatives];
-      });
+      setDerivatives((prev) => [...prev, ...newDerivatives]);
       setExpandedTypes(newExpandedTypes);
       setSelectedTypes(new Set());
 
@@ -427,12 +373,6 @@ export default function Multiply() {
     setSplitScreenMode(true);
   };
 
-  const updateDerivativeStatus = (id: string, status: "approved" | "rejected") => {
-    setDerivatives(derivatives.map(d => 
-      d.id === id ? { ...d, status } : d
-    ));
-  };
-
   const copyToClipboard = (content: string) => {
     navigator.clipboard.writeText(content);
     toast({
@@ -447,255 +387,81 @@ export default function Multiply() {
   };
 
   const saveToLibrary = async () => {
-    if (saveInFlightRef.current || isSavingMaster) {
-      return;
-    }
+    if (!selectedMaster || saveInFlightRef.current) return;
 
     saveInFlightRef.current = true;
     setIsSavingMaster(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign in to save content",
-          variant: "destructive"
-        });
-        saveInFlightRef.current = false;
-        setIsSavingMaster(false);
-        return;
-      }
-      
-      const { data: orgMember } = await supabase
-        .from('organization_members')
-        .select('organization_id')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (!orgMember) {
-        toast({
-          title: "No organization found",
-          description: "Please join or create an organization first",
-          variant: "destructive"
-        });
-        saveInFlightRef.current = false;
-        setIsSavingMaster(false);
-        return;
-      }
-      
-      const { data: existing } = await supabase
-        .from('master_content')
-        .select('id')
-        .eq('title', saveTitle)
-        .eq('organization_id', orgMember.organization_id)
-        .maybeSingle();
-      
-      if (existing) {
-        toast({
-          title: "Title already exists",
-          description: "Please choose a different title",
-          variant: "destructive"
-        });
-        saveInFlightRef.current = false;
-        setIsSavingMaster(false);
-        return;
-      }
-
-      const wordCount = selectedMaster!.content.split(/\s+/).filter(Boolean).length;
-      
       const { error } = await supabase
         .from('master_content')
-        .insert([{
-          title: saveTitle,
-          full_content: selectedMaster!.content,
-          content_type: selectedMaster!.contentType,
-          collection: selectedMaster!.collection as any,
-          word_count: wordCount,
-          organization_id: orgMember.organization_id,
-          created_by: user.id,
-          status: 'draft'
-        }]);
-      
-      if (error) {
-        if (error.code === '23505') {
-          toast({
-            title: "Title already exists",
-            description: "A content with this title already exists",
-            variant: "destructive"
-          });
-        } else {
-          throw error;
-        }
-        saveInFlightRef.current = false;
-        setIsSavingMaster(false);
-        return;
-      }
-      
+        .update({ title: saveTitle })
+        .eq('id', selectedMaster.id);
+
+      if (error) throw error;
+
       toast({
-        title: "Content saved to The Archives!",
-        description: "Your master content has been saved successfully",
+        title: "Saved to library",
+        description: "Master content has been updated",
       });
-      
+
       setSaveDialogOpen(false);
-      localStorage.removeItem('multiply-derivatives-draft');
+      setSelectedMaster({ ...selectedMaster, title: saveTitle });
     } catch (error: any) {
-      console.error('Error saving content:', error);
       toast({
-        title: "Error saving content",
-        description: error.message || "Failed to save content",
+        title: "Save failed",
+        description: error.message,
         variant: "destructive"
       });
     } finally {
-      saveInFlightRef.current = false;
       setIsSavingMaster(false);
+      saveInFlightRef.current = false;
     }
   };
 
   const saveDerivativeToDatabase = async () => {
-    if (!derivativeToSave) return;
-
-    if (saveInFlightRef.current || isSavingDerivative) {
-      return;
-    }
+    if (!derivativeToSave || saveInFlightRef.current) return;
 
     saveInFlightRef.current = true;
     setIsSavingDerivative(true);
-    
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign in to save derivatives",
-          variant: "destructive"
-        });
-        saveInFlightRef.current = false;
-        setIsSavingDerivative(false);
-        return;
-      }
-      
-      const { data: orgMember } = await supabase
-        .from('organization_members')
-        .select('organization_id')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (!orgMember) {
-        toast({
-          title: "No organization found",
-          description: "Please join or create an organization first",
-          variant: "destructive"
-        });
-        saveInFlightRef.current = false;
-        setIsSavingDerivative(false);
-        return;
-      }
-
-      const platformSpecs = derivativeToSave.sequenceEmails
-        ? {
-            ...derivativeToSave.platformSpecs,
-            emails: derivativeToSave.sequenceEmails,
-            emailCount: derivativeToSave.sequenceEmails.length,
-            title: derivativeSaveTitle,
-          }
-        : { ...derivativeToSave.platformSpecs, title: derivativeSaveTitle };
-
-      const insertData: any = {
-        asset_type: derivativeToSave.typeId,
-        generated_content: derivativeToSave.content,
-        platform_specs: platformSpecs,
-        approval_status: 'draft',
-        created_by: user.id,
-        organization_id: orgMember.organization_id,
-        master_content_id: selectedMaster?.id || null,
-      };
-
       const { error } = await supabase
         .from('derivative_assets')
-        .insert([insertData]);
-      
-      if (error) {
-        console.error('Error saving derivative:', error);
-        toast({
-          title: "Error saving derivative",
-          description: error.message || "Failed to save derivative",
-          variant: "destructive"
-        });
-        saveInFlightRef.current = false;
-        setIsSavingDerivative(false);
-        return;
-      }
-      
+        .update({
+          platform_specs: {
+            ...derivativeToSave.platformSpecs,
+            title: derivativeSaveTitle
+          }
+        })
+        .eq('id', derivativeToSave.id);
+
+      if (error) throw error;
+
       toast({
-        title: "Derivative saved to The Archives!",
-        description: "Your derivative has been saved successfully",
+        title: "Derivative saved",
+        description: "Derivative has been updated",
       });
-      
+
       setDerivativeSaveDialogOpen(false);
       setDerivativeToSave(null);
-      setDerivativeSaveTitle("");
-      localStorage.removeItem('multiply-derivatives-draft');
     } catch (error: any) {
-      console.error('Error saving derivative:', error);
       toast({
-        title: "Error saving derivative",
-        description: error.message || "Failed to save derivative",
+        title: "Save failed",
+        description: error.message,
         variant: "destructive"
       });
     } finally {
-      saveInFlightRef.current = false;
       setIsSavingDerivative(false);
+      saveInFlightRef.current = false;
     }
   };
 
-  // Auto-save derivatives to localStorage
-  useEffect(() => {
-    if (derivatives.length > 0 && selectedMaster) {
-      localStorage.setItem(
-        "multiply-derivatives-draft",
-        JSON.stringify({
-          derivatives,
-          masterContent: selectedMaster,
-          timestamp: Date.now(),
-        })
-      );
-    }
-  }, [derivatives, selectedMaster]);
-
-  // Restore derivatives draft on mount
-  useEffect(() => {
-    const draft = localStorage.getItem("multiply-derivatives-draft");
-    if (draft) {
-      try {
-        const { derivatives: draftDerivatives, masterContent, timestamp } = JSON.parse(draft);
-        if (Date.now() - timestamp < 86400000) {
-          toast({
-            title: "Restored previous derivatives",
-            description: "Click to clear drafts",
-          });
-          setDerivatives(draftDerivatives);
-          setSelectedMaster(masterContent);
-        } else {
-          localStorage.removeItem("multiply-derivatives-draft");
-        }
-      } catch (error) {
-        console.error("Error restoring draft:", error);
-        localStorage.removeItem("multiply-derivatives-draft");
-      }
-    }
-  }, []);
-
-  
   const derivativesByType = derivatives.reduce((acc, d) => {
     if (!acc[d.typeId]) acc[d.typeId] = [];
     acc[d.typeId].push(d);
     return acc;
   }, {} as Record<string, DerivativeContent[]>);
-
-  const getTypeInfo = (typeId: string) => {
-    return DERIVATIVE_TYPES.find(t => t.id === typeId);
-  };
 
   if (splitScreenMode && selectedDerivativeForDirector) {
     return (
@@ -715,99 +481,204 @@ export default function Multiply() {
     );
   }
 
-  
   return (
     <div className="min-h-screen bg-background">
-      
-      
-      <div className="container mx-auto px-4 py-8">
-        
-        
-        {selectedMaster && (
-          <div className="flex justify-end mb-4">
-            <Button
-              onClick={handleSaveToLibrary}
-              disabled={isSavingMaster}
-              className="gap-2"
-            >
+      <div className="container mx-auto px-6 py-12 space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-serif text-4xl mb-2">Multiply</h1>
+            <p className="text-muted-foreground">Transform master content into multiple formats</p>
+          </div>
+          {selectedMaster && (
+            <Button onClick={handleSaveToLibrary} disabled={isSavingMaster} className="gap-2">
               <Archive className="w-4 h-4" />
               {isSavingMaster ? "Saving..." : "Save to Library"}
             </Button>
-          </div>
-        )}
+          )}
+        </div>
 
-        
-        
-        
+        {/* Master Content Selection */}
+        <Card className="p-6">
+          <h2 className="font-serif text-2xl mb-4">Select Master Content</h2>
+          {loadingContent ? (
+            <Loader2 className="w-6 h-6 animate-spin" />
+          ) : (
+            <Select value={selectedMaster?.id || ""} onValueChange={(id) => {
+              const content = masterContentList.find(c => c.id === id);
+              if (content) setSelectedMaster(content);
+            }}>
+              <SelectTrigger><SelectValue placeholder="Select master content..." /></SelectTrigger>
+              <SelectContent>
+                {masterContentList.map((content) => (
+                  <SelectItem key={content.id} value={content.id}>
+                    {content.title} ({content.wordCount} words)
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </Card>
+
+        {/* Derivative Selection */}
+        <Card className="p-6">
+          <div className="flex justify-between mb-4">
+            <h2 className="font-serif text-2xl">Select Derivative Types</h2>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={selectAll}>Select All</Button>
+              <Button variant="outline" size="sm" onClick={deselectAll}>Deselect All</Button>
+            </div>
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            {DERIVATIVE_TYPES.map((type) => (
+              <Card key={type.id} onClick={() => toggleTypeSelection(type.id)} className={`p-4 cursor-pointer ${selectedTypes.has(type.id) ? "ring-2 ring-brass" : ""}`}>
+                <div className="flex items-start gap-3">
+                  <Checkbox checked={selectedTypes.has(type.id)} />
+                  <div>
+                    <h3 className="font-medium">{type.name}</h3>
+                    <p className="text-sm text-muted-foreground">{type.description}</p>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+          <div className="mt-6 flex justify-center">
+            <Button onClick={generateDerivatives} disabled={isGenerating || selectedTypes.size === 0} size="lg" className="gap-2">
+              {isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
+              {isGenerating ? "Generating..." : `Generate ${selectedTypes.size} Derivative${selectedTypes.size !== 1 ? "s" : ""}`}
+            </Button>
+          </div>
+        </Card>
+
+        {/* Results */}
+        {Object.keys(derivativesByType).length > 0 && (
+          <Card className="p-6">
+            <h2 className="font-serif text-2xl mb-6">Generated Derivatives</h2>
+            <div className="space-y-4">
+              {Object.entries(derivativesByType).map(([typeId, derivs]) => {
+                const type = DERIVATIVE_TYPES.find(t => t.id === typeId);
+                if (!type) return null;
+
+                const Icon = type.icon;
+                const isExpanded = expandedTypes.has(typeId);
+
+                return (
+                  <div key={typeId} className="border rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => toggleExpanded(typeId)}
+                      className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        {type.iconImage ? (
+                          <img src={type.iconImage} alt={type.name} className="w-6 h-6" />
+                        ) : Icon ? (
+                          <Icon className="w-6 h-6" style={{ color: type.iconColor }} />
+                        ) : null}
+                        <div className="text-left">
+                          <h3 className="font-medium">{type.name}</h3>
+                          <p className="text-sm text-muted-foreground">{derivs.length} generated</p>
+                        </div>
+                      </div>
+                      {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                    </button>
+
+                    {isExpanded && (
+                      <div className="p-4 space-y-3 bg-muted/20">
+                        {derivs.map((deriv) => (
+                          <Card key={deriv.id} className="p-4">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <Badge variant={deriv.status === "approved" ? "default" : deriv.status === "rejected" ? "destructive" : "secondary"}>
+                                  {deriv.status === "approved" && <CheckCircle2 className="w-3 h-3 mr-1" />}
+                                  {deriv.status === "rejected" && <XCircle className="w-3 h-3 mr-1" />}
+                                  {deriv.status}
+                                </Badge>
+                                <span className="text-sm text-muted-foreground">
+                                  {deriv.charCount} chars
+                                  {type.charLimit && ` / ${type.charLimit}`}
+                                </span>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button variant="ghost" size="sm" onClick={() => copyToClipboard(deriv.content)}>
+                                  <Copy className="w-4 h-4" />
+                                </Button>
+                                <Button variant="ghost" size="sm" onClick={() => openDirector(deriv)}>
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button variant="ghost" size="sm" onClick={() => {
+                                  setDerivativeToSave(deriv);
+                                  setDerivativeSaveTitle(type.name);
+                                  setDerivativeSaveDialogOpen(true);
+                                }}>
+                                  <Archive className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                            {deriv.isSequence && deriv.sequenceEmails ? (
+                              <div className="space-y-2">
+                                {deriv.sequenceEmails.map((email) => (
+                                  <div key={email.id} className="p-3 bg-background rounded border">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <Badge variant="outline">Email {email.sequenceNumber}</Badge>
+                                      <span className="text-sm font-medium">{email.subject}</span>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground line-clamp-2">{email.content}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm whitespace-pre-wrap line-clamp-4">{deriv.content}</p>
+                            )}
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        )}
       </div>
 
-      {/* Master Save Dialog */}
+      {/* Save Master Dialog */}
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Save to Library</DialogTitle>
-            <DialogDescription>
-              Give your master content a name before saving to The Archives
-            </DialogDescription>
+            <DialogDescription>Update the title for this master content</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="save-title">Title</Label>
-              <Input
-                id="save-title"
-                value={saveTitle}
-                onChange={(e) => setSaveTitle(e.target.value)}
-                placeholder="Enter content title"
-              />
+              <Label>Title</Label>
+              <Input value={saveTitle} onChange={(e) => setSaveTitle(e.target.value)} />
             </div>
             <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setSaveDialogOpen(false)}
-                disabled={isSavingMaster}
-              >
-                Cancel
-              </Button>
+              <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>Cancel</Button>
               <Button onClick={saveToLibrary} disabled={isSavingMaster}>
-                {isSavingMaster ? "Saving..." : "Save to Library"}
+                {isSavingMaster ? "Saving..." : "Save"}
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Derivative Save Dialog */}
+      {/* Save Derivative Dialog */}
       <Dialog open={derivativeSaveDialogOpen} onOpenChange={setDerivativeSaveDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Save Derivative</DialogTitle>
-            <DialogDescription>
-              Give your derivative content a name before saving
-            </DialogDescription>
+            <DialogDescription>Update the title for this derivative</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="derivative-save-title">Title</Label>
-              <Input
-                id="derivative-save-title"
-                value={derivativeSaveTitle}
-                onChange={(e) => setDerivativeSaveTitle(e.target.value)}
-                placeholder="Enter derivative title"
-              />
+              <Label>Title</Label>
+              <Input value={derivativeSaveTitle} onChange={(e) => setDerivativeSaveTitle(e.target.value)} />
             </div>
             <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setDerivativeSaveDialogOpen(false);
-                  setDerivativeToSave(null);
-                }}
-                disabled={isSavingDerivative}
-              >
-                Cancel
-              </Button>
+              <Button variant="outline" onClick={() => setDerivativeSaveDialogOpen(false)}>Cancel</Button>
               <Button onClick={saveDerivativeToDatabase} disabled={isSavingDerivative}>
-                {isSavingDerivative ? "Saving..." : "Save Derivative"}
+                {isSavingDerivative ? "Saving..." : "Save"}
               </Button>
             </div>
           </div>

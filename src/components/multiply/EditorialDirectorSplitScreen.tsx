@@ -211,7 +211,7 @@ export function EditorialDirectorSplitScreen({
     const minWidth = 450;
     const maxWidth = 1400;
     const minHeight = 500;
-    const maxHeight = window.innerHeight - windowPosition.y - 16;
+    const maxHeight = window.innerHeight - windowPosition.y - 4;
 
     // Handle horizontal resizing
     if (resizeDirection.includes('right')) {
