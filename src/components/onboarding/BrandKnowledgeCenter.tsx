@@ -238,16 +238,30 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
 
         // Trigger document processing in background
         if (docData) {
-          supabase.functions.invoke('process-brand-document', {
+          const { error: invokeError } = await supabase.functions.invoke('process-brand-document', {
             body: { documentId: docData.id }
-          }).then(({ error }) => {
-            if (error) {
-              console.error('Processing error for', file.name, ':', error);
-            } else {
-              console.log('Processing started for', file.name);
-              fetchUploadedDocuments(); // Refresh to show updated status
-            }
           });
+          
+          if (invokeError) {
+            console.error('Edge function invocation failed:', invokeError);
+            
+            // Mark as failed immediately so user can retry
+            await supabase
+              .from('brand_documents')
+              .update({ 
+                processing_status: 'failed',
+                content_preview: `Invocation error: ${invokeError.message}`
+              })
+              .eq('id', docData.id);
+            
+            toast({
+              title: "Processing Failed",
+              description: `Failed to start processing ${file.name}. Please retry.`,
+              variant: "destructive"
+            });
+          } else {
+            console.log('Processing started for', file.name);
+          }
         }
       }
 

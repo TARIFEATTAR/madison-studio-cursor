@@ -11,18 +11,20 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let documentId: string | null = null;
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
   try {
-    const { documentId } = await req.json();
+    const body = await req.json();
+    documentId = body.documentId;
 
     if (!documentId) {
       throw new Error('documentId is required');
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    console.log(`Processing document: ${documentId}`);
+    console.log(`[CHECKPOINT] Processing document: ${documentId}`);
 
     // Get document details
     const { data: document, error: docError } = await supabase
@@ -40,11 +42,14 @@ serve(async (req) => {
     // Update status to processing
     await supabase
       .from('brand_documents')
-      .update({ processing_status: 'processing' })
+      .update({ 
+        processing_status: 'processing',
+        processing_stage: 'downloading'
+      })
       .eq('id', documentId);
 
     // Download the file from storage (use full path, not just filename)
-    console.log(`Downloading file from path: ${document.file_url}`);
+    console.log(`[CHECKPOINT] Downloading file from path: ${document.file_url}`);
     const { data: fileData, error: downloadError } = await supabase
       .storage
       .from('brand-documents')
@@ -54,13 +59,19 @@ serve(async (req) => {
       throw new Error(`Failed to download file: ${downloadError?.message}`);
     }
 
-    console.log(`File downloaded, size: ${fileData.size} bytes`);
+    console.log(`[CHECKPOINT] File downloaded, size: ${fileData.size} bytes`);
 
     let extractedText = '';
 
     // Extract text based on file type
     if (document.file_type === 'application/pdf') {
-      console.log('Processing PDF with AI document understanding...');
+      console.log('[CHECKPOINT] Processing PDF with AI document understanding...');
+      
+      // Update stage
+      await supabase
+        .from('brand_documents')
+        .update({ processing_stage: 'extracting_text' })
+        .eq('id', documentId);
       
       try {
         // Convert PDF to base64 for AI processing
@@ -106,7 +117,15 @@ serve(async (req) => {
 
         if (!aiResponse.ok) {
           const errorText = await aiResponse.text();
-          throw new Error(`AI extraction failed: ${aiResponse.status} - ${errorText}`);
+          const errorMessage = `AI extraction failed: ${aiResponse.status} - ${errorText}`;
+          console.error(`[ERROR] ${errorMessage}`);
+          
+          // For image-heavy PDFs that fail extraction
+          if (aiResponse.status === 400 && errorText.includes('Failed to extract')) {
+            throw new Error('PDF contains images that cannot be processed. Please upload a text-based PDF or convert to plain text format.');
+          }
+          
+          throw new Error(errorMessage);
         }
 
         const aiData = await aiResponse.json();
@@ -116,9 +135,9 @@ serve(async (req) => {
           throw new Error('No text extracted from PDF');
         }
         
-        console.log(`PDF text extracted successfully: ${extractedText.length} characters`);
+        console.log(`[CHECKPOINT] PDF text extracted successfully: ${extractedText.length} characters`);
     } catch (pdfError) {
-        console.error('PDF processing error:', pdfError);
+        console.error('[ERROR] PDF processing error:', pdfError);
         const errMsg = pdfError instanceof Error ? pdfError.message : 'Unknown PDF parsing error';
         
         // Still save whatever text we got, don't fail completely
@@ -142,8 +161,14 @@ serve(async (req) => {
     // Create content preview (first 500 chars)
     const contentPreview = extractedText.slice(0, 500) + (extractedText.length > 500 ? '...' : '');
 
+    // Update stage
+    await supabase
+      .from('brand_documents')
+      .update({ processing_stage: 'extracting_knowledge' })
+      .eq('id', documentId);
+
     // NEW: Extract structured brand knowledge using Claude
-    console.log('Extracting structured brand knowledge with AI...');
+    console.log('[CHECKPOINT] Extracting structured brand knowledge with AI...');
     const { data: extractionData, error: extractionError } = await supabase.functions.invoke(
       'extract-brand-knowledge',
       {
@@ -259,13 +284,21 @@ serve(async (req) => {
       console.warn('Brand knowledge extraction returned no data');
     }
 
+    // Update stage
+    await supabase
+      .from('brand_documents')
+      .update({ processing_stage: 'saving' })
+      .eq('id', documentId);
+
     // Save extracted content
+    console.log('[CHECKPOINT] Saving extracted content to database');
     const { error: updateError } = await supabase
       .from('brand_documents')
       .update({
         extracted_content: extractedText,
         content_preview: contentPreview,
         processing_status: 'completed',
+        processing_stage: null, // Clear stage when complete
       })
       .eq('id', documentId);
 
@@ -273,7 +306,7 @@ serve(async (req) => {
       throw new Error(`Failed to save extracted content: ${updateError.message}`);
     }
 
-    console.log(`Successfully processed document: ${document.file_name}`);
+    console.log(`[SUCCESS] Processed document: ${document.file_name}`);
 
     return new Response(
       JSON.stringify({ 
@@ -285,28 +318,27 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error processing document:', error);
+    console.error('[ERROR] Processing document:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     
-    // Update status to failed - use stored documentId from request
-    try {
-      const requestBody = await req.json();
-      const documentId = requestBody.documentId;
-      if (documentId) {
-        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        
+    // Update status to failed using documentId captured at start
+    if (documentId) {
+      try {
         await supabase
           .from('brand_documents')
           .update({ 
             processing_status: 'failed',
+            processing_stage: null,
             content_preview: `Error: ${errorMessage}`
           })
           .eq('id', documentId);
+        
+        console.log(`[CHECKPOINT] Marked document ${documentId} as failed`);
+      } catch (updateError) {
+        console.error('[ERROR] Failed to update error status:', updateError);
       }
-    } catch (e) {
-      console.error('Failed to update error status:', e);
+    } else {
+      console.error('[ERROR] No documentId available to mark as failed');
     }
 
     return new Response(

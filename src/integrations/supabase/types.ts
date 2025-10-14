@@ -69,6 +69,7 @@ export type Database = {
           file_url: string | null
           id: string
           organization_id: string
+          processing_stage: string | null
           processing_status: string | null
           updated_at: string | null
           uploaded_by: string | null
@@ -83,6 +84,7 @@ export type Database = {
           file_url?: string | null
           id?: string
           organization_id: string
+          processing_stage?: string | null
           processing_status?: string | null
           updated_at?: string | null
           uploaded_by?: string | null
@@ -97,6 +99,7 @@ export type Database = {
           file_url?: string | null
           id?: string
           organization_id?: string
+          processing_stage?: string | null
           processing_status?: string | null
           updated_at?: string | null
           uploaded_by?: string | null

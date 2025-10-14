@@ -17,6 +17,7 @@ interface BrandDocumentStatusProps {
 export function BrandDocumentStatus({ organizationId, documents, onRetry }: BrandDocumentStatusProps) {
   const { toast } = useToast();
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [resetting, setResetting] = useState<string | null>(null);
   const [previewDoc, setPreviewDoc] = useState<any | null>(null);
 
   const handleRetryDocument = async (documentId: string) => {
@@ -25,7 +26,11 @@ export function BrandDocumentStatus({ organizationId, documents, onRetry }: Bran
       // Reset status to pending
       const { error: updateError } = await supabase
         .from('brand_documents')
-        .update({ processing_status: 'pending' })
+        .update({ 
+          processing_status: 'pending',
+          processing_stage: null,
+          content_preview: null
+        })
         .eq('id', documentId);
 
       if (updateError) throw updateError;
@@ -35,7 +40,18 @@ export function BrandDocumentStatus({ organizationId, documents, onRetry }: Bran
         body: { documentId }
       });
 
-      if (functionError) throw functionError;
+      if (functionError) {
+        // Mark as failed if invocation fails
+        await supabase
+          .from('brand_documents')
+          .update({ 
+            processing_status: 'failed',
+            content_preview: `Invocation error: ${functionError.message}`
+          })
+          .eq('id', documentId);
+        
+        throw functionError;
+      }
 
       toast({
         title: "Document reprocessing",
@@ -54,6 +70,37 @@ export function BrandDocumentStatus({ organizationId, documents, onRetry }: Bran
     }
   };
 
+  const handleForceReset = async (documentId: string) => {
+    setResetting(documentId);
+    try {
+      const { error } = await supabase
+        .from('brand_documents')
+        .update({ 
+          processing_status: 'failed',
+          processing_stage: null,
+          content_preview: 'Processing timeout - please retry'
+        })
+        .eq('id', documentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Document reset",
+        description: "You can now retry processing this document.",
+      });
+      
+      onRetry();
+    } catch (error: any) {
+      toast({
+        title: "Reset failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setResetting(null);
+    }
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
@@ -67,17 +114,36 @@ export function BrandDocumentStatus({ organizationId, documents, onRetry }: Bran
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, stage?: string | null) => {
     switch (status) {
       case 'completed':
         return <Badge variant="default" className="bg-green-100 text-green-800 border-green-300">Processed</Badge>;
       case 'processing':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-300">Processing...</Badge>;
+        return (
+          <div className="flex flex-col items-end gap-1">
+            <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-300">Processing...</Badge>
+            {stage && (
+              <span className="text-xs text-muted-foreground">
+                {stage === 'downloading' && '📥 Downloading'}
+                {stage === 'extracting_text' && '📄 Reading PDF'}
+                {stage === 'extracting_knowledge' && '🧠 Analyzing'}
+                {stage === 'saving' && '💾 Saving'}
+              </span>
+            )}
+          </div>
+        );
       case 'failed':
         return <Badge variant="destructive">Failed</Badge>;
       default:
         return <Badge variant="outline">Pending</Badge>;
     }
+  };
+
+  const isStuckProcessing = (doc: any) => {
+    if (doc.processing_status !== 'processing') return false;
+    const twoMinutesAgo = Date.now() - (2 * 60 * 1000);
+    const updatedTime = new Date(doc.updated_at).getTime();
+    return updatedTime < twoMinutesAgo;
   };
 
   const completedDocs = documents.filter(d => d.processing_status === 'completed');
@@ -147,7 +213,7 @@ export function BrandDocumentStatus({ organizationId, documents, onRetry }: Bran
                           </p>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          {getStatusBadge(doc.processing_status)}
+                          {getStatusBadge(doc.processing_status, doc.processing_stage)}
                           {doc.processing_status === 'completed' && doc.extracted_content && (
                             <Button
                               size="sm"
@@ -167,6 +233,18 @@ export function BrandDocumentStatus({ organizationId, documents, onRetry }: Bran
                               className="h-7 px-2"
                             >
                               <RefreshCw className={`h-3 w-3 ${retrying === doc.id ? 'animate-spin' : ''}`} />
+                            </Button>
+                          )}
+                          {isStuckProcessing(doc) && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleForceReset(doc.id)}
+                              disabled={resetting === doc.id}
+                              className="h-7 px-2 text-orange-600 border-orange-300"
+                              title="Force reset stuck document"
+                            >
+                              <XCircle className={`h-3 w-3 ${resetting === doc.id ? 'animate-spin' : ''}`} />
                             </Button>
                           )}
                         </div>
