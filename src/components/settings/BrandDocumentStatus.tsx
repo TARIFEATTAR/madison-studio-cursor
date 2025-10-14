@@ -258,7 +258,19 @@ export function BrandDocumentStatus({ organizationId, documents, onRetry }: Bran
                         </div>
                       </div>
                       {doc.processing_status === 'failed' && doc.content_preview && (
-                        <p className="text-xs text-red-600 mt-2">{doc.content_preview}</p>
+                        <div className="mt-2 space-y-2">
+                          <p className="text-xs text-red-600">{doc.content_preview}</p>
+                          {doc.content_preview.includes('Failed to extract image') && (
+                            <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded p-2">
+                              <p className="text-xs text-yellow-800 dark:text-yellow-200 font-medium mb-1">
+                                📄 This PDF appears to be image-based (scanned document)
+                              </p>
+                              <p className="text-xs text-yellow-700 dark:text-yellow-300">
+                                💡 <strong>Solution:</strong> Use the <strong>Manual Entry</strong> method instead. Open your PDF, select all text (Cmd/Ctrl+A), copy it, and paste into the Manual method.
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       )}
                       {doc.processing_status === 'completed' && doc.content_preview && (
                         <p className="text-xs text-warm-gray mt-2 line-clamp-2">{doc.content_preview}</p>

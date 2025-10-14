@@ -167,6 +167,16 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
       return;
     }
 
+    // Check if PDFs were added and show helpful guidance
+    const hasPdfs = supportedFiles.some(f => f.type === 'application/pdf');
+    if (hasPdfs) {
+      toast({
+        title: "PDF Upload Tips",
+        description: "For best results, ensure your PDF has selectable text. If text can't be selected, use the Manual method instead.",
+        duration: 6000,
+      });
+    }
+
     // Add new files to staging area, avoiding duplicates
     setStagedFiles(prev => {
       const existingNames = new Set(prev.map(f => f.name));
@@ -513,13 +523,43 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
           </motion.div>
         )}
 
-        {/* Visual Card System - Replace Tabs */}
+        {/* Visual Card System - Reordered with Manual First */}
         {!selectedMethod && !showQuickStart && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="grid grid-cols-1 md:grid-cols-3 gap-6"
           >
+            {/* Manual Entry Card - NOW FIRST */}
+            <Card 
+              onClick={() => setSelectedMethod("manual")}
+              className="cursor-pointer border-2 border-transparent hover:border-brass transition-all duration-300 hover:shadow-level-3 group"
+            >
+              <CardContent className="p-8 text-center">
+                <div className="mb-4 p-4 rounded-full bg-brass/10 w-16 h-16 mx-auto flex items-center justify-center group-hover:bg-brass/20 transition-colors">
+                  <FileText className="h-8 w-8 text-brass" />
+                </div>
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <h3 className="font-serif text-xl text-ink">Manual Entry</h3>
+                  <Sparkles className="h-4 w-4 text-brass" />
+                </div>
+                <p className="text-sm text-charcoal/70 mb-3">Most reliable method</p>
+                <Badge className="bg-brass text-parchment-white border-brass">✨ Most Reliable</Badge>
+                
+                {/* Contextual Info */}
+                <div className="mt-4 p-4 bg-vellum/50 rounded-md border border-charcoal/10 text-left">
+                  <p className="text-xs font-medium text-ink mb-2 flex items-center gap-2">
+                    <span className="text-brass">✦</span> Copy-paste from PDFs:
+                  </p>
+                  <ul className="text-xs text-charcoal/70 space-y-1">
+                    <li>• Always works (no upload issues)</li>
+                    <li>• Paste text from any document</li>
+                    <li>• Full control over content</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Upload PDFs Card */}
             <Card 
               onClick={() => setSelectedMethod("upload")}
@@ -529,19 +569,23 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
                 <div className="mb-4 p-4 rounded-full bg-brass/10 w-16 h-16 mx-auto flex items-center justify-center group-hover:bg-brass/20 transition-colors">
                   <FileUp className="h-8 w-8 text-brass" />
                 </div>
-                <h3 className="font-serif text-xl text-ink mb-2">Upload PDFs</h3>
-                <p className="text-sm text-charcoal/70 mb-3">Best for detailed documentation</p>
-                <Badge className="bg-brass/10 text-brass border-brass/30 hover:bg-brass/20">Recommended</Badge>
+                <h3 className="font-serif text-xl text-ink mb-2">Upload Files</h3>
+                <p className="text-sm text-charcoal/70 mb-3">For text-based PDFs</p>
+                <div className="flex items-center justify-center gap-2">
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">✓ TXT</Badge>
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">✓ MD</Badge>
+                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">⚠ PDF</Badge>
+                </div>
                 
                 {/* Contextual Info */}
-                <div className="mt-4 p-4 bg-vellum/50 rounded-md border border-charcoal/10 text-left">
+                <div className="mt-4 p-4 bg-yellow-50/50 rounded-md border border-yellow-200/50 text-left">
                   <p className="text-xs font-medium text-ink mb-2 flex items-center gap-2">
-                    <span className="text-brass">✦</span> Best For:
+                    <span className="text-yellow-600">⚠</span> PDF Requirements:
                   </p>
                   <ul className="text-xs text-charcoal/70 space-y-1">
-                    <li>• Brand style guides</li>
-                    <li>• Voice & tone docs</li>
-                    <li>• Product catalogs</li>
+                    <li>• Must have selectable text</li>
+                    <li>• Scanned images won't work</li>
+                    <li>• Use Manual if PDF fails</li>
                   </ul>
                 </div>
               </CardContent>
@@ -573,33 +617,6 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
                 </div>
               </CardContent>
             </Card>
-
-            {/* Manual Entry Card */}
-            <Card 
-              onClick={() => setSelectedMethod("manual")}
-              className="cursor-pointer border-2 border-transparent hover:border-brass transition-all duration-300 hover:shadow-level-3 group"
-            >
-              <CardContent className="p-8 text-center">
-                <div className="mb-4 p-4 rounded-full bg-brass/10 w-16 h-16 mx-auto flex items-center justify-center group-hover:bg-brass/20 transition-colors">
-                  <FileText className="h-8 w-8 text-brass" />
-                </div>
-                <h3 className="font-serif text-xl text-ink mb-2">Manual Entry</h3>
-                <p className="text-sm text-charcoal/70 mb-3">Most flexible</p>
-                <Badge className="bg-brass/10 text-brass border-brass/30 hover:bg-brass/20">Custom</Badge>
-                
-                {/* Contextual Info */}
-                <div className="mt-4 p-4 bg-vellum/50 rounded-md border border-charcoal/10 text-left">
-                  <p className="text-xs font-medium text-ink mb-2 flex items-center gap-2">
-                    <span className="text-brass">✦</span> Include:
-                  </p>
-                  <ul className="text-xs text-charcoal/70 space-y-1">
-                    <li>• Tone of voice</li>
-                    <li>• Key vocabulary</li>
-                    <li>• Brand personality</li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
           </motion.div>
         )}
 
@@ -613,8 +630,24 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
             <div className="space-y-2">
               <Label className="text-foreground">Brand Documents</Label>
               <p className="text-xs text-muted-foreground">
-                Upload PDFs or text files (.txt, .md) containing brand guidelines, style guides, or documentation.
+                Upload text files (.txt, .md) or text-based PDFs containing brand guidelines, style guides, or documentation.
               </p>
+              
+              {/* PDF Warning Banner */}
+              <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 text-sm">
+                    <p className="font-medium text-yellow-900 dark:text-yellow-100 mb-1">PDF Upload Requirements</p>
+                    <p className="text-yellow-700 dark:text-yellow-300 text-xs mb-2">
+                      PDFs must have <strong>selectable text</strong> (not scanned images). If your PDF is a scan or photo, use the <strong>Manual Entry</strong> method instead.
+                    </p>
+                    <p className="text-yellow-600 dark:text-yellow-400 text-xs">
+                      💡 <strong>Tip:</strong> Open your PDF and try to select text with your cursor. If you can't select text, it won't work.
+                    </p>
+                  </div>
+                </div>
+              </div>
               
               <div
                 onDrop={handleDrop}
@@ -869,21 +902,54 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
             animate={{ opacity: 1, y: 0 }}
             className="space-y-4"
           >
+            {/* Copy-Paste from PDF Helper */}
+            <div className="bg-brass/5 border border-brass/20 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="h-8 w-8 rounded-full bg-brass/10 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="h-4 w-4 text-brass" />
+                </div>
+                <div className="flex-1 text-sm">
+                  <p className="font-medium text-ink mb-2">Copy-Paste from Your PDF</p>
+                  <ol className="text-xs text-charcoal/70 space-y-1.5">
+                    <li className="flex items-start gap-2">
+                      <span className="font-mono text-brass">1.</span>
+                      <span>Open your PDF document</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-mono text-brass">2.</span>
+                      <span>Select all text (<kbd className="px-1.5 py-0.5 bg-charcoal/10 rounded text-xs font-mono">Cmd+A</kbd> or <kbd className="px-1.5 py-0.5 bg-charcoal/10 rounded text-xs font-mono">Ctrl+A</kbd>)</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-mono text-brass">3.</span>
+                      <span>Copy (<kbd className="px-1.5 py-0.5 bg-charcoal/10 rounded text-xs font-mono">Cmd+C</kbd> or <kbd className="px-1.5 py-0.5 bg-charcoal/10 rounded text-xs font-mono">Ctrl+C</kbd>)</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-mono text-brass">4.</span>
+                      <span>Paste below (<kbd className="px-1.5 py-0.5 bg-charcoal/10 rounded text-xs font-mono">Cmd+V</kbd> or <kbd className="px-1.5 py-0.5 bg-charcoal/10 rounded text-xs font-mono">Ctrl+V</kbd>)</span>
+                    </li>
+                  </ol>
+                  <p className="text-xs text-brass mt-2">✨ This method always works, regardless of PDF type!</p>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="brandVoice" className="text-foreground">
-                Brand Voice Description
+                Brand Voice & Guidelines
               </Label>
               <p className="text-xs text-muted-foreground">
-                Describe your brand's tone, personality, and preferred writing style.
+                Paste your brand guidelines, style guide content, or describe your brand's tone, personality, and preferred writing style.
               </p>
               <Textarea
                 id="brandVoice"
-                placeholder="Our brand voice is warm, elegant, and poetic. We use sensory language and evocative descriptions..."
+                placeholder="Paste your brand guidelines here, or type manually...
+
+Our brand voice is warm, elegant, and poetic. We use sensory language and evocative descriptions..."
                 value={brandVoice}
                 onChange={(e) => setBrandVoice(e.target.value)}
                 disabled={isProcessing}
-                rows={6}
-                className="bg-input border-border/40 resize-none"
+                rows={10}
+                className="bg-input border-border/40 resize-none font-mono text-sm"
               />
               <Button
                 onClick={handleManualVoice}
