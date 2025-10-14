@@ -1,4 +1,4 @@
-import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, LogOut, User, Menu } from "lucide-react";
+import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import penNibLogo from "@/assets/pen-nib-logo.png";
@@ -162,18 +162,11 @@ export function AppSidebar() {
             <div className="px-4 pb-4 flex justify-end">
               <button 
                 onClick={toggleSidebar}
-                className="relative group"
+                className="relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(38,33%,56%)]/50 rounded-lg"
                 aria-label="Collapse sidebar"
               >
-                <div
-                  className="w-20 h-8 rounded-r-md flex items-center justify-center transition-all duration-200 group-hover:brightness-110"
-                  style={{
-                    background: 'linear-gradient(135deg, #B8956A 0%, #D4AF37 100%)',
-                    boxShadow: '2px 2px 6px rgba(0,0,0,0.3)',
-                    marginRight: '-22px'
-                  }}
-                >
-                  <ChevronLeft className="w-4 h-4 text-ink-black" />
+                <div className="relative w-8 h-8 rounded-lg border border-[hsl(38,33%,56%)]/30 bg-white/5 flex items-center justify-center transition-all duration-200 group-hover:border-[hsl(38,33%,56%)] group-hover:bg-white/10 group-hover:shadow-[0_0_12px_rgba(184,149,106,0.3)]">
+                  <ChevronLeft className="w-4 h-4 text-[hsl(38,33%,56%)] transition-transform duration-200 group-hover:scale-110" />
                 </div>
               </button>
             </div>
@@ -181,7 +174,13 @@ export function AppSidebar() {
           
           {!open && (
             <div className="px-2 pb-4">
-              <SidebarTrigger className="w-full h-10 hover:bg-white/5" />
+              <button
+                onClick={toggleSidebar}
+                className="group w-full h-10 rounded-lg transition-all duration-200 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(38,33%,56%)]/50 border border-[hsl(38,33%,56%)]/30 bg-white/5 hover:border-[hsl(38,33%,56%)] hover:bg-white/10 hover:shadow-[0_0_12px_rgba(184,149,106,0.3)]"
+                aria-label="Expand sidebar"
+              >
+                <ChevronRight className="w-4 h-4 text-[hsl(38,33%,56%)] transition-transform duration-200 group-hover:scale-110" />
+              </button>
             </div>
           )}
         </SidebarHeader>
