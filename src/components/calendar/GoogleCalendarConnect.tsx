@@ -36,41 +36,11 @@ export const GoogleCalendarConnect = () => {
   };
 
   const handleConnect = async () => {
-    setConnecting(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign in to connect Google Calendar",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { data, error } = await supabase.functions.invoke("google-calendar-oauth/auth", {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: {
-          app_origin: window.location.origin,
-        },
-      });
-
-      if (error) throw error;
-
-      if (data?.authUrl) {
-        window.location.href = data.authUrl;
-      }
-    } catch (error: any) {
-      console.error("Error connecting to Google Calendar:", error);
-      toast({
-        title: "Connection failed",
-        description: error.message,
-        variant: "destructive",
-      });
-      setConnecting(false);
-    }
+    toast({
+      title: "Google Calendar Setup Required",
+      description: "Please configure Google OAuth credentials in your backend settings to enable calendar sync.",
+      variant: "destructive",
+    });
   };
 
   const handleDisconnect = async () => {
@@ -144,9 +114,9 @@ export const GoogleCalendarConnect = () => {
               Disconnect
             </Button>
           ) : (
-            <Button onClick={handleConnect} disabled={connecting}>
-              {connecting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Connect Google Calendar
+            <Button onClick={handleConnect} disabled={true} variant="outline" className="opacity-50">
+              <Calendar className="w-4 h-4 mr-2" />
+              Connect Google Calendar (Setup Required)
             </Button>
           )}
         </div>

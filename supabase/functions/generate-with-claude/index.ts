@@ -514,10 +514,51 @@ TONE:
 • Sophisticated storytelling that earns trust
 • Emotional resonance supported by product truth
 • Cinematic opening, authoritative middle, confident close
-• Balance poetry with precision`
+• Balance poetry with precision`,
+
+      MINIMAL_MODERN: `
+╔══════════════════════════════════════════════════════════════════╗
+║                STYLE OVERLAY: MINIMAL & MODERN                    ║
+║                    (Clean & Direct)                               ║
+╚══════════════════════════════════════════════════════════════════╝
+
+MINIMAL & MODERN APPROACH:
+• Strip away ornamental language—favor clarity and precision
+• Short sentences with strong verbs
+• Clean, scannable structure (use whitespace strategically)
+• No fluff, filler, or unnecessary adjectives
+• Lead with the essential truth of the product/brand
+
+STRUCTURAL ELEMENTS:
+• Crisp opening statement (no preamble)
+• 1-2 sentence paragraphs maximum
+• Bullet points or short stacks of information
+• Active voice, present tense
+• Confident assertions over hedging language
+
+TONE:
+• Contemporary and urbane
+• Confident minimalism—less is more
+• Smart but accessible (no jargon unless necessary)
+• Clean aesthetic—like a well-designed space
+• No nostalgia, no overwrought emotion—modern clarity
+
+INSPIRATION:
+Think Apple product copy, Kinfolk magazine, or Scandinavian design philosophy—
+beauty through reduction, meaning through precision.`
     };
     
-    const selectedStyleOverlay = styleOverlayInstructions[styleOverlay as keyof typeof styleOverlayInstructions] || styleOverlayInstructions.TARIFE_NATIVE;
+    // Map UI values to system values
+    const styleMapping: Record<string, string> = {
+      'tarife-native': 'TARIFE_NATIVE',
+      'poetic': 'JAY_PETERMAN',
+      'direct': 'OGILVY',
+      'story': 'HYBRID_JP_OGILVY',
+      'minimal': 'MINIMAL_MODERN',
+    };
+
+    const mappedStyle = styleMapping[styleOverlay] || 'TARIFE_NATIVE';
+    const selectedStyleOverlay = styleOverlayInstructions[mappedStyle as keyof typeof styleOverlayInstructions] || styleOverlayInstructions.TARIFE_NATIVE;
     
     // Fetch Madison's system-wide training first
     const madisonSystemConfig = await getMadisonSystemConfig();

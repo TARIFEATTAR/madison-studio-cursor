@@ -131,17 +131,17 @@ export default function Create() {
   };
 
   const handleGenerateContent = async (contentName: string) => {
-    const briefData = {
-      productId: product || null,
-      productData: product ? productData : null,
-      deliverableFormat: format,
-      targetAudience: audience,
-      contentGoal: goal,
-      styleOverlay: style,
-      additionalContext,
-      contentName,
-      timestamp: Date.now()
-    };
+      const briefData = {
+        productId: product && product !== "none" ? product : null,
+        productData: product && product !== "none" ? productData : null,
+        deliverableFormat: format,
+        targetAudience: audience,
+        contentGoal: goal,
+        styleOverlay: style,
+        additionalContext,
+        contentName,
+        timestamp: Date.now()
+      };
     
     localStorage.setItem('scriptora-content-brief', JSON.stringify(briefData));
     setNameDialogOpen(false);
@@ -158,13 +158,13 @@ export default function Create() {
 
     try {
       // Build AI prompt from brief fields
-      const promptParts = [
-        product && `Product: ${product}`,
-        `Format: ${format}`,
-        audience && `Target Audience: ${audience}`,
-        goal && `Content Goal: ${goal}`,
-        additionalContext && `\nAdditional Direction: ${additionalContext}`
-      ].filter(Boolean).join('\n');
+    const promptParts = [
+      product && product !== "none" && `Product: ${product}`,
+      `Format: ${format}`,
+      audience && `Target Audience: ${audience}`,
+      goal && `Content Goal: ${goal}`,
+      additionalContext && `\nAdditional Direction: ${additionalContext}`
+    ].filter(Boolean).join('\n');
 
       const fullPrompt = `${promptParts}\n\n[EXECUTE THIS BRIEF IMMEDIATELY. OUTPUT ONLY THE FINAL COPY. NO QUESTIONS OR ANALYSIS.]`;
 
@@ -659,11 +659,11 @@ export default function Create() {
                   } />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px] overflow-y-auto bg-white">
-                  <SelectItem value="">
-                    <div className="flex items-center gap-2">
-                      <span className="text-warm-gray">No specific product (brand-level content)</span>
-                    </div>
-                  </SelectItem>
+              <SelectItem value="none">
+                <div className="flex items-center gap-2">
+                  <span className="text-warm-gray">No specific product (brand-level content)</span>
+                </div>
+              </SelectItem>
                   {products.map((p) => (
                     <SelectItem key={p.id} value={p.name}>
                       {p.name}
