@@ -83,8 +83,12 @@ export function EditorialDirectorSplitScreen({
   );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
-  // Draggable window state - adjusted for larger window
-  const [windowPosition, setWindowPosition] = useState({ x: window.innerWidth - 950, y: 100 });
+  // Draggable window state - safe initial position
+  const [windowPosition, setWindowPosition] = useState(() => {
+    const initialWidth = 900;
+    const initialX = Math.max(20, window.innerWidth - initialWidth - 40);
+    return { x: initialX, y: 100 };
+  });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const dragHandleRef = useRef<HTMLDivElement>(null);
@@ -158,25 +162,46 @@ export function EditorialDirectorSplitScreen({
     }
   }, [selectedDerivativeId]);
 
-  // Draggable window handlers
+  // Draggable window handlers - FIXED VERSION
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (dragHandleRef.current?.contains(e.target as Node)) {
+    if (!isResizing && dragHandleRef.current?.contains(e.target as Node)) {
       setIsDragging(true);
+      // Store actual mouse position, not offset
       setDragStart({
-        x: e.clientX - windowPosition.x,
-        y: e.clientY - windowPosition.y,
+        x: e.clientX,
+        y: e.clientY,
       });
     }
   };
 
   const handleMouseMove = (e: MouseEvent) => {
     if (isDragging && !isResizing) {
-      const maxX = Math.max(0, window.innerWidth - windowSize.width - 20);
-      // Allow dragging closer to bottom - keep minimum 100px visible at top
-      const maxY = Math.max(56, window.innerHeight - windowSize.height - 16);
-      const newX = Math.max(0, Math.min(e.clientX - dragStart.x, maxX));
-      const newY = Math.max(56, Math.min(e.clientY - dragStart.y, maxY));
-      setWindowPosition({ x: newX, y: newY });
+      requestAnimationFrame(() => {
+        // Calculate how much the mouse has moved since drag started
+        const deltaX = e.clientX - dragStart.x;
+        const deltaY = e.clientY - dragStart.y;
+        
+        // Apply delta to the current window position
+        const proposedX = windowPosition.x + deltaX;
+        const proposedY = windowPosition.y + deltaY;
+        
+        // Calculate constraints based on current window size
+        const maxX = window.innerWidth - windowSize.width - 20;
+        const maxY = window.innerHeight - windowSize.height - 16;
+        
+        // Apply constraints
+        const newX = Math.max(0, Math.min(proposedX, maxX));
+        const newY = Math.max(56, Math.min(proposedY, maxY));
+        
+        // Update position
+        setWindowPosition({ x: newX, y: newY });
+        
+        // Update drag start for next frame (this is the key fix)
+        setDragStart({
+          x: e.clientX,
+          y: e.clientY,
+        });
+      });
     }
   };
   const handleMouseUp = () => {
@@ -579,7 +604,7 @@ export function EditorialDirectorSplitScreen({
         {/* Right Panel - Editorial Director (Draggable & Resizable Window) */}
         {!isExpanded && (
           <div 
-            className="fixed rounded-lg shadow-2xl overflow-hidden border-2"
+            className="fixed rounded-lg shadow-2xl overflow-hidden border-2 transition-opacity"
             style={{ 
               backgroundColor: "#FFFCF5",
               borderColor: "#B8956A",
@@ -588,7 +613,8 @@ export function EditorialDirectorSplitScreen({
               width: `${windowSize.width}px`,
               height: `${windowSize.height}px`,
               zIndex: 60,
-              cursor: isDragging ? 'grabbing' : 'default'
+              cursor: isDragging ? 'grabbing' : 'default',
+              opacity: isDragging ? 0.95 : 1
             }}
             onMouseDown={handleMouseDown}
           >
