@@ -114,11 +114,11 @@ export default function DashboardNew() {
               </button>
               
               <div className="flex items-start gap-6">
-                <div className="flex-shrink-0 w-16 h-16 bg-vellum-cream border border-charcoal/10 flex items-center justify-center">
+                <div className="flex-shrink-0">
                   <img 
                     src={madisonInsignia} 
                     alt="Madison" 
-                    className="w-12 h-12 object-contain opacity-80"
+                    className="w-32 h-32 object-contain"
                   />
                 </div>
                 
