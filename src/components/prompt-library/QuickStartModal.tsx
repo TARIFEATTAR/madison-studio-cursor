@@ -98,7 +98,7 @@ export function QuickStartModal({
           <div className="grid gap-3 sm:gap-4 mt-4 sm:mt-6">
             {/* Guided Wizard - PRIMARY */}
             <Card
-              className="p-4 sm:p-6 cursor-pointer transition-all hover:shadow-lg hover:border-[hsl(var(--saffron-gold))] bg-gradient-to-br from-[hsl(var(--saffron-gold)/0.1)] to-[hsl(var(--brass-accent)/0.1)]"
+              className="p-4 sm:p-6 cursor-pointer transition-all hover:shadow-md bg-parchment-white border border-charcoal/10 hover:border-aged-brass"
               onClick={onStartWizard}
             >
               <div className="flex items-start gap-3 sm:gap-4">
@@ -116,7 +116,7 @@ export function QuickStartModal({
 
             {/* Start from Template - SECONDARY */}
             <Card
-              className="p-4 sm:p-6 cursor-pointer transition-all hover:shadow-lg hover:border-border"
+              className="p-4 sm:p-6 cursor-pointer transition-all hover:shadow-md bg-parchment-white border border-charcoal/10 hover:border-aged-brass"
               onClick={onShowTemplates}
             >
               <div className="flex items-start gap-3 sm:gap-4">
@@ -134,7 +134,7 @@ export function QuickStartModal({
 
             {/* Import from Spreadsheet - TERTIARY */}
             <Card
-              className="p-4 sm:p-6 cursor-pointer transition-all hover:shadow-lg hover:border-border"
+              className="p-4 sm:p-6 cursor-pointer transition-all hover:shadow-md bg-parchment-white border border-charcoal/10 hover:border-aged-brass"
               onClick={onShowImport}
             >
               <div className="flex items-start gap-3 sm:gap-4">
