@@ -407,10 +407,10 @@ const TemplatesContent = () => {
   };
 
   return (
-    <div className="flex h-screen bg-[#F5F1E8] overflow-hidden">
+    <div className="flex h-screen bg-vellum-cream overflow-hidden">
       {/* MIDDLE PANEL - Collections & Categories (Fixed width: 280px) */}
       {!isMobile && (
-        <aside className="w-[280px] border-r border-border/30 bg-[#FAF8F3] flex-shrink-0 overflow-y-auto">
+        <aside className="w-[280px] border-r border-charcoal/10 bg-parchment-white flex-shrink-0 overflow-y-auto">
           <PromptLibrarySidebar
             onQuickAccessSelect={setSelectedQuickAccess}
             onCollectionSelect={setSelectedCollection}
@@ -426,7 +426,7 @@ const TemplatesContent = () => {
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* HEADER SECTION */}
-        <header className="bg-background border-b border-border/30 px-8 py-6 flex-shrink-0">
+        <header className="bg-parchment-white border-b border-charcoal/10 px-8 py-6 flex-shrink-0">
           <div className="max-w-full">
             <div className="flex items-start justify-between mb-6">
               <div>
@@ -481,7 +481,7 @@ const TemplatesContent = () => {
                 </Button>
                 <Button
                   onClick={() => setShowQuickStart(true)}
-                  className="gap-2 bg-gradient-to-r from-brass to-brass-dark hover:from-brass-dark hover:to-brass text-white border-0"
+                  className="gap-2 bg-ink-black hover:bg-charcoal text-parchment-white border-0"
                 >
                   <Plus className="w-4 h-4" />
                   New Prompt
@@ -496,14 +496,14 @@ const TemplatesContent = () => {
                 placeholder="Search prompts by title, description, tags, or content..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-background border border-border/40 focus:border-brass rounded-lg px-4 py-2.5 text-foreground placeholder:text-muted-foreground transition-all"
+                className="flex-1 bg-white border border-charcoal/10 focus:border-aged-brass px-4 py-2.5 text-ink-black placeholder:text-charcoal/50 transition-all"
               />
             </div>
           </div>
         </header>
 
         {/* PROMPTS GRID - Scrollable main content */}
-        <main className="flex-1 overflow-y-auto px-8 py-6">
+        <main className="flex-1 overflow-y-auto px-8 py-6 bg-vellum-cream">
           {/* Active Filters Display (Mobile) */}
           {isMobile && (selectedQuickAccess || selectedCollection || selectedCategory) && (
             <div className="mb-4 flex gap-2 flex-wrap">

@@ -20,15 +20,9 @@ export function PromptCard({ prompt, onClick, onArchive, onDelete }: PromptCardP
   return (
     <Card
       className={cn(
-        "cursor-pointer transition-all duration-300 hover:border-brass hover:shadow-lg",
-        "bg-card/50 backdrop-blur-sm border-border/20 relative p-6 group"
+        "cursor-pointer transition-all duration-300 hover:border-aged-brass/40",
+        "bg-parchment-white border border-charcoal/10 relative p-6 group"
       )}
-      style={{
-        backgroundImage: `
-          repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.02) 2px, rgba(0,0,0,.02) 4px),
-          repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,.02) 2px, rgba(0,0,0,.02) 4px)
-        `
-      }}
     >
       <div className="space-y-4" onClick={onClick}>
         {/* Actions Menu - only show if handlers are provided */}
@@ -73,7 +67,7 @@ export function PromptCard({ prompt, onClick, onArchive, onDelete }: PromptCardP
         )}
         
         {/* Title */}
-        <h3 className="font-serif text-xl text-foreground hover:text-brass transition-colors line-clamp-2">
+        <h3 className="font-serif text-xl text-ink-black hover:text-aged-brass transition-colors line-clamp-2">
           {prompt.title}
         </h3>
         
@@ -83,8 +77,8 @@ export function PromptCard({ prompt, onClick, onArchive, onDelete }: PromptCardP
         </p>
 
         {/* Prompt preview */}
-        <div className="bg-[#FAF8F3] rounded-lg border border-border/30 p-3">
-          <p className="text-sm text-foreground/80 line-clamp-3 leading-relaxed">
+        <div className="bg-vellum-cream border border-charcoal/10 p-3">
+          <p className="text-sm text-charcoal/80 line-clamp-3 leading-relaxed">
             {previewText}
           </p>
         </div>

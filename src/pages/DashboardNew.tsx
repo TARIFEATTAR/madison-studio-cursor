@@ -235,7 +235,7 @@ export default function DashboardNew() {
           </button>
 
           <button
-            onClick={() => navigate("/reservoir")}
+            onClick={() => navigate("/templates")}
             className="group bg-parchment-white border border-charcoal/10 p-6 text-left hover:border-aged-brass/40 transition-all"
           >
             <div className="w-10 h-10 bg-ink-black mb-4 flex items-center justify-center">
