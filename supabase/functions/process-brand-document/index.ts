@@ -6,6 +6,47 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Simple, best-effort PDF text extractor (no OCR)
+// Parses text tokens from PDF content streams as a fallback when AI extraction fails
+function simplePdfExtract(buffer: ArrayBuffer): string {
+  try {
+    const raw = new TextDecoder('latin1').decode(new Uint8Array(buffer));
+    const parts: string[] = [];
+
+    // Split into text object blocks (BT ... ET)
+    const blocks = raw.split(/\bBT\b/g);
+    for (const block of blocks) {
+      const segment = block.split(/\bET\b/)[0] ?? block;
+      // Capture strings inside parentheses before Tj/TJ operators
+      const regex = /\((?:\\.|[^\\])*?\)\s*(?:Tj|TJ)/gms;
+      let m: RegExpExecArray | null;
+      while ((m = regex.exec(segment)) !== null) {
+        const token = m[0];
+        const start = token.indexOf('(');
+        const end = token.lastIndexOf(')');
+        if (start >= 0 && end > start) {
+          let text = token.slice(start + 1, end);
+          // Unescape common sequences
+          text = text
+            .replace(/\\\)/g, ')')
+            .replace(/\\\(/g, '(')
+            .replace(/\\n/g, '\n')
+            .replace(/\\r/g, '')
+            .replace(/\\t/g, ' ')
+            .replace(/\\(\d{3})/g, (_m, oct) => String.fromCharCode(parseInt(oct, 8)));
+          parts.push(text);
+        }
+      }
+      parts.push('\n');
+    }
+
+    const joined = parts.join('').replace(/\s{3,}/g, ' ').replace(/\n{3,}/g, '\n\n');
+    return joined.trim();
+  } catch (_) {
+    return '';
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -73,10 +114,11 @@ serve(async (req) => {
         .update({ processing_stage: 'extracting_text' })
         .eq('id', documentId);
       
+      let pdfArrayBuffer: ArrayBuffer | null = null;
       try {
         // Convert PDF to base64 for AI processing
-        const arrayBuffer = await fileData.arrayBuffer();
-        const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+        pdfArrayBuffer = await fileData.arrayBuffer();
+        const base64 = btoa(String.fromCharCode(...new Uint8Array(pdfArrayBuffer)));
         
         console.log('Sending PDF to AI for text extraction...');
         
@@ -136,16 +178,29 @@ serve(async (req) => {
         }
         
         console.log(`[CHECKPOINT] PDF text extracted successfully: ${extractedText.length} characters`);
-    } catch (pdfError) {
-        console.error('[ERROR] PDF processing error:', pdfError);
-        const errMsg = pdfError instanceof Error ? pdfError.message : 'Unknown PDF parsing error';
-        
-        // Still save whatever text we got, don't fail completely
-        if (!extractedText || extractedText.length < 10) {
-          throw new Error(`Failed to process PDF: ${errMsg}`);
+      } catch (pdfError) {
+          console.error('[ERROR] PDF processing error:', pdfError);
+          const errMsg = pdfError instanceof Error ? pdfError.message : 'Unknown PDF parsing error';
+
+          // Fallback: try a lightweight PDF text extractor from raw bytes (no OCR)
+          try {
+            if (pdfArrayBuffer) {
+              const fallback = simplePdfExtract(pdfArrayBuffer);
+              if (fallback && fallback.length > 100) {
+                extractedText = fallback;
+                console.warn('Using simple PDF text extraction fallback (no OCR).');
+              }
+            }
+          } catch (fallbackErr) {
+            console.warn('Fallback PDF extractor failed:', fallbackErr);
+          }
+          
+          // If still nothing meaningful, fail
+          if (!extractedText || extractedText.length < 50) {
+            throw new Error(`Failed to process PDF: ${errMsg}`);
+          }
+          console.warn('PDF processing had errors but continuing with extracted text');
         }
-        console.warn('PDF processing had errors but continuing with extracted text');
-      }
     } else if (document.file_type.includes('text') || document.file_type.includes('markdown')) {
       extractedText = await fileData.text();
     } else {
