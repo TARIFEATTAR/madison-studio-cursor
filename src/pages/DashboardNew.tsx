@@ -80,63 +80,106 @@ export default function DashboardNew() {
 
   return (
     <div className="min-h-screen bg-vellum-cream">
-      <div className="max-w-6xl mx-auto px-8 py-10">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         
-        {/* Header */}
-        <div className="mb-10">
-          <div className="flex items-center justify-between mb-3">
-            <h1 className="font-serif text-3xl md:text-4xl font-medium text-ink-black">
-              Welcome back, {organizationName || "Creator"}
+        {/* Header Section - Clean editorial style */}
+        <div className="mb-8 pb-6 border-b border-charcoal/10">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="font-serif text-4xl md:text-5xl font-medium text-ink-black tracking-tight">
+              {organizationName || "Your Workspace"}
             </h1>
             {stats && stats.streakDays > 0 && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-parchment-white rounded-lg border border-warm-gray/20">
+              <div className="flex items-center gap-2 px-4 py-2 bg-parchment-white border border-charcoal/10">
                 <span className="text-2xl">🔥</span>
                 <span className="font-medium text-sm text-charcoal">
-                  {stats.streakDays}-day streak!
+                  {stats.streakDays}-day streak
                 </span>
               </div>
             )}
           </div>
-          <p className="text-charcoal/70 text-lg">
+          <p className="text-charcoal/60 text-lg font-light">
             Your editorial command center
           </p>
         </div>
 
-        {/* Priority Action - HERO ELEMENT */}
-        {showPriorityCard && priorityAction && (
-          <div className="bg-gradient-to-br from-brass to-brass-glow rounded-xl p-6 md:p-8 shadow-lg mb-8">
-            <div className="flex flex-col md:flex-row items-start gap-4 md:gap-6">
-              <div className="w-14 h-14 md:w-16 md:h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
-                <Calendar className="w-7 h-7 md:w-8 md:h-8 text-ink-black" />
-              </div>
-              <div className="flex-1 w-full">
-                <div className="flex items-center gap-2 md:gap-3 mb-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-ink-black/70">
-                    Priority Action
-                  </span>
-                  <span className="px-2 py-1 bg-white/20 rounded-full text-xs font-medium text-ink-black">
-                    {priorityAction.estimatedTime}
-                  </span>
+        {/* Editorial Director Banner - Minimal style */}
+        {showEditorialBanner && (
+          <div className="mb-8">
+            <div className="bg-parchment-white border border-charcoal/10 p-6 relative overflow-hidden">
+              <button
+                onClick={() => setShowEditorialBanner(false)}
+                className="absolute top-4 right-4 text-charcoal/50 hover:text-charcoal transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              
+              <div className="flex items-start gap-6">
+                <div className="flex-shrink-0 w-16 h-16 bg-vellum-cream border border-charcoal/10 flex items-center justify-center">
+                  <img 
+                    src={madisonInsignia} 
+                    alt="Madison" 
+                    className="w-12 h-12 object-contain opacity-80"
+                  />
                 </div>
-                <h2 className="font-serif text-2xl md:text-3xl lg:text-4xl font-medium text-ink-black mb-3 leading-tight">
-                  {priorityAction.title}
-                </h2>
-                <p className="text-sm md:text-base lg:text-lg text-ink-black/90 mb-6 leading-relaxed">
-                  {priorityAction.description}
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3">
+                
+                <div className="flex-1">
+                  <h3 className="font-serif text-xl font-medium text-ink-black mb-2">
+                    Madison, Editorial Director
+                  </h3>
+                  <p className="text-charcoal/70 mb-4 leading-relaxed">
+                    Your AI editorial director brings Tarife Attar's voice to every piece—
+                    from product descriptions to email campaigns. Let her guide your content creation.
+                  </p>
+                  <div className="flex gap-3">
+                    <Button 
+                      onClick={() => navigate("/create")}
+                      className="bg-ink-black hover:bg-charcoal text-parchment-white px-6 border-0"
+                    >
+                      Create Content
+                    </Button>
+                    <Button 
+                      onClick={() => navigate("/meet-madison")}
+                      variant="outline"
+                      className="border-charcoal/20 text-charcoal hover:bg-vellum-cream"
+                    >
+                      Meet Madison
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Priority Action Card - Clean lines */}
+        {showPriorityCard && priorityAction && (
+          <div className="mb-8">
+            <div className="bg-parchment-white border border-charcoal/10 p-6 relative">
+              <button
+                onClick={() => setShowPriorityCard(false)}
+                className="absolute top-4 right-4 text-charcoal/50 hover:text-charcoal transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-aged-brass/10 border border-aged-brass/20 flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 text-aged-brass" />
+                </div>
+                
+                <div className="flex-1">
+                  <h3 className="font-serif text-lg font-medium text-ink-black mb-1">
+                    {priorityAction.title}
+                  </h3>
+                  <p className="text-charcoal/70 text-sm mb-3">
+                    {priorityAction.description}
+                  </p>
                   <Button 
                     onClick={() => navigate(priorityAction.actionRoute)}
-                    className="px-6 py-3 bg-ink-black hover:bg-charcoal text-parchment-white font-semibold tracking-wide rounded-lg transition-all"
+                    size="sm"
+                    className="bg-ink-black hover:bg-charcoal text-parchment-white border-0"
                   >
-                    {priorityAction.actionLabel} →
-                  </Button>
-                  <Button 
-                    onClick={() => setShowPriorityCard(false)}
-                    variant="ghost"
-                    className="px-6 py-3 bg-white/20 hover:bg-white/30 text-ink-black font-semibold tracking-wide rounded-lg transition-all"
-                  >
-                    Not Now
+                    {priorityAction.actionLabel}
                   </Button>
                 </div>
               </div>
@@ -144,131 +187,88 @@ export default function DashboardNew() {
           </div>
         )}
 
-        {/* Editorial Director - Subtle Support */}
-        {showEditorialBanner && (
-          <div className="bg-parchment-white border-l-4 border-brass p-6 rounded-lg mb-8 shadow-sm relative">
-            <button
-              onClick={() => setShowEditorialBanner(false)}
-              className="absolute top-4 right-4 text-warm-gray hover:text-charcoal transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
-                <img 
-                  src={madisonInsignia} 
-                  alt="Madison - Editorial Director" 
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wider text-brass mb-1">
-                  Editorial Director
-                </div>
-                <p className="text-sm md:text-base text-charcoal/90 leading-relaxed">
-                  Welcome! I'll guide you through your content journey and help you make the most of your work.
-                </p>
-              </div>
+        {/* Quick Actions Grid - Sharp edges */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <button
+            onClick={() => navigate("/create")}
+            className="group bg-parchment-white border border-charcoal/10 p-6 text-left hover:border-aged-brass/40 transition-all"
+          >
+            <div className="w-10 h-10 bg-ink-black mb-4 flex items-center justify-center">
+              <PenTool className="w-5 h-5 text-parchment-white" />
             </div>
-          </div>
-        )}
-
-        {/* Quick Actions Grid */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          
-          <button 
-            onClick={() => navigate('/create')}
-            className="bg-parchment-white border-2 border-transparent hover:border-brass p-6 rounded-xl transition-all hover:shadow-[0_4px_12px_rgba(184,149,106,0.1)] group"
-          >
-            <PenTool className="w-8 h-8 text-brass mb-3 group-hover:scale-110 transition-transform" />
-            <div className="text-base font-medium text-charcoal">Create Content</div>
+            <h3 className="font-serif text-lg font-medium text-ink-black mb-1">
+              Create Content
+            </h3>
+            <p className="text-sm text-charcoal/60">
+              Generate new content with Madison
+            </p>
           </button>
 
-          <button 
-            onClick={() => navigate('/schedule')}
-            className="bg-parchment-white border-2 border-transparent hover:border-brass p-6 rounded-xl transition-all hover:shadow-[0_4px_12px_rgba(184,149,106,0.1)] group"
+          <button
+            onClick={() => navigate("/schedule")}
+            className="group bg-parchment-white border border-charcoal/10 p-6 text-left hover:border-aged-brass/40 transition-all"
           >
-            <Calendar className="w-8 h-8 text-brass mb-3 group-hover:scale-110 transition-transform" />
-            <div className="text-base font-medium text-charcoal">View Calendar</div>
+            <div className="w-10 h-10 bg-ink-black mb-4 flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-parchment-white" />
+            </div>
+            <h3 className="font-serif text-lg font-medium text-ink-black mb-1">
+              Schedule
+            </h3>
+            <p className="text-sm text-charcoal/60">
+              Plan your editorial calendar
+            </p>
           </button>
 
-          <button 
-            onClick={() => navigate('/library')}
-            className="bg-parchment-white border-2 border-transparent hover:border-brass p-6 rounded-xl transition-all hover:shadow-[0_4px_12px_rgba(184,149,106,0.1)] group"
+          <button
+            onClick={() => navigate("/library")}
+            className="group bg-parchment-white border border-charcoal/10 p-6 text-left hover:border-aged-brass/40 transition-all"
           >
-            <FileText className="w-8 h-8 text-brass mb-3 group-hover:scale-110 transition-transform" />
-            <div className="text-base font-medium text-charcoal">Browse Library</div>
+            <div className="w-10 h-10 bg-ink-black mb-4 flex items-center justify-center">
+              <Archive className="w-5 h-5 text-parchment-white" />
+            </div>
+            <h3 className="font-serif text-lg font-medium text-ink-black mb-1">
+              Library
+            </h3>
+            <p className="text-sm text-charcoal/60">
+              Browse your content archive
+            </p>
           </button>
 
+          <button
+            onClick={() => navigate("/reservoir")}
+            className="group bg-parchment-white border border-charcoal/10 p-6 text-left hover:border-aged-brass/40 transition-all"
+          >
+            <div className="w-10 h-10 bg-ink-black mb-4 flex items-center justify-center">
+              <FileText className="w-5 h-5 text-parchment-white" />
+            </div>
+            <h3 className="font-serif text-lg font-medium text-ink-black mb-1">
+              Templates
+            </h3>
+            <p className="text-sm text-charcoal/60">
+              Manage your prompt library
+            </p>
+          </button>
         </div>
 
-        {/* Content Bank */}
-        <div className="bg-parchment-white border border-warm-gray/20 rounded-xl p-6">
-          
-          {/* Header - Cleaner */}
-          <div className="flex items-center justify-between mb-6 pb-4 border-b border-warm-gray/20">
-            <div className="flex items-center gap-3">
-              <Archive className="w-5 h-5 text-brass" />
-              <h3 className="font-serif text-xl font-medium text-ink-black">Content Bank</h3>
-            </div>
-            <button 
-              onClick={() => navigate('/library')}
-              className="text-sm text-brass hover:text-brass-glow font-medium transition-colors"
-            >
-              View All →
-            </button>
+        {/* Weekly Stats & Recent Activity - Two column layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Weekly Stats */}
+          <div className="bg-parchment-white border border-charcoal/10 p-6">
+            <h2 className="font-serif text-xl font-medium text-ink-black mb-6 pb-3 border-b border-charcoal/10">
+              This Week
+            </h2>
+            <DashboardWeeklyStats stats={stats} />
           </div>
 
-          {/* Content Summary */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-vellum-cream rounded-lg">
-                <p className="text-2xl font-serif font-semibold text-ink-black">
-                  {stats?.totalContent || 0}
-                </p>
-                <p className="text-xs font-medium text-charcoal/60 uppercase tracking-wide mt-1">Total Pieces</p>
-              </div>
-              <div className="text-center p-4 bg-vellum-cream rounded-lg">
-                <p className="text-2xl font-serif font-semibold text-ink-black">
-                  {stats?.piecesCreatedThisWeek || 0}
-                </p>
-                <p className="text-xs font-medium text-charcoal/60 uppercase tracking-wide mt-1">This Week</p>
-              </div>
-              <div className="text-center p-4 bg-vellum-cream rounded-lg">
-                <p className="text-2xl font-serif font-semibold text-ink-black">
-                  {stats?.piecesScheduled || 0}
-                </p>
-                <p className="text-xs font-medium text-charcoal/60 uppercase tracking-wide mt-1">Scheduled</p>
-              </div>
-            </div>
-            
-            <button
-              onClick={() => navigate('/library')}
-              className="w-full py-3 text-sm text-brass hover:text-brass-glow font-medium transition-colors"
-            >
-              View All Content →
-            </button>
+          {/* Recent Activity */}
+          <div className="bg-parchment-white border border-charcoal/10 p-6">
+            <h2 className="font-serif text-xl font-medium text-ink-black mb-6 pb-3 border-b border-charcoal/10">
+              Recent Activity
+            </h2>
+            <DashboardRecentActivity />
           </div>
         </div>
 
-        {/* Recent Activity & Insights */}
-        <div className="bg-white rounded-xl border border-warm-gray/20 p-8 shadow-level-1">
-          <h2 className="text-2xl font-serif text-ink-black mb-6">
-            Recent Activity & Insights
-          </h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            {/* Recent Content - 60% width (3 cols) */}
-            <div className="lg:col-span-3">
-              <DashboardRecentActivity />
-            </div>
-            
-            {/* Weekly Stats - 40% width (2 cols) */}
-            <div className="lg:col-span-2">
-              <DashboardWeeklyStats />
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

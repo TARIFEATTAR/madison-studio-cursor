@@ -1,9 +1,18 @@
 import { TrendingUp, CheckCircle, Target, Calendar } from "lucide-react";
-import { useDashboardStats } from "@/hooks/useDashboardStats";
 
-export function DashboardWeeklyStats() {
-  const { data: stats } = useDashboardStats();
+interface DashboardStats {
+  piecesCreatedThisWeek: number;
+  piecesPublished: number;
+  onBrandScore: number;
+  piecesScheduled: number;
+  streakDays: number;
+}
 
+interface DashboardWeeklyStatsProps {
+  stats?: DashboardStats;
+}
+
+export function DashboardWeeklyStats({ stats }: DashboardWeeklyStatsProps) {
   const weeklyStats = [
     {
       id: 1,
@@ -32,29 +41,25 @@ export function DashboardWeeklyStats() {
   ];
 
   return (
-    <div className="bg-white rounded-lg border-t-4 border-aged-brass shadow-sm p-6">
-      <h3 className="text-xl font-serif text-ink-black mb-5">This Week's Stats</h3>
-      
-      <div className="space-y-4">
-        {weeklyStats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div key={stat.id} className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-aged-brass/10 flex items-center justify-center shrink-0">
-                <Icon className="w-4 h-4 text-aged-brass" />
-              </div>
-              
-              <div className="flex-1">
-                <p className="text-sm text-warm-gray">{stat.label}</p>
-              </div>
-              
-              <p className="text-2xl font-serif font-semibold text-ink-black">
-                {stat.value}
-              </p>
+    <div className="space-y-4">
+      {weeklyStats.map((stat) => {
+        const Icon = stat.icon;
+        return (
+          <div key={stat.id} className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-vellum-cream border border-charcoal/10 flex items-center justify-center shrink-0">
+              <Icon className="w-5 h-5 text-charcoal" />
             </div>
-          );
-        })}
-      </div>
+            
+            <div className="flex-1">
+              <p className="text-sm text-charcoal/60">{stat.label}</p>
+            </div>
+            
+            <p className="text-2xl font-serif font-medium text-ink-black">
+              {stat.value}
+            </p>
+          </div>
+        );
+      })}
     </div>
   );
 }
