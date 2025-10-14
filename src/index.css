@@ -70,7 +70,7 @@
     --input: 48 100% 99%;            /* Parchment White for inputs */
     --ring: 38 33% 56%;              /* Aged Brass */
 
-    --radius: 0.5rem;                /* 8px - Museum quality corners */
+    --radius: 0.25rem;               /* 4px - Sharp, editorial corners */
 
     /* ──────────────────────────────────────────────────────────────────────
        SOPHISTICATED SHADOW SYSTEM - Warm Black Depth
