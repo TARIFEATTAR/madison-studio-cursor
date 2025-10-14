@@ -3,7 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { Star, Archive, ArchiveRestore } from "lucide-react";
-import { contentTypes, collections } from "@/data/mockLibraryContent";
+import { collections } from "@/data/mockLibraryContent";
+import { getDeliverableByValue } from "@/config/deliverableFormats";
 import { cn } from "@/lib/utils";
 
 interface ContentCardProps {
@@ -37,7 +38,7 @@ export function ContentCard({
   onToggleSelect,
   onArchive
 }: ContentCardProps) {
-  const contentTypeInfo = contentTypes.find(ct => ct.id === content.contentType);
+  const deliverableFormat = getDeliverableByValue(content.contentType);
   const collectionInfo = collections.find(c => c.id === content.collection);
   
   const previewText = content.content.substring(0, 150) + (content.content.length > 150 ? "..." : "");
@@ -105,17 +106,13 @@ export function ContentCard({
           </h3>
           
           <div className="flex flex-wrap gap-2">
-            {contentTypeInfo && (
+            {deliverableFormat && (
               <Badge 
                 variant="secondary"
                 className="text-xs"
-                style={{ 
-                  backgroundColor: `${contentTypeInfo.color}20`,
-                  color: contentTypeInfo.color,
-                  borderColor: contentTypeInfo.color
-                }}
               >
-                {contentTypeInfo.icon} {contentTypeInfo.name}
+                <deliverableFormat.icon className="w-3 h-3 mr-1" />
+                {deliverableFormat.label}
               </Badge>
             )}
             

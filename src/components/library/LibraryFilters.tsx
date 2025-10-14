@@ -8,7 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { contentTypes, collections } from "@/data/mockLibraryContent";
+import { libraryContentTypes } from "@/config/libraryContentTypes";
+import { collections } from "@/data/mockLibraryContent";
 import { SortOption } from "./SortDropdown";
 import { cn } from "@/lib/utils";
 
@@ -70,11 +71,17 @@ export function LibraryFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
-            {contentTypes.map((type) => (
-              <SelectItem key={type.id} value={type.id}>
-                {type.icon} {type.name}
-              </SelectItem>
-            ))}
+            {libraryContentTypes.map((type) => {
+              const IconComponent = type.icon;
+              return (
+                <SelectItem key={type.id} value={type.id}>
+                  <div className="flex items-center gap-2">
+                    <IconComponent className="w-4 h-4" />
+                    {type.name}
+                  </div>
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
 

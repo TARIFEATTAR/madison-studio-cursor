@@ -15,13 +15,8 @@ export interface LibraryContent {
   status: string;
 }
 
-export const contentTypes = [
-  { id: "blog_post", name: "Blog Post", color: "#B8956A", icon: "📝" },
-  { id: "email", name: "Email Campaign", color: "#8B7355", icon: "📧" },
-  { id: "product_story", name: "Product Story", color: "#D4AF37", icon: "🏷️" },
-  { id: "instagram", name: "Social Post", color: "#A67C52", icon: "📱" },
-  { id: "email_newsletter", name: "Newsletter", color: "#8B6F47", icon: "📰" }
-];
+// Content types are now dynamically generated from deliverable formats
+// See src/config/libraryContentTypes.ts for the source of truth
 
 export const collections = [
   { id: "signature", name: "Signature Collection", icon: "✨" },

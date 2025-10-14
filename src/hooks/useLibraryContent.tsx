@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { getDeliverableByValue } from "@/config/deliverableFormats";
 
 export interface LibraryContentItem {
   id: string;
@@ -37,20 +38,23 @@ export const useLibraryContent = () => {
         console.error("Error fetching master content:", masterError);
       } else if (masterContent) {
         items.push(
-          ...masterContent.map((item) => ({
-            id: item.id,
-            title: item.title,
-            contentType: item.content_type,
-            collection: item.collection,
-            content: item.full_content,
-            createdAt: new Date(item.created_at),
-            updatedAt: new Date(item.updated_at),
-            rating: item.quality_rating,
-            wordCount: item.word_count || item.full_content?.split(/\s+/).filter(Boolean).length || 0,
-            archived: item.is_archived,
-            status: item.status || "draft",
-            sourceTable: "master_content" as const,
-          }))
+          ...masterContent.map((item) => {
+            const deliverable = getDeliverableByValue(item.content_type);
+            return {
+              id: item.id,
+              title: item.title,
+              contentType: item.content_type,
+              collection: item.collection,
+              content: item.full_content,
+              createdAt: new Date(item.created_at),
+              updatedAt: new Date(item.updated_at),
+              rating: item.quality_rating,
+              wordCount: item.word_count || item.full_content?.split(/\s+/).filter(Boolean).length || 0,
+              archived: item.is_archived,
+              status: item.status || "draft",
+              sourceTable: "master_content" as const,
+            };
+          })
         );
       }
 
@@ -64,20 +68,24 @@ export const useLibraryContent = () => {
         console.error("Error fetching outputs:", outputsError);
       } else if (outputs) {
         items.push(
-          ...outputs.map((item) => ({
-            id: item.id,
-            title: item.prompts?.title || "Untitled Output",
-            contentType: item.prompts?.content_type || "output",
-            collection: item.prompts?.collection || null,
-            content: item.generated_content,
-            createdAt: new Date(item.created_at),
-            updatedAt: new Date(item.created_at),
-            rating: item.quality_rating,
-            wordCount: item.generated_content?.split(/\s+/).filter(Boolean).length || 0,
-            archived: item.is_archived,
-            status: "generated",
-            sourceTable: "outputs" as const,
-          }))
+          ...outputs.map((item) => {
+            const contentType = item.prompts?.content_type || "output";
+            const deliverable = getDeliverableByValue(contentType);
+            return {
+              id: item.id,
+              title: item.prompts?.title || "Untitled Output",
+              contentType: contentType,
+              collection: item.prompts?.collection || null,
+              content: item.generated_content,
+              createdAt: new Date(item.created_at),
+              updatedAt: new Date(item.created_at),
+              rating: item.quality_rating,
+              wordCount: item.generated_content?.split(/\s+/).filter(Boolean).length || 0,
+              archived: item.is_archived,
+              status: "generated",
+              sourceTable: "outputs" as const,
+            };
+          })
         );
       }
 
@@ -91,20 +99,23 @@ export const useLibraryContent = () => {
         console.error("Error fetching derivatives:", derivativesError);
       } else if (derivatives) {
         items.push(
-          ...derivatives.map((item) => ({
-            id: item.id,
-            title: (typeof item.platform_specs === 'object' && item.platform_specs !== null && 'title' in item.platform_specs ? item.platform_specs.title as string : null) || item.master_content?.title || "Untitled Derivative",
-            contentType: item.asset_type,
-            collection: item.master_content?.collection || null,
-            content: item.generated_content || "",
-            createdAt: new Date(item.created_at),
-            updatedAt: new Date(item.created_at),
-            rating: item.quality_rating,
-            wordCount: item.generated_content?.split(/\s+/).filter(Boolean).length || 0,
-            archived: item.is_archived,
-            status: item.approval_status || "pending",
-            sourceTable: "derivative_assets" as const,
-          }))
+          ...derivatives.map((item) => {
+            const deliverable = getDeliverableByValue(item.asset_type);
+            return {
+              id: item.id,
+              title: (typeof item.platform_specs === 'object' && item.platform_specs !== null && 'title' in item.platform_specs ? item.platform_specs.title as string : null) || item.master_content?.title || "Untitled Derivative",
+              contentType: item.asset_type,
+              collection: item.master_content?.collection || null,
+              content: item.generated_content || "",
+              createdAt: new Date(item.created_at),
+              updatedAt: new Date(item.created_at),
+              rating: item.quality_rating,
+              wordCount: item.generated_content?.split(/\s+/).filter(Boolean).length || 0,
+              archived: item.is_archived,
+              status: item.approval_status || "pending",
+              sourceTable: "derivative_assets" as const,
+            };
+          })
         );
       }
 
