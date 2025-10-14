@@ -8,6 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { Sparkles, ArrowLeft, ArrowRight, Lightbulb, Bookmark, SkipForward } from "lucide-react";
 import { useCollections } from "@/hooks/useCollections";
 import { getCollectionIcon } from "@/utils/collectionIcons";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface PromptWizardProps {
   open: boolean;
@@ -22,6 +24,7 @@ export interface WizardData {
   tone: string;
   keyElements: string;
   constraints: string;
+  refinedPrompt?: string;
 }
 
 const CONTENT_TYPES = [
@@ -68,6 +71,7 @@ const TONES = [
 
 export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardProps) {
   const { collections, loading: collectionsLoading } = useCollections();
+  const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<WizardData>({
     purpose: "",
@@ -77,8 +81,10 @@ export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardPro
     keyElements: "",
     constraints: "",
   });
+  const [refinedPrompt, setRefinedPrompt] = useState<string>("");
+  const [isRefining, setIsRefining] = useState(false);
 
-  const totalSteps = 6;
+  const totalSteps = 7;
   const progress = (step / totalSteps) * 100;
 
   // Get smart tone default based on content type
@@ -107,9 +113,57 @@ export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardPro
         return data.keyElements.trim().length > 0;
       case 6:
         return true; // Constraints are optional
+      case 7:
+        return refinedPrompt.trim().length > 0 && !isRefining;
       default:
         return false;
     }
+  };
+
+  const refinePromptWithAI = async (wizardData: WizardData) => {
+    setIsRefining(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('refine-prompt-template', {
+        body: {
+          purpose: wizardData.purpose,
+          contentType: wizardData.contentType,
+          collection: wizardData.collection,
+          tone: wizardData.tone,
+          keyElements: wizardData.keyElements,
+          constraints: wizardData.constraints
+        }
+      });
+      
+      if (error) throw error;
+      
+      setRefinedPrompt(data.refinedPrompt);
+      return data;
+    } catch (error) {
+      console.error('AI refinement failed:', error);
+      toast({
+        title: "AI refinement unavailable",
+        description: "Using fallback template. You can edit it before saving.",
+        variant: "default",
+      });
+      // Fallback: Use basic template structure
+      const fallback = generateFallbackPrompt(wizardData);
+      setRefinedPrompt(fallback);
+    } finally {
+      setIsRefining(false);
+    }
+  };
+
+  const generateFallbackPrompt = (wizardData: WizardData): string => {
+    const parts = [];
+    parts.push(`Create ${wizardData.contentType} content with the following specifications:`);
+    parts.push(`\nPurpose: ${wizardData.purpose}`);
+    parts.push(`\nTone: ${wizardData.tone}`);
+    parts.push(`\nKey Elements: ${wizardData.keyElements}`);
+    if (wizardData.constraints) {
+      parts.push(`\nConstraints: ${wizardData.constraints}`);
+    }
+    return parts.join("\n");
   };
 
   const handleSkipCollection = () => {
@@ -119,11 +173,19 @@ export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardPro
     setStep(4); // Skip to tone step
   };
 
-  const handleNext = () => {
-    if (step < totalSteps) {
+  const handleNext = async () => {
+    if (step === 6) {
+      // Before advancing to step 7, refine the prompt
+      await refinePromptWithAI(data);
+      setStep(7);
+    } else if (step < totalSteps) {
       setStep(step + 1);
     } else {
-      onComplete(data);
+      // Step 7: Save with refined prompt
+      onComplete({
+        ...data,
+        refinedPrompt,
+      });
       onOpenChange(false);
       // Reset wizard
       setStep(1);
@@ -135,6 +197,7 @@ export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardPro
         keyElements: "",
         constraints: "",
       });
+      setRefinedPrompt("");
     }
   };
 
@@ -157,7 +220,7 @@ export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardPro
             <div>
               <DialogTitle className="text-2xl font-serif">Prompt Builder Wizard</DialogTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Step {step} of {totalSteps}
+                Step {step} of {totalSteps} • {step === 7 ? "Review & Refine" : "Build Your Template"}
               </p>
             </div>
           </div>
@@ -182,9 +245,11 @@ export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardPro
               />
               <div className="flex items-start gap-2 p-3 bg-[hsl(var(--stone-beige)/0.3)] rounded-lg">
                 <Lightbulb className="w-5 h-5 text-[hsl(var(--saffron-gold))] flex-shrink-0 mt-0.5" />
-                <p className="text-sm">
-                  💡 Tip: Use placeholders like <code className="px-1 py-0.5 bg-background rounded text-xs">&#123;&#123;PRODUCT_NAME&#125;&#125;</code> to make your prompt reusable.
-                </p>
+                <div className="text-sm">
+                  <p className="font-medium mb-1">💡 How Placeholders Work</p>
+                  <p>Use <code className="px-1 py-0.5 bg-background rounded text-xs">&#123;&#123;PRODUCT_NAME&#125;&#125;</code> to create reusable templates.</p>
+                  <p className="text-xs text-muted-foreground mt-1">Don't worry - AI will add these automatically in Step 7!</p>
+                </div>
               </div>
             </div>
           )}
@@ -344,9 +409,44 @@ export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardPro
               <div className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <Bookmark className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-green-800">
-                  🎉 Almost done! We'll save this as a reusable template. You can customize it for each piece of content.
+                  🎉 Almost done! Next step: AI will refine your template with proper placeholders.
                 </p>
               </div>
+            </div>
+          )}
+
+          {/* Step 7: AI Refined Preview */}
+          {step === 7 && (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-lg font-serif">Review Your AI-Refined Template</Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  We've transformed your input into a reusable prompt template. Edit if needed.
+                </p>
+              </div>
+              
+              {isRefining ? (
+                <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                  <Sparkles className="w-12 h-12 text-[hsl(var(--saffron-gold))] animate-pulse" />
+                  <p className="text-muted-foreground">Refining your prompt with AI...</p>
+                </div>
+              ) : (
+                <>
+                  <Textarea
+                    value={refinedPrompt}
+                    onChange={(e) => setRefinedPrompt(e.target.value)}
+                    className="min-h-[200px] font-mono text-sm bg-[hsl(var(--parchment-white))] border-[hsl(var(--brass-accent)/0.2)]"
+                  />
+                  
+                  <div className="flex items-start gap-2 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <Lightbulb className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-green-800">
+                      <p className="font-semibold mb-1">✨ Pro Tip</p>
+                      <p>Placeholders like <code className="bg-green-100 px-1 rounded">&#123;&#123;PRODUCT_NAME&#125;&#125;</code> make this template reusable. Change values each time you use it!</p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

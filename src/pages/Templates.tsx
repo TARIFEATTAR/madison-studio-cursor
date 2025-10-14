@@ -164,15 +164,20 @@ const TemplatesContent = () => {
       return;
     }
 
-    // Generate prompt from wizard data (preserves placeholders)
-    const generatedPrompt = generatePromptFromWizard(wizardData);
+    // Use refined prompt if available, fallback to generated
+    const promptText = wizardData.refinedPrompt || generatePromptFromWizard(wizardData);
+    
+    // Extract a smarter title from the refined prompt if possible
+    const titlePrefix = wizardData.contentType.charAt(0).toUpperCase() + wizardData.contentType.slice(1);
+    const titleSuffix = wizardData.purpose.substring(0, 40);
+    const generatedTitle = `${titlePrefix}: ${titleSuffix}${titleSuffix.length >= 40 ? '...' : ''}`;
     
     try {
       const { data: insertedData, error } = await supabase
         .from("prompts")
-        .insert({
-          title: `${wizardData.contentType} - ${wizardData.purpose.substring(0, 30)}...`,
-          prompt_text: generatedPrompt,
+        .insert([{
+          title: generatedTitle,
+          prompt_text: promptText,
           content_type: wizardData.contentType as any,
           collection: wizardData.collection || "General",
           organization_id: currentOrganizationId!,
@@ -185,9 +190,11 @@ const TemplatesContent = () => {
               tone: wizardData.tone,
               key_elements: wizardData.keyElements,
               constraints: wizardData.constraints,
+              collection: wizardData.collection,
             },
-          },
-        })
+            refinement_timestamp: new Date().toISOString(),
+          } as any,
+        }])
         .select()
         .single();
 

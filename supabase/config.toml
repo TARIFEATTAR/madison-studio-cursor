@@ -32,3 +32,6 @@ verify_jwt = true
 
 [functions.parse-content-worksheet]
 verify_jwt = true
+
+[functions.refine-prompt-template]
+verify_jwt = true
