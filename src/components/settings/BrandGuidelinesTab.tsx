@@ -192,13 +192,6 @@ export function BrandGuidelinesTab() {
         <>
           <BrandKnowledgeCenter organizationId={currentOrganizationId} />
           
-          {/* Brand Document Status Tracker */}
-          <BrandDocumentStatus 
-            organizationId={currentOrganizationId}
-            documents={brandDocuments}
-            onRetry={loadBrandDocuments}
-          />
-          
           <Separator className="my-8" />
         </>
       )}
