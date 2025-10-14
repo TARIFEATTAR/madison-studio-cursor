@@ -589,6 +589,7 @@ export type Database = {
       master_content: {
         Row: {
           archived_at: string | null
+          collection: string | null
           content_type: string
           created_at: string | null
           created_by: string | null
@@ -604,6 +605,7 @@ export type Database = {
         }
         Insert: {
           archived_at?: string | null
+          collection?: string | null
           content_type: string
           created_at?: string | null
           created_by?: string | null
@@ -619,6 +621,7 @@ export type Database = {
         }
         Update: {
           archived_at?: string | null
+          collection?: string | null
           content_type?: string
           created_at?: string | null
           created_by?: string | null
