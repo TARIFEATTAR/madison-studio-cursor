@@ -10,7 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import Navigation from "./components/Navigation";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./components/AppSidebar";
-import { DesktopHeader } from "./components/DesktopHeader";
 
 import Index from "./pages/Index";
 import DashboardNew from "./pages/DashboardNew";
@@ -135,7 +134,6 @@ const AppContent = () => {
     <>
       {showSidebar ? (
         <SidebarProvider>
-          <DesktopHeader />
           <div className="flex min-h-screen w-full">
             <AppSidebar />
             <main className="flex-1 overflow-auto pt-0">
