@@ -20,6 +20,7 @@ export const usePromptCounts = (organizationId: string | null) => {
         .from("prompts")
         .select("*")
         .eq("organization_id", organizationId)
+        .eq("is_archived", false)
         .is("archived_at", null);
 
       const total = prompts?.length || 0;
@@ -64,5 +65,8 @@ export const usePromptCounts = (organizationId: string | null) => {
       };
     },
     enabled: !!organizationId,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 };

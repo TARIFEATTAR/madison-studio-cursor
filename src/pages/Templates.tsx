@@ -224,6 +224,7 @@ const TemplatesContent = () => {
       }
 
       queryClient.invalidateQueries({ queryKey: ["templates"] });
+      queryClient.invalidateQueries({ queryKey: ["prompt-counts", currentOrganizationId] });
 
       // Show success toast based on whether collection was selected
       const skippedCollection = !wizardData.collection;
@@ -304,6 +305,7 @@ const TemplatesContent = () => {
 
       // Invalidate query to refresh data
       queryClient.invalidateQueries({ queryKey: ["templates"] });
+      queryClient.invalidateQueries({ queryKey: ["prompt-counts", currentOrganizationId] });
 
       // Check if prompt has field mappings
       const fieldMappings = (prompt.meta_instructions as any)?.field_mappings;
@@ -341,6 +343,7 @@ const TemplatesContent = () => {
         .eq("id", promptId);
 
       queryClient.invalidateQueries({ queryKey: ["templates"] });
+      queryClient.invalidateQueries({ queryKey: ["prompt-counts", currentOrganizationId] });
 
       toast({
         title: "Template archived",
@@ -361,6 +364,7 @@ const TemplatesContent = () => {
       await supabase.from("prompts").delete().eq("id", promptId);
 
       queryClient.invalidateQueries({ queryKey: ["templates"] });
+      queryClient.invalidateQueries({ queryKey: ["prompt-counts", currentOrganizationId] });
 
       toast({
         title: "Template deleted",
@@ -387,6 +391,7 @@ const TemplatesContent = () => {
         .eq("id", promptId);
 
       queryClient.invalidateQueries({ queryKey: ["templates"] });
+      queryClient.invalidateQueries({ queryKey: ["prompt-counts", currentOrganizationId] });
 
       toast({
         title: prompt.is_template ? "Removed from favorites" : "Added to favorites",
