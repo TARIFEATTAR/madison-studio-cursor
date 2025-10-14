@@ -153,27 +153,51 @@ const TemplatesContent = () => {
   }, [filteredPrompts, searchQuery]);
 
   const handleWizardComplete = async (wizardData: WizardData) => {
-    // Generate prompt from wizard data
+    // Generate prompt from wizard data (preserves placeholders)
     const generatedPrompt = generatePromptFromWizard(wizardData);
     
     try {
-      const { error } = await supabase.from("prompts").insert({
-        title: `${wizardData.contentType} - ${wizardData.tone}`,
-        prompt_text: generatedPrompt,
-        content_type: wizardData.contentType as any,
-        collection: "cadence" as any,
-        organization_id: currentOrganizationId!,
-        created_by: user?.id,
-        is_template: false,
-      });
+      const { data: insertedData, error } = await supabase
+        .from("prompts")
+        .insert({
+          title: `${wizardData.contentType} - ${wizardData.purpose.substring(0, 30)}...`,
+          prompt_text: generatedPrompt,
+          content_type: wizardData.contentType as any,
+          collection: (wizardData.collection || "cadence") as any,
+          organization_id: currentOrganizationId!,
+          created_by: user?.id,
+          is_template: true, // Wizard prompts ARE templates
+          meta_instructions: {
+            wizard_defaults: {
+              content_type: wizardData.contentType,
+              purpose: wizardData.purpose,
+              tone: wizardData.tone,
+              key_elements: wizardData.keyElements,
+              constraints: wizardData.constraints,
+            },
+          },
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
       queryClient.invalidateQueries({ queryKey: ["templates"] });
+
+      // Show success toast based on whether collection was selected
+      const skippedCollection = !wizardData.collection;
       toast({
-        title: "Prompt created",
-        description: "Your custom prompt has been generated successfully!",
+        title: "Template saved!",
+        description: skippedCollection 
+          ? "Prompt saved! Organize it later from the library."
+          : `Prompt saved to ${wizardData.collection}! Customize it to create content.`,
       });
+
+      // Auto-navigate: Open placeholder dialog then go to Create page
+      if (insertedData) {
+        setPendingPrompt(insertedData as Prompt);
+        setShowPlaceholderDialog(true);
+      }
     } catch (error) {
       console.error("Error creating prompt:", error);
       toast({
@@ -185,10 +209,9 @@ const TemplatesContent = () => {
   };
 
   const generatePromptFromWizard = (data: WizardData): string => {
-    // Generate prompt with placeholders for reusability
+    // Generate prompt with placeholders PRESERVED for reusability
     const parts = [];
     
-    // Use placeholders for dynamic content
     parts.push(`Create {{CONTENT_TYPE}} content with the following specifications:`);
     parts.push(`\nPurpose: {{PURPOSE}}`);
     parts.push(`\nTone: {{TONE}}`);
@@ -198,18 +221,9 @@ const TemplatesContent = () => {
       parts.push(`\nConstraints: {{CONSTRAINTS}}`);
     }
     
-    // Store the original wizard data as default placeholder values in the prompt metadata
-    // This allows users to see what was originally specified
-    const promptWithDefaults = parts.join("\n");
-    
-    // For the initial save, we'll replace placeholders with actual values
-    // but keep the placeholder structure for future reuse
-    return promptWithDefaults
-      .replace(/\{\{CONTENT_TYPE\}\}/g, data.contentType)
-      .replace(/\{\{PURPOSE\}\}/g, data.purpose)
-      .replace(/\{\{TONE\}\}/g, data.tone)
-      .replace(/\{\{KEY_ELEMENTS\}\}/g, data.keyElements)
-      .replace(/\{\{CONSTRAINTS\}\}/g, data.constraints || "None specified");
+    // Return template with placeholders intact
+    // Default values are stored in meta_instructions.wizard_defaults
+    return parts.join("\n");
   };
 
   const handleUsePrompt = async (promptId: string) => {
@@ -563,6 +577,7 @@ const TemplatesContent = () => {
           open={showPlaceholderDialog}
           onOpenChange={setShowPlaceholderDialog}
           promptText={pendingPrompt.prompt_text}
+          wizardDefaults={(pendingPrompt.meta_instructions as any)?.wizard_defaults}
           onConfirm={handlePlaceholderConfirm}
         />
       )}
@@ -574,6 +589,10 @@ const TemplatesContent = () => {
           open={!!selectedPrompt}
           onClose={() => setSelectedPrompt(null)}
           onUse={() => handleUsePrompt(selectedPrompt.id)}
+          onUpdate={() => {
+            queryClient.invalidateQueries({ queryKey: ["templates"] });
+            setSelectedPrompt(null);
+          }}
         />
       )}
     </div>

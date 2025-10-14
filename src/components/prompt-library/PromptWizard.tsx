@@ -5,7 +5,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Sparkles, ArrowLeft, ArrowRight, Lightbulb } from "lucide-react";
+import { Sparkles, ArrowLeft, ArrowRight, Lightbulb, Bookmark, SkipForward } from "lucide-react";
+import { useCollections } from "@/hooks/useCollections";
+import { getCollectionIcon } from "@/utils/collectionIcons";
 
 interface PromptWizardProps {
   open: boolean;
@@ -16,6 +18,7 @@ interface PromptWizardProps {
 export interface WizardData {
   purpose: string;
   contentType: string;
+  collection: string;
   tone: string;
   keyElements: string;
   constraints: string;
@@ -40,17 +43,32 @@ const TONES = [
 ];
 
 export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardProps) {
+  const { collections, loading: collectionsLoading } = useCollections();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<WizardData>({
     purpose: "",
     contentType: "",
+    collection: "",
     tone: "",
     keyElements: "",
     constraints: "",
   });
 
-  const totalSteps = 5;
+  const totalSteps = 6;
   const progress = (step / totalSteps) * 100;
+
+  // Get smart tone default based on content type
+  const getToneDefault = (contentType: string) => {
+    const toneMap: Record<string, string> = {
+      blog: "educational",
+      email: "warm",
+      social: "playful",
+      product: "sophisticated",
+      newsletter: "professional",
+      editorial: "intimate",
+    };
+    return toneMap[contentType] || "";
+  };
 
   const canProceed = () => {
     switch (step) {
@@ -59,14 +77,23 @@ export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardPro
       case 2:
         return data.contentType.length > 0;
       case 3:
-        return data.tone.length > 0;
+        return true; // Collection is optional (can skip)
       case 4:
-        return data.keyElements.trim().length > 0;
+        return data.tone.length > 0;
       case 5:
+        return data.keyElements.trim().length > 0;
+      case 6:
         return true; // Constraints are optional
       default:
         return false;
     }
+  };
+
+  const handleSkipCollection = () => {
+    // Auto-assign default collection
+    const defaultCollection = collections?.[0]?.name || "cadence";
+    setData({ ...data, collection: defaultCollection });
+    setStep(4); // Skip to tone step
   };
 
   const handleNext = () => {
@@ -80,6 +107,7 @@ export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardPro
       setData({
         purpose: "",
         contentType: "",
+        collection: "",
         tone: "",
         keyElements: "",
         constraints: "",
@@ -153,7 +181,9 @@ export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardPro
                         ? "border-[hsl(var(--saffron-gold))] bg-[hsl(var(--saffron-gold)/0.1)]"
                         : "hover:border-[hsl(var(--stone-beige))]"
                     }`}
-                    onClick={() => setData({ ...data, contentType: type.value })}
+                    onClick={() => {
+                      setData({ ...data, contentType: type.value, tone: getToneDefault(type.value) });
+                    }}
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{type.icon}</span>
@@ -165,8 +195,70 @@ export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardPro
             </div>
           )}
 
-          {/* Step 3: Tone */}
+          {/* Step 3: Collection (Optional) */}
           {step === 3 && (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-lg font-serif">Which collection should this belong to?</Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Organize your prompts by brand collection. You can change this later.
+                </p>
+              </div>
+              {collectionsLoading ? (
+                <div className="text-center py-8 text-muted-foreground">Loading collections...</div>
+              ) : collections && collections.length > 0 ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {collections.map((collection) => {
+                    const Icon = getCollectionIcon(collection.name);
+                    return (
+                      <Card
+                        key={collection.id}
+                        className={`p-4 cursor-pointer transition-all ${
+                          data.collection === collection.name
+                            ? "border-[hsl(var(--saffron-gold))] bg-[hsl(var(--saffron-gold)/0.1)]"
+                            : "hover:border-[hsl(var(--stone-beige))]"
+                        }`}
+                        onClick={() => setData({ ...data, collection: collection.name })}
+                      >
+                        <div className="flex items-start gap-3">
+                          {Icon && <Icon className="w-5 h-5 mt-0.5 text-[hsl(var(--saffron-gold))]" />}
+                          <div className="flex-1">
+                            <div className="font-medium capitalize">{collection.name.replace("_", " ")}</div>
+                            {collection.description && (
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                {collection.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No collections found. Create one in Settings first.</p>
+                </div>
+              )}
+              <div className="flex items-start gap-2 p-3 bg-[hsl(var(--stone-beige)/0.3)] rounded-lg">
+                <Lightbulb className="w-5 h-5 text-[hsl(var(--saffron-gold))] flex-shrink-0 mt-0.5" />
+                <p className="text-sm">
+                  💡 Not sure? Skip for now and organize later from your library.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={handleSkipCollection}
+                className="w-full gap-2"
+              >
+                <SkipForward className="w-4 h-4" />
+                Skip for now
+              </Button>
+            </div>
+          )}
+
+          {/* Step 4: Tone */}
+          {step === 4 && (
             <div className="space-y-4">
               <div>
                 <Label className="text-lg font-serif">What tone should the content have?</Label>
@@ -189,8 +281,8 @@ export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardPro
             </div>
           )}
 
-          {/* Step 4: Key Elements */}
-          {step === 4 && (
+          {/* Step 5: Key Elements */}
+          {step === 5 && (
             <div className="space-y-4">
               <div>
                 <Label className="text-lg font-serif">What key elements should always be included?</Label>
@@ -210,8 +302,8 @@ export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardPro
             </div>
           )}
 
-          {/* Step 5: Constraints */}
-          {step === 5 && (
+          {/* Step 6: Constraints */}
+          {step === 6 && (
             <div className="space-y-4">
               <div>
                 <Label className="text-lg font-serif">Any constraints or guidelines?</Label>
@@ -224,9 +316,9 @@ export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardPro
                 className="min-h-[150px] font-serif"
               />
               <div className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <Sparkles className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <Bookmark className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-green-800">
-                  🎉 Almost done! Madison will generate your custom prompt based on your answers. You can always edit it later.
+                  🎉 Almost done! We'll save this as a reusable template. You can customize it for each piece of content.
                 </p>
               </div>
             </div>
@@ -246,8 +338,8 @@ export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardPro
           >
             {step === totalSteps ? (
               <>
-                <Sparkles className="w-4 h-4" />
-                Generate Prompt
+                <Bookmark className="w-4 h-4" />
+                Save & Use Template
               </>
             ) : (
               <>

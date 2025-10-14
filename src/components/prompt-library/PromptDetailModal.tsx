@@ -1,5 +1,10 @@
-import { Sparkles, Copy, Check, Star, TrendingUp, Clock, Tag, Calendar } from "lucide-react";
+import { Sparkles, Copy, Check, Star, TrendingUp, Clock, Tag, Calendar, Edit2 } from "lucide-react";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useCollections } from "@/hooks/useCollections";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +25,7 @@ interface PromptDetailModalProps {
   open: boolean;
   onClose: () => void;
   onUse: () => void;
+  onUpdate?: () => void;
 }
 
 const collectionColors: Record<string, string> = {
@@ -34,9 +40,15 @@ const PromptDetailModal = ({
   open,
   onClose,
   onUse,
+  onUpdate,
 }: PromptDetailModalProps) => {
   const { toast } = useToast();
+  const { collections } = useCollections();
   const [copied, setCopied] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTitle, setEditedTitle] = useState(prompt.title);
+  const [editedCollection, setEditedCollection] = useState(prompt.collection);
+  const [editedTags, setEditedTags] = useState(prompt.tags?.join(", ") || "");
 
   const copyPrompt = () => {
     navigator.clipboard.writeText(prompt.prompt_text);
@@ -56,6 +68,35 @@ const PromptDetailModal = ({
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleSaveMetadata = async () => {
+    try {
+      const { error } = await supabase
+        .from("prompts")
+        .update({
+          title: editedTitle,
+          collection: editedCollection as any,
+          tags: editedTags.split(",").map(t => t.trim()).filter(Boolean),
+        })
+        .eq("id", prompt.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Prompt updated",
+        description: "Metadata has been saved successfully.",
+      });
+      setIsEditing(false);
+      onUpdate?.();
+    } catch (error) {
+      console.error("Error updating prompt:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update prompt",
+        variant: "destructive",
+      });
+    }
   };
 
   const CollectionIcon = getCollectionIcon(prompt.collection);
@@ -172,6 +213,69 @@ const PromptDetailModal = ({
 
             <Separator />
 
+            {/* Edit Metadata Section */}
+            {isEditing && (
+              <>
+                <div className="space-y-4 p-4 bg-muted/20 rounded-lg">
+                  <h4 className="text-sm font-semibold">Edit Details</h4>
+                  
+                  <div className="space-y-2">
+                    <Label>Title</Label>
+                    <Input
+                      value={editedTitle}
+                      onChange={(e) => setEditedTitle(e.target.value)}
+                      placeholder="Prompt title"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Collection</Label>
+                    <Select value={editedCollection} onValueChange={setEditedCollection}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select collection" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {collections?.map((col) => (
+                          <SelectItem key={col.id} value={col.name}>
+                            {col.name.replace("_", " ")}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Tags (comma-separated)</Label>
+                    <Input
+                      value={editedTags}
+                      onChange={(e) => setEditedTags(e.target.value)}
+                      placeholder="tag1, tag2, tag3"
+                    />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button onClick={handleSaveMetadata} size="sm" className="flex-1">
+                      Save Changes
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setIsEditing(false);
+                        setEditedTitle(prompt.title);
+                        setEditedCollection(prompt.collection);
+                        setEditedTags(prompt.tags?.join(", ") || "");
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+                <Separator />
+              </>
+            )}
+
             {/* Prompt Text */}
             <div>
               <div className="flex items-center justify-between mb-3">
@@ -207,6 +311,16 @@ const PromptDetailModal = ({
           <Button onClick={onClose} variant="outline" className="flex-1">
             Close
           </Button>
+          {!isEditing && (
+            <Button
+              onClick={() => setIsEditing(true)}
+              variant="outline"
+              className="gap-2"
+            >
+              <Edit2 className="w-4 h-4" />
+              Edit Details
+            </Button>
+          )}
           <Button
             onClick={() => {
               onUse();

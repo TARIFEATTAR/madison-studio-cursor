@@ -17,6 +17,7 @@ interface PlaceholderReplacementDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   promptText: string;
+  wizardDefaults?: Record<string, string>;
   onConfirm: (replacedText: string, placeholderValues: Record<string, string>) => void;
 }
 
@@ -24,16 +25,25 @@ interface PlaceholderReplacementDialogProps {
  * Extract placeholders from prompt text
  * Matches patterns like {{PLACEHOLDER_NAME}}
  */
-function extractPlaceholders(text: string): PlaceholderValue[] {
+function extractPlaceholders(text: string, wizardDefaults?: Record<string, string>): PlaceholderValue[] {
   const regex = /\{\{([A-Z_]+)\}\}/g;
   const matches = [...text.matchAll(regex)];
   const uniqueKeys = [...new Set(matches.map(m => m[1]))];
   
+  // Map placeholder keys to wizard_defaults keys
+  const keyMap: Record<string, string> = {
+    "CONTENT_TYPE": "content_type",
+    "PURPOSE": "purpose",
+    "TONE": "tone",
+    "KEY_ELEMENTS": "key_elements",
+    "CONSTRAINTS": "constraints",
+  };
+  
   return uniqueKeys.map(key => ({
     key,
     label: formatPlaceholderLabel(key),
-    value: "",
-    multiline: key.includes("ELEMENTS") || key.includes("CONSTRAINTS") || key.includes("INSTRUCTIONS")
+    value: (wizardDefaults && wizardDefaults[keyMap[key]]) || "",
+    multiline: key.includes("ELEMENTS") || key.includes("CONSTRAINTS") || key.includes("INSTRUCTIONS") || key.includes("PURPOSE")
   }));
 }
 
@@ -63,6 +73,7 @@ export function PlaceholderReplacementDialog({
   open,
   onOpenChange,
   promptText,
+  wizardDefaults,
   onConfirm
 }: PlaceholderReplacementDialogProps) {
   const [placeholders, setPlaceholders] = useState<PlaceholderValue[]>([]);
@@ -70,10 +81,10 @@ export function PlaceholderReplacementDialog({
 
   useEffect(() => {
     if (open) {
-      const extracted = extractPlaceholders(promptText);
+      const extracted = extractPlaceholders(promptText, wizardDefaults);
       setPlaceholders(extracted);
     }
-  }, [open, promptText]);
+  }, [open, promptText, wizardDefaults]);
 
   useEffect(() => {
     // Check if all placeholders have values
