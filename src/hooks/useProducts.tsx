@@ -2,15 +2,35 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useOnboarding } from './useOnboarding';
 
+export type ProductCategory = 'personal_fragrance' | 'home_fragrance' | 'skincare';
+
 export interface Product {
   id: string;
   name: string;
+  category: ProductCategory;
   product_type: string | null;
   collection: string | null;
+  
+  // Personal Fragrance specific
   scentFamily: string | null;
   topNotes: string | null;
   middleNotes: string | null;
   baseNotes: string | null;
+  
+  // Home Fragrance specific
+  scentProfile: string | null;
+  format: string | null;
+  burnTime: string | null;
+  
+  // Skincare specific
+  keyIngredients: string | null;
+  benefits: string | null;
+  usage: string | null;
+  formulationType: string | null;
+  
+  // Universal fields
+  usp: string | null;
+  tone: string | null;
 }
 
 export const useProducts = () => {
@@ -38,12 +58,30 @@ export const useProducts = () => {
       const formattedProducts: Product[] = (data || []).map((p) => ({
         id: p.id,
         name: p.name,
+        category: (p.category || 'personal_fragrance') as ProductCategory,
         product_type: p.product_type,
         collection: p.collection,
+        
+        // Personal Fragrance
         scentFamily: p.scent_family,
         topNotes: p.top_notes,
         middleNotes: p.middle_notes,
         baseNotes: p.base_notes,
+        
+        // Home Fragrance
+        scentProfile: p.scent_profile,
+        format: p.format,
+        burnTime: p.burn_time,
+        
+        // Skincare
+        keyIngredients: p.key_ingredients,
+        benefits: p.benefits,
+        usage: p.usage,
+        formulationType: p.formulation_type,
+        
+        // Universal
+        usp: p.usp,
+        tone: p.tone,
       }));
 
       setProducts(formattedProducts);

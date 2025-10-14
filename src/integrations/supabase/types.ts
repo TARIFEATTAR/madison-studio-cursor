@@ -168,42 +168,72 @@ export type Database = {
       brand_products: {
         Row: {
           base_notes: string | null
+          benefits: string | null
+          burn_time: string | null
+          category: string | null
           collection: string | null
           created_at: string
+          format: string | null
+          formulation_type: string | null
           id: string
+          key_ingredients: string | null
           middle_notes: string | null
           name: string
           organization_id: string
           product_type: string | null
           scent_family: string | null
+          scent_profile: string | null
+          tone: string | null
           top_notes: string | null
           updated_at: string
+          usage: string | null
+          usp: string | null
         }
         Insert: {
           base_notes?: string | null
+          benefits?: string | null
+          burn_time?: string | null
+          category?: string | null
           collection?: string | null
           created_at?: string
+          format?: string | null
+          formulation_type?: string | null
           id?: string
+          key_ingredients?: string | null
           middle_notes?: string | null
           name: string
           organization_id: string
           product_type?: string | null
           scent_family?: string | null
+          scent_profile?: string | null
+          tone?: string | null
           top_notes?: string | null
           updated_at?: string
+          usage?: string | null
+          usp?: string | null
         }
         Update: {
           base_notes?: string | null
+          benefits?: string | null
+          burn_time?: string | null
+          category?: string | null
           collection?: string | null
           created_at?: string
+          format?: string | null
+          formulation_type?: string | null
           id?: string
+          key_ingredients?: string | null
           middle_notes?: string | null
           name?: string
           organization_id?: string
           product_type?: string | null
           scent_family?: string | null
+          scent_profile?: string | null
+          tone?: string | null
           top_notes?: string | null
           updated_at?: string
+          usage?: string | null
+          usp?: string | null
         }
         Relationships: [
           {

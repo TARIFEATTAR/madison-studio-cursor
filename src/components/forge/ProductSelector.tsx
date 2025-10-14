@@ -9,9 +9,10 @@ import { useProducts, type Product } from "@/hooks/useProducts";
 interface ProductSelectorProps {
   value: string;
   onSelect: (product: Product) => void;
+  onProductDataChange?: (productData: Product | null) => void;
 }
 
-export function ProductSelector({ value, onSelect }: ProductSelectorProps) {
+export function ProductSelector({ value, onSelect, onProductDataChange }: ProductSelectorProps) {
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const { products, loading } = useProducts();
@@ -57,6 +58,7 @@ export function ProductSelector({ value, onSelect }: ProductSelectorProps) {
                     value={product.name}
                     onSelect={() => {
                       onSelect(product);
+                      onProductDataChange?.(product);
                       setOpen(false);
                       setSearchValue("");
                     }}

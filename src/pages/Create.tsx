@@ -35,6 +35,7 @@ export default function Create() {
   
   // Form state
   const [product, setProduct] = useState("");
+  const [productData, setProductData] = useState<any>(null);
   const [format, setFormat] = useState("");
   const [audience, setAudience] = useState("");
   const [goal, setGoal] = useState("");
@@ -111,6 +112,7 @@ export default function Create() {
   const handleGenerateContent = async (contentName: string) => {
     const briefData = {
       productId: product,
+      productData,
       deliverableFormat: format,
       targetAudience: audience,
       contentGoal: goal,
@@ -171,7 +173,8 @@ export default function Create() {
           prompt: fullPrompt,
           organizationId: currentOrganizationId,
           mode: "generate",
-          styleOverlay: style.toUpperCase().replace(/-/g, '_')
+          styleOverlay: style.toUpperCase().replace(/-/g, '_'),
+          productData
         }
       });
 
@@ -615,7 +618,15 @@ export default function Create() {
               <Label htmlFor="product" className="text-base mb-2 text-ink-black">
                 Product <span className="text-brass">*</span>
               </Label>
-              <Select value={product} onValueChange={setProduct} disabled={productsLoading || products.length === 0}>
+              <Select 
+                value={product} 
+                onValueChange={(value) => {
+                  setProduct(value);
+                  const selectedProduct = products.find(p => p.name === value);
+                  setProductData(selectedProduct || null);
+                }}
+                disabled={productsLoading || products.length === 0}
+              >
                 <SelectTrigger
                   id="product"
                   className="mt-2 bg-parchment-white border-warm-gray/20"

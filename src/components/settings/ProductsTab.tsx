@@ -6,6 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -32,17 +39,21 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2, AlertCircle, Upload } from "lucide-react";
-import { useProducts, Product } from "@/hooks/useProducts";
+import { useProducts, Product, ProductCategory } from "@/hooks/useProducts";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useIndustryConfig, isFragranceIndustry } from "@/hooks/useIndustryConfig";
+
+const CATEGORY_LABELS: Record<ProductCategory, string> = {
+  personal_fragrance: "Personal Fragrance",
+  home_fragrance: "Home Fragrance",
+  skincare: "Skincare / Beauty"
+};
 
 export function ProductsTab() {
   const { toast } = useToast();
   const { products, loading, refetch } = useProducts();
   const { currentOrganizationId } = useOnboarding();
-  const { industryConfig } = useIndustryConfig(currentOrganizationId);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -51,26 +62,50 @@ export function ProductsTab() {
   const [searchFilter, setSearchFilter] = useState("");
   const [isImporting, setIsImporting] = useState(false);
 
-  // Form state
+  // Form state - category-aware
   const [formData, setFormData] = useState({
+    category: "personal_fragrance" as ProductCategory,
     name: "",
     product_type: "",
     collection: "",
+    // Universal
+    usp: "",
+    tone: "",
+    // Personal Fragrance
     scent_family: "",
     top_notes: "",
     middle_notes: "",
     base_notes: "",
+    // Home Fragrance
+    scent_profile: "",
+    format: "",
+    burn_time: "",
+    // Skincare
+    key_ingredients: "",
+    benefits: "",
+    usage: "",
+    formulation_type: "",
   });
 
   const resetForm = () => {
     setFormData({
+      category: "personal_fragrance",
       name: "",
       product_type: "",
       collection: "",
+      usp: "",
+      tone: "",
       scent_family: "",
       top_notes: "",
       middle_notes: "",
       base_notes: "",
+      scent_profile: "",
+      format: "",
+      burn_time: "",
+      key_ingredients: "",
+      benefits: "",
+      usage: "",
+      formulation_type: "",
     });
   };
 
@@ -81,13 +116,23 @@ export function ProductsTab() {
 
   const handleEdit = (product: Product) => {
     setFormData({
+      category: product.category,
       name: product.name,
       product_type: product.product_type || "",
       collection: product.collection || "",
+      usp: product.usp || "",
+      tone: product.tone || "",
       scent_family: product.scentFamily || "",
       top_notes: product.topNotes || "",
       middle_notes: product.middleNotes || "",
       base_notes: product.baseNotes || "",
+      scent_profile: product.scentProfile || "",
+      format: product.format || "",
+      burn_time: product.burnTime || "",
+      key_ingredients: product.keyIngredients || "",
+      benefits: product.benefits || "",
+      usage: product.usage || "",
+      formulation_type: product.formulationType || "",
     });
     setEditingProduct(product);
   };
@@ -96,18 +141,32 @@ export function ProductsTab() {
     if (!currentOrganizationId || !formData.name.trim()) return;
 
     try {
-      const productData = {
+      const productData: any = {
         organization_id: currentOrganizationId,
+        category: formData.category,
         name: formData.name.trim(),
         product_type: formData.product_type.trim() || null,
         collection: formData.collection.trim() || null,
-        scent_family: isFragranceIndustry(industryConfig?.id) 
-          ? (formData.scent_family.trim() || null) 
-          : null,
-        top_notes: formData.top_notes.trim() || null,
-        middle_notes: formData.middle_notes.trim() || null,
-        base_notes: formData.base_notes.trim() || null,
+        usp: formData.usp.trim() || null,
+        tone: formData.tone.trim() || null,
       };
+
+      // Add category-specific fields
+      if (formData.category === 'personal_fragrance') {
+        productData.scent_family = formData.scent_family.trim() || null;
+        productData.top_notes = formData.top_notes.trim() || null;
+        productData.middle_notes = formData.middle_notes.trim() || null;
+        productData.base_notes = formData.base_notes.trim() || null;
+      } else if (formData.category === 'home_fragrance') {
+        productData.scent_profile = formData.scent_profile.trim() || null;
+        productData.format = formData.format.trim() || null;
+        productData.burn_time = formData.burn_time.trim() || null;
+      } else if (formData.category === 'skincare') {
+        productData.key_ingredients = formData.key_ingredients.trim() || null;
+        productData.benefits = formData.benefits.trim() || null;
+        productData.usage = formData.usage.trim() || null;
+        productData.formulation_type = formData.formulation_type.trim() || null;
+      }
 
       if (editingProduct) {
         const { error } = await supabase
@@ -196,8 +255,21 @@ export function ProductsTab() {
           }
         });
         
+        // Auto-detect category if not provided
+        if (!product.category) {
+          if (product.top_notes || product.middle_notes || product.base_notes) {
+            product.category = 'personal_fragrance';
+          } else if (product.format || product.burn_time) {
+            product.category = 'home_fragrance';
+          } else if (product.key_ingredients || product.benefits) {
+            product.category = 'skincare';
+          } else {
+            product.category = 'personal_fragrance';
+          }
+        }
+        
         return product;
-      }).filter(p => p.name); // Only include rows with a name
+      }).filter(p => p.name);
 
       if (products.length === 0) {
         toast({
@@ -241,33 +313,15 @@ export function ProductsTab() {
     (p.product_type?.toLowerCase() || "").includes(searchFilter.toLowerCase())
   );
 
-  const incompleteCount = isFragranceIndustry(industryConfig?.id)
-    ? products.filter(
-        (p) => !p.scentFamily || !p.topNotes || !p.middleNotes || !p.baseNotes
-      ).length
-    : 0;
-
-  const isIncomplete = (product: Product) => {
-    if (isFragranceIndustry(industryConfig?.id)) {
-      return !product.scentFamily || !product.topNotes || !product.middleNotes || !product.baseNotes;
-    }
-    return false;
-  };
-
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-            <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between">
             <div>
               <CardTitle>Products Library</CardTitle>
               <CardDescription>
-                {products.length} product{products.length === 1 ? "" : "s"}
-                {incompleteCount > 0 && (
-                  <span className="text-amber-600 ml-2">
-                    ({incompleteCount} incomplete)
-                  </span>
-                )}
+                {products.length} product{products.length === 1 ? "" : "s"} across all categories
               </CardDescription>
             </div>
             <div className="flex gap-2">
@@ -312,37 +366,24 @@ export function ProductsTab() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Collection</TableHead>
-                  {isFragranceIndustry(industryConfig?.id) && (
-                    <TableHead>Scent Family</TableHead>
-                  )}
-                  <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Collection</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredProducts.map((product) => (
                     <TableRow key={product.id} className="cursor-pointer hover:bg-muted/50">
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          {product.name}
-                          {isIncomplete(product) && (
-                            <AlertCircle className="w-4 h-4 text-amber-500" />
-                          )}
-                        </div>
+                      <TableCell className="font-medium">{product.name}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">
+                          {CATEGORY_LABELS[product.category]}
+                        </Badge>
                       </TableCell>
                       <TableCell>{product.product_type || "-"}</TableCell>
                       <TableCell>{product.collection || "-"}</TableCell>
-                      {isFragranceIndustry(industryConfig?.id) && (
-                        <TableCell>
-                          {product.scentFamily ? (
-                            <Badge variant="secondary">{product.scentFamily}</Badge>
-                          ) : (
-                            "-"
-                          )}
-                        </TableCell>
-                      )}
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button
@@ -383,10 +424,31 @@ export function ProductsTab() {
           <DialogHeader>
             <DialogTitle>{editingProduct ? "Edit Product" : "Add New Product"}</DialogTitle>
             <DialogDescription>
-              Fill in the product details. Fields marked with * are required.
+              Fill in the product details. Category determines which fields are shown.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {/* Category Selector */}
+            <div className="space-y-2">
+              <Label htmlFor="category">Product Category *</Label>
+              <Select
+                value={formData.category}
+                onValueChange={(value: ProductCategory) => 
+                  setFormData({ ...formData, category: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="personal_fragrance">Personal Fragrance (Perfumes, Attars, Oils)</SelectItem>
+                  <SelectItem value="home_fragrance">Home Fragrance (Candles, Diffusers, Sprays)</SelectItem>
+                  <SelectItem value="skincare">Skincare / Beauty (Serums, Creams, Balms)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Universal Fields */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Product Name *</Label>
@@ -403,7 +465,11 @@ export function ProductsTab() {
                   id="product_type"
                   value={formData.product_type}
                   onChange={(e) => setFormData({ ...formData, product_type: e.target.value })}
-                  placeholder="e.g., Perfume Oil, Attar..."
+                  placeholder={
+                    formData.category === 'personal_fragrance' ? 'e.g., Attar, EDP' :
+                    formData.category === 'home_fragrance' ? 'e.g., Candle, Diffuser' :
+                    'e.g., Serum, Balm'
+                  }
                 />
               </div>
             </div>
@@ -418,7 +484,30 @@ export function ProductsTab() {
                   placeholder="e.g., Cadence"
                 />
               </div>
-              {isFragranceIndustry(industryConfig?.id) && (
+              <div className="space-y-2">
+                <Label htmlFor="usp">USP (Unique Selling Point)</Label>
+                <Input
+                  id="usp"
+                  value={formData.usp}
+                  onChange={(e) => setFormData({ ...formData, usp: e.target.value })}
+                  placeholder="What makes this product special?"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tone">Brand Tone</Label>
+              <Input
+                id="tone"
+                value={formData.tone}
+                onChange={(e) => setFormData({ ...formData, tone: e.target.value })}
+                placeholder="e.g., Elegant, Playful, Luxurious"
+              />
+            </div>
+
+            {/* Personal Fragrance Fields */}
+            {formData.category === 'personal_fragrance' && (
+              <>
                 <div className="space-y-2">
                   <Label htmlFor="scent_family">Scent Family</Label>
                   <Input
@@ -428,71 +517,126 @@ export function ProductsTab() {
                     placeholder="e.g., Warm, Fresh, Woody, Floral"
                   />
                 </div>
-              )}
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="top_notes">{industryConfig?.fields[0]?.label || "Field 1"}</Label>
-              <Textarea
-                id="top_notes"
-                value={formData.top_notes}
-                onChange={(e) => {
-                  const target = e.target;
-                  const cursorPosition = target.selectionStart;
-                  const value = target.value;
-                  setFormData({ ...formData, top_notes: value });
-                  requestAnimationFrame(() => {
-                    if (target) {
-                      target.setSelectionRange(cursorPosition, cursorPosition);
-                    }
-                  });
-                }}
-                placeholder={`e.g., ${industryConfig?.fields[0]?.label || "Field 1"}`}
-                rows={2}
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="top_notes">Top Notes</Label>
+                  <Textarea
+                    id="top_notes"
+                    value={formData.top_notes}
+                    onChange={(e) => setFormData({ ...formData, top_notes: e.target.value })}
+                    placeholder="First impression notes"
+                    rows={2}
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="middle_notes">{industryConfig?.fields[1]?.label || "Field 2"}</Label>
-              <Textarea
-                id="middle_notes"
-                value={formData.middle_notes}
-                onChange={(e) => {
-                  const target = e.target;
-                  const cursorPosition = target.selectionStart;
-                  const value = target.value;
-                  setFormData({ ...formData, middle_notes: value });
-                  requestAnimationFrame(() => {
-                    if (target) {
-                      target.setSelectionRange(cursorPosition, cursorPosition);
-                    }
-                  });
-                }}
-                placeholder={`e.g., ${industryConfig?.fields[1]?.label || "Field 2"}`}
-                rows={2}
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="middle_notes">Middle Notes (Heart)</Label>
+                  <Textarea
+                    id="middle_notes"
+                    value={formData.middle_notes}
+                    onChange={(e) => setFormData({ ...formData, middle_notes: e.target.value })}
+                    placeholder="Heart of the scent"
+                    rows={2}
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="base_notes">{industryConfig?.fields[2]?.label || "Field 3"}</Label>
-              <Textarea
-                id="base_notes"
-                value={formData.base_notes}
-                onChange={(e) => {
-                  const target = e.target;
-                  const cursorPosition = target.selectionStart;
-                  const value = target.value;
-                  setFormData({ ...formData, base_notes: value });
-                  requestAnimationFrame(() => {
-                    if (target) {
-                      target.setSelectionRange(cursorPosition, cursorPosition);
-                    }
-                  });
-                }}
-                placeholder={`e.g., ${industryConfig?.fields[2]?.label || "Field 3"}`}
-                rows={2}
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="base_notes">Base Notes</Label>
+                  <Textarea
+                    id="base_notes"
+                    value={formData.base_notes}
+                    onChange={(e) => setFormData({ ...formData, base_notes: e.target.value })}
+                    placeholder="Lasting foundation"
+                    rows={2}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Home Fragrance Fields */}
+            {formData.category === 'home_fragrance' && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="scent_profile">Scent Profile</Label>
+                  <Textarea
+                    id="scent_profile"
+                    value={formData.scent_profile}
+                    onChange={(e) => setFormData({ ...formData, scent_profile: e.target.value })}
+                    placeholder="Overall scent description (avoid top/middle/base for home fragrance)"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="format">Format</Label>
+                    <Input
+                      id="format"
+                      value={formData.format}
+                      onChange={(e) => setFormData({ ...formData, format: e.target.value })}
+                      placeholder="e.g., Candle, Reed Diffuser, Room Spray"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="burn_time">Burn Time / Duration</Label>
+                    <Input
+                      id="burn_time"
+                      value={formData.burn_time}
+                      onChange={(e) => setFormData({ ...formData, burn_time: e.target.value })}
+                      placeholder="e.g., 40 hours, 3 months"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Skincare Fields */}
+            {formData.category === 'skincare' && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="key_ingredients">Key Ingredients</Label>
+                  <Textarea
+                    id="key_ingredients"
+                    value={formData.key_ingredients}
+                    onChange={(e) => setFormData({ ...formData, key_ingredients: e.target.value })}
+                    placeholder="Main active ingredients"
+                    rows={2}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="benefits">Benefits</Label>
+                  <Textarea
+                    id="benefits"
+                    value={formData.benefits}
+                    onChange={(e) => setFormData({ ...formData, benefits: e.target.value })}
+                    placeholder="e.g., Hydration, Anti-aging, Repair"
+                    rows={2}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="usage">Usage Instructions</Label>
+                    <Input
+                      id="usage"
+                      value={formData.usage}
+                      onChange={(e) => setFormData({ ...formData, usage: e.target.value })}
+                      placeholder="e.g., Daily use, Overnight"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="formulation_type">Formulation Type</Label>
+                    <Input
+                      id="formulation_type"
+                      value={formData.formulation_type}
+                      onChange={(e) => setFormData({ ...formData, formulation_type: e.target.value })}
+                      placeholder="e.g., Oil, Serum, Cream"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
           <DialogFooter>
             <Button
@@ -506,30 +650,24 @@ export function ProductsTab() {
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={!formData.name.trim()}>
-              {editingProduct ? "Update" : "Add"} Product
+              {editingProduct ? "Save Changes" : "Add Product"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Delete Confirmation */}
-      <AlertDialog
-        open={!!deleteProductId}
-        onOpenChange={(open) => !open && setDeleteProductId(null)}
-      >
+      <AlertDialog open={!!deleteProductId} onOpenChange={() => setDeleteProductId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Product?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this product from your library.
+              This will permanently remove this product from your library. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive hover:bg-destructive/90"
-            >
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

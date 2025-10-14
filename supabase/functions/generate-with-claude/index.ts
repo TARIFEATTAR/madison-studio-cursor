@@ -335,7 +335,7 @@ serve(async (req) => {
       throw new Error('ANTHROPIC_API_KEY is not configured');
     }
 
-    const { prompt, organizationId, mode = "generate", styleOverlay = "TARIFE_NATIVE" } = await req.json();
+    const { prompt, organizationId, mode = "generate", styleOverlay = "TARIFE_NATIVE", productData } = await req.json();
 
     console.log('Generating content with Claude for prompt:', prompt.substring(0, 100));
     console.log('Mode:', mode);
@@ -343,9 +343,95 @@ serve(async (req) => {
     if (organizationId) {
       console.log('Organization ID provided:', organizationId);
     }
+    if (productData) {
+      console.log('Product category:', productData.category);
+    }
 
     // Build brand-aware system prompt based on mode
     let systemPrompt = '';
+    
+    // Category-specific prompt templates
+    const CATEGORY_PROMPTS = {
+      personal_fragrance: (product: any) => `
+╔══════════════════════════════════════════════════════════════════╗
+║           PRODUCT CATEGORY: PERSONAL FRAGRANCE                    ║
+╚══════════════════════════════════════════════════════════════════╝
+
+PRODUCT METADATA (USE EXACTLY AS PROVIDED):
+• Product Name: ${product.name}
+• Collection: ${product.collection || 'Not specified'}
+• Product Type: ${product.product_type || 'Not specified'}
+
+FRAGRANCE STRUCTURE:
+• Scent Family: ${product.scentFamily || 'Not specified'}
+• Top Notes: ${product.topNotes || 'Not specified'} (first impression)
+• Middle Notes: ${product.middleNotes || 'Not specified'} (heart of the scent)
+• Base Notes: ${product.baseNotes || 'Not specified'} (lasting foundation)
+
+BRAND POSITIONING:
+• USP: ${product.usp || 'Not specified'}
+• Brand Tone: ${product.tone || 'Not specified'}
+
+⚠️ CRITICAL INSTRUCTIONS:
+- Use fragrance pyramid language (top/middle/base notes)
+- DO NOT invent additional notes or modify the scent profile
+- DO NOT mention bottle sizes unless explicitly provided
+- Maintain the exact product name and collection as shown above
+`,
+      
+      home_fragrance: (product: any) => `
+╔══════════════════════════════════════════════════════════════════╗
+║              PRODUCT CATEGORY: HOME FRAGRANCE                     ║
+╚══════════════════════════════════════════════════════════════════╝
+
+PRODUCT METADATA (USE EXACTLY AS PROVIDED):
+• Product Name: ${product.name}
+• Collection: ${product.collection || 'Not specified'}
+• Product Type: ${product.product_type || 'Not specified'}
+• Format: ${product.format || 'Not specified'} (candle, diffuser, spray, etc.)
+
+SCENT DETAILS:
+• Overall Scent Profile: ${product.scentProfile || 'Not specified'}
+• Burn Time / Duration: ${product.burnTime || 'Not specified'}
+
+BRAND POSITIONING:
+• USP: ${product.usp || 'Not specified'}
+• Brand Tone: ${product.tone || 'Not specified'}
+
+⚠️ CRITICAL INSTRUCTIONS:
+- DO NOT use perfume pyramid language (top/middle/base notes) for home fragrance
+- Describe the scent holistically, not in layers
+- DO NOT invent additional product details or sizes
+- Maintain the exact product name and collection as shown above
+`,
+      
+      skincare: (product: any) => `
+╔══════════════════════════════════════════════════════════════════╗
+║           PRODUCT CATEGORY: SKINCARE / BEAUTY                     ║
+╚══════════════════════════════════════════════════════════════════╝
+
+PRODUCT METADATA (USE EXACTLY AS PROVIDED):
+• Product Name: ${product.name}
+• Collection: ${product.collection || 'Not specified'}
+• Product Type: ${product.product_type || 'Not specified'}
+• Formulation Type: ${product.formulationType || 'Not specified'}
+
+FORMULA DETAILS:
+• Key Ingredients: ${product.keyIngredients || 'Not specified'}
+• Benefits: ${product.benefits || 'Not specified'}
+• Usage Instructions: ${product.usage || 'Not specified'}
+
+BRAND POSITIONING:
+• USP: ${product.usp || 'Not specified'}
+• Brand Tone: ${product.tone || 'Not specified'}
+
+⚠️ CRITICAL INSTRUCTIONS:
+- DO NOT use fragrance notes language for skincare products
+- Focus on ingredients, benefits, and results
+- DO NOT invent ingredients, benefits, or sizes
+- Maintain the exact product name and collection as shown above
+`
+    };
     
     // Build style overlay instructions
     const styleOverlayInstructions = {
@@ -436,6 +522,15 @@ TONE:
     // Fetch Madison's system-wide training first
     const madisonSystemConfig = await getMadisonSystemConfig();
     
+    // Build category-specific product context
+    let productContext = '';
+    if (productData && productData.category) {
+      const categoryPromptBuilder = CATEGORY_PROMPTS[productData.category as keyof typeof CATEGORY_PROMPTS];
+      if (categoryPromptBuilder) {
+        productContext = categoryPromptBuilder(productData);
+      }
+    }
+    
     // Fetch and inject brand context if organization ID provided
     if (organizationId) {
       const brandContext = await buildBrandContext(organizationId);
@@ -446,6 +541,8 @@ TONE:
           systemPrompt = `${madisonSystemConfig}
 
 ${brandContext}
+
+${productContext}
 
 ${selectedStyleOverlay}
 
