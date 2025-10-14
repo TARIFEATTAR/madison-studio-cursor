@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +25,7 @@ export interface WizardData {
   tone: string;
   keyElements: string;
   constraints: string;
+  category?: string;
   refinedPrompt?: string;
 }
 
@@ -75,18 +76,72 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<WizardData>({
-    purpose: initialData?.purpose || "",
-    contentType: initialData?.contentType || "",
-    collection: initialData?.collection || "",
-    tone: initialData?.tone || "",
-    keyElements: initialData?.keyElements || "",
-    constraints: initialData?.constraints || "",
+    purpose: "",
+    contentType: "",
+    collection: "",
+    tone: "",
+    keyElements: "",
+    constraints: "",
+    category: "",
   });
   const [refinedPrompt, setRefinedPrompt] = useState<string>("");
   const [isRefining, setIsRefining] = useState(false);
 
+  // Hydrate wizard when it opens with initialData
+  useEffect(() => {
+    if (open && initialData) {
+      setData({
+        purpose: initialData.purpose || "",
+        contentType: initialData.contentType || "",
+        collection: initialData.collection || "",
+        tone: initialData.tone || "",
+        keyElements: initialData.keyElements || "",
+        constraints: initialData.constraints || "",
+        category: initialData.category || "",
+      });
+
+      // Jump to first unanswered step
+      if (initialData.purpose && !initialData.contentType) {
+        setStep(2);
+      } else if (initialData.contentType && !initialData.tone) {
+        setStep(4);
+      } else if (initialData.tone && !initialData.keyElements) {
+        setStep(5);
+      } else if (initialData.keyElements && !initialData.constraints) {
+        setStep(6);
+      } else if (initialData.purpose && initialData.contentType) {
+        setStep(2);
+      }
+    } else if (!open) {
+      // Reset when closing
+      setStep(1);
+      setData({
+        purpose: "",
+        contentType: "",
+        collection: "",
+        tone: "",
+        keyElements: "",
+        constraints: "",
+        category: "",
+      });
+      setRefinedPrompt("");
+      setIsRefining(false);
+    }
+  }, [open, initialData]);
+
   const totalSteps = 7;
   const progress = (step / totalSteps) * 100;
+  
+  const getStepLabel = () => {
+    if (step === 7) return "Review & Refine";
+    if (step === 3) return "Optional: Collection";
+    if (step === 1) return "Step 1 of 5";
+    if (step === 2) return "Step 2 of 5";
+    if (step === 4) return "Step 3 of 5";
+    if (step === 5) return "Step 4 of 5";
+    if (step === 6) return "Step 5 of 5";
+    return "Build Your Template";
+  };
 
   // Get smart tone default based on content type
   const getToneDefault = (contentType: string) => {
@@ -221,7 +276,7 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
             <div>
               <DialogTitle className="text-2xl font-serif">Prompt Builder Wizard</DialogTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Step {step} of {totalSteps} • {step === 7 ? "Review & Refine" : "Build Your Template"}
+                {getStepLabel()} • Build Your Template
               </p>
             </div>
           </div>

@@ -1,9 +1,12 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Sparkles, Library, Upload, Star } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { useState } from "react";
 
 interface QuickStartModalProps {
   open: boolean;
@@ -33,6 +36,26 @@ export function QuickStartModal({
   onShowImport,
 }: QuickStartModalProps) {
   const { currentOrganizationId } = useOnboarding();
+  const [showAllTemplates, setShowAllTemplates] = useState(false);
+
+  // Fetch organization's active product categories
+  const { data: activeCategories } = useQuery({
+    queryKey: ['active-categories', currentOrganizationId],
+    queryFn: async () => {
+      if (!currentOrganizationId) return [];
+      
+      const { data, error } = await supabase
+        .from('brand_products')
+        .select('category')
+        .eq('organization_id', currentOrganizationId);
+
+      if (error) throw error;
+      
+      const categories = [...new Set(data?.map(p => p.category).filter(Boolean))];
+      return categories;
+    },
+    enabled: !!currentOrganizationId && open,
+  });
 
   // Fetch user's most-used prompts for "Favorites" section
   const { data: favoritePrompts = [] } = useQuery({
@@ -51,6 +74,15 @@ export function QuickStartModal({
     },
     enabled: !!currentOrganizationId && open,
   });
+
+  // Filter Quick Templates by active categories
+  const filteredTemplates = showAllTemplates 
+    ? QUICK_TEMPLATES 
+    : QUICK_TEMPLATES.filter(template => {
+        if (template.category === 'universal') return true;
+        if (!activeCategories || activeCategories.length === 0) return true;
+        return activeCategories.includes(template.category || '');
+      });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -139,6 +171,7 @@ export function QuickStartModal({
                         tone: (prompt.meta_instructions?.wizard_defaults?.tone || "sophisticated"),
                         keyElements: (prompt.meta_instructions?.wizard_defaults?.key_elements || ""),
                         constraints: (prompt.meta_instructions?.wizard_defaults?.constraints || ""),
+                        category: (prompt.meta_instructions?.wizard_defaults?.category || ""),
                       };
                       onStartWizard(templateData);
                       onOpenChange(false);
@@ -161,9 +194,21 @@ export function QuickStartModal({
 
           {/* Quick Templates Section */}
           <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t">
-            <h3 className="text-base sm:text-lg font-serif mb-3 sm:mb-4">Quick Templates</h3>
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-serif">Quick Templates</h3>
+              {activeCategories && activeCategories.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAllTemplates(!showAllTemplates)}
+                  className="text-xs h-7"
+                >
+                  {showAllTemplates ? "Show Relevant" : "Show All"}
+                </Button>
+              )}
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {QUICK_TEMPLATES.map((template) => (
+              {filteredTemplates.map((template) => (
                 <Card
                   key={template.title}
                   className="p-3 sm:p-4 cursor-pointer transition-all hover:shadow-md hover:border-[hsl(var(--saffron-gold))]"
@@ -182,8 +227,15 @@ export function QuickStartModal({
                   }}
                 >
                   <div className="flex items-start gap-2 sm:gap-3">
-                    <span className="text-xl sm:text-2xl">{template.emoji}</span>
                     <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xl sm:text-2xl">{template.emoji}</span>
+                        {template.category && template.category !== 'universal' && (
+                          <Badge variant="outline" className="text-[10px] sm:text-xs">
+                            {template.category.replace('_', ' ')}
+                          </Badge>
+                        )}
+                      </div>
                       <h4 className="font-medium text-xs sm:text-sm mb-1">{template.title}</h4>
                       <p className="text-[10px] sm:text-xs text-muted-foreground">{template.description}</p>
                     </div>

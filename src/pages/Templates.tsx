@@ -21,6 +21,7 @@ import { PromptCard } from "@/components/prompt-library/PromptCard";
 import PromptDetailModal from "@/components/prompt-library/PromptDetailModal";
 import { QuickStartModal } from "@/components/prompt-library/QuickStartModal";
 import { PromptWizard, WizardData } from "@/components/prompt-library/PromptWizard";
+import { TemplatePicker } from "@/components/prompt-library/TemplatePicker";
 import { ImportDialog } from "@/components/prompt-library/ImportDialog";
 import { OrganizationGuide } from "@/components/prompt-library/OrganizationGuide";
 import { MadisonPanel } from "@/components/prompt-library/MadisonPanel";
@@ -73,6 +74,7 @@ const TemplatesContent = () => {
   // Modal states
   const [showQuickStart, setShowQuickStart] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [showMadison, setShowMadison] = useState(false);
@@ -192,6 +194,7 @@ const TemplatesContent = () => {
               key_elements: wizardData.keyElements,
               constraints: wizardData.constraints,
               collection: wizardData.collection,
+              category: wizardData.category,
             },
             refinement_timestamp: new Date().toISOString(),
           } as any,
@@ -591,10 +594,20 @@ const TemplatesContent = () => {
         }}
         onShowTemplates={() => {
           setShowQuickStart(false);
+          setShowTemplatePicker(true);
         }}
         onShowImport={() => {
           setShowQuickStart(false);
           setShowImport(true);
+        }}
+      />
+
+      <TemplatePicker
+        open={showTemplatePicker}
+        onOpenChange={setShowTemplatePicker}
+        onPick={(templateData) => {
+          setWizardInitialData(templateData);
+          setShowWizard(true);
         }}
       />
 
