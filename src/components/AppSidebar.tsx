@@ -132,7 +132,7 @@ export function AppSidebar() {
         {/* Header */}
         <SidebarHeader className="border-b border-white/10 p-0">
           {open && (
-            <div className="px-4 pt-6 pb-4 flex items-center justify-between">
+            <div className="px-4 pt-6 pb-4 flex items-start justify-between">
               <NavLink to="/dashboard" className="flex items-center gap-3 group">
                 <img 
                   src={madisonLogo} 
@@ -143,7 +143,7 @@ export function AppSidebar() {
               </NavLink>
               <button 
                 onClick={toggleSidebar}
-                className="relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(38,33%,56%)]/50 rounded-lg"
+                className="relative group mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(38,33%,56%)]/50 rounded-lg"
                 aria-label="Collapse sidebar"
               >
                 <div className="relative w-8 h-8 rounded-lg border border-[hsl(38,33%,56%)]/30 bg-white/5 flex items-center justify-center transition-all duration-200 group-hover:border-[hsl(38,33%,56%)] group-hover:bg-white/10 group-hover:shadow-[0_0_12px_rgba(184,149,106,0.3)]">
