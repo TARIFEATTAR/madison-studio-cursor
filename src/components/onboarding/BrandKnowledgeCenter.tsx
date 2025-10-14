@@ -152,12 +152,16 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
 
   const handleFilesAdded = (files: FileList | File[]) => {
     const fileArray = Array.from(files);
-    const pdfFiles = fileArray.filter(file => file.type === 'application/pdf');
+    const supportedFiles = fileArray.filter(file =>
+      file.type === 'application/pdf' ||
+      file.type.startsWith('text/') ||
+      /\.(md|markdown)$/i.test(file.name)
+    );
 
-    if (pdfFiles.length === 0) {
+    if (supportedFiles.length === 0) {
       toast({
-        title: "Invalid File Type",
-        description: "Please upload PDF files only.",
+        title: "Unsupported File Type",
+        description: "Please upload PDF or text/markdown files.",
         variant: "destructive",
       });
       return;
@@ -166,9 +170,9 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
     // Add new files to staging area, avoiding duplicates
     setStagedFiles(prev => {
       const existingNames = new Set(prev.map(f => f.name));
-      const newFiles = pdfFiles.filter(f => !existingNames.has(f.name));
+      const newFiles = supportedFiles.filter(f => !existingNames.has(f.name));
       
-      if (newFiles.length < pdfFiles.length) {
+      if (newFiles.length < supportedFiles.length) {
         toast({
           title: "Duplicate Files Skipped",
           description: "Some files were already added.",
@@ -609,7 +613,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
             <div className="space-y-2">
               <Label className="text-foreground">Brand Documents</Label>
               <p className="text-xs text-muted-foreground">
-                Upload PDFs containing brand guidelines, style guides, or documentation.
+                Upload PDFs or text files (.txt, .md) containing brand guidelines, style guides, or documentation.
               </p>
               
               <div
@@ -627,7 +631,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
               >
                 <input
                   type="file"
-                  accept=".pdf"
+                  accept=".pdf,.txt,.md,.markdown,text/plain,text/markdown"
                   multiple
                   onChange={handleFileInputChange}
                   disabled={isProcessing}
@@ -638,7 +642,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
                   <FileUp className="h-12 w-12 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium text-foreground">
-                      {isDragging ? 'Drop files here' : 'Drag & drop PDFs here'}
+                      {isDragging ? 'Drop files here' : 'Drag & drop PDFs or .txt/.md here'}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       or click to browse • Max 20MB per file

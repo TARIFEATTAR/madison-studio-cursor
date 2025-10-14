@@ -36,7 +36,7 @@ export function BrandDocumentStatus({ organizationId, documents, onRetry }: Bran
       if (updateError) throw updateError;
 
       // Trigger reprocessing
-      const { error: functionError } = await supabase.functions.invoke('process-brand-document', {
+      const { data: invokeData, error: functionError } = await supabase.functions.invoke('process-brand-document', {
         body: { documentId }
       });
 
@@ -50,7 +50,15 @@ export function BrandDocumentStatus({ organizationId, documents, onRetry }: Bran
           })
           .eq('id', documentId);
         
-        throw functionError;
+        // Try to fetch error details saved by the function
+        const { data: doc } = await supabase
+          .from('brand_documents')
+          .select('content_preview')
+          .eq('id', documentId)
+          .maybeSingle();
+        
+        const details = doc?.content_preview || functionError.message;
+        throw new Error(details);
       }
 
       toast({
