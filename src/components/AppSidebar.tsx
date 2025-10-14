@@ -3,6 +3,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import madisonLogo from "@/assets/madison-logo-icon.png";
 import {
   Sidebar,
   SidebarContent,
@@ -131,7 +132,15 @@ export function AppSidebar() {
         {/* Header */}
         <SidebarHeader className="border-b border-white/10 p-0">
           {open && (
-            <div className="px-4 pb-4 flex justify-end">
+            <div className="px-4 pt-6 pb-4 flex items-center justify-between">
+              <NavLink to="/dashboard" className="flex items-center gap-3 group">
+                <img 
+                  src={madisonLogo} 
+                  alt="Madison Script" 
+                  className="w-10 h-10 shrink-0 transition-transform duration-200 group-hover:scale-105"
+                />
+                <span className="font-serif text-xl text-white tracking-wide">Madison Script</span>
+              </NavLink>
               <button 
                 onClick={toggleSidebar}
                 className="relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(38,33%,56%)]/50 rounded-lg"
@@ -145,7 +154,14 @@ export function AppSidebar() {
           )}
           
           {!open && (
-            <div className="px-2 pb-4">
+            <div className="px-2 pt-6 pb-4 flex flex-col items-center gap-3">
+              <NavLink to="/dashboard" className="group">
+                <img 
+                  src={madisonLogo} 
+                  alt="Madison Script" 
+                  className="w-10 h-10 transition-transform duration-200 group-hover:scale-105"
+                />
+              </NavLink>
               <button
                 onClick={toggleSidebar}
                 className="group w-full h-10 rounded-lg transition-all duration-200 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(38,33%,56%)]/50 border border-[hsl(38,33%,56%)]/30 bg-white/5 hover:border-[hsl(38,33%,56%)] hover:bg-white/10 hover:shadow-[0_0_12px_rgba(184,149,106,0.3)]"
