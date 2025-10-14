@@ -25,11 +25,36 @@ export interface WizardData {
 }
 
 const CONTENT_TYPES = [
-  { value: "blog", label: "📝 Blog Post", icon: "📝" },
-  { value: "email", label: "📧 Email", icon: "📧" },
-  { value: "social", label: "📱 Social Media", icon: "📱" },
-  { value: "product", label: "🏷️ Product Description", icon: "🏷️" },
-  { value: "visual", label: "🎨 Visual Asset", icon: "🎨" },
+  { 
+    value: "blog", 
+    label: "📝 Blog Post", 
+    icon: "📝",
+    description: "SEO-rich, long-form content (800-2000+ words)"
+  },
+  { 
+    value: "email", 
+    label: "📧 Email", 
+    icon: "📧",
+    description: "Email campaigns, newsletters, sequences"
+  },
+  { 
+    value: "social", 
+    label: "📱 Social Media", 
+    icon: "📱",
+    description: "Instagram, LinkedIn, Twitter/X posts"
+  },
+  { 
+    value: "product", 
+    label: "🏷️ Product Description", 
+    icon: "🏷️",
+    description: "Product pages, descriptions, features"
+  },
+  { 
+    value: "visual", 
+    label: "🎨 Visual Asset", 
+    icon: "🎨",
+    description: "Image prompts, graphics, visual content"
+  },
 ];
 
 const TONES = [
@@ -183,9 +208,12 @@ export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardPro
                       setData({ ...data, contentType: type.value, tone: getToneDefault(type.value) });
                     }}
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{type.icon}</span>
-                      <span className="font-medium">{type.label.replace(/^.+ /, "")}</span>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{type.icon}</span>
+                        <span className="font-medium">{type.label.replace(/^.+ /, "")}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{type.description}</p>
                     </div>
                   </Card>
                 ))}

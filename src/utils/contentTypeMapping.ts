@@ -1,11 +1,8 @@
 import { 
   BookOpen, 
   Mail, 
-  FileText, 
-  Megaphone, 
-  Instagram, 
   ShoppingBag, 
-  MessageSquare,
+  Instagram, 
   Image,
   LucideIcon 
 } from "lucide-react";
@@ -19,7 +16,7 @@ export interface ContentTypeMapping {
 export const contentTypeMapping: ContentTypeMapping[] = [
   {
     name: "Blog",
-    keys: ["blog_post"],
+    keys: ["blog_post", "blog"],
     icon: BookOpen,
   },
   {
@@ -28,24 +25,14 @@ export const contentTypeMapping: ContentTypeMapping[] = [
     icon: Mail,
   },
   {
-    name: "Product Stories",
-    keys: ["product_story"],
-    icon: FileText,
-  },
-  {
-    name: "Brand Announcements",
-    keys: ["brand_announcement"],
-    icon: Megaphone,
+    name: "Product",
+    keys: ["product"],
+    icon: ShoppingBag,
   },
   {
     name: "Social",
-    keys: ["instagram", "twitter", "linkedin", "facebook"],
+    keys: ["instagram", "twitter", "linkedin", "facebook", "social"],
     icon: Instagram,
-  },
-  {
-    name: "SMS",
-    keys: ["sms"],
-    icon: MessageSquare,
   },
   {
     name: "Visual",
