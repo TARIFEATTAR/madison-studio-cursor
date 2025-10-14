@@ -118,7 +118,7 @@ export default function DashboardNew() {
                   <img 
                     src={madisonInsignia} 
                     alt="Madison" 
-                    className="w-48 h-48 object-contain"
+                    className="w-36 h-36 object-contain"
                   />
                 </div>
                 
