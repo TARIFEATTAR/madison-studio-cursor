@@ -153,6 +153,17 @@ const TemplatesContent = () => {
   }, [filteredPrompts, searchQuery]);
 
   const handleWizardComplete = async (wizardData: WizardData) => {
+    // Phase 5: Client-side validation
+    const validContentTypes = ['product', 'email', 'social', 'visual', 'blog'];
+    if (!validContentTypes.includes(wizardData.contentType)) {
+      toast({
+        title: "Invalid Content Type",
+        description: `Please select one of: ${validContentTypes.join(', ')}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Generate prompt from wizard data (preserves placeholders)
     const generatedPrompt = generatePromptFromWizard(wizardData);
     
@@ -163,10 +174,10 @@ const TemplatesContent = () => {
           title: `${wizardData.contentType} - ${wizardData.purpose.substring(0, 30)}...`,
           prompt_text: generatedPrompt,
           content_type: wizardData.contentType as any,
-          collection: (wizardData.collection || "cadence") as any,
+          collection: wizardData.collection || "General",
           organization_id: currentOrganizationId!,
           created_by: user?.id,
-          is_template: true, // Wizard prompts ARE templates
+          is_template: true,
           meta_instructions: {
             wizard_defaults: {
               content_type: wizardData.contentType,
@@ -180,7 +191,26 @@ const TemplatesContent = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Phase 3: Improved error messaging
+        let errorMessage = "Failed to create prompt";
+        
+        if (error.message.includes("violates foreign key constraint")) {
+          errorMessage = `Collection "${wizardData.collection}" doesn't exist. Please create it in Settings first.`;
+        } else if (error.message.includes("violates row-level security")) {
+          errorMessage = "You don't have permission to create prompts in this organization.";
+        } else if (error.message.includes("content_type")) {
+          errorMessage = `Invalid content type "${wizardData.contentType}". Please choose: Blog, Email, Social, Product, or Visual.`;
+        } else if (error.message.includes("collection")) {
+          errorMessage = `Invalid collection name. Please select a valid collection.`;
+        } else if (error.details) {
+          errorMessage = error.details;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+
+        throw new Error(errorMessage);
+      }
 
       queryClient.invalidateQueries({ queryKey: ["templates"] });
 
@@ -198,11 +228,11 @@ const TemplatesContent = () => {
         setPendingPrompt(insertedData as Prompt);
         setShowPlaceholderDialog(true);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating prompt:", error);
       toast({
         title: "Error",
-        description: "Failed to create prompt",
+        description: error.message || "Failed to create prompt",
         variant: "destructive",
       });
     }

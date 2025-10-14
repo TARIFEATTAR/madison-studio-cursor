@@ -29,8 +29,7 @@ const CONTENT_TYPES = [
   { value: "email", label: "📧 Email", icon: "📧" },
   { value: "social", label: "📱 Social Media", icon: "📱" },
   { value: "product", label: "🏷️ Product Description", icon: "🏷️" },
-  { value: "newsletter", label: "📰 Newsletter", icon: "📰" },
-  { value: "editorial", label: "✍️ Editorial Content", icon: "✍️" },
+  { value: "visual", label: "🎨 Visual Asset", icon: "🎨" },
 ];
 
 const TONES = [
@@ -64,8 +63,7 @@ export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardPro
       email: "warm",
       social: "playful",
       product: "sophisticated",
-      newsletter: "professional",
-      editorial: "intimate",
+      visual: "sophisticated",
     };
     return toneMap[contentType] || "";
   };
@@ -160,7 +158,7 @@ export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardPro
               <div className="flex items-start gap-2 p-3 bg-[hsl(var(--stone-beige)/0.3)] rounded-lg">
                 <Lightbulb className="w-5 h-5 text-[hsl(var(--saffron-gold))] flex-shrink-0 mt-0.5" />
                 <p className="text-sm">
-                  💡 Tip: Be specific! The more detail you provide, the better your prompt will be.
+                  💡 Tip: Use placeholders like <code className="px-1 py-0.5 bg-background rounded text-xs">&#123;&#123;PRODUCT_NAME&#125;&#125;</code> to make your prompt reusable.
                 </p>
               </div>
             </div>

@@ -589,7 +589,6 @@ export type Database = {
       master_content: {
         Row: {
           archived_at: string | null
-          collection: Database["public"]["Enums"]["collection_type"] | null
           content_type: string
           created_at: string | null
           created_by: string | null
@@ -605,7 +604,6 @@ export type Database = {
         }
         Insert: {
           archived_at?: string | null
-          collection?: Database["public"]["Enums"]["collection_type"] | null
           content_type: string
           created_at?: string | null
           created_by?: string | null
@@ -621,7 +619,6 @@ export type Database = {
         }
         Update: {
           archived_at?: string | null
-          collection?: Database["public"]["Enums"]["collection_type"] | null
           content_type?: string
           created_at?: string | null
           created_by?: string | null
@@ -781,7 +778,7 @@ export type Database = {
           archived_at: string | null
           avg_quality_rating: number | null
           base_notes: string | null
-          collection: Database["public"]["Enums"]["collection_type"]
+          collection: string
           content_type: Database["public"]["Enums"]["content_type"]
           created_at: string | null
           created_by: string | null
@@ -808,7 +805,7 @@ export type Database = {
           archived_at?: string | null
           avg_quality_rating?: number | null
           base_notes?: string | null
-          collection: Database["public"]["Enums"]["collection_type"]
+          collection: string
           content_type: Database["public"]["Enums"]["content_type"]
           created_at?: string | null
           created_by?: string | null
@@ -835,7 +832,7 @@ export type Database = {
           archived_at?: string | null
           avg_quality_rating?: number | null
           base_notes?: string | null
-          collection?: Database["public"]["Enums"]["collection_type"]
+          collection?: string
           content_type?: Database["public"]["Enums"]["content_type"]
           created_at?: string | null
           created_by?: string | null
@@ -1105,7 +1102,6 @@ export type Database = {
       }
     }
     Enums: {
-      collection_type: "cadence" | "reserve" | "purity" | "sacred_space"
       content_type: "product" | "email" | "social" | "visual" | "blog"
       organization_role: "owner" | "admin" | "member"
       scent_family: "warm" | "floral" | "fresh" | "woody"
@@ -1236,7 +1232,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      collection_type: ["cadence", "reserve", "purity", "sacred_space"],
       content_type: ["product", "email", "social", "visual", "blog"],
       organization_role: ["owner", "admin", "member"],
       scent_family: ["warm", "floral", "fresh", "woody"],
