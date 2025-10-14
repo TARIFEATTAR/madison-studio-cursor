@@ -529,7 +529,29 @@ TONE:
       if (categoryPromptBuilder) {
         productContext = categoryPromptBuilder(productData);
       }
+    } else if (!productData) {
+      // No product selected - brand-level request
+      productContext = `
+╔══════════════════════════════════════════════════════════════════╗
+║                    BRAND-LEVEL CONTENT REQUEST                    ║
+╚══════════════════════════════════════════════════════════════════╝
+
+⚠️ NO SPECIFIC PRODUCT SELECTED
+
+This is a brand-level content request. Write about:
+• The organization's mission, values, or philosophy
+• General product category or offerings (not specific SKUs)
+• Brand story, heritage, or positioning
+• Audience benefits at a macro level
+
+DO NOT invent or reference specific products, SKUs, or product details.
+`;
     }
+    
+    // Product guidance for system prompt
+    const productGuidance = productData 
+      ? `\n⚠️ PRODUCT-SPECIFIC COPY: This request is for a specific product. Reference product details naturally.`
+      : `\n⚠️ BRAND-LEVEL COPY: No specific product selected. Write at the brand/organizational level. Focus on brand values, mission, or general offerings.`;
     
     // Fetch and inject brand context if organization ID provided
     if (organizationId) {
@@ -545,6 +567,8 @@ ${brandContext}
 ${productContext}
 
 ${selectedStyleOverlay}
+
+${productGuidance}
 
 ╔══════════════════════════════════════════════════════════════════╗
 ║                      GLOBAL SYSTEM PROMPT                         ║

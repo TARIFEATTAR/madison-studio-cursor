@@ -116,8 +116,13 @@ export default function Create() {
   const [formatPickerOpen, setFormatPickerOpen] = useState(false);
 
   const handleSubmit = () => {
-    // Validate required fields
-    if (!product || !format) {
+    // Only format is required
+    if (!format) {
+      toast({
+        title: "Format required",
+        description: "Please select a deliverable format to continue.",
+        variant: "destructive",
+      });
       return;
     }
     
@@ -127,8 +132,8 @@ export default function Create() {
 
   const handleGenerateContent = async (contentName: string) => {
     const briefData = {
-      productId: product,
-      productData,
+      productId: product || null,
+      productData: product ? productData : null,
       deliverableFormat: format,
       targetAudience: audience,
       contentGoal: goal,
@@ -154,7 +159,7 @@ export default function Create() {
     try {
       // Build AI prompt from brief fields
       const promptParts = [
-        `Product: ${product}`,
+        product && `Product: ${product}`,
         `Format: ${format}`,
         audience && `Target Audience: ${audience}`,
         goal && `Content Goal: ${goal}`,
@@ -168,7 +173,7 @@ export default function Create() {
       // Save the prompt automatically to the prompt library
       try {
         await supabase.from("prompts").insert({
-          title: `${format} - ${product}`,
+          title: product ? `${format} - ${product}` : format,
           prompt_text: fullPrompt,
           content_type: format.toLowerCase().includes('email') ? 'email' : 
                        format.toLowerCase().includes('social') ? 'social' : 
@@ -629,10 +634,10 @@ export default function Create() {
 
           {/* Form Container */}
           <div className="p-8 rounded-xl border border-warm-gray/20 space-y-6 bg-parchment-white">
-            {/* Product - Required */}
+            {/* Product - Optional */}
             <div>
               <Label htmlFor="product" className="text-base mb-2 text-ink-black">
-                Product <span className="text-brass">*</span>
+                Product <span className="text-warm-gray text-sm font-normal">(Optional)</span>
               </Label>
               <Select 
                 value={product} 
@@ -650,10 +655,15 @@ export default function Create() {
                   <SelectValue placeholder={
                     productsLoading ? "Loading products..." : 
                     products.length === 0 ? "No products available" : 
-                    "Select product..."
+                    "Select a product (or leave blank for brand-level copy)"
                   } />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[300px] overflow-y-auto bg-white">
+                  <SelectItem value="">
+                    <div className="flex items-center gap-2">
+                      <span className="text-warm-gray">No specific product (brand-level content)</span>
+                    </div>
+                  </SelectItem>
                   {products.map((p) => (
                     <SelectItem key={p.id} value={p.name}>
                       {p.name}
