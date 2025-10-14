@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useToast } from "@/hooks/use-toast";
-import { HelpCircle, Plus, Filter, X } from "lucide-react";
+import { HelpCircle, Plus, Filter, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -511,10 +511,10 @@ const TemplatesContent = () => {
           {/* 2-COLUMN GRID LAYOUT */}
           {!isLoading && displayedPrompts.length > 0 && (
             <div className={
-              viewMode === "comfortable" 
-                ? "grid grid-cols-1 xl:grid-cols-2 gap-6"
-                : viewMode === "compact"
+              viewMode === "gallery" 
                 ? "grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-4"
+                : viewMode === "comfortable"
+                ? "grid grid-cols-1 xl:grid-cols-2 gap-6"
                 : "grid grid-cols-1 gap-3"
             }>
               {displayedPrompts.map((prompt) => (
@@ -532,6 +532,7 @@ const TemplatesContent = () => {
             </div>
           )}
         </main>
+      </div>
 
       {/* Modals */}
       <QuickStartModal
@@ -541,9 +542,8 @@ const TemplatesContent = () => {
           setShowQuickStart(false);
           setShowWizard(true);
         }}
-        onShowTemplates(() => {
+        onShowTemplates={() => {
           setShowQuickStart(false);
-          // Templates are already shown on main page
         }}
         onShowImport={() => {
           setShowQuickStart(false);
@@ -561,7 +561,6 @@ const TemplatesContent = () => {
         open={showImport}
         onOpenChange={setShowImport}
         onImport={(prompts) => {
-          // TODO: Handle imported prompts
           console.log("Imported prompts:", prompts);
         }}
       />
@@ -587,8 +586,8 @@ const TemplatesContent = () => {
           open={!!selectedPrompt}
           onClose={() => setSelectedPrompt(null)}
           onUse={() => handleUsePrompt(selectedPrompt.id)}
-          />
-        )}
+        />
+      )}
     </div>
   );
 };
