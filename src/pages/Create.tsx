@@ -195,7 +195,8 @@ export default function Create() {
           organizationId: currentOrganizationId,
           mode: "generate",
           styleOverlay: style.toUpperCase().replace(/-/g, '_'),
-          productData
+          productData,
+          contentType: format // Pass the content type so Madison knows what format to use
         }
       });
 

@@ -335,11 +335,12 @@ serve(async (req) => {
       throw new Error('ANTHROPIC_API_KEY is not configured');
     }
 
-    const { prompt, organizationId, mode = "generate", styleOverlay = "TARIFE_NATIVE", productData } = await req.json();
+    const { prompt, organizationId, mode = "generate", styleOverlay = "TARIFE_NATIVE", productData, contentType } = await req.json();
 
     console.log('Generating content with Claude for prompt:', prompt.substring(0, 100));
     console.log('Mode:', mode);
     console.log('Style Overlay:', styleOverlay);
+    console.log('Content Type:', contentType);
     if (organizationId) {
       console.log('Organization ID provided:', organizationId);
     }
@@ -672,6 +673,71 @@ OUTPUT RULES:
 - No asterisks, bold, italics, headers, or special formatting
 - No emojis, no excessive enthusiasm
 - ONLY the requested copy content—nothing else
+
+╔══════════════════════════════════════════════════════════════════╗
+║                  FORMAT-SPECIFIC GUIDELINES                       ║
+╚══════════════════════════════════════════════════════════════════╝
+
+${contentType === 'video_script' || contentType === 'short_form_video_script' ? `
+━━━ VIDEO SCRIPT FORMAT ━━━
+
+You are writing a VIDEO SCRIPT, not a blog post. Follow this structure EXACTLY:
+
+${contentType === 'short_form_video_script' ? `
+SHORT-FORM VIDEO (30-60 seconds for Reels/TikTok/Shorts):
+
+[HOOK - 0:03]
+First 3 seconds to grab attention
+(Write as spoken dialogue, natural and conversational)
+
+[SETUP - 0:10]
+Context or problem introduction
+(Visual cues in brackets [like this])
+
+[VALUE - 0:25]
+Main message or demonstration
+[Visual: Show product/feature]
+
+[CTA - 0:05]
+Clear call to action
+[Visual: End screen with logo]
+
+CRITICAL REQUIREMENTS:
+- Total script under 300 characters for timing
+- Conversational, spoken language (not written prose)
+- Visual directions in [brackets]
+- Hook must be attention-grabbing (question, fact, or bold statement)
+- Keep it fast-paced and engaging
+` : `
+FULL VIDEO SCRIPT FORMAT:
+
+SCENE 1: [Location/Setting]
+VISUAL: [Camera angle, what we see]
+AUDIO: [Spoken dialogue or voiceover]
+[Duration: XX seconds]
+
+SCENE 2: [Location/Setting]  
+VISUAL: [Camera angle, what we see]
+AUDIO: [Spoken dialogue or voiceover]
+[Duration: XX seconds]
+
+Continue with numbered scenes...
+
+CRITICAL REQUIREMENTS:
+- Break into distinct SCENES with numbers
+- Include VISUAL directions for each scene
+- Write AUDIO as natural spoken dialogue, not written prose
+- Add [Duration] estimates
+- Include camera angles and shot descriptions
+- Add transitions between scenes if needed
+- End with clear call-to-action
+`}
+
+DO NOT write this as a blog post or article!
+DO NOT use paragraphs of prose!
+FORMAT as a proper script with scenes, visuals, and dialogue!
+` : ''}
+
 
 ╔══════════════════════════════════════════════════════════════════╗
 ║                   YOUR ROLE: MADISON (GHOSTWRITER)                ║
