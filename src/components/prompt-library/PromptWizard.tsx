@@ -95,8 +95,8 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
         contentType: initialData.contentType || "",
         collection: initialData.collection || "",
         tone: initialData.tone || "",
-        keyElements: initialData.keyElements || "",
-        constraints: initialData.constraints || "",
+        keyElements: "", // Don't pre-fill, use as placeholder instead
+        constraints: "", // Don't pre-fill, use as placeholder instead
         category: initialData.category || "",
       });
 
@@ -267,7 +267,7 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-full bg-gradient-to-br from-[hsl(var(--saffron-gold))] to-[hsl(var(--brass-accent))]">
@@ -437,7 +437,7 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
               <Textarea
                 value={data.keyElements}
                 onChange={(e) => setData({ ...data, keyElements: e.target.value })}
-                placeholder="Example: Product name, key ingredients, sustainability message, call-to-action, brand story..."
+                placeholder={initialData?.keyElements || "Example: Product name, key ingredients, sustainability message, call-to-action, brand story..."}
                 className="min-h-[150px] font-serif"
               />
               <div className="flex items-start gap-2 p-3 bg-[hsl(var(--stone-beige)/0.3)] rounded-lg">
@@ -459,7 +459,7 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
               <Textarea
                 value={data.constraints}
                 onChange={(e) => setData({ ...data, constraints: e.target.value })}
-                placeholder="Example: Keep under 200 words, avoid clichés, include emojis for social media, always mention sustainability..."
+                placeholder={initialData?.constraints || "Example: Keep under 200 words, avoid clichés, include emojis for social media, always mention sustainability..."}
                 className="min-h-[150px] font-serif"
               />
               <div className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
