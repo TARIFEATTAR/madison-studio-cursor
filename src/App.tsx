@@ -138,7 +138,7 @@ const AppContent = () => {
           <DesktopHeader />
           <div className="flex min-h-screen w-full">
             <AppSidebar />
-            <main className="flex-1 overflow-auto pt-0 md:pt-16">
+            <main className="flex-1 overflow-auto pt-0">
               <div className="pt-16 md:pt-0">
                 <Routes>
                   <Route path="/" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><RootRoute /></RouteErrorBoundary></ProtectedRoute>} />

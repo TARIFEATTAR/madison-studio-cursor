@@ -1,8 +1,6 @@
 import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import penNibLogo from "@/assets/pen-nib-logo.png";
-import leatherTexture from "@/assets/leather-texture-black.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -112,7 +110,7 @@ export function AppSidebar() {
     <>
       {/* Mobile Header - Only visible on mobile */}
       {isMobile && (
-        <header className="fixed top-0 left-0 right-0 z-40 h-16 bg-gradient-to-r from-ink-black to-charcoal border-b border-aged-brass/20 flex items-center justify-between px-4">
+        <header className="fixed top-0 left-0 right-0 z-40 h-16 bg-gradient-to-r from-ink-black to-charcoal border-b border-aged-brass/20 flex items-center px-4">
           <button
             onClick={toggleSidebar}
             className="p-2 hover:bg-white/5 rounded-lg transition-colors"
@@ -120,14 +118,6 @@ export function AppSidebar() {
           >
             <Menu strokeWidth={1} className="w-6 h-6 text-parchment-white" />
           </button>
-          
-          <img 
-            src="/logo.png" 
-            alt="Scriptora" 
-            className="h-8 w-auto"
-          />
-          
-          <div className="w-10" /> {/* Spacer for centering logo */}
         </header>
       )}
 
@@ -140,24 +130,6 @@ export function AppSidebar() {
       >
         {/* Header */}
         <SidebarHeader className="border-b border-white/10 p-0">
-          <div className="flex items-center gap-3 px-4 py-6">
-            <img 
-              src={penNibLogo} 
-              alt="Scriptora" 
-              className={`${open ? 'w-16 h-16' : 'w-12 h-12'} shrink-0 object-contain transition-all duration-200`}
-            />
-            {open && (
-              <div className="flex-1 min-w-0">
-                <h1 className="text-white text-2xl font-serif tracking-tight">
-                  Scriptora
-                </h1>
-                <p className="text-aged-brass text-[10px] font-sans uppercase tracking-wider">
-                  EDITORIAL INTELLIGENCE
-                </p>
-              </div>
-            )}
-          </div>
-          
           {open && (
             <div className="px-4 pb-4 flex justify-end">
               <button 

@@ -1,5 +1,3 @@
-import madisonLogo from "@/assets/madison-script-logo.png";
-
 export const DesktopHeader = () => {
   return (
     <>
@@ -12,18 +10,6 @@ export const DesktopHeader = () => {
           }}
         />
       </div>
-
-      {/* Transparent Header - Desktop Only */}
-      <header className="hidden md:block fixed top-0 left-0 right-0 z-20 h-16">
-        <div className="flex items-center h-full px-6">
-          <img 
-            src={madisonLogo} 
-            alt="Madison Script" 
-            className="h-12 w-auto"
-            style={{ imageRendering: '-webkit-optimize-contrast' }}
-          />
-        </div>
-      </header>
     </>
   );
 };
