@@ -27,37 +27,31 @@ import {
 const navItems = [
   { 
     title: "Dashboard", 
-    subtitle: "Overview & Actions",
     url: "/dashboard", 
     icon: Home 
   },
   { 
     title: "The Archives", 
-    subtitle: "Content Library",
     url: "/library", 
     icon: Archive 
   },
   { 
     title: "Create", 
-    subtitle: "Content Creation",
     url: "/create", 
     icon: Pencil 
   },
   { 
     title: "Multiply", 
-    subtitle: "Repurpose Content",
     url: "/multiply", 
     icon: Share2 
   },
   { 
     title: "Schedule", 
-    subtitle: "Content Calendar",
     url: "/schedule", 
     icon: Calendar 
   },
   { 
     title: "Prompt Library", 
-    subtitle: "AI Prompt Templates",
     url: "/templates", 
     icon: FileText 
   },
@@ -223,7 +217,7 @@ export function AppSidebar() {
                         {open && (
                           <div className="flex flex-col items-start gap-0.5">
                             <span className="font-semibold text-sm tracking-wide">{item.title}</span>
-                            <span className="text-xs text-white/60">{item.subtitle}</span>
+                            {item.subtitle && <span className="text-xs text-white/50">{item.subtitle}</span>}
                           </div>
                         )}
                       </NavLink>
