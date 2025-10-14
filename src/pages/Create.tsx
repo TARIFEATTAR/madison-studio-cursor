@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Lightbulb, FileText, PenTool, X, Send, Loader2, Bookmark, Upload } from "lucide-react";
+import { Lightbulb, FileText, PenTool, X, Send, Loader2, Bookmark, Upload, Search } from "lucide-react";
 import penNibIcon from "@/assets/pen-nib-icon-new.png";
 import { createRoot } from "react-dom/client";
 import ScriptoraLoadingAnimation from "@/components/forge/ScriptoraLoadingAnimation";
@@ -24,6 +24,21 @@ import { NameContentDialog } from "@/components/forge/NameContentDialog";
 import { SavePromptDialog } from "@/components/prompt-library/SavePromptDialog";
 import { WorksheetUpload } from "@/components/forge/WorksheetUpload";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DELIVERABLE_CATEGORIES, getDeliverableByValue } from "@/config/deliverableFormats";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 export default function Create() {
   const navigate = useNavigate();
@@ -98,6 +113,7 @@ export default function Create() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [savePromptDialogOpen, setSavePromptDialogOpen] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [formatPickerOpen, setFormatPickerOpen] = useState(false);
 
   const handleSubmit = () => {
     // Validate required fields
@@ -657,21 +673,85 @@ export default function Create() {
               <Label htmlFor="format" className="text-base mb-2 text-ink-black">
                 Deliverable Format <span className="text-brass">*</span>
               </Label>
-              <Select value={format} onValueChange={setFormat}>
-                <SelectTrigger
-                  id="format"
-                  className="mt-2 bg-parchment-white border-warm-gray/20"
-                >
-                  <SelectValue placeholder="Select format..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="blog-post">Blog Post</SelectItem>
-                  <SelectItem value="email">Email Newsletter</SelectItem>
-                  <SelectItem value="story">Product Story</SelectItem>
-                  <SelectItem value="social">Social Media Post</SelectItem>
-                  <SelectItem value="description">Product Description</SelectItem>
-                </SelectContent>
-              </Select>
+              <Popover open={formatPickerOpen} onOpenChange={setFormatPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={formatPickerOpen}
+                    className={cn(
+                      "w-full justify-between mt-2 bg-parchment-white border-warm-gray/20 hover:bg-parchment-white/80",
+                      !format && "text-muted-foreground"
+                    )}
+                  >
+                    {format ? (
+                      <span className="flex items-center gap-2">
+                        {(() => {
+                          const deliverable = getDeliverableByValue(format);
+                          const Icon = deliverable?.icon;
+                          return Icon ? <Icon className="h-4 w-4" /> : null;
+                        })()}
+                        {getDeliverableByValue(format)?.label}
+                      </span>
+                    ) : (
+                      "Select format..."
+                    )}
+                    <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[600px] p-0 bg-parchment-white border-warm-gray/20" align="start">
+                  <Command className="bg-parchment-white">
+                    <CommandInput 
+                      placeholder="Search deliverables..." 
+                      className="border-none focus:ring-0"
+                    />
+                    <CommandList className="max-h-[400px]">
+                      <CommandEmpty>No deliverable found.</CommandEmpty>
+                      {DELIVERABLE_CATEGORIES.map((category) => {
+                        const CategoryIcon = category.icon;
+                        return (
+                          <CommandGroup 
+                            key={category.name} 
+                            heading={
+                              <span className="flex items-center gap-2 text-ink-black/70">
+                                <CategoryIcon className="h-4 w-4" />
+                                {category.name}
+                              </span>
+                            }
+                          >
+                            {category.deliverables.map((deliverable) => {
+                              const DeliverableIcon = deliverable.icon;
+                              return (
+                                <CommandItem
+                                  key={deliverable.value}
+                                  value={`${deliverable.label} ${deliverable.description}`}
+                                  onSelect={() => {
+                                    setFormat(deliverable.value);
+                                    setFormatPickerOpen(false);
+                                  }}
+                                  className="cursor-pointer"
+                                >
+                                  <div className="flex items-start gap-3 w-full">
+                                    <DeliverableIcon className="h-4 w-4 mt-0.5 text-brass shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                      <div className="font-medium text-ink-black">
+                                        {deliverable.label}
+                                      </div>
+                                      <div className="text-xs text-warm-gray/70">
+                                        {deliverable.description}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </CommandItem>
+                              );
+                            })}
+                          </CommandGroup>
+                        );
+                      })}
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Target Audience - Optional */}
