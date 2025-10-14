@@ -1,13 +1,28 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
-import { Sparkles, Library, Upload } from "lucide-react";
+import { Sparkles, Library, Upload, Star } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 interface QuickStartModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onStartWizard: () => void;
+  onStartWizard: (templateData?: any) => void;
   onShowTemplates: () => void;
   onShowImport: () => void;
+}
+
+interface TemplateData {
+  title: string;
+  purpose: string;
+  contentType: string;
+  tone: string;
+  keyElements: string;
+  constraints: string;
+  category?: string;
+  emoji: string;
+  description: string;
 }
 
 export function QuickStartModal({
@@ -17,6 +32,26 @@ export function QuickStartModal({
   onShowTemplates,
   onShowImport,
 }: QuickStartModalProps) {
+  const { currentOrganizationId } = useOnboarding();
+
+  // Fetch user's most-used prompts for "Favorites" section
+  const { data: favoritePrompts = [] } = useQuery({
+    queryKey: ["favorite-prompts", currentOrganizationId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("prompts")
+        .select("*")
+        .eq("organization_id", currentOrganizationId!)
+        .eq("is_archived", false)
+        .order("times_used", { ascending: false })
+        .limit(3);
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!currentOrganizationId && open,
+  });
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] flex flex-col">
@@ -84,7 +119,47 @@ export function QuickStartModal({
             </Card>
           </div>
 
-          {/* Template Preview Section */}
+          {/* Your Favorites Section */}
+          {favoritePrompts.length > 0 && (
+            <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t">
+              <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                <Star className="w-4 h-4 text-[hsl(var(--saffron-gold))]" />
+                <h3 className="text-base sm:text-lg font-serif">Your Most-Used Templates</h3>
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                {favoritePrompts.map((prompt: any) => (
+                  <Card
+                    key={prompt.id}
+                    className="p-3 cursor-pointer transition-all hover:shadow-md hover:border-[hsl(var(--saffron-gold))]"
+                    onClick={() => {
+                      const templateData = {
+                        purpose: (prompt.meta_instructions?.wizard_defaults?.purpose || prompt.title),
+                        contentType: (prompt.meta_instructions?.wizard_defaults?.content_type || prompt.content_type),
+                        collection: (prompt.meta_instructions?.wizard_defaults?.collection || prompt.collection),
+                        tone: (prompt.meta_instructions?.wizard_defaults?.tone || "sophisticated"),
+                        keyElements: (prompt.meta_instructions?.wizard_defaults?.key_elements || ""),
+                        constraints: (prompt.meta_instructions?.wizard_defaults?.constraints || ""),
+                      };
+                      onStartWizard(templateData);
+                      onOpenChange(false);
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-sm mb-1">{prompt.title}</h4>
+                        <p className="text-xs text-muted-foreground">Used {prompt.times_used} times</p>
+                      </div>
+                      <div className="text-xs text-[hsl(var(--saffron-gold))] font-medium">
+                        {prompt.content_type}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Quick Templates Section */}
           <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t">
             <h3 className="text-base sm:text-lg font-serif mb-3 sm:mb-4">Quick Templates</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -93,8 +168,17 @@ export function QuickStartModal({
                   key={template.title}
                   className="p-3 sm:p-4 cursor-pointer transition-all hover:shadow-md hover:border-[hsl(var(--saffron-gold))]"
                   onClick={() => {
-                    // TODO: Pre-fill with template
-                    onStartWizard();
+                    const templateData = {
+                      purpose: template.purpose,
+                      contentType: template.contentType,
+                      collection: "",
+                      tone: template.tone,
+                      keyElements: template.keyElements,
+                      constraints: template.constraints,
+                      category: template.category,
+                    };
+                    onStartWizard(templateData);
+                    onOpenChange(false);
                   }}
                 >
                   <div className="flex items-start gap-2 sm:gap-3">
@@ -114,41 +198,100 @@ export function QuickStartModal({
   );
 }
 
-const QUICK_TEMPLATES = [
+const QUICK_TEMPLATES: TemplateData[] = [
+  // Personal Fragrance Templates
   {
-    emoji: "🚀",
-    title: "Product Launch",
-    description: "Announce new products with sophistication",
-    category: "Product",
-  },
-  {
-    emoji: "📧",
-    title: "Email Newsletter",
-    description: "Monthly newsletter with collection highlights",
-    category: "Email",
-  },
-  {
-    emoji: "📱",
-    title: "Social Media Post",
-    description: "Instagram-optimized storytelling captions",
-    category: "Social",
-  },
-  {
-    emoji: "✍️",
-    title: "Behind the Scenes",
-    description: "Editorial content about craftsmanship",
-    category: "Editorial",
-  },
-  {
-    emoji: "🏷️",
-    title: "Product Description",
-    description: "Detailed product page copy",
-    category: "Product",
+    emoji: "🌹",
+    title: "Perfume Launch",
+    description: "Introduce new attar with fragrance pyramid",
+    category: "personal_fragrance",
+    purpose: "Announce a new perfume or attar from your collection with emphasis on the fragrance notes and scent journey",
+    contentType: "product",
+    tone: "sophisticated",
+    keyElements: "Top notes, Middle notes, Base notes, Scent family, Collection story, Craftsmanship details",
+    constraints: "Must reference product category: personal_fragrance. Use sensory language. Highlight the olfactory experience.",
   },
   {
     emoji: "💌",
-    title: "Customer Story",
-    description: "Feature customer testimonials",
-    category: "Editorial",
+    title: "Scent Story",
+    description: "Editorial piece about perfume inspiration",
+    category: "personal_fragrance",
+    purpose: "Create editorial content that tells the story behind a fragrance, its inspiration, and emotional resonance",
+    contentType: "blog",
+    tone: "intimate",
+    keyElements: "Inspiration source, Creative process, Scent notes, Emotional narrative, Brand philosophy",
+    constraints: "Keep under 800 words. Focus on storytelling over sales. Use evocative, poetic language.",
+  },
+  
+  // Home Fragrance Templates
+  {
+    emoji: "🕯️",
+    title: "Candle Description",
+    description: "Product page for candles with burn time",
+    category: "home_fragrance",
+    purpose: "Create compelling product descriptions for candles that emphasize ambiance, burn time, and scent profile",
+    contentType: "product",
+    tone: "warm",
+    keyElements: "Scent profile, Burn time, Format (candle/diffuser), Room ambiance, Usage tips, Key ingredients",
+    constraints: "Must reference product category: home_fragrance. Include technical details (burn time, size). Focus on atmosphere creation.",
+  },
+  {
+    emoji: "🏡",
+    title: "Home Ambiance Guide",
+    description: "How to use diffusers and room sprays",
+    category: "home_fragrance",
+    purpose: "Educational content about creating ambiance with home fragrances, including usage tips and placement",
+    contentType: "blog",
+    tone: "educational",
+    keyElements: "Product types, Placement tips, Scent layering, Room-specific recommendations, Seasonal suggestions",
+    constraints: "Include product category references. Provide actionable tips. Suggest specific products.",
+  },
+  
+  // Skincare Templates
+  {
+    emoji: "✨",
+    title: "Serum Benefits",
+    description: "Product page highlighting key ingredients",
+    category: "skincare",
+    purpose: "Showcase skincare products with focus on natural ingredients, benefits, and usage instructions",
+    contentType: "product",
+    tone: "professional",
+    keyElements: "Key ingredients, Benefits, Formulation type, Usage instructions, Skin type suitability, Natural/organic claims",
+    constraints: "Must reference product category: skincare. Include ingredient transparency. Focus on efficacy and natural formulation.",
+  },
+  {
+    emoji: "🌿",
+    title: "Natural Beauty Routine",
+    description: "Editorial about oil-based skincare",
+    category: "skincare",
+    purpose: "Create editorial content about natural, oil-based skincare routines and the philosophy behind clean beauty",
+    contentType: "blog",
+    tone: "educational",
+    keyElements: "Natural ingredients, Skincare philosophy, Product recommendations, Routine steps, Benefits of oils",
+    constraints: "Emphasize natural/organic approach. Include product category context. Educational but not technical.",
+  },
+  
+  // Universal Templates
+  {
+    emoji: "📧",
+    title: "Collection Newsletter",
+    description: "Monthly newsletter across all categories",
+    category: "universal",
+    purpose: "Create a monthly newsletter that highlights new releases, behind-the-scenes content, and collection updates",
+    contentType: "email",
+    tone: "warm",
+    keyElements: "New releases, Collection highlights, Brand story element, Call-to-action, Exclusive offer",
+    constraints: "Keep under 400 words. Include clear CTA. Balance promotional with editorial content.",
+  },
+  {
+    emoji: "📱",
+    title: "Instagram Caption",
+    description: "Social media storytelling for any product",
+    category: "universal",
+    purpose: "Create engaging Instagram captions that tell product stories with authenticity and visual appeal",
+    contentType: "social",
+    tone: "playful",
+    keyElements: "Product highlight, Brand voice, Emojis, Hashtags, Call-to-action, Visual description",
+    constraints: "Keep under 150 words. Include 3-5 relevant hashtags. Use line breaks for readability. Match image aesthetic.",
   },
 ];

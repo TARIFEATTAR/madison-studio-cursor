@@ -78,6 +78,7 @@ const TemplatesContent = () => {
   const [showMadison, setShowMadison] = useState(false);
   const [showPlaceholderDialog, setShowPlaceholderDialog] = useState(false);
   const [pendingPrompt, setPendingPrompt] = useState<Prompt | null>(null);
+  const [wizardInitialData, setWizardInitialData] = useState<any>(null);
 
   // Get counts for filter cards
   const { data: counts } = usePromptCounts(currentOrganizationId);
@@ -583,8 +584,9 @@ const TemplatesContent = () => {
       <QuickStartModal
         open={showQuickStart}
         onOpenChange={setShowQuickStart}
-        onStartWizard={() => {
+        onStartWizard={(templateData) => {
           setShowQuickStart(false);
+          setWizardInitialData(templateData || null);
           setShowWizard(true);
         }}
         onShowTemplates={() => {
@@ -598,8 +600,14 @@ const TemplatesContent = () => {
 
       <PromptWizard
         open={showWizard}
-        onOpenChange={setShowWizard}
+        onOpenChange={(open) => {
+          setShowWizard(open);
+          if (!open) {
+            setWizardInitialData(null);
+          }
+        }}
         onComplete={handleWizardComplete}
+        initialData={wizardInitialData}
       />
 
       <ImportDialog

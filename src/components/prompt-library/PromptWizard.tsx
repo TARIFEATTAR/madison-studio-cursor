@@ -15,6 +15,7 @@ interface PromptWizardProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onComplete: (promptData: WizardData) => void;
+  initialData?: Partial<WizardData>;
 }
 
 export interface WizardData {
@@ -69,17 +70,17 @@ const TONES = [
   { value: "educational", label: "Educational & Informative" },
 ];
 
-export function PromptWizard({ open, onOpenChange, onComplete }: PromptWizardProps) {
+export function PromptWizard({ open, onOpenChange, onComplete, initialData }: PromptWizardProps) {
   const { collections, loading: collectionsLoading } = useCollections();
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<WizardData>({
-    purpose: "",
-    contentType: "",
-    collection: "",
-    tone: "",
-    keyElements: "",
-    constraints: "",
+    purpose: initialData?.purpose || "",
+    contentType: initialData?.contentType || "",
+    collection: initialData?.collection || "",
+    tone: initialData?.tone || "",
+    keyElements: initialData?.keyElements || "",
+    constraints: initialData?.constraints || "",
   });
   const [refinedPrompt, setRefinedPrompt] = useState<string>("");
   const [isRefining, setIsRefining] = useState(false);
