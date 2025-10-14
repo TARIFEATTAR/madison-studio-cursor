@@ -17,7 +17,7 @@ import { ViewDensityToggle, ViewMode } from "@/components/library/ViewDensityTog
 
 import PromptLibrarySidebar from "@/components/prompt-library/PromptLibrarySidebar";
 
-import EnhancedPromptCard from "@/components/prompt-library/EnhancedPromptCard";
+import { PromptCard } from "@/components/prompt-library/PromptCard";
 import PromptDetailModal from "@/components/prompt-library/PromptDetailModal";
 import { QuickStartModal } from "@/components/prompt-library/QuickStartModal";
 import { PromptWizard, WizardData } from "@/components/prompt-library/PromptWizard";
@@ -344,9 +344,9 @@ const TemplatesContent = () => {
 
   return (
     <div className="flex h-screen bg-[#F5F1E8] overflow-hidden">
-      {/* MIDDLE PANEL - Collections & Categories (Fixed width: 320px) */}
+      {/* MIDDLE PANEL - Collections & Categories (Fixed width: 280px) */}
       {!isMobile && (
-        <aside className="w-80 border-r-2 border-[#D4CFC8] bg-white flex-shrink-0 overflow-y-auto">
+        <aside className="w-[280px] border-r border-border/30 bg-[#FAF8F3] flex-shrink-0 overflow-y-auto">
           <PromptLibrarySidebar
             onQuickAccessSelect={setSelectedQuickAccess}
             onCollectionSelect={setSelectedCollection}
@@ -362,14 +362,14 @@ const TemplatesContent = () => {
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* HEADER SECTION */}
-        <header className="bg-white border-b-2 border-[#D4CFC8] px-8 py-6 flex-shrink-0">
+        <header className="bg-background border-b border-border/30 px-8 py-6 flex-shrink-0">
           <div className="max-w-full">
             <div className="flex items-start justify-between mb-6">
               <div>
-                <h1 className="text-4xl font-serif text-[#1A1816] font-semibold mb-2">
+                <h1 className="text-3xl font-serif text-foreground font-semibold mb-2">
                   Prompt Library
                 </h1>
-                <p className="text-[#6B6560] font-sans">
+                <p className="text-muted-foreground text-sm">
                   Your prompts, perfectly organized • No more scattered spreadsheets
                 </p>
               </div>
@@ -411,13 +411,13 @@ const TemplatesContent = () => {
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowGuide(true)}
-                  className="rounded-full text-[#6B6560] hover:text-[#B8956A]"
+                  className="rounded-full text-muted-foreground hover:text-brass"
                 >
                   <HelpCircle className="w-5 h-5" />
                 </Button>
                 <Button
                   onClick={() => setShowQuickStart(true)}
-                  className="gap-2 bg-gradient-to-r from-[#B8956A] to-[#D4AF37] hover:from-[#D4AF37] hover:to-[#B8956A] text-white border-0"
+                  className="gap-2 bg-gradient-to-r from-brass to-brass-dark hover:from-brass-dark hover:to-brass text-white border-0"
                 >
                   <Plus className="w-4 h-4" />
                   New Prompt
@@ -425,16 +425,15 @@ const TemplatesContent = () => {
               </div>
             </div>
             
-            {/* Search Bar + View Density Toggle */}
+            {/* Search Bar */}
             <div className="flex gap-4">
               <Input
                 type="text"
                 placeholder="Search prompts by title, description, tags, or content..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-white border-2 border-[#D4CFC8] focus:border-[#B8956A] rounded-lg px-4 py-3 text-[#2F2A26] placeholder:text-[#A8A39E] transition-all"
+                className="flex-1 bg-background border border-border/40 focus:border-brass rounded-lg px-4 py-2.5 text-foreground placeholder:text-muted-foreground transition-all"
               />
-              <ViewDensityToggle viewMode={viewMode} onChange={setViewMode} />
             </div>
           </div>
         </header>
@@ -473,7 +472,7 @@ const TemplatesContent = () => {
 
           {/* Prompts Count */}
           <div className="mb-6">
-            <p className="text-sm font-medium text-[#6B6560]">
+            <p className="text-sm font-medium text-muted-foreground">
               {displayedPrompts.length} {displayedPrompts.length === 1 ? "prompt" : "prompts"}
             </p>
           </div>
@@ -482,8 +481,8 @@ const TemplatesContent = () => {
           {isLoading && (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <div className="w-12 h-12 border-4 border-[#D4CFC8] border-t-[#B8956A] rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-[#6B6560]">Loading prompts...</p>
+                <div className="w-12 h-12 border-4 border-border border-t-brass rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading prompts...</p>
               </div>
             </div>
           )}
@@ -492,14 +491,14 @@ const TemplatesContent = () => {
           {!isLoading && displayedPrompts.length === 0 && (
             <div className="flex items-center justify-center py-12">
               <div className="text-center max-w-md">
-                <FileText className="w-16 h-16 mx-auto mb-4 text-[#D4CFC8]" />
-                <h3 className="text-xl font-semibold text-[#1A1816] mb-2">No prompts found</h3>
-                <p className="text-[#6B6560] mb-6">
+                <FileText className="w-16 h-16 mx-auto mb-4 text-border" />
+                <h3 className="text-xl font-semibold text-foreground mb-2">No prompts found</h3>
+                <p className="text-muted-foreground mb-6">
                   {searchQuery ? "Try adjusting your search or filters" : "Get started by creating your first prompt template"}
                 </p>
                 <Button
                   onClick={() => setShowQuickStart(true)}
-                  className="bg-gradient-to-r from-[#B8956A] to-[#D4AF37] hover:from-[#D4AF37] hover:to-[#B8956A] text-white"
+                  className="bg-gradient-to-r from-brass to-brass-dark hover:from-brass-dark hover:to-brass text-white"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Create Your First Prompt
@@ -508,25 +507,14 @@ const TemplatesContent = () => {
             </div>
           )}
 
-          {/* 2-COLUMN GRID LAYOUT */}
+          {/* 3-COLUMN GRID LAYOUT */}
           {!isLoading && displayedPrompts.length > 0 && (
-            <div className={
-              viewMode === "gallery" 
-                ? "grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-4"
-                : viewMode === "comfortable"
-                ? "grid grid-cols-1 xl:grid-cols-2 gap-6"
-                : "grid grid-cols-1 gap-3"
-            }>
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
               {displayedPrompts.map((prompt) => (
-                <EnhancedPromptCard
+                <PromptCard
                   key={prompt.id}
                   prompt={prompt}
-                  onUse={() => handleUsePrompt(prompt.id)}
-                  onToggleFavorite={() => handleToggleFavorite(prompt.id)}
-                  onEdit={() => setSelectedPrompt(prompt)}
-                  onDelete={() => handleDelete(prompt.id)}
-                  isFavorite={prompt.is_template}
-                  viewMode={viewMode}
+                  onClick={() => setSelectedPrompt(prompt)}
                 />
               ))}
             </div>
