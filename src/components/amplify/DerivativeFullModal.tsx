@@ -41,6 +41,7 @@ interface DerivativeFullModalProps {
   onArchive: () => void;
   onDelete: () => void;
   onViewCalendar?: () => void;
+  onSaveToLibrary?: (content: string) => void;
 }
 
 const DERIVATIVE_ICONS = {
@@ -70,6 +71,7 @@ export function DerivativeFullModal({
   onArchive,
   onDelete,
   onViewCalendar,
+  onSaveToLibrary,
 }: DerivativeFullModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
@@ -349,6 +351,12 @@ export function DerivativeFullModal({
                   <DropdownMenuItem onClick={handleEditClick}>
                     <Edit className="h-4 w-4 mr-2" />
                     Edit
+                  </DropdownMenuItem>
+                )}
+                {onSaveToLibrary && (
+                  <DropdownMenuItem onClick={() => onSaveToLibrary(derivative.generated_content)}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Save Copy to Library
                   </DropdownMenuItem>
                 )}
                 {!isScheduled && (

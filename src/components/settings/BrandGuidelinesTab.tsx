@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { IndustrySelector } from "./IndustrySelector";
 import { BrandKnowledgeCenter } from "@/components/onboarding/BrandKnowledgeCenter";
+import { BrandDocumentStatus } from "./BrandDocumentStatus";
 import { downloadWorksheet } from "@/utils/worksheetGenerator";
 import { FileText, Download } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +26,7 @@ export function BrandGuidelinesTab() {
   const { toast } = useToast();
   const { currentOrganizationId } = useOnboarding();
   const [isSaving, setIsSaving] = useState(false);
+  const [brandDocuments, setBrandDocuments] = useState<any[]>([]);
   const [guidelines, setGuidelines] = useState<BrandGuidelines>({
     brand_name: "Scriptora",
     brand_voice: "",
@@ -35,6 +37,7 @@ export function BrandGuidelinesTab() {
 
   useEffect(() => {
     loadBrandGuidelines();
+    loadBrandDocuments();
   }, [currentOrganizationId]);
 
   const loadBrandGuidelines = async () => {
@@ -60,6 +63,24 @@ export function BrandGuidelinesTab() {
       });
     } catch (error) {
       console.error("Error loading brand guidelines:", error);
+    }
+  };
+
+  const loadBrandDocuments = async () => {
+    if (!currentOrganizationId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('brand_documents')
+        .select('*')
+        .eq('organization_id', currentOrganizationId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setBrandDocuments(data || []);
+    } catch (error) {
+      console.error('Error loading brand documents:', error);
     }
   };
 
@@ -170,6 +191,13 @@ export function BrandGuidelinesTab() {
       {currentOrganizationId && (
         <>
           <BrandKnowledgeCenter organizationId={currentOrganizationId} />
+          
+          {/* Brand Document Status Tracker */}
+          <BrandDocumentStatus 
+            organizationId={currentOrganizationId}
+            documents={brandDocuments}
+            onRetry={loadBrandDocuments}
+          />
           
           <Separator className="my-8" />
         </>
