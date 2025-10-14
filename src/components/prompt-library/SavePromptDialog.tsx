@@ -49,6 +49,16 @@ export function SavePromptDialog({
   const [isSaving, setIsSaving] = useState(false);
   const [editedPromptText, setEditedPromptText] = useState(promptText);
   const [showPlaceholderSuggestions, setShowPlaceholderSuggestions] = useState(false);
+  
+  // Field mapping state
+  const [enableFieldMapping, setEnableFieldMapping] = useState(false);
+  const [fieldMappings, setFieldMappings] = useState({
+    product: "",
+    format: "",
+    audience: "",
+    goal: "",
+    additionalContext: ""
+  });
 
   const [availableCollections, setAvailableCollections] = useState<any[]>([]);
 
@@ -194,6 +204,7 @@ export function SavePromptDialog({
         is_template: isTemplate,
         meta_instructions: {
           category: selectedCategory,
+          field_mappings: enableFieldMapping ? fieldMappings : undefined,
         },
         organization_id: currentOrganizationId,
         created_by: (await supabase.auth.getUser()).data.user?.id,
@@ -444,6 +455,77 @@ export function SavePromptDialog({
             >
               Save as reusable template
             </Label>
+          </div>
+
+          {/* Field Mapping Section */}
+          <div className="space-y-4 border-t border-warm-gray/20 pt-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="enable-field-mapping"
+                checked={enableFieldMapping}
+                onCheckedChange={(checked) => setEnableFieldMapping(checked as boolean)}
+                className="border-brass data-[state=checked]:bg-brass data-[state=checked]:border-brass"
+              />
+              <Label
+                htmlFor="enable-field-mapping"
+                className="text-sm font-medium text-ink-black cursor-pointer"
+              >
+                Smart Field Mapping (Auto-fill Create form)
+              </Label>
+            </div>
+            
+            {enableFieldMapping && (
+              <div className="pl-6 space-y-3 p-4 bg-muted/20 rounded-lg">
+                <p className="text-xs text-muted-foreground mb-3">
+                  Map parts of your prompt to specific form fields. Use placeholders like {`{{PRODUCT}}`} to make them dynamic.
+                </p>
+                <div className="space-y-2">
+                  <Label className="text-xs">Product</Label>
+                  <Input
+                    value={fieldMappings.product}
+                    onChange={(e) => setFieldMappings(prev => ({ ...prev, product: e.target.value }))}
+                    placeholder="e.g., {{PRODUCT_NAME}} or leave empty"
+                    className="text-sm"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Format</Label>
+                  <Input
+                    value={fieldMappings.format}
+                    onChange={(e) => setFieldMappings(prev => ({ ...prev, format: e.target.value }))}
+                    placeholder="e.g., Social Media Post"
+                    className="text-sm"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Audience</Label>
+                  <Input
+                    value={fieldMappings.audience}
+                    onChange={(e) => setFieldMappings(prev => ({ ...prev, audience: e.target.value }))}
+                    placeholder="e.g., {{TARGET_AUDIENCE}} or Luxury buyers"
+                    className="text-sm"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Goal</Label>
+                  <Input
+                    value={fieldMappings.goal}
+                    onChange={(e) => setFieldMappings(prev => ({ ...prev, goal: e.target.value }))}
+                    placeholder="e.g., Drive product awareness"
+                    className="text-sm"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Additional Context (Full prompt)</Label>
+                  <Textarea
+                    value={fieldMappings.additionalContext}
+                    onChange={(e) => setFieldMappings(prev => ({ ...prev, additionalContext: e.target.value }))}
+                    placeholder="The full prompt text will be used here by default"
+                    className="text-sm min-h-[60px]"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

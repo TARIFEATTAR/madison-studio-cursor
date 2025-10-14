@@ -301,19 +301,23 @@ const TemplatesContent = () => {
       // Invalidate query to refresh data
       queryClient.invalidateQueries({ queryKey: ["templates"] });
 
-      // Navigate to Create with prompt data (using the replaced text)
+      // Check if prompt has field mappings
+      const fieldMappings = (prompt.meta_instructions as any)?.field_mappings;
+
+      // Navigate to Create with prompt data and field mappings
       navigate("/create", {
         state: { 
           prompt: {
             ...prompt,
             prompt_text: finalPromptText // Use the customized version
-          }
+          },
+          fieldMappings: fieldMappings || null
         },
       });
 
       toast({
         title: "Template loaded",
-        description: "Ready to generate content in Create.",
+        description: fieldMappings ? "Form fields auto-populated from template" : "Ready to generate content in Create.",
       });
     } catch (error) {
       console.error("Error using prompt:", error);
@@ -566,6 +570,8 @@ const TemplatesContent = () => {
                   key={prompt.id}
                   prompt={prompt}
                   onClick={() => setSelectedPrompt(prompt)}
+                  onArchive={handleArchive}
+                  onDelete={handleDelete}
                 />
               ))}
             </div>

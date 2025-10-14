@@ -99,7 +99,9 @@ const PromptCard = ({ prompt, onArchive, onDelete, onClick }: PromptCardProps) =
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDelete(prompt.id);
+                  if (window.confirm(`Delete "${prompt.title}" permanently? This cannot be undone.`)) {
+                    onDelete(prompt.id);
+                  }
                 }}
                 className="cursor-pointer text-destructive focus:text-destructive"
               >

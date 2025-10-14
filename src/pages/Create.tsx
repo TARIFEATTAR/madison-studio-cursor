@@ -45,14 +45,34 @@ export default function Create() {
   useEffect(() => {
     if (location.state?.prompt) {
       const prompt = location.state.prompt;
-      // Pre-fill the form with prompt data
-      setAdditionalContext(prompt.prompt_text);
+      const fieldMappings = location.state?.fieldMappings;
       
-      // Show toast to confirm template loaded
-      toast({
-        title: "Template loaded",
-        description: `"${prompt.title}" is ready to use`,
-      });
+      if (fieldMappings) {
+        // Smart mapping: populate individual fields
+        if (fieldMappings.product) setProduct(fieldMappings.product);
+        if (fieldMappings.format) setFormat(fieldMappings.format);
+        if (fieldMappings.audience) setAudience(fieldMappings.audience);
+        if (fieldMappings.goal) setGoal(fieldMappings.goal);
+        if (fieldMappings.additionalContext) {
+          setAdditionalContext(fieldMappings.additionalContext);
+        } else {
+          // Fallback to full prompt text if no specific mapping
+          setAdditionalContext(prompt.prompt_text);
+        }
+        
+        toast({
+          title: "Template loaded with smart mapping",
+          description: `"${prompt.title}" fields auto-populated`,
+        });
+      } else {
+        // Legacy behavior: dump everything into additional context
+        setAdditionalContext(prompt.prompt_text);
+        
+        toast({
+          title: "Template loaded",
+          description: `"${prompt.title}" is ready to use`,
+        });
+      }
       
       // Clear the navigation state
       window.history.replaceState({}, document.title);
