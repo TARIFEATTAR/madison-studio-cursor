@@ -578,6 +578,10 @@ export default function ContentEditorPage() {
         console.log('[ContentEditor] Created new master_content:', finalContentId);
       }
       
+      // Persist master ID to localStorage and URL for robust cross-device/reload tracking
+      localStorage.setItem('lastEditedMasterId', finalContentId);
+      localStorage.setItem('lastEditedMasterTitle', title);
+      
       console.log('[ContentEditor] Navigating to Multiply with content:', {
         id: finalContentId,
         title,
@@ -585,7 +589,7 @@ export default function ContentEditorPage() {
         preview: contentToSend?.substring(0, 100)
       });
       
-      navigate("/multiply", { 
+      navigate(`/multiply?id=${finalContentId}`, { 
         state: { 
           content: contentToSend,
           title,

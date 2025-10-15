@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +48,7 @@ interface DerivativeContent {
   status: "pending" | "approved" | "rejected";
   charCount: number;
   isSequence?: boolean;
+  master_content_id?: string;
   sequenceEmails?: {
     id: string;
     sequenceNumber: number;
@@ -157,6 +158,8 @@ const DERIVATIVE_TYPES = [...TOP_DERIVATIVE_TYPES, ...ADDITIONAL_DERIVATIVE_TYPE
 export default function Multiply() {
   const { toast } = useToast();
   const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { currentOrganizationId } = useOnboarding();
   const [selectedMaster, setSelectedMaster] = useState<MasterContent | null>(null);
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
@@ -189,21 +192,47 @@ export default function Multiply() {
     const loadMasterContent = async () => {
       if (!currentOrganizationId) return;
       
-      // If we have navigation state, fetch that specific content immediately
-      if (location.state?.contentId) {
-        console.log('[Multiply] Loading specific content from navigation:', location.state.contentId);
+      // Multi-source master selection: URL → state → localStorage → fallback
+      let selectedId: string | null = null;
+      let selectionSource: 'url' | 'state' | 'localStorage' | 'fallback' = 'fallback';
+      
+      // 1. Check URL param
+      const urlId = searchParams.get('id');
+      if (urlId) {
+        selectedId = urlId;
+        selectionSource = 'url';
+      }
+      
+      // 2. Check navigation state
+      if (!selectedId && location.state?.contentId) {
+        selectedId = location.state.contentId;
+        selectionSource = 'state';
+      }
+      
+      // 3. Check localStorage
+      if (!selectedId) {
+        const localId = localStorage.getItem('lastEditedMasterId');
+        if (localId) {
+          selectedId = localId;
+          selectionSource = 'localStorage';
+        }
+      }
+      
+      // If we have a specific ID from url/state/localStorage, fetch it immediately
+      if (selectedId && selectionSource !== 'fallback') {
+        console.log(`[Multiply] Selected source: ${selectionSource}, id: ${selectedId}`);
         
         try {
           const { data, error } = await supabase
             .from('master_content')
             .select('id, title, content_type, full_content, word_count, collection')
-            .eq('id', location.state.contentId)
+            .eq('id', selectedId)
             .single();
           
           if (error) throw error;
           
           if (data) {
-            const navigationContent = {
+            const masterContent = {
               id: data.id,
               title: data.title || 'Untitled',
               contentType: data.content_type || 'Content',
@@ -213,17 +242,22 @@ export default function Multiply() {
               charCount: data.full_content?.length || 0,
             };
             
-            console.log('[Multiply] Selected via navigation:', navigationContent.id);
-            setSelectedMaster(navigationContent);
+            console.log(`[Multiply] Selected master id: ${masterContent.id}, title: ${masterContent.title}, chars: ${masterContent.charCount}`);
+            setSelectedMaster(masterContent);
             selectedViaNavigationRef.current = true;
+            
+            // Update URL if it doesn't have ?id
+            if (selectionSource !== 'url') {
+              navigate(`/multiply?id=${selectedId}`, { replace: true });
+            }
             
             toast({
               title: "Content loaded",
-              description: "Loaded latest saved edits from Editor",
+              description: `Loaded master: ${masterContent.title} (${masterContent.charCount} chars)`,
             });
           }
         } catch (e) {
-          console.error('[Multiply] Error loading navigation content:', e);
+          console.error('[Multiply] Error loading specific content:', e);
         }
       }
       
@@ -268,7 +302,12 @@ export default function Multiply() {
     };
 
     loadMasterContent();
-  }, [currentOrganizationId]);
+  }, [currentOrganizationId, searchParams]);
+
+  // Clear derivatives when selectedMaster changes
+  useEffect(() => {
+    setDerivatives([]);
+  }, [selectedMaster?.id]);
 
 
   const toggleTypeSelection = (typeId: string) => {
@@ -363,6 +402,15 @@ export default function Multiply() {
         const typeId = derivative.asset_type;
         const isSequence = typeId.includes('email_') && (typeId.includes('3part') || typeId.includes('5part') || typeId.includes('7part'));
         
+        // Defensive check: verify master_content_id matches
+        if (derivative.master_content_id && derivative.master_content_id !== selectedMaster.id) {
+          console.error('[Multiply] Derivative master_content_id mismatch!', {
+            derivativeId: derivative.id,
+            derivativeMasterId: derivative.master_content_id,
+            selectedMasterId: selectedMaster.id
+          });
+        }
+        
         if (isSequence && derivative.platform_specs?.emails) {
           const sequenceEmails = derivative.platform_specs.emails.map((email: any, index: number) => ({
             id: `${derivative.id}-email-${index + 1}`,
@@ -384,6 +432,7 @@ export default function Multiply() {
             platformSpecs: derivative.platform_specs,
             asset_type: derivative.asset_type,
             generated_content: derivative.generated_content,
+            master_content_id: derivative.master_content_id,
           });
         } else {
           newDerivatives.push({
@@ -395,6 +444,7 @@ export default function Multiply() {
             platformSpecs: derivative.platform_specs,
             asset_type: derivative.asset_type,
             generated_content: derivative.generated_content,
+            master_content_id: derivative.master_content_id,
           });
         }
 
