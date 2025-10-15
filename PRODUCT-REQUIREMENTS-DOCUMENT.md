@@ -279,7 +279,7 @@ Scriptora consists of 6 core feature areas:
 **Browse & Filter**
 - Grid view of all master content and generated outputs
 - Filter by content type (blog, email, product story, etc.)
-- Filter by collection (Cadence, Reserve, Purity, Sacred Space)
+- Filter by collection (Humanities, Reserve, Purity, Elemental)
 - Filter by DIP week (Week 1-4 production cycle)
 - Real-time search across titles and content
 - Archive/unarchive content management
@@ -400,7 +400,7 @@ Mode switcher at top: Toggle buttons "Single Content" | "Master Content"
 | Post Type | Select | Yes | Philosophy, Educational, Announcement |
 | Word Count | Select | Yes | 500, 750, 1000, 1250, 1500+ |
 | Product | Select | No | Link to product from catalog |
-| Collection | Select | Yes | Cadence, Reserve, Purity, Sacred Space |
+| Collection | Select | Yes | Humanities, Reserve, Purity, Elemental |
 | Subject | Text | Yes | Main topic of the post |
 | Themes | Text | No | Supporting themes (comma-separated) |
 | Takeaway | Textarea | Yes | Key message for reader |
@@ -443,7 +443,7 @@ Mode switcher at top: Toggle buttons "Single Content" | "Master Content"
 | Content Type | Select | Yes | Blog, Email Newsletter, Product Story, Announcement |
 | Title | Text | Yes | Master content title |
 | Product | Select | No | Associated product |
-| Collection | Select | Yes | Cadence, Reserve, Purity, Sacred Space |
+| Collection | Select | Yes | Humanities, Reserve, Purity, Elemental |
 | Subject | Text | Yes | Main topic |
 | Themes | Text | No | Supporting themes |
 | Takeaway | Textarea | Yes | Key message |

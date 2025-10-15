@@ -438,7 +438,7 @@ Create long-form master content designed to be repurposed into multiple derivati
 
 **Sidebar Filters**:
 - Content types (with counts)
-- Collections (Cadence, Reserve, Purity, Sacred Space)
+- Collections (Humanities, Reserve, Purity, Elemental)
 - Favorites only
 - Templates only
 - Clear all filters
