@@ -405,9 +405,9 @@ export default function Create() {
 
           if (line.endsWith("\r")) line = line.slice(0, -1);   // handle CRLF
           if (line.startsWith(":") || line.trim() === "") continue; // SSE comments/keepalive
-          if (!line.startsWith("data: ")) continue;
+          if (!line.startsWith("data:")) continue;
 
-          const jsonStr = line.slice(6).trim();
+          const jsonStr = line.slice(5).trim();
           if (jsonStr === "[DONE]") {
             streamDone = true;
             break;
@@ -452,8 +452,8 @@ export default function Create() {
           if (!raw) continue;
           if (raw.endsWith("\r")) raw = raw.slice(0, -1);
           if (raw.startsWith(":") || raw.trim() === "") continue;
-          if (!raw.startsWith("data: ")) continue;
-          const jsonStr = raw.slice(6).trim();
+          if (!raw.startsWith("data:")) continue;
+          const jsonStr = raw.slice(5).trim();
           if (jsonStr === "[DONE]") continue;
           try {
             const parsed = JSON.parse(jsonStr);
