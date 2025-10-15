@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 const FONT_OPTIONS = [
   { value: 'cormorant', label: 'Cormorant Garamond', family: '"Cormorant Garamond", serif' },
@@ -96,6 +97,7 @@ export default function ContentEditorPage() {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const editableRef = useRef<HTMLDivElement>(null);
+  const { currentOrganizationId } = useOnboarding();
   
   // Load content from route state, DB, or localStorage
   const [isLoading, setIsLoading] = useState(true);
@@ -533,16 +535,27 @@ export default function ContentEditorPage() {
       let finalContentId = contentId;
       
       if (!finalContentId) {
-        console.log('[ContentEditor] No contentId - checking for existing master_content');
+        console.info('[ContentEditor] No contentId - checking for existing master_content');
         
         const { data: userData } = await supabase.auth.getUser();
-        const { data: orgData } = await supabase
-          .from('organization_members')
-          .select('organization_id')
-          .eq('user_id', userData?.user?.id)
-          .single();
         
-        if (!orgData?.organization_id) {
+        // Get organization ID using authoritative source
+        let orgId = currentOrganizationId;
+        
+        if (!orgId) {
+          console.info('[ContentEditor] No currentOrganizationId from useOnboarding, fetching from organization_members');
+          const { data: orgData } = await supabase
+            .from('organization_members')
+            .select('organization_id')
+            .eq('user_id', userData?.user?.id)
+            .limit(1)
+            .maybeSingle();
+          
+          orgId = orgData?.organization_id || null;
+        }
+        
+        if (!orgId) {
+          console.error('[ContentEditor] Could not determine organization ID');
           toast({
             title: "Error",
             description: "Could not find organization",
@@ -551,25 +564,29 @@ export default function ContentEditorPage() {
           return;
         }
         
-        // First, check if master_content with this title already exists
+        console.info('[ContentEditor] Using organization ID:', orgId);
+        
+        // Check if master_content with this title already exists (including archived)
         const { data: existingContent } = await supabase
           .from('master_content')
-          .select('id')
-          .eq('organization_id', orgData.organization_id)
+          .select('id, is_archived')
+          .eq('organization_id', orgId)
           .eq('title', title)
-          .eq('is_archived', false)
           .maybeSingle();
         
         if (existingContent) {
-          // Update existing record
-          console.log('[ContentEditor] Found existing master_content, updating:', existingContent.id);
+          // Update existing record (and unarchive if needed)
+          const wasArchived = existingContent.is_archived;
+          console.info(`[ContentEditor] Found existing master_content (archived: ${wasArchived}), updating:`, existingContent.id);
+          
           const { error: updateError } = await supabase
             .from('master_content')
             .update({
               content_type: contentType,
               full_content: contentToSend,
               word_count: contentToSend?.split(/\s+/).filter(Boolean).length || 0,
-              updated_at: new Date().toISOString()
+              updated_at: new Date().toISOString(),
+              ...(wasArchived ? { is_archived: false, archived_at: null } : {})
             })
             .eq('id', existingContent.id);
           
@@ -584,25 +601,85 @@ export default function ContentEditorPage() {
           }
           
           finalContentId = existingContent.id;
-          console.log('[ContentEditor] Updated existing master_content:', finalContentId);
+          console.info(`[ContentEditor] Updated existing master_content${wasArchived ? ' (unarchived)' : ''}:`, finalContentId);
         } else {
           // Insert new record
-          console.log('[ContentEditor] No existing content found, creating new master_content');
+          console.info('[ContentEditor] No existing content found, creating new master_content');
           const { data: newContent, error: insertError } = await supabase
             .from('master_content')
             .insert({
               title,
               content_type: contentType,
               full_content: contentToSend,
-              organization_id: orgData.organization_id,
+              organization_id: orgId,
               created_by: userData?.user?.id,
               word_count: contentToSend?.split(/\s+/).filter(Boolean).length || 0
             })
             .select()
             .single();
           
-          if (insertError || !newContent) {
+          if (insertError) {
             console.error('[ContentEditor] Failed to create master_content:', insertError);
+            
+            // Handle duplicate key constraint violation (race condition)
+            if (insertError.code === '23505') {
+              console.info('[ContentEditor] Duplicate key detected (23505) - race condition, attempting recovery');
+              
+              // Find the existing row that was just created
+              const { data: raceContent } = await supabase
+                .from('master_content')
+                .select('id, is_archived')
+                .eq('organization_id', orgId)
+                .eq('title', title)
+                .maybeSingle();
+              
+              if (raceContent) {
+                console.info('[ContentEditor] Found duplicate row, updating instead:', raceContent.id);
+                
+                const { error: raceUpdateError } = await supabase
+                  .from('master_content')
+                  .update({
+                    content_type: contentType,
+                    full_content: contentToSend,
+                    word_count: contentToSend?.split(/\s+/).filter(Boolean).length || 0,
+                    updated_at: new Date().toISOString(),
+                    ...(raceContent.is_archived ? { is_archived: false, archived_at: null } : {})
+                  })
+                  .eq('id', raceContent.id);
+                
+                if (raceUpdateError) {
+                  console.error('[ContentEditor] Failed to update duplicate row:', raceUpdateError);
+                  toast({
+                    title: "Error",
+                    description: "Failed to save content",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                
+                finalContentId = raceContent.id;
+                console.info('[ContentEditor] Successfully recovered from race condition, updated:', finalContentId);
+              } else {
+                toast({
+                  title: "Error",
+                  description: "Content with this title already exists but could not be found",
+                  variant: "destructive"
+                });
+                return;
+              }
+            } else {
+              toast({
+                title: "Error",
+                description: "Failed to save content",
+                variant: "destructive"
+              });
+              return;
+            }
+          } else if (newContent) {
+            finalContentId = newContent.id;
+            console.info('[ContentEditor] Created new master_content:', finalContentId);
+          } else {
+            console.error('[ContentEditor] No content returned from insert');
             toast({
               title: "Error",
               description: "Failed to save content",
@@ -610,9 +687,6 @@ export default function ContentEditorPage() {
             });
             return;
           }
-          
-          finalContentId = newContent.id;
-          console.log('[ContentEditor] Created new master_content:', finalContentId);
         }
       }
       
