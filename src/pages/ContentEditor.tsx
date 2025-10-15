@@ -522,11 +522,15 @@ export default function ContentEditorPage() {
     console.log('[ContentEditor] Save status before navigation:', saveStatus);
     
     try {
-      // Force save and wait for completion
+      // Force save and wait for completion (best-effort)
       if (saveStatus !== "saved") {
         console.log('[ContentEditor] Forcing save before navigation...');
-        await forceSave();
-        console.log('[ContentEditor] Save completed');
+        try {
+          await forceSave();
+          console.log('[ContentEditor] Save completed');
+        } catch (e) {
+          console.warn('[ContentEditor] forceSave failed, proceeding with upsert fallback:', e);
+        }
       }
       
       const contentToSend = getContentForSave();
@@ -566,128 +570,53 @@ export default function ContentEditorPage() {
         
         console.info('[ContentEditor] Using organization ID:', orgId);
         
-        // Check if master_content with this title already exists (including archived)
-        const { data: existingContent } = await supabase
+        // Use a single UPSERT to avoid duplicates and race conditions
+        const normalizedTitle = (title || 'Untitled Content').trim();
+        console.info('[ContentEditor] Saving via upsert with normalized title:', normalizedTitle);
+
+        const { data: upsertData, error: upsertError } = await supabase
           .from('master_content')
-          .select('id, is_archived')
-          .eq('organization_id', orgId)
-          .eq('title', title)
-          .maybeSingle();
-        
-        if (existingContent) {
-          // Update existing record (and unarchive if needed)
-          const wasArchived = existingContent.is_archived;
-          console.info(`[ContentEditor] Found existing master_content (archived: ${wasArchived}), updating:`, existingContent.id);
-          
-          const { error: updateError } = await supabase
-            .from('master_content')
-            .update({
-              content_type: contentType,
-              full_content: contentToSend,
-              word_count: contentToSend?.split(/\s+/).filter(Boolean).length || 0,
-              updated_at: new Date().toISOString(),
-              ...(wasArchived ? { is_archived: false, archived_at: null } : {})
-            })
-            .eq('id', existingContent.id);
-          
-          if (updateError) {
-            console.error('[ContentEditor] Failed to update master_content:', updateError);
-            toast({
-              title: "Error",
-              description: "Failed to save content",
-              variant: "destructive"
-            });
-            return;
-          }
-          
-          finalContentId = existingContent.id;
-          console.info(`[ContentEditor] Updated existing master_content${wasArchived ? ' (unarchived)' : ''}:`, finalContentId);
-        } else {
-          // Insert new record
-          console.info('[ContentEditor] No existing content found, creating new master_content');
-          const { data: newContent, error: insertError } = await supabase
-            .from('master_content')
-            .insert({
-              title,
-              content_type: contentType,
-              full_content: contentToSend,
+          .upsert(
+            {
+              // Conflict target: organization_id + title
               organization_id: orgId,
-              created_by: userData?.user?.id,
-              word_count: contentToSend?.split(/\s+/).filter(Boolean).length || 0
-            })
-            .select()
-            .single();
-          
-          if (insertError) {
-            console.error('[ContentEditor] Failed to create master_content:', insertError);
-            
-            // Handle duplicate key constraint violation (race condition)
-            if (insertError.code === '23505') {
-              console.info('[ContentEditor] Duplicate key detected (23505) - race condition, attempting recovery');
-              
-              // Find the existing row that was just created
-              const { data: raceContent } = await supabase
-                .from('master_content')
-                .select('id, is_archived')
-                .eq('organization_id', orgId)
-                .eq('title', title)
-                .maybeSingle();
-              
-              if (raceContent) {
-                console.info('[ContentEditor] Found duplicate row, updating instead:', raceContent.id);
-                
-                const { error: raceUpdateError } = await supabase
-                  .from('master_content')
-                  .update({
-                    content_type: contentType,
-                    full_content: contentToSend,
-                    word_count: contentToSend?.split(/\s+/).filter(Boolean).length || 0,
-                    updated_at: new Date().toISOString(),
-                    ...(raceContent.is_archived ? { is_archived: false, archived_at: null } : {})
-                  })
-                  .eq('id', raceContent.id);
-                
-                if (raceUpdateError) {
-                  console.error('[ContentEditor] Failed to update duplicate row:', raceUpdateError);
-                  toast({
-                    title: "Error",
-                    description: "Failed to save content",
-                    variant: "destructive"
-                  });
-                  return;
-                }
-                
-                finalContentId = raceContent.id;
-                console.info('[ContentEditor] Successfully recovered from race condition, updated:', finalContentId);
-              } else {
-                toast({
-                  title: "Error",
-                  description: "Content with this title already exists but could not be found",
-                  variant: "destructive"
-                });
-                return;
-              }
-            } else {
-              toast({
-                title: "Error",
-                description: "Failed to save content",
-                variant: "destructive"
-              });
-              return;
-            }
-          } else if (newContent) {
-            finalContentId = newContent.id;
-            console.info('[ContentEditor] Created new master_content:', finalContentId);
-          } else {
-            console.error('[ContentEditor] No content returned from insert');
-            toast({
-              title: "Error",
-              description: "Failed to save content",
-              variant: "destructive"
-            });
-            return;
-          }
+              title: normalizedTitle,
+              content_type: contentType || 'Content',
+              full_content: contentToSend || '',
+              word_count: (contentToSend?.split(/\s+/).filter(Boolean).length) || 0,
+              created_by: userData?.user?.id || null,
+              // If row exists and was archived, unarchive it
+              is_archived: false,
+              archived_at: null,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'organization_id,title' }
+          )
+          .select('id')
+          .single();
+
+        if (upsertError) {
+          console.error('[ContentEditor] Upsert master_content failed:', upsertError);
+          toast({
+            title: 'Error',
+            description: upsertError.message || 'Failed to save content',
+            variant: 'destructive',
+          });
+          return;
         }
+
+        if (!upsertData?.id) {
+          console.error('[ContentEditor] Upsert succeeded without id');
+          toast({
+            title: 'Error',
+            description: 'Failed to save content',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        finalContentId = upsertData.id;
+        console.info('[ContentEditor] Upserted master_content id:', finalContentId);
       }
       
       // Persist master ID to localStorage and URL for robust cross-device/reload tracking
