@@ -137,13 +137,13 @@ export function AppSidebar() {
                 <img 
                   src={madisonLogo} 
                   alt="Madison Script" 
-                  className="w-10 h-10 shrink-0 transition-transform duration-200 group-hover:scale-105"
+                  className="w-12 h-12 shrink-0 transition-transform duration-200 group-hover:scale-105"
                 />
                 <span className="font-serif text-xl text-white tracking-wide">Madison Script</span>
               </NavLink>
               <button 
                 onClick={toggleSidebar}
-                className="relative group mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(38,33%,56%)]/50 rounded-lg"
+                className="relative group mt-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(38,33%,56%)]/50 rounded-lg"
                 aria-label="Collapse sidebar"
               >
                 <div className="relative w-8 h-8 rounded-lg border border-[hsl(38,33%,56%)]/30 bg-white/5 flex items-center justify-center transition-all duration-200 group-hover:border-[hsl(38,33%,56%)] group-hover:bg-white/10 group-hover:shadow-[0_0_12px_rgba(184,149,106,0.3)]">
@@ -159,7 +159,7 @@ export function AppSidebar() {
                 <img 
                   src={madisonLogo} 
                   alt="Madison Script" 
-                  className="w-10 h-10 transition-transform duration-200 group-hover:scale-105"
+                  className="w-12 h-12 transition-transform duration-200 group-hover:scale-105"
                 />
               </NavLink>
               <button
