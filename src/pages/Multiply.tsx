@@ -186,6 +186,13 @@ export default function Multiply() {
     const loadMasterContent = async () => {
       if (!currentOrganizationId) return;
       
+      // Don't load from database if we have navigation state
+      if (location.state?.contentId) {
+        console.log('[Multiply] Skipping DB load - content from navigation');
+        setLoadingContent(false);
+        return;
+      }
+      
       setLoadingContent(true);
       try {
         const { data, error } = await supabase
@@ -211,8 +218,8 @@ export default function Multiply() {
           
           setMasterContentList(formatted);
           
-          // Only auto-select from database if we didn't receive content via navigation
-          if (!selectedMaster && !location.state?.contentId && !contentFromNavigation) {
+          // Only auto-select from database if we don't have a selected master yet
+          if (!selectedMaster) {
             setSelectedMaster(formatted[0]);
           }
         }
@@ -224,7 +231,7 @@ export default function Multiply() {
     };
 
     loadMasterContent();
-  }, [currentOrganizationId, contentFromNavigation]);
+  }, [currentOrganizationId, location.state?.contentId]);
 
   useEffect(() => {
     if (location.state?.contentId) {
