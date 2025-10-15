@@ -519,30 +519,89 @@ export default function ContentEditorPage() {
     console.log('[ContentEditor] Starting navigation to Multiply');
     console.log('[ContentEditor] Save status before navigation:', saveStatus);
     
-    if (saveStatus !== "saved") {
-      console.log('[ContentEditor] Forcing save before navigation...');
-      await forceSave();
-      console.log('[ContentEditor] Save completed');
-    }
-    
-    const contentToSend = getContentForSave();
-    
-    console.log('[ContentEditor] Navigating to Multiply with content:', {
-      id: contentId,
-      title,
-      contentLength: contentToSend?.length,
-      preview: contentToSend?.substring(0, 100)
-    });
-    
-    navigate("/multiply", { 
-      state: { 
-        content: contentToSend,
+    try {
+      // Force save and wait for completion
+      if (saveStatus !== "saved") {
+        console.log('[ContentEditor] Forcing save before navigation...');
+        await forceSave();
+        console.log('[ContentEditor] Save completed');
+      }
+      
+      const contentToSend = getContentForSave();
+      
+      // Ensure we have a contentId - create master_content if needed
+      let finalContentId = contentId;
+      
+      if (!finalContentId) {
+        console.log('[ContentEditor] No contentId - creating master_content record');
+        
+        const { data: userData } = await supabase.auth.getUser();
+        const { data: orgData } = await supabase
+          .from('organization_members')
+          .select('organization_id')
+          .eq('user_id', userData?.user?.id)
+          .single();
+        
+        if (!orgData?.organization_id) {
+          toast({
+            title: "Error",
+            description: "Could not find organization",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        const { data: newContent, error: insertError } = await supabase
+          .from('master_content')
+          .insert({
+            title,
+            content_type: contentType,
+            full_content: contentToSend,
+            organization_id: orgData.organization_id,
+            created_by: userData?.user?.id,
+            word_count: contentToSend?.split(/\s+/).filter(Boolean).length || 0
+          })
+          .select()
+          .single();
+        
+        if (insertError || !newContent) {
+          console.error('[ContentEditor] Failed to create master_content:', insertError);
+          toast({
+            title: "Error",
+            description: "Failed to save content",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        finalContentId = newContent.id;
+        console.log('[ContentEditor] Created new master_content:', finalContentId);
+      }
+      
+      console.log('[ContentEditor] Navigating to Multiply with content:', {
+        id: finalContentId,
         title,
-        contentType,
-        productName,
-        contentId
-      } 
-    });
+        contentLength: contentToSend?.length,
+        preview: contentToSend?.substring(0, 100)
+      });
+      
+      navigate("/multiply", { 
+        state: { 
+          content: contentToSend,
+          title,
+          contentType,
+          productName,
+          contentId: finalContentId
+        } 
+      });
+    } catch (error) {
+      console.error('[ContentEditor] Error during navigation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save content before continuing",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -825,15 +884,26 @@ export default function ContentEditorPage() {
             
             <Button
               onClick={handleNextToMultiply}
+              disabled={saveStatus === "saving"}
               className="gap-1 sm:gap-2 h-8 sm:h-9"
               style={{
                 backgroundColor: "#1A1816",
                 color: "#FFFFFF"
               }}
             >
-              <span className="hidden sm:inline">Next: Multiply</span>
-              <span className="sm:hidden">Next</span>
-              <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 rotate-180" />
+              {saveStatus === "saving" ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
+                  <span className="hidden sm:inline">Saving...</span>
+                  <span className="sm:hidden">Saving</span>
+                </>
+              ) : (
+                <>
+                  <span className="hidden sm:inline">Save & Continue to Multiply</span>
+                  <span className="sm:hidden">Continue</span>
+                  <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 rotate-180" />
+                </>
+              )}
             </Button>
           </div>
         </div>

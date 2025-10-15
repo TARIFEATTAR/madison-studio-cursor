@@ -78,8 +78,9 @@ export function useAutoSave({
       lastSavedContent.current = content;
       setSaveStatus("saved");
     } catch (error) {
-      console.error("Auto-save error:", error);
+      console.error("[AutoSave] Error:", error);
       setSaveStatus("unsaved");
+      throw error; // Re-throw so forceSave knows it failed
     }
   };
 

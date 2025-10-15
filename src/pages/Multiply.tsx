@@ -182,17 +182,52 @@ export default function Multiply() {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [contentFromNavigation, setContentFromNavigation] = useState(false);
 
+  // Track if we selected master via navigation
+  const selectedViaNavigationRef = useRef(false);
+
   useEffect(() => {
     const loadMasterContent = async () => {
       if (!currentOrganizationId) return;
       
-      // Don't load from database if we have navigation state
+      // If we have navigation state, fetch that specific content immediately
       if (location.state?.contentId) {
-        console.log('[Multiply] Skipping DB load - content from navigation');
-        setLoadingContent(false);
-        return;
+        console.log('[Multiply] Loading specific content from navigation:', location.state.contentId);
+        
+        try {
+          const { data, error } = await supabase
+            .from('master_content')
+            .select('id, title, content_type, full_content, word_count, collection')
+            .eq('id', location.state.contentId)
+            .single();
+          
+          if (error) throw error;
+          
+          if (data) {
+            const navigationContent = {
+              id: data.id,
+              title: data.title || 'Untitled',
+              contentType: data.content_type || 'Content',
+              collection: data.collection || undefined,
+              content: data.full_content || '',
+              wordCount: data.word_count || 0,
+              charCount: data.full_content?.length || 0,
+            };
+            
+            console.log('[Multiply] Selected via navigation:', navigationContent.id);
+            setSelectedMaster(navigationContent);
+            selectedViaNavigationRef.current = true;
+            
+            toast({
+              title: "Content loaded",
+              description: "Loaded latest saved edits from Editor",
+            });
+          }
+        } catch (e) {
+          console.error('[Multiply] Error loading navigation content:', e);
+        }
       }
       
+      // Always load the list for dropdown
       setLoadingContent(true);
       try {
         const { data, error } = await supabase
@@ -216,48 +251,25 @@ export default function Multiply() {
             charCount: item.full_content?.length || 0,
           }));
           
+          console.log('[Multiply] Loaded from DB:', formatted.length, 'items');
           setMasterContentList(formatted);
           
-          // Only auto-select from database if we don't have a selected master yet
-          if (!selectedMaster) {
+          // Only auto-select from database if we didn't arrive via navigation
+          if (!selectedMaster && !selectedViaNavigationRef.current) {
+            console.log('[Multiply] Auto-selecting first item from list');
             setSelectedMaster(formatted[0]);
           }
         }
       } catch (e) {
-        console.error('Error loading master content:', e);
+        console.error('[Multiply] Error loading master content list:', e);
       } finally {
         setLoadingContent(false);
       }
     };
 
     loadMasterContent();
-  }, [currentOrganizationId, location.state?.contentId]);
+  }, [currentOrganizationId]);
 
-  useEffect(() => {
-    if (location.state?.contentId) {
-      console.log('[Multiply] Received content from navigation:', {
-        id: location.state.contentId,
-        title: location.state.title,
-        contentLength: location.state.content?.length,
-        preview: location.state.content?.substring(0, 100)
-      });
-      
-      const contentData = {
-        id: location.state.contentId,
-        title: location.state.title || 'Untitled',
-        contentType: location.state.contentType || 'Content',
-        collection: location.state.collection,
-        content: location.state.content || '',
-        wordCount: location.state.content ? location.state.content.split(/\s+/).filter(Boolean).length : 0,
-        charCount: location.state.content?.length || 0,
-      };
-      setUserContent(contentData);
-      setSelectedMaster(contentData);
-      setContentFromNavigation(true);
-      
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state]);
 
   const toggleTypeSelection = (typeId: string) => {
     const newSet = new Set(selectedTypes);
@@ -296,17 +308,46 @@ export default function Multiply() {
       return;
     }
 
+    if (!selectedMaster.id) {
+      toast({
+        title: "Error",
+        description: "Master content must be saved before generating derivatives",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsGenerating(true);
 
     try {
+      // Re-fetch latest content to ensure we have the most up-to-date version
+      console.log('[Multiply] Re-fetching latest content for:', selectedMaster.id);
+      const { data: latestContent, error: fetchError } = await supabase
+        .from('master_content')
+        .select('id, title, content_type, full_content, word_count, collection')
+        .eq('id', selectedMaster.id)
+        .single();
+      
+      if (fetchError) {
+        console.error('[Multiply] Error fetching latest content:', fetchError);
+        throw new Error('Failed to fetch latest content');
+      }
+      
       const contentId = selectedMaster.id;
+      const masterContentToUse = latestContent.full_content || selectedMaster.content;
+      
+      console.log('[Multiply] Generating derivatives with:', {
+        masterId: contentId,
+        contentLength: masterContentToUse.length,
+        preview: masterContentToUse.substring(0, 100)
+      });
       
       const { data, error } = await supabase.functions.invoke('repurpose-content', {
         body: {
           masterContentId: contentId,
           derivativeTypes: Array.from(selectedTypes),
           masterContent: {
-            full_content: selectedMaster.content,
+            full_content: masterContentToUse,
             collection: selectedMaster.collection,
           }
         }
@@ -479,7 +520,14 @@ export default function Multiply() {
     }
   };
 
-  const derivativesByType = derivatives.reduce((acc, d) => {
+  // Filter derivatives by selected master content ID
+  const filteredDerivatives = derivatives.filter(d => {
+    // Since derivatives might not have master_content_id stored, we'll show all for now
+    // In production, you'd filter by: d.master_content_id === selectedMaster?.id
+    return true;
+  });
+
+  const derivativesByType = filteredDerivatives.reduce((acc, d) => {
     if (!acc[d.typeId]) acc[d.typeId] = [];
     acc[d.typeId].push(d);
     return acc;
@@ -545,7 +593,14 @@ export default function Multiply() {
             <ResizablePanel defaultSize={40} minSize={30}>
               <div className="h-full p-6 flex flex-col">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-serif text-2xl">Master Content</h2>
+                  <div className="space-y-1">
+                    <h2 className="font-serif text-2xl">Master Content</h2>
+                    {selectedMaster && (
+                      <Badge variant="secondary" className="text-xs">
+                        Using: {selectedMaster.title}
+                      </Badge>
+                    )}
+                  </div>
                   {selectedMaster && (
                     <Button onClick={handleSaveToLibrary} disabled={isSavingMaster} size="sm" variant="outline" className="gap-2">
                       <Archive className="w-4 h-4" />
