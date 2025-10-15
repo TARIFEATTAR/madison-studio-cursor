@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { EditorialDirectorSplitScreen } from "@/components/multiply/EditorialDirectorSplitScreen";
 import { SavePromptDialog } from "@/components/prompt-library/SavePromptDialog";
+import { ScheduleButton } from "@/components/forge/ScheduleButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import fannedPagesImage from "@/assets/fanned-pages-new.png";
@@ -732,6 +733,24 @@ export default function Multiply() {
                                           <Button variant="ghost" size="sm" onClick={() => openDirector(deriv)}>
                                             <Edit className="w-4 h-4" />
                                           </Button>
+                                          <ScheduleButton
+                                            contentTitle={type.name}
+                                            contentType={deriv.asset_type || type.id}
+                                            variant="ghost"
+                                            size="sm"
+                                            derivativeAsset={{
+                                              id: deriv.id,
+                                              master_content_id: selectedMaster?.id || '',
+                                              asset_type: deriv.asset_type || type.id,
+                                              generated_content: deriv.generated_content || deriv.content,
+                                              platform_specs: deriv.platformSpecs || {}
+                                            }}
+                                            masterContent={selectedMaster ? {
+                                              id: selectedMaster.id,
+                                              title: selectedMaster.title,
+                                              content_type: selectedMaster.contentType
+                                            } : undefined}
+                                          />
                                           <Button variant="ghost" size="sm" onClick={() => {
                                             setDerivativeToSave(deriv);
                                             setDerivativeSaveTitle(type.name);

@@ -1,6 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { CalendarIcon, Mail, Instagram, Twitter, Package, MessageSquare, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CalendarIcon, Mail, Instagram, Twitter, Package, MessageSquare, FileText, Calendar } from "lucide-react";
+import { ScheduleButton } from "@/components/forge/ScheduleButton";
 
 interface DerivativeGridCardProps {
   derivative: {
@@ -8,11 +10,18 @@ interface DerivativeGridCardProps {
     asset_type: string;
     generated_content: string;
     approval_status: string;
+    master_content_id?: string;
+    platform_specs?: any;
   };
   label: string;
   isScheduled?: boolean;
   onClick: () => void;
   typeColor?: string;
+  masterContent?: {
+    id: string;
+    title: string;
+    content_type: string;
+  };
 }
 
 const DERIVATIVE_ICONS = {
@@ -26,7 +35,7 @@ const DERIVATIVE_ICONS = {
   email_7part: Mail,
 };
 
-export function DerivativeGridCard({ derivative, label, isScheduled, onClick, typeColor }: DerivativeGridCardProps) {
+export function DerivativeGridCard({ derivative, label, isScheduled, onClick, typeColor, masterContent }: DerivativeGridCardProps) {
   const Icon = DERIVATIVE_ICONS[derivative.asset_type as keyof typeof DERIVATIVE_ICONS] || FileText;
   
   // Get status styling with optional type color
@@ -94,12 +103,28 @@ export function DerivativeGridCard({ derivative, label, isScheduled, onClick, ty
           {previewText}
         </p>
 
-        {/* Scheduled Indicator */}
-        {isScheduled && (
+        {/* Scheduled Indicator or Schedule Button */}
+        {isScheduled ? (
           <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
             <CalendarIcon className="h-3.5 w-3.5" />
             <span>Scheduled</span>
           </div>
+        ) : (
+          <ScheduleButton
+            contentTitle={label}
+            contentType={derivative.asset_type}
+            variant="ghost"
+            size="sm"
+            className="w-full mt-1"
+            derivativeAsset={{
+              id: derivative.id,
+              master_content_id: derivative.master_content_id || '',
+              asset_type: derivative.asset_type,
+              generated_content: derivative.generated_content,
+              platform_specs: derivative.platform_specs || {}
+            }}
+            masterContent={masterContent}
+          />
         )}
       </div>
     </Card>

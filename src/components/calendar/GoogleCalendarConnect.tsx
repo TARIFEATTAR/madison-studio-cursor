@@ -36,11 +36,39 @@ export const GoogleCalendarConnect = () => {
   };
 
   const handleConnect = async () => {
-    toast({
-      title: "Google Calendar Setup Required",
-      description: "Please configure Google OAuth credentials in your backend settings to enable calendar sync.",
-      variant: "destructive",
-    });
+    setConnecting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to connect Google Calendar",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Call the OAuth edge function to initiate the flow
+      const { data, error } = await supabase.functions.invoke('google-calendar-oauth/auth', {
+        body: { action: 'auth' }
+      });
+
+      if (error) throw error;
+
+      if (data?.authUrl) {
+        // Redirect to Google OAuth
+        window.location.href = data.authUrl;
+      }
+    } catch (error: any) {
+      console.error('Connection error:', error);
+      toast({
+        title: "Connection Failed",
+        description: error.message || "Failed to connect to Google Calendar",
+        variant: "destructive",
+      });
+    } finally {
+      setConnecting(false);
+    }
   };
 
   const handleDisconnect = async () => {
@@ -110,13 +138,22 @@ export const GoogleCalendarConnect = () => {
             )}
           </div>
           {isConnected ? (
-            <Button variant="outline" onClick={handleDisconnect}>
+            <Button variant="outline" onClick={handleDisconnect} disabled={connecting}>
               Disconnect
             </Button>
           ) : (
-            <Button onClick={handleConnect} disabled={true} variant="outline" className="opacity-50">
-              <Calendar className="w-4 h-4 mr-2" />
-              Connect Google Calendar (Setup Required)
+            <Button onClick={handleConnect} disabled={connecting} variant="outline">
+              {connecting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Connect Google Calendar
+                </>
+              )}
             </Button>
           )}
         </div>
