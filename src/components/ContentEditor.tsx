@@ -6,6 +6,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import DOMPurify from 'dompurify';
+
+// Configure DOMPurify with safe defaults for rich text editing
+const sanitizeHtml = (html: string): string => {
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [
+      'p', 'br', 'b', 'i', 'u', 'strong', 'em', 'a', 'ul', 'ol', 'li',
+      'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre',
+      'span', 'div'
+    ],
+    ALLOWED_ATTR: [
+      'href', 'target', 'rel', 'class', 'style'
+    ],
+    KEEP_CONTENT: true,
+    ADD_ATTR: ['target']
+  });
+};
 
 const FONT_OPTIONS = [
   { value: 'cormorant', label: 'Cormorant Garamond', family: '"Cormorant Garamond", serif' },
@@ -138,7 +155,8 @@ export const ContentEditor = ({
       // Only set if different to avoid unnecessary DOM changes
       if (editableRef.current.innerHTML !== nextHtml) {
         console.debug("[ContentEditor] Hydrating full-screen editor");
-        editableRef.current.innerHTML = nextHtml;
+        // Sanitize HTML before setting to prevent XSS
+        editableRef.current.innerHTML = sanitizeHtml(nextHtml);
         setRichHtml(nextHtml);
       }
       
@@ -208,7 +226,8 @@ export const ContentEditor = ({
       
       if (isFullScreen && editableRef.current) {
         const prevRichHtml = richHistoryRef.current[historyIndexRef.current];
-        editableRef.current.innerHTML = prevRichHtml;
+        // Sanitize HTML before setting to prevent XSS
+        editableRef.current.innerHTML = sanitizeHtml(prevRichHtml);
         setRichHtml(prevRichHtml);
       }
       onChange(historyRef.current[historyIndexRef.current]);
@@ -222,7 +241,8 @@ export const ContentEditor = ({
       
       if (isFullScreen && editableRef.current) {
         const nextRichHtml = richHistoryRef.current[historyIndexRef.current];
-        editableRef.current.innerHTML = nextRichHtml;
+        // Sanitize HTML before setting to prevent XSS
+        editableRef.current.innerHTML = sanitizeHtml(nextRichHtml);
         setRichHtml(nextRichHtml);
       }
       onChange(historyRef.current[historyIndexRef.current]);
