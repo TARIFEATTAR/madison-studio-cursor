@@ -11,6 +11,30 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to verify user has access to organization
+async function verifyOrganizationAccess(userId: string, organizationId: string): Promise<boolean> {
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  
+  try {
+    const { data, error } = await supabase
+      .from('organization_members')
+      .select('user_id')
+      .eq('user_id', userId)
+      .eq('organization_id', organizationId)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Error verifying organization access:', error);
+      return false;
+    }
+    
+    return !!data;
+  } catch (error) {
+    console.error('Error in verifyOrganizationAccess:', error);
+    return false;
+  }
+}
+
 // Helper function to fetch Madison's system training
 async function getMadisonSystemConfig() {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -331,11 +355,50 @@ serve(async (req) => {
   }
 
   try {
+    // Authentication check - verify JWT token is present and valid
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('Missing Authorization header');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Authentication required' }), 
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Extract and verify the JWT token
+    const token = authHeader.replace('Bearer ', '');
+    const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
+    
+    if (authError || !user) {
+      console.error('Authentication failed:', authError?.message || 'Invalid user');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Invalid or expired token' }), 
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Authenticated request from user: ${user.id}`);
+    
     if (!ANTHROPIC_API_KEY) {
       throw new Error('ANTHROPIC_API_KEY is not configured');
     }
 
     const { prompt, organizationId, mode = "generate", styleOverlay = "TARIFE_NATIVE", productData, contentType } = await req.json();
+    
+    // Verify user has access to the requested organization
+    if (organizationId) {
+      const hasAccess = await verifyOrganizationAccess(user.id, organizationId);
+      if (!hasAccess) {
+        console.error(`User ${user.id} does not have access to organization ${organizationId}`);
+        return new Response(
+          JSON.stringify({ error: 'Forbidden - You do not have access to this organization' }), 
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      console.log(`User ${user.id} verified for organization ${organizationId}`);
+    }
 
     console.log('Generating content with Claude for prompt:', prompt.substring(0, 100));
     console.log('Mode:', mode);
