@@ -8,6 +8,29 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import DOMPurify from 'dompurify';
 
+// Convert markdown syntax to HTML
+const markdownToHtml = (text: string): string => {
+  let html = text;
+  
+  // Bold: **text** or __text__
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+  
+  // Italic: *text* or _text_
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+  
+  // Headers
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+  
+  // Line breaks
+  html = html.replace(/\n/g, '<br>');
+  
+  return html;
+};
+
 // Configure DOMPurify with safe defaults for rich text editing
 const sanitizeHtml = (html: string): string => {
   return DOMPurify.sanitize(html, {
@@ -150,13 +173,14 @@ export const ContentEditor = ({
   // Initialize richHtml when entering full-screen
   useEffect(() => {
     if (isFullScreen && editableRef.current) {
-      const nextHtml = content.replace(/\n/g, '<br>');
+      // Convert markdown to HTML first, then sanitize
+      const htmlWithMarkdown = markdownToHtml(content);
+      const nextHtml = sanitizeHtml(htmlWithMarkdown);
       
       // Only set if different to avoid unnecessary DOM changes
       if (editableRef.current.innerHTML !== nextHtml) {
         console.debug("[ContentEditor] Hydrating full-screen editor");
-        // Sanitize HTML before setting to prevent XSS
-        editableRef.current.innerHTML = sanitizeHtml(nextHtml);
+        editableRef.current.innerHTML = nextHtml;
         setRichHtml(nextHtml);
       }
       
@@ -525,22 +549,15 @@ export const ContentEditor = ({
           borderColor: "#D4CFC8"
         }}
       >
-        <Textarea
-          ref={textareaRef}
-          value={content}
-          onChange={(e) => {
-            const cursorPosition = e.target.selectionStart;
-            onChange(e.target.value);
-            requestAnimationFrame(() => {
-              if (textareaRef.current) {
-                textareaRef.current.selectionStart = cursorPosition;
-                textareaRef.current.selectionEnd = cursorPosition;
-              }
-            });
+        <div 
+          className="min-h-[400px] bg-background/50 leading-relaxed font-serif text-lg rounded-md border border-input p-3"
+          dangerouslySetInnerHTML={{ 
+            __html: sanitizeHtml(markdownToHtml(content)) 
           }}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          className="min-h-[400px] bg-background/50 leading-relaxed font-serif text-lg"
+          style={{
+            whiteSpace: 'pre-wrap',
+            wordWrap: 'break-word'
+          }}
         />
       </div>
     );
@@ -601,22 +618,16 @@ export const ContentEditor = ({
               </Button>
             </div>
           </div>
-          <Textarea
-            ref={textareaRef}
-            value={content}
-            onChange={(e) => {
-              const cursorPosition = e.target.selectionStart;
-              onChange(e.target.value);
-              requestAnimationFrame(() => {
-                if (textareaRef.current) {
-                  textareaRef.current.selectionStart = cursorPosition;
-                  textareaRef.current.selectionEnd = cursorPosition;
-                }
-              });
+          <div 
+            className="min-h-[200px] bg-background/50 leading-relaxed font-serif rounded-md border border-input p-3"
+            dangerouslySetInnerHTML={{ 
+              __html: sanitizeHtml(markdownToHtml(content)) 
             }}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            className="min-h-[200px] bg-background/50 leading-relaxed font-serif"
+            style={{
+              whiteSpace: 'pre-wrap',
+              wordWrap: 'break-word'
+            }}
+            onClick={handleToggleFullScreen}
           />
         </div>
       )}
