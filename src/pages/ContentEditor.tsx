@@ -516,11 +516,23 @@ export default function ContentEditorPage() {
   };
 
   const handleNextToMultiply = async () => {
+    console.log('[ContentEditor] Starting navigation to Multiply');
+    console.log('[ContentEditor] Save status before navigation:', saveStatus);
+    
     if (saveStatus !== "saved") {
+      console.log('[ContentEditor] Forcing save before navigation...');
       await forceSave();
+      console.log('[ContentEditor] Save completed');
     }
     
     const contentToSend = getContentForSave();
+    
+    console.log('[ContentEditor] Navigating to Multiply with content:', {
+      id: contentId,
+      title,
+      contentLength: contentToSend?.length,
+      preview: contentToSend?.substring(0, 100)
+    });
     
     navigate("/multiply", { 
       state: { 

@@ -180,6 +180,7 @@ export default function Multiply() {
   const [isSavingDerivative, setIsSavingDerivative] = useState(false);
   const saveInFlightRef = useRef(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [contentFromNavigation, setContentFromNavigation] = useState(false);
 
   useEffect(() => {
     const loadMasterContent = async () => {
@@ -210,7 +211,8 @@ export default function Multiply() {
           
           setMasterContentList(formatted);
           
-          if (!selectedMaster && !location.state?.contentId) {
+          // Only auto-select from database if we didn't receive content via navigation
+          if (!selectedMaster && !location.state?.contentId && !contentFromNavigation) {
             setSelectedMaster(formatted[0]);
           }
         }
@@ -222,10 +224,17 @@ export default function Multiply() {
     };
 
     loadMasterContent();
-  }, [currentOrganizationId]);
+  }, [currentOrganizationId, contentFromNavigation]);
 
   useEffect(() => {
     if (location.state?.contentId) {
+      console.log('[Multiply] Received content from navigation:', {
+        id: location.state.contentId,
+        title: location.state.title,
+        contentLength: location.state.content?.length,
+        preview: location.state.content?.substring(0, 100)
+      });
+      
       const contentData = {
         id: location.state.contentId,
         title: location.state.title || 'Untitled',
@@ -237,6 +246,7 @@ export default function Multiply() {
       };
       setUserContent(contentData);
       setSelectedMaster(contentData);
+      setContentFromNavigation(true);
       
       window.history.replaceState({}, document.title);
     }
