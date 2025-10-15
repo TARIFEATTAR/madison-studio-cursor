@@ -447,7 +447,7 @@ This is the default style—trust the brand DNA and maintain consistency.`,
 
       JAY_PETERMAN: `
 ╔══════════════════════════════════════════════════════════════════╗
-║                  STYLE OVERLAY: JAY PETERMAN                      ║
+║                  STYLE OVERLAY: J PETERMAN                        ║
 ║                      (Vignette Style)                             ║
 ╚══════════════════════════════════════════════════════════════════╝
 

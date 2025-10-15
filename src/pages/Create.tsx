@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Lightbulb, FileText, PenTool, X, Send, Loader2, Bookmark, Upload, Search } from "lucide-react";
-import ReactMarkdown from 'react-markdown';
 import penNibIcon from "@/assets/pen-nib-icon-new.png";
 import { createRoot } from "react-dom/client";
 import ScriptoraLoadingAnimation from "@/components/forge/ScriptoraLoadingAnimation";
@@ -575,9 +574,7 @@ export default function Create() {
                             : 'bg-brass/10 text-ink-black'
                         }`}
                       >
-                        <div className="text-sm prose prose-sm max-w-none prose-p:my-2 prose-strong:text-ink-black prose-strong:font-semibold">
-                          <ReactMarkdown>{msg.content}</ReactMarkdown>
-                        </div>
+                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                       </div>
                     </div>
                   ))}
