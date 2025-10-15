@@ -6,35 +6,49 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// AES-256-GCM encryption/decryption helpers
-async function encryptToken(token: string): Promise<{ encrypted: string; iv: string }> {
-  const ENCRYPTION_KEY = Deno.env.get('GOOGLE_TOKEN_ENCRYPTION_KEY');
-  if (!ENCRYPTION_KEY) {
-    throw new Error('GOOGLE_TOKEN_ENCRYPTION_KEY not configured');
-  }
-
-  const keyData = Uint8Array.from(atob(ENCRYPTION_KEY), c => c.charCodeAt(0));
-  const key = await crypto.subtle.importKey(
-    'raw',
-    keyData,
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['encrypt']
-  );
-
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const encodedToken = new TextEncoder().encode(token);
+// Store tokens securely in Supabase Vault
+async function storeTokenInVault(supabase: any, tokenValue: string, tokenName: string, userId: string): Promise<string> {
+  console.log(`Storing ${tokenName} in vault for user ${userId}`);
   
-  const encryptedData = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv },
-    key,
-    encodedToken
-  );
-
-  return {
-    encrypted: btoa(String.fromCharCode(...new Uint8Array(encryptedData))),
-    iv: btoa(String.fromCharCode(...iv))
-  };
+  // Create a unique secret name for this user's token
+  const secretName = `google_calendar_${tokenName}_${userId}`;
+  
+  // Store in vault using the vault.secrets table
+  const { data, error } = await supabase
+    .from('vault.secrets')
+    .insert({
+      name: secretName,
+      secret: tokenValue,
+      description: `Google Calendar ${tokenName} for user ${userId}`
+    })
+    .select('id')
+    .single();
+  
+  if (error) {
+    // If secret already exists, update it instead
+    if (error.code === '23505') { // Unique violation
+      const { data: updateData, error: updateError } = await supabase
+        .from('vault.secrets')
+        .update({ 
+          secret: tokenValue,
+          updated_at: new Date().toISOString()
+        })
+        .eq('name', secretName)
+        .select('id')
+        .single();
+      
+      if (updateError) {
+        console.error('Error updating vault secret:', updateError);
+        throw new Error(`Failed to update ${tokenName} in vault`);
+      }
+      return updateData.id;
+    }
+    
+    console.error('Error storing vault secret:', error);
+    throw new Error(`Failed to store ${tokenName} in vault`);
+  }
+  
+  return data.id;
 }
 
 serve(async (req) => {
@@ -149,19 +163,17 @@ serve(async (req) => {
 
       const tokenExpiry = new Date(Date.now() + expires_in * 1000);
 
-      // Encrypt tokens before storing
-      const encryptedAccess = await encryptToken(access_token);
-      const encryptedRefresh = await encryptToken(refresh_token);
+      // Store tokens securely in Supabase Vault
+      const accessTokenSecretId = await storeTokenInVault(supabase, access_token, 'access_token', userId);
+      const refreshTokenSecretId = await storeTokenInVault(supabase, refresh_token, 'refresh_token', userId);
 
-      // Store encrypted tokens in database (upsert to handle reconnections)
+      // Store vault references in database (upsert to handle reconnections)
       const { error: dbError } = await supabase
-        .from('google_calendar_tokens')
+        .from('google_calendar_vault_refs')
         .upsert({
           user_id: userId,
-          encrypted_access_token: encryptedAccess.encrypted,
-          access_token_iv: encryptedAccess.iv,
-          encrypted_refresh_token: encryptedRefresh.encrypted,
-          refresh_token_iv: encryptedRefresh.iv,
+          access_token_secret_id: accessTokenSecretId,
+          refresh_token_secret_id: refreshTokenSecretId,
           token_expiry: tokenExpiry.toISOString(),
         }, {
           onConflict: 'user_id'
@@ -169,7 +181,7 @@ serve(async (req) => {
 
       if (dbError) {
         console.error('Database error:', dbError);
-        throw new Error('Failed to store tokens');
+        throw new Error('Failed to store vault references');
       }
 
       // Enable sync by default

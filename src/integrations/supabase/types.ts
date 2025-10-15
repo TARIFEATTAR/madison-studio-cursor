@@ -541,6 +541,36 @@ export type Database = {
         }
         Relationships: []
       }
+      google_calendar_vault_refs: {
+        Row: {
+          access_token_secret_id: string
+          created_at: string | null
+          id: string
+          refresh_token_secret_id: string
+          token_expiry: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token_secret_id: string
+          created_at?: string | null
+          id?: string
+          refresh_token_secret_id: string
+          token_expiry?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token_secret_id?: string
+          created_at?: string | null
+          id?: string
+          refresh_token_secret_id?: string
+          token_expiry?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       madison_system_config: {
         Row: {
           created_at: string | null

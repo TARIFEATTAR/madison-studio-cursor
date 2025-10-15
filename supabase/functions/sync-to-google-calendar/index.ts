@@ -6,63 +6,47 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// AES-256-GCM decryption helper
-async function decryptToken(encryptedToken: string, ivString: string): Promise<string> {
-  const ENCRYPTION_KEY = Deno.env.get('GOOGLE_TOKEN_ENCRYPTION_KEY');
-  if (!ENCRYPTION_KEY) {
-    throw new Error('GOOGLE_TOKEN_ENCRYPTION_KEY not configured');
+// Retrieve token from Supabase Vault
+async function getTokenFromVault(supabase: any, secretId: string): Promise<string> {
+  const { data, error } = await supabase
+    .from('vault.secrets')
+    .select('decrypted_secret')
+    .eq('id', secretId)
+    .single();
+  
+  if (error) {
+    console.error('Error retrieving vault secret:', error);
+    throw new Error('Failed to retrieve token from vault');
   }
-
-  const keyData = Uint8Array.from(atob(ENCRYPTION_KEY), c => c.charCodeAt(0));
-  const key = await crypto.subtle.importKey(
-    'raw',
-    keyData,
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['decrypt']
-  );
-
-  const iv = Uint8Array.from(atob(ivString), c => c.charCodeAt(0));
-  const encryptedData = Uint8Array.from(atob(encryptedToken), c => c.charCodeAt(0));
-
-  const decryptedData = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv },
-    key,
-    encryptedData
-  );
-
-  return new TextDecoder().decode(decryptedData);
+  
+  if (!data?.decrypted_secret) {
+    throw new Error('Token not found in vault');
+  }
+  
+  return data.decrypted_secret;
 }
 
-// AES-256-GCM encryption helper
-async function encryptToken(token: string): Promise<{ encrypted: string; iv: string }> {
-  const ENCRYPTION_KEY = Deno.env.get('GOOGLE_TOKEN_ENCRYPTION_KEY');
-  if (!ENCRYPTION_KEY) {
-    throw new Error('GOOGLE_TOKEN_ENCRYPTION_KEY not configured');
-  }
-
-  const keyData = Uint8Array.from(atob(ENCRYPTION_KEY), c => c.charCodeAt(0));
-  const key = await crypto.subtle.importKey(
-    'raw',
-    keyData,
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['encrypt']
-  );
-
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const encodedToken = new TextEncoder().encode(token);
+// Store token securely in Supabase Vault
+async function storeTokenInVault(supabase: any, tokenValue: string, tokenName: string, userId: string): Promise<string> {
+  const secretName = `google_calendar_${tokenName}_${userId}`;
   
-  const encryptedData = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv },
-    key,
-    encodedToken
-  );
-
-  return {
-    encrypted: btoa(String.fromCharCode(...new Uint8Array(encryptedData))),
-    iv: btoa(String.fromCharCode(...iv))
-  };
+  // Update existing secret
+  const { data, error } = await supabase
+    .from('vault.secrets')
+    .update({ 
+      secret: tokenValue,
+      updated_at: new Date().toISOString()
+    })
+    .eq('name', secretName)
+    .select('id')
+    .single();
+  
+  if (error) {
+    console.error('Error updating vault secret:', error);
+    throw new Error(`Failed to update ${tokenName} in vault`);
+  }
+  
+  return data.id;
 }
 
 interface SyncRequest {
@@ -101,28 +85,27 @@ serve(async (req) => {
 
     console.log('Sync operation:', operation, 'for user:', user.id);
 
-    // Get user's Google OAuth tokens
-    const { data: tokenData, error: tokenError } = await supabaseClient
-      .from('google_calendar_tokens')
-      .select('encrypted_access_token, access_token_iv, encrypted_refresh_token, refresh_token_iv, token_expiry')
+    // Get user's Google OAuth vault references
+    const { data: vaultRefs, error: vaultError } = await supabaseClient
+      .from('google_calendar_vault_refs')
+      .select('access_token_secret_id, refresh_token_secret_id, token_expiry')
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (tokenError || !tokenData) {
+    if (vaultError || !vaultRefs) {
       throw new Error('Google Calendar not connected. Please connect your Google Calendar first.');
     }
 
-    if (!tokenData.encrypted_access_token || !tokenData.access_token_iv || 
-        !tokenData.encrypted_refresh_token || !tokenData.refresh_token_iv) {
-      throw new Error('Invalid token data. Please reconnect your Google Calendar.');
+    if (!vaultRefs.access_token_secret_id || !vaultRefs.refresh_token_secret_id) {
+      throw new Error('Invalid vault references. Please reconnect your Google Calendar.');
     }
 
-    // Decrypt tokens
-    const refreshToken = await decryptToken(tokenData.encrypted_refresh_token, tokenData.refresh_token_iv);
+    // Retrieve tokens from vault
+    const refreshToken = await getTokenFromVault(supabaseClient, vaultRefs.refresh_token_secret_id);
     
     // Check if access token is expired and refresh if needed
     let accessToken: string;
-    const tokenExpiry = new Date(tokenData.token_expiry);
+    const tokenExpiry = new Date(vaultRefs.token_expiry);
     const now = new Date();
 
     if (now >= tokenExpiry) {
@@ -145,19 +128,19 @@ serve(async (req) => {
       const refreshData = await refreshResponse.json();
       accessToken = refreshData.access_token;
 
-      // Encrypt and update new access token in database
-      const encryptedAccess = await encryptToken(accessToken);
+      // Update new access token in vault
+      const newAccessTokenSecretId = await storeTokenInVault(supabaseClient, accessToken, 'access_token', user.id);
+      
       await supabaseClient
-        .from('google_calendar_tokens')
+        .from('google_calendar_vault_refs')
         .update({
-          encrypted_access_token: encryptedAccess.encrypted,
-          access_token_iv: encryptedAccess.iv,
+          access_token_secret_id: newAccessTokenSecretId,
           token_expiry: new Date(Date.now() + refreshData.expires_in * 1000).toISOString(),
         })
         .eq('user_id', user.id);
     } else {
-      // Decrypt existing access token
-      accessToken = await decryptToken(tokenData.encrypted_access_token, tokenData.access_token_iv);
+      // Retrieve existing access token from vault
+      accessToken = await getTokenFromVault(supabaseClient, vaultRefs.access_token_secret_id);
     }
 
     // Get calendar ID and timezone from settings
