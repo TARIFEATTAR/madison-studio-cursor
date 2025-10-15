@@ -229,7 +229,7 @@ const Auth = () => {
           <img 
             src={madisonScriptLogo} 
             alt="Madison Script" 
-            className="h-36 w-auto mx-auto mb-3"
+            className="h-64 w-auto mx-auto mb-3"
           />
           <p className="text-muted-foreground text-lg">
             Where brands craft and multiply their narrative
