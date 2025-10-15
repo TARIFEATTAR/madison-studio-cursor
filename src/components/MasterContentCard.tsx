@@ -27,11 +27,13 @@ interface MasterContentCardProps {
 }
 
 const collectionColors: Record<string, string> = {
-  cadence: "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20",
+  humanities: "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20",
+  cadence: "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20", // Legacy
   reserve: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20",
   purity: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20",
-  sacred_space: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20",
-  "sacred space": "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20",
+  elemental: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20",
+  sacred_space: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20", // Legacy
+  "sacred space": "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20", // Legacy
 };
 
 const dipWorlds: Record<number, string> = {
@@ -88,7 +90,7 @@ export function MasterContentCard({
   };
 
   const normalizedCollection = normalizeCollectionName(content.collection);
-  const collectionColorClass = collectionColors[normalizedCollection] || collectionColors.cadence;
+  const collectionColorClass = collectionColors[normalizedCollection] || collectionColors.humanities;
   const displayCollection = formatCollectionDisplay(content.collection);
   const CollectionIcon = getCollectionIcon(content.collection);
 

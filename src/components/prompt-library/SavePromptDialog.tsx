@@ -383,7 +383,7 @@ export function SavePromptDialog({
               </SelectTrigger>
               <SelectContent>
                 {availableCollections.length === 0 ? (
-                  <SelectItem value="cadence">Default Collection</SelectItem>
+                  <SelectItem value="humanities">Default Collection</SelectItem>
                 ) : (
                   availableCollections.map((collection) => (
                     <SelectItem key={collection.id} value={collection.name.toLowerCase().replace(/\s+/g, '_')}>

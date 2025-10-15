@@ -178,7 +178,7 @@ export default function Create() {
           content_type: format.toLowerCase().includes('email') ? 'email' : 
                        format.toLowerCase().includes('social') ? 'social' : 
                        format.toLowerCase().includes('blog') ? 'blog' : 'product',
-          collection: "cadence",
+          collection: "humanities",
           organization_id: currentOrganizationId,
           is_template: false,
           times_used: 1

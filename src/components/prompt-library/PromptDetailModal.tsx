@@ -29,10 +29,12 @@ interface PromptDetailModalProps {
 }
 
 const collectionColors: Record<string, string> = {
-  cadence: "bg-saffron-gold/20 text-saffron-gold border-saffron-gold/30",
+  humanities: "bg-saffron-gold/20 text-saffron-gold border-saffron-gold/30",
+  cadence: "bg-saffron-gold/20 text-saffron-gold border-saffron-gold/30", // Legacy
   reserve: "bg-golden-brown/20 text-golden-brown border-golden-brown/30",
   purity: "bg-soft-ivory/80 text-deep-charcoal border-sandstone",
-  sacred_space: "bg-stone-beige/60 text-deep-charcoal border-sandstone",
+  elemental: "bg-stone-beige/60 text-deep-charcoal border-sandstone",
+  sacred_space: "bg-stone-beige/60 text-deep-charcoal border-sandstone", // Legacy
 };
 
 const PromptDetailModal = ({

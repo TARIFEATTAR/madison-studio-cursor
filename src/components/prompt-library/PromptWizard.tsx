@@ -224,7 +224,7 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
 
   const handleSkipCollection = () => {
     // Auto-assign default collection
-    const defaultCollection = collections?.[0]?.name || "cadence";
+    const defaultCollection = collections?.[0]?.name || "humanities";
     setData({ ...data, collection: defaultCollection });
     setStep(4); // Skip to tone step
   };

@@ -3,10 +3,12 @@ export const toEnum = (v?: string | null) => (v ? v.toLowerCase().replace(/\s+/g
 
 export const mapCollectionToEnum = (label?: string | null) => {
   if (!label) return null;
-  if (label.includes('Cadence')) return 'cadence';
+  if (label.includes('Humanities')) return 'humanities';
+  if (label.includes('Cadence')) return 'humanities'; // Legacy support
   if (label.includes('Reserve')) return 'reserve';
   if (label.includes('Purity')) return 'purity';
-  if (label.includes('Sacred')) return 'sacred_space';
+  if (label.includes('Elemental')) return 'elemental';
+  if (label.includes('Sacred')) return 'elemental'; // Legacy support
   return toEnum(label);
 };
 

@@ -30,10 +30,12 @@ interface PromptCardProps {
 }
 
 const collectionColors: Record<string, string> = {
-  Cadence: "bg-saffron-gold/20 text-saffron-gold border-saffron-gold/30",
+  Humanities: "bg-saffron-gold/20 text-saffron-gold border-saffron-gold/30",
+  Cadence: "bg-saffron-gold/20 text-saffron-gold border-saffron-gold/30", // Legacy
   Reserve: "bg-golden-brown/20 text-golden-brown border-golden-brown/30",
   Purity: "bg-soft-ivory/80 text-deep-charcoal border-sandstone",
-  "Sacred Space": "bg-stone-beige/60 text-deep-charcoal border-sandstone",
+  Elemental: "bg-stone-beige/60 text-deep-charcoal border-sandstone",
+  "Sacred Space": "bg-stone-beige/60 text-deep-charcoal border-sandstone", // Legacy
 };
 
 const scentFamilyIcons: Record<string, string> = {

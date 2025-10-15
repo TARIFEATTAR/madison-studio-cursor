@@ -75,7 +75,7 @@ export function LibrarySidebar({ onFilterChange, activeFilters, counts }: Librar
     collections: false,
     contentTypes: true,
   });
-  const [expandedCollections, setExpandedCollections] = useState<string[]>(['cadence']);
+  const [expandedCollections, setExpandedCollections] = useState<string[]>(['humanities']);
   
 
   const toggleSection = (section: string) => {
