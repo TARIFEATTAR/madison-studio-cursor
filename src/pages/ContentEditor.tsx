@@ -533,7 +533,7 @@ export default function ContentEditorPage() {
       let finalContentId = contentId;
       
       if (!finalContentId) {
-        console.log('[ContentEditor] No contentId - creating master_content record');
+        console.log('[ContentEditor] No contentId - checking for existing master_content');
         
         const { data: userData } = await supabase.auth.getUser();
         const { data: orgData } = await supabase
@@ -551,31 +551,69 @@ export default function ContentEditorPage() {
           return;
         }
         
-        const { data: newContent, error: insertError } = await supabase
+        // First, check if master_content with this title already exists
+        const { data: existingContent } = await supabase
           .from('master_content')
-          .insert({
-            title,
-            content_type: contentType,
-            full_content: contentToSend,
-            organization_id: orgData.organization_id,
-            created_by: userData?.user?.id,
-            word_count: contentToSend?.split(/\s+/).filter(Boolean).length || 0
-          })
-          .select()
-          .single();
+          .select('id')
+          .eq('organization_id', orgData.organization_id)
+          .eq('title', title)
+          .eq('is_archived', false)
+          .maybeSingle();
         
-        if (insertError || !newContent) {
-          console.error('[ContentEditor] Failed to create master_content:', insertError);
-          toast({
-            title: "Error",
-            description: "Failed to save content",
-            variant: "destructive"
-          });
-          return;
+        if (existingContent) {
+          // Update existing record
+          console.log('[ContentEditor] Found existing master_content, updating:', existingContent.id);
+          const { error: updateError } = await supabase
+            .from('master_content')
+            .update({
+              content_type: contentType,
+              full_content: contentToSend,
+              word_count: contentToSend?.split(/\s+/).filter(Boolean).length || 0,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingContent.id);
+          
+          if (updateError) {
+            console.error('[ContentEditor] Failed to update master_content:', updateError);
+            toast({
+              title: "Error",
+              description: "Failed to save content",
+              variant: "destructive"
+            });
+            return;
+          }
+          
+          finalContentId = existingContent.id;
+          console.log('[ContentEditor] Updated existing master_content:', finalContentId);
+        } else {
+          // Insert new record
+          console.log('[ContentEditor] No existing content found, creating new master_content');
+          const { data: newContent, error: insertError } = await supabase
+            .from('master_content')
+            .insert({
+              title,
+              content_type: contentType,
+              full_content: contentToSend,
+              organization_id: orgData.organization_id,
+              created_by: userData?.user?.id,
+              word_count: contentToSend?.split(/\s+/).filter(Boolean).length || 0
+            })
+            .select()
+            .single();
+          
+          if (insertError || !newContent) {
+            console.error('[ContentEditor] Failed to create master_content:', insertError);
+            toast({
+              title: "Error",
+              description: "Failed to save content",
+              variant: "destructive"
+            });
+            return;
+          }
+          
+          finalContentId = newContent.id;
+          console.log('[ContentEditor] Created new master_content:', finalContentId);
         }
-        
-        finalContentId = newContent.id;
-        console.log('[ContentEditor] Created new master_content:', finalContentId);
       }
       
       // Persist master ID to localStorage and URL for robust cross-device/reload tracking
