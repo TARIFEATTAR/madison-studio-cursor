@@ -54,12 +54,6 @@ const navItems = [
     url: "/templates", 
     icon: FileText 
   },
-  { 
-    title: "Meet Madison", 
-    subtitle: "Editorial Director",
-    url: "/meet-madison", 
-    icon: User
-  },
 ];
 
 export function AppSidebar() {
@@ -139,7 +133,7 @@ export function AppSidebar() {
                   alt="Madison Script" 
                   className="w-16 h-16 shrink-0 transition-transform duration-200 group-hover:scale-105"
                 />
-                <span className="font-serif text-xl text-white tracking-wide">Madison Script</span>
+                <span className="font-serif text-xl text-white tracking-wide -ml-2 mt-1.5">Madison Script</span>
               </NavLink>
               
               <div className="mt-6 flex justify-end">
@@ -208,7 +202,6 @@ export function AppSidebar() {
                         {open && (
                           <div className="flex flex-col items-start gap-0.5">
                             <span className="font-semibold text-sm tracking-wide">{item.title}</span>
-                            {item.subtitle && <span className="text-xs text-white/50">{item.subtitle}</span>}
                           </div>
                         )}
                       </NavLink>
@@ -221,9 +214,41 @@ export function AppSidebar() {
 
           <Separator className="mx-4 bg-white/10" />
 
-          {/* Video Tutorials */}
-          <div className="px-2 py-4">
+          {/* Meet Madison & Video Tutorials */}
+          <div className="px-2 py-4 space-y-1.5">
             <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  className={`
+                    group
+                    ${isActive("/meet-madison") 
+                      ? 'border-l-2 border-[hsl(38,33%,56%)] bg-white/8 text-white shadow-[inset_4px_0_8px_rgba(184,149,106,0.1)]' 
+                      : 'text-white/50 hover:text-white/80 hover:bg-white/5 hover:border-l-2 hover:border-[hsl(38,33%,56%)]/40'
+                    }
+                    ${open ? 'py-2.5 px-3' : 'h-12 justify-center'}
+                    transition-all duration-200
+                  `}
+                >
+                  <NavLink to="/meet-madison" onClick={() => isMobile && toggleSidebar()}>
+                    <User 
+                      strokeWidth={1}
+                      className={`w-6 h-6 shrink-0 transition-all duration-200 ${
+                        isActive("/meet-madison")
+                          ? 'text-[hsl(38,33%,56%)] drop-shadow-[0_0_6px_rgba(184,149,106,0.4)]'
+                          : 'text-white/50 group-hover:text-white/70 group-hover:drop-shadow-[0_0_4px_rgba(184,149,106,0.2)] group-hover:scale-105'
+                      }`} 
+                    />
+                    {open && (
+                      <div className="flex flex-col items-start gap-0.5">
+                        <span className="font-semibold text-sm tracking-wide">Meet Madison</span>
+                        <span className="text-xs text-white/50">Editorial Director</span>
+                      </div>
+                    )}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className={`
