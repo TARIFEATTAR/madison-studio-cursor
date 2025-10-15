@@ -127,13 +127,13 @@ export function AppSidebar() {
         <SidebarHeader className="border-b border-white/10 p-0">
           {open && (
             <div className="px-4 pt-6 pb-4">
-              <NavLink to="/dashboard" className="flex items-center gap-3 group">
+              <NavLink to="/dashboard" className="flex items-end gap-3 group">
                 <img 
                   src={madisonLogo} 
                   alt="Madison Script" 
                   className="w-16 h-16 shrink-0 transition-transform duration-200 group-hover:scale-105"
                 />
-                <span className="font-serif text-xl text-white tracking-wide -ml-2 mt-1.5">Madison Script</span>
+                <span className="font-serif text-xl text-white tracking-wide -ml-2">Madison Script</span>
               </NavLink>
               
               <div className="mt-6 flex justify-end">
