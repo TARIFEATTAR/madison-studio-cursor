@@ -12,7 +12,7 @@ import multiplyIcon from "@/assets/multiply-icon.png";
 import calendarIcon from "@/assets/calendar-icon.png";
 import scriptoraLogo from "@/assets/scriptora-logo-icon.png";
 import scriptoraIcon from "@/assets/scriptora-icon-transparent.png";
-import heroImage from "@/assets/vanity-table-hero.png";
+import madisonHero from "@/assets/madison-hero.jpg";
 
 const Landing = () => {
   const { user } = useAuth();
@@ -40,11 +40,13 @@ const Landing = () => {
     <div className="min-h-screen bg-vellum">
       {/* Navigation Header */}
       <header 
-        className="sticky top-0 w-full z-[1000] border-b border-aged-brass/15 transition-all duration-300"
+        className="fixed top-0 w-full z-[1000] transition-all duration-300"
         style={{ 
-          backgroundColor: '#F5F1E8',
+          background: 'linear-gradient(to bottom, rgba(245, 241, 232, 0.95) 0%, rgba(245, 241, 232, 0.85) 50%, rgba(245, 241, 232, 0) 100%)',
+          backdropFilter: 'blur(8px)',
           padding: '20px 40px',
-          boxShadow: '0 2px 8px rgba(26, 24, 22, 0.08)'
+          border: 'none',
+          boxShadow: 'none'
         }}
       >
         <div className="container mx-auto">
@@ -213,17 +215,26 @@ const Landing = () => {
         {/* Background Image Layer */}
         <div className="hero-background">
           <img 
-            src={heroImage} 
-            alt="Luxury vanity mirror with perfume and makeup brushes"
+            src={madisonHero} 
+            alt="Madison luxury editorial workspace"
             className="hero-image"
           />
         </div>
         
+        {/* Top Fade Gradient - Light and Subtle */}
+        <div 
+          className="absolute inset-x-0 top-0 h-32 z-[1]"
+          style={{
+            background: 'linear-gradient(to bottom, rgba(245, 241, 232, 0.6) 0%, rgba(245, 241, 232, 0.3) 40%, transparent 100%)'
+          }}
+        ></div>
+        
         {/* Gradient Overlay for Text Legibility */}
         <div className="hero-overlay md:hidden" style={{
-          background: 'linear-gradient(to bottom, rgba(26, 24, 22, 0.75) 0%, rgba(26, 24, 22, 0.65) 40%, rgba(26, 24, 22, 0.85) 100%)'
+          background: 'linear-gradient(to bottom, rgba(26, 24, 22, 0.75) 0%, rgba(26, 24, 22, 0.65) 40%, rgba(26, 24, 22, 0.85) 100%)',
+          zIndex: 10
         }}></div>
-        <div className="hero-overlay hidden md:block"></div>
+        <div className="hero-overlay hidden md:block" style={{ zIndex: 10 }}></div>
         
         <div className="relative z-20 h-full flex items-center justify-start pl-6 pr-6 pt-28 md:pl-[120px] md:pr-[45%] md:pt-0">
           <div className="max-w-[650px] text-left -mt-5 md:mt-0">
