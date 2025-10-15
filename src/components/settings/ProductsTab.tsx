@@ -481,7 +481,7 @@ export function ProductsTab() {
                   id="collection"
                   value={formData.collection}
                   onChange={(e) => setFormData({ ...formData, collection: e.target.value })}
-                  placeholder="e.g., Cadence"
+                  placeholder="e.g., Humanities"
                 />
               </div>
               <div className="space-y-2">

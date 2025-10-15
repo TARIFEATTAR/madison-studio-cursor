@@ -701,7 +701,7 @@ export const contentTypeDisplayNames: Record<string, string> = {
 **collections**
 ```sql
 - id (uuid, primary key)
-- name (text) -- Cadence, Reserve, Purity, Sacred Space
+- name (text) -- Humanities, Reserve, Purity, Elemental
 - description (text)
 - icon (text)
 - color (text)
@@ -724,27 +724,31 @@ export const contentTypeDisplayNames: Record<string, string> = {
 
 ### Collections System
 
-**The Four Collections**:
+**The Four Product Line Collections**:
 
-1. **Cadence**
-   - Icon: Calendar
-   - Purpose: Regular posting rhythm
-   - Use case: Scheduled, recurring content
+1. **Humanities**
+   - Icon: Sparkles
+   - Theme: Accessible sophistication
+   - Positioning: Everyday luxury that makes fine fragrance approachable
+   - Legacy Name: Cadence
 
 2. **Reserve**
-   - Icon: Library
-   - Purpose: Timeless evergreen content
-   - Use case: Content that can be used anytime
+   - Icon: Crown
+   - Theme: Premium exclusivity
+   - Positioning: Limited edition, high-end products for discerning customers
 
 3. **Purity**
-   - Icon: Book
-   - Purpose: Core brand philosophy
-   - Use case: Brand story, values, mission
+   - Icon: Droplet
+   - Theme: Clean, minimalist elegance
+   - Positioning: Simple formulations with transparent ingredient sourcing
 
-4. **Sacred Space**
-   - Icon: Pen Nib
-   - Purpose: Premium, special content
-   - Use case: Launch content, important announcements
+4. **Elemental**
+   - Icon: Home
+   - Theme: Raw, foundational beauty
+   - Positioning: Essential products celebrating natural ingredients
+   - Legacy Name: Sacred Space
+
+**Note**: Collections represent product line groupings, not content categories. See `COLLECTIONS_TERMINOLOGY.md` for detailed reference.
 
 ### DIP Week System
 
@@ -1498,7 +1502,7 @@ const onSubmit = async (values: any) => {
 
 **Derivative Asset**: Repurposed content optimized for a specific channel (email, Instagram, etc.), generated from master content in Amplify.
 
-**Collection**: Organizational system for content (Cadence, Reserve, Purity, Sacred Space).
+**Collection**: Product line grouping system (Humanities, Reserve, Purity, Elemental). Represents themes and positioning for product categories.
 
 **DIP Week**: 4-week content production cycle tracking (Distillation in Progress).
 
