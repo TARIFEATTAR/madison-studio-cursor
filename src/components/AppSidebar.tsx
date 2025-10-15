@@ -133,7 +133,7 @@ export function AppSidebar() {
                   alt="Madison Script" 
                   className="w-16 h-16 shrink-0 transition-transform duration-200 group-hover:scale-105"
                 />
-                <span className="font-serif text-xl text-white tracking-wide -ml-2">Madison Script</span>
+                <span className="font-serif text-xl text-white tracking-wide -ml-2 -mb-0.5">Madison Script</span>
               </NavLink>
               
               <div className="mt-6 flex justify-end">
