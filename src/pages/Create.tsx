@@ -388,21 +388,34 @@ export default function Create() {
       const decoder = new TextDecoder();
       let aiMessage = "";
       let aiMessageIndex = -1;
+      let textBuffer = "";
+      let streamDone = false;
 
-      while (true) {
+      while (!streamDone) {
         const { done, value } = await reader.read();
         if (done) break;
         
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n').filter(line => line.trim().startsWith('data:'));
-        
-        for (const line of lines) {
+        textBuffer += decoder.decode(value, { stream: true });
+
+        // Process line-by-line as data arrives
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+
+          if (line.endsWith("\r")) line = line.slice(0, -1);   // handle CRLF
+          if (line.startsWith(":") || line.trim() === "") continue; // SSE comments/keepalive
+          if (!line.startsWith("data: ")) continue;
+
           const jsonStr = line.slice(6).trim();
-          if (jsonStr === '[DONE]') continue;
-          
+          if (jsonStr === "[DONE]") {
+            streamDone = true;
+            break;
+          }
+
           try {
             const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
             
             if (content) {
               aiMessage += content;
@@ -426,8 +439,36 @@ export default function Create() {
               });
             }
           } catch (parseError) {
-            console.error('Error parsing SSE:', parseError);
+            // Incomplete JSON split across chunks: put it back and wait for more data
+            textBuffer = line + "\n" + textBuffer;
+            break;
           }
+        }
+      }
+
+      // Final flush in case remaining buffered lines arrived without trailing newline
+      if (textBuffer.trim()) {
+        for (let raw of textBuffer.split("\n")) {
+          if (!raw) continue;
+          if (raw.endsWith("\r")) raw = raw.slice(0, -1);
+          if (raw.startsWith(":") || raw.trim() === "") continue;
+          if (!raw.startsWith("data: ")) continue;
+          const jsonStr = raw.slice(6).trim();
+          if (jsonStr === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              aiMessage += content;
+              setThinkModeMessages(prev => {
+                const updated = [...prev];
+                if (aiMessageIndex !== -1) {
+                  updated[aiMessageIndex].content = aiMessage;
+                }
+                return updated;
+              });
+            }
+          } catch { /* ignore partial leftovers */ }
         }
       }
     } catch (error) {
