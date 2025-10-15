@@ -1175,6 +1175,7 @@ export type Database = {
     }
     Enums: {
       content_type: "product" | "email" | "social" | "visual" | "blog"
+      formulation_type_enum: "Purity" | "Composed" | "Natural Resins & Incense"
       organization_role: "owner" | "admin" | "member"
       scent_family: "warm" | "floral" | "fresh" | "woody"
     }
@@ -1305,6 +1306,7 @@ export const Constants = {
   public: {
     Enums: {
       content_type: ["product", "email", "social", "visual", "blog"],
+      formulation_type_enum: ["Purity", "Composed", "Natural Resins & Incense"],
       organization_role: ["owner", "admin", "member"],
       scent_family: ["warm", "floral", "fresh", "woody"],
     },
