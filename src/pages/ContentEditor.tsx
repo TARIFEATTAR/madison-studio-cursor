@@ -529,7 +529,7 @@ export default function ContentEditorPage() {
           await forceSave();
           console.log('[ContentEditor] Save completed');
         } catch (e) {
-          console.warn('[ContentEditor] forceSave failed, proceeding with upsert fallback:', e);
+          console.warn('[ContentEditor] forceSave failed, proceeding with resolve-save fallback:', e);
         }
       }
       
@@ -539,7 +539,7 @@ export default function ContentEditorPage() {
       let finalContentId = contentId;
       
       if (!finalContentId) {
-        console.info('[ContentEditor] No contentId - checking for existing master_content');
+        console.info('[ContentEditor] No contentId - starting resolve-save routine');
         
         const { data: userData } = await supabase.auth.getUser();
         
@@ -570,53 +570,201 @@ export default function ContentEditorPage() {
         
         console.info('[ContentEditor] Using organization ID:', orgId);
         
-        // Use a single UPSERT to avoid duplicates and race conditions
         const normalizedTitle = (title || 'Untitled Content').trim();
-        console.info('[ContentEditor] Saving via upsert with normalized title:', normalizedTitle);
+        const payload = {
+          full_content: contentToSend || '',
+          content_type: contentType || 'Content',
+          word_count: (contentToSend?.split(/\s+/).filter(Boolean).length) || 0,
+          updated_at: new Date().toISOString(),
+          ...(qualityRating && { quality_rating: qualityRating })
+        };
+        
+        console.info('[ContentEditor] Normalized title:', normalizedTitle);
 
-        const { data: upsertData, error: upsertError } = await supabase
+        // Try to find active row first
+        const { data: activeRow, error: activeErr } = await supabase
           .from('master_content')
-          .upsert(
-            {
-              // Conflict target: organization_id + title
-              organization_id: orgId,
-              title: normalizedTitle,
-              content_type: contentType || 'Content',
-              full_content: contentToSend || '',
-              word_count: (contentToSend?.split(/\s+/).filter(Boolean).length) || 0,
-              created_by: userData?.user?.id || null,
-              // If row exists and was archived, unarchive it
-              is_archived: false,
-              archived_at: null,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: 'organization_id,title' }
-          )
           .select('id')
-          .single();
-
-        if (upsertError) {
-          console.error('[ContentEditor] Upsert master_content failed:', upsertError);
+          .eq('organization_id', orgId)
+          .eq('title', normalizedTitle)
+          .eq('is_archived', false)
+          .maybeSingle();
+        
+        if (activeErr) {
+          console.error('[ContentEditor] Error checking for active row:', activeErr);
           toast({
             title: 'Error',
-            description: upsertError.message || 'Failed to save content',
+            description: activeErr.message || 'Failed to save content',
             variant: 'destructive',
           });
           return;
         }
 
-        if (!upsertData?.id) {
-          console.error('[ContentEditor] Upsert succeeded without id');
+        if (activeRow) {
+          // Active row exists, update it
+          console.info('[ContentEditor] Found active row, updating id:', activeRow.id);
+          const { error: updateErr } = await supabase
+            .from('master_content')
+            .update(payload)
+            .eq('id', activeRow.id);
+          
+          if (updateErr) {
+            console.error('[ContentEditor] Error updating active row:', updateErr);
+            toast({
+              title: 'Error',
+              description: updateErr.message || 'Failed to save content',
+              variant: 'destructive',
+            });
+            return;
+          }
+          
+          finalContentId = activeRow.id;
+          console.info('[ContentEditor] Updated active row successfully');
+        } else {
+          // No active row, check for archived row
+          const { data: archivedRow, error: archivedErr } = await supabase
+            .from('master_content')
+            .select('id')
+            .eq('organization_id', orgId)
+            .eq('title', normalizedTitle)
+            .eq('is_archived', true)
+            .order('updated_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          
+          if (archivedErr) {
+            console.error('[ContentEditor] Error checking for archived row:', archivedErr);
+            toast({
+              title: 'Error',
+              description: archivedErr.message || 'Failed to save content',
+              variant: 'destructive',
+            });
+            return;
+          }
+
+          if (archivedRow) {
+            // Archived row exists, unarchive and update it
+            console.info('[ContentEditor] Found archived row, unarchiving and updating id:', archivedRow.id);
+            const { error: unarchiveErr } = await supabase
+              .from('master_content')
+              .update({
+                ...payload,
+                is_archived: false,
+                archived_at: null
+              })
+              .eq('id', archivedRow.id);
+            
+            if (unarchiveErr) {
+              console.error('[ContentEditor] Error unarchiving row:', unarchiveErr);
+              toast({
+                title: 'Error',
+                description: unarchiveErr.message || 'Failed to save content',
+                variant: 'destructive',
+              });
+              return;
+            }
+            
+            finalContentId = archivedRow.id;
+            console.info('[ContentEditor] Unarchived and updated row successfully');
+          } else {
+            // No existing row, insert new
+            console.info('[ContentEditor] No existing row found, inserting new');
+            const { data: insertData, error: insertErr } = await supabase
+              .from('master_content')
+              .insert({
+                organization_id: orgId,
+                title: normalizedTitle,
+                created_by: userData?.user?.id || null,
+                ...payload,
+                is_archived: false,
+                archived_at: null
+              })
+              .select('id')
+              .single();
+            
+            if (insertErr) {
+              // Check if it's a duplicate key error (race condition)
+              if (insertErr.code === '23505') {
+                console.info('[ContentEditor] Insert failed with 23505 (duplicate), recovering by re-selecting active row');
+                const { data: recoveryRow, error: recoveryErr } = await supabase
+                  .from('master_content')
+                  .select('id')
+                  .eq('organization_id', orgId)
+                  .eq('title', normalizedTitle)
+                  .eq('is_archived', false)
+                  .maybeSingle();
+                
+                if (recoveryErr || !recoveryRow) {
+                  console.error('[ContentEditor] Recovery failed:', recoveryErr);
+                  toast({
+                    title: 'Error',
+                    description: recoveryErr?.message || 'Failed to save content',
+                    variant: 'destructive',
+                  });
+                  return;
+                }
+                
+                // Update the recovered row
+                const { error: recoveryUpdateErr } = await supabase
+                  .from('master_content')
+                  .update(payload)
+                  .eq('id', recoveryRow.id);
+                
+                if (recoveryUpdateErr) {
+                  console.error('[ContentEditor] Recovery update failed:', recoveryUpdateErr);
+                  toast({
+                    title: 'Error',
+                    description: recoveryUpdateErr.message || 'Failed to save content',
+                    variant: 'destructive',
+                  });
+                  return;
+                }
+                
+                finalContentId = recoveryRow.id;
+                console.info('[ContentEditor] Recovered from race condition, updated id:', finalContentId);
+              } else {
+                console.error('[ContentEditor] Insert failed:', insertErr);
+                toast({
+                  title: 'Error',
+                  description: insertErr.message || 'Failed to save content',
+                  variant: 'destructive',
+                });
+                return;
+              }
+            } else {
+              finalContentId = insertData.id;
+              console.info('[ContentEditor] Inserted new row successfully, id:', finalContentId);
+            }
+          }
+        }
+      } else {
+        // We have a contentId, update it
+        console.info('[ContentEditor] Have contentId, updating:', contentId);
+        const payload = {
+          full_content: contentToSend || '',
+          content_type: contentType || 'Content',
+          word_count: (contentToSend?.split(/\s+/).filter(Boolean).length) || 0,
+          updated_at: new Date().toISOString(),
+          ...(qualityRating && { quality_rating: qualityRating })
+        };
+        
+        const { error: updateErr } = await supabase
+          .from('master_content')
+          .update(payload)
+          .eq('id', contentId);
+        
+        if (updateErr) {
+          console.error('[ContentEditor] Error updating existing content:', updateErr);
           toast({
             title: 'Error',
-            description: 'Failed to save content',
+            description: updateErr.message || 'Failed to save content',
             variant: 'destructive',
           });
           return;
         }
-
-        finalContentId = upsertData.id;
-        console.info('[ContentEditor] Upserted master_content id:', finalContentId);
+        
+        finalContentId = contentId;
+        console.info('[ContentEditor] Updated existing content successfully');
       }
       
       // Persist master ID to localStorage and URL for robust cross-device/reload tracking
