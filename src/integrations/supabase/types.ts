@@ -718,7 +718,9 @@ export type Database = {
           brand_config: Json | null
           created_at: string | null
           created_by: string | null
+          deleted_at: string | null
           id: string
+          is_deleted: boolean
           name: string
           settings: Json | null
           slug: string | null
@@ -728,7 +730,9 @@ export type Database = {
           brand_config?: Json | null
           created_at?: string | null
           created_by?: string | null
+          deleted_at?: string | null
           id?: string
+          is_deleted?: boolean
           name: string
           settings?: Json | null
           slug?: string | null
@@ -738,7 +742,9 @@ export type Database = {
           brand_config?: Json | null
           created_at?: string | null
           created_by?: string | null
+          deleted_at?: string | null
           id?: string
+          is_deleted?: boolean
           name?: string
           settings?: Json | null
           slug?: string | null
