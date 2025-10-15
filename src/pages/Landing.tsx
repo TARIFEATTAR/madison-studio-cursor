@@ -43,7 +43,7 @@ const Landing = () => {
       <header 
         className="fixed top-0 w-full z-[1000] transition-all duration-300"
         style={{ 
-          backgroundColor: '#4f2c22',
+          backgroundColor: '#1A1816',
           padding: '20px 40px',
           border: 'none',
           boxShadow: 'none'
@@ -51,32 +51,16 @@ const Landing = () => {
       >
         <div className="container mx-auto">
           <nav className="flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-4">
-              <div className="w-20 h-20 flex-shrink-0">
-                <img src={madisonNibb} alt="Madison Nibb" className="w-full h-full object-contain" />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <div 
-                  className="font-serif text-white"
-                  style={{ 
-                    fontSize: '24px',
-                    fontWeight: 600,
-                    lineHeight: 1
-                  }}
-                >
-                  Madison Script
-                </div>
-                <div 
-                  className="font-sans uppercase text-white/70" 
-                  style={{ 
-                    fontSize: '11px',
-                    letterSpacing: '0.12em',
-                    fontWeight: 500,
-                    lineHeight: 1
-                  }}
-                >
-                  Editorial Intelligence
-                </div>
+            <Link to="/" className="flex items-center">
+              <div 
+                className="font-serif text-white"
+                style={{ 
+                  fontSize: '24px',
+                  fontWeight: 600,
+                  lineHeight: 1
+                }}
+              >
+                Madison Script
               </div>
             </Link>
 
@@ -154,9 +138,9 @@ const Landing = () => {
                           </Link>
                           <Button 
                             asChild 
-                            className="w-full text-ink-black font-serif font-semibold transition-all duration-300" 
+                            className="w-full text-ink-black font-serif font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0" 
                             style={{
-                              background: 'linear-gradient(135deg, #B8956A 0%, #D4AF37 100%)',
+                              backgroundColor: '#B8956A',
                               padding: '14px 36px',
                               borderRadius: '8px',
                               boxShadow: '0 4px 12px rgba(184, 149, 106, 0.3)'
@@ -193,7 +177,7 @@ const Landing = () => {
                     asChild 
                     className="hidden md:inline-flex text-ink-black font-serif font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(184,149,106,0.45)] active:translate-y-0 active:shadow-[0_2px_8px_rgba(184,149,106,0.3)]" 
                     style={{
-                      background: 'linear-gradient(135deg, #B8956A 0%, #D4AF37 100%)',
+                      backgroundColor: '#B8956A',
                       padding: '14px 36px',
                       borderRadius: '8px',
                       boxShadow: '0 4px 12px rgba(184, 149, 106, 0.3)',
@@ -282,7 +266,7 @@ const Landing = () => {
                 to="/auth" 
                 className="inline-block px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-[18px] text-sm sm:text-base md:text-lg font-serif font-semibold text-ink-black rounded-lg transition-all duration-300"
                 style={{
-                  background: 'linear-gradient(135deg, #B8956A 0%, #D4AF37 100%)',
+                  backgroundColor: '#B8956A',
                   boxShadow: '0 4px 16px rgba(184, 149, 106, 0.35)'
                 }}
                 onMouseEnter={(e) => {
@@ -294,7 +278,7 @@ const Landing = () => {
                   e.currentTarget.style.boxShadow = '0 4px 16px rgba(184, 149, 106, 0.35)';
                 }}
               >
-                Commission Your First Piece
+                Create Your First Piece
               </Link>
               <Link 
                 to="/meet-madison" 
