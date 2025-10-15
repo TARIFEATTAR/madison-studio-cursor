@@ -13,6 +13,7 @@ import calendarIcon from "@/assets/calendar-icon.png";
 import scriptoraLogo from "@/assets/scriptora-logo-icon.png";
 import scriptoraIcon from "@/assets/scriptora-icon-transparent.png";
 import madisonHero from "@/assets/madison-hero.jpg";
+import madisonNibb from "@/assets/madison-nibb.png";
 
 const Landing = () => {
   const { user } = useAuth();
@@ -42,8 +43,7 @@ const Landing = () => {
       <header 
         className="fixed top-0 w-full z-[1000] transition-all duration-300"
         style={{ 
-          background: 'linear-gradient(to bottom, rgba(245, 241, 232, 0.95) 0%, rgba(245, 241, 232, 0.85) 50%, rgba(245, 241, 232, 0) 100%)',
-          backdropFilter: 'blur(8px)',
+          backgroundColor: '#4f2c22',
           padding: '20px 40px',
           border: 'none',
           boxShadow: 'none'
@@ -53,21 +53,21 @@ const Landing = () => {
           <nav className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-4">
               <div className="w-20 h-20 flex-shrink-0">
-                <img src={scriptoraIcon} alt="Scriptora Icon" className="w-full h-full object-contain" />
+                <img src={madisonNibb} alt="Madison Nibb" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col gap-0.5">
                 <div 
-                  className="font-serif text-ink-black"
+                  className="font-serif text-white"
                   style={{ 
                     fontSize: '24px',
                     fontWeight: 600,
                     lineHeight: 1
                   }}
                 >
-                  Scriptora
+                  Madison Script
                 </div>
                 <div 
-                  className="font-sans uppercase text-aged-brass" 
+                  className="font-sans uppercase text-white/70" 
                   style={{ 
                     fontSize: '11px',
                     letterSpacing: '0.12em',
@@ -83,25 +83,25 @@ const Landing = () => {
             <div className="hidden md:flex items-center gap-12">
               <a 
                 href="#features" 
-                className="nav-link-styled font-sans text-charcoal transition-all duration-300 hover:text-aged-brass relative group"
+                className="nav-link-styled font-sans text-white transition-all duration-300 hover:text-white/70 relative group"
                 style={{
                   fontSize: '16px',
                   fontWeight: 400
                 }}
               >
                 Features
-                <span className="absolute bottom-[-4px] left-0 w-0 h-0.5 bg-aged-brass transition-all duration-300 group-hover:w-full"></span>
+                <span className="absolute bottom-[-4px] left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
               </a>
               <a 
                 href="#how-it-works" 
-                className="nav-link-styled font-sans text-charcoal transition-all duration-300 hover:text-aged-brass relative group"
+                className="nav-link-styled font-sans text-white transition-all duration-300 hover:text-white/70 relative group"
                 style={{
                   fontSize: '16px',
                   fontWeight: 400
                 }}
               >
                 How It Works
-                <span className="absolute bottom-[-4px] left-0 w-0 h-0.5 bg-aged-brass transition-all duration-300 group-hover:w-full"></span>
+                <span className="absolute bottom-[-4px] left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
               </a>
             </div>
 
@@ -112,7 +112,7 @@ const Landing = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="md:hidden text-charcoal hover:text-aged-brass"
+                    className="md:hidden text-white hover:text-white/70"
                   >
                     <Menu className="w-6 h-6" />
                   </Button>
@@ -180,7 +180,7 @@ const Landing = () => {
                 <>
                   <Link
                     to="/auth"
-                    className="hidden md:inline-flex font-sans text-charcoal transition-all duration-300 hover:text-aged-brass"
+                    className="hidden md:inline-flex font-sans text-white transition-all duration-300 hover:text-white/70"
                     style={{
                       fontSize: '16px',
                       fontWeight: 500,
