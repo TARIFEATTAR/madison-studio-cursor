@@ -989,34 +989,70 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
       }
     }
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 4096,
-        system: systemPrompt,
-        messages: [
-          {
-            role: 'user',
-            content: prompt
+    // Retry configuration
+    const MAX_RETRIES = 3;
+    const INITIAL_RETRY_DELAY = 1000; // 1 second
+    
+    let lastError: Error | null = null;
+    let generatedContent = '';
+    
+    // Exponential backoff retry logic
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        if (attempt > 0) {
+          const delay = INITIAL_RETRY_DELAY * Math.pow(2, attempt - 1);
+          console.log(`Retry attempt ${attempt + 1}/${MAX_RETRIES} after ${delay}ms delay`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+        
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'x-api-key': ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 4096,
+            system: systemPrompt,
+            messages: [
+              {
+                role: 'user',
+                content: prompt
+              }
+            ],
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Claude API error (attempt ${attempt + 1}):`, response.status, errorText);
+          
+          // Only retry on 500 errors
+          if (response.status === 500) {
+            lastError = new Error(`Claude API error: ${response.status} - ${errorText}`);
+            continue; // Try again
           }
-        ],
-      }),
-    });
+          
+          // For other errors, fail immediately
+          throw new Error(`Claude API error: ${response.status} - ${errorText}`);
+        }
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Claude API error:', response.status, errorText);
-      throw new Error(`Claude API error: ${response.status} - ${errorText}`);
+        const data = await response.json();
+        generatedContent = data.content[0].text;
+        
+        // Success - break out of retry loop
+        break;
+        
+      } catch (error) {
+        if (attempt === MAX_RETRIES - 1) {
+          // Last attempt failed
+          throw lastError || error;
+        }
+        lastError = error as Error;
+      }
     }
-
-    const data = await response.json();
-    const generatedContent = data.content[0].text;
 
     console.log('Successfully generated content with Claude');
 
