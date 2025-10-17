@@ -118,7 +118,7 @@ const Auth = () => {
       });
     } else {
       toast({
-        title: "Welcome to MADISON",
+        title: "Welcome to Madison",
         description: "Your account has been created successfully.",
       });
     }
