@@ -215,17 +215,17 @@ const Landing = () => {
         
         {/* Gradient Overlay for Text Legibility */}
         <div className="hero-overlay md:hidden" style={{
-          background: 'linear-gradient(to bottom, rgba(26, 24, 22, 0.75) 0%, rgba(26, 24, 22, 0.65) 40%, rgba(26, 24, 22, 0.85) 100%)',
+          background: 'linear-gradient(to bottom, rgba(26, 24, 22, 0.78) 0%, rgba(26, 24, 22, 0.70) 40%, rgba(26, 24, 22, 0.88) 100%)',
           zIndex: 10
         }}></div>
         <div className="hero-overlay hidden md:block" style={{ zIndex: 10 }}></div>
         
-        <div className="relative z-20 h-full flex items-center justify-start pl-6 pr-6 pt-28 md:pl-[120px] md:pr-[45%] md:pt-0">
+        <div className="relative z-20 h-full flex items-center justify-start pl-6 pr-6 pt-32 md:pl-[120px] md:pr-[45%] md:pt-0">
           <div className="max-w-[650px] text-left -mt-5 md:mt-0">
             
             {/* Headline with brass accent */}
             <h1 className="font-serif font-semibold mb-4 md:mb-5">
-              <span className="block text-3xl sm:text-4xl md:text-6xl lg:text-7xl text-parchment-white leading-tight">
+              <span className="block text-3xl sm:text-4xl md:text-6xl lg:text-7xl text-parchment-white leading-[1.25] md:leading-tight tracking-[0.015em] md:tracking-normal">
                 Where Luxury Beauty Brands Craft Their
               </span>
               <span 
@@ -247,11 +247,10 @@ const Landing = () => {
             
             {/* Subheadline */}
             <p 
-              className="text-base sm:text-lg md:text-xl max-w-[580px]"
+              className="text-[17px] leading-[1.8] sm:text-lg md:text-xl md:leading-[1.7] max-w-[520px] md:max-w-[580px]"
               style={{
                 color: 'rgba(255, 252, 245, 0.95)',
-                textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
-                lineHeight: '1.7'
+                textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
               }}
             >
               AI-powered content creation that honors craftsmanship, 
@@ -261,7 +260,7 @@ const Landing = () => {
             </p>
             
             {/* CTA Buttons */}
-            <div className="hero-ctas mt-8 md:mt-10">
+            <div className="flex flex-col sm:flex-row gap-4 mt-10 md:mt-10">
               <Link 
                 to="/auth" 
                 className="inline-block px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-[18px] text-sm sm:text-base md:text-lg font-serif font-semibold text-ink-black rounded-lg transition-all duration-300"
@@ -282,19 +281,20 @@ const Landing = () => {
               </Link>
               <Link 
                 to="/meet-madison" 
-                className="inline-block px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-[18px] text-sm sm:text-base md:text-lg font-sans font-medium rounded-lg transition-all duration-300"
+                className="inline-block px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-[18px] text-sm sm:text-base md:text-lg font-sans font-medium rounded-lg transition-all duration-300 border-2 border-parchment-white/65 md:border-parchment-white/80 bg-ink-black/15 md:bg-transparent"
                 style={{
-                  border: '2px solid rgba(255, 252, 245, 0.8)',
-                  color: 'rgba(255, 252, 245, 0.95)',
+                  color: 'rgba(255, 252, 245, 0.85)',
                   backdropFilter: 'blur(4px)'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'rgba(255, 252, 245, 0.1)';
                   e.currentTarget.style.borderColor = 'rgba(255, 252, 245, 1)';
+                  e.currentTarget.style.color = 'rgba(255, 252, 245, 0.95)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.borderColor = 'rgba(255, 252, 245, 0.8)';
+                  e.currentTarget.style.background = window.innerWidth < 768 ? 'rgba(26, 24, 22, 0.15)' : 'transparent';
+                  e.currentTarget.style.borderColor = window.innerWidth < 768 ? 'rgba(255, 252, 245, 0.65)' : 'rgba(255, 252, 245, 0.8)';
+                  e.currentTarget.style.color = 'rgba(255, 252, 245, 0.85)';
                 }}
               >
                 Meet Your Editorial Director
