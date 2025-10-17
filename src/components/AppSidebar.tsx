@@ -130,10 +130,10 @@ export function AppSidebar() {
               <NavLink to="/dashboard" className="flex items-center gap-3 group">
               <img 
                 src={maddiLogo} 
-                alt="Maddi"
+                alt="MADISON"
                   className="w-16 h-16 shrink-0 transition-transform duration-200 group-hover:scale-105"
                 />
-                <span className="font-serif text-xl text-white tracking-wide -ml-2 -mb-[8px]">Maddi</span>
+                <span className="font-serif text-xl text-white tracking-wide -ml-2 -mb-[8px]">MADISON</span>
               </NavLink>
               
               <div className="mt-6 flex justify-end">
@@ -155,7 +155,7 @@ export function AppSidebar() {
               <NavLink to="/dashboard" className="group">
               <img 
                 src={maddiLogo} 
-                alt="Maddi"
+                alt="MADISON"
                   className="w-14 h-14 transition-transform duration-200 group-hover:scale-105"
                 />
               </NavLink>
