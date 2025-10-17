@@ -133,7 +133,7 @@ export function AppSidebar() {
                 alt="MADISON"
                   className="w-16 h-16 shrink-0 transition-transform duration-200 group-hover:scale-105"
                 />
-                <span className="font-serif text-xl tracking-[0.15em] -ml-2 -mb-[8px]" style={{ fontWeight: 300, color: '#F5F5DC' }}>MADISON</span>
+                <span className="font-serif text-xl tracking-[0.18em] -ml-2 -mb-[8px]" style={{ fontWeight: 300, color: '#F5F5DC' }}>MADISON</span>
               </NavLink>
               
               <div className="mt-6 flex justify-end">
