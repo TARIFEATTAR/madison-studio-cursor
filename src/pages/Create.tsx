@@ -5,6 +5,7 @@ import penNibIcon from "@/assets/pen-nib-icon-new.png";
 import { createRoot } from "react-dom/client";
 import ScriptoraLoadingAnimation from "@/components/forge/ScriptoraLoadingAnimation";
 import { TransitionLoader } from "@/components/forge/TransitionLoader";
+import { stripMarkdown } from "@/utils/forgeHelpers";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useProducts } from "@/hooks/useProducts";
@@ -202,7 +203,7 @@ export default function Create() {
 
       if (error) throw error;
 
-      const generatedContent = data?.generatedContent || "Error: No content generated";
+      const generatedContent = stripMarkdown(data?.generatedContent || "");
       
       console.log('AI generated content, length:', generatedContent.length);
       
