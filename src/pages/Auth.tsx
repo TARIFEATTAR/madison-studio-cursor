@@ -118,7 +118,7 @@ const Auth = () => {
       });
     } else {
       toast({
-        title: "Welcome to Madison Script",
+        title: "Welcome to Maddi",
         description: "Your account has been created successfully.",
       });
     }
@@ -228,7 +228,7 @@ const Auth = () => {
         <div className="text-center mb-8 fade-enter">
           <img 
             src={madisonScriptLogo} 
-            alt="Madison Script" 
+            alt="Maddi"
             className="h-64 w-auto mx-auto mb-3"
           />
           <p className="text-muted-foreground text-lg">

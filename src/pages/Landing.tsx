@@ -60,7 +60,7 @@ const Landing = () => {
                   lineHeight: 1
                 }}
               >
-                Madison Script
+                Maddi
               </div>
             </Link>
 
@@ -375,7 +375,7 @@ const Landing = () => {
         <div className="container mx-auto px-6">
           <div className="max-w-6xl mx-auto space-y-12">
             <div className="text-center space-y-4">
-              <h2 className="text-4xl md:text-5xl font-serif text-ink-black">How Madison Script Works</h2>
+              <h2 className="text-4xl md:text-5xl font-serif text-ink-black">How Maddi Works</h2>
               <p className="text-lg text-charcoal/70">
                 From brand setup to content distribution in three simple steps
               </p>
@@ -389,7 +389,7 @@ const Landing = () => {
                   </div>
                   <h3 className="text-xl font-serif text-ink-black">Establish Your Brand</h3>
                   <p className="text-charcoal/80 leading-relaxed">
-                    Upload brand guidelines, define your voice, and set your visual identity. Madison Script learns what makes your brand unique.
+                    Upload brand guidelines, define your voice, and set your visual identity. Maddi learns what makes your brand unique.
                   </p>
                 </CardContent>
                 <ArrowRight className="hidden md:block absolute -right-4 top-1/2 -translate-y-1/2 text-aged-brass w-8 h-8" />
@@ -434,7 +434,7 @@ const Landing = () => {
                   Everything You Need to <span className="text-aged-brass">Scale Your Content</span>
                 </h2>
                 <p className="text-lg text-parchment-white/70 leading-relaxed">
-                  Madison Script brings together brand intelligence, AI-powered creation, and strategic distribution into one seamless platform.
+                  Maddi brings together brand intelligence, AI-powered creation, and strategic distribution into one seamless platform.
                 </p>
                 <Button asChild variant="brass" size="lg" className="gap-2">
                   <Link to="/auth">
@@ -472,7 +472,7 @@ const Landing = () => {
                 Ready to Transform Your Content Workflow?
               </h2>
               <p className="text-lg text-charcoal/80 max-w-2xl mx-auto">
-                Join brands using Madison Script to create consistent, on-brand content at scale. Start your free trial today—no credit card required.
+                Join brands using Maddi to create consistent, on-brand content at scale. Start your free trial today—no credit card required.
               </p>
               <div className="space-y-3">
                 <Button asChild variant="brass" size="lg" className="gap-2">
@@ -493,7 +493,7 @@ const Landing = () => {
           <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-8">
             <div className="space-y-4">
               <div>
-                <div className="font-serif font-bold text-xl">Madison Script</div>
+                <div className="font-serif font-bold text-xl">Maddi</div>
                 <div className="text-xs text-parchment-white/60 tracking-wider uppercase">Editorial Intelligence</div>
               </div>
               <p className="text-sm text-parchment-white/70 leading-relaxed">
@@ -529,7 +529,7 @@ const Landing = () => {
           </div>
 
           <div className="mt-12 pt-8 border-t border-aged-brass/20 text-center text-sm text-parchment-white/60">
-            © 2024 Madison Script. All rights reserved.
+            © 2024 Maddi. All rights reserved.
           </div>
         </div>
       </footer>

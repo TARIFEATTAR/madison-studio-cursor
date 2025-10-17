@@ -128,12 +128,12 @@ export function AppSidebar() {
           {open && (
             <div className="px-4 pt-6 pb-4">
               <NavLink to="/dashboard" className="flex items-center gap-3 group">
-                <img 
-                  src={madisonLogo} 
-                  alt="Madison Script" 
+              <img 
+                src={madisonLogo} 
+                alt="Maddi"
                   className="w-16 h-16 shrink-0 transition-transform duration-200 group-hover:scale-105"
                 />
-                <span className="font-serif text-xl text-white tracking-wide -ml-2 -mb-[8px]">Madison Script</span>
+                <span className="font-serif text-xl text-white tracking-wide -ml-2 -mb-[8px]">Maddi</span>
               </NavLink>
               
               <div className="mt-6 flex justify-end">
@@ -153,9 +153,9 @@ export function AppSidebar() {
           {!open && (
             <div className="px-2 pt-6 pb-4 flex flex-col items-center gap-3">
               <NavLink to="/dashboard" className="group">
-                <img 
-                  src={madisonLogo} 
-                  alt="Madison Script" 
+              <img 
+                src={madisonLogo} 
+                alt="Maddi"
                   className="w-14 h-14 transition-transform duration-200 group-hover:scale-105"
                 />
               </NavLink>
