@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 interface DerivativeAsset {
   id: string;
@@ -66,6 +67,7 @@ export const ScheduleModal = ({
   masterContent 
 }: ScheduleModalProps) => {
   const isMobile = useIsMobile();
+  const { currentOrganizationId } = useOnboarding();
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Date | undefined>(selectedDate || new Date());
   const [time, setTime] = useState("");
@@ -140,6 +142,7 @@ export const ScheduleModal = ({
 
       const scheduleData = {
         user_id: user.id,
+        organization_id: currentOrganizationId,
         title,
         content_type: platform || "general",
         platform,
