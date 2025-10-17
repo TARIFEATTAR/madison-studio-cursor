@@ -39,7 +39,7 @@ export function WelcomeModal({ open, onComplete, onSkip }: WelcomeModalProps) {
         )}
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl text-foreground">
-            Welcome to Scriptora
+            Welcome to MADISON
           </DialogTitle>
           <p className="text-sm text-muted-foreground mt-2">
             Step 1 of 3 • This takes 30 seconds

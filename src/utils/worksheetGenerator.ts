@@ -12,7 +12,7 @@ export async function generateWorksheet(options: WorksheetOptions = {}): Promise
     format: 'a4'
   });
 
-  const { organizationName = 'Scriptora' } = options;
+  const { organizationName = 'MADISON' } = options;
   
   // Colors matching brand
   const brassColor: [number, number, number] = [184, 149, 106]; // #B8956A
@@ -216,7 +216,7 @@ export async function generateWorksheet(options: WorksheetOptions = {}): Promise
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...warmGray);
-  doc.text('Scan to upload this worksheet or visit: scriptora.app/create', pageWidth / 2, yPos, { align: 'center' });
+  doc.text('Scan to upload this worksheet or visit: madisonstudio.io/create', pageWidth / 2, yPos, { align: 'center' });
   yPos += 5;
   doc.setFontSize(8);
   doc.text('Supported formats: PDF, JPG, PNG', pageWidth / 2, yPos, { align: 'center' });

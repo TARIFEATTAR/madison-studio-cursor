@@ -144,7 +144,7 @@ export default function Create() {
         timestamp: Date.now()
       };
     
-    localStorage.setItem('scriptora-content-brief', JSON.stringify(briefData));
+    localStorage.setItem('madison-content-brief', JSON.stringify(briefData));
     setNameDialogOpen(false);
     setIsGenerating(true);
     

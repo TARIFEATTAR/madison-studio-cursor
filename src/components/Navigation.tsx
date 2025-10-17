@@ -63,7 +63,7 @@ const Navigation = () => {
           <Link to="/" className="flex items-center group">
             <img 
               src="/logo.png" 
-              alt="Scriptora - Editorial Intelligence" 
+              alt="MADISON - Editorial Intelligence" 
               className="h-48 md:h-64 w-auto transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 group-hover:drop-shadow-lg"
               onError={(e) => {
                 console.error('Logo failed to load');

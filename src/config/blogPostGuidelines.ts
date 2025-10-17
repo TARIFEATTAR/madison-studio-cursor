@@ -1,5 +1,5 @@
 /**
- * Blog Post Content Guidelines for Scriptora
+ * Blog Post Content Guidelines for MADISON
  * Implements three-act structure and brand voice validation
  */
 

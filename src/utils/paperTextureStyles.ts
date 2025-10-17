@@ -1,6 +1,6 @@
 /**
  * PAPER TEXTURE STYLES
- * Reusable paper texture utilities for Scriptora components
+ * Reusable paper texture utilities for MADISON components
  * Based on warm, editorial aesthetic throughout the application
  */
 

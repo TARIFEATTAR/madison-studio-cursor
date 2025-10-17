@@ -30,7 +30,7 @@ export function OnboardingCompleteModal({ open, onClose }: OnboardingCompleteMod
             <CheckCircle2 className="h-10 w-10 text-brass" />
           </motion.div>
           <DialogTitle className="font-serif text-3xl text-center">
-            Welcome to Scriptora! 🎉
+            Welcome to MADISON! 🎉
           </DialogTitle>
           <DialogDescription className="text-center text-base">
             You're all set! Your brand voice is trained and ready to use.

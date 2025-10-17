@@ -40,7 +40,7 @@ export default function MeetMadison() {
             Meet Madison
           </h1>
           <p className="text-xl text-warm-gray">
-            Your Editorial Director at Scriptora
+            Your Editorial Director at MADISON
           </p>
         </div>
         
@@ -61,7 +61,7 @@ export default function MeetMadison() {
                 Madison worked on campaigns for heritage perfume houses, emerging niche fragrance brands, prestige skincare lines, and luxury beauty conglomerates. They learned that whether selling a classic French parfum, an indie botanical perfume oil, a clinical skincare serum, or an artisan fragrance—the principles of effective communication remain constant, while the application evolves with consumer behavior.
               </p>
               <p>
-                Now at Scriptora, Madison brings decades of cross-category expertise to help modern beauty and fragrance brands craft content that honors timeless principles while speaking to contemporary consumers.
+                Now at MADISON, Madison brings decades of cross-category expertise to help modern beauty and fragrance brands craft content that honors timeless principles while speaking to contemporary consumers.
               </p>
             </div>
           </section>

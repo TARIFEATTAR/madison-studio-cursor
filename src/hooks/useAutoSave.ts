@@ -55,7 +55,7 @@ export function useAutoSave({
 
     try {
       // Save to localStorage first (fast)
-      localStorage.setItem('scriptora-content-draft', JSON.stringify({
+      localStorage.setItem('madison-content-draft', JSON.stringify({
         id: contentId,
         title: contentName,
         content,

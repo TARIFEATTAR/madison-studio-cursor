@@ -27,7 +27,7 @@ const Index = () => {
     console.log("[Index] Showing loading state");
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-foreground text-xl">Loading Scriptora...</div>
+        <div className="text-foreground text-xl">Loading MADISON...</div>
       </div>
     );
   }

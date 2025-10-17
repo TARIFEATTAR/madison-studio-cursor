@@ -28,7 +28,7 @@ export function BrandGuidelinesTab() {
   const [isSaving, setIsSaving] = useState(false);
   const [brandDocuments, setBrandDocuments] = useState<any[]>([]);
   const [guidelines, setGuidelines] = useState<BrandGuidelines>({
-    brand_name: "Scriptora",
+    brand_name: "",
     brand_voice: "",
     forbidden_phrases: "",
     brand_story: "",
@@ -55,7 +55,7 @@ export function BrandGuidelinesTab() {
       const settings = (data?.settings as any) || {};
       const saved = settings.brand_guidelines || {};
       setGuidelines({
-        brand_name: saved.brand_name || "Scriptora",
+        brand_name: saved.brand_name || "",
         brand_voice: saved.brand_voice || "",
         forbidden_phrases: saved.forbidden_phrases || "",
         brand_story: saved.brand_story || "",

@@ -23,7 +23,7 @@ export const generateFilename = (contentType: string, title: string, date: strin
     .substring(0, 50);
   
   const cleanDate = new Date(date).toISOString().split('T')[0];
-  return `scriptora-${contentType}-${cleanTitle}-${cleanDate}.${extension}`;
+  return `madison-${contentType}-${cleanTitle}-${cleanDate}.${extension}`;
 };
 
 export const exportAsText = (content: string, metadata: ExportMetadata): void => {
@@ -162,10 +162,10 @@ export const exportAsPDF = (content: string, metadata: ExportMetadata): void => 
       doc.text(metadata.organizationName, margin, pageHeight - 10);
     }
     
-    // Center: "Created with Scriptora"
+    // Center: "Created with MADISON"
     doc.setFont('helvetica', 'italic');
     doc.text(
-      'Created with Scriptora',
+      'Created with MADISON',
       pageWidth / 2,
       pageHeight - 10,
       { align: 'center' }
@@ -265,12 +265,12 @@ export const exportAsDocx = async (content: string, metadata: ExportMetadata): P
   // Footer
   children.push(
     new Paragraph({
-      text: 'Created with Scriptora',
+      text: 'Created with MADISON',
       alignment: AlignmentType.CENTER,
       spacing: { before: 400 },
       children: [
         new TextRun({
-          text: `Created with Scriptora${metadata.organizationName ? ' • ' + metadata.organizationName : ''}`,
+          text: `Created with MADISON${metadata.organizationName ? ' • ' + metadata.organizationName : ''}`,
           size: 16,
           color: '999999',
           italics: true,

@@ -5,19 +5,19 @@ import { Badge } from "@/components/ui/badge";
 const teamMembers = [
   {
     name: "Sarah Bennett",
-    email: "sarah@scriptora.com",
+    email: "sarah@madisonstudio.io",
     role: "Owner",
     initials: "SB",
   },
   {
     name: "Michael Chen",
-    email: "michael@scriptora.com",
+    email: "michael@madisonstudio.io",
     role: "Editor",
     initials: "MC",
   },
   {
     name: "Emma Rodriguez",
-    email: "emma@scriptora.com",
+    email: "emma@madisonstudio.io",
     role: "Contributor",
     initials: "ER",
   },

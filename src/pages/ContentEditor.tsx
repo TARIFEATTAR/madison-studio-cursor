@@ -279,7 +279,7 @@ export default function ContentEditorPage() {
         }
       }
 
-      const savedDraft = localStorage.getItem('scriptora-content-draft');
+      const savedDraft = localStorage.getItem('madison-content-draft');
       if (savedDraft) {
         try {
           const draft = JSON.parse(savedDraft);

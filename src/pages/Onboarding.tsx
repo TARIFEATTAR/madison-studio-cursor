@@ -13,7 +13,7 @@ export default function Onboarding() {
 
   // Load saved progress on mount and align storage keys
   useEffect(() => {
-    const savedProgress = localStorage.getItem('scriptora-onboarding-progress');
+    const savedProgress = localStorage.getItem('madison-onboarding-progress');
     if (savedProgress) {
       const progress = JSON.parse(savedProgress);
       setCurrentStep(progress.step || 1);
@@ -24,7 +24,7 @@ export default function Onboarding() {
   // Save progress whenever data changes
   useEffect(() => {
     if (Object.keys(onboardingData).length > 0) {
-      localStorage.setItem('scriptora-onboarding-progress', JSON.stringify({
+      localStorage.setItem('madison-onboarding-progress', JSON.stringify({
         step: currentStep,
         data: onboardingData
       }));
@@ -47,7 +47,7 @@ export default function Onboarding() {
   };
 
   const handleSkip = () => {
-    localStorage.removeItem('scriptora-onboarding-progress');
+    localStorage.removeItem('madison-onboarding-progress');
     // DO NOT mark as completed when skipping
     navigate('/library');
   };
@@ -56,7 +56,7 @@ export default function Onboarding() {
     if (!user) return;
     
     // Clean up old progress
-    localStorage.removeItem('scriptora-onboarding-progress');
+    localStorage.removeItem('madison-onboarding-progress');
     
     // Mark onboarding as complete using user-specific key
     localStorage.setItem(`onboarding_step_${user.id}`, 'completed');
