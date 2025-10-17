@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import madisonScriptLogo from "@/assets/madison-script-full-logo.png";
+import maddiLogo from "@/assets/maddi-logo.png";
 
 const Auth = () => {
   console.log("[Auth] Rendering Auth page...");
@@ -227,9 +227,9 @@ const Auth = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8 fade-enter">
           <img 
-            src={madisonScriptLogo} 
+            src={maddiLogo} 
             alt="Maddi"
-            className="h-64 w-auto mx-auto mb-3"
+            className="h-32 w-auto mx-auto mb-3"
           />
           <p className="text-muted-foreground text-lg">
             Where brands craft and multiply their narrative

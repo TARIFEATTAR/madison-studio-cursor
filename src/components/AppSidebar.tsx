@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import madisonLogo from "@/assets/madison-logo-icon.png";
+import maddiLogo from "@/assets/maddi-logo.png";
 import {
   Sidebar,
   SidebarContent,
@@ -129,7 +129,7 @@ export function AppSidebar() {
             <div className="px-4 pt-6 pb-4">
               <NavLink to="/dashboard" className="flex items-center gap-3 group">
               <img 
-                src={madisonLogo} 
+                src={maddiLogo} 
                 alt="Maddi"
                   className="w-16 h-16 shrink-0 transition-transform duration-200 group-hover:scale-105"
                 />
@@ -154,7 +154,7 @@ export function AppSidebar() {
             <div className="px-2 pt-6 pb-4 flex flex-col items-center gap-3">
               <NavLink to="/dashboard" className="group">
               <img 
-                src={madisonLogo} 
+                src={maddiLogo} 
                 alt="Maddi"
                   className="w-14 h-14 transition-transform duration-200 group-hover:scale-105"
                 />
