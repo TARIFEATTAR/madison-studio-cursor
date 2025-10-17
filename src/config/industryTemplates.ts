@@ -31,6 +31,7 @@ export function getIndustryOptions() {
   return [
     { value: 'skincare', label: 'Skin Care' },
     { value: 'perfume', label: 'Perfumery' },
-    { value: 'home_fragrance', label: 'Home Fragrance' }
+    { value: 'home_fragrance', label: 'Home Fragrance' },
+    { value: 'other', label: 'Other' }
   ];
 }
