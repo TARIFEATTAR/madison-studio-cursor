@@ -51,7 +51,7 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
           </div>
           <h1 className="font-serif text-5xl text-foreground mb-4">You're All Set!</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Welcome to Scriptora, <strong>{brandData.brandName}</strong>! Your brand intelligence platform is ready to create content that truly reflects your voice.
+            Welcome to MADISON, <strong>{brandData.brandName}</strong>! Your brand intelligence platform is ready to create content that truly reflects your voice.
           </p>
         </div>
 
@@ -104,7 +104,7 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
           ) : (
             <>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                {sampleContent || `Your brand's story begins here. With Scriptora's AI-powered platform, you'll create content that captures the essence of ${brandData.brandName}, maintaining consistency across every channel.`}
+                {sampleContent || `Your brand's story begins here. With MADISON's AI-powered platform, you'll create content that captures the essence of ${brandData.brandName}, maintaining consistency across every channel.`}
               </p>
               <p className="text-xs text-muted-foreground">
                 ✨ {sampleContent ? `Generated using ${brandData.brandName}'s brand guidelines and voice` : 'Sample content'}

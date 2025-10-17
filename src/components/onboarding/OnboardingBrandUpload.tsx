@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import madisonLogo from "@/assets/madison-horizontal-logo.png";
 
 interface OnboardingBrandUploadProps {
   onContinue: (data: any) => void;
@@ -150,8 +151,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-border/20">
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="Scriptora" className="h-8" />
-          <span className="font-serif text-xl text-foreground">Scriptora</span>
+          <img src={madisonLogo} alt="MADISON" className="h-8" />
         </div>
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" className="text-muted-foreground">

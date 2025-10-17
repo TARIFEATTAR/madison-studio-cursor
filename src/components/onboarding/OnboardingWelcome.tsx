@@ -9,6 +9,7 @@ import { getIndustryOptions } from "@/config/industryTemplates";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import madisonLogo from "@/assets/madison-horizontal-logo.png";
 
 interface OnboardingWelcomeProps {
   onContinue: (data: any) => void;
@@ -29,7 +30,7 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
     if (!userName.trim() || !brandName.trim()) return;
 
     // Save user name separately for dashboard personalization
-    localStorage.setItem('scriptora-user-name', userName.trim());
+    localStorage.setItem('madison-user-name', userName.trim());
 
     // Update organization with brand config
     if (user) {
@@ -105,8 +106,7 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-border/20">
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="Scriptora" className="h-8" />
-          <span className="font-serif text-xl text-foreground">Scriptora</span>
+          <img src={madisonLogo} alt="MADISON" className="h-8" />
         </div>
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" className="text-muted-foreground">
@@ -130,7 +130,7 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-brass to-gold/80 mb-6">
               <Sparkles className="w-8 h-8 text-white" />
             </div>
-            <h1 className="font-serif text-4xl text-foreground mb-3">Welcome to Scriptora</h1>
+            <h1 className="font-serif text-4xl text-foreground mb-3">Welcome to MADISON</h1>
             <p className="text-lg text-muted-foreground">
               Let's set up your brand identity
             </p>
