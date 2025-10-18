@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { VideoCard } from "@/components/help/VideoCard";
 import { VideoModal } from "@/components/help/VideoModal";
+import { LearningPathTimeline } from "@/components/help/LearningPathTimeline";
 import { HelpVideo, VideoCategory, categoryLabels, getVideosByCategory, searchVideos } from "@/config/helpVideos";
 
 export default function HelpCenter() {
@@ -91,34 +92,42 @@ export default function HelpCenter() {
             )}
           </div>
         ) : (
-          // Category Tabs
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as VideoCategory)}>
-            <TabsList className="bg-[hsl(var(--parchment-white))] border border-[#E8DCC8] mb-8">
-              {(Object.entries(categoryLabels) as [VideoCategory, string][]).map(([key, label]) => (
-                <TabsTrigger
-                  key={key}
-                  value={key}
-                  className="data-[state=active]:bg-[hsl(var(--aged-brass))] data-[state=active]:text-[hsl(var(--ink-black))]"
-                >
-                  {label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+          // Category Tabs with Learning Path
+          <>
+            {/* Learning Path Timeline */}
+            <LearningPathTimeline 
+              activeCategory={activeTab}
+              onCategoryClick={(category) => setActiveTab(category)}
+            />
 
-            {(Object.keys(categoryLabels) as VideoCategory[]).map((category) => (
-              <TabsContent key={category} value={category}>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {getVideosByCategory(category).map((video) => (
-                    <VideoCard
-                      key={video.id}
-                      video={video}
-                      onClick={() => handleVideoClick(video)}
-                    />
-                  ))}
-                </div>
-              </TabsContent>
-            ))}
-          </Tabs>
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as VideoCategory)}>
+              <TabsList className="bg-[hsl(var(--parchment-white))] border border-[#E8DCC8] mb-8">
+                {(Object.entries(categoryLabels) as [VideoCategory, string][]).map(([key, label]) => (
+                  <TabsTrigger
+                    key={key}
+                    value={key}
+                    className="data-[state=active]:bg-[hsl(var(--aged-brass))] data-[state=active]:text-[hsl(var(--ink-black))]"
+                  >
+                    {label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
+              {(Object.keys(categoryLabels) as VideoCategory[]).map((category) => (
+                <TabsContent key={category} value={category}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {getVideosByCategory(category).map((video) => (
+                      <VideoCard
+                        key={video.id}
+                        video={video}
+                        onClick={() => handleVideoClick(video)}
+                      />
+                    ))}
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </>
         )}
       </div>
 
