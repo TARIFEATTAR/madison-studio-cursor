@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { VideoCard } from "@/components/help/VideoCard";
 import { VideoModal } from "@/components/help/VideoModal";
 import { LearningPathTimeline } from "@/components/help/LearningPathTimeline";
-import { HelpVideo, VideoCategory, categoryLabels, getVideosByCategory, searchVideos } from "@/config/helpVideos";
+import { HelpVideo, VideoCategory, categoryLabels, orderedCategories, getVideosByCategory, searchVideos } from "@/config/helpVideos";
 
 export default function HelpCenter() {
   const [selectedVideo, setSelectedVideo] = useState<HelpVideo | null>(null);
@@ -102,18 +102,18 @@ export default function HelpCenter() {
 
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as VideoCategory)}>
               <TabsList className="bg-[hsl(var(--parchment-white))] border border-[#E8DCC8] mb-8">
-                {(Object.entries(categoryLabels) as [VideoCategory, string][]).map(([key, label]) => (
+                {orderedCategories.map((key) => (
                   <TabsTrigger
                     key={key}
                     value={key}
                     className="data-[state=active]:bg-[hsl(var(--aged-brass))] data-[state=active]:text-[hsl(var(--ink-black))]"
                   >
-                    {label}
+                    {categoryLabels[key]}
                   </TabsTrigger>
                 ))}
               </TabsList>
 
-              {(Object.keys(categoryLabels) as VideoCategory[]).map((category) => (
+              {orderedCategories.map((category) => (
                 <TabsContent key={category} value={category}>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {getVideosByCategory(category).map((video) => (

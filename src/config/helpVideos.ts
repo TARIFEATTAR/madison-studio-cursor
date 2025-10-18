@@ -32,6 +32,16 @@ export const categoryLabels: Record<VideoCategory, string> = {
   'settings': 'Settings',
 };
 
+// Recommended order for Help Center tabs (matches learning path)
+export const orderedCategories: VideoCategory[] = [
+  'getting-started',
+  'settings',
+  'content-creation',
+  'multiply',
+  'library',
+  'calendar',
+];
+
 export const helpVideos: HelpVideo[] = [
   // Getting Started
   {

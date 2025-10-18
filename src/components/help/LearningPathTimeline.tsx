@@ -100,7 +100,7 @@ export function LearningPathTimeline({ activeCategory, onCategoryClick }: Learni
                     ${isActive 
                       ? 'border-[hsl(var(--aged-brass))] bg-[hsl(var(--aged-brass))]/10 shadow-md' 
                       : isCompleted
-                      ? 'border-[hsl(var(--aged-brass))]/30 bg-white/50'
+                      ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950/30'
                       : 'border-[#E8DCC8] bg-white hover:border-[hsl(var(--aged-brass))]/50'
                     }
                   `}
@@ -113,7 +113,7 @@ export function LearningPathTimeline({ activeCategory, onCategoryClick }: Learni
                         ${isActive
                           ? 'bg-[hsl(var(--aged-brass))] text-white'
                           : isCompleted
-                          ? 'bg-[hsl(var(--aged-brass))]/20 text-[hsl(var(--aged-brass))]'
+                          ? 'bg-emerald-500 text-white dark:bg-emerald-600'
                           : 'bg-[#E8DCC8] text-[hsl(var(--warm-gray))]'
                         }
                       `}
@@ -151,7 +151,7 @@ export function LearningPathTimeline({ activeCategory, onCategoryClick }: Learni
                   className={`
                     w-5 h-5 mx-2 flex-shrink-0 transition-colors
                     ${index < currentStepIndex
-                      ? 'text-[hsl(var(--aged-brass))]'
+                      ? 'text-emerald-500'
                       : 'text-[#E8DCC8]'
                     }
                   `}
@@ -181,7 +181,7 @@ export function LearningPathTimeline({ activeCategory, onCategoryClick }: Learni
                   ${isActive 
                     ? 'border-[hsl(var(--aged-brass))] bg-[hsl(var(--aged-brass))]/10 shadow-md' 
                     : isCompleted
-                    ? 'border-[hsl(var(--aged-brass))]/30 bg-white/50'
+                    ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950/30'
                     : 'border-[#E8DCC8] bg-white hover:border-[hsl(var(--aged-brass))]/50'
                   }
                 `}
@@ -194,7 +194,7 @@ export function LearningPathTimeline({ activeCategory, onCategoryClick }: Learni
                       ${isActive
                         ? 'bg-[hsl(var(--aged-brass))] text-white'
                         : isCompleted
-                        ? 'bg-[hsl(var(--aged-brass))]/20 text-[hsl(var(--aged-brass))]'
+                        ? 'bg-emerald-500 text-white dark:bg-emerald-600'
                         : 'bg-[#E8DCC8] text-[hsl(var(--warm-gray))]'
                       }
                     `}
