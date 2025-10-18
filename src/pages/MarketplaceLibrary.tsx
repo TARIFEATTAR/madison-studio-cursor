@@ -194,9 +194,9 @@ export default function MarketplaceLibrary() {
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
       case 'etsy':
-        return <Tag className="w-5 h-5 text-orange-500" />;
+        return <Tag className="w-5 h-5" />;
       case 'tiktok_shop':
-        return <ShoppingCart className="w-5 h-5 text-pink-500" />;
+        return <ShoppingCart className="w-5 h-5" />;
       default:
         return <ShoppingCart className="w-5 h-5" />;
     }
@@ -204,19 +204,19 @@ export default function MarketplaceLibrary() {
 
   const getPlatformBadge = (platform: string) => {
     const colors = {
-      etsy: "bg-orange-500/10 text-orange-700 border-orange-500/20",
-      tiktok_shop: "bg-pink-500/10 text-pink-700 border-pink-500/20"
+      etsy: "bg-charcoal/10 text-charcoal/70 border-charcoal/20",
+      tiktok_shop: "bg-warm-gray/10 text-charcoal/70 border-warm-gray/20"
     };
-    return colors[platform as keyof typeof colors] || "bg-gray-500/10 text-gray-700";
+    return colors[platform as keyof typeof colors] || "bg-charcoal/5 text-charcoal/60";
   };
 
   const getStatusBadge = (status: string) => {
     const colors = {
-      draft: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
-      published: "bg-green-500/10 text-green-700 border-green-500/20",
-      archived: "bg-gray-500/10 text-gray-700 border-gray-500/20"
+      draft: "bg-charcoal/5 text-charcoal/60 border-charcoal/10",
+      published: "bg-aged-brass/10 text-aged-brass border-aged-brass/20",
+      archived: "bg-charcoal/5 text-charcoal/50 border-charcoal/10"
     };
-    return colors[status as keyof typeof colors] || "bg-gray-500/10 text-gray-700";
+    return colors[status as keyof typeof colors] || "bg-charcoal/5 text-charcoal/60";
   };
 
   return (
@@ -238,11 +238,11 @@ export default function MarketplaceLibrary() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => navigate('/marketplace/etsy')}>
-                  <Tag className="w-4 h-4 mr-2 text-orange-500" />
+                  <Tag className="w-4 h-4 mr-2" />
                   Etsy Listing
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/marketplace/tiktok_shop')}>
-                  <ShoppingCart className="w-4 h-4 mr-2 text-pink-500" />
+                  <ShoppingCart className="w-4 h-4 mr-2" />
                   TikTok Shop Listing
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -279,23 +279,23 @@ export default function MarketplaceLibrary() {
             
             {/* Platform Filters */}
             <Badge
-              variant={platformFilter === "all" ? "default" : "outline"}
-              className="cursor-pointer"
+              variant="outline"
+              className={platformFilter === "all" ? "cursor-pointer bg-aged-brass/10 text-aged-brass border-aged-brass/20" : "cursor-pointer hover:bg-charcoal/5"}
               onClick={() => setPlatformFilter("all")}
             >
               All Platforms
             </Badge>
             <Badge
-              variant={platformFilter === "etsy" ? "default" : "outline"}
-              className="cursor-pointer bg-orange-500/10 text-orange-700 border-orange-500/20 hover:bg-orange-500/20"
+              variant="outline"
+              className={platformFilter === "etsy" ? "cursor-pointer bg-aged-brass/10 text-aged-brass border-aged-brass/20" : "cursor-pointer bg-charcoal/10 text-charcoal/70 border-charcoal/20 hover:bg-charcoal/15"}
               onClick={() => setPlatformFilter("etsy")}
             >
               <Tag className="w-3 h-3 mr-1" />
               Etsy
             </Badge>
             <Badge
-              variant={platformFilter === "tiktok_shop" ? "default" : "outline"}
-              className="cursor-pointer bg-pink-500/10 text-pink-700 border-pink-500/20 hover:bg-pink-500/20"
+              variant="outline"
+              className={platformFilter === "tiktok_shop" ? "cursor-pointer bg-aged-brass/10 text-aged-brass border-aged-brass/20" : "cursor-pointer bg-warm-gray/10 text-charcoal/70 border-warm-gray/20 hover:bg-warm-gray/15"}
               onClick={() => setPlatformFilter("tiktok_shop")}
             >
               <ShoppingCart className="w-3 h-3 mr-1" />
@@ -306,22 +306,22 @@ export default function MarketplaceLibrary() {
 
             {/* Status Filters */}
             <Badge
-              variant={statusFilter === "all" ? "secondary" : "outline"}
-              className="cursor-pointer"
+              variant="outline"
+              className={statusFilter === "all" ? "cursor-pointer bg-aged-brass/10 text-aged-brass border-aged-brass/20" : "cursor-pointer hover:bg-charcoal/5"}
               onClick={() => setStatusFilter("all")}
             >
               All Statuses
             </Badge>
             <Badge
-              variant={statusFilter === "draft" ? "default" : "outline"}
-              className="cursor-pointer bg-yellow-500/10 text-yellow-700 border-yellow-500/20 hover:bg-yellow-500/20"
+              variant="outline"
+              className={statusFilter === "draft" ? "cursor-pointer bg-aged-brass/10 text-aged-brass border-aged-brass/20" : "cursor-pointer bg-charcoal/5 text-charcoal/60 border-charcoal/10 hover:bg-charcoal/10"}
               onClick={() => setStatusFilter("draft")}
             >
               Draft
             </Badge>
             <Badge
-              variant={statusFilter === "published" ? "default" : "outline"}
-              className="cursor-pointer bg-green-500/10 text-green-700 border-green-500/20 hover:bg-green-500/20"
+              variant="outline"
+              className={statusFilter === "published" ? "cursor-pointer bg-aged-brass/10 text-aged-brass border-aged-brass/20" : "cursor-pointer bg-aged-brass/5 text-aged-brass/80 border-aged-brass/15 hover:bg-aged-brass/10"}
               onClick={() => setStatusFilter("published")}
             >
               Published
@@ -332,7 +332,7 @@ export default function MarketplaceLibrary() {
                 variant="ghost"
                 size="sm"
                 onClick={clearFilters}
-                className="h-7 gap-1 ml-2"
+                className="h-7 gap-1 ml-2 text-charcoal/70 hover:text-charcoal"
               >
                 <X className="w-3 h-3" />
                 Clear All
