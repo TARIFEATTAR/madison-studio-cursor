@@ -126,20 +126,19 @@ export function AppSidebar() {
         <SidebarHeader className="border-b border-white/10 p-0">
           {open && (
             <div className="px-4 pt-6 pb-4">
-              <NavLink to="/dashboard" className="flex items-center group">
-                <span className="font-serif text-xl tracking-[0.216em]" style={{ fontWeight: 300, color: '#F5F5DC' }}>MADISON</span>
-              </NavLink>
-              
-              <div className="mt-6 flex justify-end">
+              <div className="flex items-center gap-3">
                 <button 
                   onClick={toggleSidebar}
-                  className="relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(38,33%,56%)]/50 rounded-lg"
+                  className="relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(38,33%,56%)]/50 rounded-md"
                   aria-label="Collapse sidebar"
                 >
-                  <div className="relative w-8 h-8 rounded-lg border border-[hsl(38,33%,56%)]/30 bg-white/5 flex items-center justify-center transition-all duration-200 group-hover:border-[hsl(38,33%,56%)] group-hover:bg-white/10 group-hover:shadow-[0_0_12px_rgba(184,149,106,0.3)]">
+                  <div className="relative w-8 h-8 rounded-md border border-[hsl(38,33%,56%)]/30 bg-white/5 flex items-center justify-center transition-all duration-200 group-hover:border-[hsl(38,33%,56%)] group-hover:bg-white/10 group-hover:shadow-[0_0_12px_rgba(184,149,106,0.3)]">
                     <ChevronLeft className="w-4 h-4 text-[hsl(38,33%,56%)] transition-transform duration-200 group-hover:scale-110" />
                   </div>
                 </button>
+                <NavLink to="/dashboard" className="group">
+                  <span className="font-serif text-xl tracking-[0.216em]" style={{ fontWeight: 300, color: '#F5F5DC' }}>MADISON</span>
+                </NavLink>
               </div>
             </div>
           )}
@@ -151,7 +150,7 @@ export function AppSidebar() {
               </NavLink>
               <button
                 onClick={toggleSidebar}
-                className="group w-full h-10 rounded-lg transition-all duration-200 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(38,33%,56%)]/50 border border-[hsl(38,33%,56%)]/30 bg-white/5 hover:border-[hsl(38,33%,56%)] hover:bg-white/10 hover:shadow-[0_0_12px_rgba(184,149,106,0.3)]"
+                className="group w-full h-10 rounded-md transition-all duration-200 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(38,33%,56%)]/50 border border-[hsl(38,33%,56%)]/30 bg-white/5 hover:border-[hsl(38,33%,56%)] hover:bg-white/10 hover:shadow-[0_0_12px_rgba(184,149,106,0.3)]"
                 aria-label="Expand sidebar"
               >
                 <ChevronRight className="w-4 h-4 text-[hsl(38,33%,56%)] transition-transform duration-200 group-hover:scale-110" />
