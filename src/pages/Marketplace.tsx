@@ -1,12 +1,24 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getAllPlatforms } from "@/config/marketplaceTemplates";
 import { ArrowRight } from "lucide-react";
 
+// Static color map for platform icons to avoid Tailwind purging dynamic classes
+const platformColors = {
+  etsy: { bg: 'bg-orange-500/10', text: 'text-orange-500' },
+  tiktok_shop: { bg: 'bg-pink-500/10', text: 'text-pink-500' },
+};
+
 export default function Marketplace() {
   const navigate = useNavigate();
   const platforms = getAllPlatforms();
+
+  useEffect(() => {
+    console.log("✅ Marketplace mounted");
+    return () => console.log("❌ Marketplace unmounted");
+  }, []);
 
   return (
     <div className="min-h-screen bg-parchment-white p-8">
@@ -31,8 +43,8 @@ export default function Marketplace() {
               >
                 <CardHeader>
                   <div className="flex items-start justify-between">
-                    <div className={`w-12 h-12 rounded-lg bg-${platform.color}/10 flex items-center justify-center mb-4`}>
-                      <Icon className={`w-6 h-6 text-${platform.color}`} />
+                    <div className={`w-12 h-12 rounded-lg ${platformColors[platform.id as keyof typeof platformColors]?.bg || 'bg-aged-brass/10'} flex items-center justify-center mb-4`}>
+                      <Icon className={`w-6 h-6 ${platformColors[platform.id as keyof typeof platformColors]?.text || 'text-aged-brass'}`} />
                     </div>
                     <ArrowRight className="w-5 h-5 text-charcoal/40 group-hover:text-aged-brass group-hover:translate-x-1 transition-all" />
                   </div>

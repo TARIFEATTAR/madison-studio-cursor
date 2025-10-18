@@ -5,7 +5,7 @@ import { Sparkles, ArrowRight, CheckCircle2, PlayCircle, Menu } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import archivesIcon from "@/assets/archives-icon-new.png";
 import createIcon from "@/assets/create-icon.png";
 import multiplyIcon from "@/assets/multiply-icon.png";
@@ -102,6 +102,10 @@ const Landing = () => {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="bg-vellum border-l border-aged-brass/20">
+                  <SheetHeader className="sr-only">
+                    <SheetTitle>Mobile Navigation</SheetTitle>
+                    <SheetDescription>Navigate to different sections</SheetDescription>
+                  </SheetHeader>
                   <div className="flex flex-col gap-6 mt-8">
                     {/* Navigation Links */}
                     <a 

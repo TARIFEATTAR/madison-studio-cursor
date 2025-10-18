@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { BookOpen, Sparkles, Archive, Calendar as CalendarIcon, LogOut, Repeat, Settings, Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { useState } from "react";
 import {
   Tooltip,
@@ -139,6 +139,10 @@ const Navigation = () => {
                 side="right" 
                 className="w-[280px] sm:w-[320px] bg-[hsl(var(--ink-black))] border-l border-aged-brass/20"
               >
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Mobile Menu</SheetTitle>
+                  <SheetDescription>Navigation menu</SheetDescription>
+                </SheetHeader>
                 <div className="flex flex-col h-full py-6">
                   <nav className="flex flex-col gap-2 flex-1" role="navigation" aria-label="Mobile navigation">
                     {navItems.map((item) => {

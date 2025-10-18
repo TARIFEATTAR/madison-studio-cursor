@@ -189,7 +189,13 @@ export function AppSidebar() {
                         transition-all duration-200
                       `}
                     >
-                      <NavLink to={item.url} onClick={() => isMobile && toggleSidebar()}>
+                      <NavLink 
+                        to={item.url} 
+                        onClick={(e) => {
+                          console.log(`AppSidebar → ${item.title.toLowerCase()} click`);
+                          if (isMobile) toggleSidebar();
+                        }}
+                      >
                         <item.icon 
                           strokeWidth={1}
                           className={`w-6 h-6 shrink-0 transition-all duration-200 ${
