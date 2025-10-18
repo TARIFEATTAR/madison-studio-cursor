@@ -25,13 +25,11 @@ export default function MeetMadison() {
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-16">
 {/* Madison insignia - OUTSIDE card, on cream background */}
 <div className="flex justify-center mb-6">
-  <div className="w-[576px] h-[576px] bg-vellum-cream flex items-center justify-center">
-    <img 
-      src={madisonInsignia} 
-      alt="Madison" 
-      className="w-full h-full object-cover"
-    />
-  </div>
+  <img 
+    src={madisonInsignia} 
+    alt="Madison" 
+    className="w-[50px] h-[50px] object-contain"
+  />
 </div>
         
         {/* Header text - OUTSIDE card */}
