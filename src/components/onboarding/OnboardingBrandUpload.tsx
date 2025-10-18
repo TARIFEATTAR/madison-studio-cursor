@@ -196,7 +196,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
                   <Upload className="w-6 h-6 text-white" />
                 </div>
                 <Badge variant="secondary" className="bg-gradient-to-r from-brass to-gold text-white">
-                  ⭐ Recommended
+                  Recommended
                 </Badge>
               </div>
               <h3 className="font-semibold text-foreground mb-2">Upload PDF</h3>
@@ -216,7 +216,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brass to-gold/80 flex items-center justify-center mb-4">
                 <Globe className="w-6 h-6 text-white" />
               </div>
-              <h3 className="font-semibold text-foreground mb-2">Scrape Website 🌐</h3>
+              <h3 className="font-semibold text-foreground mb-2">Scrape Website</h3>
               <p className="text-sm text-muted-foreground">
                 We'll analyze your website for brand voice
               </p>
@@ -233,7 +233,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brass to-gold/80 flex items-center justify-center mb-4">
                 <FileText className="w-6 h-6 text-white" />
               </div>
-              <h3 className="font-semibold text-foreground mb-2">Manual Entry ✍️</h3>
+              <h3 className="font-semibold text-foreground mb-2">Manual Entry</h3>
               <p className="text-sm text-muted-foreground">
                 Type your brand guidelines directly
               </p>
@@ -281,7 +281,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
                 className="h-12 text-base"
               />
               <p className="text-sm text-muted-foreground mt-2">
-                🔍 We'll analyze your website's content, tone, and style to understand your brand voice
+                We'll analyze your website's content, tone, and style to understand your brand voice
               </p>
             </div>
           )}

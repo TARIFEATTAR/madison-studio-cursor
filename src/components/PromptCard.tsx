@@ -39,7 +39,7 @@ const collectionColors: Record<string, string> = {
 };
 
 const scentFamilyIcons: Record<string, string> = {
-  Warm: "🔥",
+  Warm: "Warm",
   Floral: "🌸",
   Fresh: "🍃",
   Woody: "🌲",

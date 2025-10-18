@@ -107,7 +107,7 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
                 {sampleContent || `Your brand's story begins here. With MADISON's AI-powered platform, you'll create content that captures the essence of ${brandData.brandName}, maintaining consistency across every channel.`}
               </p>
               <p className="text-xs text-muted-foreground">
-                ✨ {sampleContent ? `Generated using ${brandData.brandName}'s brand guidelines and voice` : 'Sample content'}
+                {sampleContent ? `Generated using ${brandData.brandName}'s brand guidelines and voice` : 'Sample content'}
               </p>
             </>
           )}
@@ -116,7 +116,7 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
         {/* Quick Tips */}
         <div className="mb-12 p-6 rounded-lg border border-border/40 bg-card/50">
           <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-            💡 Quick Tips to Get Started
+            Quick Tips to Get Started
           </h3>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">

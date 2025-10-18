@@ -25,17 +25,17 @@ export function OrganizationGuide({ open, onOpenChange }: OrganizationGuideProps
             <Card className="p-6 bg-[hsl(var(--stone-beige)/0.2)]">
               <pre className="text-sm font-mono whitespace-pre">
 {`Prompt Library
-├── 🌟 Quick Access (Zero-decision access)
-│   ├── ⭐ Favorites
-│   ├── 🕐 Recently Used
-│   └── 📊 Most Used
+├── Quick Access (Zero-decision access)
+│   ├── Favorites
+│   ├── Recently Used
+│   └── Most Used
 │
-├── 📁 Collections (User-created folders)
-│   ├── 🚀 Product Launches
-│   ├── 📱 Social Media
+├── Collections (User-created folders)
+│   ├── Product Launches
+│   ├── Social Media
 │   └── ... (custom collections)
 │
-└── # Categories (System tags)
+└── Categories (System tags)
     ├── Product
     ├── Editorial
     └── ... (all categories)`}
@@ -137,10 +137,10 @@ export function OrganizationGuide({ open, onOpenChange }: OrganizationGuideProps
             <h3 className="text-xl font-serif mb-4">AI-Powered Features</h3>
             <Card className="p-6 bg-gradient-to-br from-[hsl(var(--saffron-gold)/0.1)] to-[hsl(var(--brass-accent)/0.1)]">
               <div className="space-y-3">
-                <p className="text-sm">✨ Madison suggests improvements to prompts</p>
-                <p className="text-sm">✨ Auto-categorization based on content</p>
-                <p className="text-sm">✨ Find similar prompts automatically</p>
-                <p className="text-sm">✨ Generate variations of existing prompts</p>
+                <p className="text-sm">Madison suggests improvements to prompts</p>
+                <p className="text-sm">Auto-categorization based on content</p>
+                <p className="text-sm">Find similar prompts automatically</p>
+                <p className="text-sm">Generate variations of existing prompts</p>
               </div>
             </Card>
           </section>

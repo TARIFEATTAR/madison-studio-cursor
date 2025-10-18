@@ -122,7 +122,7 @@ export function ContentPipeline() {
       ) : (
         <div className="p-3 bg-aged-brass/5 border border-aged-brass/20">
           <p className="text-xs text-aged-brass">
-            <strong>💡 Pro tip:</strong> {
+            <strong>Pro tip:</strong> {
               draftCount > scheduledCount 
                 ? "You have drafts ready! Schedule them to maintain consistency."
                 : scheduledCount > publishedCount

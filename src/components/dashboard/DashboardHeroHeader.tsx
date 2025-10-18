@@ -51,7 +51,6 @@ export function DashboardHeroHeader({ organizationName, streakDays }: DashboardH
 
             {streakDays && streakDays > 0 && (
               <div className="mt-6 inline-flex items-center gap-3 px-4 py-2 bg-parchment-white/80 border border-aged-brass/20">
-                <span className="text-2xl">🔥</span>
                 <div>
                   <p className="text-xs uppercase tracking-wider text-charcoal/60 font-sans">Active Streak</p>
                   <p className="font-serif text-lg font-semibold text-aged-brass">

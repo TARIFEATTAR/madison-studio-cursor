@@ -66,7 +66,7 @@ export function MadisonPanel({ open, onOpenChange }: MadisonPanelProps) {
       return "I'd be happy to help you create a new prompt! Let's start by understanding what kind of content you want to generate. Could you tell me:\n\n1. What type of content? (e.g., blog post, email, social media)\n2. What's the main topic or product?\n3. What tone should it have?\n\nOnce I know these details, I can craft a custom prompt for you.";
     }
     if (userMessage.toLowerCase().includes("refine") || userMessage.toLowerCase().includes("improve")) {
-      return "Great question! Here are some ways to improve your prompts:\n\n✨ Be more specific about your brand voice\n✨ Include concrete examples of what you want\n✨ Add constraints (word count, must-have elements)\n✨ Specify what to avoid\n\nWould you like me to review a specific prompt and suggest improvements?";
+      return "Great question! Here are some ways to improve your prompts:\n\nBe more specific about your brand voice\nInclude concrete examples of what you want\nAdd constraints (word count, must-have elements)\nSpecify what to avoid\n\nWould you like me to review a specific prompt and suggest improvements?";
     }
     return "I understand you're looking for help with your prompts. Could you provide more details about what you'd like to do? I can help you:\n\n• Create new prompts from scratch\n• Refine and improve existing ones\n• Find similar prompts in your library\n• Organize your prompt collection\n\nWhat would be most helpful for you right now?";
   };

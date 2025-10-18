@@ -135,7 +135,7 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
               Let's set up your brand identity
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              ⭐ Takes 2 minutes • Your content will use this info to match your brand perfectly
+              Takes 2 minutes — Your content will use this info to match your brand perfectly
             </p>
           </div>
 
@@ -152,7 +152,7 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
                 className="bg-input border-border/40 h-12 text-base"
               />
               <p className="text-sm text-muted-foreground">
-                💡 We'll use this to personalize your experience
+                We'll use this to personalize your experience
               </p>
             </div>
 
@@ -207,7 +207,7 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
                 />
               </div>
               <p className="text-sm text-muted-foreground">
-                💡 This color will be used in your generated content and brand materials
+                This color will be used in your generated content and brand materials
               </p>
             </div>
           </div>

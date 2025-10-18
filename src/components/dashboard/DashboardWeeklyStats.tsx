@@ -124,10 +124,10 @@ export function DashboardWeeklyStats({ stats }: DashboardWeeklyStatsProps) {
           </div>
         </div>
         <p className="text-xs text-charcoal/60 italic">
-          {stats?.onBrandScore >= 95 && "Your content perfectly matches your brand voice! 🎯"}
-          {stats?.onBrandScore >= 85 && stats?.onBrandScore < 95 && "Strong brand consistency across your content."}
-          {stats?.onBrandScore >= 75 && stats?.onBrandScore < 85 && "Good quality. Consider reviewing brand guidelines."}
-          {stats?.onBrandScore < 75 && "Use Madison's guidance to improve brand alignment."}
+          {stats?.onBrandScore >= 95 && "Your content perfectly matches your brand voice"}
+          {stats?.onBrandScore >= 85 && stats?.onBrandScore < 95 && "Strong brand consistency across your content"}
+          {stats?.onBrandScore >= 75 && stats?.onBrandScore < 85 && "Good quality. Consider reviewing brand guidelines"}
+          {stats?.onBrandScore < 75 && "Use Madison's guidance to improve brand alignment"}
         </p>
       </div>
 

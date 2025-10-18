@@ -1,4 +1,4 @@
-import { Star, Folder, Hash, ChevronDown, Plus } from "lucide-react";
+import { Star, Folder, Hash, ChevronDown, Plus, Clock, TrendingUp } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -24,11 +24,11 @@ interface PromptFilterCardsProps {
 }
 
 const collectionLabels: Record<string, { label: string; icon: string }> = {
-  product_launches: { label: "Product Launches", icon: "🚀" },
-  social_media: { label: "Social Media", icon: "📱" },
-  email_campaigns: { label: "Email Campaigns", icon: "📧" },
-  seasonal_content: { label: "Seasonal Content", icon: "🌸" },
-  customer_stories: { label: "Customer Stories", icon: "❤️" },
+  product_launches: { label: "Product Launches", icon: "Rocket" },
+  social_media: { label: "Social Media", icon: "Share2" },
+  email_campaigns: { label: "Email Campaigns", icon: "Mail" },
+  seasonal_content: { label: "Seasonal Content", icon: "Sparkles" },
+  customer_stories: { label: "Customer Stories", icon: "Heart" },
 };
 
 const categoryLabels: Record<string, string> = {
@@ -73,7 +73,7 @@ export default function PromptFilterCards({
                 }`}
               >
                 <span className="flex items-center gap-2">
-                  <span>⭐</span>
+                  <Star className="w-4 h-4" />
                   <span className="font-medium text-sm">Favorites</span>
                 </span>
                 <span
@@ -96,7 +96,7 @@ export default function PromptFilterCards({
                 }`}
               >
                 <span className="flex items-center gap-2">
-                  <span>🕐</span>
+                  <Clock className="w-4 h-4" />
                   <span className="font-medium text-sm">Recently Used</span>
                 </span>
                 <span
@@ -119,7 +119,7 @@ export default function PromptFilterCards({
                 }`}
               >
                 <span className="flex items-center gap-2">
-                  <span>📊</span>
+                  <TrendingUp className="w-4 h-4" />
                   <span className="font-medium text-sm">Most Used</span>
                 </span>
                 <span

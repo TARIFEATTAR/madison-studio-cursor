@@ -32,32 +32,32 @@ export interface WizardData {
 const CONTENT_TYPES = [
   { 
     value: "blog", 
-    label: "📝 Blog Post", 
-    icon: "📝",
+    label: "Blog Post", 
+    icon: "FileText",
     description: "SEO-rich, long-form content (800-2000+ words)"
   },
   { 
     value: "email", 
-    label: "📧 Email", 
-    icon: "📧",
+    label: "Email", 
+    icon: "Mail",
     description: "Email campaigns, newsletters, sequences"
   },
   { 
     value: "social", 
-    label: "📱 Social Media", 
-    icon: "📱",
+    label: "Social Media", 
+    icon: "Share2",
     description: "Instagram, LinkedIn, Twitter/X posts"
   },
   { 
     value: "product", 
-    label: "🏷️ Product Description", 
-    icon: "🏷️",
+    label: "Product Description", 
+    icon: "Tag",
     description: "Product pages, descriptions, features"
   },
   { 
     value: "visual", 
-    label: "🎨 Visual Asset", 
-    icon: "🎨",
+    label: "Visual Asset", 
+    icon: "Image",
     description: "Image prompts, graphics, visual content"
   },
 ];
@@ -302,7 +302,7 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
               <div className="flex items-start gap-2 p-3 bg-[hsl(var(--stone-beige)/0.3)] rounded-lg">
                 <Lightbulb className="w-5 h-5 text-[hsl(var(--saffron-gold))] flex-shrink-0 mt-0.5" />
                 <div className="text-sm">
-                  <p className="font-medium mb-1">💡 How Placeholders Work</p>
+                  <p className="font-medium mb-1">How Placeholders Work</p>
                   <p>Use <code className="px-1 py-0.5 bg-background rounded text-xs">&#123;&#123;PRODUCT_NAME&#125;&#125;</code> to create reusable templates.</p>
                   <p className="text-xs text-muted-foreground mt-1">Don't worry - AI will add these automatically in Step 7!</p>
                 </div>
@@ -390,7 +390,7 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
               <div className="flex items-start gap-2 p-3 bg-[hsl(var(--stone-beige)/0.3)] rounded-lg">
                 <Lightbulb className="w-5 h-5 text-[hsl(var(--saffron-gold))] flex-shrink-0 mt-0.5" />
                 <p className="text-sm">
-                  💡 Not sure? Skip for now and organize later from your library.
+                  Not sure? Skip for now and organize later from your library.
                 </p>
               </div>
               <Button
@@ -443,7 +443,7 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
               <div className="flex items-start gap-2 p-3 bg-[hsl(var(--stone-beige)/0.3)] rounded-lg">
                 <Lightbulb className="w-5 h-5 text-[hsl(var(--saffron-gold))] flex-shrink-0 mt-0.5" />
                 <p className="text-sm">
-                  💡 Tip: Think about what makes your content unique and what you never want to forget.
+                  Tip: Think about what makes your content unique and what you never want to forget.
                 </p>
               </div>
             </div>
@@ -465,7 +465,7 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
               <div className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <Bookmark className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-green-800">
-                  🎉 Almost done! Next step: AI will refine your template with proper placeholders.
+                  Almost done! Next step: AI will refine your template with proper placeholders.
                 </p>
               </div>
             </div>

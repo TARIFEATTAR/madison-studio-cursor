@@ -544,7 +544,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
                   <Sparkles className="h-4 w-4 text-brass" />
                 </div>
                 <p className="text-sm text-charcoal/70 mb-3">Most reliable method</p>
-                <Badge className="bg-brass text-parchment-white border-brass">✨ Most Reliable</Badge>
+                <Badge className="bg-brass text-parchment-white border-brass">Most Reliable</Badge>
                 
                 {/* Contextual Info */}
                 <div className="mt-4 p-4 bg-vellum/50 rounded-md border border-charcoal/10 text-left">
@@ -643,7 +643,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
                       PDFs must have <strong>selectable text</strong> (not scanned images). If your PDF is a scan or photo, use the <strong>Manual Entry</strong> method instead.
                     </p>
                     <p className="text-yellow-600 dark:text-yellow-400 text-xs">
-                      💡 <strong>Tip:</strong> Open your PDF and try to select text with your cursor. If you can't select text, it won't work.
+                      <strong>Tip:</strong> Open your PDF and try to select text with your cursor. If you can't select text, it won't work.
                     </p>
                   </div>
                 </div>
@@ -928,7 +928,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
                       <span>Paste below (<kbd className="px-1.5 py-0.5 bg-charcoal/10 rounded text-xs font-mono">Cmd+V</kbd> or <kbd className="px-1.5 py-0.5 bg-charcoal/10 rounded text-xs font-mono">Ctrl+V</kbd>)</span>
                     </li>
                   </ol>
-                  <p className="text-xs text-brass mt-2">✨ This method always works, regardless of PDF type!</p>
+                  <p className="text-xs text-brass mt-2">This method always works, regardless of PDF type</p>
                 </div>
               </div>
             </div>

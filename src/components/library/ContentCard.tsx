@@ -136,7 +136,7 @@ export function ContentCard({
 
         <div className="pt-4 border-t border-border/20 flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-4">
-            <span>📅 {timeAgo}</span>
+            <span>{timeAgo}</span>
             <span>• {content.wordCount} words</span>
             {content.dipWeek && (
               <span>• Week {content.dipWeek}</span>

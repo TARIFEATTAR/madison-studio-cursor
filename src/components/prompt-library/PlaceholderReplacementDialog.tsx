@@ -137,7 +137,7 @@ export function PlaceholderReplacementDialog({
           </p>
           <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-xs text-blue-800">
-              💡 <strong>Placeholder Syntax:</strong> Use <code className="px-1 py-0.5 bg-white rounded text-xs">&#123;&#123;PLACEHOLDER_NAME&#125;&#125;</code> in your prompts to make them reusable. Avoid <code className="px-1 py-0.5 bg-white rounded text-xs">[BRACKETS]</code> - they won't be recognized.
+              <strong>Placeholder Syntax:</strong> Use <code className="px-1 py-0.5 bg-white rounded text-xs">&#123;&#123;PLACEHOLDER_NAME&#125;&#125;</code> in your prompts to make them reusable. Avoid <code className="px-1 py-0.5 bg-white rounded text-xs">[BRACKETS]</code> - they won't be recognized.
             </p>
           </div>
         </DialogHeader>
