@@ -53,20 +53,18 @@ export function useCurrentOrganizationId() {
         return;
       }
 
-      // Check localStorage cache first
-      const cached = localStorage.getItem('current_org_id');
-      if (cached) {
-        setOrgId(cached);
-      }
-
       try {
         const { data, error } = await supabase
           .from("organization_members")
           .select("organization_id")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error loading organization ID:", error);
+          setLoading(false);
+          return;
+        }
 
         if (data?.organization_id) {
           setOrgId(data.organization_id);
@@ -89,9 +87,25 @@ export function useIsEcommerceOrg() {
   const { orgId, loading: orgLoading } = useCurrentOrganizationId();
   const { industryConfig, loading: configLoading } = useIndustryConfig(orgId);
 
+  // If still loading org, return loading true
+  if (orgLoading) {
+    return { isEcommerce: false, loading: true };
+  }
+
+  // If no org found, user is not e-commerce
+  if (!orgId) {
+    return { isEcommerce: false, loading: false };
+  }
+
+  // If still loading config, return loading true
+  if (configLoading) {
+    return { isEcommerce: false, loading: true };
+  }
+
+  // Finally check if e-commerce
   return {
     isEcommerce: isEcommerceIndustry(industryConfig?.id),
-    loading: orgLoading || configLoading
+    loading: false
   };
 }
 
