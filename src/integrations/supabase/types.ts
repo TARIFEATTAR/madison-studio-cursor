@@ -419,13 +419,16 @@ export type Database = {
           asset_type: string
           created_at: string | null
           created_by: string | null
+          external_urls: Json | null
           generated_content: string | null
           id: string
           is_archived: boolean
           master_content_id: string | null
           organization_id: string
           platform_specs: Json | null
+          publish_notes: string | null
           published_at: string | null
+          published_to: Json | null
           quality_rating: number | null
         }
         Insert: {
@@ -434,13 +437,16 @@ export type Database = {
           asset_type: string
           created_at?: string | null
           created_by?: string | null
+          external_urls?: Json | null
           generated_content?: string | null
           id?: string
           is_archived?: boolean
           master_content_id?: string | null
           organization_id: string
           platform_specs?: Json | null
+          publish_notes?: string | null
           published_at?: string | null
+          published_to?: Json | null
           quality_rating?: number | null
         }
         Update: {
@@ -449,13 +455,16 @@ export type Database = {
           asset_type?: string
           created_at?: string | null
           created_by?: string | null
+          external_urls?: Json | null
           generated_content?: string | null
           id?: string
           is_archived?: boolean
           master_content_id?: string | null
           organization_id?: string
           platform_specs?: Json | null
+          publish_notes?: string | null
           published_at?: string | null
+          published_to?: Json | null
           quality_rating?: number | null
         }
         Relationships: [
@@ -725,10 +734,13 @@ export type Database = {
           content_type: string
           created_at: string | null
           created_by: string | null
+          external_urls: Json | null
           full_content: string
           id: string
           is_archived: boolean
           organization_id: string
+          publish_notes: string | null
+          published_to: Json | null
           quality_rating: number | null
           status: string | null
           title: string
@@ -741,10 +753,13 @@ export type Database = {
           content_type: string
           created_at?: string | null
           created_by?: string | null
+          external_urls?: Json | null
           full_content: string
           id?: string
           is_archived?: boolean
           organization_id: string
+          publish_notes?: string | null
+          published_to?: Json | null
           quality_rating?: number | null
           status?: string | null
           title: string
@@ -757,10 +772,13 @@ export type Database = {
           content_type?: string
           created_at?: string | null
           created_by?: string | null
+          external_urls?: Json | null
           full_content?: string
           id?: string
           is_archived?: boolean
           organization_id?: string
+          publish_notes?: string | null
+          published_to?: Json | null
           quality_rating?: number | null
           status?: string | null
           title?: string

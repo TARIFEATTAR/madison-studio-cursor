@@ -16,6 +16,10 @@ export interface LibraryContentItem {
   archived: boolean;
   status: string;
   sourceTable: "master_content" | "outputs" | "derivative_assets";
+  publishedTo?: string[];
+  externalUrls?: Record<string, string>;
+  publishNotes?: string;
+  publishedAt?: string;
 }
 
 export const useLibraryContent = () => {
@@ -53,6 +57,9 @@ export const useLibraryContent = () => {
               archived: item.is_archived,
               status: item.status || "draft",
               sourceTable: "master_content" as const,
+              publishedTo: item.published_to as string[] | undefined,
+              externalUrls: item.external_urls as Record<string, string> | undefined,
+              publishNotes: item.publish_notes || undefined,
             };
           })
         );
@@ -114,6 +121,10 @@ export const useLibraryContent = () => {
               archived: item.is_archived,
               status: item.approval_status || "pending",
               sourceTable: "derivative_assets" as const,
+              publishedTo: item.published_to as string[] | undefined,
+              externalUrls: item.external_urls as Record<string, string> | undefined,
+              publishNotes: item.publish_notes || undefined,
+              publishedAt: item.published_at || undefined,
             };
           })
         );

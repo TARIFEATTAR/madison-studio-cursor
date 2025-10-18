@@ -2,10 +2,13 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
-import { Star, Archive, ArchiveRestore } from "lucide-react";
+import { Star, Archive, ArchiveRestore, Send } from "lucide-react";
 import { collections } from "@/data/mockLibraryContent";
 import { getDeliverableByValue } from "@/config/deliverableFormats";
 import { cn } from "@/lib/utils";
+import { PublishingStatus } from "./PublishingStatus";
+import { PublishingDrawer } from "./PublishingDrawer";
+import { useState } from "react";
 
 interface ContentCardProps {
   content: {
@@ -20,6 +23,11 @@ interface ContentCardProps {
     dipWeek?: number;
     rating?: number;
     archived: boolean;
+    status?: string;
+    publishedTo?: string[];
+    externalUrls?: Record<string, string>;
+    publishedAt?: string;
+    sourceTable?: "master_content" | "derivative_assets" | "outputs";
   };
   onClick: () => void;
   viewMode?: "grid" | "list";
@@ -27,6 +35,7 @@ interface ContentCardProps {
   selected?: boolean;
   onToggleSelect?: () => void;
   onArchive?: () => void;
+  onPublishSuccess?: () => void;
 }
 
 export function ContentCard({ 
@@ -36,8 +45,10 @@ export function ContentCard({
   selectable = false,
   selected = false,
   onToggleSelect,
-  onArchive
+  onArchive,
+  onPublishSuccess
 }: ContentCardProps) {
+  const [publishDrawerOpen, setPublishDrawerOpen] = useState(false);
   const deliverableFormat = getDeliverableByValue(content.contentType);
   const collectionInfo = collections.find(c => c.id === content.collection);
   
@@ -68,6 +79,18 @@ export function ContentCard({
     >
       {/* Action buttons - top right */}
       <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            setPublishDrawerOpen(true);
+          }}
+          className="h-8 px-2 hover:bg-brass/10"
+          title={content.status === "published" ? "Update Publishing" : "Mark as Published"}
+        >
+          <Send className="w-4 h-4 text-muted-foreground hover:text-brass" />
+        </Button>
         {onArchive && (
           <Button
             variant="ghost"
@@ -134,6 +157,18 @@ export function ContentCard({
           {previewText}
         </p>
 
+        {/* Publishing Status */}
+        {content.publishedTo && content.publishedTo.length > 0 && (
+          <div className="pt-3">
+            <PublishingStatus
+              publishedTo={content.publishedTo}
+              externalUrls={content.externalUrls}
+              publishedAt={content.publishedAt}
+              compact
+            />
+          </div>
+        )}
+
         <div className="pt-4 border-t border-border/20 flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-4">
             <span>{timeAgo}</span>
@@ -158,6 +193,21 @@ export function ContentCard({
           )}
         </div>
       </div>
+
+      {/* Publishing Drawer */}
+      {content.sourceTable && (
+        <PublishingDrawer
+          open={publishDrawerOpen}
+          onOpenChange={setPublishDrawerOpen}
+          contentId={content.id}
+          contentTitle={content.title}
+          sourceTable={content.sourceTable}
+          onSuccess={() => {
+            onPublishSuccess?.();
+            window.location.reload();
+          }}
+        />
+      )}
     </Card>
   );
 }
