@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import maddiLogo from "@/assets/madison-logo-gold.png";
+import maddiLogo from "@/assets/scriptora-full-logo.png";
 import {
   Sidebar,
   SidebarContent,
