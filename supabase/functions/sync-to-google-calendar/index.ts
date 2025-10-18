@@ -6,47 +6,48 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Retrieve token from Supabase Vault
-async function getTokenFromVault(supabase: any, secretId: string): Promise<string> {
-  const { data, error } = await supabase
-    .from('vault.secrets')
-    .select('decrypted_secret')
-    .eq('id', secretId)
-    .single();
-  
-  if (error) {
-    console.error('Error retrieving vault secret:', error);
-    throw new Error('Failed to retrieve token from vault');
-  }
-  
-  if (!data?.decrypted_secret) {
-    throw new Error('Token not found in vault');
-  }
-  
-  return data.decrypted_secret;
+// Decrypt tokens from google_calendar_tokens table
+function base64ToBytes(b64: string): Uint8Array {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
 }
 
-// Store token securely in Supabase Vault
-async function storeTokenInVault(supabase: any, tokenValue: string, tokenName: string, userId: string): Promise<string> {
-  const secretName = `google_calendar_${tokenName}_${userId}`;
-  
-  // Update existing secret
-  const { data, error } = await supabase
-    .from('vault.secrets')
-    .update({ 
-      secret: tokenValue,
-      updated_at: new Date().toISOString()
-    })
-    .eq('name', secretName)
-    .select('id')
-    .single();
-  
-  if (error) {
-    console.error('Error updating vault secret:', error);
-    throw new Error(`Failed to update ${tokenName} in vault`);
-  }
-  
-  return data.id;
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+async function decryptText(ciphertextB64: string, ivB64: string, keyB64: string): Promise<string> {
+  const keyBytes = base64ToBytes(keyB64);
+  const keyCopy = new Uint8Array(keyBytes.length);
+  keyCopy.set(keyBytes);
+  const keyBuffer: ArrayBuffer = keyCopy.buffer;
+  const cryptoKey = await crypto.subtle.importKey('raw', keyBuffer, { name: 'AES-GCM' }, false, ['decrypt']);
+  const ivBytes = base64ToBytes(ivB64);
+  const ivCopy = new Uint8Array(ivBytes.length);
+  ivCopy.set(ivBytes);
+  const iv: ArrayBuffer = ivCopy.buffer;
+  const ciphertextBytes = base64ToBytes(ciphertextB64);
+  const ciphertextCopy = new Uint8Array(ciphertextBytes.length);
+  ciphertextCopy.set(ciphertextBytes);
+  const ciphertext: ArrayBuffer = ciphertextCopy.buffer;
+  const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, cryptoKey, ciphertext);
+  return new TextDecoder().decode(plaintext);
+}
+
+async function encryptText(plain: string, keyB64: string): Promise<{ ciphertextB64: string; ivB64: string }> {
+  const keyBytes = base64ToBytes(keyB64);
+  const keyCopy = new Uint8Array(keyBytes.length);
+  keyCopy.set(keyBytes);
+  const keyBuffer: ArrayBuffer = keyCopy.buffer;
+  const cryptoKey = await crypto.subtle.importKey('raw', keyBuffer, { name: 'AES-GCM' }, false, ['encrypt']);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encoded = new TextEncoder().encode(plain);
+  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, cryptoKey, encoded);
+  return { ciphertextB64: bytesToBase64(new Uint8Array(ciphertext)), ivB64: bytesToBase64(iv) };
 }
 
 interface SyncRequest {
@@ -85,27 +86,30 @@ serve(async (req) => {
 
     console.log('Sync operation:', operation, 'for user:', user.id);
 
-    // Get user's Google OAuth vault references
-    const { data: vaultRefs, error: vaultError } = await supabaseClient
-      .from('google_calendar_vault_refs')
-      .select('access_token_secret_id, refresh_token_secret_id, token_expiry')
+    // Get user's encrypted tokens from google_calendar_tokens table
+    const { data: tokenData, error: tokenError } = await supabaseClient
+      .from('google_calendar_tokens')
+      .select('encrypted_access_token, access_token_iv, encrypted_refresh_token, refresh_token_iv, token_expiry')
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (vaultError || !vaultRefs) {
+    if (tokenError || !tokenData) {
       throw new Error('Google Calendar not connected. Please connect your Google Calendar first.');
     }
 
-    if (!vaultRefs.access_token_secret_id || !vaultRefs.refresh_token_secret_id) {
-      throw new Error('Invalid vault references. Please reconnect your Google Calendar.');
+    if (!tokenData.encrypted_access_token || !tokenData.encrypted_refresh_token) {
+      throw new Error('Invalid tokens. Please reconnect your Google Calendar.');
     }
 
-    // Retrieve tokens from vault
-    const refreshToken = await getTokenFromVault(supabaseClient, vaultRefs.refresh_token_secret_id);
+    const ENC_KEY = Deno.env.get('GOOGLE_TOKEN_ENCRYPTION_KEY');
+    if (!ENC_KEY) throw new Error('Token encryption key not configured');
+
+    // Decrypt tokens
+    const refreshToken = await decryptText(tokenData.encrypted_refresh_token, tokenData.refresh_token_iv, ENC_KEY);
     
     // Check if access token is expired and refresh if needed
     let accessToken: string;
-    const tokenExpiry = new Date(vaultRefs.token_expiry);
+    const tokenExpiry = new Date(tokenData.token_expiry);
     const now = new Date();
 
     if (now >= tokenExpiry) {
@@ -128,19 +132,21 @@ serve(async (req) => {
       const refreshData = await refreshResponse.json();
       accessToken = refreshData.access_token;
 
-      // Update new access token in vault
-      const newAccessTokenSecretId = await storeTokenInVault(supabaseClient, accessToken, 'access_token', user.id);
+      // Encrypt and update new access token
+      const { ciphertextB64: encAccess, ivB64: ivAccess } = await encryptText(accessToken, ENC_KEY);
       
       await supabaseClient
-        .from('google_calendar_vault_refs')
+        .from('google_calendar_tokens')
         .update({
-          access_token_secret_id: newAccessTokenSecretId,
+          encrypted_access_token: encAccess,
+          access_token_iv: ivAccess,
           token_expiry: new Date(Date.now() + refreshData.expires_in * 1000).toISOString(),
+          updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id);
     } else {
-      // Retrieve existing access token from vault
-      accessToken = await getTokenFromVault(supabaseClient, vaultRefs.access_token_secret_id);
+      // Decrypt existing access token
+      accessToken = await decryptText(tokenData.encrypted_access_token, tokenData.access_token_iv, ENC_KEY);
     }
 
     // Get calendar ID and timezone from settings
