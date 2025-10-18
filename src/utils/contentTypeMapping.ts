@@ -31,7 +31,7 @@ export const contentTypeMapping: ContentTypeMapping[] = [
   },
   {
     name: "Social",
-    keys: ["instagram", "twitter", "linkedin", "facebook", "social", "youtube"],
+    keys: ["instagram", "linkedin", "facebook", "social", "youtube"],
     icon: Instagram,
   },
   {

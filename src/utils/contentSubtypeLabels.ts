@@ -16,7 +16,6 @@ export function getContentSubtypeLabel(contentType: string | undefined): string 
     
     // Social subtypes
     'instagram': 'Instagram',
-    'twitter': 'Twitter',
     'linkedin': 'LinkedIn',
     'facebook': 'Facebook',
     'youtube': 'YouTube',
@@ -52,7 +51,6 @@ export function getContentCategoryLabel(contentType: string | undefined): string
     
     // Social
     'instagram': 'Social',
-    'twitter': 'Social',
     'linkedin': 'Social',
     'facebook': 'Social',
     'youtube': 'Social',

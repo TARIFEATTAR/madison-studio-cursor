@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, Mail, Instagram, Twitter, Package, MessageSquare, FileText, Calendar, Briefcase, Video, Share2 } from "lucide-react";
+import { CalendarIcon, Mail, Instagram, Package, MessageSquare, FileText, Calendar, Briefcase, Video, Share2 } from "lucide-react";
 import { ScheduleButton } from "@/components/forge/ScheduleButton";
 
 interface DerivativeGridCardProps {
@@ -27,7 +27,6 @@ interface DerivativeGridCardProps {
 const DERIVATIVE_ICONS = {
   email: Mail,
   instagram: Instagram,
-  twitter: Twitter,
   product: Package,
   sms: MessageSquare,
   email_3part: Mail,
