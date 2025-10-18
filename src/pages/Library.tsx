@@ -461,7 +461,7 @@ export default function Library() {
             setSelectedContent(null);
           }}
           onRepurpose={(id) => {
-            navigate(`/repurpose?content=${id}`);
+            navigate(`/multiply?id=${id}`);
           }}
           onSchedule={async (content, category) => {
             setSelectedContent(null);
