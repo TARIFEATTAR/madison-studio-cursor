@@ -1,8 +1,9 @@
-import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu } from "lucide-react";
+import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu, ShoppingBag } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useIsEcommerceOrg } from "@/hooks/useIndustryConfig";
 import {
   Sidebar,
   SidebarContent,
@@ -22,45 +23,54 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-const navItems = [
-  { 
-    title: "Dashboard", 
-    url: "/dashboard", 
-    icon: Home 
-  },
-  { 
-    title: "The Archives", 
-    url: "/library", 
-    icon: Archive 
-  },
-  { 
-    title: "Create", 
-    url: "/create", 
-    icon: Pencil 
-  },
-  { 
-    title: "Multiply", 
-    url: "/multiply", 
-    icon: Share2 
-  },
-  { 
-    title: "Schedule", 
-    url: "/schedule", 
-    icon: Calendar 
-  },
-  { 
-    title: "Prompt Library", 
-    url: "/templates", 
-    icon: FileText 
-  },
-];
-
 export function AppSidebar() {
   const { open, toggleSidebar, isMobile, openMobile } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isEcommerce } = useIsEcommerceOrg();
+
+  // Build dynamic navigation items based on industry
+  const navItems = [
+    { 
+      title: "Dashboard", 
+      url: "/dashboard", 
+      icon: Home 
+    },
+    { 
+      title: "The Archives", 
+      url: "/library", 
+      icon: Archive 
+    },
+    { 
+      title: "Create", 
+      url: "/create", 
+      icon: Pencil 
+    },
+    { 
+      title: "Multiply", 
+      url: "/multiply", 
+      icon: Share2 
+    },
+    ...(isEcommerce ? [
+      { 
+        title: "Marketplace", 
+        url: "/marketplace", 
+        icon: ShoppingBag 
+      }
+    ] : []),
+    { 
+      title: "Schedule", 
+      url: "/schedule", 
+      icon: Calendar 
+    },
+    { 
+      title: "Prompt Library", 
+      url: "/templates", 
+      icon: FileText 
+    },
+  ];
 
   const handleSignOut = async () => {
     try {

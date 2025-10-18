@@ -25,10 +25,12 @@ import NotFound from "./pages/NotFound";
 import MeetMadison from "./pages/MeetMadison";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
+import Marketplace from "./pages/Marketplace";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EcommerceGuard } from "./components/guards/EcommerceGuard";
 
 const queryClient = new QueryClient();
 
@@ -145,6 +147,7 @@ const AppContent = () => {
                   <Route path="/create" element={<ProtectedRoute><RouteErrorBoundary routeName="Create"><Create /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Editor"><ContentEditor /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/multiply" element={<ProtectedRoute><RouteErrorBoundary routeName="Multiply"><Multiply /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/marketplace" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Marketplace"><Marketplace /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
                   <Route path="/templates" element={<ProtectedRoute><RouteErrorBoundary routeName="Templates"><Templates /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
@@ -166,6 +169,7 @@ const AppContent = () => {
             <Route path="/create" element={<ProtectedRoute><RouteErrorBoundary routeName="Create"><Create /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Editor"><ContentEditor /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/multiply" element={<ProtectedRoute><RouteErrorBoundary routeName="Multiply"><Multiply /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/marketplace" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Marketplace"><Marketplace /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
             <Route path="/templates" element={<ProtectedRoute><RouteErrorBoundary routeName="Templates"><Templates /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />

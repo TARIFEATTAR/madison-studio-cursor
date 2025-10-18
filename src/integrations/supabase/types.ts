@@ -649,6 +649,75 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_listings: {
+        Row: {
+          archived_at: string | null
+          created_at: string | null
+          created_by: string | null
+          external_id: string | null
+          external_url: string | null
+          id: string
+          is_archived: boolean | null
+          last_synced_at: string | null
+          organization_id: string
+          platform: string
+          platform_data: Json
+          product_id: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          external_id?: string | null
+          external_url?: string | null
+          id?: string
+          is_archived?: boolean | null
+          last_synced_at?: string | null
+          organization_id: string
+          platform: string
+          platform_data?: Json
+          product_id?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          external_id?: string | null
+          external_url?: string | null
+          id?: string
+          is_archived?: boolean | null
+          last_synced_at?: string | null
+          organization_id?: string
+          platform?: string
+          platform_data?: Json
+          product_id?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_listings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_listings_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "brand_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       master_content: {
         Row: {
           archived_at: string | null
