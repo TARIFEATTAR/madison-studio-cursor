@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import madisonInsignia from "@/assets/madison-insignia.png";
+import { DashboardContextPanel } from "./DashboardContextPanel";
 
 interface DashboardHeroHeaderProps {
   organizationName: string;
@@ -61,17 +61,8 @@ export function DashboardHeroHeader({ organizationName, streakDays }: DashboardH
             )}
           </div>
 
-          {/* Right: Madison's Insignia as decorative element */}
-          <div className="hidden md:flex items-center justify-center">
-            <div className="relative">
-              <img 
-                src={madisonInsignia} 
-                alt="Madison Insignia" 
-                className="w-32 h-32 object-contain opacity-90"
-              />
-              <div className="absolute inset-0 bg-aged-brass/5 blur-2xl -z-10" />
-            </div>
-          </div>
+          {/* Right: Editorial Context Panel */}
+          <DashboardContextPanel />
         </div>
       </div>
 
