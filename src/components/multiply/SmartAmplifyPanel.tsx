@@ -9,6 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { VideoHelpTrigger } from "@/components/help/VideoHelpTrigger";
 
 export interface AmplifyRecommendation {
   derivativeType: string;
@@ -77,7 +78,10 @@ export function SmartAmplifyPanel({
             <Sparkles className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-foreground">Smart Amplify</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-foreground">Smart Amplify</h3>
+              <VideoHelpTrigger videoId="understanding-smart-amplify" variant="icon" />
+            </div>
             <p className="text-sm text-muted-foreground">
               AI-powered recommendations for your content
             </p>

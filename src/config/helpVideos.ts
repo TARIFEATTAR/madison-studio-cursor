@@ -99,14 +99,34 @@ export const helpVideos: HelpVideo[] = [
 
   // Multiply
   {
-    id: 'understanding-smart-amplify',
-    title: 'Understanding Smart Amplify',
-    description: 'Learn how to turn master content into dozens of platform-specific derivatives.',
-    duration: '4:45',
+    id: 'what-is-multiply',
+    title: 'What is Multiply?',
+    description: 'Overview of the Multiply page workflow: selecting master content, choosing derivatives, generating, and editing platform-specific versions.',
+    duration: '4:00',
     category: 'multiply',
     videoUrl: 'https://www.loom.com/embed/placeholder',
     order: 7,
-    keywords: ['amplify', 'multiply', 'derivatives', 'repurpose'],
+    keywords: ['multiply', 'overview', 'workflow', 'introduction'],
+  },
+  {
+    id: 'understanding-derivatives',
+    title: 'Understanding Derivatives',
+    description: 'Explains what derivatives are, the different types available (Instagram, Email, Product descriptions, etc.), and how they adapt your master content for each platform.',
+    duration: '4:30',
+    category: 'multiply',
+    videoUrl: 'https://www.loom.com/embed/placeholder',
+    order: 8,
+    keywords: ['derivatives', 'types', 'platforms', 'formats'],
+  },
+  {
+    id: 'understanding-smart-amplify',
+    title: 'Understanding Smart Amplify',
+    description: 'Learn how Madison\'s AI analyzes your content and recommends the best derivative types for maximum reach and engagement.',
+    duration: '4:45',
+    category: 'multiply',
+    videoUrl: 'https://www.loom.com/embed/placeholder',
+    order: 9,
+    keywords: ['smart amplify', 'ai', 'recommendations', 'intelligence'],
   },
   {
     id: 'customizing-derivatives',
@@ -115,7 +135,7 @@ export const helpVideos: HelpVideo[] = [
     duration: '3:30',
     category: 'multiply',
     videoUrl: 'https://www.loom.com/embed/placeholder',
-    order: 8,
+    order: 10,
     keywords: ['edit', 'customize', 'derivatives', 'refine'],
   },
   {

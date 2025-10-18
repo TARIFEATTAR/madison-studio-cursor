@@ -874,7 +874,7 @@ export default function Multiply() {
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
             <h1 className="font-serif text-4xl">Multiply</h1>
-            <VideoHelpTrigger videoId="understanding-smart-amplify" variant="icon" />
+            <VideoHelpTrigger videoId="what-is-multiply" variant="icon" />
           </div>
           <p className="text-muted-foreground">Transform master content into multiple formats</p>
         </div>
@@ -970,7 +970,7 @@ export default function Multiply() {
                 <div className="p-6 space-y-6">
                   <div className="flex items-center gap-3">
                     <h2 className="font-serif text-2xl">Derivative Editions</h2>
-                    <VideoHelpTrigger videoId="understanding-smart-amplify" variant="icon" />
+                    <VideoHelpTrigger videoId="understanding-derivatives" variant="icon" />
                   </div>
 
                   {/* Empty State or Derivative Selector */}
