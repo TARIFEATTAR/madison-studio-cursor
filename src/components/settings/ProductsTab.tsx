@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ArrowUpDown, X } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -61,6 +62,11 @@ export function ProductsTab() {
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
   const [searchFilter, setSearchFilter] = useState("");
   const [isImporting, setIsImporting] = useState(false);
+  
+  // ADHD-friendly filters
+  const [categoryFilter, setCategoryFilter] = useState<ProductCategory | "all">("all");
+  const [collectionFilter, setCollectionFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"alphabetical" | "recent" | "category">("alphabetical");
 
   // Form state - category-aware
   const [formData, setFormData] = useState({
@@ -307,11 +313,45 @@ export function ProductsTab() {
     }
   };
 
-  const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
-    (p.collection?.toLowerCase() || "").includes(searchFilter.toLowerCase()) ||
-    (p.product_type?.toLowerCase() || "").includes(searchFilter.toLowerCase())
-  );
+  // Get unique collections for filter
+  const collections = useMemo(() => {
+    const unique = new Set(products.map(p => p.collection).filter(Boolean));
+    return Array.from(unique).sort();
+  }, [products]);
+
+  // Filter and sort products
+  const filteredAndSortedProducts = useMemo(() => {
+    let filtered = products.filter((p) => {
+      const matchesSearch = 
+        p.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
+        (p.collection?.toLowerCase() || "").includes(searchFilter.toLowerCase()) ||
+        (p.product_type?.toLowerCase() || "").includes(searchFilter.toLowerCase());
+      
+      const matchesCategory = categoryFilter === "all" || p.category === categoryFilter;
+      const matchesCollection = collectionFilter === "all" || p.collection === collectionFilter;
+      
+      return matchesSearch && matchesCategory && matchesCollection;
+    });
+
+    // Sort
+    return filtered.sort((a, b) => {
+      if (sortBy === "alphabetical") {
+        return a.name.localeCompare(b.name);
+      } else if (sortBy === "recent") {
+        return new Date(b.id).getTime() - new Date(a.id).getTime();
+      } else if (sortBy === "category") {
+        return a.category.localeCompare(b.category);
+      }
+      return 0;
+    });
+  }, [products, searchFilter, categoryFilter, collectionFilter, sortBy]);
+
+  const hasActiveFilters = categoryFilter !== "all" || collectionFilter !== "all";
+
+  const clearFilters = () => {
+    setCategoryFilter("all");
+    setCollectionFilter("all");
+  };
 
   return (
     <div className="space-y-6">
@@ -349,17 +389,96 @@ export function ProductsTab() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Input
-            placeholder="Search products..."
-            value={searchFilter}
-            onChange={(e) => setSearchFilter(e.target.value)}
-          />
+          {/* Search and Sort Row */}
+          <div className="flex gap-2">
+            <Input
+              placeholder="Search products..."
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              className="flex-1"
+            />
+            <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+              <SelectTrigger className="w-[180px]">
+                <ArrowUpDown className="w-4 h-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="alphabetical">A-Z</SelectItem>
+                <SelectItem value="recent">Recently Added</SelectItem>
+                <SelectItem value="category">By Category</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Quick Filter Chips */}
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-sm text-muted-foreground">Filter:</span>
+            <Badge
+              variant={categoryFilter === "all" ? "secondary" : "default"}
+              className="cursor-pointer"
+              onClick={() => setCategoryFilter("all")}
+            >
+              All Categories
+            </Badge>
+            <Badge
+              variant={categoryFilter === "personal_fragrance" ? "default" : "outline"}
+              className="cursor-pointer"
+              onClick={() => setCategoryFilter("personal_fragrance")}
+            >
+              Personal Fragrance
+            </Badge>
+            <Badge
+              variant={categoryFilter === "home_fragrance" ? "default" : "outline"}
+              className="cursor-pointer"
+              onClick={() => setCategoryFilter("home_fragrance")}
+            >
+              Home Fragrance
+            </Badge>
+            <Badge
+              variant={categoryFilter === "skincare" ? "default" : "outline"}
+              className="cursor-pointer"
+              onClick={() => setCategoryFilter("skincare")}
+            >
+              Skincare
+            </Badge>
+            
+            {collections.length > 0 && (
+              <>
+                <div className="h-4 w-px bg-border mx-1" />
+                <Select value={collectionFilter} onValueChange={setCollectionFilter}>
+                  <SelectTrigger className="w-[160px] h-7">
+                    <SelectValue placeholder="All Collections" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Collections</SelectItem>
+                    {collections.map((collection) => (
+                      <SelectItem key={collection} value={collection || ""}>
+                        {collection}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </>
+            )}
+
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="h-7 gap-1"
+              >
+                <X className="w-3 h-3" />
+                Clear
+              </Button>
+            )}
+          </div>
 
           {loading ? (
             <p className="text-muted-foreground">Loading products...</p>
-          ) : filteredProducts.length === 0 ? (
+          ) : filteredAndSortedProducts.length === 0 ? (
             <p className="text-muted-foreground italic">
-              {searchFilter ? "No products match your search." : "No products yet. Add your first product above."}
+              {searchFilter || hasActiveFilters ? "No products match your filters." : "No products yet. Add your first product above."}
             </p>
           ) : (
             <div className="border rounded-lg">
@@ -374,7 +493,7 @@ export function ProductsTab() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredProducts.map((product) => (
+                  {filteredAndSortedProducts.map((product) => (
                     <TableRow key={product.id} className="cursor-pointer hover:bg-muted/50">
                       <TableCell className="font-medium">{product.name}</TableCell>
                       <TableCell>
