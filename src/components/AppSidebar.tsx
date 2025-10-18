@@ -1,4 +1,4 @@
-import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu, ShoppingBag } from "lucide-react";
+import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu, ShoppingBag, Store } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -70,6 +70,13 @@ export function AppSidebar() {
       url: "/templates", 
       icon: FileText 
     },
+    ...(isEcommerce ? [
+      { 
+        title: "Marketplace Library", 
+        url: "/marketplace-library", 
+        icon: Store 
+      }
+    ] : []),
   ];
 
   const handleSignOut = async () => {
