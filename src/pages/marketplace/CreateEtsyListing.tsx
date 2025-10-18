@@ -52,8 +52,7 @@ export default function CreateEtsyListing() {
         .from('marketplace_listings')
         .select('*')
         .eq('id', id)
-        .eq('organization_id', currentOrganizationId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -111,8 +110,7 @@ export default function CreateEtsyListing() {
             platform_data: platformData,
             updated_at: new Date().toISOString()
           })
-          .eq('id', listingId)
-          .eq('organization_id', currentOrganizationId);
+          .eq('id', listingId);
 
         if (error) throw error;
 
