@@ -219,7 +219,7 @@ const Landing = () => {
         
         {/* Gradient Overlay for Text Legibility */}
         <div className="hero-overlay md:hidden" style={{
-          background: 'linear-gradient(to bottom, rgba(26, 24, 22, 0.78) 0%, rgba(26, 24, 22, 0.70) 40%, rgba(26, 24, 22, 0.88) 100%)',
+          background: 'linear-gradient(to bottom, rgba(26, 24, 22, 0.65) 0%, rgba(26, 24, 22, 0.60) 40%, rgba(26, 24, 22, 0.75) 100%)',
           zIndex: 10
         }}></div>
         <div className="hero-overlay hidden md:block" style={{ zIndex: 10 }}></div>
@@ -229,7 +229,12 @@ const Landing = () => {
             
             {/* Headline with brass accent */}
             <h1 className="font-serif font-semibold mb-4 md:mb-5">
-              <span className="block text-3xl sm:text-4xl md:text-6xl lg:text-7xl text-parchment-white leading-[1.25] md:leading-tight tracking-[0.015em] md:tracking-normal">
+              <span className="block text-3xl sm:text-4xl md:text-6xl lg:text-7xl leading-[1.25] md:leading-tight tracking-[0.015em] md:tracking-normal"
+                style={{
+                  color: '#FFFCF5',
+                  textShadow: '0 3px 12px rgba(0, 0, 0, 0.5)'
+                }}
+              >
                 Where Luxury Beauty Brands Craft Their
               </span>
               <span 
@@ -253,8 +258,8 @@ const Landing = () => {
             <p 
               className="text-[17px] leading-[1.8] sm:text-lg md:text-xl md:leading-[1.7] max-w-[520px] md:max-w-[580px]"
               style={{
-                color: 'rgba(255, 252, 245, 0.95)',
-                textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
+                color: '#FFFCF5',
+                textShadow: '0 2px 10px rgba(0, 0, 0, 0.6)'
               }}
             >
               AI-powered content creation that honors craftsmanship, 
