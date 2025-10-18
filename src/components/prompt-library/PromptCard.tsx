@@ -20,8 +20,8 @@ export function PromptCard({ prompt, onClick, onArchive, onDelete }: PromptCardP
   return (
     <Card
       className={cn(
-        "cursor-pointer transition-all duration-300 hover:border-aged-brass/40",
-        "bg-parchment-white border border-charcoal/10 relative p-6 group"
+        "cursor-pointer transition-all duration-300 hover:border-aged-brass/40 hover:shadow-sm",
+        "bg-card border border-charcoal/10 relative p-6 group rounded-lg"
       )}
     >
       <div className="space-y-4" onClick={onClick}>
@@ -77,8 +77,8 @@ export function PromptCard({ prompt, onClick, onArchive, onDelete }: PromptCardP
         </p>
 
         {/* Prompt preview */}
-        <div className="bg-vellum-cream border border-charcoal/10 p-3">
-          <p className="text-sm text-charcoal/80 line-clamp-3 leading-relaxed">
+        <div className="border-t border-charcoal/5 pt-3">
+          <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
             {previewText}
           </p>
         </div>
@@ -91,7 +91,7 @@ export function PromptCard({ prompt, onClick, onArchive, onDelete }: PromptCardP
               <Badge
                 key={tag}
                 variant="outline"
-                className="text-xs bg-background/60 border-border/40 text-muted-foreground"
+                className="text-xs bg-charcoal/5 border-charcoal/10 text-charcoal/60 rounded-md"
               >
                 #{tag}
               </Badge>

@@ -442,7 +442,7 @@ const TemplatesContent = () => {
                 {isMobile && (
                   <Drawer open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
                     <DrawerTrigger asChild>
-                      <Button variant="outline" size="icon" className="rounded-full">
+                      <Button variant="outline" size="icon">
                         <Filter className="w-5 h-5" />
                       </Button>
                     </DrawerTrigger>
