@@ -531,6 +531,124 @@ TONE:
 - Avoid hard selling
 
 Generate the Pinterest pin description now.`,
+
+  youtube: `Transform this master content into a YouTube video description optimized for SEO and engagement.
+
+TRANSFORMATION REQUIREMENTS:
+- Condense main content into compelling video description (600-800 words)
+- Front-load the most important information (first 150 characters are critical)
+- Include natural keywords for SEO without keyword stuffing
+- Add timestamps for key sections
+- Include relevant links and CTAs
+- Maintain brand voice while optimizing for discovery
+
+DESCRIPTION STRUCTURE:
+1. Opening Hook (first 150 chars): Compelling reason to watch - visible before "show more"
+2. Video Overview (100-150 words): What viewers will learn/gain
+3. Key Timestamps (5-8 sections): 
+   [00:00] Introduction
+   [01:30] Main concept
+   [03:45] Key insight #1
+   etc.
+4. Detailed Breakdown (300-400 words): Expand on main points from master content
+5. About Section (50-100 words): Brief brand/creator context
+6. CTAs & Links:
+   - Subscribe message
+   - Related videos/playlists
+   - Website/social links
+   - Product links if relevant
+
+SEO OPTIMIZATION:
+- Include primary keyword in first sentence
+- Use related keywords naturally throughout
+- Add relevant hashtags (3-5 max)
+- Keep it readable and engaging (SEO serves humans first)
+
+TONE:
+- Authentic and conversational
+- Educational yet engaging
+- Professional but approachable
+- Maintain brand voice throughout
+
+OUTPUT FORMAT:
+[First 150 characters - the hook]
+
+VIDEO OVERVIEW:
+[What this video covers]
+
+⏱️ TIMESTAMPS:
+[00:00] Introduction
+[XX:XX] Section name
+[XX:XX] Section name
+...
+
+[Detailed breakdown - main content]
+
+ABOUT:
+[Brief brand/creator info]
+
+🔗 LINKS & RESOURCES:
+[Relevant links]
+
+CONNECT:
+[Social media handles]
+
+#Hashtag1 #Hashtag2 #Hashtag3
+
+Generate the YouTube video description now.`,
+
+  facebook: `Transform this master content into an engaging Facebook post that drives community interaction.
+
+TRANSFORMATION REQUIREMENTS:
+- Condense to 30-40% of original length (target: 400-600 words)
+- Opening must stop the scroll (question, surprising fact, relatable moment)
+- Structure for readability with short paragraphs (2-3 sentences max)
+- Include natural conversation starters
+- Add clear CTA but make it feel organic
+- Optimize for comments and shares
+
+POST STRUCTURE:
+1. Hook (1-2 sentences): Grab attention immediately - question, bold statement, or relatable scenario
+2. Story/Context (2-3 short paragraphs): Share the core insight from master content in conversational tone
+3. Value Delivery (2-3 paragraphs): Key takeaways or benefits, make it actionable
+4. Community Prompt: Ask a question or invite opinions to drive comments
+5. CTA: Soft invitation to learn more, visit link, or tag a friend
+
+FACEBOOK BEST PRACTICES:
+- Write like you're talking to a friend (conversational, warm)
+- Use line breaks for readability (mobile-first formatting)
+- Include 1-2 emoji for personality (don't overdo it)
+- Ask questions to encourage comments
+- Make shares feel natural ("Tag someone who needs to hear this")
+- Keep brand voice but prioritize authenticity
+
+ENGAGEMENT TACTICS:
+- Pose a discussion question related to main content
+- Invite personal stories/experiences in comments
+- Create "tag a friend" moments
+- Use light humor or relatable observations where appropriate
+
+TONE:
+- Warm and conversational
+- Authentic, not corporate
+- Community-focused
+- Blend education with entertainment
+- Maintain brand voice while feeling personal
+
+OUTPUT FORMAT:
+[Hook - 1-2 punchy sentences]
+
+[Story/context paragraph]
+
+[Value delivery paragraphs with line breaks for mobile readability]
+
+[Community prompt - question or invitation]
+
+[Soft CTA]
+
+[Optional: 1-2 relevant hashtags]
+
+Generate the Facebook post now.`,
 };
 
 // Utility: strip Markdown and common formatting to plain text

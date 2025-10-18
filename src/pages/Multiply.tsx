@@ -18,13 +18,16 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Sparkles, Archive, Mail, MessageSquare, Tag,
   FileText, CheckCircle2, XCircle, ChevronDown, ChevronRight, Copy, 
-  Calendar, Edit, Loader2, AlertCircle, Video, Bookmark 
+  Calendar, Edit, Loader2, AlertCircle, Video, Bookmark,
+  Briefcase, Share2
 } from "lucide-react";
 import { EditorialDirectorSplitScreen } from "@/components/multiply/EditorialDirectorSplitScreen";
 import { SavePromptDialog } from "@/components/prompt-library/SavePromptDialog";
 import { ScheduleButton } from "@/components/forge/ScheduleButton";
+import { SmartAmplifyPanel } from "@/components/multiply/SmartAmplifyPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { useSmartAmplify } from "@/hooks/useSmartAmplify";
 import fannedPagesImage from "@/assets/fanned-pages-new.png";
 import ticketIcon from "@/assets/ticket-icon.png";
 import envelopeIcon from "@/assets/envelope-icon.png";
@@ -99,6 +102,30 @@ const TOP_DERIVATIVE_TYPES: DerivativeType[] = [
     iconImage: ticketIcon,
     iconColor: "#3A4A3D",
     charLimit: 500,
+  },
+  {
+    id: "linkedin",
+    name: "LinkedIn",
+    description: "Professional network posts",
+    icon: Briefcase,
+    iconColor: "#0A66C2",
+    charLimit: 3000,
+  },
+  {
+    id: "youtube",
+    name: "YouTube",
+    description: "Video descriptions & scripts",
+    icon: Video,
+    iconColor: "#FF0000",
+    charLimit: 5000,
+  },
+  {
+    id: "facebook",
+    name: "Facebook",
+    description: "Community engagement posts",
+    icon: Share2,
+    iconColor: "#1877F2",
+    charLimit: 2000,
   },
 ];
 
@@ -187,6 +214,15 @@ export default function Multiply() {
 
   // Track if we selected master via navigation
   const selectedViaNavigationRef = useRef(false);
+
+  // Smart Amplify integration
+  const smartAmplifyMasterContent = selectedMaster ? {
+    id: selectedMaster.id,
+    title: selectedMaster.title,
+    content_type: selectedMaster.contentType,
+    full_content: selectedMaster.content,
+  } : null;
+  const { recommendations, isLoading: isAnalyzing } = useSmartAmplify(smartAmplifyMasterContent);
 
   useEffect(() => {
     const loadMasterContent = async () => {
@@ -318,6 +354,24 @@ export default function Multiply() {
       newSet.add(typeId);
     }
     setSelectedTypes(newSet);
+  };
+
+  const selectAllRecommendations = () => {
+    const allRecommendationsSelected = recommendations.every(r => 
+      selectedTypes.has(r.derivativeType)
+    );
+    
+    if (allRecommendationsSelected) {
+      // Deselect all recommendations
+      const newSet = new Set(selectedTypes);
+      recommendations.forEach(r => newSet.delete(r.derivativeType));
+      setSelectedTypes(newSet);
+    } else {
+      // Select all recommendations
+      const newSet = new Set(selectedTypes);
+      recommendations.forEach(r => newSet.add(r.derivativeType));
+      setSelectedTypes(newSet);
+    }
   };
 
   const selectAll = () => {
@@ -708,6 +762,17 @@ export default function Multiply() {
                       <h3 className="font-medium text-lg mb-2">No Derivatives Yet</h3>
                       <p className="text-sm text-muted-foreground">Generate channel-specific versions of your master content</p>
                     </div>
+                  )}
+
+                  {/* Smart Amplify Panel */}
+                  {selectedMaster && recommendations.length > 0 && (
+                    <SmartAmplifyPanel
+                      recommendations={recommendations}
+                      selectedTypes={Array.from(selectedTypes)}
+                      onSelectAll={selectAllRecommendations}
+                      onToggleType={toggleTypeSelection}
+                      isLoading={isAnalyzing}
+                    />
                   )}
 
                   {/* Derivative Type Selector */}

@@ -35,3 +35,6 @@ verify_jwt = true
 
 [functions.refine-prompt-template]
 verify_jwt = true
+
+[functions.analyze-amplify-fit]
+verify_jwt = true

@@ -19,6 +19,7 @@ export function getContentSubtypeLabel(contentType: string | undefined): string 
     'twitter': 'Twitter',
     'linkedin': 'LinkedIn',
     'facebook': 'Facebook',
+    'youtube': 'YouTube',
     
     // Other content types (generic label)
     'blog_post': 'Article',
@@ -54,6 +55,7 @@ export function getContentCategoryLabel(contentType: string | undefined): string
     'twitter': 'Social',
     'linkedin': 'Social',
     'facebook': 'Social',
+    'youtube': 'Social',
     
     // Other
     'blog_post': 'Blog',
