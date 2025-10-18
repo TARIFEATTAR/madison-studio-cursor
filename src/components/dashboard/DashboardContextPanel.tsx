@@ -184,7 +184,7 @@ export function DashboardContextPanel() {
             onClick={() => navigate("/calendar")}
             className="w-full text-center text-xs text-aged-brass hover:text-charcoal transition-colors uppercase tracking-wider border-t border-charcoal/10 pt-4"
           >
-            View Full Calendar →
+            View Full Content Calendar →
           </button>
         </div>
       </div>
