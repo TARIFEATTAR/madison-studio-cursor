@@ -13,6 +13,8 @@ import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/hooks/use-toast";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Tooltip,
   TooltipContent,
@@ -20,6 +22,8 @@ import {
 } from "@/components/ui/tooltip";
 
 const Calendar = () => {
+  const { user } = useAuth();
+  const { currentOrganizationId } = useOnboarding();
   const isMobile = useIsMobile();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"month" | "week" | "agenda">(isMobile ? "agenda" : "month");
@@ -34,14 +38,20 @@ const Calendar = () => {
 
   useEffect(() => {
     fetchScheduledContent();
-  }, [currentDate]);
+  }, [currentDate, user, currentOrganizationId]);
 
   const fetchScheduledContent = async () => {
+    if (!user || !currentOrganizationId) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from("scheduled_content")
         .select("*")
+        .eq("organization_id", currentOrganizationId)
         .order("scheduled_date", { ascending: true });
 
       if (error) throw error;

@@ -317,7 +317,7 @@ const Reservoir = () => {
   };
 
   const handleRepurpose = (contentId: string) => {
-    navigate(`/multiply?contentId=${contentId}`);
+    navigate(`/multiply?id=${contentId}`);
   };
 
   const refetchData = () => {
