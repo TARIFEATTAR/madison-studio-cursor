@@ -73,12 +73,15 @@ export function ProductAssociationSection({ productId, onProductSelect }: Produc
                 <label className="text-sm font-medium text-ink-black mb-2 block">
                   Link to Existing Product (Optional)
                 </label>
-                <Select value={productId || ""} onValueChange={onProductSelect}>
+                <Select 
+                  value={productId || undefined} 
+                  onValueChange={(value) => onProductSelect(value === 'none' ? null : value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select product from database..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None (Create standalone listing)</SelectItem>
+                    <SelectItem value="none">None (Create standalone listing)</SelectItem>
                     {products.map((product) => (
                       <SelectItem key={product.id} value={product.id}>
                         {product.name}
