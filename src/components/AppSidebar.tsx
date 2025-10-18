@@ -263,22 +263,33 @@ export function AppSidebar() {
               
               <SidebarMenuItem className="mt-3">
                 <SidebarMenuButton
+                  asChild
                   className={`
-                    group text-white/50 hover:text-white/80 hover:bg-white/5 hover:border-l-2 hover:border-[hsl(38,33%,56%)]/40
+                    group
+                    ${isActive("/help-center") 
+                      ? 'border-l-2 border-[hsl(38,33%,56%)] bg-white/8 text-white shadow-[inset_4px_0_8px_rgba(184,149,106,0.1)]' 
+                      : 'text-white/50 hover:text-white/80 hover:bg-white/5 hover:border-l-2 hover:border-[hsl(38,33%,56%)]/40'
+                    }
                     ${open ? 'py-2.5 px-3' : 'h-12 justify-center'}
                     transition-all duration-200
                   `}
                 >
-                  <Video 
-                    strokeWidth={1}
-                    className="w-6 h-6 shrink-0 transition-all duration-200 text-white/50 group-hover:text-white/70 group-hover:drop-shadow-[0_0_4px_rgba(184,149,106,0.2)] group-hover:scale-105" 
-                  />
-                  {open && (
-                    <div className="flex flex-col items-start gap-0.5">
-                      <span className="font-semibold text-sm tracking-wide">Video Tutorials</span>
-                      <span className="text-xs text-white/60">Learn & Get Help</span>
-                    </div>
-                  )}
+                  <NavLink to="/help-center" onClick={() => isMobile && toggleSidebar()}>
+                    <Video 
+                      strokeWidth={1}
+                      className={`w-6 h-6 shrink-0 transition-all duration-200 ${
+                        isActive("/help-center")
+                          ? 'text-[hsl(38,33%,56%)] drop-shadow-[0_0_6px_rgba(184,149,106,0.4)]'
+                          : 'text-white/50 group-hover:text-white/70 group-hover:drop-shadow-[0_0_4px_rgba(184,149,106,0.2)] group-hover:scale-105'
+                      }`} 
+                    />
+                    {open && (
+                      <div className="flex flex-col items-start gap-0.5">
+                        <span className="font-semibold text-sm tracking-wide">Video Tutorials</span>
+                        <span className="text-xs text-white/60">Learn & Get Help</span>
+                      </div>
+                    )}
+                  </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
