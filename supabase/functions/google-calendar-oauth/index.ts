@@ -6,57 +6,92 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Store tokens securely in Supabase Vault
-async function storeTokenInVault(supabase: any, tokenValue: string, tokenName: string, userId: string): Promise<string> {
-  console.log(`Attempting to store ${tokenName} in vault for user ${userId}`);
-  
-  const secretName = `google_calendar_${tokenName}_${userId}`;
-  
-  try {
-    // Insert directly into vault.secrets table - Vault handles encryption automatically
-    const { data, error } = await supabase
-      .from('vault.secrets')
-      .insert({
-        secret: tokenValue,
-        name: secretName,
-        description: `Google Calendar ${tokenName} for user ${userId}`
+// Encrypt and store Google tokens in application table (no Vault)
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+function base64ToBytes(b64: string): Uint8Array {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+async function encryptText(plain: string, keyB64: string): Promise<{ ciphertextB64: string; ivB64: string }> {
+  const keyBytes = base64ToBytes(keyB64);
+  // Create a fresh ArrayBuffer to satisfy Deno's BufferSource typing
+  const keyCopy = new Uint8Array(keyBytes.length);
+  keyCopy.set(keyBytes);
+  const keyBuffer: ArrayBuffer = keyCopy.buffer;
+  const cryptoKey = await crypto.subtle.importKey('raw', keyBuffer, { name: 'AES-GCM' }, false, ['encrypt']);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encoded = new TextEncoder().encode(plain);
+  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, cryptoKey, encoded);
+  return { ciphertextB64: bytesToBase64(new Uint8Array(ciphertext)), ivB64: bytesToBase64(iv) };
+}
+
+async function storeTokensEncrypted(
+  supabase: any,
+  userId: string,
+  accessToken: string,
+  refreshToken: string,
+  tokenExpiry: Date
+): Promise<void> {
+  const ENC_KEY = Deno.env.get('GOOGLE_TOKEN_ENCRYPTION_KEY');
+  if (!ENC_KEY) throw new Error('Token encryption key not configured');
+
+  console.log(`Encrypting Google tokens for user ${userId}`);
+  const { ciphertextB64: encAccess, ivB64: ivAccess } = await encryptText(accessToken, ENC_KEY);
+  const { ciphertextB64: encRefresh, ivB64: ivRefresh } = await encryptText(refreshToken, ENC_KEY);
+
+  // Check if record exists for this user
+  const { data: existing, error: fetchErr } = await supabase
+    .from('google_calendar_tokens')
+    .select('id')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (fetchErr) {
+    console.error('Error querying google_calendar_tokens:', fetchErr);
+    throw new Error('Failed to query token storage');
+  }
+
+  if (existing?.id) {
+    const { error: updateErr } = await supabase
+      .from('google_calendar_tokens')
+      .update({
+        encrypted_access_token: encAccess,
+        access_token_iv: ivAccess,
+        encrypted_refresh_token: encRefresh,
+        refresh_token_iv: ivRefresh,
+        token_expiry: tokenExpiry.toISOString(),
+        updated_at: new Date().toISOString(),
       })
-      .select('id')
-      .single();
-    
-    if (error) {
-      // If duplicate key (secret already exists), update instead
-      if (error.code === '23505') {
-        console.log(`Secret ${secretName} already exists, updating...`);
-        
-        const { data: updateData, error: updateError } = await supabase
-          .from('vault.secrets')
-          .update({ 
-            secret: tokenValue,
-            updated_at: new Date().toISOString()
-          })
-          .eq('name', secretName)
-          .select('id')
-          .single();
-        
-        if (updateError) {
-          console.error('Error updating vault secret:', updateError);
-          throw new Error(`Failed to update ${tokenName} in vault: ${updateError.message}`);
-        }
-        
-        console.log(`Successfully updated ${tokenName} in vault`);
-        return updateData.id;
-      }
-      
-      console.error('Error creating vault secret:', error);
-      throw new Error(`Failed to store ${tokenName} in vault: ${error.message}`);
+      .eq('id', existing.id);
+
+    if (updateErr) {
+      console.error('Error updating encrypted tokens:', updateErr);
+      throw new Error('Failed to update encrypted tokens');
     }
-    
-    console.log(`Successfully stored ${tokenName} in vault`);
-    return data.id;
-  } catch (err) {
-    console.error(`Failed to store ${tokenName} in vault:`, err);
-    throw err;
+    console.log('Updated encrypted Google tokens');
+  } else {
+    const { error: insertErr } = await supabase.from('google_calendar_tokens').insert({
+      user_id: userId,
+      encrypted_access_token: encAccess,
+      access_token_iv: ivAccess,
+      encrypted_refresh_token: encRefresh,
+      refresh_token_iv: ivRefresh,
+      token_expiry: tokenExpiry.toISOString(),
+    });
+
+    if (insertErr) {
+      console.error('Error inserting encrypted tokens:', insertErr);
+      throw new Error('Failed to insert encrypted tokens');
+    }
+    console.log('Stored encrypted Google tokens');
   }
 }
 
@@ -172,26 +207,8 @@ serve(async (req) => {
 
       const tokenExpiry = new Date(Date.now() + expires_in * 1000);
 
-      // Store tokens securely in Supabase Vault
-      const accessTokenSecretId = await storeTokenInVault(supabase, access_token, 'access_token', userId);
-      const refreshTokenSecretId = await storeTokenInVault(supabase, refresh_token, 'refresh_token', userId);
-
-      // Store vault references in database (upsert to handle reconnections)
-      const { error: dbError } = await supabase
-        .from('google_calendar_vault_refs')
-        .upsert({
-          user_id: userId,
-          access_token_secret_id: accessTokenSecretId,
-          refresh_token_secret_id: refreshTokenSecretId,
-          token_expiry: tokenExpiry.toISOString(),
-        }, {
-          onConflict: 'user_id'
-        });
-
-      if (dbError) {
-        console.error('Database error:', dbError);
-        throw new Error('Failed to store vault references');
-      }
+      // Encrypt and store tokens in application table (no Vault)
+      await storeTokensEncrypted(supabase, userId, access_token, refresh_token, tokenExpiry);
 
       // Enable sync by default
       await supabase
