@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { VideoHelpTrigger } from "@/components/help/VideoHelpTrigger";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -871,7 +872,10 @@ export default function Multiply() {
       <div className="container mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="font-serif text-4xl mb-2">Multiply</h1>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="font-serif text-4xl">Multiply</h1>
+            <VideoHelpTrigger videoId="understanding-smart-amplify" variant="icon" />
+          </div>
           <p className="text-muted-foreground">Transform master content into multiple formats</p>
         </div>
 
@@ -964,7 +968,10 @@ export default function Multiply() {
             <ResizablePanel defaultSize={60} minSize={40}>
               <ScrollArea className="h-full">
                 <div className="p-6 space-y-6">
-                  <h2 className="font-serif text-2xl">Derivative Editions</h2>
+                  <div className="flex items-center gap-3">
+                    <h2 className="font-serif text-2xl">Derivative Editions</h2>
+                    <VideoHelpTrigger videoId="understanding-smart-amplify" variant="icon" />
+                  </div>
 
                   {/* Empty State or Derivative Selector */}
                   {Object.keys(derivativesByType).length === 0 && (

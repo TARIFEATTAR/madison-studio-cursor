@@ -24,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { NameContentDialog } from "@/components/forge/NameContentDialog";
 import { SavePromptDialog } from "@/components/prompt-library/SavePromptDialog";
 import { WorksheetUpload } from "@/components/forge/WorksheetUpload";
+import { VideoHelpTrigger } from "@/components/help/VideoHelpTrigger";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DELIVERABLE_CATEGORIES, getDeliverableByValue } from "@/config/deliverableFormats";
 import {
@@ -666,22 +667,28 @@ export default function Create() {
                 className="w-12 h-12 md:w-16 md:h-16 object-contain"
               />
               <div className="flex-1">
-                <h1 className="text-3xl md:text-4xl font-serif font-medium text-ink-black">
-                  Create Content
-                </h1>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-3xl md:text-4xl font-serif font-medium text-ink-black">
+                    Create Content
+                  </h1>
+                  <VideoHelpTrigger videoId="creating-first-content" variant="icon" />
+                </div>
                 <p className="text-base md:text-lg mt-1 text-warm-gray">
                   Quick brief to generate your content
                 </p>
               </div>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => setUploadDialogOpen(true)}
-              className="flex items-center justify-center gap-2 border-brass text-brass hover:bg-brass/10 w-full md:w-auto mb-4"
-            >
-              <Upload className="w-4 h-4" />
-              Upload Worksheet
-            </Button>
+            <div className="flex items-center gap-2 mb-4">
+              <Button
+                variant="outline"
+                onClick={() => setUploadDialogOpen(true)}
+                className="flex items-center justify-center gap-2 border-brass text-brass hover:bg-brass/10 w-full md:w-auto"
+              >
+                <Upload className="w-4 h-4" />
+                Upload Worksheet
+              </Button>
+              <VideoHelpTrigger videoId="understanding-content-worksheets" variant="icon" />
+            </div>
             <p className="text-base text-warm-gray">
               Choose your product and format. Add optional details for more targeted content. Our AI will handle the rest.
             </p>
