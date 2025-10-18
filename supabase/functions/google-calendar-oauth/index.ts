@@ -8,47 +8,49 @@ const corsHeaders = {
 
 // Store tokens securely in Supabase Vault
 async function storeTokenInVault(supabase: any, tokenValue: string, tokenName: string, userId: string): Promise<string> {
-  console.log(`Storing ${tokenName} in vault for user ${userId}`);
+  console.log(`Attempting to store ${tokenName} in vault for user ${userId}`);
   
-  // Create a unique secret name for this user's token
   const secretName = `google_calendar_${tokenName}_${userId}`;
   
-  // Store in vault using the vault.secrets table
-  const { data, error } = await supabase
-    .from('vault.secrets')
-    .insert({
-      name: secretName,
+  try {
+    // Try to create the secret first using the correct Vault API
+    const { data: createData, error: createError } = await supabase.rpc('vault.create_secret', {
       secret: tokenValue,
+      name: secretName,
       description: `Google Calendar ${tokenName} for user ${userId}`
-    })
-    .select('id')
-    .single();
-  
-  if (error) {
-    // If secret already exists, update it instead
-    if (error.code === '23505') { // Unique violation
-      const { data: updateData, error: updateError } = await supabase
-        .from('vault.secrets')
-        .update({ 
+    });
+
+    if (createError) {
+      // If secret already exists (duplicate), update it instead
+      if (createError.message?.includes('duplicate') || createError.code === '23505') {
+        console.log(`Secret ${secretName} already exists, updating...`);
+        
+        const { data: updateData, error: updateError } = await supabase.rpc('vault.update_secret', {
+          id: secretName,
           secret: tokenValue,
-          updated_at: new Date().toISOString()
-        })
-        .eq('name', secretName)
-        .select('id')
-        .single();
-      
-      if (updateError) {
-        console.error('Error updating vault secret:', updateError);
-        throw new Error(`Failed to update ${tokenName} in vault`);
+          name: secretName,
+          description: `Google Calendar ${tokenName} for user ${userId}`
+        });
+        
+        if (updateError) {
+          console.error('Error updating vault secret:', updateError);
+          throw new Error(`Failed to update ${tokenName} in vault: ${updateError.message}`);
+        }
+        
+        console.log(`Successfully updated ${tokenName} in vault`);
+        return updateData || secretName;
       }
-      return updateData.id;
+      
+      console.error('Error creating vault secret:', createError);
+      throw new Error(`Failed to store ${tokenName} in vault: ${createError.message}`);
     }
     
-    console.error('Error storing vault secret:', error);
-    throw new Error(`Failed to store ${tokenName} in vault`);
+    console.log(`Successfully stored ${tokenName} in vault`);
+    return createData || secretName;
+  } catch (err) {
+    console.error(`Failed to store ${tokenName} in vault:`, err);
+    throw err;
   }
-  
-  return data.id;
 }
 
 serve(async (req) => {
