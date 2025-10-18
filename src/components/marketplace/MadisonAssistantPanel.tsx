@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   role: "user" | "assistant";
@@ -66,12 +67,26 @@ What would you like me to help with?`,
     setIsGenerating(true);
 
     try {
+      // Get user session and access token
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to use Madison.",
+          variant: "destructive",
+        });
+        setIsGenerating(false);
+        return;
+      }
+
       const FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marketplace-assistant`;
       const response = await fetch(FUNCTION_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           messages: [...messages, userMessage].map(m => ({
@@ -87,12 +102,22 @@ What would you like me to help with?`,
       });
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          toast({
+            title: "Authentication error",
+            description: "Your session may have expired. Please refresh the page.",
+            variant: "destructive",
+          });
+          setIsGenerating(false);
+          return;
+        }
         if (response.status === 429) {
           toast({
             title: "Rate limit exceeded",
             description: "Please try again in a moment.",
             variant: "destructive",
           });
+          setIsGenerating(false);
           return;
         }
         if (response.status === 402) {
@@ -101,6 +126,7 @@ What would you like me to help with?`,
             description: "Please add funds to your workspace.",
             variant: "destructive",
           });
+          setIsGenerating(false);
           return;
         }
         throw new Error('Failed to get response');
