@@ -114,6 +114,47 @@ export type Database = {
           },
         ]
       }
+      brand_health: {
+        Row: {
+          completeness_score: number
+          created_at: string
+          gap_analysis: Json
+          id: string
+          last_analyzed_at: string
+          organization_id: string
+          recommendations: Json
+          updated_at: string
+        }
+        Insert: {
+          completeness_score?: number
+          created_at?: string
+          gap_analysis?: Json
+          id?: string
+          last_analyzed_at?: string
+          organization_id: string
+          recommendations?: Json
+          updated_at?: string
+        }
+        Update: {
+          completeness_score?: number
+          created_at?: string
+          gap_analysis?: Json
+          id?: string
+          last_analyzed_at?: string
+          organization_id?: string
+          recommendations?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_health_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_knowledge: {
         Row: {
           content: Json
@@ -417,12 +458,15 @@ export type Database = {
           approval_status: string | null
           archived_at: string | null
           asset_type: string
+          brand_analysis: Json | null
+          brand_consistency_score: number | null
           created_at: string | null
           created_by: string | null
           external_urls: Json | null
           generated_content: string | null
           id: string
           is_archived: boolean
+          last_brand_check_at: string | null
           master_content_id: string | null
           organization_id: string
           platform_specs: Json | null
@@ -435,12 +479,15 @@ export type Database = {
           approval_status?: string | null
           archived_at?: string | null
           asset_type: string
+          brand_analysis?: Json | null
+          brand_consistency_score?: number | null
           created_at?: string | null
           created_by?: string | null
           external_urls?: Json | null
           generated_content?: string | null
           id?: string
           is_archived?: boolean
+          last_brand_check_at?: string | null
           master_content_id?: string | null
           organization_id: string
           platform_specs?: Json | null
@@ -453,12 +500,15 @@ export type Database = {
           approval_status?: string | null
           archived_at?: string | null
           asset_type?: string
+          brand_analysis?: Json | null
+          brand_consistency_score?: number | null
           created_at?: string | null
           created_by?: string | null
           external_urls?: Json | null
           generated_content?: string | null
           id?: string
           is_archived?: boolean
+          last_brand_check_at?: string | null
           master_content_id?: string | null
           organization_id?: string
           platform_specs?: Json | null
@@ -730,6 +780,8 @@ export type Database = {
       master_content: {
         Row: {
           archived_at: string | null
+          brand_analysis: Json | null
+          brand_consistency_score: number | null
           collection: string | null
           content_type: string
           created_at: string | null
@@ -738,6 +790,7 @@ export type Database = {
           full_content: string
           id: string
           is_archived: boolean
+          last_brand_check_at: string | null
           organization_id: string
           publish_notes: string | null
           published_to: Json | null
@@ -749,6 +802,8 @@ export type Database = {
         }
         Insert: {
           archived_at?: string | null
+          brand_analysis?: Json | null
+          brand_consistency_score?: number | null
           collection?: string | null
           content_type: string
           created_at?: string | null
@@ -757,6 +812,7 @@ export type Database = {
           full_content: string
           id?: string
           is_archived?: boolean
+          last_brand_check_at?: string | null
           organization_id: string
           publish_notes?: string | null
           published_to?: Json | null
@@ -768,6 +824,8 @@ export type Database = {
         }
         Update: {
           archived_at?: string | null
+          brand_analysis?: Json | null
+          brand_consistency_score?: number | null
           collection?: string | null
           content_type?: string
           created_at?: string | null
@@ -776,6 +834,7 @@ export type Database = {
           full_content?: string
           id?: string
           is_archived?: boolean
+          last_brand_check_at?: string | null
           organization_id?: string
           publish_notes?: string | null
           published_to?: Json | null

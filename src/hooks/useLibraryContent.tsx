@@ -20,6 +20,9 @@ export interface LibraryContentItem {
   externalUrls?: Record<string, string>;
   publishNotes?: string;
   publishedAt?: string;
+  brandConsistencyScore?: number;
+  brandAnalysis?: any;
+  lastBrandCheckAt?: string;
 }
 
 export const useLibraryContent = () => {
@@ -35,7 +38,7 @@ export const useLibraryContent = () => {
       // Fetch master content
       const { data: masterContent, error: masterError } = await supabase
         .from("master_content")
-        .select("*")
+        .select("*, brand_consistency_score, brand_analysis, last_brand_check_at")
         .order("created_at", { ascending: false });
 
       if (masterError) {
@@ -60,6 +63,9 @@ export const useLibraryContent = () => {
               publishedTo: item.published_to as string[] | undefined,
               externalUrls: item.external_urls as Record<string, string> | undefined,
               publishNotes: item.publish_notes || undefined,
+              brandConsistencyScore: item.brand_consistency_score || undefined,
+              brandAnalysis: item.brand_analysis || undefined,
+              lastBrandCheckAt: item.last_brand_check_at || undefined,
             };
           })
         );
@@ -99,7 +105,7 @@ export const useLibraryContent = () => {
       // Fetch derivative assets
       const { data: derivatives, error: derivativesError } = await supabase
         .from("derivative_assets")
-        .select("*, master_content(title, collection)")
+        .select("*, master_content(title, collection), brand_consistency_score, brand_analysis, last_brand_check_at")
         .order("created_at", { ascending: false });
 
       if (derivativesError) {
@@ -125,6 +131,9 @@ export const useLibraryContent = () => {
               externalUrls: item.external_urls as Record<string, string> | undefined,
               publishNotes: item.publish_notes || undefined,
               publishedAt: item.published_at || undefined,
+              brandConsistencyScore: item.brand_consistency_score || undefined,
+              brandAnalysis: item.brand_analysis || undefined,
+              lastBrandCheckAt: item.last_brand_check_at || undefined,
             };
           })
         );

@@ -8,6 +8,7 @@ import { DashboardEditorialTimeline } from "@/components/dashboard/DashboardEdit
 import { DashboardWorkflowMap } from "@/components/dashboard/DashboardWorkflowMap";
 import { ContentPipeline } from "@/components/dashboard/ContentPipeline";
 import { UpcomingSchedule } from "@/components/dashboard/UpcomingSchedule";
+import { BrandHealthCard } from "@/components/dashboard/BrandHealthCard";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { usePriorityAction } from "@/hooks/usePriorityAction";
 import { useAuth } from "@/hooks/useAuth";
@@ -208,8 +209,11 @@ export default function DashboardNew() {
           </div>
         </div>
 
-        {/* Editorial Timeline & Upcoming Schedule - Two column layout - Transformation #3 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Brand Health & Editorial Timeline - Two column layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          {/* Brand Health Card */}
+          <BrandHealthCard />
+
           {/* Editorial Timeline */}
           <div className="bg-parchment-white border border-charcoal/10 p-8">
             <div className="mb-8 pb-4 border-b border-charcoal/10">
@@ -222,19 +226,19 @@ export default function DashboardNew() {
             </div>
             <DashboardEditorialTimeline />
           </div>
+        </div>
 
-          {/* Upcoming Schedule */}
-          <div className="bg-parchment-white border border-charcoal/10 p-8">
-            <div className="mb-8 pb-4 border-b border-charcoal/10">
-              <h2 className="font-serif text-2xl font-medium text-ink-black mb-1">
-                Upcoming This Week
-              </h2>
-              <p className="text-xs text-charcoal/60 italic">
-                Your editorial calendar
-              </p>
-            </div>
-            <UpcomingSchedule />
+        {/* Upcoming Schedule - Full width */}
+        <div className="bg-parchment-white border border-charcoal/10 p-8">
+          <div className="mb-8 pb-4 border-b border-charcoal/10">
+            <h2 className="font-serif text-2xl font-medium text-ink-black mb-1">
+              Upcoming This Week
+            </h2>
+            <p className="text-xs text-charcoal/60 italic">
+              Your editorial calendar
+            </p>
           </div>
+          <UpcomingSchedule />
         </div>
 
       </div>

@@ -8,6 +8,7 @@ import { getDeliverableByValue } from "@/config/deliverableFormats";
 import { cn } from "@/lib/utils";
 import { PublishingStatus } from "./PublishingStatus";
 import { PublishingDrawer } from "./PublishingDrawer";
+import { BrandAlignmentButton } from "./BrandAlignmentButton";
 import { useState } from "react";
 
 interface ContentCardProps {
@@ -28,6 +29,8 @@ interface ContentCardProps {
     externalUrls?: Record<string, string>;
     publishedAt?: string;
     sourceTable?: "master_content" | "derivative_assets" | "outputs";
+    brandConsistencyScore?: number;
+    lastBrandCheckAt?: string;
   };
   onClick: () => void;
   viewMode?: "grid" | "list";
@@ -165,6 +168,20 @@ export function ContentCard({
               externalUrls={content.externalUrls}
               publishedAt={content.publishedAt}
               compact
+            />
+          </div>
+        )}
+
+        {/* Brand Alignment Button */}
+        {(content.sourceTable === 'master_content' || content.sourceTable === 'derivative_assets') && (
+          <div className="pt-3" onClick={(e) => e.stopPropagation()}>
+            <BrandAlignmentButton
+              contentId={content.id}
+              contentType={content.sourceTable === 'master_content' ? 'master' : 'derivative'}
+              title={content.title}
+              content={content.content}
+              currentScore={content.brandConsistencyScore}
+              lastCheckAt={content.lastBrandCheckAt}
             />
           </div>
         )}
