@@ -181,8 +181,9 @@ serve(async (req) => {
       // Handle date/time properly for Google Calendar API
       if (eventData.time) {
         // Specific time - use dateTime with timezone
-        const startDateTime = `${eventData.date}T${eventData.time}`;
-        const endDateTime = `${eventData.date}T${addHour(eventData.time)}`;
+        // Ensure seconds component is included (HH:MM:SS format)
+        const startDateTime = `${eventData.date}T${eventData.time}:00`;
+        const endDateTime = `${eventData.date}T${addHour(eventData.time)}:00`;
         
         event.start = {
           dateTime: startDateTime,
@@ -243,8 +244,9 @@ serve(async (req) => {
       // Handle date/time properly for Google Calendar API
       if (eventData.time) {
         // Specific time - use dateTime with timezone
-        const startDateTime = `${eventData.date}T${eventData.time}`;
-        const endDateTime = `${eventData.date}T${addHour(eventData.time)}`;
+        // Ensure seconds component is included (HH:MM:SS format)
+        const startDateTime = `${eventData.date}T${eventData.time}:00`;
+        const endDateTime = `${eventData.date}T${addHour(eventData.time)}:00`;
         
         event.start = {
           dateTime: startDateTime,
