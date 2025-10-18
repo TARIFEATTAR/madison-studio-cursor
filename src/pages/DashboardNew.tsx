@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { X, PenTool, Calendar, Archive, FileText, Loader2 } from "lucide-react";
+import { X, PenTool, Calendar, Archive, FileText, Loader2, TrendingUp, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DashboardRecentActivity } from "@/components/dashboard/DashboardRecentActivity";
 import { DashboardWeeklyStats } from "@/components/dashboard/DashboardWeeklyStats";
+import { ContentPipeline } from "@/components/dashboard/ContentPipeline";
+import { UpcomingSchedule } from "@/components/dashboard/UpcomingSchedule";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { usePriorityAction } from "@/hooks/usePriorityAction";
 import { useAuth } from "@/hooks/useAuth";
@@ -250,22 +252,53 @@ export default function DashboardNew() {
           </button>
         </div>
 
-        {/* Weekly Stats & Recent Activity - Two column layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Weekly Stats & Content Pipeline - Two column layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Weekly Stats */}
           <div className="bg-parchment-white border border-charcoal/10 p-6">
-            <h2 className="font-serif text-xl font-medium text-ink-black mb-6 pb-3 border-b border-charcoal/10">
-              This Week
-            </h2>
+            <div className="flex items-center gap-2 mb-6 pb-3 border-b border-charcoal/10">
+              <TrendingUp className="w-5 h-5 text-charcoal" />
+              <h2 className="font-serif text-xl font-medium text-ink-black">
+                This Week
+              </h2>
+            </div>
             <DashboardWeeklyStats stats={stats} />
           </div>
 
+          {/* Content Pipeline */}
+          <div className="bg-parchment-white border border-charcoal/10 p-6">
+            <div className="flex items-center gap-2 mb-6 pb-3 border-b border-charcoal/10">
+              <PenTool className="w-5 h-5 text-charcoal" />
+              <h2 className="font-serif text-xl font-medium text-ink-black">
+                Content Pipeline
+              </h2>
+            </div>
+            <ContentPipeline />
+          </div>
+        </div>
+
+        {/* Recent Activity & Upcoming Schedule - Two column layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Activity */}
           <div className="bg-parchment-white border border-charcoal/10 p-6">
-            <h2 className="font-serif text-xl font-medium text-ink-black mb-6 pb-3 border-b border-charcoal/10">
-              Recent Activity
-            </h2>
+            <div className="flex items-center gap-2 mb-6 pb-3 border-b border-charcoal/10">
+              <Clock className="w-5 h-5 text-charcoal" />
+              <h2 className="font-serif text-xl font-medium text-ink-black">
+                Recent Activity
+              </h2>
+            </div>
             <DashboardRecentActivity />
+          </div>
+
+          {/* Upcoming Schedule */}
+          <div className="bg-parchment-white border border-charcoal/10 p-6">
+            <div className="flex items-center gap-2 mb-6 pb-3 border-b border-charcoal/10">
+              <Calendar className="w-5 h-5 text-charcoal" />
+              <h2 className="font-serif text-xl font-medium text-ink-black">
+                Upcoming This Week
+              </h2>
+            </div>
+            <UpcomingSchedule />
           </div>
         </div>
 
