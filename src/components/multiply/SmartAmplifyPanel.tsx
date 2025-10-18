@@ -1,7 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, CheckCircle2, Lightbulb } from "lucide-react";
+import { Sparkles, CheckCircle2, Lightbulb, X } from "lucide-react";
+import { useState } from "react";
 import {
   Tooltip,
   TooltipContent,
@@ -21,6 +22,7 @@ interface SmartAmplifyPanelProps {
   selectedTypes: string[];
   onSelectAll: () => void;
   onToggleType: (typeId: string) => void;
+  onRemoveRecommendation: (typeId: string) => void;
   isLoading?: boolean;
 }
 
@@ -29,8 +31,10 @@ export function SmartAmplifyPanel({
   selectedTypes,
   onSelectAll,
   onToggleType,
+  onRemoveRecommendation,
   isLoading = false,
 }: SmartAmplifyPanelProps) {
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   if (isLoading) {
     return (
       <Card className="p-6 mb-6 border-primary/20 bg-primary/5">
@@ -93,39 +97,63 @@ export function SmartAmplifyPanel({
       <div className="grid gap-3">
         {recommendations.map((rec) => {
           const isSelected = selectedTypes.includes(rec.derivativeType);
+          const isHovered = hoveredCard === rec.derivativeType;
           return (
             <TooltipProvider key={rec.derivativeType}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button
-                    onClick={() => onToggleType(rec.derivativeType)}
-                    className={`
-                      flex items-start gap-3 p-3 rounded-lg border-2 transition-all text-left
-                      ${isSelected 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-border hover:border-primary/50 hover:bg-accent/50'
-                      }
-                    `}
+                  <div 
+                    className="relative group"
+                    onMouseEnter={() => setHoveredCard(rec.derivativeType)}
+                    onMouseLeave={() => setHoveredCard(null)}
                   >
-                    <div className="flex-shrink-0 mt-0.5">
-                      {isSelected ? (
-                        <CheckCircle2 className="w-5 h-5 text-primary" />
-                      ) : (
-                        <Lightbulb className="w-5 h-5 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-foreground capitalize">
-                          {rec.derivativeType.replace(/_/g, ' ')}
-                        </span>
-                        {getConfidenceBadge(rec.confidence)}
+                    <button
+                      onClick={() => onToggleType(rec.derivativeType)}
+                      className={`
+                        flex items-start gap-3 p-3 rounded-lg border-2 transition-all text-left w-full
+                        ${isSelected 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-border hover:border-primary/50 hover:bg-accent/50'
+                        }
+                      `}
+                    >
+                      <div className="flex-shrink-0 mt-0.5">
+                        {isSelected ? (
+                          <CheckCircle2 className="w-5 h-5 text-primary" />
+                        ) : (
+                          <Lightbulb className="w-5 h-5 text-muted-foreground" />
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {rec.reason}
-                      </p>
-                    </div>
-                  </button>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-foreground capitalize">
+                            {rec.derivativeType.replace(/_/g, ' ')}
+                          </span>
+                          {getConfidenceBadge(rec.confidence)}
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {rec.reason}
+                        </p>
+                      </div>
+                    </button>
+                    
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveRecommendation(rec.derivativeType);
+                      }}
+                      aria-label="Remove recommendation"
+                      className={`
+                        absolute top-2 right-2 p-1.5 rounded-md 
+                        bg-destructive/10 hover:bg-destructive/20 
+                        text-destructive hover:text-destructive
+                        transition-all duration-200 z-10
+                        ${isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}
+                      `}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="max-w-xs">
                   <p className="text-sm">{rec.reason}</p>

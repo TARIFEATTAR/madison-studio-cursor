@@ -228,6 +228,14 @@ export default function Multiply() {
     full_content: selectedMaster.content,
   } : null;
   const { recommendations, isLoading: isAnalyzing } = useSmartAmplify(smartAmplifyMasterContent);
+  
+  // Track filtered recommendations (user can remove recommendations)
+  const [filteredRecommendations, setFilteredRecommendations] = useState<typeof recommendations>([]);
+  
+  // Reset filtered recommendations when source recommendations change
+  useEffect(() => {
+    setFilteredRecommendations(recommendations);
+  }, [recommendations]);
 
   useEffect(() => {
     const loadMasterContent = async () => {
@@ -362,19 +370,31 @@ export default function Multiply() {
   };
 
   const selectAllRecommendations = () => {
-    const allRecommendationsSelected = recommendations.every(r => 
+    const allRecommendationsSelected = filteredRecommendations.every(r => 
       selectedTypes.has(r.derivativeType)
     );
     
     if (allRecommendationsSelected) {
       // Deselect all recommendations
       const newSet = new Set(selectedTypes);
-      recommendations.forEach(r => newSet.delete(r.derivativeType));
+      filteredRecommendations.forEach(r => newSet.delete(r.derivativeType));
       setSelectedTypes(newSet);
     } else {
       // Select all recommendations
       const newSet = new Set(selectedTypes);
-      recommendations.forEach(r => newSet.add(r.derivativeType));
+      filteredRecommendations.forEach(r => newSet.add(r.derivativeType));
+      setSelectedTypes(newSet);
+    }
+  };
+
+  const handleRemoveRecommendation = (typeId: string) => {
+    setFilteredRecommendations(prev => 
+      prev.filter(rec => rec.derivativeType !== typeId)
+    );
+    // Also deselect if it was selected
+    if (selectedTypes.has(typeId)) {
+      const newSet = new Set(selectedTypes);
+      newSet.delete(typeId);
       setSelectedTypes(newSet);
     }
   };
@@ -956,12 +976,13 @@ export default function Multiply() {
                   )}
 
                   {/* Smart Amplify Panel */}
-                  {selectedMaster && recommendations.length > 0 && (
+                  {selectedMaster && filteredRecommendations.length > 0 && (
                     <SmartAmplifyPanel
-                      recommendations={recommendations}
+                      recommendations={filteredRecommendations}
                       selectedTypes={Array.from(selectedTypes)}
                       onSelectAll={selectAllRecommendations}
                       onToggleType={toggleTypeSelection}
+                      onRemoveRecommendation={handleRemoveRecommendation}
                       isLoading={isAnalyzing}
                     />
                   )}
