@@ -13,24 +13,31 @@ async function storeTokenInVault(supabase: any, tokenValue: string, tokenName: s
   const secretName = `google_calendar_${tokenName}_${userId}`;
   
   try {
-    // Try to create the secret first using the correct Vault API
-    const { data: createData, error: createError } = await supabase.rpc('vault.create_secret', {
-      secret: tokenValue,
-      name: secretName,
-      description: `Google Calendar ${tokenName} for user ${userId}`
-    });
-
-    if (createError) {
-      // If secret already exists (duplicate), update it instead
-      if (createError.message?.includes('duplicate') || createError.code === '23505') {
+    // Insert directly into vault.secrets table - Vault handles encryption automatically
+    const { data, error } = await supabase
+      .from('vault.secrets')
+      .insert({
+        secret: tokenValue,
+        name: secretName,
+        description: `Google Calendar ${tokenName} for user ${userId}`
+      })
+      .select('id')
+      .single();
+    
+    if (error) {
+      // If duplicate key (secret already exists), update instead
+      if (error.code === '23505') {
         console.log(`Secret ${secretName} already exists, updating...`);
         
-        const { data: updateData, error: updateError } = await supabase.rpc('vault.update_secret', {
-          id: secretName,
-          secret: tokenValue,
-          name: secretName,
-          description: `Google Calendar ${tokenName} for user ${userId}`
-        });
+        const { data: updateData, error: updateError } = await supabase
+          .from('vault.secrets')
+          .update({ 
+            secret: tokenValue,
+            updated_at: new Date().toISOString()
+          })
+          .eq('name', secretName)
+          .select('id')
+          .single();
         
         if (updateError) {
           console.error('Error updating vault secret:', updateError);
@@ -38,15 +45,15 @@ async function storeTokenInVault(supabase: any, tokenValue: string, tokenName: s
         }
         
         console.log(`Successfully updated ${tokenName} in vault`);
-        return updateData || secretName;
+        return updateData.id;
       }
       
-      console.error('Error creating vault secret:', createError);
-      throw new Error(`Failed to store ${tokenName} in vault: ${createError.message}`);
+      console.error('Error creating vault secret:', error);
+      throw new Error(`Failed to store ${tokenName} in vault: ${error.message}`);
     }
     
     console.log(`Successfully stored ${tokenName} in vault`);
-    return createData || secretName;
+    return data.id;
   } catch (err) {
     console.error(`Failed to store ${tokenName} in vault:`, err);
     throw err;
