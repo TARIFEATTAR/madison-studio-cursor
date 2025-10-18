@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, FileDown, Eye, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,7 +19,10 @@ export default function CreateEtsyListing() {
   const { toast } = useToast();
   const { currentOrganizationId } = useOnboarding();
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [listingId, setListingId] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -33,6 +36,55 @@ export default function CreateEtsyListing() {
     images: [] as string[]
   });
 
+  // Load existing listing if editing
+  useEffect(() => {
+    const id = searchParams.get('id');
+    if (id) {
+      setListingId(id);
+      loadListing(id);
+    }
+  }, [searchParams]);
+
+  const loadListing = async (id: string) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('marketplace_listings')
+        .select('*')
+        .eq('id', id)
+        .eq('organization_id', currentOrganizationId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        // Safely access platform_data properties
+        const platformData = data.platform_data as any || {};
+        
+        // Populate form with existing data
+        setFormData({
+          productId: data.product_id,
+          title: data.title || "",
+          category: platformData.category || "",
+          price: platformData.price || "",
+          quantity: platformData.quantity || "1",
+          description: platformData.description || "",
+          tags: platformData.tags || [],
+          images: platformData.images || []
+        });
+      }
+    } catch (error) {
+      console.error('Error loading listing:', error);
+      toast({
+        title: "Error loading listing",
+        description: "Could not load the listing data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const updateFormData = (updates: Partial<typeof formData>) => {
     setFormData(prev => ({ ...prev, ...updates }));
   };
@@ -40,40 +92,58 @@ export default function CreateEtsyListing() {
   const handleSaveDraft = async () => {
     setSaving(true);
     try {
-      // Get organization ID
-      const { data: orgMember } = await supabase
-        .from("organization_members")
-        .select("organization_id")
-        .eq("user_id", user?.id)
-        .single();
+      const platformData = {
+        category: formData.category,
+        price: formData.price,
+        quantity: formData.quantity,
+        description: formData.description,
+        tags: formData.tags,
+        images: formData.images
+      };
 
-      if (!orgMember) throw new Error("Organization not found");
+      if (listingId) {
+        // Update existing listing
+        const { error } = await supabase
+          .from("marketplace_listings")
+          .update({
+            title: formData.title || "Untitled Draft",
+            product_id: formData.productId,
+            platform_data: platformData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', listingId)
+          .eq('organization_id', currentOrganizationId);
 
-      const { error } = await supabase
-        .from("marketplace_listings")
-        .insert({
-          organization_id: orgMember.organization_id,
-          product_id: formData.productId,
-          platform: "etsy",
-          title: formData.title || "Untitled Draft",
-          status: "draft",
-          platform_data: {
-            category: formData.category,
-            price: formData.price,
-            quantity: formData.quantity,
-            description: formData.description,
-            tags: formData.tags,
-            images: formData.images
-          },
-          created_by: user?.id
+        if (error) throw error;
+
+        toast({
+          title: "Listing updated",
+          description: "Your Etsy listing has been updated."
         });
+      } else {
+        // Create new listing
+        const { error } = await supabase
+          .from("marketplace_listings")
+          .insert({
+            organization_id: currentOrganizationId,
+            product_id: formData.productId,
+            platform: "etsy",
+            title: formData.title || "Untitled Draft",
+            status: "draft",
+            platform_data: platformData,
+            created_by: user?.id
+          });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Draft saved",
-        description: "Your Etsy listing has been saved as a draft."
-      });
+        toast({
+          title: "Draft saved",
+          description: "Your Etsy listing has been saved as a draft."
+        });
+      }
+
+      // Navigate back to library
+      navigate('/marketplace-library');
     } catch (error) {
       console.error("Error saving draft:", error);
       toast({
@@ -118,7 +188,9 @@ export default function CreateEtsyListing() {
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div>
-                <h1 className="font-serif text-2xl text-ink-black">Create Etsy Listing</h1>
+                <h1 className="font-serif text-2xl text-ink-black">
+                  {listingId ? 'Edit Etsy Listing' : 'Create Etsy Listing'}
+                </h1>
                 <p className="text-sm text-charcoal/60">Craft a marketplace-optimized listing with Madison's guidance</p>
               </div>
             </div>
@@ -153,9 +225,14 @@ export default function CreateEtsyListing() {
 
       {/* Main Content - Split Layout */}
       <div className="max-w-[1600px] mx-auto p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Side - Form */}
-          <div className="lg:col-span-2 space-y-4">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <p className="text-charcoal/70">Loading listing...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Side - Form */}
+            <div className="lg:col-span-2 space-y-4">
             <ProductAssociationSection 
               productId={formData.productId}
               onProductSelect={(productId) => updateFormData({ productId })}
@@ -194,8 +271,9 @@ export default function CreateEtsyListing() {
               organizationId={currentOrganizationId || undefined}
               productId={formData.productId || undefined}
             />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
