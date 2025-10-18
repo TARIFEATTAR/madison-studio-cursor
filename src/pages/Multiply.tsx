@@ -25,6 +25,7 @@ import { EditorialDirectorSplitScreen } from "@/components/multiply/EditorialDir
 import { SavePromptDialog } from "@/components/prompt-library/SavePromptDialog";
 import { ScheduleButton } from "@/components/forge/ScheduleButton";
 import { SmartAmplifyPanel } from "@/components/multiply/SmartAmplifyPanel";
+import { DerivativeFullModal } from "@/components/amplify/DerivativeFullModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useSmartAmplify } from "@/hooks/useSmartAmplify";
@@ -211,6 +212,10 @@ export default function Multiply() {
   const saveInFlightRef = useRef(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [contentFromNavigation, setContentFromNavigation] = useState(false);
+
+  // Modal state for derivative viewing/editing
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedDerivativeForModal, setSelectedDerivativeForModal] = useState<DerivativeContent | null>(null);
 
   // Track if we selected master via navigation
   const selectedViaNavigationRef = useRef(false);
@@ -533,6 +538,192 @@ export default function Multiply() {
       newSet.add(typeId);
     }
     setExpandedTypes(newSet);
+  };
+
+  const handleOpenModal = (derivative: DerivativeContent) => {
+    setSelectedDerivativeForModal(derivative);
+    setModalOpen(true);
+  };
+
+  const handleSaveEdit = async (newContent: string) => {
+    if (!selectedDerivativeForModal) return;
+    
+    try {
+      // Update database
+      const { error } = await supabase
+        .from('derivative_assets')
+        .update({ generated_content: newContent })
+        .eq('id', selectedDerivativeForModal.id);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setDerivatives(prev =>
+        prev.map(d => 
+          d.id === selectedDerivativeForModal.id 
+            ? { ...d, content: newContent, generated_content: newContent, charCount: newContent.length }
+            : d
+        )
+      );
+      
+      // Update modal state
+      setSelectedDerivativeForModal(prev => 
+        prev ? { ...prev, content: newContent, generated_content: newContent } : null
+      );
+      
+      toast({
+        title: "Changes saved",
+        description: "Your edits have been saved to the database.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error saving changes",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleApproveDerivative = async () => {
+    if (!selectedDerivativeForModal) return;
+    
+    try {
+      const { error } = await supabase
+        .from('derivative_assets')
+        .update({ approval_status: 'approved' })
+        .eq('id', selectedDerivativeForModal.id);
+      
+      if (error) throw error;
+      
+      setDerivatives(prev =>
+        prev.map(d => 
+          d.id === selectedDerivativeForModal.id 
+            ? { ...d, status: 'approved' }
+            : d
+        )
+      );
+      
+      setSelectedDerivativeForModal(prev => 
+        prev ? { ...prev, status: 'approved' } : null
+      );
+      
+      toast({
+        title: "Derivative approved",
+        description: "The derivative has been marked as approved.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error approving derivative",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRejectDerivative = async () => {
+    if (!selectedDerivativeForModal) return;
+    
+    try {
+      const { error } = await supabase
+        .from('derivative_assets')
+        .update({ approval_status: 'rejected' })
+        .eq('id', selectedDerivativeForModal.id);
+      
+      if (error) throw error;
+      
+      setDerivatives(prev =>
+        prev.map(d => 
+          d.id === selectedDerivativeForModal.id 
+            ? { ...d, status: 'rejected' }
+            : d
+        )
+      );
+      
+      setSelectedDerivativeForModal(prev => 
+        prev ? { ...prev, status: 'rejected' } : null
+      );
+      
+      toast({
+        title: "Derivative rejected",
+        description: "The derivative has been marked as rejected.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error rejecting derivative",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleScheduleDerivative = () => {
+    console.log('Schedule clicked - using ScheduleButton component');
+  };
+
+  const handleArchiveDerivative = async () => {
+    if (!selectedDerivativeForModal) return;
+    
+    try {
+      const { error } = await supabase
+        .from('derivative_assets')
+        .update({ is_archived: true })
+        .eq('id', selectedDerivativeForModal.id);
+      
+      if (error) throw error;
+      
+      setDerivatives(prev =>
+        prev.filter(d => d.id !== selectedDerivativeForModal.id)
+      );
+      
+      setModalOpen(false);
+      setSelectedDerivativeForModal(null);
+      
+      toast({
+        title: "Derivative archived",
+        description: "The derivative has been archived.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error archiving derivative",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteDerivative = async () => {
+    if (!selectedDerivativeForModal) return;
+    
+    if (!confirm('Are you sure you want to delete this derivative? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('derivative_assets')
+        .delete()
+        .eq('id', selectedDerivativeForModal.id);
+      
+      if (error) throw error;
+      
+      setDerivatives(prev =>
+        prev.filter(d => d.id !== selectedDerivativeForModal.id)
+      );
+      
+      setModalOpen(false);
+      setSelectedDerivativeForModal(null);
+      
+      toast({
+        title: "Derivative deleted",
+        description: "The derivative has been permanently deleted.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error deleting derivative",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const openDirector = (derivative: DerivativeContent) => {
@@ -914,10 +1105,23 @@ export default function Multiply() {
                                           </span>
                                         </div>
                                         <div className="flex gap-2">
+                                          <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            onClick={() => handleOpenModal(deriv)}
+                                            title="View full details"
+                                          >
+                                            <FileText className="w-4 h-4" />
+                                          </Button>
                                           <Button variant="ghost" size="sm" onClick={() => copyToClipboard(deriv.content)}>
                                             <Copy className="w-4 h-4" />
                                           </Button>
-                                          <Button variant="ghost" size="sm" onClick={() => openDirector(deriv)}>
+                                          <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            onClick={() => openDirector(deriv)}
+                                            title="Open AI Director"
+                                          >
                                             <Edit className="w-4 h-4" />
                                           </Button>
                                           <ScheduleButton
@@ -1098,6 +1302,13 @@ export default function Multiply() {
                               <div className="flex justify-between mb-2">
                                 <Badge variant="secondary" className="text-xs">{deriv.status}</Badge>
                                 <div className="flex gap-1">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => handleOpenModal(deriv)}
+                                  >
+                                    <FileText className="w-3 h-3" />
+                                  </Button>
                                   <Button variant="ghost" size="sm" onClick={() => copyToClipboard(deriv.content)}>
                                     <Copy className="w-3 h-3" />
                                   </Button>
@@ -1163,6 +1374,30 @@ export default function Multiply() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Derivative Detail Modal */}
+      <DerivativeFullModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        derivative={selectedDerivativeForModal ? {
+          id: selectedDerivativeForModal.id,
+          asset_type: selectedDerivativeForModal.asset_type || selectedDerivativeForModal.typeId,
+          generated_content: selectedDerivativeForModal.generated_content || selectedDerivativeForModal.content,
+          approval_status: selectedDerivativeForModal.status,
+          platform_specs: selectedDerivativeForModal.platformSpecs,
+        } : null}
+        label={selectedDerivativeForModal ? 
+          DERIVATIVE_TYPES.find(t => t.id === selectedDerivativeForModal.typeId)?.name || '' 
+          : ''}
+        onApprove={handleApproveDerivative}
+        onReject={handleRejectDerivative}
+        onEdit={handleSaveEdit}
+        onCopy={() => selectedDerivativeForModal && copyToClipboard(selectedDerivativeForModal.content)}
+        onSchedule={handleScheduleDerivative}
+        onApproveAndSchedule={handleScheduleDerivative}
+        onArchive={handleArchiveDerivative}
+        onDelete={handleDeleteDerivative}
+      />
     </div>
   );
 }
