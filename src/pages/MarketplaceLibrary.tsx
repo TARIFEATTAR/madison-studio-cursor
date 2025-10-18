@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
@@ -31,7 +31,9 @@ import {
   Archive, 
   Tag,
   ShoppingCart,
-  ExternalLink
+  ExternalLink,
+  ArrowUpDown,
+  X
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -56,6 +58,7 @@ export default function MarketplaceLibrary() {
   const [searchQuery, setSearchQuery] = useState("");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"alphabetical" | "recent" | "status">("recent");
 
   useEffect(() => {
     if (currentOrganizationId) {
@@ -86,12 +89,35 @@ export default function MarketplaceLibrary() {
     }
   };
 
-  const filteredListings = listings.filter(listing => {
-    const matchesSearch = listing.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPlatform = platformFilter === "all" || listing.platform === platformFilter;
-    const matchesStatus = statusFilter === "all" || listing.status === statusFilter;
-    return matchesSearch && matchesPlatform && matchesStatus;
-  });
+  // Filter and sort listings
+  const filteredAndSortedListings = useMemo(() => {
+    let filtered = listings.filter(listing => {
+      const matchesSearch = listing.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesPlatform = platformFilter === "all" || listing.platform === platformFilter;
+      const matchesStatus = statusFilter === "all" || listing.status === statusFilter;
+      return matchesSearch && matchesPlatform && matchesStatus;
+    });
+
+    // Sort
+    return filtered.sort((a, b) => {
+      if (sortBy === "alphabetical") {
+        return a.title.localeCompare(b.title);
+      } else if (sortBy === "recent") {
+        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+      } else if (sortBy === "status") {
+        return a.status.localeCompare(b.status);
+      }
+      return 0;
+    });
+  }, [listings, searchQuery, platformFilter, statusFilter, sortBy]);
+
+  const hasActiveFilters = platformFilter !== "all" || statusFilter !== "all";
+
+  const clearFilters = () => {
+    setPlatformFilter("all");
+    setStatusFilter("all");
+    setSearchQuery("");
+  };
 
   const handleDuplicate = async (listing: MarketplaceListing) => {
     try {
@@ -223,8 +249,8 @@ export default function MarketplaceLibrary() {
             </DropdownMenu>
           </div>
 
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          {/* Search and Sort Row */}
+          <div className="flex gap-2 mb-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/50" />
               <Input
@@ -234,26 +260,84 @@ export default function MarketplaceLibrary() {
                 className="pl-10"
               />
             </div>
-            <Select value={platformFilter} onValueChange={setPlatformFilter}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Platform" />
+            <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+              <SelectTrigger className="w-[180px]">
+                <ArrowUpDown className="w-4 h-4 mr-2" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Platforms</SelectItem>
-                <SelectItem value="etsy">Etsy</SelectItem>
-                <SelectItem value="tiktok_shop">TikTok Shop</SelectItem>
+                <SelectItem value="recent">Most Recent</SelectItem>
+                <SelectItem value="alphabetical">A-Z</SelectItem>
+                <SelectItem value="status">By Status</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="published">Published</SelectItem>
-              </SelectContent>
-            </Select>
+          </div>
+
+          {/* Quick Filter Chips */}
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-sm text-charcoal/60">Filter:</span>
+            
+            {/* Platform Filters */}
+            <Badge
+              variant={platformFilter === "all" ? "default" : "outline"}
+              className="cursor-pointer"
+              onClick={() => setPlatformFilter("all")}
+            >
+              All Platforms
+            </Badge>
+            <Badge
+              variant={platformFilter === "etsy" ? "default" : "outline"}
+              className="cursor-pointer bg-orange-500/10 text-orange-700 border-orange-500/20 hover:bg-orange-500/20"
+              onClick={() => setPlatformFilter("etsy")}
+            >
+              <Tag className="w-3 h-3 mr-1" />
+              Etsy
+            </Badge>
+            <Badge
+              variant={platformFilter === "tiktok_shop" ? "default" : "outline"}
+              className="cursor-pointer bg-pink-500/10 text-pink-700 border-pink-500/20 hover:bg-pink-500/20"
+              onClick={() => setPlatformFilter("tiktok_shop")}
+            >
+              <ShoppingCart className="w-3 h-3 mr-1" />
+              TikTok Shop
+            </Badge>
+
+            <div className="h-4 w-px bg-border mx-1" />
+
+            {/* Status Filters */}
+            <Badge
+              variant={statusFilter === "all" ? "secondary" : "outline"}
+              className="cursor-pointer"
+              onClick={() => setStatusFilter("all")}
+            >
+              All Statuses
+            </Badge>
+            <Badge
+              variant={statusFilter === "draft" ? "default" : "outline"}
+              className="cursor-pointer bg-yellow-500/10 text-yellow-700 border-yellow-500/20 hover:bg-yellow-500/20"
+              onClick={() => setStatusFilter("draft")}
+            >
+              Draft
+            </Badge>
+            <Badge
+              variant={statusFilter === "published" ? "default" : "outline"}
+              className="cursor-pointer bg-green-500/10 text-green-700 border-green-500/20 hover:bg-green-500/20"
+              onClick={() => setStatusFilter("published")}
+            >
+              Published
+            </Badge>
+
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="h-7 gap-1 ml-2"
+              >
+                <X className="w-3 h-3" />
+                Clear All
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -265,7 +349,7 @@ export default function MarketplaceLibrary() {
             <div className="text-center py-12">
               <p className="text-charcoal/70">Loading listings...</p>
             </div>
-          ) : filteredListings.length === 0 ? (
+          ) : filteredAndSortedListings.length === 0 ? (
             <div className="text-center py-12">
               <ShoppingCart className="w-12 h-12 mx-auto text-charcoal/30 mb-4" />
               <h3 className="text-lg font-semibold text-ink-black mb-2">No listings found</h3>
@@ -283,7 +367,7 @@ export default function MarketplaceLibrary() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredListings.map((listing) => (
+              {filteredAndSortedListings.map((listing) => (
                 <Card key={listing.id} className="hover:shadow-lg transition-shadow">
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between mb-3">
