@@ -8,7 +8,7 @@ export interface IndustryTemplate {
   }>;
 }
 
-// E-commerce industries that can access marketplace features
+// E-commerce industries that have access to Marketplace features
 export const ECOMMERCE_INDUSTRIES = [
   'skincare',
   'perfume',
@@ -16,11 +16,11 @@ export const ECOMMERCE_INDUSTRIES = [
   'fashion',
   'jewelry',
   'cosmetics'
-] as const;
+];
 
 export const isEcommerceIndustry = (industryId: string | undefined): boolean => {
   if (!industryId) return false;
-  return ECOMMERCE_INDUSTRIES.includes(industryId as any);
+  return ECOMMERCE_INDUSTRIES.includes(industryId);
 };
 
 // Legacy industry templates - DEPRECATED
@@ -57,7 +57,11 @@ export function getAllIndustryOptions() {
   ];
 }
 
-// Deprecated: Use getAllIndustryOptions instead
 export function getIndustryOptions() {
-  return getAllIndustryOptions().filter(opt => opt.isEcommerce);
+  return [
+    { value: 'skincare', label: 'Skin Care' },
+    { value: 'perfume', label: 'Perfumery' },
+    { value: 'home_fragrance', label: 'Home Fragrance' },
+    { value: 'other', label: 'Other' }
+  ];
 }

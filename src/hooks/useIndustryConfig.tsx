@@ -41,23 +41,22 @@ export function useIndustryConfig(organizationId: string | null) {
   return { industryConfig, loading };
 }
 
-// Helper hook to get current organization ID
 export function useCurrentOrganizationId() {
   const { user } = useAuth();
   const [orgId, setOrgId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadOrgId = async () => {
+    const loadOrganizationId = async () => {
       if (!user) {
         setLoading(false);
         return;
       }
 
-      // Try to get from localStorage cache first
-      const cachedOrgId = localStorage.getItem('current_organization_id');
-      if (cachedOrgId) {
-        setOrgId(cachedOrgId);
+      // Check localStorage cache first
+      const cached = localStorage.getItem('current_org_id');
+      if (cached) {
+        setOrgId(cached);
       }
 
       try {
@@ -65,14 +64,13 @@ export function useCurrentOrganizationId() {
           .from("organization_members")
           .select("organization_id")
           .eq("user_id", user.id)
-          .limit(1)
           .single();
 
         if (error) throw error;
 
         if (data?.organization_id) {
           setOrgId(data.organization_id);
-          localStorage.setItem('current_organization_id', data.organization_id);
+          localStorage.setItem('current_org_id', data.organization_id);
         }
       } catch (error) {
         console.error("Error loading organization ID:", error);
@@ -81,13 +79,12 @@ export function useCurrentOrganizationId() {
       }
     };
 
-    loadOrgId();
+    loadOrganizationId();
   }, [user]);
 
   return { orgId, loading };
 }
 
-// Helper hook to check if user's org is e-commerce
 export function useIsEcommerceOrg() {
   const { orgId, loading: orgLoading } = useCurrentOrganizationId();
   const { industryConfig, loading: configLoading } = useIndustryConfig(orgId);

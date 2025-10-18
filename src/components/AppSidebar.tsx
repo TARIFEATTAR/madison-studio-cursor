@@ -29,9 +29,9 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { isEcommerce } = useIsEcommerceOrg();
+  const { isEcommerce, loading: isEcommerceLoading } = useIsEcommerceOrg();
 
-  // Build dynamic navigation items based on industry
+  // Build dynamic nav items based on industry
   const navItems = [
     { 
       title: "Dashboard", 

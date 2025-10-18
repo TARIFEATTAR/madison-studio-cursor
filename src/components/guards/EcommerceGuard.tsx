@@ -2,11 +2,7 @@ import { Navigate } from "react-router-dom";
 import { useIsEcommerceOrg } from "@/hooks/useIndustryConfig";
 import { Loader2 } from "lucide-react";
 
-interface EcommerceGuardProps {
-  children: React.ReactNode;
-}
-
-export function EcommerceGuard({ children }: EcommerceGuardProps) {
+export function EcommerceGuard({ children }: { children: React.ReactNode }) {
   const { isEcommerce, loading } = useIsEcommerceOrg();
 
   if (loading) {
