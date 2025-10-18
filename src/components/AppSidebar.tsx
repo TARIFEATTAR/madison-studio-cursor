@@ -131,7 +131,7 @@ export function AppSidebar() {
               <img 
                 src={maddiLogo} 
                 alt="MADISON"
-                  className="w-16 h-16 shrink-0 transition-transform duration-200 group-hover:scale-105"
+                  className="w-10 h-10 shrink-0 transition-transform duration-200 group-hover:scale-105"
                 />
                 <span className="font-serif text-xl tracking-[0.216em] -ml-2 -mb-[8px]" style={{ fontWeight: 300, color: '#F5F5DC' }}>MADISON</span>
               </NavLink>
@@ -156,7 +156,7 @@ export function AppSidebar() {
               <img 
                 src={maddiLogo} 
                 alt="MADISON"
-                  className="w-14 h-14 transition-transform duration-200 group-hover:scale-105"
+                  className="w-8 h-8 transition-transform duration-200 group-hover:scale-105"
                 />
               </NavLink>
               <button
