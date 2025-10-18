@@ -2,7 +2,7 @@ import { User, Lightbulb, BookOpen, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import madisonInsignia from "@/assets/madison-insignia.png";
+import madisonInsignia from "@/assets/madison-insignia-new.png";
 
 export default function MeetMadison() {
   const navigate = useNavigate();
