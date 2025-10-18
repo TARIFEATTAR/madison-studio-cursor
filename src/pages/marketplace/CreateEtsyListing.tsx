@@ -12,10 +12,12 @@ import { MadisonAssistantPanel } from "@/components/marketplace/MadisonAssistant
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 export default function CreateEtsyListing() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { currentOrganizationId } = useOnboarding();
   const { user } = useAuth();
   const [saving, setSaving] = useState(false);
 
@@ -189,6 +191,8 @@ export default function CreateEtsyListing() {
               platform="etsy"
               formData={formData}
               onUpdateField={updateFormData}
+              organizationId={currentOrganizationId || undefined}
+              productId={formData.productId || undefined}
             />
           </div>
         </div>

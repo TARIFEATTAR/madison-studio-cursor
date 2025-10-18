@@ -38,3 +38,6 @@ verify_jwt = true
 
 [functions.analyze-amplify-fit]
 verify_jwt = true
+
+[functions.marketplace-assistant]
+verify_jwt = true

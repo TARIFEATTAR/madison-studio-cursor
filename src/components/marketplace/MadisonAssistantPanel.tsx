@@ -1,22 +1,190 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Sparkles, Tag, FileText, Send } from "lucide-react";
-import { useState } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { Sparkles, Tag, FileText, Send, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
+import ReactMarkdown from "react-markdown";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+}
 
 interface MadisonAssistantPanelProps {
   platform: string;
   formData: any;
   onUpdateField: (updates: any) => void;
+  organizationId?: string;
+  productId?: string;
 }
 
-export function MadisonAssistantPanel({ platform, formData, onUpdateField }: MadisonAssistantPanelProps) {
-  const [message, setMessage] = useState("");
+export function MadisonAssistantPanel({ 
+  platform, 
+  formData, 
+  onUpdateField,
+  organizationId,
+  productId 
+}: MadisonAssistantPanelProps) {
+  const { toast } = useToast();
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: "assistant",
+      content: `Hello! I'm Madison, your editorial assistant. I can help you create an ${platform === 'etsy' ? 'Etsy' : 'TikTok Shop'}-optimized listing that maintains your brand voice while maximizing discoverability.
+
+I see you're creating a listing for ${formData.productId ? "a product from your catalog" : "a new product"}. I can help you craft compelling copy that tells your product's story.
+
+What would you like me to help with?`,
+      timestamp: new Date(),
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const handleSend = async (actionType?: string, customPrompt?: string) => {
+    const userPrompt = customPrompt || input.trim();
+    if (!userPrompt || isGenerating) return;
+
+    const userMessage: Message = {
+      role: "user",
+      content: userPrompt,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setIsGenerating(true);
+
+    try {
+      const FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marketplace-assistant`;
+      const response = await fetch(FUNCTION_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          messages: [...messages, userMessage].map(m => ({
+            role: m.role,
+            content: m.content
+          })),
+          platform,
+          organizationId,
+          formData,
+          productId,
+          actionType
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          toast({
+            title: "Rate limit exceeded",
+            description: "Please try again in a moment.",
+            variant: "destructive",
+          });
+          return;
+        }
+        if (response.status === 402) {
+          toast({
+            title: "Credits depleted",
+            description: "Please add funds to your workspace.",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw new Error('Failed to get response');
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let assistantContent = "";
+      
+      // Add placeholder assistant message
+      const assistantMessageIndex = messages.length + 1;
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: "",
+        timestamp: new Date()
+      }]);
+
+      if (reader) {
+        let buffer = "";
+        
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || "";
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6).trim();
+              if (data === '[DONE]') continue;
+              
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  assistantContent += content;
+                  setMessages(prev => {
+                    const updated = [...prev];
+                    updated[assistantMessageIndex] = {
+                      role: "assistant",
+                      content: assistantContent,
+                      timestamp: new Date()
+                    };
+                    return updated;
+                  });
+                }
+              } catch (e) {
+                // Ignore parse errors
+              }
+            }
+          }
+        }
+      }
+
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Communication error",
+        description: "Unable to reach Madison. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleQuickAction = (action: string) => {
-    // TODO: Implement AI generation
-    console.log("Quick action:", action);
+    const prompts: Record<string, string> = {
+      description: `Generate a compelling ${platform === 'etsy' ? 'artisan-focused Etsy' : 'viral TikTok Shop'} description for this product that matches our brand voice.`,
+      tags: `Suggest SEO-optimized tags for this product listing (max ${platform === 'etsy' ? '13' : '10'} tags).`,
+      title: `Create an optimized title for this product that balances keywords with brand voice.`
+    };
+    
+    handleSend(action, prompts[action]);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   };
 
   return (
@@ -43,6 +211,7 @@ export function MadisonAssistantPanel({ platform, formData, onUpdateField }: Mad
               size="sm"
               className="w-full justify-start text-aged-brass border-aged-brass/30 hover:bg-aged-brass/10"
               onClick={() => handleQuickAction("description")}
+              disabled={isGenerating}
             >
               <Sparkles className="w-4 h-4 mr-2" />
               Generate Description
@@ -52,6 +221,7 @@ export function MadisonAssistantPanel({ platform, formData, onUpdateField }: Mad
               size="sm"
               className="w-full justify-start"
               onClick={() => handleQuickAction("tags")}
+              disabled={isGenerating}
             >
               <Tag className="w-4 h-4 mr-2" />
               Suggest Tags
@@ -61,6 +231,7 @@ export function MadisonAssistantPanel({ platform, formData, onUpdateField }: Mad
               size="sm"
               className="w-full justify-start"
               onClick={() => handleQuickAction("title")}
+              disabled={isGenerating}
             >
               <FileText className="w-4 h-4 mr-2" />
               Optimize Title
@@ -69,46 +240,78 @@ export function MadisonAssistantPanel({ platform, formData, onUpdateField }: Mad
         </div>
 
         {/* Chat Area */}
-        <ScrollArea className="flex-1 p-4">
+        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
           <div className="space-y-4">
-            {/* Welcome Message */}
-            <div className="bg-aged-brass/5 rounded-lg p-4 border border-aged-brass/10">
-              <p className="text-sm text-ink-black leading-relaxed">
-                <span className="font-semibold">Hello! I'm Madison, your editorial assistant.</span> I can help you create an 
-                Etsy-optimized listing that maintains your brand voice while maximizing discoverability.
-              </p>
-              <p className="text-sm text-charcoal/80 mt-3 leading-relaxed">
-                I see you're creating a listing for <span className="font-medium">
-                  {formData.productId ? "a product from your catalog" : "a new product"}
-                </span>. 
-                I can help you craft compelling copy that tells your product's story.
-              </p>
-            </div>
+            {messages.map((message, index) => (
+              <div key={index} className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center font-serif text-sm font-bold ${
+                    message.role === "assistant" ? "bg-aged-brass text-white" : "bg-charcoal/10 text-ink-black"
+                  }`}>
+                    {message.role === "assistant" ? "M" : "U"}
+                  </div>
+                  <span className="text-xs text-charcoal/60">
+                    {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+                <div className={`rounded-lg px-4 py-3 text-sm leading-relaxed ${
+                  message.role === "user" ? "bg-charcoal/5" : "bg-aged-brass/5 border border-aged-brass/10"
+                }`}>
+                  {message.role === "assistant" ? (
+                    <ReactMarkdown
+                      components={{
+                        p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
+                        strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                        ul: ({ children }) => <ul className="list-disc pl-4 mb-3 space-y-1">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal pl-4 mb-3 space-y-1">{children}</ol>,
+                        li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  ) : (
+                    <p className="whitespace-pre-wrap">{message.content}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+            {isGenerating && (
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-aged-brass flex items-center justify-center">
+                  <Loader2 className="w-3 h-3 animate-spin text-white" />
+                </div>
+                <span className="text-xs text-charcoal/60">Madison is thinking...</span>
+              </div>
+            )}
           </div>
         </ScrollArea>
 
         {/* Input Area */}
         <div className="p-4 border-t border-aged-brass/10">
-          <div className="flex gap-2">
-            <Input
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
+          <div className="flex gap-2 items-end">
+            <Textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="Ask Madison for help..."
-              className="flex-1"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  // TODO: Handle message send
-                  setMessage("");
-                }
-              }}
+              className="min-h-[52px] max-h-[120px] resize-none flex-1"
+              disabled={isGenerating}
             />
             <Button 
               size="icon"
-              className="bg-aged-brass hover:bg-aged-brass/90 shrink-0"
+              className="bg-aged-brass hover:bg-aged-brass/90 shrink-0 h-[52px] w-[52px]"
+              onClick={() => handleSend()}
+              disabled={!input.trim() || isGenerating}
             >
-              <Send className="w-4 h-4" />
+              {isGenerating ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
             </Button>
           </div>
+          <p className="text-xs mt-2 text-charcoal/50">Press Enter to send • Shift + Enter for new line</p>
         </div>
       </CardContent>
     </Card>
