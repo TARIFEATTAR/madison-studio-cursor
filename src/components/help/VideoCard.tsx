@@ -1,7 +1,8 @@
-import { Play, Clock } from "lucide-react";
+import { Play, Clock, Check } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { HelpVideo, categoryLabels } from "@/config/helpVideos";
+import { useVideoCompletion } from "@/hooks/useVideoCompletion";
 
 interface VideoCardProps {
   video: HelpVideo;
@@ -9,14 +10,29 @@ interface VideoCardProps {
 }
 
 export function VideoCard({ video, onClick }: VideoCardProps) {
+  const { isVideoComplete } = useVideoCompletion();
+  const isCompleted = isVideoComplete(video.id);
+
   return (
     <Card 
-      className="group cursor-pointer bg-[#FFFCF5] border-[#E8DCC8] hover:border-[hsl(var(--aged-brass))] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_4px_14px_rgba(184,149,106,0.2)]"
+      className={`
+        group cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_4px_14px_rgba(184,149,106,0.2)]
+        ${isCompleted 
+          ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 hover:border-emerald-300' 
+          : 'bg-[#FFFCF5] border-[#E8DCC8] hover:border-[hsl(var(--aged-brass))]'
+        }
+      `}
       onClick={onClick}
     >
       <CardContent className="p-0">
         {/* Video Thumbnail */}
         <div className="relative aspect-video bg-gradient-to-br from-[hsl(var(--vellum-cream))] to-[hsl(var(--parchment-white))] border-b border-[#E8DCC8] overflow-hidden">
+          {/* Completed Badge */}
+          {isCompleted && (
+            <div className="absolute top-2 left-2 w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg z-10">
+              <Check className="w-5 h-5 text-white" />
+            </div>
+          )}
           {video.thumbnailUrl ? (
             <img 
               src={video.thumbnailUrl} 

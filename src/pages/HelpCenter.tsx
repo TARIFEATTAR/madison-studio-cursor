@@ -2,16 +2,20 @@ import { useState } from "react";
 import { BookOpen, Search } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { VideoCard } from "@/components/help/VideoCard";
 import { VideoModal } from "@/components/help/VideoModal";
 import { LearningPathTimeline } from "@/components/help/LearningPathTimeline";
 import { HelpVideo, VideoCategory, categoryLabels, orderedCategories, getVideosByCategory, searchVideos } from "@/config/helpVideos";
+import { useVideoCompletion } from "@/hooks/useVideoCompletion";
 
 export default function HelpCenter() {
   const [selectedVideo, setSelectedVideo] = useState<HelpVideo | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<VideoCategory>("getting-started");
+  
+  const { completedCategories, getCategoryProgress, overallProgress, isAuthenticated } = useVideoCompletion();
 
   const handleVideoClick = (video: HelpVideo) => {
     setSelectedVideo(video);
@@ -41,12 +45,21 @@ export default function HelpCenter() {
               <BookOpen className="w-6 h-6 text-[hsl(var(--aged-brass))]" />
             </div>
             <div>
-              <h1 className="font-serif text-4xl font-light tracking-wide text-[hsl(var(--parchment-white))]">
-                Help Center
-              </h1>
-              <p className="text-[hsl(var(--parchment-white))]/70 text-sm mt-1">
-                Video guides to master Madison Studio
-              </p>
+              <div>
+                <h1 className="font-serif text-4xl font-light tracking-wide text-[hsl(var(--parchment-white))]">
+                  Help Center
+                </h1>
+                <div className="flex items-center gap-3 mt-1">
+                  <p className="text-[hsl(var(--parchment-white))]/70 text-sm">
+                    Video guides to master Madison Studio
+                  </p>
+                  {isAuthenticated && overallProgress.total > 0 && (
+                    <Badge variant="outline" className="border-emerald-400 text-emerald-400 bg-emerald-950/30">
+                      {overallProgress.completed}/{overallProgress.total} videos completed ({overallProgress.percentage}%)
+                    </Badge>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -98,6 +111,8 @@ export default function HelpCenter() {
             <LearningPathTimeline 
               activeCategory={activeTab}
               onCategoryClick={(category) => setActiveTab(category)}
+              completedCategories={completedCategories}
+              getCategoryProgress={getCategoryProgress}
             />
 
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as VideoCategory)}>

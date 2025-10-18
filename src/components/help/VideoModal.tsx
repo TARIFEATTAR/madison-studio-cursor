@@ -1,8 +1,9 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X, ArrowRight } from "lucide-react";
+import { X, ArrowRight, Check } from "lucide-react";
 import { HelpVideo, categoryLabels, helpVideos } from "@/config/helpVideos";
+import { useVideoCompletion } from "@/hooks/useVideoCompletion";
 
 interface VideoModalProps {
   video: HelpVideo | null;
@@ -12,10 +13,18 @@ interface VideoModalProps {
 }
 
 export function VideoModal({ video, isOpen, onClose, onVideoSelect }: VideoModalProps) {
+  const { isVideoComplete, markVideoComplete, isAuthenticated } = useVideoCompletion();
+  
   if (!video) return null;
+
+  const isCompleted = isVideoComplete(video.id);
 
   // Find next video in sequence
   const nextVideo = helpVideos.find(v => v.order === video.order + 1);
+
+  const handleMarkComplete = async () => {
+    await markVideoComplete(video.id);
+  };
 
   // Extract Loom video ID from URL for embed
   const getEmbedUrl = (url: string) => {
@@ -59,6 +68,32 @@ export function VideoModal({ video, isOpen, onClose, onVideoSelect }: VideoModal
               {video.description}
             </DialogDescription>
           </DialogHeader>
+
+          {/* Mark as Complete Button */}
+          {isAuthenticated && (
+            <div className="mb-6">
+              <Button
+                onClick={handleMarkComplete}
+                disabled={isCompleted}
+                className={`
+                  w-full transition-all
+                  ${isCompleted 
+                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white' 
+                    : 'bg-[hsl(var(--aged-brass))] hover:bg-[hsl(var(--aged-brass))]/90 text-[hsl(var(--ink-black))]'
+                  }
+                `}
+              >
+                {isCompleted ? (
+                  <>
+                    <Check className="w-4 h-4 mr-2" />
+                    Completed ✓
+                  </>
+                ) : (
+                  'Mark as Complete'
+                )}
+              </Button>
+            </div>
+          )}
 
           {/* Next Video Suggestion */}
           {nextVideo && (

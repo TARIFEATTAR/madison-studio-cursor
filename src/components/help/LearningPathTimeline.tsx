@@ -52,9 +52,11 @@ const learningPath: PathStep[] = [
 interface LearningPathTimelineProps {
   activeCategory: VideoCategory;
   onCategoryClick: (category: VideoCategory) => void;
+  completedCategories: Set<VideoCategory>;
+  getCategoryProgress: (category: VideoCategory) => { completed: number; total: number; percentage: number };
 }
 
-export function LearningPathTimeline({ activeCategory, onCategoryClick }: LearningPathTimelineProps) {
+export function LearningPathTimeline({ activeCategory, onCategoryClick, completedCategories, getCategoryProgress }: LearningPathTimelineProps) {
   const currentStepIndex = learningPath.findIndex(step => step.category === activeCategory);
 
   return (
@@ -81,8 +83,9 @@ export function LearningPathTimeline({ activeCategory, onCategoryClick }: Learni
       <div className="hidden lg:flex items-center justify-between gap-3">
         {learningPath.map((step, index) => {
           const isActive = step.category === activeCategory;
-          const isCompleted = index < currentStepIndex;
+          const isCompleted = completedCategories.has(step.category);
           const isCurrent = index === currentStepIndex;
+          const progress = getCategoryProgress(step.category);
 
           return (
             <div key={step.category} className="flex items-center flex-1">
@@ -139,8 +142,11 @@ export function LearningPathTimeline({ activeCategory, onCategoryClick }: Learni
                   >
                     {step.label}
                   </h4>
-                  <p className="text-xs text-[hsl(var(--warm-gray))]">
+                  <p className="text-xs text-[hsl(var(--warm-gray))] mb-1">
                     {step.description}
+                  </p>
+                  <p className="text-xs font-medium text-[hsl(var(--warm-gray))]">
+                    {progress.completed}/{progress.total} videos
                   </p>
                 </div>
               </button>
@@ -166,8 +172,9 @@ export function LearningPathTimeline({ activeCategory, onCategoryClick }: Learni
       <div className="lg:hidden space-y-3">
         {learningPath.map((step, index) => {
           const isActive = step.category === activeCategory;
-          const isCompleted = index < currentStepIndex;
+          const isCompleted = completedCategories.has(step.category);
           const isCurrent = index === currentStepIndex;
+          const progress = getCategoryProgress(step.category);
 
           return (
             <button
@@ -222,8 +229,11 @@ export function LearningPathTimeline({ activeCategory, onCategoryClick }: Learni
                         </Badge>
                       )}
                     </div>
-                    <p className="text-xs text-[hsl(var(--warm-gray))]">
+                    <p className="text-xs text-[hsl(var(--warm-gray))] mb-1">
                       {step.description}
+                    </p>
+                    <p className="text-xs font-medium text-[hsl(var(--warm-gray))]">
+                      {progress.completed}/{progress.total} videos
                     </p>
                   </div>
 
