@@ -13,8 +13,13 @@ export function TeamTab() {
   const { members, invitations, isLoading, removeMember } = useTeamMembers(currentOrganizationId);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
 
-  const getInitials = (email: string) => {
-    return email.substring(0, 2).toUpperCase();
+  const getInitials = (name: string) => {
+    if (!name) return 'U';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
   };
 
   const getRoleBadgeVariant = (role: string) => {
@@ -70,13 +75,13 @@ export function TeamTab() {
             >
               <Avatar className="h-12 w-12">
                 <AvatarFallback className="bg-brass text-charcoal font-serif text-base">
-                  {getInitials(member.user_id)}
+                  {getInitials((member as any).profiles?.full_name || (member as any).profiles?.email || 'U')}
                 </AvatarFallback>
               </Avatar>
               
               <div className="flex-1">
-                <h3 className="font-medium text-charcoal">User {member.user_id.substring(0, 8)}</h3>
-                <p className="text-sm text-neutral-600">{member.user_id}</p>
+                <h3 className="font-medium text-charcoal">{(member as any).profiles?.full_name || (member as any).profiles?.email || 'Unknown User'}</h3>
+                <p className="text-sm text-neutral-600">{(member as any).profiles?.email || 'No email'}</p>
               </div>
 
               <Badge 

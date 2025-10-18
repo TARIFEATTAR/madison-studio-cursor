@@ -18,7 +18,11 @@ export function useTeamMembers(organizationId: string | null) {
           id,
           role,
           created_at,
-          user_id
+          user_id,
+          profiles:user_id (
+            email,
+            full_name
+          )
         `)
         .eq("organization_id", organizationId)
         .order("created_at", { ascending: true });
