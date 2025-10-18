@@ -181,9 +181,10 @@ serve(async (req) => {
       // Handle date/time properly for Google Calendar API
       if (eventData.time) {
         // Specific time - use dateTime with timezone
-        // Ensure seconds component is included (HH:MM:SS format)
-        const startDateTime = `${eventData.date}T${eventData.time}:00`;
-        const endDateTime = `${eventData.date}T${addHour(eventData.time)}:00`;
+        const normalizedTime = ensureHms(eventData.time);
+        const normalizedEndTime = addHour(eventData.time);
+        const startDateTime = `${eventData.date}T${normalizedTime}`;
+        const endDateTime = `${eventData.date}T${normalizedEndTime}`;
         
         event.start = {
           dateTime: startDateTime,
@@ -194,12 +195,12 @@ serve(async (req) => {
           timeZone: timezone,
         };
       } else {
-        // All-day event - use date field only
+        // All-day event - use date field only (end date is exclusive, so next day)
         event.start = {
           date: eventData.date,
         };
         event.end = {
-          date: eventData.date,
+          date: addOneDay(eventData.date),
         };
       }
 
@@ -244,9 +245,10 @@ serve(async (req) => {
       // Handle date/time properly for Google Calendar API
       if (eventData.time) {
         // Specific time - use dateTime with timezone
-        // Ensure seconds component is included (HH:MM:SS format)
-        const startDateTime = `${eventData.date}T${eventData.time}:00`;
-        const endDateTime = `${eventData.date}T${addHour(eventData.time)}:00`;
+        const normalizedTime = ensureHms(eventData.time);
+        const normalizedEndTime = addHour(eventData.time);
+        const startDateTime = `${eventData.date}T${normalizedTime}`;
+        const endDateTime = `${eventData.date}T${normalizedEndTime}`;
         
         event.start = {
           dateTime: startDateTime,
@@ -257,12 +259,12 @@ serve(async (req) => {
           timeZone: timezone,
         };
       } else {
-        // All-day event - use date field only
+        // All-day event - use date field only (end date is exclusive, so next day)
         event.start = {
           date: eventData.date,
         };
         event.end = {
-          date: eventData.date,
+          date: addOneDay(eventData.date),
         };
       }
 
@@ -350,9 +352,34 @@ serve(async (req) => {
   }
 });
 
-// Helper function to add one hour to a time string
+// Helper function to normalize time to HH:MM:SS format
+function ensureHms(time: string): string {
+  const parts = time.split(':');
+  if (parts.length === 2) {
+    // HH:MM -> HH:MM:SS
+    const [hh, mm] = parts;
+    return `${hh.padStart(2, '0')}:${mm.padStart(2, '0')}:00`;
+  }
+  if (parts.length >= 3) {
+    // HH:MM:SS (or more) -> HH:MM:SS
+    const [hh, mm, ss = '00'] = parts;
+    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+  }
+  // Fallback: append :00:00
+  return `${time.padStart(2, '0')}:00:00`;
+}
+
+// Helper function to add one hour to a time string (returns HH:MM:SS)
 function addHour(time: string): string {
-  const [hours, minutes] = time.split(':').map(Number);
+  const normalized = ensureHms(time);
+  const [hours, minutes, seconds] = normalized.split(':').map(Number);
   const newHours = (hours + 1) % 24;
-  return `${String(newHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  return `${String(newHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+// Helper function to add one day to a date string (YYYY-MM-DD)
+function addOneDay(dateStr: string): string {
+  const date = new Date(dateStr + 'T00:00:00Z');
+  date.setUTCDate(date.getUTCDate() + 1);
+  return date.toISOString().split('T')[0];
 }
