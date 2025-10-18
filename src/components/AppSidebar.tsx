@@ -3,7 +3,6 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import maddiLogo from "@/assets/scriptora-full-logo.png";
 import {
   Sidebar,
   SidebarContent,
@@ -127,13 +126,8 @@ export function AppSidebar() {
         <SidebarHeader className="border-b border-white/10 p-0">
           {open && (
             <div className="px-4 pt-6 pb-4">
-              <NavLink to="/dashboard" className="flex items-center gap-3 group">
-              <img 
-                src={maddiLogo} 
-                alt="MADISON"
-                  className="w-10 h-10 shrink-0 transition-transform duration-200 group-hover:scale-105"
-                />
-                <span className="font-serif text-xl tracking-[0.216em] -ml-2 -mb-[8px]" style={{ fontWeight: 300, color: '#F5F5DC' }}>MADISON</span>
+              <NavLink to="/dashboard" className="flex items-center group">
+                <span className="font-serif text-xl tracking-[0.216em]" style={{ fontWeight: 300, color: '#F5F5DC' }}>MADISON</span>
               </NavLink>
               
               <div className="mt-6 flex justify-end">
@@ -153,11 +147,7 @@ export function AppSidebar() {
           {!open && (
             <div className="px-2 pt-6 pb-4 flex flex-col items-center gap-3">
               <NavLink to="/dashboard" className="group">
-              <img 
-                src={maddiLogo} 
-                alt="MADISON"
-                  className="w-8 h-8 transition-transform duration-200 group-hover:scale-105"
-                />
+                <span className="font-serif text-sm tracking-wider" style={{ fontWeight: 300, color: '#F5F5DC' }}>M</span>
               </NavLink>
               <button
                 onClick={toggleSidebar}
