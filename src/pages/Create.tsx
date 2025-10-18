@@ -355,13 +355,25 @@ export default function Create() {
     setIsThinking(true);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      if (!accessToken) {
+        toast({
+          title: "Sign in required",
+          description: "Please sign in to use Think Mode.",
+          variant: "destructive"
+        });
+        setIsThinking(false);
+        return;
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/think-mode-chat`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
+            'Authorization': `Bearer ${accessToken}`
           },
           body: JSON.stringify({ 
             messages: [...thinkModeMessages, userMessage]
