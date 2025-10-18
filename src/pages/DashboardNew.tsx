@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { X, PenTool, Calendar, Archive, FileText, Loader2, TrendingUp, Clock } from "lucide-react";
+import { X, PenTool, Calendar, Archive, FileText, Loader2, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { DashboardRecentActivity } from "@/components/dashboard/DashboardRecentActivity";
-import { DashboardWeeklyStats } from "@/components/dashboard/DashboardWeeklyStats";
+import { DashboardHeroHeader } from "@/components/dashboard/DashboardHeroHeader";
+import { DashboardEditorialStats } from "@/components/dashboard/DashboardEditorialStats";
+import { DashboardEditorialTimeline } from "@/components/dashboard/DashboardEditorialTimeline";
+import { DashboardWorkflowMap } from "@/components/dashboard/DashboardWorkflowMap";
 import { ContentPipeline } from "@/components/dashboard/ContentPipeline";
 import { UpcomingSchedule } from "@/components/dashboard/UpcomingSchedule";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
@@ -82,67 +84,52 @@ export default function DashboardNew() {
 
   return (
     <div className="min-h-screen bg-vellum-cream">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        
-        {/* Header Section - Clean editorial style */}
-        <div className="mb-8 pb-6 border-b border-charcoal/10">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="font-serif text-4xl md:text-5xl font-medium text-ink-black tracking-tight">
-              {organizationName || "Your Workspace"}
-            </h1>
-            {stats && stats.streakDays > 0 && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-parchment-white border border-charcoal/10">
-                <span className="text-2xl">🔥</span>
-                <span className="font-medium text-sm text-charcoal">
-                  {stats.streakDays}-day streak
-                </span>
-              </div>
-            )}
-          </div>
-          <p className="text-charcoal/60 text-lg font-light">
-            Your editorial command center
-          </p>
-        </div>
+      {/* Hero Dashboard Header - Transformation #1 */}
+      <DashboardHeroHeader 
+        organizationName={organizationName || "Your Workspace"} 
+        streakDays={stats?.streakDays}
+      />
 
+      <div className="max-w-7xl mx-auto px-6 pb-8">
         {/* Editorial Director Banner - Minimal style */}
         {showEditorialBanner && (
-          <div className="mb-8">
-            <div className="bg-parchment-white border border-charcoal/10 p-6 relative overflow-hidden">
+          <div className="mb-12">
+            <div className="bg-parchment-white border border-charcoal/10 p-8 relative overflow-hidden">
               <button
                 onClick={() => setShowEditorialBanner(false)}
-                className="absolute top-4 right-4 text-charcoal/50 hover:text-charcoal transition-colors"
+                className="absolute top-6 right-6 text-charcoal/50 hover:text-charcoal transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
               
-              <div className="flex items-start gap-6">
+              <div className="flex items-start gap-8">
                 <div className="flex-shrink-0">
                   <img 
                     src={madisonInsignia} 
                     alt="Madison" 
-                    className="w-36 h-36 object-contain"
+                    className="w-32 h-32 object-contain opacity-90"
                   />
                 </div>
                 
                 <div className="flex-1">
-                  <h3 className="font-serif text-xl font-medium text-ink-black mb-2">
+                  <h3 className="font-serif text-2xl font-medium text-ink-black mb-3">
                     Madison, Editorial Director
                   </h3>
-                  <p className="text-charcoal/70 mb-4 leading-relaxed">
+                  <p className="text-charcoal/70 mb-6 leading-relaxed font-light text-base">
                     Your AI editorial director brings Tarife Attar's voice to every piece—
                     from product descriptions to email campaigns. Let her guide your content creation.
                   </p>
-                  <div className="flex gap-3">
+                  <div className="flex gap-4">
                     <Button 
                       onClick={() => navigate("/create")}
-                      className="bg-ink-black hover:bg-charcoal text-parchment-white px-6 border-0"
+                      className="bg-ink-black hover:bg-charcoal text-parchment-white px-8 py-6 text-sm uppercase tracking-wider border-0"
                     >
                       Create Content
                     </Button>
                     <Button 
                       onClick={() => navigate("/meet-madison")}
                       variant="outline"
-                      className="border-charcoal/20 text-charcoal hover:bg-vellum-cream"
+                      className="border-charcoal/20 text-charcoal hover:bg-vellum-cream px-8 py-6 text-sm uppercase tracking-wider"
                     >
                       Meet Madison
                     </Button>
@@ -155,31 +142,30 @@ export default function DashboardNew() {
 
         {/* Priority Action Card - Clean lines */}
         {showPriorityCard && priorityAction && (
-          <div className="mb-8">
-            <div className="bg-parchment-white border border-charcoal/10 p-6 relative">
+          <div className="mb-12">
+            <div className="bg-parchment-white border border-charcoal/10 p-8 relative">
               <button
                 onClick={() => setShowPriorityCard(false)}
-                className="absolute top-4 right-4 text-charcoal/50 hover:text-charcoal transition-colors"
+                className="absolute top-6 right-6 text-charcoal/50 hover:text-charcoal transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
               
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-10 h-10 bg-aged-brass/10 border border-aged-brass/20 flex items-center justify-center">
-                  <Loader2 className="w-5 h-5 text-aged-brass" />
+              <div className="flex items-start gap-6">
+                <div className="flex-shrink-0 w-12 h-12 bg-aged-brass/10 border border-aged-brass/20 flex items-center justify-center">
+                  <Loader2 className="w-6 h-6 text-aged-brass" />
                 </div>
                 
                 <div className="flex-1">
-                  <h3 className="font-serif text-lg font-medium text-ink-black mb-1">
+                  <h3 className="font-serif text-xl font-medium text-ink-black mb-2">
                     {priorityAction.title}
                   </h3>
-                  <p className="text-charcoal/70 text-sm mb-3">
+                  <p className="text-charcoal/70 text-sm mb-4 font-light">
                     {priorityAction.description}
                   </p>
                   <Button 
                     onClick={() => navigate(priorityAction.actionRoute)}
-                    size="sm"
-                    className="bg-ink-black hover:bg-charcoal text-parchment-white border-0"
+                    className="bg-ink-black hover:bg-charcoal text-parchment-white border-0 uppercase tracking-wider text-xs"
                   >
                     {priorityAction.actionLabel}
                   </Button>
@@ -189,114 +175,63 @@ export default function DashboardNew() {
           </div>
         )}
 
-        {/* Quick Actions Grid - Sharp edges */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <button
-            onClick={() => navigate("/create")}
-            className="group bg-parchment-white border border-charcoal/10 p-6 text-left hover:border-aged-brass/40 transition-all"
-          >
-            <div className="w-10 h-10 bg-ink-black mb-4 flex items-center justify-center">
-              <PenTool className="w-5 h-5 text-parchment-white" />
-            </div>
-            <h3 className="font-serif text-lg font-medium text-ink-black mb-1">
-              Create Content
-            </h3>
-            <p className="text-sm text-charcoal/60">
-              Generate new content with Madison
-            </p>
-          </button>
-
-          <button
-            onClick={() => navigate("/schedule")}
-            className="group bg-parchment-white border border-charcoal/10 p-6 text-left hover:border-aged-brass/40 transition-all"
-          >
-            <div className="w-10 h-10 bg-ink-black mb-4 flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-parchment-white" />
-            </div>
-            <h3 className="font-serif text-lg font-medium text-ink-black mb-1">
-              Schedule
-            </h3>
-            <p className="text-sm text-charcoal/60">
-              Plan your editorial calendar
-            </p>
-          </button>
-
-          <button
-            onClick={() => navigate("/library")}
-            className="group bg-parchment-white border border-charcoal/10 p-6 text-left hover:border-aged-brass/40 transition-all"
-          >
-            <div className="w-10 h-10 bg-ink-black mb-4 flex items-center justify-center">
-              <Archive className="w-5 h-5 text-parchment-white" />
-            </div>
-            <h3 className="font-serif text-lg font-medium text-ink-black mb-1">
-              Library
-            </h3>
-            <p className="text-sm text-charcoal/60">
-              Browse your content archive
-            </p>
-          </button>
-
-          <button
-            onClick={() => navigate("/templates")}
-            className="group bg-parchment-white border border-charcoal/10 p-6 text-left hover:border-aged-brass/40 transition-all"
-          >
-            <div className="w-10 h-10 bg-ink-black mb-4 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-parchment-white" />
-            </div>
-            <h3 className="font-serif text-lg font-medium text-ink-black mb-1">
-              Templates
-            </h3>
-            <p className="text-sm text-charcoal/60">
-              Manage your prompt library
-            </p>
-          </button>
+        {/* Workflow Map - Transformation #4 */}
+        <div className="mb-12">
+          <DashboardWorkflowMap />
         </div>
 
-        {/* Weekly Stats & Content Pipeline - Two column layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Weekly Stats */}
-          <div className="bg-parchment-white border border-charcoal/10 p-6">
-            <div className="flex items-center gap-2 mb-6 pb-3 border-b border-charcoal/10">
-              <TrendingUp className="w-5 h-5 text-charcoal" />
-              <h2 className="font-serif text-xl font-medium text-ink-black">
-                This Week
-              </h2>
-            </div>
-            <DashboardWeeklyStats stats={stats} />
+        {/* Editorial Stats Grid - Transformation #2 */}
+        <div className="mb-12">
+          <div className="mb-8">
+            <h2 className="font-serif text-3xl font-light text-ink-black mb-2">
+              This Week at a Glance
+            </h2>
+            <p className="text-sm text-charcoal/60 italic">
+              Your editorial progress, beautifully summarized
+            </p>
           </div>
+          <DashboardEditorialStats stats={stats} />
+        </div>
 
-          {/* Content Pipeline */}
-          <div className="bg-parchment-white border border-charcoal/10 p-6">
-            <div className="flex items-center gap-2 mb-6 pb-3 border-b border-charcoal/10">
-              <PenTool className="w-5 h-5 text-charcoal" />
-              <h2 className="font-serif text-xl font-medium text-ink-black">
-                Content Pipeline
-              </h2>
-            </div>
+        {/* Content Pipeline - Separate section */}
+        <div className="mb-12">
+          <div className="mb-6">
+            <h2 className="font-serif text-3xl font-light text-ink-black mb-2">
+              Content Pipeline
+            </h2>
+            <p className="text-sm text-charcoal/60 italic">
+              From draft to published
+            </p>
+          </div>
+          <div className="bg-parchment-white border border-charcoal/10 p-8">
             <ContentPipeline />
           </div>
         </div>
 
-        {/* Recent Activity & Upcoming Schedule - Two column layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Activity */}
-          <div className="bg-parchment-white border border-charcoal/10 p-6">
-            <div className="flex items-center gap-2 mb-6 pb-3 border-b border-charcoal/10">
-              <Clock className="w-5 h-5 text-charcoal" />
-              <h2 className="font-serif text-xl font-medium text-ink-black">
+        {/* Editorial Timeline & Upcoming Schedule - Two column layout - Transformation #3 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Editorial Timeline */}
+          <div className="bg-parchment-white border border-charcoal/10 p-8">
+            <div className="mb-8 pb-4 border-b border-charcoal/10">
+              <h2 className="font-serif text-2xl font-medium text-ink-black mb-1">
                 Recent Activity
               </h2>
+              <p className="text-xs text-charcoal/60 italic">
+                Your creative timeline
+              </p>
             </div>
-            <DashboardRecentActivity />
+            <DashboardEditorialTimeline />
           </div>
 
           {/* Upcoming Schedule */}
-          <div className="bg-parchment-white border border-charcoal/10 p-6">
-            <div className="flex items-center gap-2 mb-6 pb-3 border-b border-charcoal/10">
-              <Calendar className="w-5 h-5 text-charcoal" />
-              <h2 className="font-serif text-xl font-medium text-ink-black">
+          <div className="bg-parchment-white border border-charcoal/10 p-8">
+            <div className="mb-8 pb-4 border-b border-charcoal/10">
+              <h2 className="font-serif text-2xl font-medium text-ink-black mb-1">
                 Upcoming This Week
               </h2>
+              <p className="text-xs text-charcoal/60 italic">
+                Your editorial calendar
+              </p>
             </div>
             <UpcomingSchedule />
           </div>
