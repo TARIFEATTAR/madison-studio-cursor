@@ -56,9 +56,9 @@ export function DashboardHeroHeader({ organizationName, streakDays, showMadisonB
               Your Editorial Studio
             </p>
 
-            {/* Madison Banner - Full width to align with Brand Health */}
+            {/* Madison Banner - Compact, inside hero */}
             {showMadisonBanner && (
-              <div className="w-full">
+              <div className="max-w-md">
                 <div className="bg-gradient-to-r from-aged-brass/5 to-warm-cream/20 border border-aged-brass/20 px-6 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <img 
