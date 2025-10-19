@@ -59,15 +59,15 @@ export function DashboardHeroHeader({ organizationName, streakDays, showMadisonB
             {/* Madison Banner - Compact, inside hero */}
             {showMadisonBanner && (
               <div className="max-w-md">
-                <div className="bg-gradient-to-r from-aged-brass/5 to-warm-cream/20 border border-aged-brass/20 px-4 py-2.5 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                <div className="bg-gradient-to-r from-aged-brass/5 to-warm-cream/20 border border-aged-brass/20 px-6 py-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
                     <img 
                       src={madisonInsignia} 
                       alt="Madison" 
-                      className="w-7 h-7 object-contain opacity-80 flex-shrink-0"
+                      className="w-10 h-10 object-contain opacity-80 flex-shrink-0"
                     />
                     <div className="min-w-0">
-                      <p className="font-serif text-sm text-ink-black">
+                      <p className="font-serif text-base text-ink-black">
                         Madison, Your Editorial Director
                       </p>
                     </div>
