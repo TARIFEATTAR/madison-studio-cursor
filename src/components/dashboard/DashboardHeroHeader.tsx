@@ -1,12 +1,19 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { DashboardContextPanel } from "./DashboardContextPanel";
+import madisonInsignia from "@/assets/madison-insignia.png";
 
 interface DashboardHeroHeaderProps {
   organizationName: string;
   streakDays?: number;
+  showMadisonBanner?: boolean;
+  onDismissMadison?: () => void;
 }
 
-export function DashboardHeroHeader({ organizationName, streakDays }: DashboardHeroHeaderProps) {
+export function DashboardHeroHeader({ organizationName, streakDays, showMadisonBanner = true, onDismissMadison }: DashboardHeroHeaderProps) {
+  const navigate = useNavigate();
   const [greeting, setGreeting] = useState("Good Morning");
   const [currentDate, setCurrentDate] = useState("");
 
@@ -45,9 +52,47 @@ export function DashboardHeroHeader({ organizationName, streakDays }: DashboardH
             
             <div className="w-16 md:w-24 h-[1px] bg-aged-brass my-4 md:my-6" />
             
-            <p className="font-serif text-lg md:text-xl text-charcoal/70 italic font-light max-w-xl">
+            <p className="font-serif text-lg md:text-xl text-charcoal/70 italic font-light max-w-xl mb-4">
               Your Editorial Studio
             </p>
+
+            {/* Madison Banner - Compact, inside hero */}
+            {showMadisonBanner && (
+              <div className="max-w-md">
+                <div className="bg-gradient-to-r from-aged-brass/5 to-warm-cream/20 border border-aged-brass/20 px-4 py-2.5 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                    <img 
+                      src={madisonInsignia} 
+                      alt="Madison" 
+                      className="w-7 h-7 object-contain opacity-80 flex-shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <p className="font-serif text-sm text-ink-black">
+                        Madison, Your Editorial Director
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <Button 
+                      onClick={() => navigate("/meet-madison")}
+                      variant="ghost"
+                      size="sm"
+                      className="text-charcoal/70 hover:text-aged-brass text-xs h-auto py-1 px-2"
+                    >
+                      Learn More
+                    </Button>
+                    <button
+                      onClick={onDismissMadison}
+                      className="p-1 text-charcoal/40 hover:text-charcoal/80 transition-colors"
+                      aria-label="Dismiss"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right: Editorial Context Panel - Hidden on mobile */}

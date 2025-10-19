@@ -91,51 +91,15 @@ export default function DashboardNew() {
       {/* Dashboard Tour Modal */}
       <DashboardTourModal />
 
-      {/* Hero Dashboard Header - Transformation #1 */}
+      {/* Hero Dashboard Header */}
       <DashboardHeroHeader 
         organizationName={organizationName || "Your Workspace"} 
         streakDays={stats?.streakDays}
+        showMadisonBanner={showEditorialBanner}
+        onDismissMadison={() => setShowEditorialBanner(false)}
       />
 
       <div className="max-w-7xl mx-auto px-6 pb-8">
-        {/* Madison Banner - Compact, right under hero */}
-        {showEditorialBanner && (
-          <div className="mb-8 max-w-md">
-            <div className="bg-gradient-to-r from-aged-brass/5 to-warm-cream/20 border border-aged-brass/20 px-4 py-2.5 flex items-center justify-between">
-              <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                <img 
-                  src={madisonInsignia} 
-                  alt="Madison" 
-                  className="w-7 h-7 object-contain opacity-80 flex-shrink-0"
-                />
-                <div className="min-w-0">
-                  <p className="font-serif text-sm text-ink-black">
-                    Madison, Your Editorial Director
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-1 flex-shrink-0">
-                <Button 
-                  onClick={() => navigate("/meet-madison")}
-                  variant="ghost"
-                  size="sm"
-                  className="text-charcoal/70 hover:text-aged-brass text-xs h-auto py-1 px-2"
-                >
-                  Learn More
-                </Button>
-                <button
-                  onClick={() => setShowEditorialBanner(false)}
-                  className="p-1 text-charcoal/40 hover:text-charcoal/80 transition-colors"
-                  aria-label="Dismiss"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Brand Health Card - Top Priority */}
         <div className="mb-8">
           <BrandHealthCard />
