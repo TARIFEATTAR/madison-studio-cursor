@@ -62,7 +62,7 @@ export default function BrandHealth() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-12">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div className="flex items-center gap-4">
               <Shield className="w-10 h-10 text-charcoal/40" />
               <div>
@@ -73,18 +73,18 @@ export default function BrandHealth() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
               <Button
                 onClick={() => navigate("/")}
                 variant="outline"
-                className="border-charcoal/20"
+                className="border-charcoal/20 w-full sm:w-auto"
               >
                 Back to Dashboard
               </Button>
               <Button
                 onClick={() => analyzeBrandHealth()}
                 disabled={isAnalyzing}
-                className="bg-aged-brass hover:bg-aged-brass/90 text-ink-black"
+                className="bg-aged-brass hover:bg-aged-brass/90 text-ink-black w-full sm:w-auto"
               >
                 {isAnalyzing ? "Analyzing..." : "Refresh Analysis"}
               </Button>
