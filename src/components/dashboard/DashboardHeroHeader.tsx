@@ -7,15 +7,17 @@ import madisonInsignia from "@/assets/madison-insignia.png";
 
 interface DashboardHeroHeaderProps {
   organizationName: string;
+  userName?: string;
   streakDays?: number;
   showMadisonBanner?: boolean;
   onDismissMadison?: () => void;
 }
 
-export function DashboardHeroHeader({ organizationName, streakDays, showMadisonBanner = true, onDismissMadison }: DashboardHeroHeaderProps) {
+export function DashboardHeroHeader({ organizationName, userName, streakDays, showMadisonBanner = true, onDismissMadison }: DashboardHeroHeaderProps) {
   const navigate = useNavigate();
   const [greeting, setGreeting] = useState("Good Morning");
   const [currentDate, setCurrentDate] = useState("");
+  const [displayName, setDisplayName] = useState("");
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -30,7 +32,11 @@ export function DashboardHeroHeader({ organizationName, streakDays, showMadisonB
       day: 'numeric' 
     });
     setCurrentDate(date);
-  }, []);
+
+    // Get user name from localStorage or prop
+    const storedName = userName || localStorage.getItem('madison-user-name');
+    setDisplayName(storedName || '');
+  }, [userName]);
 
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-[#FAF8F3] to-[#F0EDE5] border-b border-charcoal/10 mb-8 md:mb-12">
@@ -43,10 +49,10 @@ export function DashboardHeroHeader({ organizationName, streakDays, showMadisonB
                 {currentDate}
               </p>
               <h1 className="font-serif text-4xl md:text-6xl lg:text-7xl font-light text-ink-black tracking-tight leading-[0.95] mb-1 md:mb-2">
-                {greeting},
+                {greeting}{displayName && `, ${displayName}`}
               </h1>
               <h2 className="font-serif text-3xl md:text-5xl lg:text-6xl font-medium text-ink-black tracking-tight leading-[0.95]">
-                {organizationName || "Your Brand"}
+                {organizationName || "Your Workspace"}
               </h2>
             </div>
             

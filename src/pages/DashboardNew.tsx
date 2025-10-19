@@ -20,10 +20,18 @@ export default function DashboardNew() {
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const [showEditorialBanner, setShowEditorialBanner] = useState(true);
   const [organizationName, setOrganizationName] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
   const [longLoad, setLongLoad] = useState(false);
 
-  // Fetch organization name
+  // Fetch organization name and user name
   useEffect(() => {
+    // Get user name from localStorage
+    const storedName = localStorage.getItem('madison-user-name');
+    if (storedName) {
+      setUserName(storedName);
+    }
+
+    // Fetch organization name
     if (user) {
       supabase
         .from("organization_members")
@@ -87,7 +95,8 @@ export default function DashboardNew() {
 
       {/* Hero Dashboard Header */}
       <DashboardHeroHeader 
-        organizationName={organizationName || "Your Workspace"} 
+        organizationName={organizationName || "Your Workspace"}
+        userName={userName}
         streakDays={stats?.streakDays}
         showMadisonBanner={showEditorialBanner}
         onDismissMadison={() => setShowEditorialBanner(false)}
