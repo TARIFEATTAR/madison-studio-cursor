@@ -79,7 +79,7 @@ export function DashboardContextPanel() {
 
   if (loading) {
     return (
-      <div className="hidden md:block w-[560px] min-h-[340px] bg-parchment-white/90 border-2 border-aged-brass/20 shadow-[0_4px_20px_rgba(184,149,106,0.12)] p-6">
+      <div className="hidden md:block w-[640px] min-h-[340px] bg-parchment-white/90 border-2 border-aged-brass/20 shadow-[0_4px_20px_rgba(184,149,106,0.12)] p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-4 bg-charcoal/10 rounded w-1/2" />
           <div className="h-8 bg-charcoal/10 rounded" />
@@ -90,7 +90,7 @@ export function DashboardContextPanel() {
   }
 
   return (
-    <div className="hidden md:block w-[560px] min-h-[340px] self-start bg-parchment-white/90 border-2 border-aged-brass/20 shadow-[0_4px_20px_rgba(184,149,106,0.12)]">
+    <div className="hidden md:block w-[640px] min-h-[340px] self-start bg-parchment-white/90 border-2 border-aged-brass/20 shadow-[0_4px_20px_rgba(184,149,106,0.12)]">
       <div className="p-6 space-y-8">
         {/* Today's Slate */}
         <div>
