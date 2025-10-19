@@ -47,10 +47,17 @@ export function ScoreHistoryChart({ organizationId }: ScoreHistoryChartProps) {
     );
   }
 
+  // Calculate trend - compare earliest to latest for overall progress
   const latestScore = history[0].completeness_score;
-  const previousScore = history[1].completeness_score;
-  const scoreDiff = latestScore - previousScore;
+  const earliestScore = history[history.length - 1].completeness_score;
+  const scoreDiff = latestScore - earliestScore;
   const trend = scoreDiff > 0 ? "up" : scoreDiff < 0 ? "down" : "same";
+  
+  // Format earliest date for display
+  const earliestDate = new Date(history[history.length - 1].analyzed_at).toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric' 
+  });
 
   return (
     <div className="bg-parchment-white border border-charcoal/10 p-8">
@@ -80,7 +87,7 @@ export function ScoreHistoryChart({ organizationId }: ScoreHistoryChartProps) {
             </>
           )}
         </div>
-        <p className="text-xs text-charcoal/60">Since last analysis</p>
+        <p className="text-xs text-charcoal/60">Since {earliestDate}</p>
       </div>
 
       {/* Simple Score List */}

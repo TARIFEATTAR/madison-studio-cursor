@@ -190,6 +190,7 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
 
       // Invalidate queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ["brand-health"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       onClose();
     } catch (error) {
       console.error("Error saving:", error);

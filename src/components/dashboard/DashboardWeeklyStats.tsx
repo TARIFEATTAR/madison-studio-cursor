@@ -110,8 +110,8 @@ export function DashboardWeeklyStats({ stats }: DashboardWeeklyStatsProps) {
               <Target className="w-5 h-5 text-charcoal" />
             </div>
             <div>
-              <p className="text-sm font-medium text-ink-black">On-Brand Score</p>
-              <p className="text-xs text-charcoal/60">Quality & consistency rating</p>
+              <p className="text-sm font-medium text-ink-black">Brand Health</p>
+              <p className="text-xs text-charcoal/60">Brand guidelines completeness</p>
             </div>
           </div>
           <div className="text-right">
@@ -124,10 +124,10 @@ export function DashboardWeeklyStats({ stats }: DashboardWeeklyStatsProps) {
           </div>
         </div>
         <p className="text-xs text-charcoal/60 italic">
-          {stats?.onBrandScore >= 95 && "Your content perfectly matches your brand voice"}
-          {stats?.onBrandScore >= 85 && stats?.onBrandScore < 95 && "Strong brand consistency across your content"}
-          {stats?.onBrandScore >= 75 && stats?.onBrandScore < 85 && "Good quality. Consider reviewing brand guidelines"}
-          {stats?.onBrandScore < 75 && "Use Madison's guidance to improve brand alignment"}
+          {stats?.onBrandScore >= 95 && "Exceptional brand knowledge foundation"}
+          {stats?.onBrandScore >= 85 && stats?.onBrandScore < 95 && "Strong brand guidelines in place"}
+          {stats?.onBrandScore >= 75 && stats?.onBrandScore < 85 && "Good foundation. A few gaps to address"}
+          {stats?.onBrandScore < 75 && "Complete Quick Wins to strengthen your brand foundation"}
         </p>
       </div>
 

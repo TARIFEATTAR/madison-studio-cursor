@@ -63,6 +63,13 @@ export function useDashboardStats() {
         startOfWeek.setDate(now.getDate() - now.getDay());
         startOfWeek.setHours(0, 0, 0, 0);
 
+        // Fetch brand health score
+        const { data: brandHealth } = await supabase
+          .from("brand_health")
+          .select("completeness_score")
+          .eq("organization_id", organizationId)
+          .maybeSingle();
+
         // Fetch master content
         const { data: masterContent } = await supabase
           .from("master_content")
@@ -109,16 +116,8 @@ export function useDashboardStats() {
 
         const piecesScheduled = scheduled?.length || 0;
 
-        // Calculate on-brand score from quality ratings
-        const allRatings = [
-          ...(masterContent || []).map(m => m.quality_rating),
-          ...(outputs || []).map(o => o.quality_rating),
-          ...(derivatives || []).map(d => d.quality_rating),
-        ].filter((rating): rating is number => rating !== null && rating !== undefined);
-
-        const onBrandScore = allRatings.length > 0
-          ? Math.round((allRatings.reduce((sum, r) => sum + r, 0) / allRatings.length) * 20) // Convert 1-5 to percentage
-          : defaultStats.onBrandScore;
+        // Use brand health score (from brand guidelines completeness analysis)
+        const onBrandScore = brandHealth?.completeness_score ?? defaultStats.onBrandScore;
 
         // Calculate streak (simplified - just count days with activity in last 30 days)
         const thirtyDaysAgo = new Date();
