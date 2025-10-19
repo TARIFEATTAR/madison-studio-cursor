@@ -152,12 +152,12 @@ export default function DashboardNew() {
                 <X className="w-4 h-4" />
               </button>
               
-              <div className="flex items-start gap-6">
+              <div className="flex flex-col sm:flex-row items-start gap-6">
                 <div className="flex-shrink-0 w-12 h-12 bg-aged-brass/10 border border-aged-brass/20 flex items-center justify-center">
                   <Loader2 className="w-6 h-6 text-aged-brass" />
                 </div>
                 
-                <div className="flex-1">
+                <div className="flex-1 w-full">
                   <h3 className="font-serif text-xl font-medium text-ink-black mb-2">
                     {priorityAction.title}
                   </h3>
