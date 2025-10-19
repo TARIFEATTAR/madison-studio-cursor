@@ -49,10 +49,10 @@ export function DashboardWorkflowMap() {
     <div className="bg-gradient-to-br from-[#F5F1E8] to-[#FAF8F3] border border-charcoal/10 p-4 md:p-8 lg:p-12">
       <div className="text-center mb-6 md:mb-12">
         <h3 className="font-serif text-2xl md:text-3xl font-light text-ink-black mb-2">
-          Your Content Ecosystem
+          Content Workflow Status
         </h3>
         <p className="text-sm text-charcoal/60 italic font-serif">
-          A visual journey through your editorial workflow
+          Track your content through each stage of production
         </p>
       </div>
 

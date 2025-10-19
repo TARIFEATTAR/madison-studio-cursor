@@ -60,46 +60,47 @@ export function DashboardEditorialStats({ stats }: DashboardEditorialStatsProps)
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Adjust Targets Button */}
+    <div className="space-y-8">
+      {/* Header with title and settings */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-serif text-3xl font-light text-ink-black mb-2">
-            This Week at a Glance
+          <h2 className="font-serif text-2xl md:text-3xl font-light text-ink-black mb-2">
+            Editorial Dashboard
           </h2>
           <p className="text-sm text-charcoal/60 italic">
-            Your editorial progress, beautifully summarized
+            Your weekly progress and content pipeline
           </p>
         </div>
         <Button
           onClick={() => navigate('/settings?tab=goals')}
           variant="outline"
           size="sm"
-          className="border-charcoal/20 text-charcoal hover:bg-vellum-cream gap-2"
+          className="border-charcoal/20 text-charcoal hover:bg-vellum-cream gap-2 text-xs"
         >
-          <Settings className="w-4 h-4" />
-          Adjust Targets
+          <Settings className="w-3 h-3" />
+          <span className="hidden sm:inline">Adjust Targets</span>
         </Button>
       </div>
 
+
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {statCards.map((card, index) => (
         <div
           key={index}
-          className="group relative bg-parchment-white border border-charcoal/10 p-8 hover:border-aged-brass/40 transition-all hover:shadow-lg"
+          className="group relative bg-parchment-white border border-charcoal/10 p-6 md:p-8 hover:border-aged-brass/40 transition-all hover:shadow-lg"
         >
           {/* Decorative corner accent */}
           <div className="absolute top-0 right-0 w-12 h-12 border-t-2 border-r-2 border-aged-brass/0 group-hover:border-aged-brass/40 transition-all" />
           
           {/* Icon as decorative element */}
-          <div className="mb-6">
-            <card.icon className="w-8 h-8 text-charcoal/30 group-hover:text-aged-brass transition-colors" />
+          <div className="mb-4 md:mb-6">
+            <card.icon className="w-6 h-6 md:w-8 md:h-8 text-charcoal/30 group-hover:text-aged-brass transition-colors" />
           </div>
 
           {/* Large serif number */}
-          <div className="mb-4">
-            <p className={`font-serif text-6xl font-light ${card.isScore ? card.scoreColor : 'text-ink-black'} leading-none mb-2`}>
+          <div className="mb-3 md:mb-4">
+            <p className={`font-serif text-4xl md:text-6xl font-light ${card.isScore ? card.scoreColor : 'text-ink-black'} leading-none mb-2`}>
               {card.value}
             </p>
             {card.goalMet && (
@@ -111,7 +112,7 @@ export function DashboardEditorialStats({ stats }: DashboardEditorialStatsProps)
           </div>
 
           {/* Label and sublabel */}
-          <div className="mb-3">
+          <div className="mb-2 md:mb-3">
             <p className="text-xs uppercase tracking-[0.15em] font-sans text-charcoal/80 mb-1">
               {card.label}
             </p>
@@ -121,7 +122,7 @@ export function DashboardEditorialStats({ stats }: DashboardEditorialStatsProps)
           </div>
 
           {/* Brass accent line */}
-          <div className="w-12 h-[1px] bg-aged-brass/30 mb-3 group-hover:w-24 transition-all" />
+          <div className="w-12 h-[1px] bg-aged-brass/30 mb-2 md:mb-3 group-hover:w-24 transition-all" />
 
           {/* Editorial micro-copy */}
           <p className="text-xs italic text-charcoal/60 font-serif">

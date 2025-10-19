@@ -150,34 +150,34 @@ export default function DashboardNew() {
           <BrandHealthCard />
         </div>
 
-        {/* Workflow Map - Transformation #4 */}
+        {/* Workflow Map */}
         <div className="mb-12">
           <DashboardWorkflowMap />
         </div>
 
         {/* Accolades & Streak - Side by Side */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-12">
           <EditorialAccolades />
           <StreakTracker />
         </div>
 
-        {/* Editorial Stats Grid - Transformation #2 */}
+        {/* Editorial Dashboard (merged stats + pipeline) */}
         <div className="mb-12">
-          <DashboardEditorialStats stats={stats} />
-        </div>
-
-        {/* Content Pipeline - Separate section */}
-        <div className="mb-12">
-          <div className="mb-8">
-            <h2 className="font-serif text-2xl md:text-3xl font-light text-ink-black mb-2">
-              Content Pipeline
-            </h2>
-            <p className="text-sm text-charcoal/60 italic">
-              From draft to published
-            </p>
-          </div>
-          <div className="bg-parchment-white border border-charcoal/10 p-4 md:p-6 lg:p-8">
-            <ContentPipeline />
+          <div className="bg-parchment-white border border-charcoal/10 p-6 md:p-8">
+            <DashboardEditorialStats stats={stats} />
+            
+            {/* Pipeline Section */}
+            <div className="mt-12 pt-8 border-t border-charcoal/10">
+              <div className="mb-6">
+                <h3 className="font-serif text-xl md:text-2xl font-light text-ink-black mb-2">
+                  Content Pipeline
+                </h3>
+                <p className="text-sm text-charcoal/60 italic">
+                  From draft to published
+                </p>
+              </div>
+              <ContentPipeline />
+            </div>
           </div>
         </div>
 
@@ -196,14 +196,14 @@ export default function DashboardNew() {
           </div>
         </div>
 
-        {/* Upcoming Schedule - Full width */}
-        <div className="bg-parchment-white border border-charcoal/10 p-8">
-          <div className="mb-8 pb-4 border-b border-charcoal/10">
-            <h2 className="font-serif text-2xl font-medium text-ink-black mb-1">
+        {/* Upcoming Schedule - Full width on mobile, conditional on desktop */}
+        <div className="lg:hidden bg-parchment-white border border-charcoal/10 p-6 md:p-8">
+          <div className="mb-6 md:mb-8 pb-4 border-b border-charcoal/10">
+            <h2 className="font-serif text-xl md:text-2xl font-medium text-ink-black mb-1">
               Upcoming This Week
             </h2>
             <p className="text-xs text-charcoal/60 italic">
-              Your editorial calendar
+              Your content schedule for the next 7 days
             </p>
           </div>
           <UpcomingSchedule />
