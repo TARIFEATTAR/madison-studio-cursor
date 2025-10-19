@@ -14,14 +14,14 @@ export function DashboardWorkflowMap() {
 
   const stations = [
     {
-      id: "create",
-      title: "Create",
+      id: "drafts",
+      title: "Drafts",
       description: "Studio",
       icon: PenTool,
       route: "/create",
-      count: stats?.piecesCreatedThisWeek || 0,
-      label: "this week",
-      microCopy: "Pieces drafted this week",
+      count: stats?.totalDrafts || 0,
+      label: "drafts",
+      microCopy: "Unpublished content",
       isNextStep: (stats?.totalContent || 0) === 0,
     },
     {
@@ -61,8 +61,8 @@ export function DashboardWorkflowMap() {
 
   return (
     <TooltipProvider>
-      <div className="bg-gradient-to-br from-[#F5F1E8] to-[#FAF8F3] border border-charcoal/10 p-3 md:p-5">
-        <div className="text-center mb-4 md:mb-6">
+      <div className="bg-gradient-to-br from-[#F5F1E8] to-[#FAF8F3] border border-charcoal/10 p-4">
+        <div className="text-center mb-5">
           <div className="flex items-center justify-center gap-2 mb-1">
             <h3 className="font-serif text-lg md:text-xl font-light text-ink-black">
               Content Workflow Status
@@ -91,7 +91,7 @@ export function DashboardWorkflowMap() {
           {/* Connecting lines */}
           <div className="absolute top-1/2 left-0 right-0 h-[1px] bg-gradient-to-r from-aged-brass/20 via-aged-brass/40 to-aged-brass/20 -translate-y-1/2 hidden lg:block" />
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 relative z-10">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 md:gap-3 relative z-10">
             {stations.map((station, index) => (
               <button
                 key={station.id}
@@ -108,17 +108,17 @@ export function DashboardWorkflowMap() {
                 )}
 
                 {/* Station card */}
-                <div className="bg-parchment-white border-2 border-charcoal/10 p-3 md:p-4 hover:border-aged-brass/60 hover:shadow-lg transition-all">
+                <div className="bg-parchment-white border-2 border-charcoal/10 p-2.5 md:p-3 hover:border-aged-brass/60 hover:shadow-lg transition-all">
                   {/* Count badge */}
-                  <div className="absolute -top-2 -right-2 w-8 h-8 md:w-10 md:h-10 bg-aged-brass/90 border-2 border-parchment-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-md">
-                    <span className="font-serif text-sm md:text-base font-semibold text-parchment-white">
+                  <div className="absolute -top-2 -right-2 w-7 h-7 md:w-8 md:h-8 bg-ink-black border-2 border-parchment-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-md">
+                    <span className="font-serif text-sm font-semibold text-parchment-white">
                       {station.count}
                     </span>
                   </div>
 
                   {/* Icon */}
-                  <div className="mb-3 md:mb-4 flex justify-center">
-                    <div className="w-10 h-10 md:w-12 md:h-12 border border-aged-brass/30 flex items-center justify-center group-hover:border-aged-brass transition-colors">
+                  <div className="mb-2.5 md:mb-3 flex justify-center">
+                    <div className="w-9 h-9 md:w-11 md:h-11 border border-aged-brass/30 flex items-center justify-center group-hover:border-aged-brass transition-colors">
                       <station.icon className="w-5 h-5 md:w-6 md:h-6 text-aged-brass group-hover:scale-110 transition-transform" />
                     </div>
                   </div>
@@ -154,7 +154,7 @@ export function DashboardWorkflowMap() {
         </div>
 
         {/* Bottom decorative line */}
-        <div className="mt-4 md:mt-6 flex items-center justify-center">
+        <div className="mt-5 flex items-center justify-center">
           <div className="w-24 h-[1px] bg-aged-brass/30" />
         </div>
       </div>

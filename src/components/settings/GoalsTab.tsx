@@ -229,15 +229,15 @@ export function GoalsTab() {
             <div className="text-xs uppercase tracking-wider text-charcoal/60 mb-3">
               Last 7 Days
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 justify-center">
               {streakData.dailyActivity.map((day, index) => (
                 <div
                   key={day.date}
-                  className="flex-1 text-center"
+                  className="flex flex-col items-center flex-shrink-0"
                   title={new Date(day.date).toLocaleDateString()}
                 >
                   <div
-                    className={`w-full aspect-square rounded-full border-2 mb-2 ${
+                    className={`w-12 h-12 md:w-16 md:h-16 max-w-[60px] md:max-w-[80px] rounded-full border-2 mb-2 ${
                       day.hasActivity
                         ? 'bg-aged-brass border-aged-brass'
                         : 'bg-transparent border-charcoal/20'

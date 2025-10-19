@@ -10,6 +10,7 @@ interface DashboardStats {
   onBrandScore: number;
   streakDays: number;
   recentActivity: RecentActivityItem[];
+  totalDrafts: number;
 }
 
 interface RecentActivityItem {
@@ -36,6 +37,7 @@ export function useDashboardStats() {
         onBrandScore: 95,
         streakDays: 0,
         recentActivity: [],
+        totalDrafts: 0,
       };
 
       try {
@@ -116,6 +118,9 @@ export function useDashboardStats() {
 
         const piecesScheduled = scheduled?.length || 0;
 
+        // Calculate total drafts (unpublished content)
+        const totalDrafts = totalContent - piecesPublished;
+
         // Use brand health score (from brand guidelines completeness analysis)
         const onBrandScore = brandHealth?.completeness_score ?? defaultStats.onBrandScore;
 
@@ -177,6 +182,7 @@ export function useDashboardStats() {
           onBrandScore,
           streakDays,
           recentActivity,
+          totalDrafts,
         };
       } catch (e) {
         // Any failure should not block UI

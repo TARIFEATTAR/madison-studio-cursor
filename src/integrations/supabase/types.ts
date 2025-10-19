@@ -831,6 +831,7 @@ export type Database = {
           last_brand_check_at: string | null
           organization_id: string
           publish_notes: string | null
+          published_at: string | null
           published_to: Json | null
           quality_rating: number | null
           status: string | null
@@ -853,6 +854,7 @@ export type Database = {
           last_brand_check_at?: string | null
           organization_id: string
           publish_notes?: string | null
+          published_at?: string | null
           published_to?: Json | null
           quality_rating?: number | null
           status?: string | null
@@ -875,6 +877,7 @@ export type Database = {
           last_brand_check_at?: string | null
           organization_id?: string
           publish_notes?: string | null
+          published_at?: string | null
           published_to?: Json | null
           quality_rating?: number | null
           status?: string | null
