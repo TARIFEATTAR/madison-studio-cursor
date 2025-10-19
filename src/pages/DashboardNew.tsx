@@ -95,42 +95,42 @@ export default function DashboardNew() {
         {/* Editorial Director Banner - Minimal style */}
         {showEditorialBanner && (
           <div className="mb-12">
-            <div className="bg-parchment-white border border-charcoal/10 p-8 relative overflow-hidden">
+            <div className="bg-parchment-white border border-charcoal/10 p-4 md:p-6 lg:p-8 relative overflow-hidden">
               <button
                 onClick={() => setShowEditorialBanner(false)}
-                className="absolute top-6 right-6 text-charcoal/50 hover:text-charcoal transition-colors"
+                className="absolute top-3 right-3 md:top-4 md:right-4 lg:top-6 lg:right-6 text-charcoal/50 hover:text-charcoal transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
               
-              <div className="flex items-start gap-8">
+              <div className="flex flex-col sm:flex-row items-start gap-4 md:gap-6 lg:gap-8">
                 <div className="flex-shrink-0">
                   <img 
                     src={madisonInsignia} 
                     alt="Madison" 
-                    className="w-32 h-32 object-contain opacity-90"
+                    className="w-20 h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 object-contain opacity-90"
                   />
                 </div>
                 
                 <div className="flex-1">
-                  <h3 className="font-serif text-2xl font-medium text-ink-black mb-3">
+                  <h3 className="font-serif text-xl md:text-2xl font-medium text-ink-black mb-2 md:mb-3">
                     Madison, Editorial Director
                   </h3>
-                  <p className="text-charcoal/70 mb-6 leading-relaxed font-light text-base">
+                  <p className="text-charcoal/70 mb-4 md:mb-6 leading-relaxed font-light text-sm md:text-base">
                     Your AI editorial director brings Tarife Attar's voice to every piece—
                     from product descriptions to email campaigns. Let her guide your content creation.
                   </p>
-                  <div className="flex gap-4">
+                  <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
                     <Button 
                       onClick={() => navigate("/create")}
-                      className="bg-ink-black hover:bg-charcoal text-parchment-white px-8 py-6 text-sm uppercase tracking-wider border-0"
+                      className="bg-ink-black hover:bg-charcoal text-parchment-white px-4 py-3 md:px-6 md:py-4 lg:px-8 lg:py-6 text-sm uppercase tracking-wider border-0"
                     >
                       Create Content
                     </Button>
                     <Button 
                       onClick={() => navigate("/meet-madison")}
                       variant="outline"
-                      className="border-charcoal/20 text-charcoal hover:bg-vellum-cream px-8 py-6 text-sm uppercase tracking-wider"
+                      className="border-charcoal/20 text-charcoal hover:bg-vellum-cream px-4 py-3 md:px-6 md:py-4 lg:px-8 lg:py-6 text-sm uppercase tracking-wider"
                     >
                       Meet Madison
                     </Button>
@@ -196,15 +196,15 @@ export default function DashboardNew() {
 
         {/* Content Pipeline - Separate section */}
         <div className="mb-12">
-          <div className="mb-6">
-            <h2 className="font-serif text-3xl font-light text-ink-black mb-2">
+          <div className="mb-8">
+            <h2 className="font-serif text-2xl md:text-3xl font-light text-ink-black mb-2">
               Content Pipeline
             </h2>
             <p className="text-sm text-charcoal/60 italic">
               From draft to published
             </p>
           </div>
-          <div className="bg-parchment-white border border-charcoal/10 p-8">
+          <div className="bg-parchment-white border border-charcoal/10 p-4 md:p-6 lg:p-8">
             <ContentPipeline />
           </div>
         </div>

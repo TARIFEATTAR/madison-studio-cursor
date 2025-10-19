@@ -66,18 +66,18 @@ export function ContentPipeline() {
           return (
             <div key={stage.label} className="flex items-center flex-1">
               <div className="flex-1">
-                <div className="h-10 md:h-8 bg-vellum-cream border border-charcoal/10 overflow-hidden">
+                <div className="h-12 md:h-10 lg:h-8 bg-vellum-cream border border-charcoal/10 overflow-hidden">
                   <div 
                     className={`h-full ${stage.bgColor} transition-all duration-500`}
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
-                <p className="text-xs md:text-[10px] text-charcoal/60 mt-1 text-center">
+                <p className="text-xs lg:text-[10px] text-charcoal/60 mt-1 text-center">
                   {stage.label}
                 </p>
               </div>
               {index < stages.length - 1 && (
-                <ArrowRight className="w-4 h-4 text-charcoal/20 mx-1" />
+                <ArrowRight className="w-4 h-4 text-charcoal/20 mx-2 md:mx-1" />
               )}
             </div>
           );
@@ -92,19 +92,19 @@ export function ContentPipeline() {
             <button
               key={stage.label}
               onClick={() => navigate(stage.route)}
-              className="text-left p-4 md:p-3 border border-charcoal/10 hover:border-aged-brass/40 transition-all bg-parchment-white hover:bg-vellum-cream/30 group"
+              className="text-left p-5 md:p-4 border border-charcoal/10 hover:border-aged-brass/40 transition-all bg-parchment-white hover:bg-vellum-cream/30 group"
             >
               <div className="flex items-center gap-2 mb-2">
-                <div className={`w-10 h-10 md:w-8 md:h-8 ${stage.bgColor} flex items-center justify-center shrink-0`}>
-                  <Icon className={`w-5 h-5 md:w-4 md:h-4 ${stage.color}`} />
+                <div className={`w-12 h-12 md:w-10 md:h-10 lg:w-8 lg:h-8 ${stage.bgColor} flex items-center justify-center shrink-0`}>
+                  <Icon className={`w-6 h-6 md:w-5 md:h-5 lg:w-4 lg:h-4 ${stage.color}`} />
                 </div>
-                <span className="text-lg font-serif font-medium text-ink-black">
+                <span className="text-xl md:text-2xl lg:text-xl font-serif font-medium text-ink-black">
                   {stage.count}
                 </span>
               </div>
-              <p className="text-xs font-medium text-charcoal mb-1">{stage.label}</p>
-              <p className="text-xs md:text-[10px] text-charcoal/60">{stage.description}</p>
-              <div className="mt-2 text-xs md:text-[10px] text-aged-brass opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+              <p className="text-sm md:text-xs font-semibold text-charcoal mb-1">{stage.label}</p>
+              <p className="text-xs text-charcoal/60">{stage.description}</p>
+              <div className="mt-2 text-xs text-aged-brass opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                 {stage.action} <ArrowRight className="w-3 h-3" />
               </div>
             </button>
@@ -114,14 +114,14 @@ export function ContentPipeline() {
 
       {/* Quick insight */}
       {totalContent === 0 ? (
-        <div className="p-4 md:p-3 bg-vellum-cream/50 border border-charcoal/10">
+        <div className="p-4 bg-vellum-cream/50 border border-charcoal/10">
           <p className="text-xs text-charcoal/70 text-center">
             No content in pipeline yet. Start creating to see your workflow!
           </p>
         </div>
       ) : (
-        <div className="p-4 md:p-3 bg-aged-brass/5 border border-aged-brass/20">
-          <p className="text-xs text-aged-brass">
+        <div className="p-4 bg-aged-brass/5 border border-aged-brass/20">
+          <p className="text-xs text-aged-brass font-medium leading-relaxed">
             <strong>Pro tip:</strong> {
               draftCount > scheduledCount 
                 ? "You have drafts ready! Schedule them to maintain consistency."
