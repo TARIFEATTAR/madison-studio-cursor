@@ -94,15 +94,16 @@ export default function DashboardNew() {
       />
 
       <div className="max-w-7xl mx-auto px-6 pb-8">
-        {/* Brand Health - Full Width */}
-        <div className="mb-6">
-          <BrandHealthCard />
-        </div>
-
-        {/* Accolades & Streak - Side by Side */}
+        {/* Brand Health + Accolades & Streak - 3 Column Layout */}
         <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <EditorialAccolades />
-          <StreakTracker />
+          {/* Left: Brand Health - Takes full left column */}
+          <BrandHealthCard />
+          
+          {/* Right: Stacked Accolades + Streak */}
+          <div className="grid grid-rows-2 gap-6">
+            <EditorialAccolades />
+            <StreakTracker />
+          </div>
         </div>
 
         {/* Editorial Goals */}

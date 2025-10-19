@@ -14,18 +14,16 @@ export function StreakTracker() {
 
   return (
     <TooltipProvider>
-      <div className={`${getPaperTexture('cardPaper')} border border-charcoal/10 p-5`}>
+      <div className={`${getPaperTexture('cardPaper')} border border-charcoal/10 p-3`}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2">
-            <Flame className="w-5 h-5 text-aged-brass" />
-            <h3 className="font-serif text-base font-medium text-ink-black">
-              Publishing Streak
-            </h3>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-1.5">
+            <Flame className="w-4 h-4 text-aged-brass" />
+            <h3 className="font-serif text-xs font-medium">Publishing Streak</h3>
             <Tooltip>
               <TooltipTrigger asChild>
                 <button className="text-charcoal/40 hover:text-aged-brass transition-colors">
-                  <HelpCircle className="w-3.5 h-3.5" />
+                  <HelpCircle className="w-3 h-3" />
                 </button>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs bg-ink-black text-parchment-white border-charcoal/20">
@@ -40,8 +38,8 @@ export function StreakTracker() {
             {streakData?.gracePeriodActive && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="text-[10px] bg-aged-brass/10 border border-aged-brass/20 px-2 py-0.5 cursor-help">
-                    <span className="text-aged-brass font-medium">Grace Period</span>
+                  <div className="text-[9px] bg-aged-brass/10 border border-aged-brass/20 px-1.5 py-0.5 cursor-help">
+                    <span className="text-aged-brass font-medium">Grace</span>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs bg-ink-black text-parchment-white border-charcoal/20">
@@ -59,54 +57,42 @@ export function StreakTracker() {
               }}
               variant="ghost"
               size="sm"
-              className="h-7 w-7 p-0 hover:bg-aged-brass/10"
+              className="h-6 w-6 p-0 hover:bg-aged-brass/10"
             >
-              <Settings className="w-3.5 h-3.5 text-charcoal/60 hover:text-aged-brass" />
+              <Settings className="w-3 h-3 text-charcoal/60 hover:text-aged-brass" />
             </Button>
           </div>
         </div>
 
-      {/* Current Streak - Large Display */}
-      <div className="text-center mb-5">
-        <div className="font-serif text-6xl font-light text-aged-brass mb-1">
-          {streakData?.currentStreak || 0}
+      {/* Horizontal Layout: Number on left, details on right */}
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <div className="font-serif text-4xl font-light text-aged-brass leading-none">
+            {streakData?.currentStreak || 0}
+          </div>
+          <div className="text-[9px] uppercase tracking-wider text-charcoal/60">
+            Days Active
+          </div>
         </div>
-        <div className="text-xs uppercase tracking-wider text-charcoal/60">
-          {streakData?.currentStreak === 1 ? 'Day' : 'Days'} Active
-        </div>
-        <p className="text-[10px] italic text-charcoal/50 mt-1.5">
-          Keep creating to maintain momentum
-        </p>
+        
+        {(streakData?.longestStreak || 0) > 0 && (
+          <div className="text-right">
+            <div className="text-[9px] uppercase tracking-wider text-charcoal/60">Best</div>
+            <div className="font-serif text-lg text-ink-black">{streakData.longestStreak}</div>
+          </div>
+        )}
       </div>
 
-      {/* Brass accent line */}
-      <div className="w-24 h-[1px] bg-aged-brass/30 mx-auto mb-8" />
-
-      {/* Longest Streak Badge */}
-      {(streakData?.longestStreak || 0) > 0 && (
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <Award className="w-5 h-5 text-ink-black/40" />
-          <div className="text-center">
-            <div className="text-xs uppercase tracking-wider text-charcoal/60 mb-1">
-              Personal Best
-            </div>
-            <div className="font-serif text-2xl text-ink-black">
-              {streakData.longestStreak} {streakData.longestStreak === 1 ? 'Day' : 'Days'}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Mini Calendar - Last 7 Days */}
+      {/* Compact Last 7 Days */}
       {streakData?.dailyActivity && streakData.dailyActivity.length > 0 && (
-        <div className={`${getPaperTexture('manuscriptPaper')} border border-charcoal/10 p-4`}>
-          <div className="text-[10px] uppercase tracking-wider text-charcoal/50 mb-3 text-center">
+        <div className="border-t border-charcoal/10 pt-2">
+          <div className="text-[9px] uppercase tracking-wider text-charcoal/50 mb-2 text-center">
             Last 7 Days
           </div>
-          <div className="flex gap-2 justify-center">
+          <div className="flex gap-1.5 justify-center">
             {streakData.dailyActivity.map((day) => {
               const date = new Date(day.date);
-              const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+              const dayName = date.toLocaleDateString('en-US', { weekday: 'short' }).charAt(0);
               
               return (
                 <div
@@ -115,13 +101,13 @@ export function StreakTracker() {
                   title={date.toLocaleDateString()}
                 >
                   <div
-                    className={`w-10 h-10 rounded-full border-2 mb-1 transition-all ${
+                    className={`w-6 h-6 rounded-full border ${
                       day.hasActivity
-                        ? 'bg-aged-brass border-aged-brass shadow-sm'
-                        : 'bg-transparent border-charcoal/20'
+                        ? 'bg-aged-brass border-aged-brass'
+                        : 'border-charcoal/20'
                     }`}
                   />
-                  <div className="text-[9px] text-charcoal/50 uppercase">
+                  <div className="text-[8px] text-charcoal/50 mt-0.5">
                     {dayName}
                   </div>
                 </div>

@@ -122,42 +122,33 @@ export function EditorialAccolades() {
   return (
     <TooltipProvider>
       <div 
-        className={`${getPaperTexture('cardPaper')} border border-charcoal/10 p-4 cursor-pointer hover:border-aged-brass/40 transition-all group`}
+        className={`${getPaperTexture('cardPaper')} border border-charcoal/10 p-3 cursor-pointer hover:border-aged-brass/40 transition-all group`}
         onClick={() => setShowModal(true)}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3">
+        {/* Header - Single Row */}
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-aged-brass/10 border border-aged-brass/20 flex items-center justify-center">
-              <Award className="w-3.5 h-3.5 text-aged-brass" />
-            </div>
+            <Award className="w-4 h-4 text-aged-brass" />
             <div>
-              <div className="text-[9px] uppercase tracking-wider text-charcoal/50">
+              <div className="text-[8px] uppercase tracking-wider text-charcoal/50">
                 Editorial Accolade
               </div>
-              <h3 className="font-serif text-sm font-medium text-ink-black">
+              <h3 className="font-serif text-xs font-medium text-ink-black">
                 {currentAccolade.title}
               </h3>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-charcoal/30 group-hover:text-aged-brass transition-colors" />
+          <ChevronRight className="w-3.5 h-3.5 text-charcoal/30 group-hover:text-aged-brass transition-colors" />
         </div>
 
-        {/* Brass accent line */}
-        <div className="w-12 h-[1px] bg-aged-brass/30 mb-3 group-hover:w-20 transition-all" />
-
-        {/* Next Accolade Progress */}
+        {/* Next Accolade Progress - Compact */}
         {nextAccolade && nextProgress && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="text-[10px] uppercase tracking-wider text-charcoal/60">
-                Progress to {nextAccolade.title}
-              </div>
-              <div className="text-xs font-medium text-ink-black">
-                {nextProgress.current} / {nextProgress.target}
-              </div>
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[9px] text-charcoal/60">Next: {nextAccolade.title}</span>
+              <span className="text-[10px] font-medium text-ink-black">{nextProgress.current}/{nextProgress.target}</span>
             </div>
-            <div className="w-full h-1 bg-charcoal/10 overflow-hidden">
+            <div className="w-full h-0.5 bg-charcoal/10">
               <div 
                 className="h-full bg-aged-brass transition-all duration-500"
                 style={{ width: `${progressPercent}%` }}
@@ -168,11 +159,11 @@ export function EditorialAccolades() {
 
         {/* All Unlocked */}
         {!nextAccolade && (
-          <div className="text-center py-3">
+          <div className="text-center py-2">
             <p className="text-xs font-medium text-aged-brass">
               All accolades unlocked!
             </p>
-            <p className="text-[10px] italic text-charcoal/60 mt-0.5">
+            <p className="text-[9px] italic text-charcoal/60 mt-0.5">
               You've mastered the editorial bureau
             </p>
           </div>
