@@ -22,29 +22,18 @@ export function DashboardWorkflowMap() {
       count: stats?.totalDrafts || 0,
       label: "drafts",
       microCopy: "Unpublished content",
-      isNextStep: (stats?.totalContent || 0) === 0,
-    },
-    {
-      id: "library",
-      title: "Library",
-      description: "Archive",
-      icon: Archive,
-      route: "/library",
-      count: stats?.totalContent || 0,
-      label: "pieces",
-      microCopy: "Total content in archive",
-      isNextStep: (stats?.totalContent || 0) > 0 && (stats?.piecesScheduled || 0) === 0,
+      isNextStep: (stats?.totalDrafts || 0) === 0,
     },
     {
       id: "schedule",
-      title: "Schedule",
+      title: "Scheduled",
       description: "Calendar",
       icon: Calendar,
       route: "/schedule",
       count: stats?.piecesScheduled || 0,
       label: "scheduled",
       microCopy: "Queued for publishing",
-      isNextStep: (stats?.piecesScheduled || 0) === 0 && (stats?.totalContent || 0) > 0,
+      isNextStep: (stats?.totalDrafts || 0) > 0 && (stats?.piecesScheduled || 0) === 0,
     },
     {
       id: "publish",
@@ -91,7 +80,7 @@ export function DashboardWorkflowMap() {
           {/* Connecting lines */}
           <div className="absolute top-1/2 left-0 right-0 h-[1px] bg-gradient-to-r from-aged-brass/20 via-aged-brass/40 to-aged-brass/20 -translate-y-1/2 hidden lg:block" />
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 md:gap-3 relative z-10">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 md:gap-3 relative z-10">
             {stations.map((station, index) => (
               <button
                 key={station.id}

@@ -1,6 +1,7 @@
-import { Flame, Award, HelpCircle } from "lucide-react";
+import { Flame, Award, HelpCircle, Settings } from "lucide-react";
 import { useStreakCalculation } from "@/hooks/useStreakCalculation";
 import { getPaperTexture } from "@/utils/paperTextureStyles";
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -35,20 +36,34 @@ export function StreakTracker() {
               </TooltipContent>
             </Tooltip>
           </div>
-          {streakData?.gracePeriodActive && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="text-[10px] bg-aged-brass/10 border border-aged-brass/20 px-2 py-0.5 cursor-help">
-                  <span className="text-aged-brass font-medium">Grace Period</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs bg-ink-black text-parchment-white border-charcoal/20">
-                <p className="text-xs leading-relaxed">
-                  You have 3 days after the week ends to create content and keep your streak alive.
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          )}
+          <div className="flex items-center gap-2">
+            {streakData?.gracePeriodActive && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="text-[10px] bg-aged-brass/10 border border-aged-brass/20 px-2 py-0.5 cursor-help">
+                    <span className="text-aged-brass font-medium">Grace Period</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs bg-ink-black text-parchment-white border-charcoal/20">
+                  <p className="text-xs leading-relaxed">
+                    You have 3 days after the week ends to create content and keep your streak alive.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+            <Button
+              onClick={() => {
+                const settingsUrl = new URL('/settings', window.location.href);
+                settingsUrl.searchParams.set('tab', 'goals');
+                window.location.href = settingsUrl.pathname + settingsUrl.search;
+              }}
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 hover:bg-aged-brass/10"
+            >
+              <Settings className="w-3.5 h-3.5 text-charcoal/60 hover:text-aged-brass" />
+            </Button>
+          </div>
         </div>
 
       {/* Current Streak - Large Display */}

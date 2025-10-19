@@ -106,8 +106,26 @@ export default function DashboardNew() {
         </div>
 
         {/* Workflow Map */}
-        <div className="mb-12">
+        <div className="mb-8">
           <DashboardWorkflowMap />
+        </div>
+
+        {/* Editorial Goals */}
+        <div className="mb-8 bg-parchment-white border border-charcoal/10 p-6 md:p-8">
+          <DashboardEditorialStats stats={stats} />
+        </div>
+
+        {/* Content Pipeline */}
+        <div className="mb-8 bg-parchment-white border border-charcoal/10 p-6 md:p-8">
+          <div className="mb-6">
+            <h3 className="font-serif text-xl md:text-2xl font-light text-ink-black mb-2">
+              Content Pipeline
+            </h3>
+            <p className="text-sm text-charcoal/60 italic">
+              From draft to published
+            </p>
+          </div>
+          <ContentPipeline />
         </div>
 
         {/* Accolades & Streak - Side by Side */}
@@ -115,27 +133,6 @@ export default function DashboardNew() {
           <EditorialAccolades />
           <StreakTracker />
         </div>
-
-        {/* Editorial Dashboard (merged stats + pipeline) */}
-        <div className="mb-12">
-          <div className="bg-parchment-white border border-charcoal/10 p-6 md:p-8">
-            <DashboardEditorialStats stats={stats} />
-            
-            {/* Pipeline Section */}
-            <div className="mt-12 pt-8 border-t border-charcoal/10">
-              <div className="mb-6">
-                <h3 className="font-serif text-xl md:text-2xl font-light text-ink-black mb-2">
-                  Content Pipeline
-                </h3>
-                <p className="text-sm text-charcoal/60 italic">
-                  From draft to published
-                </p>
-              </div>
-              <ContentPipeline />
-            </div>
-          </div>
-        </div>
-
 
         {/* Upcoming Schedule - Full width on mobile, conditional on desktop */}
         <div className="lg:hidden bg-parchment-white border border-charcoal/10 p-6 md:p-8">

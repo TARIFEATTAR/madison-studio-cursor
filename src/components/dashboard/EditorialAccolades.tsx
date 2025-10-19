@@ -122,38 +122,20 @@ export function EditorialAccolades() {
   return (
     <TooltipProvider>
       <div 
-        className={`${getPaperTexture('cardPaper')} border border-charcoal/10 p-5 cursor-pointer hover:border-aged-brass/40 transition-all group`}
+        className={`${getPaperTexture('cardPaper')} border border-charcoal/10 p-4 cursor-pointer hover:border-aged-brass/40 transition-all group`}
         onClick={() => setShowModal(true)}
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-aged-brass/10 border border-aged-brass/20 flex items-center justify-center">
-              <Award className="w-4 h-4 text-aged-brass" />
+            <div className="w-7 h-7 bg-aged-brass/10 border border-aged-brass/20 flex items-center justify-center">
+              <Award className="w-3.5 h-3.5 text-aged-brass" />
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <div className="text-[9px] uppercase tracking-wider text-charcoal/50">
-                  Editorial Accolade
-                </div>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button 
-                      className="text-charcoal/40 hover:text-aged-brass transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <HelpCircle className="w-3 h-3" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs bg-ink-black text-parchment-white border-charcoal/20">
-                    <p className="text-xs leading-relaxed">
-                      <strong>Editorial Accolades:</strong> Earn badges as you progress from Novice to Literary Master. 
-                      Each accolade recognizes your growing expertise and content library.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
+              <div className="text-[9px] uppercase tracking-wider text-charcoal/50">
+                Editorial Accolade
               </div>
-              <h3 className="font-serif text-base font-medium text-ink-black">
+              <h3 className="font-serif text-sm font-medium text-ink-black">
                 {currentAccolade.title}
               </h3>
             </div>
@@ -161,18 +143,8 @@ export function EditorialAccolades() {
           <ChevronRight className="w-4 h-4 text-charcoal/30 group-hover:text-aged-brass transition-colors" />
         </div>
 
-        {/* Current Accolade Description */}
-        <p className="text-xs italic text-charcoal/60 mb-1.5">
-          {currentAccolade.description}
-        </p>
-        
-        {/* Current Progress Display */}
-        <p className="text-sm font-medium text-aged-brass mb-4">
-          {currentAccolade.checkProgress(stats).current} pieces created
-        </p>
-
         {/* Brass accent line */}
-        <div className="w-12 h-[1px] bg-aged-brass/30 mb-4 group-hover:w-20 transition-all" />
+        <div className="w-12 h-[1px] bg-aged-brass/30 mb-3 group-hover:w-20 transition-all" />
 
         {/* Next Accolade Progress */}
         {nextAccolade && nextProgress && (

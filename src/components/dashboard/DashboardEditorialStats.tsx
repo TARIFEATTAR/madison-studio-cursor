@@ -61,25 +61,14 @@ export function DashboardEditorialStats({ stats }: DashboardEditorialStatsProps)
 
   return (
     <div className="space-y-5">
-      {/* Header with title and settings */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-serif text-xl md:text-2xl font-light text-ink-black mb-1">
-            Editorial Dashboard
-          </h2>
-          <p className="text-xs text-charcoal/60 italic">
-            Your weekly progress
-          </p>
-        </div>
-        <Button
-          onClick={() => navigate('/settings?tab=goals')}
-          variant="outline"
-          size="sm"
-          className="border-charcoal/20 text-charcoal hover:bg-vellum-cream gap-1.5 text-[10px]"
-        >
-          <Settings className="w-3 h-3" />
-          <span className="hidden sm:inline">Adjust</span>
-        </Button>
+      {/* Header with title */}
+      <div>
+        <h2 className="font-serif text-xl md:text-2xl font-light text-ink-black mb-1">
+          Editorial Goals
+        </h2>
+        <p className="text-xs text-charcoal/60 italic">
+          Your weekly progress
+        </p>
       </div>
 
 
