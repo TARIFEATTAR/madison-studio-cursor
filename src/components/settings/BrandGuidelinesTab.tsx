@@ -10,6 +10,7 @@ import { useOnboarding } from "@/hooks/useOnboarding";
 import { IndustrySelector } from "./IndustrySelector";
 import { BrandKnowledgeCenter } from "@/components/onboarding/BrandKnowledgeCenter";
 import { BrandDocumentStatus } from "./BrandDocumentStatus";
+import { BrandKnowledgeManager } from "./BrandKnowledgeManager";
 import { downloadWorksheet } from "@/utils/worksheetGenerator";
 import { FileText, Download } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -147,6 +148,14 @@ export function BrandGuidelinesTab() {
   return (
     <div className="space-y-8">
       <IndustrySelector />
+
+      {/* Brand Knowledge Manager - New Section */}
+      {currentOrganizationId && (
+        <>
+          <BrandKnowledgeManager />
+          <Separator className="my-8" />
+        </>
+      )}
 
       {/* Content Brief Worksheets */}
       <Card className="bg-paper-light border-cream-dark">
