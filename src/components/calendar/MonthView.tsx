@@ -62,7 +62,7 @@ export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick
       </div>
 
       {/* Calendar grid */}
-      <div className={cn("grid grid-cols-7", isMobile ? "[&>*]:min-h-[80px]" : "[&>*]:min-h-[160px]")}>
+      <div className={cn("grid grid-cols-7", isMobile ? "[&>*]:min-h-[100px]" : "[&>*]:min-h-[160px]")}>
         {days.map((day, idx) => {
           const dayId = format(day, "yyyy-MM-dd");
           const dayItems = getItemsForDay(dayId);

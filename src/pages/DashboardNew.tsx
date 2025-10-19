@@ -12,25 +12,20 @@ import { StreakTracker } from "@/components/dashboard/StreakTracker";
 import { DashboardTourModal } from "@/components/dashboard/DashboardTourModal";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function DashboardNew() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
+  const { userName } = useUserProfile();
   const [showEditorialBanner, setShowEditorialBanner] = useState(true);
   const [organizationName, setOrganizationName] = useState<string>("");
-  const [userName, setUserName] = useState<string>("");
   const [longLoad, setLongLoad] = useState(false);
 
-  // Fetch organization name and user name
+  // Fetch organization name
   useEffect(() => {
-    // Get user name from localStorage
-    const storedName = localStorage.getItem('madison-user-name');
-    if (storedName) {
-      setUserName(storedName);
-    }
-
     // Fetch organization name
     if (user) {
       supabase
