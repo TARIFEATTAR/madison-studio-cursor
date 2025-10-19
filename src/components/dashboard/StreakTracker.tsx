@@ -8,9 +8,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useBrandColor } from "@/hooks/useBrandColor";
 
 export function StreakTracker() {
   const { data: streakData } = useStreakCalculation();
+  const { brandColor } = useBrandColor();
 
   return (
     <TooltipProvider>
@@ -18,7 +20,10 @@ export function StreakTracker() {
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5">
-            <Flame className="w-4 h-4 text-aged-brass" />
+            <Flame 
+              className="w-4 h-4" 
+              style={{ color: (streakData?.currentStreak || 0) > 0 ? brandColor : 'hsl(var(--aged-brass))' }}
+            />
             <h3 className="font-serif text-xs font-medium">Publishing Streak</h3>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -67,7 +72,10 @@ export function StreakTracker() {
       {/* Horizontal Layout: Number on left, details on right */}
       <div className="flex items-center justify-between mb-3">
         <div>
-          <div className="font-serif text-4xl font-light text-aged-brass leading-none">
+          <div 
+            className="font-serif text-4xl font-light leading-none"
+            style={{ color: (streakData?.currentStreak || 0) > 0 ? brandColor : 'hsl(var(--aged-brass))' }}
+          >
             {streakData?.currentStreak || 0}
           </div>
           <div className="text-[9px] uppercase tracking-wider text-charcoal/60">
@@ -102,10 +110,12 @@ export function StreakTracker() {
                 >
                   <div
                     className={`w-6 h-6 rounded-full border ${
-                      day.hasActivity
-                        ? 'bg-aged-brass border-aged-brass'
-                        : 'border-charcoal/20'
+                      day.hasActivity ? '' : 'border-charcoal/20'
                     }`}
+                    style={day.hasActivity ? { 
+                      backgroundColor: brandColor, 
+                      borderColor: brandColor 
+                    } : {}}
                   />
                   <div className="text-[8px] text-charcoal/50 mt-0.5">
                     {dayName}

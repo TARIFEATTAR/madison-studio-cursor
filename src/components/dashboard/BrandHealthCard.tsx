@@ -2,10 +2,12 @@ import { Shield, AlertCircle, CheckCircle2, TrendingUp, Sparkles } from "lucide-
 import { Button } from "@/components/ui/button";
 import { useBrandHealth } from "@/hooks/useBrandHealth";
 import { useNavigate } from "react-router-dom";
+import { useBrandColor } from "@/hooks/useBrandColor";
 
 export function BrandHealthCard() {
   const { brandHealth, isLoading, analyzeBrandHealth, isAnalyzing } = useBrandHealth();
   const navigate = useNavigate();
+  const { brandColor } = useBrandColor();
 
   if (isLoading) {
     return (
@@ -43,7 +45,8 @@ export function BrandHealthCard() {
   }
 
   const score = brandHealth.completeness_score;
-  const scoreColor = score >= 90 ? "text-emerald-600" : score >= 70 ? "text-aged-brass" : "text-red-600";
+  const scoreColor = score >= 90 ? "text-emerald-600" : score >= 70 ? "" : "text-red-600";
+  const scoreStyle = score >= 70 && score < 90 ? { color: brandColor } : {};
   const highPriorityRecs = brandHealth.recommendations.filter(r => r.priority === 'high');
 
   return (
@@ -73,7 +76,10 @@ export function BrandHealthCard() {
       {/* Score */}
       <div className="mb-4">
         <div className="flex items-end gap-2 mb-1">
-          <p className={`font-serif text-5xl font-light ${scoreColor} leading-none`}>
+          <p 
+            className={`font-serif text-5xl font-light ${scoreColor} leading-none`}
+            style={scoreStyle}
+          >
             {score}%
           </p>
           {score >= 90 && (
@@ -88,8 +94,11 @@ export function BrandHealthCard() {
         </p>
         <div className="w-full h-1.5 bg-charcoal/10 mt-1.5 overflow-hidden">
           <div
-            className={`h-full transition-all ${score >= 90 ? 'bg-emerald-500' : score >= 70 ? 'bg-aged-brass' : 'bg-red-500'}`}
-            style={{ width: `${score}%` }}
+            className={`h-full transition-all ${score >= 90 ? 'bg-emerald-500' : score < 70 ? 'bg-red-500' : ''}`}
+            style={{ 
+              width: `${score}%`,
+              backgroundColor: score >= 70 && score < 90 ? brandColor : undefined
+            }}
           />
         </div>
       </div>

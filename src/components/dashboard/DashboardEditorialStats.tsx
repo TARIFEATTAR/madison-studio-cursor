@@ -2,6 +2,7 @@ import { TrendingUp, CheckCircle, Target, Calendar, Sparkles, Settings } from "l
 import { useGoals } from "@/hooks/useGoals";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useBrandColor } from "@/hooks/useBrandColor";
 
 interface DashboardStats {
   piecesCreatedThisWeek: number;
@@ -18,6 +19,7 @@ interface DashboardEditorialStatsProps {
 export function DashboardEditorialStats({ stats }: DashboardEditorialStatsProps) {
   const navigate = useNavigate();
   const { data: goals, isLoading } = useGoals();
+  const { brandColor } = useBrandColor();
   
   const creationGoal = goals?.weekly_creation || 10;
   const publishGoal = goals?.weekly_publishing || 5;
@@ -47,7 +49,8 @@ export function DashboardEditorialStats({ stats }: DashboardEditorialStatsProps)
       icon: Target,
       microCopy: stats?.onBrandScore >= 90 ? "Perfectly on-brand" : "Maintain consistency",
       isScore: true,
-      scoreColor: stats?.onBrandScore >= 90 ? "text-emerald-600" : stats?.onBrandScore >= 75 ? "text-aged-brass" : "text-charcoal",
+      scoreColor: stats?.onBrandScore >= 90 ? "text-emerald-600" : stats?.onBrandScore >= 75 ? "" : "text-charcoal",
+      scoreStyle: stats?.onBrandScore >= 75 && stats?.onBrandScore < 90 ? { color: brandColor } : {},
     },
     {
       value: stats?.piecesScheduled || 0,
@@ -77,19 +80,53 @@ export function DashboardEditorialStats({ stats }: DashboardEditorialStatsProps)
         {statCards.map((card, index) => (
         <div
           key={index}
-          className="group relative bg-parchment-white border border-charcoal/10 p-4 hover:border-aged-brass/40 transition-all hover:shadow-md"
+          className="group relative bg-parchment-white border border-charcoal/10 p-4 transition-all hover:shadow-md"
+          style={{
+            borderColor: 'hsl(var(--charcoal) / 0.1)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = `${brandColor}66`;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = 'hsl(var(--charcoal) / 0.1)';
+          }}
         >
           {/* Decorative corner accent */}
-          <div className="absolute top-0 right-0 w-10 h-10 border-t border-r border-aged-brass/0 group-hover:border-aged-brass/40 transition-all" />
+          <div 
+            className="absolute top-0 right-0 w-10 h-10 border-t border-r transition-all"
+            style={{
+              borderColor: 'transparent',
+            }}
+            onMouseEnter={(e) => {
+              const parent = e.currentTarget.parentElement;
+              if (parent?.matches(':hover')) {
+                e.currentTarget.style.borderColor = `${brandColor}66`;
+              }
+            }}
+          />
           
           {/* Icon as decorative element */}
           <div className="mb-3">
-            <card.icon className="w-5 h-5 text-charcoal/30 group-hover:text-aged-brass transition-colors" />
+            <card.icon 
+              className="w-5 h-5 text-charcoal/30 transition-colors"
+              style={{
+                color: 'hsl(var(--charcoal) / 0.3)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = brandColor;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'hsl(var(--charcoal) / 0.3)';
+              }}
+            />
           </div>
 
           {/* Large serif number */}
           <div className="mb-2">
-            <p className={`font-serif text-3xl md:text-4xl font-light ${card.isScore ? card.scoreColor : 'text-ink-black'} leading-none mb-1.5`}>
+            <p 
+              className={`font-serif text-3xl md:text-4xl font-light ${card.isScore ? card.scoreColor : 'text-ink-black'} leading-none mb-1.5`}
+              style={(card as any).scoreStyle}
+            >
               {card.value}
             </p>
             {card.goalMet && (
@@ -111,7 +148,16 @@ export function DashboardEditorialStats({ stats }: DashboardEditorialStatsProps)
           </div>
 
           {/* Brass accent line */}
-          <div className="w-10 h-[1px] bg-aged-brass/30 mb-1.5 group-hover:w-16 transition-all" />
+          <div 
+            className="w-10 h-[1px] mb-1.5 transition-all"
+            style={{ backgroundColor: `${brandColor}4D` }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.width = '4rem';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.width = '2.5rem';
+            }}
+          />
 
           {/* Editorial micro-copy */}
           <p className="text-[10px] italic text-charcoal/60 font-serif">

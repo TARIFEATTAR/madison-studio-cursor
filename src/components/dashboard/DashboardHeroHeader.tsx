@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashboardContextPanel } from "./DashboardContextPanel";
 import madisonInsignia from "@/assets/madison-insignia.png";
+import { useBrandColor } from "@/hooks/useBrandColor";
 
 interface DashboardHeroHeaderProps {
   organizationName: string;
@@ -15,6 +16,7 @@ interface DashboardHeroHeaderProps {
 
 export function DashboardHeroHeader({ organizationName, userName, streakDays, showMadisonBanner = true, onDismissMadison }: DashboardHeroHeaderProps) {
   const navigate = useNavigate();
+  const { brandColor } = useBrandColor();
   const [greeting, setGreeting] = useState("Good Morning");
   const [currentDate, setCurrentDate] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -56,7 +58,10 @@ export function DashboardHeroHeader({ organizationName, userName, streakDays, sh
               </h2>
             </div>
             
-            <div className="w-16 md:w-24 h-[1px] bg-aged-brass my-4 md:my-6" />
+            <div 
+              className="w-16 md:w-24 h-[1px] my-4 md:my-6" 
+              style={{ backgroundColor: brandColor }}
+            />
             
             <p className="font-serif text-lg md:text-xl text-charcoal/70 italic font-light max-w-xl mb-4">
               Your Editorial Studio
@@ -109,7 +114,12 @@ export function DashboardHeroHeader({ organizationName, userName, streakDays, sh
       </div>
 
       {/* Bottom brass line accent */}
-      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-aged-brass to-transparent opacity-40" />
+      <div 
+        className="absolute bottom-0 left-0 right-0 h-[2px] opacity-40"
+        style={{ 
+          background: `linear-gradient(to right, transparent, ${brandColor}, transparent)`
+        }}
+      />
     </div>
   );
 }
