@@ -33,36 +33,55 @@ export function CategoryProgress({ gapAnalysis }: CategoryProgressProps) {
     return isMissing ? "missing" : "incomplete";
   };
 
+  // Create prioritized list: filter incomplete/missing, sort by severity then importance
+  const categoriesNeedingAttention = CATEGORIES
+    .map(category => ({
+      ...category,
+      status: getCategoryStatus(category),
+    }))
+    .filter(c => c.status !== "complete") // Only show items needing work
+    .sort((a, b) => {
+      // First sort by status severity (missing before incomplete)
+      const statusOrder = { missing: 0, incomplete: 1, complete: 2 };
+      const statusDiff = statusOrder[a.status] - statusOrder[b.status];
+      if (statusDiff !== 0) return statusDiff;
+      
+      // Then by category importance (already in correct order in CATEGORIES array)
+      return 0;
+    });
+
   return (
     <div className="space-y-4">
-      {CATEGORIES.map((category) => {
-        const status = getCategoryStatus(category);
+      {categoriesNeedingAttention.map((category, index) => {
+        const priorityNumber = index + 1;
         
         return (
           <div key={category.id} className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {status === "complete" && (
-                <CheckCircle2 className="w-4 h-4 text-forest-ink flex-shrink-0" />
-              )}
-              {status === "incomplete" && (
-                <AlertCircle className="w-4 h-4 text-aged-brass flex-shrink-0" />
-              )}
-              {status === "missing" && (
+              {/* Priority Number Badge */}
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-aged-brass/10 border border-aged-brass/30 flex items-center justify-center">
+                <span className="text-xs font-semibold text-aged-brass">
+                  {priorityNumber}
+                </span>
+              </div>
+              
+              {/* Status Icon */}
+              {category.status === "missing" && (
                 <Circle className="w-4 h-4 text-red-600 flex-shrink-0" />
               )}
+              {category.status === "incomplete" && (
+                <AlertCircle className="w-4 h-4 text-aged-brass flex-shrink-0" />
+              )}
+              
               <span className="text-sm text-charcoal/80">{category.label}</span>
             </div>
-            <div className="flex items-center gap-2">
-              {status === "complete" && (
-                <span className="text-xs text-forest-ink font-medium">Complete</span>
-              )}
-              {status === "incomplete" && (
-                <span className="text-xs text-aged-brass font-medium">Incomplete</span>
-              )}
-              {status === "missing" && (
-                <span className="text-xs text-red-600 font-medium">Missing</span>
-              )}
-            </div>
+            
+            {/* Status text on right */}
+            <span className={`text-xs font-medium ${
+              category.status === "missing" ? "text-red-600" : "text-aged-brass"
+            }`}>
+              {category.status === "missing" ? "Missing" : "Incomplete"}
+            </span>
           </div>
         );
       })}
