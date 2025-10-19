@@ -96,11 +96,14 @@ export default function DashboardNew() {
       />
 
       <div className="max-w-7xl mx-auto px-6 pb-8">
-        {/* Brand Health Card - Top Priority */}
-        <div className="mb-8">
+        {/* Brand Health + Recent Activity - Side by Side */}
+        <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
           <BrandHealthCard />
+          <div className="bg-parchment-white border border-charcoal/10 p-5">
+            <h3 className="font-serif text-xl text-ink-black mb-4">Recent Activity</h3>
+            <DashboardEditorialTimeline />
+          </div>
         </div>
-
 
         {/* Workflow Map */}
         <div className="mb-12">
@@ -133,20 +136,6 @@ export default function DashboardNew() {
           </div>
         </div>
 
-        {/* Editorial Timeline - Full width */}
-        <div className="mb-12">
-          <div className="bg-parchment-white border border-charcoal/10 p-8">
-            <div className="mb-8 pb-4 border-b border-charcoal/10">
-              <h2 className="font-serif text-2xl font-medium text-ink-black mb-1">
-                Recent Activity
-              </h2>
-              <p className="text-xs text-charcoal/60 italic">
-                Your creative timeline
-              </p>
-            </div>
-            <DashboardEditorialTimeline />
-          </div>
-        </div>
 
         {/* Upcoming Schedule - Full width on mobile, conditional on desktop */}
         <div className="lg:hidden bg-parchment-white border border-charcoal/10 p-6 md:p-8">

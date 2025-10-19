@@ -36,17 +36,17 @@ export function DashboardEditorialTimeline() {
 
   if (recentActivity.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="w-20 h-20 mx-auto mb-6 bg-vellum-cream/50 border border-charcoal/10 flex items-center justify-center">
-          <FileText className="w-10 h-10 text-charcoal/20" />
+      <div className="text-center py-8">
+        <div className="w-16 h-16 mx-auto mb-4 bg-vellum-cream/50 border border-charcoal/10 flex items-center justify-center">
+          <FileText className="w-8 h-8 text-charcoal/20" />
         </div>
-        <h3 className="font-serif text-xl font-medium text-ink-black mb-2">No Activity Yet</h3>
-        <p className="text-sm text-charcoal/60 mb-6 font-light">
+        <h3 className="font-serif text-lg font-medium text-ink-black mb-1">No Activity Yet</h3>
+        <p className="text-xs text-charcoal/60 mb-4 font-light">
           Your creative journey begins here
         </p>
         <button
           onClick={() => navigate("/create")}
-          className="px-6 py-3 bg-ink-black text-parchment-white hover:bg-charcoal transition-colors font-sans text-sm uppercase tracking-wider"
+          className="px-4 py-2 bg-ink-black text-parchment-white hover:bg-charcoal transition-colors font-sans text-xs uppercase tracking-wider"
         >
           Start Creating
         </button>
@@ -57,9 +57,9 @@ export function DashboardEditorialTimeline() {
   return (
     <div className="relative">
       {/* Vertical timeline line */}
-      <div className="absolute left-6 top-0 bottom-0 w-[2px] bg-gradient-to-b from-aged-brass/40 via-aged-brass/20 to-transparent" />
+      <div className="absolute left-4 top-0 bottom-0 w-[1px] bg-gradient-to-b from-aged-brass/40 via-aged-brass/20 to-transparent" />
 
-      <div className="space-y-6">
+      <div className="space-y-4">
         {recentActivity.map((activity, index) => {
           const Icon = getIconForType(activity.type);
           const statusInfo = getStatusInfo(activity.action);
@@ -68,47 +68,47 @@ export function DashboardEditorialTimeline() {
           return (
             <div key={activity.id} className="relative">
               {/* Timeline node */}
-              <div className="absolute left-6 top-8 -translate-x-1/2 w-3 h-3 rounded-full bg-aged-brass border-2 border-parchment-white z-10" />
+              <div className="absolute left-4 top-5 -translate-x-1/2 w-2 h-2 rounded-full bg-aged-brass border-2 border-parchment-white z-10" />
 
               {/* Timeline card */}
               <div 
                 onClick={() => handleContentClick(activity)}
-                className="ml-16 group cursor-pointer"
+                className="ml-10 group cursor-pointer"
               >
-                <div className="bg-parchment-white border border-charcoal/10 p-6 hover:border-aged-brass/40 hover:shadow-lg transition-all relative">
+                <div className="bg-parchment-white border border-charcoal/10 p-3 hover:border-aged-brass/40 hover:shadow-md transition-all relative">
                   {/* Time marker */}
-                  <div className="absolute -left-14 top-8 text-xs text-charcoal/50 font-sans w-12 text-right">
+                  <div className="absolute -left-9 top-5 text-[10px] text-charcoal/50 font-sans w-8 text-right">
                     {activity.time}
                   </div>
 
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-3">
                     {/* Icon */}
-                    <div className="w-12 h-12 bg-vellum-cream border border-charcoal/10 flex items-center justify-center shrink-0 group-hover:border-aged-brass/40 transition-colors">
-                      <Icon className="w-6 h-6 text-charcoal group-hover:text-aged-brass transition-colors" />
+                    <div className="w-9 h-9 bg-vellum-cream border border-charcoal/10 flex items-center justify-center shrink-0 group-hover:border-aged-brass/40 transition-colors">
+                      <Icon className="w-4 h-4 text-charcoal group-hover:text-aged-brass transition-colors" />
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-4 mb-2">
-                        <h4 className="font-serif text-lg font-medium text-ink-black group-hover:text-aged-brass transition-colors">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h4 className="font-serif text-sm font-medium text-ink-black group-hover:text-aged-brass transition-colors leading-tight">
                           {activity.title}
                         </h4>
                         
                         {/* Status badge */}
-                        <div className={`inline-flex items-center gap-1 px-3 py-1 shrink-0 ${statusInfo.bgColor} border ${statusInfo.borderColor}`}>
-                          <StatusIcon className={`w-3 h-3 ${statusInfo.color}`} />
-                          <span className={`text-[10px] font-sans uppercase tracking-wider ${statusInfo.color}`}>
+                        <div className={`inline-flex items-center gap-0.5 px-2 py-0.5 shrink-0 ${statusInfo.bgColor} border ${statusInfo.borderColor}`}>
+                          <StatusIcon className={`w-2.5 h-2.5 ${statusInfo.color}`} />
+                          <span className={`text-[9px] font-sans uppercase tracking-wider ${statusInfo.color}`}>
                             {statusInfo.text}
                           </span>
                         </div>
                       </div>
 
-                      <p className="text-xs uppercase tracking-wider text-charcoal/60 mb-3 font-sans">
+                      <p className="text-[10px] uppercase tracking-wider text-charcoal/60 mb-1.5 font-sans">
                         {activity.type.replace(/_/g, ' ')}
                       </p>
 
                       {/* Brass accent line on hover */}
-                      <div className="w-0 group-hover:w-16 h-[1px] bg-aged-brass transition-all duration-300" />
+                      <div className="w-0 group-hover:w-12 h-[1px] bg-aged-brass transition-all duration-300" />
                     </div>
                   </div>
                 </div>
@@ -119,10 +119,10 @@ export function DashboardEditorialTimeline() {
       </div>
 
       {recentActivity.length >= 5 && (
-        <div className="mt-8 text-center">
+        <div className="mt-4 text-center">
           <button
             onClick={() => navigate("/library")}
-            className="font-sans text-xs uppercase tracking-wider text-charcoal hover:text-aged-brass transition-colors inline-flex items-center gap-2"
+            className="font-sans text-[10px] uppercase tracking-wider text-charcoal hover:text-aged-brass transition-colors inline-flex items-center gap-1.5"
           >
             View Complete Timeline
             <span>→</span>
