@@ -34,7 +34,7 @@ export function DashboardHeroHeader({ organizationName, streakDays, showMadisonB
 
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-[#FAF8F3] to-[#F0EDE5] border-b border-charcoal/10 mb-8 md:mb-12">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-16">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-8">
         <div className="flex items-start justify-between gap-4 md:gap-8">
           {/* Left: Editorial Masthead */}
           <div className="flex-1">
