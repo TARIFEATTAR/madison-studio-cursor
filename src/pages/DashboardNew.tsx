@@ -102,31 +102,31 @@ export default function DashboardNew() {
         {showEditorialBanner && (
           <div className="mb-8">
             <div className="bg-gradient-to-r from-aged-brass/5 to-warm-cream/20 border border-aged-brass/20 px-4 md:px-6 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
                 <img 
                   src={madisonInsignia} 
                   alt="Madison" 
-                  className="w-10 h-10 object-contain opacity-80 flex-shrink-0"
+                  className="w-8 h-8 md:w-10 md:h-10 object-contain opacity-80 flex-shrink-0"
                 />
-                <div>
-                  <p className="font-serif text-base md:text-lg text-ink-black">
+                <div className="min-w-0">
+                  <p className="font-serif text-sm md:text-base lg:text-lg text-ink-black truncate">
                     Madison, Your Editorial Director
                   </p>
-                  <p className="text-xs text-charcoal/60 hidden sm:block">
-                    AI-powered guidance for content strategy & brand alignment
+                  <p className="text-xs text-charcoal/60">
+                    AI-powered content guidance
                   </p>
                 </div>
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <Button 
                   onClick={() => navigate("/meet-madison")}
                   variant="ghost"
                   size="sm"
                   className="text-charcoal/70 hover:text-aged-brass gap-1 text-xs"
                 >
-                  <span className="hidden sm:inline">Learn More</span>
-                  <span className="sm:hidden">Info</span>
+                  <span className="hidden md:inline">Learn More</span>
+                  <span className="md:hidden">Info</span>
                 </Button>
                 <button
                   onClick={() => setShowEditorialBanner(false)}
