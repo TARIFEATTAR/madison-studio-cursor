@@ -13,24 +13,24 @@ export function StreakTracker() {
 
   return (
     <TooltipProvider>
-      <div className={`${getPaperTexture('cardPaper')} border border-charcoal/10 p-8`}>
+      <div className={`${getPaperTexture('cardPaper')} border border-charcoal/10 p-5`}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <Flame className="w-6 h-6 text-aged-brass" />
-            <h3 className="font-serif text-xl font-medium text-ink-black">
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <Flame className="w-5 h-5 text-aged-brass" />
+            <h3 className="font-serif text-base font-medium text-ink-black">
               Publishing Streak
             </h3>
             <Tooltip>
               <TooltipTrigger asChild>
                 <button className="text-charcoal/40 hover:text-aged-brass transition-colors">
-                  <HelpCircle className="w-4 h-4" />
+                  <HelpCircle className="w-3.5 h-3.5" />
                 </button>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs bg-ink-black text-parchment-white border-charcoal/20">
                 <p className="text-xs leading-relaxed">
                   <strong>How streaks work:</strong> Create, publish, or schedule at least one piece per week to maintain your streak. 
-                  You have a 3-day grace period after each week to keep momentum going.
+                  You have a 3-day grace period after each week.
                 </p>
               </TooltipContent>
             </Tooltip>
@@ -38,14 +38,13 @@ export function StreakTracker() {
           {streakData?.gracePeriodActive && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="text-xs bg-aged-brass/10 border border-aged-brass/20 px-3 py-1 cursor-help">
-                  <span className="text-aged-brass font-medium">Grace Period Active</span>
+                <div className="text-[10px] bg-aged-brass/10 border border-aged-brass/20 px-2 py-0.5 cursor-help">
+                  <span className="text-aged-brass font-medium">Grace Period</span>
                 </div>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs bg-ink-black text-parchment-white border-charcoal/20">
                 <p className="text-xs leading-relaxed">
-                  You have 3 days after the week ends to create content and keep your streak alive. 
-                  Don't break the momentum!
+                  You have 3 days after the week ends to create content and keep your streak alive.
                 </p>
               </TooltipContent>
             </Tooltip>
@@ -53,15 +52,15 @@ export function StreakTracker() {
         </div>
 
       {/* Current Streak - Large Display */}
-      <div className="text-center mb-8">
-        <div className="font-serif text-7xl font-light text-aged-brass mb-2">
+      <div className="text-center mb-5">
+        <div className="font-serif text-6xl font-light text-aged-brass mb-1">
           {streakData?.currentStreak || 0}
         </div>
-        <div className="text-sm uppercase tracking-wider text-charcoal/60">
+        <div className="text-xs uppercase tracking-wider text-charcoal/60">
           {streakData?.currentStreak === 1 ? 'Day' : 'Days'} Active
         </div>
-        <p className="text-xs italic text-charcoal/50 mt-2">
-          Keep it alive—create, publish, or schedule to maintain momentum
+        <p className="text-[10px] italic text-charcoal/50 mt-1.5">
+          Keep creating to maintain momentum
         </p>
       </div>
 

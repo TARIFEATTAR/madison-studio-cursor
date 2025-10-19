@@ -60,72 +60,72 @@ export function DashboardEditorialStats({ stats }: DashboardEditorialStatsProps)
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       {/* Header with title and settings */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-serif text-2xl md:text-3xl font-light text-ink-black mb-2">
+          <h2 className="font-serif text-xl md:text-2xl font-light text-ink-black mb-1">
             Editorial Dashboard
           </h2>
-          <p className="text-sm text-charcoal/60 italic">
-            Your weekly progress and content pipeline
+          <p className="text-xs text-charcoal/60 italic">
+            Your weekly progress
           </p>
         </div>
         <Button
           onClick={() => navigate('/settings?tab=goals')}
           variant="outline"
           size="sm"
-          className="border-charcoal/20 text-charcoal hover:bg-vellum-cream gap-2 text-xs"
+          className="border-charcoal/20 text-charcoal hover:bg-vellum-cream gap-1.5 text-[10px]"
         >
           <Settings className="w-3 h-3" />
-          <span className="hidden sm:inline">Adjust Targets</span>
+          <span className="hidden sm:inline">Adjust</span>
         </Button>
       </div>
 
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {statCards.map((card, index) => (
         <div
           key={index}
-          className="group relative bg-parchment-white border border-charcoal/10 p-6 md:p-8 hover:border-aged-brass/40 transition-all hover:shadow-lg"
+          className="group relative bg-parchment-white border border-charcoal/10 p-4 hover:border-aged-brass/40 transition-all hover:shadow-md"
         >
           {/* Decorative corner accent */}
-          <div className="absolute top-0 right-0 w-12 h-12 border-t-2 border-r-2 border-aged-brass/0 group-hover:border-aged-brass/40 transition-all" />
+          <div className="absolute top-0 right-0 w-10 h-10 border-t border-r border-aged-brass/0 group-hover:border-aged-brass/40 transition-all" />
           
           {/* Icon as decorative element */}
-          <div className="mb-4 md:mb-6">
-            <card.icon className="w-6 h-6 md:w-8 md:h-8 text-charcoal/30 group-hover:text-aged-brass transition-colors" />
+          <div className="mb-3">
+            <card.icon className="w-5 h-5 text-charcoal/30 group-hover:text-aged-brass transition-colors" />
           </div>
 
           {/* Large serif number */}
-          <div className="mb-3 md:mb-4">
-            <p className={`font-serif text-4xl md:text-6xl font-light ${card.isScore ? card.scoreColor : 'text-ink-black'} leading-none mb-2`}>
+          <div className="mb-2">
+            <p className={`font-serif text-3xl md:text-4xl font-light ${card.isScore ? card.scoreColor : 'text-ink-black'} leading-none mb-1.5`}>
               {card.value}
             </p>
             {card.goalMet && (
-              <div className="inline-flex items-center gap-1 bg-emerald-500/10 px-2 py-1 border border-emerald-200">
-                <Sparkles className="w-3 h-3 text-emerald-600" />
-                <span className="text-[10px] font-sans uppercase tracking-wider text-emerald-700">Goal Met</span>
+              <div className="inline-flex items-center gap-0.5 bg-emerald-500/10 px-1.5 py-0.5 border border-emerald-200">
+                <Sparkles className="w-2.5 h-2.5 text-emerald-600" />
+                <span className="text-[9px] font-sans uppercase tracking-wider text-emerald-700">Goal Met</span>
               </div>
             )}
           </div>
 
           {/* Label and sublabel */}
-          <div className="mb-2 md:mb-3">
-            <p className="text-xs uppercase tracking-[0.15em] font-sans text-charcoal/80 mb-1">
+          <div className="mb-2">
+            <p className="text-[10px] uppercase tracking-[0.15em] font-sans text-charcoal/80 mb-0.5">
               {card.label}
             </p>
-            <p className="text-xs text-charcoal/50 font-light">
+            <p className="text-[10px] text-charcoal/50 font-light">
               {card.sublabel}
             </p>
           </div>
 
           {/* Brass accent line */}
-          <div className="w-12 h-[1px] bg-aged-brass/30 mb-2 md:mb-3 group-hover:w-24 transition-all" />
+          <div className="w-10 h-[1px] bg-aged-brass/30 mb-1.5 group-hover:w-16 transition-all" />
 
           {/* Editorial micro-copy */}
-          <p className="text-xs italic text-charcoal/60 font-serif">
+          <p className="text-[10px] italic text-charcoal/60 font-serif">
             {card.microCopy}
           </p>
           </div>

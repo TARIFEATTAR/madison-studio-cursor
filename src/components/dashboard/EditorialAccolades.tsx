@@ -122,18 +122,18 @@ export function EditorialAccolades() {
   return (
     <TooltipProvider>
       <div 
-        className={`${getPaperTexture('cardPaper')} border border-charcoal/10 p-8 cursor-pointer hover:border-aged-brass/40 transition-all group`}
+        className={`${getPaperTexture('cardPaper')} border border-charcoal/10 p-5 cursor-pointer hover:border-aged-brass/40 transition-all group`}
         onClick={() => setShowModal(true)}
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-aged-brass/10 border border-aged-brass/20 flex items-center justify-center">
-              <Award className="w-5 h-5 text-aged-brass" />
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-aged-brass/10 border border-aged-brass/20 flex items-center justify-center">
+              <Award className="w-4 h-4 text-aged-brass" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <div className="text-[10px] uppercase tracking-wider text-charcoal/50">
+              <div className="flex items-center gap-1.5">
+                <div className="text-[9px] uppercase tracking-wider text-charcoal/50">
                   Editorial Accolade
                 </div>
                 <Tooltip>
@@ -148,44 +148,44 @@ export function EditorialAccolades() {
                   <TooltipContent className="max-w-xs bg-ink-black text-parchment-white border-charcoal/20">
                     <p className="text-xs leading-relaxed">
                       <strong>Editorial Accolades:</strong> Earn badges as you progress from Novice to Literary Master. 
-                      Each accolade recognizes your growing expertise and content library. Click to see all achievements!
+                      Each accolade recognizes your growing expertise and content library.
                     </p>
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <h3 className="font-serif text-lg font-medium text-ink-black">
+              <h3 className="font-serif text-base font-medium text-ink-black">
                 {currentAccolade.title}
               </h3>
             </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-charcoal/30 group-hover:text-aged-brass transition-colors" />
+          <ChevronRight className="w-4 h-4 text-charcoal/30 group-hover:text-aged-brass transition-colors" />
         </div>
 
         {/* Current Accolade Description */}
-        <p className="text-xs italic text-charcoal/60 mb-2">
+        <p className="text-xs italic text-charcoal/60 mb-1.5">
           {currentAccolade.description}
         </p>
         
         {/* Current Progress Display */}
-        <p className="text-sm font-medium text-aged-brass mb-6">
+        <p className="text-sm font-medium text-aged-brass mb-4">
           {currentAccolade.checkProgress(stats).current} pieces created
         </p>
 
         {/* Brass accent line */}
-        <div className="w-16 h-[1px] bg-aged-brass/30 mb-6 group-hover:w-24 transition-all" />
+        <div className="w-12 h-[1px] bg-aged-brass/30 mb-4 group-hover:w-20 transition-all" />
 
         {/* Next Accolade Progress */}
         {nextAccolade && nextProgress && (
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <div className="text-xs uppercase tracking-wider text-charcoal/60">
+              <div className="text-[10px] uppercase tracking-wider text-charcoal/60">
                 Progress to {nextAccolade.title}
               </div>
               <div className="text-xs font-medium text-ink-black">
                 {nextProgress.current} / {nextProgress.target}
               </div>
             </div>
-            <div className="w-full h-1.5 bg-charcoal/10 overflow-hidden">
+            <div className="w-full h-1 bg-charcoal/10 overflow-hidden">
               <div 
                 className="h-full bg-aged-brass transition-all duration-500"
                 style={{ width: `${progressPercent}%` }}
@@ -196,11 +196,11 @@ export function EditorialAccolades() {
 
         {/* All Unlocked */}
         {!nextAccolade && (
-          <div className="text-center py-4">
+          <div className="text-center py-3">
             <p className="text-xs font-medium text-aged-brass">
               All accolades unlocked!
             </p>
-            <p className="text-xs italic text-charcoal/60 mt-1">
+            <p className="text-[10px] italic text-charcoal/60 mt-0.5">
               You've mastered the editorial bureau
             </p>
           </div>
