@@ -48,17 +48,6 @@ export function DashboardHeroHeader({ organizationName, streakDays }: DashboardH
             <p className="font-serif text-lg md:text-xl text-charcoal/70 italic font-light max-w-xl">
               Your Editorial Studio
             </p>
-
-            {streakDays && streakDays > 0 && (
-              <div className="mt-4 md:mt-6 w-full md:w-auto inline-flex items-center gap-3 px-4 py-2 bg-parchment-white/80 border border-aged-brass/20">
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-charcoal/60 font-sans">Active Streak</p>
-                  <p className="font-serif text-lg font-semibold text-aged-brass">
-                    {streakDays} {streakDays === 1 ? 'Day' : 'Days'}
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Right: Editorial Context Panel - Hidden on mobile */}

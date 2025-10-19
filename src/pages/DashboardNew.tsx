@@ -98,47 +98,48 @@ export default function DashboardNew() {
       />
 
       <div className="max-w-7xl mx-auto px-6 pb-8">
-        {/* Editorial Director Banner - Compact Header */}
+        {/* Madison Banner - Compact, right under hero */}
         {showEditorialBanner && (
-          <div className="mb-8">
-            <div className="bg-gradient-to-r from-aged-brass/5 to-warm-cream/20 border border-aged-brass/20 px-4 md:px-6 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="mb-8 max-w-md">
+            <div className="bg-gradient-to-r from-aged-brass/5 to-warm-cream/20 border border-aged-brass/20 px-4 py-2.5 flex items-center justify-between">
+              <div className="flex items-center gap-2.5 flex-1 min-w-0">
                 <img 
                   src={madisonInsignia} 
                   alt="Madison" 
-                  className="w-8 h-8 md:w-10 md:h-10 object-contain opacity-80 flex-shrink-0"
+                  className="w-7 h-7 object-contain opacity-80 flex-shrink-0"
                 />
                 <div className="min-w-0">
-                  <p className="font-serif text-sm md:text-base lg:text-lg text-ink-black truncate">
+                  <p className="font-serif text-sm text-ink-black">
                     Madison, Your Editorial Director
-                  </p>
-                  <p className="text-xs text-charcoal/60">
-                    AI-powered content guidance
                   </p>
                 </div>
               </div>
               
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-1 flex-shrink-0">
                 <Button 
                   onClick={() => navigate("/meet-madison")}
                   variant="ghost"
                   size="sm"
-                  className="text-charcoal/70 hover:text-aged-brass gap-1 text-xs"
+                  className="text-charcoal/70 hover:text-aged-brass text-xs h-auto py-1 px-2"
                 >
-                  <span className="hidden md:inline">Learn More</span>
-                  <span className="md:hidden">Info</span>
+                  Learn More
                 </Button>
                 <button
                   onClick={() => setShowEditorialBanner(false)}
                   className="p-1 text-charcoal/40 hover:text-charcoal/80 transition-colors"
-                  aria-label="Dismiss banner"
+                  aria-label="Dismiss"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
           </div>
         )}
+
+        {/* Brand Health Card - Top Priority */}
+        <div className="mb-8">
+          <BrandHealthCard />
+        </div>
 
         {/* Priority Action Card - Clean lines */}
         {showPriorityCard && priorityAction && (
@@ -148,11 +149,6 @@ export default function DashboardNew() {
             </div>
           </div>
         )}
-
-        {/* Brand Health Card - Prominent Position */}
-        <div className="mb-12">
-          <BrandHealthCard />
-        </div>
 
         {/* Workflow Map */}
         <div className="mb-12">
