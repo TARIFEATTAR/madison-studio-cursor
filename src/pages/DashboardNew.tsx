@@ -94,50 +94,43 @@ export default function DashboardNew() {
       />
 
       <div className="max-w-7xl mx-auto px-6 pb-8">
-        {/* Editorial Director Banner - Minimal style */}
+        {/* Editorial Director Banner - Compact Header */}
         {showEditorialBanner && (
-          <div className="mb-12">
-            <div className="bg-parchment-white border border-charcoal/10 p-4 md:p-6 lg:p-8 relative overflow-hidden">
-              <button
-                onClick={() => setShowEditorialBanner(false)}
-                className="absolute top-3 right-3 md:top-4 md:right-4 lg:top-6 lg:right-6 text-charcoal/50 hover:text-charcoal transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-              
-              <div className="flex flex-col sm:flex-row items-start gap-4 md:gap-6 lg:gap-8">
-                <div className="flex-shrink-0">
-                  <img 
-                    src={madisonInsignia} 
-                    alt="Madison" 
-                    className="w-20 h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 object-contain opacity-90"
-                  />
-                </div>
-                
-                <div className="flex-1">
-                  <h3 className="font-serif text-xl md:text-2xl font-medium text-ink-black mb-2 md:mb-3">
-                    Madison, Editorial Director
-                  </h3>
-                  <p className="text-charcoal/70 mb-4 md:mb-6 leading-relaxed font-light text-sm md:text-base">
-                    Your AI editorial director brings Tarife Attar's voice to every piece—
-                    from product descriptions to email campaigns. Let her guide your content creation.
+          <div className="mb-8">
+            <div className="bg-gradient-to-r from-aged-brass/5 to-warm-cream/20 border border-aged-brass/20 px-4 md:px-6 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <img 
+                  src={madisonInsignia} 
+                  alt="Madison" 
+                  className="w-10 h-10 object-contain opacity-80 flex-shrink-0"
+                />
+                <div>
+                  <p className="font-serif text-base md:text-lg text-ink-black">
+                    Madison, Your Editorial Director
                   </p>
-                  <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
-                    <Button 
-                      onClick={() => navigate("/create")}
-                      className="bg-ink-black hover:bg-charcoal text-parchment-white px-4 py-3 md:px-6 md:py-4 lg:px-8 lg:py-6 text-sm uppercase tracking-wider border-0"
-                    >
-                      Create Content
-                    </Button>
-                    <Button 
-                      onClick={() => navigate("/meet-madison")}
-                      variant="outline"
-                      className="border-charcoal/20 text-charcoal hover:bg-vellum-cream px-4 py-3 md:px-6 md:py-4 lg:px-8 lg:py-6 text-sm uppercase tracking-wider"
-                    >
-                      Meet Madison
-                    </Button>
-                  </div>
+                  <p className="text-xs text-charcoal/60 hidden sm:block">
+                    AI-powered guidance for content strategy & brand alignment
+                  </p>
                 </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Button 
+                  onClick={() => navigate("/meet-madison")}
+                  variant="ghost"
+                  size="sm"
+                  className="text-charcoal/70 hover:text-aged-brass gap-1 text-xs"
+                >
+                  <span className="hidden sm:inline">Learn More</span>
+                  <span className="sm:hidden">Info</span>
+                </Button>
+                <button
+                  onClick={() => setShowEditorialBanner(false)}
+                  className="p-1 text-charcoal/40 hover:text-charcoal/80 transition-colors"
+                  aria-label="Dismiss banner"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             </div>
           </div>
@@ -145,38 +138,17 @@ export default function DashboardNew() {
 
         {/* Priority Action Card - Clean lines */}
         {showPriorityCard && priorityAction && (
-          <div className="mb-12">
+          <div className="mb-8">
             <div className="bg-parchment-white border border-charcoal/10 p-8 relative">
-              <button
-                onClick={() => setShowPriorityCard(false)}
-                className="absolute top-6 right-6 text-charcoal/50 hover:text-charcoal transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-              
-              <div className="flex flex-col sm:flex-row items-start gap-6">
-                <div className="flex-shrink-0 w-12 h-12 bg-aged-brass/10 border border-aged-brass/20 flex items-center justify-center">
-                  <Loader2 className="w-6 h-6 text-aged-brass" />
-                </div>
-                
-                <div className="flex-1 w-full">
-                  <h3 className="font-serif text-xl font-medium text-ink-black mb-2">
-                    {priorityAction.title}
-                  </h3>
-                  <p className="text-charcoal/70 text-sm mb-4 font-light">
-                    {priorityAction.description}
-                  </p>
-                  <Button 
-                    onClick={() => navigate(priorityAction.actionRoute)}
-                    className="bg-ink-black hover:bg-charcoal text-parchment-white border-0 uppercase tracking-wider text-xs w-full sm:w-auto"
-                  >
-                    {priorityAction.actionLabel}
-                  </Button>
-                </div>
-              </div>
+...
             </div>
           </div>
         )}
+
+        {/* Brand Health Card - Prominent Position */}
+        <div className="mb-12">
+          <BrandHealthCard />
+        </div>
 
         {/* Workflow Map - Transformation #4 */}
         <div className="mb-12">
@@ -209,12 +181,8 @@ export default function DashboardNew() {
           </div>
         </div>
 
-        {/* Brand Health & Editorial Timeline - Two column layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Brand Health Card */}
-          <BrandHealthCard />
-
-          {/* Editorial Timeline */}
+        {/* Editorial Timeline - Full width */}
+        <div className="mb-12">
           <div className="bg-parchment-white border border-charcoal/10 p-8">
             <div className="mb-8 pb-4 border-b border-charcoal/10">
               <h2 className="font-serif text-2xl font-medium text-ink-black mb-1">

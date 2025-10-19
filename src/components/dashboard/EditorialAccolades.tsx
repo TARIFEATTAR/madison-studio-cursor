@@ -19,11 +19,11 @@ const ACCOLADES: Accolade[] = [
     id: 'novice',
     title: 'The Novice',
     description: 'Your editorial journey begins',
-    requirement: 'Complete your first week of content creation',
+    requirement: 'Create your first 10 pieces of content',
     checkProgress: (stats) => ({
-      current: stats?.piecesCreatedThisWeek || 0,
-      target: 1,
-      unlocked: (stats?.piecesCreatedThisWeek || 0) >= 1,
+      current: stats?.totalContent || 0,
+      target: 10,
+      unlocked: (stats?.totalContent || 0) >= 10,
     }),
   },
   {
@@ -138,8 +138,13 @@ export function EditorialAccolades() {
         </div>
 
         {/* Current Accolade Description */}
-        <p className="text-xs italic text-charcoal/60 mb-6">
+        <p className="text-xs italic text-charcoal/60 mb-2">
           {currentAccolade.description}
+        </p>
+        
+        {/* Current Progress Display */}
+        <p className="text-sm font-medium text-aged-brass mb-6">
+          {currentAccolade.checkProgress(stats).current} pieces created
         </p>
 
         {/* Brass accent line */}
