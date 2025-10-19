@@ -966,8 +966,8 @@ CRITICAL INSTRUCTIONS:
         if (userName) {
           systemPrompt += `\n\n(Note: You're speaking with ${userName}. Use their name naturally when appropriate—in greetings, when acknowledging good ideas, or when offering encouragement. Don't overuse it; once per conversation or when emphasizing a point is sufficient.)`;
         }
-      }
-    } else {
+        }
+      } else {
       // No organization context - fallback prompts
       if (mode === "generate") {
         systemPrompt = 'You are a professional copywriter. Always return plain text responses with no Markdown formatting. Do not use asterisks, bold, italics, headers, or any special formatting characters. Output must be clean, copy-paste ready text.';
