@@ -126,15 +126,15 @@ export function PublishingDrawer({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[540px] sm:max-w-[540px] overflow-y-auto">
+      <SheetContent className="w-full sm:w-[540px] sm:max-w-[540px] overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Mark as Published</SheetTitle>
-          <SheetDescription>
-            Track where "{contentTitle}" has been published
+          <SheetDescription className="line-clamp-2">
+            Track where <span className="font-medium">"{contentTitle}"</span> has been published
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6 space-y-6">
+        <div className="mt-4 sm:mt-6 space-y-4 sm:space-y-6 px-1">
           {/* Publish Date */}
           <div className="space-y-2">
             <Label>Publish Date</Label>
@@ -152,7 +152,12 @@ export function PublishingDrawer({
                   {publishDate ? format(publishDate, "PPP") : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
+              <PopoverContent 
+                className="w-auto p-0" 
+                align="start"
+                side="bottom"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Calendar
                   mode="single"
                   selected={publishDate}
@@ -166,7 +171,7 @@ export function PublishingDrawer({
           {/* Platform Selection */}
           <div className="space-y-3">
             <Label>Publishing Platforms</Label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {PLATFORMS.map((platform) => (
                 <div
                   key={platform.id}
@@ -182,12 +187,14 @@ export function PublishingDrawer({
                     id={platform.id}
                     checked={selectedPlatforms.includes(platform.id)}
                     onCheckedChange={() => {}}
+                    className="shrink-0"
                   />
                   <label
                     htmlFor={platform.id}
-                    className="flex-1 text-sm font-medium cursor-pointer"
+                    className="flex-1 text-sm font-medium cursor-pointer truncate"
                   >
-                    {platform.icon} {platform.label}
+                    <span className="mr-1">{platform.icon}</span>
+                    <span className="truncate">{platform.label}</span>
                   </label>
                 </div>
               ))}
@@ -225,16 +232,17 @@ export function PublishingDrawer({
           <div className="space-y-2">
             <Label>Publishing Notes (Optional)</Label>
             <Textarea
-              placeholder="Add notes about performance, engagement, or publishing context..."
+              placeholder="Add notes about performance, engagement..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              rows={4}
+              rows={3}
+              className="text-sm"
               onClick={(e) => e.stopPropagation()}
             />
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Button
               variant="outline"
               onClick={(e) => {
