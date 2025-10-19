@@ -35,9 +35,8 @@ export function DashboardHeroHeader({ organizationName, userName, streakDays, sh
     });
     setCurrentDate(date);
 
-    // Get user name from localStorage or prop
-    const storedName = userName || localStorage.getItem('madison-user-name');
-    setDisplayName(storedName || '');
+    // Use only the database value from useUserProfile hook
+    setDisplayName(userName || '');
   }, [userName]);
 
   return (
