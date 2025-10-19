@@ -46,9 +46,9 @@ export function DashboardWorkflowMap() {
   ];
 
   return (
-    <div className="bg-gradient-to-br from-[#F5F1E8] to-[#FAF8F3] border border-charcoal/10 p-12">
-      <div className="text-center mb-12">
-        <h3 className="font-serif text-3xl font-light text-ink-black mb-2">
+    <div className="bg-gradient-to-br from-[#F5F1E8] to-[#FAF8F3] border border-charcoal/10 p-4 md:p-8 lg:p-12">
+      <div className="text-center mb-6 md:mb-12">
+        <h3 className="font-serif text-2xl md:text-3xl font-light text-ink-black mb-2">
           Your Content Ecosystem
         </h3>
         <p className="text-sm text-charcoal/60 italic font-serif">
@@ -61,7 +61,7 @@ export function DashboardWorkflowMap() {
         {/* Connecting lines */}
         <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-gradient-to-r from-aged-brass/20 via-aged-brass/40 to-aged-brass/20 -translate-y-1/2 hidden lg:block" />
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 relative z-10">
           {stations.map((station, index) => (
             <button
               key={station.id}
@@ -69,33 +69,33 @@ export function DashboardWorkflowMap() {
               className="group relative"
             >
               {/* Station card */}
-              <div className="bg-parchment-white border-2 border-charcoal/10 p-8 hover:border-aged-brass/60 hover:shadow-xl transition-all">
+              <div className="bg-parchment-white border-2 border-charcoal/10 p-4 md:p-6 lg:p-8 hover:border-aged-brass/60 hover:shadow-xl transition-all">
                 {/* Count badge */}
-                <div className="absolute -top-4 -right-4 w-12 h-12 bg-aged-brass/90 border-2 border-parchment-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-                  <span className="font-serif text-xl font-semibold text-parchment-white">
+                <div className="absolute -top-3 md:-top-4 -right-3 md:-right-4 w-10 h-10 md:w-12 md:h-12 bg-aged-brass/90 border-2 border-parchment-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                  <span className="font-serif text-lg md:text-xl font-semibold text-parchment-white">
                     {station.count}
                   </span>
                 </div>
 
                 {/* Icon */}
-                <div className="mb-6 flex justify-center">
-                  <div className="w-16 h-16 border-2 border-aged-brass/30 flex items-center justify-center group-hover:border-aged-brass transition-colors">
-                    <station.icon className="w-8 h-8 text-aged-brass group-hover:scale-110 transition-transform" />
+                <div className="mb-4 md:mb-6 flex justify-center">
+                  <div className="w-12 h-12 md:w-16 md:h-16 border-2 border-aged-brass/30 flex items-center justify-center group-hover:border-aged-brass transition-colors">
+                    <station.icon className="w-6 h-6 md:w-8 md:h-8 text-aged-brass group-hover:scale-110 transition-transform" />
                   </div>
                 </div>
 
                 {/* Title */}
-                <h4 className="font-serif text-2xl font-medium text-ink-black mb-1 group-hover:text-aged-brass transition-colors">
+                <h4 className="font-serif text-xl md:text-2xl font-medium text-ink-black mb-1 group-hover:text-aged-brass transition-colors">
                   {station.title}
                 </h4>
                 
                 {/* Description */}
-                <p className="text-xs uppercase tracking-[0.15em] text-charcoal/60 mb-3 font-sans">
+                <p className="text-[10px] md:text-xs uppercase tracking-[0.15em] text-charcoal/60 mb-2 md:mb-3 font-sans">
                   {station.description}
                 </p>
 
                 {/* Label */}
-                <p className="text-xs text-charcoal/50 font-light italic">
+                <p className="text-[10px] md:text-xs text-charcoal/50 font-light italic">
                   {station.label}
                 </p>
 
@@ -117,7 +117,7 @@ export function DashboardWorkflowMap() {
       </div>
 
       {/* Bottom decorative line */}
-      <div className="mt-12 flex items-center justify-center">
+      <div className="mt-8 md:mt-12 flex items-center justify-center">
         <div className="w-32 h-[1px] bg-aged-brass/30" />
       </div>
     </div>
