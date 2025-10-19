@@ -88,20 +88,12 @@ export function RecommendationCard({ recommendation, priority }: RecommendationC
                 </div>
               )}
 
-              <div className="flex items-center gap-3">
-                <Button
-                  onClick={() => setShowWizard(true)}
-                  className="bg-aged-brass hover:bg-aged-brass/90 text-ink-black"
-                >
-                  Fix This Issue
-                </Button>
-                <Button
-                  variant="outline"
-                  className="border-charcoal/20"
-                >
-                  Learn More
-                </Button>
-              </div>
+              <Button
+                onClick={() => setShowWizard(true)}
+                className="bg-aged-brass hover:bg-aged-brass/90 text-ink-black"
+              >
+                Fix This Issue
+              </Button>
             </div>
           )}
         </div>
