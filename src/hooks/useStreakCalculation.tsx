@@ -108,15 +108,29 @@ export function useStreakCalculation() {
       processActivity(derivatives || [], 'creation');
       processActivity(scheduled || [], 'scheduling');
 
-      // Convert to sorted array
-      const dailyActivity = Object.values(dailyActivityMap).sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-      );
-
       // Calculate current streak
       let currentStreak = 0;
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+      
+      // Generate last 7 days (Mon-Sun order)
+      const last7Days: DailyActivity[] = [];
+      
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateKey = date.toISOString().split('T')[0];
+        
+        last7Days.push(
+          dailyActivityMap[dateKey] || {
+            date: dateKey,
+            hasActivity: false,
+            goalsMetCount: 0,
+          }
+        );
+      }
+      
+      const dailyActivity = last7Days;
       
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
@@ -164,7 +178,7 @@ export function useStreakCalculation() {
         currentStreak,
         longestStreak,
         gracePeriodActive,
-        dailyActivity: dailyActivity.slice(0, 7), // Last 7 days for display
+        dailyActivity, // Already filtered to last 7 days
       };
     },
     enabled: !!user && !!gamificationData,

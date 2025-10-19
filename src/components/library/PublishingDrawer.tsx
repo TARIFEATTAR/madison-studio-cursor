@@ -176,22 +176,16 @@ export function PublishingDrawer({
                       ? "bg-primary/5 border-primary"
                       : "hover:bg-muted/50"
                   )}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handlePlatformToggle(platform.id);
-                  }}
+                  onClick={() => handlePlatformToggle(platform.id)}
                 >
                   <Checkbox
                     id={platform.id}
                     checked={selectedPlatforms.includes(platform.id)}
-                    onCheckedChange={(checked) => {
-                      handlePlatformToggle(platform.id);
-                    }}
+                    onCheckedChange={() => {}}
                   />
                   <label
                     htmlFor={platform.id}
                     className="flex-1 text-sm font-medium cursor-pointer"
-                    onClick={(e) => e.stopPropagation()}
                   >
                     {platform.icon} {platform.label}
                   </label>
