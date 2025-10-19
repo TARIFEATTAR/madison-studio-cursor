@@ -992,11 +992,11 @@ AVOID:
 Return plain text only with no Markdown formatting. No asterisks, bold, italics, or headers.`;
       }
     }
-
+    }
+    
     // Retry configuration
     const MAX_RETRIES = 3;
     const INITIAL_RETRY_DELAY = 1000; // 1 second
-    
     let lastError: Error | null = null;
     let generatedContent = '';
     
