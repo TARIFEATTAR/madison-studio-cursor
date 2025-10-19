@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useBrandHealth } from "@/hooks/useBrandHealth";
 import { toast } from "sonner";
 import { Loader2, Sparkles } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -22,6 +23,7 @@ interface GapWizardModalProps {
 
 export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardModalProps) {
   const { user } = useAuth();
+  const { brandHealth } = useBrandHealth();
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -177,8 +179,17 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
           toast.error("Failed to recalculate brand health score");
         } else {
           const newScore = analysisData?.healthAnalysis?.completeness_score;
+          const oldScore = brandHealth?.completeness_score || 0;
+          
           if (newScore !== undefined) {
-            toast.success(`Brand health updated! New score: ${newScore}%`);
+            const improvement = newScore - oldScore;
+            if (improvement > 0) {
+              toast.success(`✨ Score improved by ${improvement}%! New score: ${newScore}%`, {
+                duration: 5000,
+              });
+            } else {
+              toast.success(`Brand health updated! Score: ${newScore}%`);
+            }
           } else {
             toast.success("Brand health analysis complete!");
           }
