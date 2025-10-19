@@ -162,6 +162,7 @@ const AppContent = () => {
                   <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/meet-madison" element={<ProtectedRoute><RouteErrorBoundary routeName="Meet Madison"><MeetMadison /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/help-center" element={<ProtectedRoute><RouteErrorBoundary routeName="Help Center"><HelpCenter /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>
