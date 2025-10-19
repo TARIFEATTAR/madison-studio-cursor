@@ -1,9 +1,10 @@
-import { Shield, TrendingUp, AlertCircle, CheckCircle2, Clock, Sparkles } from "lucide-react";
+import { Shield, TrendingUp, AlertCircle, CheckCircle2, Clock, Sparkles, BookOpen } from "lucide-react";
 import { useBrandHealth } from "@/hooks/useBrandHealth";
 import { Button } from "@/components/ui/button";
 import { CategoryProgress } from "@/components/brand-health/CategoryProgress";
 import { RecommendationCard } from "@/components/brand-health/RecommendationCard";
 import { ScoreHistoryChart } from "@/components/brand-health/ScoreHistoryChart";
+import { CompletedKnowledgePanel } from "@/components/brand-health/CompletedKnowledgePanel";
 import { useNavigate } from "react-router-dom";
 
 export default function BrandHealth() {
@@ -219,6 +220,9 @@ export default function BrandHealth() {
                 </div>
               </div>
             )}
+
+            {/* Completed Brand Knowledge */}
+            <CompletedKnowledgePanel organizationId={brandHealth.organization_id} />
 
             {/* Strengths */}
             {brandHealth.gap_analysis.strengths && brandHealth.gap_analysis.strengths.length > 0 && (
