@@ -30,6 +30,7 @@ import Marketplace from "./pages/Marketplace";
 import MarketplaceLibrary from "./pages/MarketplaceLibrary";
 import CreateEtsyListing from "./pages/marketplace/CreateEtsyListing";
 import CreateTikTokShopListing from "./pages/marketplace/CreateTikTokShopListing";
+import BrandHealth from "./pages/BrandHealth";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { AlertCircle } from "lucide-react";
@@ -188,6 +189,7 @@ const AppContent = () => {
             <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/meet-madison" element={<ProtectedRoute><RouteErrorBoundary routeName="Meet Madison"><MeetMadison /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/help-center" element={<ProtectedRoute><RouteErrorBoundary routeName="Help Center"><HelpCenter /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </>

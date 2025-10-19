@@ -155,6 +155,44 @@ export type Database = {
           },
         ]
       }
+      brand_health_history: {
+        Row: {
+          analyzed_at: string
+          completeness_score: number
+          created_at: string
+          gap_analysis: Json
+          id: string
+          organization_id: string
+          recommendations: Json
+        }
+        Insert: {
+          analyzed_at?: string
+          completeness_score: number
+          created_at?: string
+          gap_analysis?: Json
+          id?: string
+          organization_id: string
+          recommendations?: Json
+        }
+        Update: {
+          analyzed_at?: string
+          completeness_score?: number
+          created_at?: string
+          gap_analysis?: Json
+          id?: string
+          organization_id?: string
+          recommendations?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_health_history_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_knowledge: {
         Row: {
           content: Json

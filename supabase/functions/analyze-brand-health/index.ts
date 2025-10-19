@@ -159,6 +159,17 @@ Be specific and prioritize recommendations by impact.`;
       );
     }
 
+    // Also store in history for tracking progress over time
+    await supabase
+      .from('brand_health_history')
+      .insert({
+        organization_id: organizationId,
+        completeness_score: healthAnalysis.completeness_score,
+        gap_analysis: healthAnalysis.gap_analysis,
+        recommendations: healthAnalysis.recommendations,
+        analyzed_at: new Date().toISOString(),
+      });
+
     console.log(`Brand health analysis complete for org ${organizationId}: ${healthAnalysis.completeness_score}%`);
 
     return new Response(

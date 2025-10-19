@@ -146,7 +146,7 @@ export function BrandHealthCard() {
 
       {/* Action Button */}
       <Button
-        onClick={() => navigate("/settings?tab=brand")}
+        onClick={() => navigate("/brand-health")}
         className="w-full bg-ink-black hover:bg-ink-black/90 text-parchment-white"
       >
         View Full Analysis & Fix Issues
