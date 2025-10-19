@@ -15,10 +15,10 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
-    if (!anthropicApiKey) {
-      throw new Error('ANTHROPIC_API_KEY not configured');
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -96,14 +96,13 @@ serve(async (req) => {
 
     const context = contextParts.join('\n');
 
-    // Build the prompt based on knowledge_type
-    let systemPrompt = `You are Madison, an expert editorial director helping a brand define their identity. 
+    // Build tool definition based on knowledge_type
+    const systemPrompt = `You are Madison, an expert editorial director helping a brand define their identity. 
 Your role is to analyze existing brand content and create intelligent, context-aware suggestions that feel authentic to their voice.
 
 CONTEXT ABOUT THIS BRAND:
 ${context}
 
-TASK: Generate ${knowledge_type} suggestions based on the brand's existing content and products.
 ${recommendation ? `\nRECOMMENDATION CONTEXT: ${recommendation.title} - ${recommendation.description}` : ''}
 
 GUIDELINES:
@@ -113,66 +112,143 @@ GUIDELINES:
 - Reference what you're seeing (e.g., "Based on your 5 blog posts about sustainability...")
 - Keep each suggestion concise but comprehensive (2-4 sentences)`;
 
-    let userPrompt = '';
-    
+    let tools, toolChoice, userPrompt;
+
     if (knowledge_type === 'core_identity') {
-      userPrompt = `Generate brand identity suggestions with these fields:
-- mission: A clear mission statement (what the brand does and why)
-- vision: An aspirational vision statement (the future they're creating)
-- values: 3-5 core values that guide decisions
-- personality: Brand personality traits (if the brand were a person)
-
-Format as JSON with these exact keys. Include a "sources" array explaining what you based each suggestion on.`;
+      tools = [{
+        type: "function",
+        function: {
+          name: "suggest_core_identity",
+          description: "Generate brand core identity suggestions",
+          parameters: {
+            type: "object",
+            properties: {
+              mission: { type: "string", description: "Clear mission statement" },
+              vision: { type: "string", description: "Aspirational vision statement" },
+              values: { type: "string", description: "3-5 core values" },
+              personality: { type: "string", description: "Brand personality traits" },
+              sources: { type: "array", items: { type: "string" }, description: "What you based suggestions on" }
+            },
+            required: ["mission", "vision", "values", "personality", "sources"],
+            additionalProperties: false
+          }
+        }
+      }];
+      toolChoice = { type: "function", function: { name: "suggest_core_identity" } };
+      userPrompt = "Generate brand identity suggestions based on the context above.";
     } else if (knowledge_type === 'voice_tone') {
-      userPrompt = `Generate voice and tone guidelines with these fields:
-- voice_guidelines: Consistent voice characteristics (e.g., "warm, knowledgeable, never condescending")
-- tone_spectrum: How tone varies by context (e.g., "Educational: patient and detailed. Promotional: exciting but authentic")
-
-Format as JSON with these exact keys. Include a "sources" array explaining what patterns you observed.`;
+      tools = [{
+        type: "function",
+        function: {
+          name: "suggest_voice_tone",
+          description: "Generate voice and tone guidelines",
+          parameters: {
+            type: "object",
+            properties: {
+              voice_guidelines: { type: "string", description: "Consistent voice characteristics" },
+              tone_spectrum: { type: "string", description: "How tone varies by context" },
+              sources: { type: "array", items: { type: "string" }, description: "What patterns you observed" }
+            },
+            required: ["voice_guidelines", "tone_spectrum", "sources"],
+            additionalProperties: false
+          }
+        }
+      }];
+      toolChoice = { type: "function", function: { name: "suggest_voice_tone" } };
+      userPrompt = "Generate voice and tone guidelines based on the context above.";
     } else {
-      userPrompt = `Generate brand guideline suggestions for: ${knowledge_type}
-Return as JSON with relevant fields and a "sources" array.`;
+      tools = [{
+        type: "function",
+        function: {
+          name: "suggest_brand_guideline",
+          description: "Generate brand guideline suggestions",
+          parameters: {
+            type: "object",
+            properties: {
+              content: { type: "string", description: "Brand guideline content" },
+              sources: { type: "array", items: { type: "string" }, description: "What you based this on" }
+            },
+            required: ["content", "sources"],
+            additionalProperties: false
+          }
+        }
+      }];
+      toolChoice = { type: "function", function: { name: "suggest_brand_guideline" } };
+      userPrompt = `Generate brand guideline suggestions for: ${knowledge_type}`;
     }
 
-    // Call Claude API
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // Call Lovable AI Gateway with tool-calling
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
-        'x-api-key': anthropicApiKey,
-        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 2000,
+        model: 'google/gemini-2.5-flash',
         messages: [
-          {
-            role: 'user',
-            content: `${systemPrompt}\n\n${userPrompt}`
-          }
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
         ],
+        tools,
+        tool_choice: toolChoice,
       }),
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('Claude API error:', error);
+      const errorText = await response.text();
+      console.error('AI Gateway error:', response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ 
+          error: 'Rate limit exceeded. Please try again in a moment.' 
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ 
+          error: 'AI credits exhausted. Please add credits to continue.' 
+        }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       throw new Error('Failed to generate suggestions');
     }
 
     const data = await response.json();
-    const assistantMessage = data.content[0].text;
+    console.log('AI Gateway response:', JSON.stringify(data));
 
-    // Parse JSON from response (Claude usually wraps it in markdown)
-    const jsonMatch = assistantMessage.match(/```json\n([\s\S]*?)\n```/) || 
-                      assistantMessage.match(/\{[\s\S]*\}/);
-    
+    // Extract tool call arguments
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     let suggestions;
-    if (jsonMatch) {
-      suggestions = JSON.parse(jsonMatch[1] || jsonMatch[0]);
+
+    if (toolCall?.function?.arguments) {
+      try {
+        suggestions = typeof toolCall.function.arguments === 'string' 
+          ? JSON.parse(toolCall.function.arguments)
+          : toolCall.function.arguments;
+      } catch (parseError) {
+        console.error('Failed to parse tool arguments:', parseError);
+        return new Response(JSON.stringify({ 
+          error: 'Failed to parse AI response' 
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     } else {
-      // Fallback: try to parse the whole response
-      suggestions = JSON.parse(assistantMessage);
+      console.error('No tool call in response');
+      return new Response(JSON.stringify({ 
+        error: 'AI did not return structured suggestions' 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     console.log('Generated suggestions:', suggestions);

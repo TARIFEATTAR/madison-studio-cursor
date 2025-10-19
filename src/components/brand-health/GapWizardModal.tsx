@@ -59,6 +59,13 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
     }
 
     setIsGenerating(true);
+    setAiSources([]);
+
+    const timeoutId = setTimeout(() => {
+      setIsGenerating(false);
+      toast.error("Request timed out. Madison took too long to respond. Please try again.");
+    }, 45000);
+
     try {
       const { data, error } = await supabase.functions.invoke('suggest-brand-knowledge', {
         body: {
@@ -70,9 +77,19 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
         }
       });
 
+      clearTimeout(timeoutId);
+
       if (error) throw error;
 
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
       const { suggestions } = data;
+
+      if (!suggestions) {
+        throw new Error("No suggestions returned");
+      }
 
       // Update form data with AI suggestions
       if (suggestions.mission) setFormData(prev => ({ ...prev, mission: suggestions.mission }));
@@ -81,6 +98,7 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
       if (suggestions.personality) setFormData(prev => ({ ...prev, personality: suggestions.personality }));
       if (suggestions.voice_guidelines) setFormData(prev => ({ ...prev, voiceGuidelines: suggestions.voice_guidelines }));
       if (suggestions.tone_spectrum) setFormData(prev => ({ ...prev, toneSpectrum: suggestions.tone_spectrum }));
+      if (suggestions.content) setFormData(prev => ({ ...prev, contentTemplate: suggestions.content }));
 
       // Store sources for display
       if (suggestions.sources) {
@@ -89,8 +107,9 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
 
       toast.success("Madison has generated suggestions based on your existing content!");
     } catch (error) {
+      clearTimeout(timeoutId);
       console.error("Error generating:", error);
-      toast.error("Failed to generate suggestions. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Failed to generate suggestions. Please try again.");
     } finally {
       setIsGenerating(false);
     }
