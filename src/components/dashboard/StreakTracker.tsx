@@ -1,26 +1,56 @@
-import { Flame, Award } from "lucide-react";
+import { Flame, Award, HelpCircle } from "lucide-react";
 import { useStreakCalculation } from "@/hooks/useStreakCalculation";
 import { getPaperTexture } from "@/utils/paperTextureStyles";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function StreakTracker() {
   const { data: streakData } = useStreakCalculation();
 
   return (
-    <div className={`${getPaperTexture('cardPaper')} border border-charcoal/10 p-8`}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
-          <Flame className="w-6 h-6 text-aged-brass" />
-          <h3 className="font-serif text-xl font-medium text-ink-black">
-            Publishing Streak
-          </h3>
-        </div>
-        {streakData?.gracePeriodActive && (
-          <div className="text-xs bg-aged-brass/10 border border-aged-brass/20 px-3 py-1">
-            <span className="text-aged-brass font-medium">Grace Period Active</span>
+    <TooltipProvider>
+      <div className={`${getPaperTexture('cardPaper')} border border-charcoal/10 p-8`}>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <Flame className="w-6 h-6 text-aged-brass" />
+            <h3 className="font-serif text-xl font-medium text-ink-black">
+              Publishing Streak
+            </h3>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="text-charcoal/40 hover:text-aged-brass transition-colors">
+                  <HelpCircle className="w-4 h-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs bg-ink-black text-parchment-white border-charcoal/20">
+                <p className="text-xs leading-relaxed">
+                  <strong>How streaks work:</strong> Create, publish, or schedule at least one piece per week to maintain your streak. 
+                  You have a 3-day grace period after each week to keep momentum going.
+                </p>
+              </TooltipContent>
+            </Tooltip>
           </div>
-        )}
-      </div>
+          {streakData?.gracePeriodActive && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="text-xs bg-aged-brass/10 border border-aged-brass/20 px-3 py-1 cursor-help">
+                  <span className="text-aged-brass font-medium">Grace Period Active</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs bg-ink-black text-parchment-white border-charcoal/20">
+                <p className="text-xs leading-relaxed">
+                  You have 3 days after the week ends to create content and keep your streak alive. 
+                  Don't break the momentum!
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
 
       {/* Current Streak - Large Display */}
       <div className="text-center mb-8">
@@ -118,7 +148,8 @@ export function StreakTracker() {
             Remarkable dedication—you're a publishing professional
           </p>
         </div>
-      )}
-    </div>
+        )}
+      </div>
+    </TooltipProvider>
   );
 }

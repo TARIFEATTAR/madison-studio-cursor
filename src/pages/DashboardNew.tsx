@@ -11,6 +11,7 @@ import { UpcomingSchedule } from "@/components/dashboard/UpcomingSchedule";
 import { BrandHealthCard } from "@/components/dashboard/BrandHealthCard";
 import { EditorialAccolades } from "@/components/dashboard/EditorialAccolades";
 import { StreakTracker } from "@/components/dashboard/StreakTracker";
+import { DashboardTourModal } from "@/components/dashboard/DashboardTourModal";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { usePriorityAction } from "@/hooks/usePriorityAction";
 import { useAuth } from "@/hooks/useAuth";
@@ -87,6 +88,9 @@ export default function DashboardNew() {
 
   return (
     <div className="min-h-screen bg-vellum-cream">
+      {/* Dashboard Tour Modal */}
+      <DashboardTourModal />
+
       {/* Hero Dashboard Header - Transformation #1 */}
       <DashboardHeroHeader 
         organizationName={organizationName || "Your Workspace"} 

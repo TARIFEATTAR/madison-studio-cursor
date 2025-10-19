@@ -1,10 +1,16 @@
 import { useState } from "react";
-import { Award, Lock, ChevronRight } from "lucide-react";
+import { Award, Lock, ChevronRight, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useGamificationData } from "@/hooks/useGoals";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { getPaperTexture } from "@/utils/paperTextureStyles";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Accolade {
   id: string;
@@ -114,7 +120,7 @@ export function EditorialAccolades() {
     : 100;
 
   return (
-    <>
+    <TooltipProvider>
       <div 
         className={`${getPaperTexture('cardPaper')} border border-charcoal/10 p-8 cursor-pointer hover:border-aged-brass/40 transition-all group`}
         onClick={() => setShowModal(true)}
@@ -126,8 +132,26 @@ export function EditorialAccolades() {
               <Award className="w-5 h-5 text-aged-brass" />
             </div>
             <div>
-              <div className="text-[10px] uppercase tracking-wider text-charcoal/50 mb-1">
-                Editorial Accolade
+              <div className="flex items-center gap-2">
+                <div className="text-[10px] uppercase tracking-wider text-charcoal/50">
+                  Editorial Accolade
+                </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button 
+                      className="text-charcoal/40 hover:text-aged-brass transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <HelpCircle className="w-3 h-3" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs bg-ink-black text-parchment-white border-charcoal/20">
+                    <p className="text-xs leading-relaxed">
+                      <strong>Editorial Accolades:</strong> Earn badges as you progress from Novice to Literary Master. 
+                      Each accolade recognizes your growing expertise and content library. Click to see all achievements!
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
               <h3 className="font-serif text-lg font-medium text-ink-black">
                 {currentAccolade.title}
@@ -272,6 +296,6 @@ export function EditorialAccolades() {
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </TooltipProvider>
   );
 }
