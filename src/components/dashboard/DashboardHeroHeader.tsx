@@ -59,7 +59,7 @@ export function DashboardHeroHeader({ organizationName, streakDays, showMadisonB
             {/* Madison Banner - Aligned with Brand Health */}
             {showMadisonBanner && (
               <div className="w-[480px]">
-                <div className="bg-gradient-to-r from-aged-brass/5 to-warm-cream/20 border border-aged-brass/20 px-6 py-6 min-h-[340px] flex items-center justify-between">
+                <div className="bg-gradient-to-r from-aged-brass/5 to-warm-cream/20 border border-aged-brass/20 px-6 py-6 h-[100px] flex items-center justify-between">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <img 
                       src={madisonInsignia} 
