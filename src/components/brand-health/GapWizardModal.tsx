@@ -25,6 +25,7 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiSources, setAiSources] = useState<string[]>([]);
   
   // Form state based on fix_type
@@ -160,7 +161,34 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
 
       if (error) throw error;
 
-      toast.success("Brand knowledge saved successfully!");
+      toast.success("Brand knowledge saved! Recalculating health score...");
+      
+      // Trigger brand health re-analysis
+      setIsSaving(false);
+      setIsAnalyzing(true);
+      
+      try {
+        const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-brand-health', {
+          body: { organizationId: orgMember.organization_id }
+        });
+
+        if (analysisError) {
+          console.error("Analysis error:", analysisError);
+          toast.error("Failed to recalculate brand health score");
+        } else {
+          const newScore = analysisData?.healthAnalysis?.completeness_score;
+          if (newScore !== undefined) {
+            toast.success(`Brand health updated! New score: ${newScore}%`);
+          } else {
+            toast.success("Brand health analysis complete!");
+          }
+        }
+      } catch (analysisError) {
+        console.error("Error during analysis:", analysisError);
+        toast.error("Failed to recalculate brand health score");
+      }
+
+      // Invalidate queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ["brand-health"] });
       onClose();
     } catch (error) {
@@ -168,6 +196,7 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
       toast.error("Failed to save brand knowledge");
     } finally {
       setIsSaving(false);
+      setIsAnalyzing(false);
     }
   };
 
@@ -324,13 +353,18 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
             </Button>
             <Button
               onClick={handleSave}
-              disabled={isSaving}
+              disabled={isSaving || isAnalyzing}
               className="bg-aged-brass hover:bg-aged-brass/90 text-ink-black"
             >
               {isSaving ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Saving...
+                </>
+              ) : isAnalyzing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Updating Score...
                 </>
               ) : (
                 "Save & Apply"
