@@ -25,6 +25,7 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [aiSources, setAiSources] = useState<string[]>([]);
   
   // Form state based on fix_type
   const [formData, setFormData] = useState({
@@ -52,14 +53,44 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
   };
 
   const handleAIGenerate = async () => {
+    if (!user) {
+      toast.error("You must be logged in");
+      return;
+    }
+
     setIsGenerating(true);
     try {
-      // Here you would call an edge function to generate suggestions
-      // For now, we'll show a placeholder
-      toast.info("AI generation coming soon!");
+      const { data, error } = await supabase.functions.invoke('suggest-brand-knowledge', {
+        body: {
+          knowledge_type: getKnowledgeType(),
+          recommendation: {
+            title: recommendation.title,
+            description: recommendation.description,
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      const { suggestions } = data;
+
+      // Update form data with AI suggestions
+      if (suggestions.mission) setFormData(prev => ({ ...prev, mission: suggestions.mission }));
+      if (suggestions.vision) setFormData(prev => ({ ...prev, vision: suggestions.vision }));
+      if (suggestions.values) setFormData(prev => ({ ...prev, values: suggestions.values }));
+      if (suggestions.personality) setFormData(prev => ({ ...prev, personality: suggestions.personality }));
+      if (suggestions.voice_guidelines) setFormData(prev => ({ ...prev, voiceGuidelines: suggestions.voice_guidelines }));
+      if (suggestions.tone_spectrum) setFormData(prev => ({ ...prev, toneSpectrum: suggestions.tone_spectrum }));
+
+      // Store sources for display
+      if (suggestions.sources) {
+        setAiSources(suggestions.sources);
+      }
+
+      toast.success("Madison has generated suggestions based on your existing content!");
     } catch (error) {
       console.error("Error generating:", error);
-      toast.error("Failed to generate suggestions");
+      toast.error("Failed to generate suggestions. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -230,6 +261,19 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
             </p>
           </div>
 
+          {aiSources.length > 0 && (
+            <div className="bg-green-50 border border-green-200 p-4 mb-6 rounded">
+              <p className="text-sm font-medium text-green-900 mb-2">
+                Madison's suggestions based on:
+              </p>
+              <ul className="text-xs text-green-800 space-y-1">
+                {aiSources.map((source, idx) => (
+                  <li key={idx}>• {source}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {renderFormFields()}
 
           <div className="flex items-center gap-3 mt-8 pt-6 border-t border-charcoal/10">
@@ -247,7 +291,7 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 mr-2" />
-                  AI Suggest
+                  Ask Madison
                 </>
               )}
             </Button>
