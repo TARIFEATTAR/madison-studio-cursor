@@ -1,4 +1,7 @@
-import { TrendingUp, CheckCircle, Target, Calendar, Sparkles } from "lucide-react";
+import { TrendingUp, CheckCircle, Target, Calendar, Sparkles, Settings } from "lucide-react";
+import { useGoals } from "@/hooks/useGoals";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 interface DashboardStats {
   piecesCreatedThisWeek: number;
@@ -13,9 +16,12 @@ interface DashboardEditorialStatsProps {
 }
 
 export function DashboardEditorialStats({ stats }: DashboardEditorialStatsProps) {
-  const creationGoal = 10;
-  const publishGoal = 5;
-  const scheduleGoal = 7;
+  const navigate = useNavigate();
+  const { data: goals, isLoading } = useGoals();
+  
+  const creationGoal = goals?.weekly_creation || 10;
+  const publishGoal = goals?.weekly_publishing || 5;
+  const scheduleGoal = goals?.weekly_scheduling || 7;
 
   const statCards = [
     {
@@ -54,8 +60,31 @@ export function DashboardEditorialStats({ stats }: DashboardEditorialStatsProps)
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {statCards.map((card, index) => (
+    <div className="space-y-6">
+      {/* Adjust Targets Button */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-serif text-3xl font-light text-ink-black mb-2">
+            This Week at a Glance
+          </h2>
+          <p className="text-sm text-charcoal/60 italic">
+            Your editorial progress, beautifully summarized
+          </p>
+        </div>
+        <Button
+          onClick={() => navigate('/settings?tab=goals')}
+          variant="outline"
+          size="sm"
+          className="border-charcoal/20 text-charcoal hover:bg-vellum-cream gap-2"
+        >
+          <Settings className="w-4 h-4" />
+          Adjust Targets
+        </Button>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {statCards.map((card, index) => (
         <div
           key={index}
           className="group relative bg-parchment-white border border-charcoal/10 p-8 hover:border-aged-brass/40 transition-all hover:shadow-lg"
@@ -98,8 +127,9 @@ export function DashboardEditorialStats({ stats }: DashboardEditorialStatsProps)
           <p className="text-xs italic text-charcoal/60 font-serif">
             {card.microCopy}
           </p>
-        </div>
-      ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

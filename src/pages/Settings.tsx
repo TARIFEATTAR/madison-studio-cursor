@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Package, Users, Bell, CreditCard, FolderKanban, Sparkles } from "lucide-react";
+import { Building2, Package, Users, Bell, CreditCard, FolderKanban, Sparkles, Target } from "lucide-react";
 import { ProductsTab } from "@/components/settings/ProductsTab";
 import { BrandGuidelinesTab } from "@/components/settings/BrandGuidelinesTab";
 import { TeamTab } from "@/components/settings/TeamTab";
@@ -7,8 +7,13 @@ import { NotificationsTab } from "@/components/settings/NotificationsTab";
 import { BillingTab } from "@/components/settings/BillingTab";
 import { CollectionsTab } from "@/components/settings/CollectionsTab";
 import { MadisonTrainingTab } from "@/components/settings/MadisonTrainingTab";
+import { GoalsTab } from "@/components/settings/GoalsTab";
+import { useSearchParams } from "react-router-dom";
 
 export default function Settings() {
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get('tab') || 'brand';
+
   return (
     <div className="min-h-screen bg-paper">
       <div className="max-w-6xl mx-auto">
@@ -22,7 +27,7 @@ export default function Settings() {
 
         {/* Tabs Section */}
         <div className="px-8 py-6">
-          <Tabs defaultValue="brand" className="space-y-6">
+          <Tabs defaultValue={defaultTab} className="space-y-6">
             <TabsList className="bg-paper-light border border-cream-dark p-1 w-full justify-start flex-wrap">
               <TabsTrigger 
                 value="brand" 
@@ -39,6 +44,13 @@ export default function Settings() {
                 Madison's Training
               </TabsTrigger>
               <TabsTrigger 
+                value="goals"
+                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal gap-2"
+              >
+                <Target className="w-4 h-4" />
+                Goals & Accolades
+              </TabsTrigger>
+              <TabsTrigger
                 value="collections"
                 className="data-[state=active]:bg-brass data-[state=active]:text-charcoal gap-2"
               >
@@ -81,6 +93,10 @@ export default function Settings() {
 
             <TabsContent value="madison">
               <MadisonTrainingTab />
+            </TabsContent>
+
+            <TabsContent value="goals">
+              <GoalsTab />
             </TabsContent>
 
             <TabsContent value="collections">

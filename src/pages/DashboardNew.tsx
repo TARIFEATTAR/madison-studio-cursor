@@ -9,6 +9,8 @@ import { DashboardWorkflowMap } from "@/components/dashboard/DashboardWorkflowMa
 import { ContentPipeline } from "@/components/dashboard/ContentPipeline";
 import { UpcomingSchedule } from "@/components/dashboard/UpcomingSchedule";
 import { BrandHealthCard } from "@/components/dashboard/BrandHealthCard";
+import { EditorialAccolades } from "@/components/dashboard/EditorialAccolades";
+import { StreakTracker } from "@/components/dashboard/StreakTracker";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { usePriorityAction } from "@/hooks/usePriorityAction";
 import { useAuth } from "@/hooks/useAuth";
@@ -181,16 +183,14 @@ export default function DashboardNew() {
           <DashboardWorkflowMap />
         </div>
 
+        {/* Accolades & Streak - Side by Side */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          <EditorialAccolades />
+          <StreakTracker />
+        </div>
+
         {/* Editorial Stats Grid - Transformation #2 */}
         <div className="mb-12">
-          <div className="mb-8">
-            <h2 className="font-serif text-3xl font-light text-ink-black mb-2">
-              This Week at a Glance
-            </h2>
-            <p className="text-sm text-charcoal/60 italic">
-              Your editorial progress, beautifully summarized
-            </p>
-          </div>
           <DashboardEditorialStats stats={stats} />
         </div>
 
