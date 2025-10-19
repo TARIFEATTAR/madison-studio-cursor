@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Settings2 } from "lucide-react";
+import { Calendar as CalendarIcon, Settings2, CheckSquare, FileText } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -11,7 +11,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GoogleCalendarConnect } from "./GoogleCalendarConnect";
+import { TasksList } from "./TasksList";
+import { NotesPanel } from "./NotesPanel";
 
 interface MobileCalendarSheetProps {
   currentDate: Date;
@@ -43,6 +46,32 @@ export const MobileCalendarSheet = ({
         </SheetHeader>
 
         <div className="space-y-8 overflow-y-auto max-h-[calc(85vh-120px)] pb-6">
+          {/* Tasks & Notes Section */}
+          <div>
+            <Tabs defaultValue="tasks" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="tasks" className="gap-2">
+                  <CheckSquare className="w-4 h-4" />
+                  Tasks
+                </TabsTrigger>
+                <TabsTrigger value="notes" className="gap-2">
+                  <FileText className="w-4 h-4" />
+                  Notes
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="tasks" className="max-h-[300px] overflow-y-auto mt-4">
+                <TasksList />
+              </TabsContent>
+              
+              <TabsContent value="notes" className="max-h-[300px] overflow-y-auto mt-4">
+                <NotesPanel />
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          <Separator />
+
           {/* Mini Calendar */}
           <div>
             <h3 className="text-lg font-medium mb-4">Jump to Date</h3>
