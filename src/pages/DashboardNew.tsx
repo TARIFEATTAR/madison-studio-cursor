@@ -166,7 +166,7 @@ export default function DashboardNew() {
                   </p>
                   <Button 
                     onClick={() => navigate(priorityAction.actionRoute)}
-                    className="bg-ink-black hover:bg-charcoal text-parchment-white border-0 uppercase tracking-wider text-xs"
+                    className="bg-ink-black hover:bg-charcoal text-parchment-white border-0 uppercase tracking-wider text-xs w-full sm:w-auto"
                   >
                     {priorityAction.actionLabel}
                   </Button>
