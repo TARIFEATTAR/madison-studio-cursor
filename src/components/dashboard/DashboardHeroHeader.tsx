@@ -64,7 +64,7 @@ export function DashboardHeroHeader({ organizationName, streakDays, showMadisonB
                     <img 
                       src={madisonInsignia} 
                       alt="Madison" 
-                      className="w-10 h-10 object-contain opacity-80 flex-shrink-0"
+                      className="w-20 h-20 object-contain opacity-80 flex-shrink-0"
                     />
                     <div className="min-w-0">
                       <p className="font-serif text-base text-ink-black">
