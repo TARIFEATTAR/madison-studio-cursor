@@ -57,18 +57,18 @@ export function GoalsTab() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8">
       {/* Header */}
-      <div className={`${getPaperTexture('cardPaper')} border border-charcoal/10 p-8`}>
-        <div className="flex items-start gap-4 mb-4">
-          <div className="w-12 h-12 bg-aged-brass/10 border border-aged-brass/20 flex items-center justify-center flex-shrink-0">
-            <Target className="w-6 h-6 text-aged-brass" />
+      <div className={`${getPaperTexture('cardPaper')} border border-charcoal/10 p-4 md:p-8`}>
+        <div className="flex items-start gap-3 md:gap-4">
+          <div className="w-10 h-10 md:w-12 md:h-12 bg-aged-brass/10 border border-aged-brass/20 flex items-center justify-center flex-shrink-0">
+            <Target className="w-5 h-5 md:w-6 md:h-6 text-aged-brass" />
           </div>
           <div>
-            <h2 className="font-serif text-2xl font-medium text-ink-black mb-2">
+            <h2 className="font-serif text-xl md:text-2xl font-medium text-ink-black mb-1 md:mb-2">
               Weekly Editorial Targets
             </h2>
-            <p className="text-charcoal/70 text-sm font-light leading-relaxed">
+            <p className="text-charcoal/70 text-xs md:text-sm font-light leading-relaxed">
               Set targets that challenge you, but won't break you. These goals help track your progress 
               and maintain consistency without creating burnout.
             </p>
@@ -77,14 +77,14 @@ export function GoalsTab() {
       </div>
 
       {/* Goal Sliders */}
-      <div className={`${getPaperTexture('cardPaper')} border border-charcoal/10 p-8 space-y-8`}>
+      <div className={`${getPaperTexture('cardPaper')} border border-charcoal/10 p-4 md:p-8 space-y-6 md:space-y-8`}>
         {/* Creation Goal */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm uppercase tracking-wider text-charcoal/80">
+        <div className="space-y-3 md:space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <Label className="text-xs md:text-sm uppercase tracking-wider text-charcoal/80">
               Weekly Creation Target
             </Label>
-            <span className="font-serif text-3xl text-ink-black">
+            <span className="font-serif text-2xl md:text-3xl text-ink-black">
               {goals.weekly_creation}
             </span>
           </div>
@@ -94,7 +94,7 @@ export function GoalsTab() {
             min={3}
             max={25}
             step={1}
-            className="py-4"
+            className="py-3 md:py-4"
           />
           <p className="text-xs text-charcoal/60 italic">
             Number of pieces you aim to create each week (3-25)
@@ -102,12 +102,12 @@ export function GoalsTab() {
         </div>
 
         {/* Publishing Goal */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm uppercase tracking-wider text-charcoal/80">
+        <div className="space-y-3 md:space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <Label className="text-xs md:text-sm uppercase tracking-wider text-charcoal/80">
               Weekly Publishing Target
             </Label>
-            <span className="font-serif text-3xl text-ink-black">
+            <span className="font-serif text-2xl md:text-3xl text-ink-black">
               {goals.weekly_publishing}
             </span>
           </div>
@@ -117,7 +117,7 @@ export function GoalsTab() {
             min={1}
             max={15}
             step={1}
-            className="py-4"
+            className="py-3 md:py-4"
           />
           <p className="text-xs text-charcoal/60 italic">
             Number of pieces you plan to publish each week (1-15)
@@ -125,12 +125,12 @@ export function GoalsTab() {
         </div>
 
         {/* Scheduling Goal */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm uppercase tracking-wider text-charcoal/80">
+        <div className="space-y-3 md:space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <Label className="text-xs md:text-sm uppercase tracking-wider text-charcoal/80">
               Weekly Scheduling Target
             </Label>
-            <span className="font-serif text-3xl text-ink-black">
+            <span className="font-serif text-2xl md:text-3xl text-ink-black">
               {goals.weekly_scheduling}
             </span>
           </div>
@@ -140,7 +140,7 @@ export function GoalsTab() {
             min={1}
             max={20}
             step={1}
-            className="py-4"
+            className="py-3 md:py-4"
           />
           <p className="text-xs text-charcoal/60 italic">
             Number of pieces you aim to schedule each week (1-20)
@@ -152,7 +152,7 @@ export function GoalsTab() {
           <Button
             onClick={handleSave}
             disabled={updateGoals.isPending}
-            className="bg-ink-black hover:bg-charcoal text-parchment-white uppercase tracking-wider"
+            className="w-full sm:w-auto h-11 bg-ink-black hover:bg-charcoal text-parchment-white uppercase tracking-wider text-sm"
           >
             {updateGoals.isPending ? "Saving..." : "Save Targets"}
           </Button>
@@ -160,30 +160,30 @@ export function GoalsTab() {
       </div>
 
       {/* Streak Display */}
-      <div className={`${getPaperTexture('cardPaper')} border border-charcoal/10 p-8`}>
-        <div className="flex items-center gap-4 mb-6">
-          <Flame className="w-8 h-8 text-aged-brass" />
+      <div className={`${getPaperTexture('cardPaper')} border border-charcoal/10 p-4 md:p-8`}>
+        <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
+          <Flame className="w-6 h-6 md:w-8 md:h-8 text-aged-brass" />
           <div>
-            <h3 className="font-serif text-xl font-medium text-ink-black">
+            <h3 className="font-serif text-lg md:text-xl font-medium text-ink-black">
               Publishing Streak
             </h3>
-            <p className="text-sm text-charcoal/60">
+            <p className="text-xs md:text-sm text-charcoal/60">
               Consecutive weeks meeting any goal
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6 mb-6">
-          <div className={`${getPaperTexture('manuscriptPaper')} border border-charcoal/10 p-6 text-center`}>
-            <div className="font-serif text-4xl text-aged-brass mb-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
+          <div className={`${getPaperTexture('manuscriptPaper')} border border-charcoal/10 p-4 md:p-6 text-center`}>
+            <div className="font-serif text-3xl md:text-4xl text-aged-brass mb-1 md:mb-2">
               {streakData?.currentStreak || 0}
             </div>
             <div className="text-xs uppercase tracking-wider text-charcoal/60">
               Current Streak
             </div>
           </div>
-          <div className={`${getPaperTexture('manuscriptPaper')} border border-charcoal/10 p-6 text-center`}>
-            <div className="font-serif text-4xl text-ink-black mb-2">
+          <div className={`${getPaperTexture('manuscriptPaper')} border border-charcoal/10 p-4 md:p-6 text-center`}>
+            <div className="font-serif text-3xl md:text-4xl text-ink-black mb-1 md:mb-2">
               {streakData?.longestStreak || 0}
             </div>
             <div className="text-xs uppercase tracking-wider text-charcoal/60">
@@ -193,10 +193,10 @@ export function GoalsTab() {
         </div>
 
         {/* Grace Period Info */}
-        <div className="bg-aged-brass/5 border border-aged-brass/20 p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <Info className="w-5 h-5 text-aged-brass flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-charcoal/70">
+        <div className="bg-aged-brass/5 border border-aged-brass/20 p-3 md:p-4 mb-4 md:mb-6">
+          <div className="flex items-start gap-2 md:gap-3">
+            <Info className="w-4 h-4 md:w-5 md:h-5 text-aged-brass flex-shrink-0 mt-0.5" />
+            <div className="text-xs md:text-sm text-charcoal/70">
               <p className="font-medium mb-1">Editor's Extension</p>
               <p className="text-xs leading-relaxed">
                 If you miss a day, you have 48 hours to catch up without breaking your streak. 
@@ -207,9 +207,9 @@ export function GoalsTab() {
         </div>
 
         {/* Vacation Mode */}
-        <div className="flex items-center justify-between p-4 border border-charcoal/10">
-          <div>
-            <Label className="text-sm font-medium text-ink-black">
+        <div className="flex items-center justify-between gap-4 p-3 md:p-4 border border-charcoal/10">
+          <div className="min-w-0 flex-1">
+            <Label className="text-xs md:text-sm font-medium text-ink-black">
               Vacation Mode
             </Label>
             <p className="text-xs text-charcoal/60 mt-1">
@@ -219,6 +219,7 @@ export function GoalsTab() {
           <Switch
             checked={vacationMode}
             onCheckedChange={handleVacationToggle}
+            className="flex-shrink-0"
           />
         </div>
 

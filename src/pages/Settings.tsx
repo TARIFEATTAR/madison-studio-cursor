@@ -28,62 +28,62 @@ export default function Settings() {
         {/* Tabs Section */}
         <div className="px-8 py-6">
           <Tabs defaultValue={defaultTab} className="space-y-6">
-            <TabsList className="bg-paper-light border border-cream-dark p-1 w-full justify-start flex-wrap">
+            <TabsList className="bg-paper-light border border-cream-dark p-1 w-full justify-start overflow-x-auto flex-nowrap">
               <TabsTrigger 
                 value="brand" 
-                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal gap-2"
+                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal px-2 sm:px-3 py-1.5 gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0"
               >
                 <Building2 className="w-4 h-4" />
-                Brand Guidelines
+                <span className="hidden xs:inline">Brand Guidelines</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="madison"
-                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal gap-2"
+                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal px-2 sm:px-3 py-1.5 gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0"
               >
                 <Sparkles className="w-4 h-4" />
-                Madison's Training
+                <span className="hidden xs:inline">Madison's Training</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="goals"
-                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal gap-2"
+                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal px-2 sm:px-3 py-1.5 gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0"
               >
                 <Target className="w-4 h-4" />
-                Goals & Accolades
+                <span className="hidden xs:inline">Goals & Accolades</span>
               </TabsTrigger>
               <TabsTrigger
                 value="collections"
-                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal gap-2"
+                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal px-2 sm:px-3 py-1.5 gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0"
               >
                 <FolderKanban className="w-4 h-4" />
-                Collections
+                <span className="hidden xs:inline">Collections</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="products"
-                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal gap-2"
+                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal px-2 sm:px-3 py-1.5 gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0"
               >
                 <Package className="w-4 h-4" />
-                Products
+                <span className="hidden xs:inline">Products</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="team"
-                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal gap-2"
+                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal px-2 sm:px-3 py-1.5 gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0"
               >
                 <Users className="w-4 h-4" />
-                Team
+                <span className="hidden xs:inline">Team</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="notifications"
-                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal gap-2"
+                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal px-2 sm:px-3 py-1.5 gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0"
               >
                 <Bell className="w-4 h-4" />
-                Notifications
+                <span className="hidden xs:inline">Notifications</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="billing"
-                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal gap-2"
+                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal px-2 sm:px-3 py-1.5 gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0"
               >
                 <CreditCard className="w-4 h-4" />
-                Billing
+                <span className="hidden xs:inline">Billing</span>
               </TabsTrigger>
             </TabsList>
 
