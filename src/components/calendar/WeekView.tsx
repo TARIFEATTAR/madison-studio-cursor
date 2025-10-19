@@ -2,8 +2,10 @@ import { startOfWeek, endOfWeek, eachDayOfInterval, format, isSameDay, isToday }
 import { Droppable, Draggable } from "react-beautiful-dnd";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { GripVertical } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { GripVertical, Calendar } from "lucide-react";
 import { useMemo } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ScheduledItem {
   id: string;
@@ -23,6 +25,7 @@ interface WeekViewProps {
 }
 
 export const WeekView = ({ currentDate, scheduledItems, onItemClick }: WeekViewProps) => {
+  const isMobile = useIsMobile();
   const weekStart = startOfWeek(currentDate);
   const weekEnd = endOfWeek(currentDate);
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
@@ -52,6 +55,103 @@ export const WeekView = ({ currentDate, scheduledItems, onItemClick }: WeekViewP
     return itemsByDay.get(dayId) || [];
   };
 
+  // Mobile: Vertical list of days
+  if (isMobile) {
+    return (
+      <div className="space-y-4">
+        {days.map((day) => {
+          const dayId = format(day, "yyyy-MM-dd");
+          const dayItems = getItemsForDay(dayId);
+          const isDayToday = isToday(day);
+
+          return (
+            <Droppable key={dayId} droppableId={dayId}>
+              {(provided, snapshot) => (
+                <Card
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className={cn(
+                    "p-4 transition-all",
+                    isDayToday && "ring-2 ring-primary/40 border-primary/30 bg-accent/30",
+                    snapshot.isDraggingOver && "bg-primary/10 ring-2 ring-primary border-primary"
+                  )}
+                >
+                  {/* Day Header */}
+                  <div className="flex items-baseline gap-3 mb-4 pb-3 border-b border-border/20">
+                    <div className={cn(
+                      "text-3xl font-bold",
+                      isDayToday && "text-primary"
+                    )}>
+                      {format(day, "d")}
+                    </div>
+                    <div className={cn(
+                      "text-lg uppercase tracking-wide",
+                      isDayToday ? "text-primary font-semibold" : "text-muted-foreground"
+                    )}>
+                      {format(day, "EEEE")}
+                    </div>
+                  </div>
+
+                  {/* Items */}
+                  {dayItems.length > 0 ? (
+                    <div className="space-y-2">
+                      {dayItems.map((item, index) => (
+                        <Draggable key={item.id} draggableId={item.id} index={index}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onItemClick(item);
+                              }}
+                              className={cn(
+                                "p-4 rounded-md transition-all cursor-grab active:cursor-grabbing",
+                                "bg-card hover:bg-accent/50 border border-border/40 hover:border-border/60",
+                                snapshot.isDragging && "shadow-2xl ring-2 ring-primary opacity-90 scale-105 cursor-grabbing"
+                              )}
+                            >
+                              <div className="flex items-start gap-3">
+                                <GripVertical className="w-5 h-5 text-muted-foreground/70 flex-shrink-0 mt-0.5" />
+                                <div className="flex-1 min-w-0">
+                                  {item.scheduled_time && (
+                                    <div className="text-sm text-muted-foreground mb-2 flex items-center gap-1.5">
+                                      <Calendar className="w-3.5 h-3.5" />
+                                      {format(new Date(`2000-01-01T${item.scheduled_time}`), "h:mm a")}
+                                    </div>
+                                  )}
+                                  <div className="font-medium text-base leading-snug mb-2">
+                                    {item.title}
+                                  </div>
+                                  {item.platform && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      {item.platform}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground/60 text-sm">
+                      No items scheduled
+                    </div>
+                  )}
+                </Card>
+              )}
+            </Droppable>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Desktop: 7-column grid
   return (
     <div className="space-y-8">
       {/* Week Grid */}
