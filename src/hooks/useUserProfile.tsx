@@ -25,9 +25,11 @@ export function useUserProfile() {
           console.error("Error fetching user profile:", error);
           setUserName(null);
         } else if (data) {
-          const name = data.full_name?.split(' ')[0] || 
-                      data.email?.split('@')[0] || 
-                      "there";
+          const rawName = data.full_name?.split(' ')[0] || 
+                       data.email?.split('@')[0] || 
+                       "there";
+          // Capitalize first letter only, rest lowercase
+          const name = rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase();
           setUserName(name);
         }
       } catch (error) {
