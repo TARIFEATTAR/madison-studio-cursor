@@ -25,7 +25,7 @@ export function useUserProfile() {
           console.error("Error fetching user profile:", error);
           setUserName(null);
         } else if (data) {
-          const name = data.full_name || 
+          const name = data.full_name?.split(' ')[0] || 
                       data.email?.split('@')[0] || 
                       "there";
           setUserName(name);
