@@ -103,9 +103,11 @@ export function ContentPipeline() {
                 </span>
               </div>
               <p className="text-xs font-semibold text-charcoal mb-0.5">{stage.label}</p>
-              <p className="text-[10px] text-charcoal/60 leading-tight">{stage.description}</p>
-              <div className="mt-1.5 text-[10px] text-aged-brass opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
-                {stage.action} <ArrowRight className="w-2.5 h-2.5" />
+              <p className="text-[10px] text-charcoal/60 leading-tight mb-2">{stage.description}</p>
+              <div className="pt-2 border-t border-charcoal/10">
+                <div className="text-[10px] uppercase tracking-wider text-aged-brass font-medium flex items-center gap-1 group-hover:gap-1.5 transition-all">
+                  {stage.action} <ArrowRight className="w-3 h-3" />
+                </div>
               </div>
             </button>
           );

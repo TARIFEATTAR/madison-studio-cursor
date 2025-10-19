@@ -5,9 +5,7 @@ import { Button } from "@/components/ui/button";
 import { DashboardHeroHeader } from "@/components/dashboard/DashboardHeroHeader";
 import { DashboardEditorialStats } from "@/components/dashboard/DashboardEditorialStats";
 import { DashboardEditorialTimeline } from "@/components/dashboard/DashboardEditorialTimeline";
-import { DashboardWorkflowMap } from "@/components/dashboard/DashboardWorkflowMap";
 import { ContentPipeline } from "@/components/dashboard/ContentPipeline";
-import { UpcomingSchedule } from "@/components/dashboard/UpcomingSchedule";
 import { BrandHealthCard } from "@/components/dashboard/BrandHealthCard";
 import { EditorialAccolades } from "@/components/dashboard/EditorialAccolades";
 import { StreakTracker } from "@/components/dashboard/StreakTracker";
@@ -96,18 +94,15 @@ export default function DashboardNew() {
       />
 
       <div className="max-w-7xl mx-auto px-6 pb-8">
-        {/* Brand Health + Recent Activity - Side by Side */}
-        <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Brand Health - Full Width */}
+        <div className="mb-6">
           <BrandHealthCard />
-          <div className="bg-parchment-white border border-charcoal/10 p-5">
-            <h3 className="font-serif text-xl text-ink-black mb-4">Recent Activity</h3>
-            <DashboardEditorialTimeline />
-          </div>
         </div>
 
-        {/* Workflow Map */}
-        <div className="mb-8">
-          <DashboardWorkflowMap />
+        {/* Accolades & Streak - Side by Side */}
+        <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <EditorialAccolades />
+          <StreakTracker />
         </div>
 
         {/* Editorial Goals */}
@@ -115,7 +110,7 @@ export default function DashboardNew() {
           <DashboardEditorialStats stats={stats} />
         </div>
 
-        {/* Content Pipeline */}
+        {/* Content Pipeline - Enhanced */}
         <div className="mb-8 bg-parchment-white border border-charcoal/10 p-6 md:p-8">
           <div className="mb-6">
             <h3 className="font-serif text-xl md:text-2xl font-light text-ink-black mb-2">
@@ -128,23 +123,17 @@ export default function DashboardNew() {
           <ContentPipeline />
         </div>
 
-        {/* Accolades & Streak - Side by Side */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-12">
-          <EditorialAccolades />
-          <StreakTracker />
-        </div>
-
-        {/* Upcoming Schedule - Full width on mobile, conditional on desktop */}
-        <div className="lg:hidden bg-parchment-white border border-charcoal/10 p-6 md:p-8">
-          <div className="mb-6 md:mb-8 pb-4 border-b border-charcoal/10">
+        {/* Recent Activity - Full Width Timeline */}
+        <div className="bg-parchment-white border border-charcoal/10 p-6 md:p-8">
+          <div className="mb-6 pb-4 border-b border-charcoal/10">
             <h2 className="font-serif text-xl md:text-2xl font-medium text-ink-black mb-1">
-              Upcoming This Week
+              Recent Activity
             </h2>
             <p className="text-xs text-charcoal/60 italic">
-              Your content schedule for the next 7 days
+              Your editorial timeline
             </p>
           </div>
-          <UpcomingSchedule />
+          <DashboardEditorialTimeline />
         </div>
 
       </div>
