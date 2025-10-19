@@ -146,12 +146,13 @@ export function PublishingDrawer({
                     "w-full justify-start text-left font-normal",
                     !publishDate && "text-muted-foreground"
                   )}
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {publishDate ? format(publishDate, "PPP") : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              <PopoverContent className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
                 <Calendar
                   mode="single"
                   selected={publishDate}
@@ -175,16 +176,22 @@ export function PublishingDrawer({
                       ? "bg-primary/5 border-primary"
                       : "hover:bg-muted/50"
                   )}
-                  onClick={() => handlePlatformToggle(platform.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePlatformToggle(platform.id);
+                  }}
                 >
                   <Checkbox
                     id={platform.id}
                     checked={selectedPlatforms.includes(platform.id)}
-                    onCheckedChange={() => handlePlatformToggle(platform.id)}
+                    onCheckedChange={(checked) => {
+                      handlePlatformToggle(platform.id);
+                    }}
                   />
                   <label
                     htmlFor={platform.id}
                     className="flex-1 text-sm font-medium cursor-pointer"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     {platform.icon} {platform.label}
                   </label>
@@ -212,6 +219,7 @@ export function PublishingDrawer({
                       placeholder={`https://...`}
                       value={platformUrls[platformId] || ""}
                       onChange={(e) => handleUrlChange(platformId, e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
                     />
                   </div>
                 );
@@ -227,6 +235,7 @@ export function PublishingDrawer({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
 
@@ -234,13 +243,23 @@ export function PublishingDrawer({
           <div className="flex gap-3">
             <Button
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenChange(false);
+              }}
               className="flex-1"
               disabled={saving}
             >
               Cancel
             </Button>
-            <Button onClick={handlePublish} className="flex-1" disabled={saving}>
+            <Button 
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePublish();
+              }} 
+              className="flex-1" 
+              disabled={saving}
+            >
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Mark as Published
             </Button>
