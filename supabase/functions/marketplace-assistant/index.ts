@@ -112,7 +112,7 @@ serve(async (req) => {
       );
     }
 
-    const { messages, platform, organizationId, formData, productId, actionType } = await req.json();
+    const { messages, platform, organizationId, formData, productId, actionType, userName } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -215,6 +215,11 @@ QUICK ACTIONS:
 - "Optimize Title": Craft compelling, keyword-rich title
 
 Always maintain brand voice while optimizing for the platform's audience and algorithm.`;
+    
+    // Add personalization if user name is provided
+    if (userName) {
+      systemContent += `\n\n(Note: You're assisting ${userName} with this listing. Use their name naturally in greetings or when acknowledging their work. Example: "Great choice, ${userName}!" or "Here's what I suggest, ${userName}...")`;
+    }
 
     // Call Lovable AI with streaming
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {

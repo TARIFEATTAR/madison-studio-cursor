@@ -9,6 +9,7 @@ import { stripMarkdown } from "@/utils/forgeHelpers";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useProducts } from "@/hooks/useProducts";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +48,7 @@ export default function Create() {
   const location = useLocation();
   const { currentOrganizationId } = useOnboarding();
   const { products, loading: productsLoading } = useProducts();
+  const { userName } = useUserProfile();
   const { toast } = useToast();
 
   
@@ -377,7 +379,8 @@ export default function Create() {
             'Authorization': `Bearer ${accessToken}`
           },
           body: JSON.stringify({ 
-            messages: [...thinkModeMessages, userMessage]
+            messages: [...thinkModeMessages, userMessage],
+            userName: userName || undefined,
           })
         }
       );

@@ -5,6 +5,7 @@ import { Sparkles, Tag, FileText, Send, Loader2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -30,21 +31,28 @@ export function MadisonAssistantPanel({
   productId 
 }: MadisonAssistantPanelProps) {
   const { toast } = useToast();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: `Hello! I'm Madison, your editorial assistant. I can help you create an ${platform === 'etsy' ? 'Etsy' : 'TikTok Shop'}-optimized listing that maintains your brand voice while maximizing discoverability.
-
-I see you're creating a listing for ${formData.productId ? "a product from your catalog" : "a new product"}. I can help you craft compelling copy that tells your product's story.
-
-What would you like me to help with?`,
-      timestamp: new Date(),
-    },
-  ]);
+  const { userName } = useUserProfile();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (userName && messages.length === 0) {
+      const greeting = `Hi ${userName}! I'm Madison, your editorial assistant. I can help you create an ${platform === 'etsy' ? 'Etsy' : 'TikTok Shop'}-optimized listing that maintains your brand voice while maximizing discoverability.
+
+I see you're creating a listing for ${formData.productId ? "a product from your catalog" : "a new product"}. I can help you craft compelling copy that tells your product's story.
+
+What would you like me to help with?`;
+      
+      setMessages([{
+        role: "assistant",
+        content: greeting,
+        timestamp: new Date(),
+      }]);
+    }
+  }, [userName, platform, formData.productId]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -97,7 +105,8 @@ What would you like me to help with?`,
           organizationId,
           formData,
           productId,
-          actionType
+          actionType,
+          userName: userName || undefined,
         }),
       });
 

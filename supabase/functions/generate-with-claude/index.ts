@@ -385,7 +385,7 @@ serve(async (req) => {
       throw new Error('ANTHROPIC_API_KEY is not configured');
     }
 
-    const { prompt, organizationId, mode = "generate", styleOverlay = "TARIFE_NATIVE", productData, contentType } = await req.json();
+    const { prompt, organizationId, mode = "generate", styleOverlay = "TARIFE_NATIVE", productData, contentType, userName } = await req.json();
     
     // Verify user has access to the requested organization
     if (organizationId) {
@@ -961,6 +961,10 @@ CRITICAL INSTRUCTIONS:
 • Return output as plain text only with no Markdown formatting
 • No emojis, no excessive enthusiasm, no generic praise
 • Be the strategic counsel they need, not the validation they might want`;
+        
+        // Add personalization if user name is provided
+        if (userName) {
+          systemPrompt += `\n\n(Note: You're speaking with ${userName}. Use their name naturally when appropriate—in greetings, when acknowledging good ideas, or when offering encouragement. Don't overuse it; once per conversation or when emphasizing a point is sufficient.)`;
         }
       }
     } else {

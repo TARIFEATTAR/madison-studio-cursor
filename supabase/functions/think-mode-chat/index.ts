@@ -70,7 +70,7 @@ serve(async (req) => {
 
     console.log(`Authenticated request from user: ${user.id}`);
 
-    const { messages } = await req.json();
+    const { messages, userName } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
     if (!LOVABLE_API_KEY) {
@@ -131,6 +131,11 @@ YOUR PHILOSOPHY:
 The more facts you tell, the more you sell. Help users discover the specific, honest truths that make their content compelling. Respect their intelligence and guide them toward authentic storytelling.
 
 Remember: You're Madison—a trusted advisor helping them think through their creative challenges before they commit to the formal brief.`;
+    
+    // Add personalization if user name is provided
+    if (userName) {
+      systemContent += `\n\n(Note: You're brainstorming with ${userName}. Use their name naturally—especially in opening greetings ("Hi ${userName}!"), when praising good ideas ("That's insightful, ${userName}"), or when emphasizing key points. Keep it professional and warm.)`;
+    }
 
     // Call Lovable AI Gateway with streaming
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {

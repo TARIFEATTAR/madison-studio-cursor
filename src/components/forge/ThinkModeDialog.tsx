@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sparkles, Send, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -20,6 +21,7 @@ interface Message {
 
 export function ThinkModeDialog({ open, onOpenChange }: ThinkModeDialogProps) {
   const { toast } = useToast();
+  const { userName } = useUserProfile();
   const [messages, setMessages] = useState<Message[]>([]);
   const [idea, setIdea] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -66,9 +68,10 @@ export function ThinkModeDialog({ open, onOpenChange }: ThinkModeDialogProps) {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ 
-          messages: [...messages, userMessage]
-        }),
+          body: JSON.stringify({ 
+            messages: [...messages, userMessage],
+            userName: userName || undefined,
+          }),
       });
 
       if (!response.ok) {

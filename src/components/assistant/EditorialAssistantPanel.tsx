@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 
@@ -23,18 +24,23 @@ interface EditorialAssistantPanelProps {
 export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAssistantPanelProps) {
   const { toast } = useToast();
   const { currentOrganizationId } = useOnboarding();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: "Your content is ready. I'm here to help you refine it. What would you like to improve?",
-      timestamp: new Date(),
-    },
-  ]);
+  const { userName } = useUserProfile();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState(initialContent || "");
   const [isGenerating, setIsGenerating] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (userName && messages.length === 0) {
+      setMessages([{
+        role: "assistant",
+        content: `Hi ${userName}! Your content is ready. I'm here to help you refine it. What would you like to improve?`,
+        timestamp: new Date(),
+      }]);
+    }
+  }, [userName]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -85,6 +91,7 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
           prompt,
           organizationId: currentOrganizationId,
           mode: "consult",
+          userName: userName || undefined,
         },
       });
 
