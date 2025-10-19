@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, PenTool, Calendar, Archive, FileText, Loader2, Clock } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DashboardHeroHeader } from "@/components/dashboard/DashboardHeroHeader";
@@ -13,18 +13,14 @@ import { EditorialAccolades } from "@/components/dashboard/EditorialAccolades";
 import { StreakTracker } from "@/components/dashboard/StreakTracker";
 import { DashboardTourModal } from "@/components/dashboard/DashboardTourModal";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
-import { usePriorityAction } from "@/hooks/usePriorityAction";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import madisonInsignia from "@/assets/madison-insignia.png";
 
 export default function DashboardNew() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
-  const { data: priorityAction, isLoading: priorityLoading } = usePriorityAction();
   const [showEditorialBanner, setShowEditorialBanner] = useState(true);
-  const [showPriorityCard, setShowPriorityCard] = useState(true);
   const [organizationName, setOrganizationName] = useState<string>("");
   const [longLoad, setLongLoad] = useState(false);
 
@@ -60,7 +56,7 @@ export default function DashboardNew() {
   }, []);
 
   // Show spinner initially
-  if ((statsLoading || priorityLoading) && !longLoad) {
+  if (statsLoading && !longLoad) {
     return (
       <div className="min-h-screen bg-vellum-cream flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-brass" />
@@ -69,7 +65,7 @@ export default function DashboardNew() {
   }
 
   // Show fallback if loading too long
-  if ((statsLoading || priorityLoading) && longLoad) {
+  if (statsLoading && longLoad) {
     return (
       <div className="min-h-screen bg-vellum-cream flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -105,14 +101,6 @@ export default function DashboardNew() {
           <BrandHealthCard />
         </div>
 
-        {/* Priority Action Card - Clean lines */}
-        {showPriorityCard && priorityAction && (
-          <div className="mb-8">
-            <div className="bg-parchment-white border border-charcoal/10 p-8 relative">
-...
-            </div>
-          </div>
-        )}
 
         {/* Workflow Map */}
         <div className="mb-12">
