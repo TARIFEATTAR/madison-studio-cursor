@@ -66,11 +66,23 @@ CURRENT BRAND SETUP:
 - Asset Types Created: ${context.assetTypes.join(', ')}
 - Collections Used: ${context.collectionsUsed.join(', ')}
 
+BRAND KNOWLEDGE DETAILS:
+${context.brandKnowledge.map(k => {
+  const fields = Object.keys(k.content || {}).filter(key => k.content[key]);
+  return `- ${k.knowledge_type} (v${k.version}): ${fields.length > 0 ? fields.join(', ') : 'empty'}`;
+}).join('\n')}
+
 PRODUCT DETAILS:
 ${context.products.map(p => `- ${p.name} (${p.collection || 'No collection'}): ${p.category || 'No category'}`).join('\n')}
 
 COLLECTION DETAILS:
 ${context.collections.map(c => `- ${c.name}: ${c.description ? 'Has description' : 'Missing description'}, ${c.transparency_statement ? 'Has transparency' : 'Missing transparency'}`).join('\n')}
+
+IMPORTANT: Identify completed brand knowledge as STRENGTHS. For example:
+- If core_identity exists with mission/vision/values → "Defined core brand identity"
+- If voice_tone exists → "Established brand voice guidelines"
+- If products exist → "Created product catalog"
+- If collections exist → "Organized product collections"
 
 Analyze what's missing or incomplete and provide actionable recommendations in this JSON format:
 {
@@ -78,7 +90,8 @@ Analyze what's missing or incomplete and provide actionable recommendations in t
   "gap_analysis": {
     "missing_components": ["<component 1>", "<component 2>"],
     "incomplete_areas": ["<area 1>", "<area 2>"],
-    "affected_content_types": ["<type 1>", "<type 2>"]
+    "affected_content_types": ["<type 1>", "<type 2>"],
+    "strengths": ["<strength 1 - what IS complete>", "<strength 2>"]
   },
   "recommendations": [
     {
@@ -90,11 +103,10 @@ Analyze what's missing or incomplete and provide actionable recommendations in t
       "affected_items_count": <number>
     }
   ],
-  "strengths": ["<strength 1>", "<strength 2>"],
   "quick_wins": ["<quick action 1>", "<quick action 2>"]
 }
 
-Be specific and prioritize recommendations by impact.`;
+Be specific and prioritize recommendations by impact. ALWAYS include strengths array showing what IS working well.`;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
