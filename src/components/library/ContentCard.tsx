@@ -61,6 +61,8 @@ export function ContentCard({
   return (
     <Card
       onClick={(e) => {
+        // Prevent opening detail modal while publish drawer is open
+        if (publishDrawerOpen) return;
         // Don't trigger card click if clicking checkbox
         if (!(e.target as HTMLElement).closest('input[type="checkbox"]')) {
           onClick();

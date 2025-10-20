@@ -312,7 +312,13 @@ export function ContentDetailModal({
               )}
 
               <Button
-                onClick={() => setMadisonDialogOpen(true)}
+                onClick={() => {
+                  if (onEditWithMadison) {
+                    onEditWithMadison(content, category);
+                  } else {
+                    setMadisonDialogOpen(true);
+                  }
+                }}
                 variant="outline"
                 size="sm"
               >

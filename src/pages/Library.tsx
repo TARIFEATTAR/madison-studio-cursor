@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ScheduleModal } from "@/components/calendar/ScheduleModal";
+import { MadisonSplitEditor } from "@/components/library/MadisonSplitEditor";
 
 export default function Library() {
   const navigate = useNavigate();
@@ -31,6 +32,15 @@ export default function Library() {
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [derivativeAssetForSchedule, setDerivativeAssetForSchedule] = useState<any>(null);
   const [masterForSchedule, setMasterForSchedule] = useState<any>(null);
+
+  // Madison split editor state
+  const [madisonOpen, setMadisonOpen] = useState(false);
+  const [madisonContext, setMadisonContext] = useState<{
+    id: string;
+    category: "master" | "output" | "derivative";
+    initialText: string;
+    title?: string;
+  } | null>(null);
 
   // Filtering and sorting logic
   const filteredContent = useMemo(() => {

@@ -126,7 +126,12 @@ export function PublishingDrawer({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:w-[540px] sm:max-w-[540px] overflow-y-auto">
+      <SheetContent 
+        className="w-full sm:w-[540px] sm:max-w-[540px] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         <SheetHeader>
           <SheetTitle>Mark as Published</SheetTitle>
           <SheetDescription className="line-clamp-2">
