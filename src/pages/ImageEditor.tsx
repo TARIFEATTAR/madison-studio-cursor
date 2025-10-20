@@ -172,8 +172,7 @@ export default function ImageEditor() {
       setAwaitingSessionName(false);
       setSessionStarted(true);
       
-      // Generate image directly
-      handleGenerate(message);
+      toast.success(`Session "${finalSessionName}" started! Describe your image to generate it.`);
     } else {
       // User provided a session name
       finalSessionName = message;

@@ -120,7 +120,8 @@ export default function Library() {
       const itemsByTable = {
         master_content: [] as string[],
         outputs: [] as string[],
-        derivative_assets: [] as string[]
+        derivative_assets: [] as string[],
+        generated_images: [] as string[]
       };
 
       selectedItems.forEach(id => {
@@ -156,6 +157,15 @@ export default function Library() {
             .from('derivative_assets')
             .update({ is_archived: !showArchived, archived_at: !showArchived ? new Date().toISOString() : null })
             .in('id', itemsByTable.derivative_assets)
+        );
+      }
+
+      if (itemsByTable.generated_images.length > 0) {
+        updatePromises.push(
+          supabase
+            .from('generated_images')
+            .update({ is_archived: !showArchived, archived_at: !showArchived ? new Date().toISOString() : null })
+            .in('id', itemsByTable.generated_images)
         );
       }
 

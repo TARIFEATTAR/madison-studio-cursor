@@ -170,7 +170,7 @@ export const useLibraryContent = () => {
               updatedAt: new Date(item.created_at),
               rating: null,
               wordCount: 0,
-              archived: false,
+              archived: item.is_archived || false,
               status: "published",
               sourceTable: "generated_images" as any,
               imageUrl: item.image_url, // Add explicit imageUrl field
