@@ -466,7 +466,7 @@ export default function ImageEditor() {
       <Sheet open={madisonOpen} onOpenChange={setMadisonOpen}>
         <SheetContent 
           side="right" 
-          className="w-[300px] p-0 border-l border-[#3D3935]"
+          className="w-[350px] p-0 border-l border-[#3D3935]"
           style={{ backgroundColor: '#2F2A26' }}
         >
           <EditorialAssistantPanel

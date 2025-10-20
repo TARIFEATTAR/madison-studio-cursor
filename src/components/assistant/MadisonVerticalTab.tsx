@@ -12,7 +12,7 @@ export function MadisonVerticalTab({ isOpen, onClick, hasSuggestions }: MadisonV
       onClick={onClick}
       className={cn(
         // Fixed positioning - bottom-right, small tab
-        "fixed right-0 bottom-0 h-[100px] z-40",
+        "fixed right-0 bottom-0 h-[60px] z-40",
         "w-20 md:flex items-center justify-center hidden",
         
         // Styling - brass gradient with subtle border
@@ -20,7 +20,7 @@ export function MadisonVerticalTab({ isOpen, onClick, hasSuggestions }: MadisonV
         "border-t border-l border-brass/30 shadow-2xl rounded-tl-lg",
         
         // Hover effects
-        "hover:h-[110px] transition-all duration-300 ease-out",
+        "hover:h-[70px] transition-all duration-300 ease-out",
         "hover:shadow-brass/40",
         
         // Active/open state
