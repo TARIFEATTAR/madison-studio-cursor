@@ -176,6 +176,12 @@ export const DELIVERABLE_CATEGORIES: DeliverableCategory[] = [
     icon: Camera,
     deliverables: [
       {
+        value: "visual-asset",
+        label: "Visual Asset",
+        description: "AI-generated images and graphics",
+        icon: ImageIcon,
+      },
+      {
         value: "image_prompt",
         label: "Image Prompt",
         description: "AI image generation prompt",

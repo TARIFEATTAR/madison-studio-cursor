@@ -392,8 +392,6 @@ const Reservoir = () => {
           const bTitle = b.title || b.full_content?.substring(0, 50) || "";
           return aTitle.localeCompare(bTitle);
         });
-      case "dipWeek":
-        return sorted.sort((a, b) => (a.dip_week || 0) - (b.dip_week || 0));
       case "mostUsed":
         return sorted.sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0));
       default:

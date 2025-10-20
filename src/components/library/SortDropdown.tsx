@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
-export type SortOption = "recent" | "alphabetical" | "dipWeek" | "mostUsed";
+export type SortOption = "recent" | "alphabetical" | "mostUsed";
 
 interface SortDropdownProps {
   value: SortOption;
@@ -17,7 +17,6 @@ interface SortDropdownProps {
 const sortLabels: Record<SortOption, string> = {
   recent: "Most Recent",
   alphabetical: "A-Z",
-  dipWeek: "DIP Week",
   mostUsed: "Most Used",
 };
 
@@ -36,9 +35,6 @@ export function SortDropdown({ value, onChange }: SortDropdownProps) {
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onChange("alphabetical")}>
           A-Z
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onChange("dipWeek")}>
-          DIP Week
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onChange("mostUsed")}>
           Most Used

@@ -31,7 +31,6 @@ interface LibraryFiltersProps {
 const sortOptions = [
   { value: "recent", label: "Newest First" },
   { value: "alphabetical", label: "A-Z" },
-  { value: "dipWeek", label: "DIP Week" },
   { value: "mostUsed", label: "Most Used" },
 ];
 
