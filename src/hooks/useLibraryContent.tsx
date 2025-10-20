@@ -15,7 +15,7 @@ export interface LibraryContentItem {
   wordCount: number | null;
   archived: boolean;
   status: string;
-  sourceTable: "master_content" | "outputs" | "derivative_assets";
+  sourceTable: "master_content" | "outputs" | "derivative_assets" | "generated_images";
   publishedTo?: string[];
   externalUrls?: Record<string, string>;
   publishNotes?: string;
@@ -23,6 +23,10 @@ export interface LibraryContentItem {
   brandConsistencyScore?: number;
   brandAnalysis?: any;
   lastBrandCheckAt?: string;
+  imageUrl?: string;
+  goalType?: string;
+  aspectRatio?: string;
+  finalPrompt?: string;
 }
 
 export const useLibraryContent = () => {
@@ -134,6 +138,45 @@ export const useLibraryContent = () => {
               brandConsistencyScore: item.brand_consistency_score || undefined,
               brandAnalysis: item.brand_analysis || undefined,
               lastBrandCheckAt: item.last_brand_check_at || undefined,
+            };
+          })
+        );
+      }
+
+      // Fetch generated images (from Madison Image Studio)
+      const { data: generatedImages, error: imagesError } = await supabase
+        .from("generated_images")
+        .select("*")
+        .eq("saved_to_library", true)
+        .order("created_at", { ascending: false });
+
+      if (imagesError) {
+        console.error("Error fetching generated images:", imagesError);
+      } else if (generatedImages) {
+        items.push(
+          ...generatedImages.map((item) => {
+            // Parse library_category to determine where to show
+            const categories = item.library_category?.split(',') || ['content'];
+            const isContentLibrary = categories.includes('content');
+            const isMarketplace = categories.includes('marketplace');
+            
+            return {
+              id: item.id,
+              title: item.session_name || "Generated Image",
+              contentType: "visual-asset", // Use existing visual asset type
+              collection: null,
+              content: item.image_url, // Store image URL as content
+              createdAt: new Date(item.created_at),
+              updatedAt: new Date(item.created_at),
+              rating: null,
+              wordCount: 0,
+              archived: false,
+              status: "published",
+              sourceTable: "generated_images" as any,
+              imageUrl: item.image_url, // Add explicit imageUrl field
+              goalType: item.goal_type,
+              aspectRatio: item.aspect_ratio,
+              finalPrompt: item.final_prompt,
             };
           })
         );

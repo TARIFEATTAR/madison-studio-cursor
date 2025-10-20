@@ -37,7 +37,7 @@ interface PublishingDrawerProps {
   onOpenChange: (open: boolean) => void;
   contentId: string;
   contentTitle: string;
-  sourceTable: "master_content" | "derivative_assets" | "outputs";
+  sourceTable: "master_content" | "derivative_assets" | "outputs" | "generated_images";
   onSuccess?: () => void;
 }
 

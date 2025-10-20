@@ -28,9 +28,12 @@ interface ContentCardProps {
     publishedTo?: string[];
     externalUrls?: Record<string, string>;
     publishedAt?: string;
-    sourceTable?: "master_content" | "derivative_assets" | "outputs";
+    sourceTable?: "master_content" | "derivative_assets" | "outputs" | "generated_images";
     brandConsistencyScore?: number;
     lastBrandCheckAt?: string;
+    imageUrl?: string;
+    aspectRatio?: string;
+    finalPrompt?: string;
   };
   onClick: () => void;
   viewMode?: "grid" | "list";
@@ -158,9 +161,27 @@ export function ContentCard({
           </div>
         </div>
 
-        <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed">
-          {previewText}
-        </p>
+        {/* Content Preview - Special handling for generated images */}
+        {content.sourceTable === "generated_images" && content.imageUrl ? (
+          <div className="space-y-2">
+            <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden bg-[#252220] border border-[#3D3935]">
+              <img
+                src={content.imageUrl}
+                alt={content.title}
+                className="w-full h-full object-contain"
+              />
+            </div>
+            {content.finalPrompt && (
+              <p className="text-xs text-muted-foreground italic line-clamp-2">
+                "{content.finalPrompt.substring(0, 120)}..."
+              </p>
+            )}
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed">
+            {previewText}
+          </p>
+        )}
 
         {/* Publishing Status */}
         {content.publishedTo && content.publishedTo.length > 0 && (

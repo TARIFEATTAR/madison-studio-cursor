@@ -8,6 +8,51 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+/**
+ * Enhanced prompt builder following the core formula:
+ * [Shot Type], [Subject/Action], [Environment], [Color/Tone], [Camera/Lens], [Lighting], [Mood]
+ */
+function enhancePromptWithFormula(
+  userScene: string,
+  brandContext?: any
+): string {
+  let enhanced = userScene;
+  
+  // Add brand color palette if available
+  if (brandContext?.colors && brandContext.colors.length > 0) {
+    enhanced += `, incorporating ${brandContext.colors.join(" and ")} color tones`;
+  }
+  
+  // Add brand aesthetic/style keywords
+  if (brandContext?.styleKeywords && brandContext.styleKeywords.length > 0) {
+    enhanced += `, ${brandContext.styleKeywords.join(", ")} aesthetic`;
+  }
+  
+  return enhanced;
+}
+
+function buildProductPlacementPrompt(
+  sceneDescription: string,
+  brandContext?: any
+): string {
+  const enhancedScene = enhancePromptWithFormula(sceneDescription, brandContext);
+
+  return `PRODUCT PLACEMENT INSTRUCTION:
+The reference image shows a product (bottle, item, object). Take this EXACT product and place it into the scene described below. Maintain the product's appearance, colors, shape, and design exactly as shown in the reference image.
+
+SCENE TO CREATE:
+${enhancedScene}
+
+PHOTOGRAPHIC REQUIREMENTS:
+- Shot Type: Hero product photography with professional composition
+- Camera/Lens: DSLR quality with appropriate depth of field for product focus
+- Lighting: Ensure the product is well-lit with natural-looking shadows
+- Environment: The scene should complement and elevate the product
+- The product must be the focal point and clearly visible
+
+IMPORTANT: Do not regenerate or alter the product - use it as-is from the reference image. Only the scene, environment, lighting, and context around it should change according to the description above.`;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -40,12 +85,13 @@ serve(async (req) => {
       hasReferenceImage: !!referenceImageUrl
     });
 
-    // Enhance prompt with brand context
+    // Enhance prompt with brand context (works for any business vertical)
     let enhancedPrompt = prompt;
     
     if (brandContext) {
+      // Only add brand context if it exists - system works for ANY business
       if (brandContext.colors && brandContext.colors.length > 0) {
-        enhancedPrompt += `\n\nBrand Colors to incorporate: ${brandContext.colors.join(', ')}`;
+        enhancedPrompt += `\n\nBrand Colors: ${brandContext.colors.join(', ')}`;
       }
       
       if (brandContext.styleKeywords && brandContext.styleKeywords.length > 0) {
@@ -61,15 +107,9 @@ serve(async (req) => {
       }
     }
 
-    // Add explicit reference image instructions if provided
+    // Apply advanced prompt formula if reference image is provided
     if (referenceImageUrl) {
-      enhancedPrompt = `PRODUCT PLACEMENT INSTRUCTION:
-The reference image shows a product (bottle, item, object). Take this EXACT product and place it into the scene described below. Maintain the product's appearance, colors, shape, and design exactly as shown in the reference image.
-
-SCENE TO CREATE:
-${enhancedPrompt}
-
-IMPORTANT: The product in the reference image should be the focal point of the new scene. Do not regenerate or alter the product - use it as-is from the reference.`;
+      enhancedPrompt = buildProductPlacementPrompt(enhancedPrompt, brandContext);
       
       if (referenceDescription) {
         enhancedPrompt += `\n\nAdditional Reference Notes: ${referenceDescription}`;
