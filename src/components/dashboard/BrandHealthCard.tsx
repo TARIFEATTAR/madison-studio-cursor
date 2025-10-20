@@ -1,13 +1,16 @@
-import { Shield, AlertCircle, CheckCircle2, TrendingUp, Sparkles } from "lucide-react";
+import { Shield, AlertCircle, CheckCircle2, TrendingUp, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBrandHealth } from "@/hooks/useBrandHealth";
 import { useNavigate } from "react-router-dom";
 import { useBrandColor } from "@/hooks/useBrandColor";
+import { GapWizardModal } from "@/components/brand-health/GapWizardModal";
+import { useState } from "react";
 
 export function BrandHealthCard() {
   const { brandHealth, isLoading, analyzeBrandHealth, isAnalyzing } = useBrandHealth();
   const navigate = useNavigate();
   const { brandColor } = useBrandColor();
+  const [selectedRecommendation, setSelectedRecommendation] = useState<any>(null);
 
   if (isLoading) {
     return (
@@ -26,15 +29,41 @@ export function BrandHealthCard() {
         <div className="flex items-start gap-3">
           <Shield className="w-6 h-6 text-charcoal/30 flex-shrink-0 mt-1" />
           <div className="flex-1">
-            <h3 className="font-serif text-xl text-ink-black mb-1">Brand Health</h3>
-            <p className="text-xs text-charcoal/60 mb-3">
-              Analyze your brand documentation to identify gaps and improve content consistency.
+            <h3 className="font-serif text-xl text-ink-black mb-2">Brand Health</h3>
+            <p className="text-xs text-charcoal/70 mb-3 leading-relaxed">
+              Brand Health Score measures your documentation completeness to ensure consistent, 
+              high-quality content across all platforms.
             </p>
+            
+            <div className="bg-vellum-cream/50 border border-charcoal/10 p-3 mb-4">
+              <p className="text-[10px] uppercase tracking-[0.15em] font-sans text-charcoal/60 mb-2">
+                Analysis Based On:
+              </p>
+              <div className="space-y-1.5">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="w-3 h-3 text-aged-brass flex-shrink-0 mt-0.5" />
+                  <span className="text-xs text-charcoal/80">Brand Knowledge (mission, voice, values)</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="w-3 h-3 text-aged-brass flex-shrink-0 mt-0.5" />
+                  <span className="text-xs text-charcoal/80">Products & Collections</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="w-3 h-3 text-aged-brass flex-shrink-0 mt-0.5" />
+                  <span className="text-xs text-charcoal/80">Content created & published</span>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-[10px] text-charcoal/60 mb-3 italic">
+              Add brand knowledge and products in Settings for an accurate score.
+            </p>
+            
             <Button
               onClick={() => analyzeBrandHealth()}
               disabled={isAnalyzing}
               size="sm"
-              className="bg-aged-brass hover:bg-aged-brass/90 text-parchment-white"
+              className="bg-aged-brass hover:bg-aged-brass/90 text-parchment-white w-full"
             >
               {isAnalyzing ? "Analyzing..." : "Run Brand Health Check"}
             </Button>
@@ -116,12 +145,23 @@ export function BrandHealthCard() {
             {highPriorityRecs.slice(0, 2).map((rec, idx) => (
               <div key={idx} className="bg-warm-cream/30 border border-charcoal/10 p-2">
                 <p className="text-xs font-medium text-ink-black mb-0.5">{rec.title}</p>
-                <p className="text-[10px] text-charcoal/60 leading-snug">{rec.description}</p>
-                {rec.affected_items_count > 0 && (
-                  <p className="text-[10px] text-red-600 mt-0.5">
-                    Affects {rec.affected_items_count} {rec.affected_items_count === 1 ? 'item' : 'items'}
-                  </p>
-                )}
+                <p className="text-[10px] text-charcoal/60 leading-snug mb-1.5">{rec.description}</p>
+                <div className="flex items-center justify-between gap-2">
+                  {rec.affected_items_count > 0 && (
+                    <p className="text-[10px] text-red-600">
+                      Affects {rec.affected_items_count} {rec.affected_items_count === 1 ? 'item' : 'items'}
+                    </p>
+                  )}
+                  <Button
+                    onClick={() => setSelectedRecommendation(rec)}
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 text-[10px] text-aged-brass hover:text-aged-brass hover:bg-aged-brass/10 ml-auto px-2"
+                  >
+                    Fix This
+                    <ArrowRight className="w-3 h-3 ml-1" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
@@ -162,6 +202,15 @@ export function BrandHealthCard() {
       >
         View Full Analysis & Fix Issues
       </Button>
+
+      {/* Gap Wizard Modal */}
+      {selectedRecommendation && (
+        <GapWizardModal
+          isOpen={!!selectedRecommendation}
+          onClose={() => setSelectedRecommendation(null)}
+          recommendation={selectedRecommendation}
+        />
+      )}
     </div>
   );
 }
