@@ -30,16 +30,16 @@ export function ExportOptions({
   onOutputFormatChange 
 }: ExportOptionsProps) {
   return (
-    <Card className="bg-parchment-white border border-charcoal/10 shadow-level-1 p-6">
-      <h3 className="font-serif text-lg text-ink-black mb-4">Export Options</h3>
+    <Card className="bg-[#2F2A26] border border-[#3D3935] shadow-level-1 p-6">
+      <h3 className="font-serif text-lg text-[#FFFCF5] mb-4">Export Options</h3>
       
       <div className="space-y-4">
         <div>
-          <Label className="font-sans text-sm font-medium text-ink-black mb-2 block">
+          <Label className="font-sans text-sm font-medium text-[#D4CFC8] mb-2 block">
             Aspect Ratio
           </Label>
           <Select value={aspectRatio} onValueChange={onAspectRatioChange}>
-            <SelectTrigger className="bg-vellum-cream border-charcoal/20">
+            <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -53,11 +53,11 @@ export function ExportOptions({
         </div>
 
         <div>
-          <Label className="font-sans text-sm font-medium text-ink-black mb-2 block">
+          <Label className="font-sans text-sm font-medium text-[#D4CFC8] mb-2 block">
             Format
           </Label>
           <Select value={outputFormat} onValueChange={onOutputFormatChange}>
-            <SelectTrigger className="bg-vellum-cream border-charcoal/20">
+            <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
