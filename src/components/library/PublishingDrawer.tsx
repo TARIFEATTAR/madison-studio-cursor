@@ -84,13 +84,21 @@ export function PublishingDrawer({
     setSaving(true);
 
     try {
-      const updateData = {
+      // Build updateData conditionally based on sourceTable
+      const updateData: any = {
         published_to: selectedPlatforms,
         external_urls: platformUrls,
         publish_notes: notes,
         published_at: publishDate.toISOString(),
-        status: "published",
       };
+
+      // Only add status fields for tables that have them
+      if (sourceTable === "master_content") {
+        updateData.status = "published";
+      } else if (sourceTable === "derivative_assets") {
+        updateData.approval_status = "approved"; // represents published state
+      }
+      // outputs table has no status column, so we skip it
 
       const { error } = await supabase
         .from(sourceTable)

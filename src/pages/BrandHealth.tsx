@@ -191,8 +191,14 @@ export default function BrandHealth() {
                 <div className="flex items-center gap-3 mb-6">
                   <TrendingUp className="w-6 h-6 text-aged-brass" />
                   <div>
-                    <h2 className="font-serif text-3xl text-ink-black">Areas to Improve</h2>
-                    <p className="text-sm text-charcoal/60">Enhance your brand consistency</p>
+                    <h2 className="font-serif text-3xl text-ink-black">
+                      {score >= 90 ? "Optimization Opportunities" : "Areas to Improve"}
+                    </h2>
+                    <p className="text-sm text-charcoal/60">
+                      {score >= 90 
+                        ? "Optional polish items to consider—your core documentation looks excellent." 
+                        : "Enhance your brand consistency"}
+                    </p>
                   </div>
                 </div>
                 <div className="space-y-4">

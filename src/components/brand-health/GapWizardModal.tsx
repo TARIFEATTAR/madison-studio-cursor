@@ -68,8 +68,8 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
       return "content_guidelines";
     }
     
-    // Collections transparency keywords
-    if (text.match(/\b(collection transparency|transparency statement|collection description)\b/)) {
+    // Collections transparency keywords (more forgiving)
+    if (text.match(/\b(collection transparency|transparency statements?|collection description|collections?)\b/) && text.includes('transparency')) {
       return "collections_transparency";
     }
     

@@ -44,19 +44,86 @@ serve(async (req) => {
     const brandIndustry = orgData?.brand_config?.industry || 'general';
 
     // Fetch all brand data
-    const [brandKnowledge, products, collections, masterContent, derivatives] = await Promise.all([
+    const [brandKnowledge, products, collections, masterContent, derivatives, previousHealth] = await Promise.all([
       supabase.from('brand_knowledge').select('*').eq('organization_id', organizationId).eq('is_active', true),
       supabase.from('brand_products').select('*').eq('organization_id', organizationId),
       supabase.from('brand_collections').select('*').eq('organization_id', organizationId),
       supabase.from('master_content').select('content_type, collection').eq('organization_id', organizationId).eq('is_archived', false),
       supabase.from('derivative_assets').select('asset_type').eq('organization_id', organizationId).eq('is_archived', false),
+      supabase.from('brand_health').select('completeness_score').eq('organization_id', organizationId).single(),
     ]);
+
+    const previousScore = previousHealth.data?.completeness_score || 0;
+
+    // === COMPUTE DETERMINISTIC FACTS ===
+    const knowledge = brandKnowledge.data || [];
+    const productsCount = products.data?.length || 0;
+    const collectionsCount = collections.data?.length || 0;
+    const masterCount = masterContent.data?.length || 0;
+    const derivativeCount = derivatives.data?.length || 0;
+
+    // Core Identity: At least 2 of mission/vision/values/personality present
+    const coreIdentityDoc = knowledge.find(k => k.knowledge_type === 'core_identity');
+    const coreIdentityPresent = coreIdentityDoc ? 
+      Object.entries(coreIdentityDoc.content || {}).filter(([k, v]) => 
+        ['mission', 'vision', 'values', 'personality'].includes(k) && 
+        typeof v === 'string' && v.trim().length > 0
+      ).length >= 2 : false;
+
+    // Voice & Tone: voice_tone with voice_guidelines OR tone_spectrum, OR brand_voice with voice/tone keys
+    const voiceTonePresent = knowledge.some(k => {
+      if (k.knowledge_type === 'voice_tone') {
+        const content = k.content || {};
+        return (content.voice_guidelines && typeof content.voice_guidelines === 'string' && content.voice_guidelines.trim().length > 0) ||
+               (content.tone_spectrum && typeof content.tone_spectrum === 'string' && content.tone_spectrum.trim().length > 0);
+      }
+      if (k.knowledge_type === 'brand_voice') {
+        const content = k.content || {};
+        const hasVoiceData = Object.keys(content).some(key => 
+          key.toLowerCase().includes('voice') || key.toLowerCase().includes('tone')
+        );
+        return hasVoiceData;
+      }
+      return false;
+    });
+
+    // Target Audience: target_audience with descriptive content
+    const targetAudiencePresent = knowledge.some(k => 
+      k.knowledge_type === 'target_audience' && 
+      Object.values(k.content || {}).some((v: any) => 
+        typeof v === 'string' && v.trim().length > 0
+      )
+    );
+
+    // Collections Transparency: comprehensive doc OR per-collection coverage
+    const hasComprehensiveTransparencyDoc = knowledge.some(k => {
+      if (!['collections_transparency', 'general', 'content_guidelines'].includes(k.knowledge_type)) return false;
+      const contentStr = JSON.stringify(k.content || {}).toLowerCase();
+      return contentStr.includes('transparency') && contentStr.includes('collection');
+    });
+    const collectionsWithTransparency = (collections.data || []).filter(c => 
+      c.transparency_statement && c.transparency_statement.trim().length > 0
+    ).length;
+    const transparencyCoverage = collectionsCount > 0 ? collectionsWithTransparency / collectionsCount : 0;
+
+    const contentCreated = masterCount > 0 || derivativeCount > 0;
+
+    // === DETERMINISTIC BASE SCORE ===
+    let deterministicScore = 0;
+    if (coreIdentityPresent) deterministicScore += 30;
+    if (voiceTonePresent) deterministicScore += 20;
+    if (targetAudiencePresent) deterministicScore += 15;
+    if (productsCount > 0) deterministicScore += 15;
+    if (collectionsCount > 0) deterministicScore += 10;
+    if (transparencyCoverage >= 0.5 || hasComprehensiveTransparencyDoc) deterministicScore += 5;
+    if (contentCreated) deterministicScore += 10;
+    deterministicScore = Math.min(100, deterministicScore);
 
     // Prepare context for AI analysis
     const context = {
-      brandKnowledge: brandKnowledge.data || [],
-      productsCount: products.data?.length || 0,
-      collectionsCount: collections.data?.length || 0,
+      brandKnowledge: knowledge,
+      productsCount,
+      collectionsCount,
       products: products.data || [],
       collections: collections.data || [],
       contentTypes: [...new Set((masterContent.data || []).map(c => c.content_type))],
@@ -79,22 +146,30 @@ serve(async (req) => {
       ? completedTypes.join(', ') 
       : 'none yet';
 
-    const prompt = `You are a brand health analyzer. Analyze this organization's brand documentation completeness and identify gaps.
+    const prompt = `You are a brand health analyzer. Generate gap_analysis and recommendations ONLY (not the score).
 
 BRAND INDUSTRY: ${brandIndustry}
 ${brandIndustry === 'fragrance' ? '**THIS IS A FRAGRANCE/PERFUME/ATTAR BRAND - Do NOT recommend skincare, cosmetics, or beauty categories. Focus only on fragrance-related categories like personal_fragrance, home_fragrance, candles, incense.**' : ''}
 
+=== COMPUTED FACTS (DO NOT CONTRADICT THESE) ===
+- coreIdentityPresent: ${coreIdentityPresent}
+- voiceTonePresent: ${voiceTonePresent}
+- targetAudiencePresent: ${targetAudiencePresent}
+- productsCount: ${productsCount}
+- collectionsCount: ${collectionsCount}
+- hasComprehensiveTransparencyDoc: ${hasComprehensiveTransparencyDoc}
+- transparencyCoverage: ${Math.round(transparencyCoverage * 100)}%
+- contentCreated: ${contentCreated}
+
 COMPLETED KNOWLEDGE TYPES: ${completedTypesStr}
-**CRITICAL**: Do NOT include these completed types in gap_analysis.missing_components. Only include them in incomplete_areas if specific fields within them are empty.
 
 CURRENT BRAND SETUP:
 - Brand Knowledge Documents: ${context.brandKnowledge.length}
 - Knowledge Types: ${context.brandKnowledge.map(k => k.knowledge_type).join(', ')}
-- Products: ${context.productsCount}
-- Collections: ${context.collectionsCount}
+- Products: ${productsCount}
+- Collections: ${collectionsCount}
 - Content Types Created: ${context.contentTypes.join(', ')}
 - Asset Types Created: ${context.assetTypes.join(', ')}
-- Collections Used: ${context.collectionsUsed.join(', ')}
 
 BRAND KNOWLEDGE DETAILS:
 ${context.brandKnowledge.map(k => {
@@ -108,24 +183,14 @@ ${context.products.map(p => `- ${p.name} (${p.collection || 'No collection'}): $
 COLLECTION DETAILS:
 ${context.collections.map(c => `- ${c.name}: ${c.description ? 'Has description' : 'Missing description'}, ${c.transparency_statement ? 'Has transparency' : 'Missing transparency'}`).join('\n')}
 
-SCORING GUIDELINES (use to calculate completeness_score):
-- Core Identity (mission/vision/values/personality): +30 if at least 2 fields present
-- Voice & Tone (voice_guidelines or tone_spectrum): +20 if present
-- Target Audience: +15 if present
-- Products: +15 if count > 0
-- Collections: +10 if count > 0 (bonus +5 if most have transparency_statement)
-- Content Created (master or derivative): +10 if any content exists
-- MONOTONICITY: Adding valid knowledge should NEVER reduce the score. Only increase or maintain.
+**CRITICAL INSTRUCTIONS**:
+1. Do NOT mark items missing if facts show they're present (e.g., if coreIdentityPresent=true, do NOT add "Core Identity" to missing_components)
+2. If hasComprehensiveTransparencyDoc=true, do NOT recommend "Add transparency statements to collections"
+3. Only recommend things that are genuinely missing based on the facts
+4. ALWAYS include strengths array showing what IS complete
 
-IMPORTANT RULES:
-1. Identify completed brand knowledge as STRENGTHS, not gaps.
-2. Do NOT introduce new missing categories that aren't part of the rubric.
-3. Adding valid knowledge should NEVER reduce completeness_score.
-4. Focus recommendations on truly missing or incomplete items only.
-
-Analyze what's missing or incomplete and provide actionable recommendations in this JSON format:
+Generate ONLY gap_analysis and recommendations in this JSON format (DO NOT include completeness_score):
 {
-  "completeness_score": <number 0-100>,
   "gap_analysis": {
     "missing_components": ["<component 1>", "<component 2>"],
     "incomplete_areas": ["<area 1>", "<area 2>"],
@@ -145,7 +210,7 @@ Analyze what's missing or incomplete and provide actionable recommendations in t
   "quick_wins": ["<quick action 1>", "<quick action 2>"]
 }
 
-Be specific and prioritize recommendations by impact. ALWAYS include strengths array showing what IS working well.`;
+Be specific and prioritize recommendations by impact.`;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -176,10 +241,10 @@ Be specific and prioritize recommendations by impact. ALWAYS include strengths a
     const analysisText = aiData.choices[0].message.content;
 
     // Parse the AI response
-    let healthAnalysis;
+    let aiAnalysis;
     try {
       const cleanedText = analysisText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      healthAnalysis = JSON.parse(cleanedText);
+      aiAnalysis = JSON.parse(cleanedText);
     } catch (parseError) {
       console.error('Failed to parse AI response:', analysisText);
       return new Response(
@@ -187,6 +252,37 @@ Be specific and prioritize recommendations by impact. ALWAYS include strengths a
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // === POST-PROCESS: Filter contradictory recommendations ===
+    let filteredMissing = (aiAnalysis.gap_analysis?.missing_components || []).filter((item: string) => {
+      const lower = item.toLowerCase();
+      if (lower.includes('core identity') && coreIdentityPresent) return false;
+      if (lower.includes('voice') && lower.includes('tone') && voiceTonePresent) return false;
+      if (lower.includes('target audience') && targetAudiencePresent) return false;
+      if (lower.includes('product') && productsCount > 0) return false;
+      if (lower.includes('collection') && lower.includes('transparency') && hasComprehensiveTransparencyDoc) return false;
+      return true;
+    });
+
+    let filteredRecommendations = (aiAnalysis.recommendations || []).filter((rec: any) => {
+      const text = (rec.title + ' ' + rec.description).toLowerCase();
+      if (text.includes('transparency') && text.includes('collection') && hasComprehensiveTransparencyDoc) return false;
+      return true;
+    });
+
+    const filteredGapAnalysis = {
+      ...aiAnalysis.gap_analysis,
+      missing_components: filteredMissing,
+    };
+
+    // === MONOTONIC SCORE: Never decrease ===
+    const finalScore = Math.max(previousScore, deterministicScore);
+
+    const healthAnalysis = {
+      completeness_score: finalScore,
+      gap_analysis: filteredGapAnalysis,
+      recommendations: filteredRecommendations,
+    };
 
     // Upsert brand health record
     const { error: upsertError } = await supabase
