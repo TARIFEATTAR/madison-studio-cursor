@@ -49,7 +49,6 @@ import { useToast } from "@/hooks/use-toast";
 const CATEGORY_LABELS: Record<ProductCategory, string> = {
   personal_fragrance: "Personal Fragrance",
   home_fragrance: "Home Fragrance",
-  skincare: "Skincare / Beauty"
 };
 
 export function ProductsTab() {
@@ -184,11 +183,6 @@ export function ProductsTab() {
         productData.scent_profile = formData.scent_profile.trim() || null;
         productData.format = formData.format.trim() || null;
         productData.burn_time = formData.burn_time.trim() || null;
-      } else if (formData.category === 'skincare') {
-        productData.key_ingredients = formData.key_ingredients.trim() || null;
-        productData.benefits = formData.benefits.trim() || null;
-        productData.usage = formData.usage.trim() || null;
-        productData.formulation_type = formData.formulation_type.trim() || null;
       }
 
       if (editingProduct) {
@@ -284,8 +278,6 @@ export function ProductsTab() {
             product.category = 'personal_fragrance';
           } else if (product.format || product.burn_time) {
             product.category = 'home_fragrance';
-          } else if (product.key_ingredients || product.benefits) {
-            product.category = 'skincare';
           } else {
             product.category = 'personal_fragrance';
           }
@@ -579,13 +571,6 @@ export function ProductsTab() {
             >
               Home Fragrance
             </Badge>
-            <Badge
-              variant={categoryFilter === "skincare" ? "default" : "outline"}
-              className="cursor-pointer"
-              onClick={() => setCategoryFilter("skincare")}
-            >
-              Skincare
-            </Badge>
             
             {collections.length > 0 && (
               <>
@@ -695,7 +680,7 @@ export function ProductsTab() {
 
       {/* Bulk Actions Toolbar */}
       {selectedProductIds.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+        <div className="sticky bottom-6 left-1/2 -translate-x-1/2 z-50 mx-auto w-fit">
           <Card className="shadow-lg border-2">
             <CardContent className="flex items-center gap-4 p-4">
               <span className="font-medium">
@@ -1048,54 +1033,6 @@ export function ProductsTab() {
                       value={formData.burn_time}
                       onChange={(e) => setFormData({ ...formData, burn_time: e.target.value })}
                       placeholder="e.g., 40 hours, 3 months"
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* Skincare Fields */}
-            {formData.category === 'skincare' && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="key_ingredients">Key Ingredients</Label>
-                  <Textarea
-                    id="key_ingredients"
-                    value={formData.key_ingredients}
-                    onChange={(e) => setFormData({ ...formData, key_ingredients: e.target.value })}
-                    placeholder="Main active ingredients"
-                    rows={2}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="benefits">Benefits</Label>
-                  <Textarea
-                    id="benefits"
-                    value={formData.benefits}
-                    onChange={(e) => setFormData({ ...formData, benefits: e.target.value })}
-                    placeholder="e.g., Hydration, Anti-aging, Repair"
-                    rows={2}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="usage">Usage Instructions</Label>
-                    <Input
-                      id="usage"
-                      value={formData.usage}
-                      onChange={(e) => setFormData({ ...formData, usage: e.target.value })}
-                      placeholder="e.g., Daily use, Overnight"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="formulation_type">Formulation Type</Label>
-                    <Input
-                      id="formulation_type"
-                      value={formData.formulation_type}
-                      onChange={(e) => setFormData({ ...formData, formulation_type: e.target.value })}
-                      placeholder="e.g., Oil, Serum, Cream"
                     />
                   </div>
                 </div>

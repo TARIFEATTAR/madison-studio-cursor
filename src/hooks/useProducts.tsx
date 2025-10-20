@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useOnboarding } from './useOnboarding';
 
-export type ProductCategory = 'personal_fragrance' | 'home_fragrance' | 'skincare';
+export type ProductCategory = 'personal_fragrance' | 'home_fragrance';
 
 export interface Product {
   id: string;
