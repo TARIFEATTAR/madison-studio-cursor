@@ -348,31 +348,8 @@ export default function ImageEditor() {
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col gap-6">
-              {/* Top Controls */}
-              <Card className="p-6 bg-parchment-white border-charcoal/10 shadow-sm">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <p className="text-sm font-medium text-ink-black mb-3">Image Goal</p>
-                    <GoalSelector
-                      selectedGoal={goalType}
-                      onSelectGoal={setGoalType}
-                    />
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm font-medium text-ink-black mb-3">Export Settings</p>
-                    <ExportOptions
-                      aspectRatio={aspectRatio}
-                      outputFormat={outputFormat}
-                      onAspectRatioChange={setAspectRatio}
-                      onOutputFormatChange={(value) => setOutputFormat(value as "png" | "jpeg" | "webp")}
-                    />
-                  </div>
-                </div>
-              </Card>
-
-              {/* Main Image Display */}
-              <Card className="flex-1 p-8 bg-white border-charcoal/10 shadow-sm min-h-[500px] flex items-center justify-center">
+              {/* Main Image Display - Starts at top */}
+              <Card className="flex-1 p-8 bg-white border-charcoal/10 shadow-sm min-h-[600px] flex items-center justify-center">
                 {isGenerating ? (
                   <div className="text-center space-y-4">
                     <Loader2 className="w-12 h-12 text-brass animate-spin mx-auto" />
@@ -380,7 +357,7 @@ export default function ImageEditor() {
                     <p className="text-xs text-charcoal/40">This may take 15-30 seconds</p>
                   </div>
                 ) : heroImage ? (
-                  <div className="w-full max-w-3xl">
+                  <div className="w-full max-w-4xl">
                     <div className="relative">
                       <img
                         src={heroImage.imageUrl}
@@ -408,9 +385,29 @@ export default function ImageEditor() {
                 )}
               </Card>
 
-              {/* Chat-Style Refinement Input */}
+              {/* Chat-Style Refinement Input with Integrated Controls */}
               <Card className="p-6 bg-parchment-white border-charcoal/10 shadow-sm">
                 <div className="space-y-4">
+                  {/* Compact Controls Row */}
+                  <div className="flex gap-4 pb-4 border-b border-charcoal/10">
+                    <div className="flex-1">
+                      <label className="text-xs text-charcoal/60 font-medium mb-2 block">GOAL</label>
+                      <GoalSelector
+                        selectedGoal={goalType}
+                        onSelectGoal={setGoalType}
+                      />
+                    </div>
+                    <div className="w-48">
+                      <label className="text-xs text-charcoal/60 font-medium mb-2 block">SETTINGS</label>
+                      <ExportOptions
+                        aspectRatio={aspectRatio}
+                        outputFormat={outputFormat}
+                        onAspectRatioChange={setAspectRatio}
+                        onOutputFormatChange={(value) => setOutputFormat(value as "png" | "jpeg" | "webp")}
+                      />
+                    </div>
+                  </div>
+                  
                   <Textarea
                     value={userPrompt}
                     onChange={(e) => setUserPrompt(e.target.value)}
