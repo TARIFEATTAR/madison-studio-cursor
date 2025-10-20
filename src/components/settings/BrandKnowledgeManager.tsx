@@ -8,9 +8,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { toast } from "sonner";
-import { Edit2, History, Power, PowerOff, Plus, ChevronDown, ChevronRight, Loader2, AlertTriangle, RefreshCw, CheckCircle, XCircle } from "lucide-react";
+import { Edit2, History, Power, PowerOff, Plus, ChevronDown, ChevronRight, Loader2, AlertTriangle, RefreshCw, CheckCircle, XCircle, Eye } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { format } from "date-fns";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface BrandKnowledge {
   id: string;
@@ -34,6 +36,8 @@ export function BrandKnowledgeManager() {
   const [consolidating, setConsolidating] = useState(false);
   const [lastScanAt, setLastScanAt] = useState<Date | null>(null);
   const [lastConsolidation, setLastConsolidation] = useState<{ status: 'success' | 'error'; message: string } | null>(null);
+  const [viewingDuplicates, setViewingDuplicates] = useState<string | null>(null);
+  const [duplicateEntries, setDuplicateEntries] = useState<BrandKnowledge[]>([]);
 
   
   useEffect(() => {
@@ -121,6 +125,53 @@ export function BrandKnowledgeManager() {
       toast.error(errorMessage);
     } finally {
       setConsolidating(false);
+    }
+  };
+
+  const handleViewDuplicates = async (knowledgeType: string) => {
+    if (!currentOrganizationId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('brand_knowledge')
+        .select('*')
+        .eq('organization_id', currentOrganizationId)
+        .eq('knowledge_type', knowledgeType)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setDuplicateEntries(data || []);
+      setViewingDuplicates(knowledgeType);
+    } catch (error) {
+      console.error('Error fetching duplicate entries:', error);
+      toast.error('Failed to load duplicate entries');
+    }
+  };
+
+  const handleKeepVersion = async (keepId: string, knowledgeType: string) => {
+    if (!currentOrganizationId) return;
+
+    try {
+      // Deactivate all other versions of this knowledge type except the one we're keeping
+      const { error } = await supabase
+        .from('brand_knowledge')
+        .update({ is_active: false })
+        .eq('organization_id', currentOrganizationId)
+        .eq('knowledge_type', knowledgeType)
+        .neq('id', keepId);
+
+      if (error) throw error;
+
+      toast.success(`Kept selected version and removed duplicates for ${formatKnowledgeType(knowledgeType)}`);
+      setViewingDuplicates(null);
+      setDuplicateEntries([]);
+      await loadBrandKnowledge();
+      await rescanForDuplicates();
+    } catch (error) {
+      console.error('Error keeping version:', error);
+      toast.error('Failed to consolidate duplicates');
     }
   };
 
@@ -384,6 +435,63 @@ export function BrandKnowledgeManager() {
                   <RefreshCw className="w-3 h-3 mr-1" />
                   Rescan
                 </Button>
+                {duplicates.length > 0 && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                      >
+                        <Eye className="w-3 h-3 mr-1" />
+                        View Duplicates
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[80vh]">
+                      <DialogHeader>
+                        <DialogTitle>Duplicate Knowledge Types</DialogTitle>
+                        <DialogDescription>
+                          Select a knowledge type below to view and manage its duplicate entries
+                        </DialogDescription>
+                      </DialogHeader>
+                      <ScrollArea className="max-h-[60vh]">
+                        <div className="space-y-3 pr-4">
+                          {duplicates.map((knowledgeType) => {
+                            const dupeCount = knowledgeItems.filter(
+                              k => k.knowledge_type === knowledgeType && k.is_active
+                            ).length;
+                            
+                            return (
+                              <Card key={knowledgeType} className="bg-amber-50 border-amber-200">
+                                <CardHeader className="pb-3">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <CardTitle className="text-sm text-amber-900">
+                                        {formatKnowledgeType(knowledgeType)}
+                                      </CardTitle>
+                                      <p className="text-xs text-amber-700 mt-1">
+                                        {dupeCount} active entries found
+                                      </p>
+                                    </div>
+                                    <Button
+                                      onClick={() => handleViewDuplicates(knowledgeType)}
+                                      variant="outline"
+                                      size="sm"
+                                      className="border-amber-300 text-amber-700 hover:bg-amber-100"
+                                    >
+                                      <Eye className="w-3 h-3 mr-1" />
+                                      Compare Entries
+                                    </Button>
+                                  </div>
+                                </CardHeader>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                      </ScrollArea>
+                    </DialogContent>
+                  </Dialog>
+                )}
                 <Button
                   onClick={handleConsolidateDuplicates}
                   disabled={consolidating || duplicates.length === 0}
@@ -576,6 +684,59 @@ export function BrandKnowledgeManager() {
           })
         )}
       </CardContent>
+
+      {/* Duplicate Comparison Dialog */}
+      <Dialog open={!!viewingDuplicates} onOpenChange={(open) => !open && setViewingDuplicates(null)}>
+        <DialogContent className="max-w-6xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Compare Duplicate Entries: {viewingDuplicates && formatKnowledgeType(viewingDuplicates)}</DialogTitle>
+            <DialogDescription>
+              Review each version below and select which one to keep. All other versions will be deactivated.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[70vh]">
+            <div className="space-y-4 pr-4">
+              {duplicateEntries.map((entry, index) => (
+                <Card key={entry.id} className="bg-slate-50 border-slate-200">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          Version {entry.version}
+                          <Badge variant="outline" className="text-xs">
+                            {index === 0 ? 'Most Recent' : `${index + 1} versions old`}
+                          </Badge>
+                        </CardTitle>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Created: {format(new Date(entry.created_at), 'MMM d, yyyy h:mm a')}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={() => handleKeepVersion(entry.id, entry.knowledge_type)}
+                        variant="outline"
+                        size="sm"
+                        className="border-green-300 text-green-700 hover:bg-green-50"
+                      >
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Keep This Version
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="bg-white p-4 rounded border border-slate-200 max-h-64 overflow-y-auto">
+                      <pre className="text-xs text-slate-700 whitespace-pre-wrap">
+                        {typeof entry.content === 'string' 
+                          ? entry.content 
+                          : JSON.stringify(entry.content, null, 2)}
+                      </pre>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
