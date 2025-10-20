@@ -204,7 +204,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
               Help our AI understand your brand's unique voice
             </p>
             <p className="text-sm text-muted-foreground mt-4 max-w-2xl mx-auto">
-              🧠 <strong>Why this matters:</strong> Our AI will learn your brand's unique voice, tone, and style to generate content that sounds authentically like you.
+              💗 <strong>Why this matters:</strong> Our AI will learn your brand's unique voice, tone, and style to generate content that sounds authentically like you.
             </p>
           </div>
 
