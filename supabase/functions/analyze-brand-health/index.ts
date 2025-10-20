@@ -64,10 +64,28 @@ serve(async (req) => {
       collectionsUsed: [...new Set((masterContent.data || []).map(c => c.collection).filter(Boolean))],
     };
 
+    // Compute completed knowledge types
+    const completedTypes: string[] = [];
+    for (const k of context.brandKnowledge) {
+      const content = k.content || {};
+      const hasContent = Object.values(content).some((v: any) => 
+        typeof v === 'string' ? v.trim().length > 0 : v && typeof v === 'object' ? Object.keys(v).length > 0 : false
+      );
+      if (hasContent) {
+        completedTypes.push(k.knowledge_type);
+      }
+    }
+    const completedTypesStr = completedTypes.length > 0 
+      ? completedTypes.join(', ') 
+      : 'none yet';
+
     const prompt = `You are a brand health analyzer. Analyze this organization's brand documentation completeness and identify gaps.
 
 BRAND INDUSTRY: ${brandIndustry}
 ${brandIndustry === 'fragrance' ? '**THIS IS A FRAGRANCE/PERFUME/ATTAR BRAND - Do NOT recommend skincare, cosmetics, or beauty categories. Focus only on fragrance-related categories like personal_fragrance, home_fragrance, candles, incense.**' : ''}
+
+COMPLETED KNOWLEDGE TYPES: ${completedTypesStr}
+**CRITICAL**: Do NOT include these completed types in gap_analysis.missing_components. Only include them in incomplete_areas if specific fields within them are empty.
 
 CURRENT BRAND SETUP:
 - Brand Knowledge Documents: ${context.brandKnowledge.length}
@@ -90,11 +108,20 @@ ${context.products.map(p => `- ${p.name} (${p.collection || 'No collection'}): $
 COLLECTION DETAILS:
 ${context.collections.map(c => `- ${c.name}: ${c.description ? 'Has description' : 'Missing description'}, ${c.transparency_statement ? 'Has transparency' : 'Missing transparency'}`).join('\n')}
 
-IMPORTANT: Identify completed brand knowledge as STRENGTHS. For example:
-- If core_identity exists with mission/vision/values → "Defined core brand identity"
-- If voice_tone exists → "Established brand voice guidelines"
-- If products exist → "Created product catalog"
-- If collections exist → "Organized product collections"
+SCORING GUIDELINES (use to calculate completeness_score):
+- Core Identity (mission/vision/values/personality): +30 if at least 2 fields present
+- Voice & Tone (voice_guidelines or tone_spectrum): +20 if present
+- Target Audience: +15 if present
+- Products: +15 if count > 0
+- Collections: +10 if count > 0 (bonus +5 if most have transparency_statement)
+- Content Created (master or derivative): +10 if any content exists
+- MONOTONICITY: Adding valid knowledge should NEVER reduce the score. Only increase or maintain.
+
+IMPORTANT RULES:
+1. Identify completed brand knowledge as STRENGTHS, not gaps.
+2. Do NOT introduce new missing categories that aren't part of the rubric.
+3. Adding valid knowledge should NEVER reduce completeness_score.
+4. Focus recommendations on truly missing or incomplete items only.
 
 Analyze what's missing or incomplete and provide actionable recommendations in this JSON format:
 {

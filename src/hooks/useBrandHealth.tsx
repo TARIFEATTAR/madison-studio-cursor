@@ -71,7 +71,8 @@ export function useBrandHealth() {
       return data.healthAnalysis;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["brand-health"] });
+      queryClient.invalidateQueries({ queryKey: ["brand-health", user?.id] });
+      queryClient.refetchQueries({ queryKey: ["brand-health", user?.id] });
       toast.success("Brand health analysis complete!");
     },
     onError: (error: Error) => {

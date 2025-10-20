@@ -42,16 +42,38 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
   });
 
   const getKnowledgeType = () => {
-    const title = recommendation.title.toLowerCase();
-    if (title.includes("mission") || title.includes("vision") || title.includes("identity")) {
-      return "core_identity";
-    }
-    if (title.includes("voice") || title.includes("tone")) {
-      return "voice_tone";
-    }
-    if (title.includes("audience")) {
+    // Priority 1: Use fix_type if provided
+    if (recommendation.fix_type) return recommendation.fix_type;
+    
+    // Priority 2: Keyword mapping
+    const text = (recommendation.title + " " + recommendation.description).toLowerCase();
+    
+    // Target audience keywords
+    if (text.match(/\b(audience|icp|persona|buyer|customer|demographic|profile|segment|target)\b/)) {
       return "target_audience";
     }
+    
+    // Voice and tone keywords
+    if (text.match(/\b(voice|tone|style guide|tone spectrum|writing style)\b/)) {
+      return "voice_tone";
+    }
+    
+    // Core identity keywords
+    if (text.match(/\b(mission|vision|values|identity|personality|core)\b/)) {
+      return "core_identity";
+    }
+    
+    // Content guidelines keywords
+    if (text.match(/\b(content type|guidelines|format rules|blog|reels|shorts|tiktok|caption|post template|content format)\b/)) {
+      return "content_guidelines";
+    }
+    
+    // Collections transparency keywords
+    if (text.match(/\b(collection transparency|transparency statement|collection description)\b/)) {
+      return "collections_transparency";
+    }
+    
+    // Default fallback
     return "general";
   };
 
@@ -233,8 +255,9 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
       }
 
       // Invalidate queries to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ["brand-health"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["brand-health", user.id] });
+      queryClient.refetchQueries({ queryKey: ["brand-health", user.id] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats", user.id] });
       onClose();
     } catch (error) {
       console.error("Error saving:", error);
