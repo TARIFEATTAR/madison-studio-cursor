@@ -149,6 +149,9 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
       } else if (knowledgeType === "voice_tone") {
         content.voice_guidelines = formData.voiceGuidelines;
         content.tone_spectrum = formData.toneSpectrum;
+      } else {
+        // Generic content for all other knowledge types (target_audience, general, etc.)
+        content.description = formData.contentTemplate;
       }
 
       // Insert brand knowledge

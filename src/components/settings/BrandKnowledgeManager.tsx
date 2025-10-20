@@ -374,6 +374,29 @@ export function BrandKnowledgeManager() {
       );
     }
 
+    // Generic content with description field
+    if (content.description) {
+      return (
+        <div>
+          <Label className="text-sm font-medium text-charcoal mb-2 block">
+            Content
+          </Label>
+          {isEditing ? (
+            <Textarea
+              value={content.description || ''}
+              onChange={(e) => setEditContent({ ...editContent, description: e.target.value })}
+              className="min-h-[150px] bg-paper border-cream-dark"
+            />
+          ) : (
+            <p className="text-sm text-warm-gray bg-parchment-white p-3 rounded border border-cream-dark whitespace-pre-wrap">
+              {content.description || 'Not set'}
+            </p>
+          )}
+        </div>
+      );
+    }
+
+    // Fallback for unknown structure - show raw JSON
     return (
       <div>
         {isEditing ? (
