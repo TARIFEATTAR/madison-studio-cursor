@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { toast } from "sonner";
-import { Edit2, History, Power, PowerOff, Plus, ChevronDown, ChevronRight, Loader2, AlertTriangle } from "lucide-react";
+import { Edit2, History, Power, PowerOff, Plus, ChevronDown, ChevronRight, Loader2, AlertTriangle, RefreshCw, CheckCircle, XCircle } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { format } from "date-fns";
 
@@ -32,16 +32,50 @@ export function BrandKnowledgeManager() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['core_identity']));
   const [duplicates, setDuplicates] = useState<string[]>([]);
   const [consolidating, setConsolidating] = useState(false);
+  const [lastScanAt, setLastScanAt] = useState<Date | null>(null);
+  const [lastConsolidation, setLastConsolidation] = useState<{ status: 'success' | 'error'; message: string } | null>(null);
 
+  
   useEffect(() => {
     loadBrandKnowledge();
   }, [currentOrganizationId]);
+
+  const rescanForDuplicates = async () => {
+    if (!currentOrganizationId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('brand_knowledge')
+        .select('*')
+        .eq('organization_id', currentOrganizationId)
+        .eq('is_active', true);
+
+      if (error) throw error;
+
+      const typeCounts: Record<string, number> = {};
+      (data || []).forEach((k: BrandKnowledge) => {
+        typeCounts[k.knowledge_type] = (typeCounts[k.knowledge_type] || 0) + 1;
+      });
+      const dupes = Object.keys(typeCounts).filter(type => typeCounts[type] > 1);
+      setDuplicates(dupes);
+      setLastScanAt(new Date());
+      
+      toast.success(`Scan complete. Found ${dupes.length} knowledge type(s) with duplicates`);
+    } catch (error) {
+      console.error('Error scanning for duplicates:', error);
+      toast.error('Failed to scan for duplicates');
+    }
+  };
 
   const handleConsolidateDuplicates = async () => {
     if (!currentOrganizationId || duplicates.length === 0) return;
 
     setConsolidating(true);
+    setLastConsolidation(null);
+    
     try {
+      let totalConsolidated = 0;
+      
       // For each duplicate knowledge type, keep only the latest version
       for (const knowledgeType of duplicates) {
         const items = knowledgeItems
@@ -58,14 +92,21 @@ export function BrandKnowledgeManager() {
             .eq("id", item.id);
 
           if (error) throw error;
+          totalConsolidated++;
         }
       }
 
-      toast.success(`Duplicates consolidated. Kept the latest version of ${duplicates.length} knowledge type(s)`);
+      const successMessage = `Successfully consolidated ${duplicates.length} knowledge type(s), removed ${totalConsolidated} duplicate entries`;
+      setLastConsolidation({ status: 'success', message: successMessage });
+      toast.success(successMessage);
+      
       await loadBrandKnowledge();
+      await rescanForDuplicates(); // Rescan to update duplicate count
     } catch (error) {
       console.error("Error consolidating duplicates:", error);
-      toast.error("Failed to consolidate duplicates. Please try again.");
+      const errorMessage = "Failed to consolidate duplicates. Please try again.";
+      setLastConsolidation({ status: 'error', message: errorMessage });
+      toast.error(errorMessage);
     } finally {
       setConsolidating(false);
     }
@@ -290,6 +331,67 @@ export function BrandKnowledgeManager() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Duplicate Scanner Panel - Always Visible */}
+        <Card className="bg-slate-50 border-slate-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm text-slate-700 flex items-center gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Duplicate Scanner
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="text-sm text-slate-600">
+                  {lastScanAt ? (
+                    <>Last scan: {format(lastScanAt, 'MMM d, yyyy h:mm a')} - Found {duplicates.length} duplicate type(s)</>
+                  ) : (
+                    <>Scan for duplicate knowledge types</>
+                  )}
+                </div>
+                {lastConsolidation && (
+                  <div className={`flex items-center gap-2 mt-2 text-sm ${
+                    lastConsolidation.status === 'success' ? 'text-green-700' : 'text-red-700'
+                  }`}>
+                    {lastConsolidation.status === 'success' ? (
+                      <CheckCircle className="w-4 h-4" />
+                    ) : (
+                      <XCircle className="w-4 h-4" />
+                    )}
+                    {lastConsolidation.message}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={rescanForDuplicates}
+                  variant="outline"
+                  size="sm"
+                  className="border-slate-300 text-slate-600 hover:bg-slate-100"
+                >
+                  <RefreshCw className="w-3 h-3 mr-1" />
+                  Rescan
+                </Button>
+                <Button
+                  onClick={handleConsolidateDuplicates}
+                  disabled={consolidating || duplicates.length === 0}
+                  variant="outline"
+                  size="sm"
+                  className="border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50"
+                >
+                  {consolidating ? (
+                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                  ) : (
+                    <AlertTriangle className="w-3 h-3 mr-1" />
+                  )}
+                  Auto-Fix ({duplicates.length})
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Legacy Alert - Only show if duplicates exist */}
         {duplicates.length > 0 && (
           <Alert className="bg-amber-50 border-amber-200">
             <AlertTriangle className="h-4 w-4 text-amber-600" />
@@ -309,6 +411,7 @@ export function BrandKnowledgeManager() {
             </AlertDescription>
           </Alert>
         )}
+        
         {Object.keys(groupedItems).length === 0 ? (
           <div className="text-center py-12 text-warm-gray">
             <p className="mb-2">No brand knowledge saved yet</p>
