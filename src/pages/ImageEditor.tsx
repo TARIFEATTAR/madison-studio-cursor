@@ -1,205 +1,304 @@
-import { useState } from 'react';
-import { ArrowLeft, Wand2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { GoalSelector } from '@/components/image-editor/GoalSelector';
-import { PromptSuggestions } from '@/components/image-editor/PromptSuggestions';
-import { ImagePreview } from '@/components/image-editor/ImagePreview';
-import { RefinementChat } from '@/components/image-editor/RefinementChat';
-import { ExportOptions } from '@/components/image-editor/ExportOptions';
-import { ReferenceUpload } from '@/components/image-editor/ReferenceUpload';
-import { useImagePromptBuilder } from '@/hooks/useImagePromptBuilder';
-import { useAuth } from '@/hooks/useAuth';
-import { useCurrentOrganizationId } from '@/hooks/useIndustryConfig';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import madisonInsignia from '@/assets/madison-insignia-new.png';
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useCurrentOrganizationId } from "@/hooks/useIndustryConfig";
+import { toast } from "sonner";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Download, Loader2, Sparkles, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { GoalSelector } from "@/components/image-editor/GoalSelector";
+import { ExportOptions } from "@/components/image-editor/ExportOptions";
+
+type GeneratedImage = {
+  id: string;
+  imageUrl: string;
+  prompt: string;
+  timestamp: number;
+};
 
 export default function ImageEditor() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { orgId } = useCurrentOrganizationId();
-
-  // Workflow state
-  const [step, setStep] = useState<'goal' | 'prompts' | 'preview' | 'refine'>('goal');
-  const [selectedGoal, setSelectedGoal] = useState<string>('');
-  const [productName, setProductName] = useState<string>('');
-  const [referenceImage, setReferenceImage] = useState<string | null>(null);
-  const [referenceDescription, setReferenceDescription] = useState<string>('');
   
-  // Generation state
-  const [selectedPrompt, setSelectedPrompt] = useState<string>('');
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
-  const [generatedImages, setGeneratedImages] = useState<Array<{ url: string; description: string }>>([]);
+  const [goalType, setGoalType] = useState<string>("etsy-listing");
+  const [aspectRatio, setAspectRatio] = useState<string>("1:1");
+  const [outputFormat, setOutputFormat] = useState<"png" | "jpeg" | "webp">("png");
+  
+  const [userPrompt, setUserPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   
-  // Export state
-  const [aspectRatio, setAspectRatio] = useState<string>('1:1');
-  const [outputFormat, setOutputFormat] = useState<'png' | 'jpeg' | 'webp'>('png');
+  // Current main image being refined
+  const [currentImage, setCurrentImage] = useState<GeneratedImage | null>(null);
+  
+  // Gallery of completed/previous iterations
+  const [imageGallery, setImageGallery] = useState<GeneratedImage[]>([]);
 
-  const { buildPromptOptions, refinePrompt, loading: contextLoading } = useImagePromptBuilder(
-    selectedGoal,
-    productName
-  );
+  const handleGenerate = async () => {
+    if (!userPrompt.trim() || !user || !orgId) {
+      toast.error("Please enter a prompt to generate an image");
+      return;
+    }
 
-  const handleGoalSelect = (goal: string) => {
-    setSelectedGoal(goal);
-    setStep('prompts');
-  };
-
-  const handlePromptSelect = async (prompt: string, templateKey: string) => {
-    setSelectedPrompt(prompt);
-    setSelectedTemplate(templateKey);
     setIsGenerating(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('generate-madison-image', {
+      const { data, error } = await supabase.functions.invoke("generate-madison-image", {
         body: {
-          prompt,
-          organizationId: orgId,
-          userId: user?.id,
-          goalType: selectedGoal,
+          goalType,
           aspectRatio,
           outputFormat,
-          selectedTemplate: templateKey,
-          userRefinements: null
-        }
+          prompt: userPrompt,
+          organizationId: orgId,
+          userId: user.id,
+          selectedTemplate: null,
+          userRefinements: currentImage ? userPrompt : null
+        },
       });
 
       if (error) throw error;
 
-      setGeneratedImages([{ url: data.imageUrl, description: data.description }]);
-      setStep('preview');
-      toast.success('Image generated successfully!');
+      if (data?.imageUrl) {
+        const newImage: GeneratedImage = {
+          id: data.id || crypto.randomUUID(),
+          imageUrl: data.imageUrl,
+          prompt: userPrompt,
+          timestamp: Date.now(),
+        };
+        
+        setCurrentImage(newImage);
+        
+        toast.success(currentImage ? "✨ Image refined!" : "✨ Image generated!");
+      }
     } catch (error) {
-      console.error('Generation error:', error);
-      toast.error('Failed to generate image. Please try again.');
+      console.error("Generation error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to generate image");
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const handleRefinement = async (refinementText: string) => {
-    const refinedPrompt = refinePrompt(selectedPrompt, refinementText);
-    setIsGenerating(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-madison-image', {
-        body: {
-          prompt: refinedPrompt,
-          organizationId: orgId,
-          userId: user?.id,
-          goalType: selectedGoal,
-          aspectRatio,
-          outputFormat,
-          selectedTemplate,
-          userRefinements: refinementText
-        }
-      });
-
-      if (error) throw error;
-
-      setGeneratedImages(prev => [...prev, { url: data.imageUrl, description: data.description }]);
-      toast.success('Refined image generated!');
-    } catch (error) {
-      console.error('Refinement error:', error);
-      toast.error('Failed to refine image.');
-    } finally {
-      setIsGenerating(false);
+  const handleMoveToGallery = () => {
+    if (currentImage) {
+      setImageGallery((prev) => [currentImage, ...prev].slice(0, 5)); // Keep max 5
+      setCurrentImage(null);
+      setUserPrompt("");
+      
+      toast.success("Image saved to gallery. Ready for next generation!");
     }
   };
+
+  const handleSelectFromGallery = (image: GeneratedImage) => {
+    // Move current to gallery if exists
+    if (currentImage) {
+      setImageGallery((prev) => [currentImage, ...prev.filter(img => img.id !== image.id)].slice(0, 5));
+    }
+    
+    // Make selected image the current one
+    setCurrentImage(image);
+    setUserPrompt(image.prompt);
+  };
+
+  const handleDownload = (imageUrl: string) => {
+    const link = document.createElement('a');
+    link.href = imageUrl;
+    link.download = `madison-image-${Date.now()}.${outputFormat}`;
+    link.click();
+  };
+
+  const quickRefinements = [
+    "More dramatic lighting",
+    "Different angle",
+    "Clean white background",
+    "Add soft shadows",
+    "Closer product shot"
+  ];
 
   return (
     <div className="min-h-screen bg-vellum-cream">
-      {/* Header */}
-      <div className="relative border-b border-charcoal/10 bg-parchment-white sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <img 
-                  src={madisonInsignia} 
-                  alt="Madison" 
-                  className="w-8 h-8 object-contain opacity-80"
-                />
-                <h1 className="font-serif text-2xl md:text-3xl text-ink-black">
-                  Madison Image Studio
-                </h1>
-              </div>
-              <p className="font-sans text-sm text-charcoal/60 italic">
-                Guided image generation for your brand
-              </p>
+      <div className="max-w-[1800px] mx-auto p-6">
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
+              <h1 className="font-serif text-3xl text-ink-black">Madison Image Studio</h1>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <Wand2 className="w-4 h-4 mr-2" />
-              Ask Madison
-            </Button>
+            <p className="text-charcoal/70 text-sm">E-commerce product photography with AI</p>
           </div>
         </div>
-        
-        {/* Brass accent line */}
-        <div 
-          className="absolute bottom-0 left-0 right-0 h-[2px] opacity-40"
-          style={{ 
-            background: `linear-gradient(to right, transparent, hsl(var(--brass)), transparent)`
-          }}
-        />
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Panel - Controls */}
-          <div className="lg:col-span-1 space-y-6">
-            {step === 'goal' && (
-              <>
-                <GoalSelector onSelectGoal={handleGoalSelect} />
-                <ReferenceUpload
-                  onUpload={(url, desc) => {
-                    setReferenceImage(url);
-                    setReferenceDescription(desc);
-                  }}
+        {/* Main Layout: Gallery + Main Image + Chat */}
+        <div className="flex gap-6">
+          {/* Left Sidebar - Thumbnail Gallery */}
+          <div className="w-32 flex-shrink-0 space-y-3">
+            <p className="text-xs font-semibold text-charcoal/60 mb-3 tracking-wide">PREVIOUS</p>
+            {imageGallery.map((image, index) => (
+              <button
+                key={image.id}
+                onClick={() => handleSelectFromGallery(image)}
+                className={`w-full aspect-square rounded border-2 transition-all overflow-hidden hover:scale-105 ${
+                  currentImage?.id === image.id
+                    ? "border-brass shadow-md ring-2 ring-brass/20"
+                    : "border-charcoal/20 hover:border-brass/50"
+                }`}
+              >
+                <img
+                  src={image.imageUrl}
+                  alt={`Generation ${index + 1}`}
+                  className="w-full h-full object-cover"
                 />
-              </>
-            )}
-
-            {step === 'prompts' && !contextLoading && (
-              <PromptSuggestions
-                options={buildPromptOptions(referenceDescription)}
-                onSelectPrompt={handlePromptSelect}
-                isGenerating={isGenerating}
+              </button>
+            ))}
+            
+            {/* Empty slots */}
+            {Array.from({ length: Math.max(0, 5 - imageGallery.length) }).map((_, i) => (
+              <div
+                key={`empty-${i}`}
+                className="w-full aspect-square rounded border-2 border-dashed border-charcoal/10 bg-white/50"
               />
-            )}
-
-            {(step === 'preview' || step === 'refine') && (
-              <>
-                <ExportOptions
-                  aspectRatio={aspectRatio}
-                  outputFormat={outputFormat}
-                  onAspectRatioChange={setAspectRatio}
-                  onOutputFormatChange={(value) => setOutputFormat(value as 'png' | 'jpeg' | 'webp')}
-                />
-                <RefinementChat
-                  onRefine={handleRefinement}
-                  isGenerating={isGenerating}
-                />
-              </>
-            )}
+            ))}
           </div>
 
-          {/* Right Panel - Preview */}
-          <div className="lg:col-span-2">
-            <ImagePreview
-              images={generatedImages}
-              isGenerating={isGenerating}
-              referenceImage={referenceImage}
-            />
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col gap-6">
+            {/* Top Controls */}
+            <Card className="p-6 bg-parchment-white border-charcoal/10 shadow-sm">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <p className="text-sm font-medium text-ink-black mb-3">Image Goal</p>
+                  <GoalSelector
+                    selectedGoal={goalType}
+                    onSelectGoal={setGoalType}
+                  />
+                </div>
+                
+                <div>
+                  <p className="text-sm font-medium text-ink-black mb-3">Export Settings</p>
+                  <ExportOptions
+                    aspectRatio={aspectRatio}
+                    outputFormat={outputFormat}
+                    onAspectRatioChange={setAspectRatio}
+                    onOutputFormatChange={(value) => setOutputFormat(value as "png" | "jpeg" | "webp")}
+                  />
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-ink-black mb-3">Actions</p>
+                  {currentImage && (
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleDownload(currentImage.imageUrl)}
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Download
+                      </Button>
+                      <Button
+                        onClick={handleMoveToGallery}
+                        size="sm"
+                        className="flex-1 bg-brass hover:bg-brass/90 text-white"
+                      >
+                        Next →
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+
+            {/* Main Image Display */}
+            <Card className="flex-1 p-8 bg-white border-charcoal/10 shadow-sm min-h-[500px] flex items-center justify-center">
+              {isGenerating ? (
+                <div className="text-center space-y-4">
+                  <Loader2 className="w-12 h-12 text-brass animate-spin mx-auto" />
+                  <p className="text-charcoal/70">Generating your image...</p>
+                  <p className="text-xs text-charcoal/40">This may take 15-30 seconds</p>
+                </div>
+              ) : currentImage ? (
+                <div className="w-full max-w-3xl">
+                  <img
+                    src={currentImage.imageUrl}
+                    alt="Generated product"
+                    className="w-full h-auto rounded shadow-lg"
+                  />
+                  <div className="mt-4 p-3 bg-vellum-cream/50 rounded">
+                    <p className="text-xs text-charcoal/60 font-medium mb-1">PROMPT</p>
+                    <p className="text-sm text-charcoal/70 italic">"{currentImage.prompt}"</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center space-y-3">
+                  <Sparkles className="w-16 h-16 text-brass/30 mx-auto" />
+                  <p className="text-lg text-charcoal/70 font-medium">Start a new generation</p>
+                  <p className="text-sm text-charcoal/50">Describe the product image you want below</p>
+                </div>
+              )}
+            </Card>
+
+            {/* Chat-Style Refinement Input */}
+            <Card className="p-6 bg-parchment-white border-charcoal/10 shadow-sm">
+              <div className="space-y-4">
+                <Textarea
+                  value={userPrompt}
+                  onChange={(e) => setUserPrompt(e.target.value)}
+                  placeholder={currentImage 
+                    ? "Describe how to refine this image... (e.g., 'make the lighting warmer' or 'add a soft shadow')" 
+                    : "Describe the product image you want to create... (e.g., 'luxury candle on marble surface with soft natural light')"
+                  }
+                  rows={3}
+                  className="resize-none bg-white border-charcoal/20 focus:border-brass"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                      handleGenerate();
+                    }
+                  }}
+                />
+                
+                <div className="flex justify-between items-center">
+                  <div className="flex flex-wrap gap-2">
+                    {quickRefinements.map((refinement) => (
+                      <button
+                        key={refinement}
+                        onClick={() => setUserPrompt(refinement)}
+                        className="px-3 py-1 text-xs rounded-full bg-brass/10 text-brass hover:bg-brass/20 transition-colors"
+                      >
+                        {refinement}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <Button
+                    onClick={handleGenerate}
+                    disabled={isGenerating || !userPrompt.trim()}
+                    className="bg-brass hover:bg-brass/90 text-white"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        {currentImage ? "Refine" : "Generate"}
+                      </>
+                    )}
+                  </Button>
+                </div>
+                
+                <p className="text-xs text-charcoal/40 text-right">
+                  Press ⌘+Enter to generate
+                </p>
+              </div>
+            </Card>
           </div>
         </div>
       </div>

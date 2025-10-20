@@ -35,39 +35,35 @@ const GOALS = [
 ];
 
 interface GoalSelectorProps {
+  selectedGoal?: string;
   onSelectGoal: (goalId: string) => void;
 }
 
-export function GoalSelector({ onSelectGoal }: GoalSelectorProps) {
+export function GoalSelector({ selectedGoal, onSelectGoal }: GoalSelectorProps) {
   return (
-    <Card className="bg-parchment-white border border-charcoal/10 shadow-level-1 p-6">
-      <h3 className="font-serif text-xl text-ink-black mb-2">What's your goal?</h3>
-      <p className="font-sans text-sm text-charcoal/60 italic mb-6">
-        Madison will suggest prompts optimized for your objective
-      </p>
-      
-      <div className="space-y-3">
-        {GOALS.map(goal => (
-          <button
-            key={goal.id}
-            onClick={() => onSelectGoal(goal.id)}
-            className="w-full text-left p-4 rounded-sm border-2 border-charcoal/10 
-                     hover:border-brass/40 transition-all duration-300 
-                     hover:shadow-level-2 group bg-parchment-white"
-          >
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-brass/10 flex items-center justify-center 
-                            group-hover:bg-brass/20 transition-colors">
-                <goal.icon className="w-5 h-5 text-brass" />
-              </div>
-              <div className="flex-1">
-                <h4 className="font-sans font-semibold text-foreground">{goal.label}</h4>
-                <p className="text-xs text-charcoal/60 mt-1">{goal.description}</p>
-              </div>
+    <div className="space-y-2">
+      {GOALS.map(goal => (
+        <button
+          key={goal.id}
+          onClick={() => onSelectGoal(goal.id)}
+          className={`w-full text-left px-4 py-3 rounded border-2 transition-all duration-200 ${
+            selectedGoal === goal.id
+              ? 'border-brass bg-brass/5 shadow-sm'
+              : 'border-charcoal/10 hover:border-brass/40 bg-white'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+              selectedGoal === goal.id ? 'bg-brass/20' : 'bg-brass/10'
+            }`}>
+              <goal.icon className="w-4 h-4 text-brass" />
             </div>
-          </button>
-        ))}
-      </div>
-    </Card>
+            <div className="flex-1">
+              <h4 className="text-sm font-semibold text-foreground">{goal.label}</h4>
+            </div>
+          </div>
+        </button>
+      ))}
+    </div>
   );
 }
