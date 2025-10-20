@@ -186,6 +186,17 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
         return;
       }
 
+      // If this recommendation is about collection transparency, update collections directly
+      if (knowledgeType === "collections_transparency") {
+        const statement = (formData.contentTemplate || "").trim();
+        const { error: updateTransparencyError } = await supabase
+          .from("brand_collections")
+          .update({ transparency_statement: statement })
+          .eq("organization_id", orgMember.organization_id)
+          .is("transparency_statement", null);
+        if (updateTransparencyError) throw updateTransparencyError;
+      }
+
       // Deactivate existing active entries for this knowledge type and compute next version
       const { data: existing, error: existingError } = await supabase
         .from("brand_knowledge")
