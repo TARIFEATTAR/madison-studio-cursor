@@ -577,6 +577,7 @@ export type Database = {
           archived_at: string | null
           aspect_ratio: string
           brand_colors_used: string[] | null
+          brand_context_used: Json | null
           brand_style_tags: string[] | null
           created_at: string | null
           description: string | null
@@ -590,6 +591,7 @@ export type Database = {
           library_category: string | null
           organization_id: string | null
           output_format: string | null
+          reference_image_url: string | null
           saved_to_library: boolean | null
           selected_template: string | null
           session_id: string | null
@@ -602,6 +604,7 @@ export type Database = {
           archived_at?: string | null
           aspect_ratio: string
           brand_colors_used?: string[] | null
+          brand_context_used?: Json | null
           brand_style_tags?: string[] | null
           created_at?: string | null
           description?: string | null
@@ -615,6 +618,7 @@ export type Database = {
           library_category?: string | null
           organization_id?: string | null
           output_format?: string | null
+          reference_image_url?: string | null
           saved_to_library?: boolean | null
           selected_template?: string | null
           session_id?: string | null
@@ -627,6 +631,7 @@ export type Database = {
           archived_at?: string | null
           aspect_ratio?: string
           brand_colors_used?: string[] | null
+          brand_context_used?: Json | null
           brand_style_tags?: string[] | null
           created_at?: string | null
           description?: string | null
@@ -640,6 +645,7 @@ export type Database = {
           library_category?: string | null
           organization_id?: string | null
           output_format?: string | null
+          reference_image_url?: string | null
           saved_to_library?: boolean | null
           selected_template?: string | null
           session_id?: string | null

@@ -27,37 +27,77 @@ serve(async (req) => {
       outputFormat = 'png',
       selectedTemplate,
       userRefinements,
-      referenceImage,
-      referenceDescription
+      referenceImageUrl,
+      referenceDescription,
+      brandContext
     } = await req.json();
 
     console.log('🎨 Generating Madison image:', {
       goalType,
       aspectRatio,
-      promptLength: prompt.length
+      promptLength: prompt.length,
+      hasBrandContext: !!brandContext,
+      hasReferenceImage: !!referenceImageUrl
     });
 
-    // Generate image with NanoBanana
+    // Enhance prompt with brand context
+    let enhancedPrompt = prompt;
+    
+    if (brandContext) {
+      if (brandContext.colors && brandContext.colors.length > 0) {
+        enhancedPrompt += `\n\nBrand Colors: ${brandContext.colors.join(', ')}`;
+      }
+      
+      if (brandContext.styleKeywords && brandContext.styleKeywords.length > 0) {
+        enhancedPrompt += `\nBrand Aesthetic: ${brandContext.styleKeywords.join(', ')}`;
+      }
+      
+      if (brandContext.voiceTone) {
+        enhancedPrompt += `\nBrand Voice: ${brandContext.voiceTone}`;
+      }
+      
+      if (brandContext.productName) {
+        enhancedPrompt += `\nProduct: ${brandContext.productName}`;
+      }
+    }
+
     // Build message content with optional reference image
     let messageContent: any;
     
-    if (referenceImage) {
+    if (referenceImageUrl) {
+      // Fetch reference image from storage
+      let referenceImageData = referenceImageUrl;
+      
+      // If it's a Supabase storage URL, fetch it
+      if (referenceImageUrl.includes('/storage/v1/object/public/')) {
+        try {
+          const imageResponse = await fetch(referenceImageUrl);
+          if (imageResponse.ok) {
+            const imageBuffer = await imageResponse.arrayBuffer();
+            const base64 = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+            referenceImageData = `data:image/jpeg;base64,${base64}`;
+          }
+        } catch (error) {
+          console.error('Failed to fetch reference image:', error);
+        }
+      }
+      
       // Multi-modal message with reference image and text
       messageContent = [
         {
           type: "text",
-          text: prompt + (referenceDescription ? `\n\nReference context: ${referenceDescription}` : "")
+          text: enhancedPrompt + (referenceDescription ? `\n\nReference context: ${referenceDescription}` : "")
         },
         {
           type: "image_url",
           image_url: {
-            url: referenceImage
+            url: referenceImageData
           }
         }
       ];
     } else {
       // Text-only message
-      messageContent = prompt;
+      messageContent = enhancedPrompt;
     }
     
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -120,7 +160,9 @@ serve(async (req) => {
         user_refinements: userRefinements,
         final_prompt: prompt,
         image_url: imageUrl,
-        description: description
+        description: description,
+        reference_image_url: referenceImageUrl,
+        brand_context_used: brandContext
       })
       .select()
       .single();

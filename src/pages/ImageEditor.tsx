@@ -51,9 +51,47 @@ export default function ImageEditor() {
   const [isSaving, setIsSaving] = useState(false);
   const [madisonOpen, setMadisonOpen] = useState(false);
   
-  // Reference image state (per-session)
-  const [referenceImage, setReferenceImage] = useState<string>("");
-  const [referenceDescription, setReferenceDescription] = useState<string>("");
+  // Reference image state (per-session) - now stores URL instead of base64
+  const [referenceImageUrl, setReferenceImageUrl] = useState<string | null>(null);
+  const [referenceDescription, setReferenceDescription] = useState("");
+  const [brandContext, setBrandContext] = useState<any>(null);
+  
+  // Fetch brand context on mount
+  useEffect(() => {
+    const fetchBrandContext = async () => {
+      if (!orgId) return;
+
+      try {
+        // Fetch brand configuration for colors
+        const { data: brandConfig } = await supabase
+          .from('organizations')
+          .select('brand_config')
+          .eq('id', orgId)
+          .single();
+
+        // Fetch brand knowledge for voice/tone and style
+        const { data: brandKnowledge } = await supabase
+          .from('brand_knowledge')
+          .select('content, knowledge_type')
+          .eq('organization_id', orgId)
+          .eq('is_active', true)
+          .in('knowledge_type', ['brand_voice', 'brand_style']);
+
+        const voiceKnowledge = brandKnowledge?.find(k => k.knowledge_type === 'brand_voice');
+        const styleKnowledge = brandKnowledge?.find(k => k.knowledge_type === 'brand_style');
+
+        setBrandContext({
+          colors: (brandConfig?.brand_config as any)?.colors || [],
+          voiceTone: (voiceKnowledge?.content as any)?.tone || '',
+          styleKeywords: (styleKnowledge?.content as any)?.keywords || []
+        });
+      } catch (error) {
+        console.error('Error fetching brand context:', error);
+      }
+    };
+
+    fetchBrandContext();
+  }, [orgId]);
   
   // Session management - Conversational start
   const [sessionId] = useState(crypto.randomUUID());
@@ -161,8 +199,9 @@ export default function ImageEditor() {
           userId: user.id,
           selectedTemplate: null,
           userRefinements: currentSession.images.length > 0 ? prompt : null,
-          referenceImage: referenceImage || undefined,
-          referenceDescription: referenceDescription || undefined
+          referenceImageUrl: referenceImageUrl || undefined,
+          referenceDescription: referenceDescription || undefined,
+          brandContext: brandContext || undefined
         },
       });
 
@@ -312,6 +351,63 @@ export default function ImageEditor() {
     toast.success(`Downloaded ${flaggedImages.length} approved images`);
   };
   
+  const handleReferenceUpload = async (imageData: string, description: string) => {
+    if (!user?.id) return;
+
+    try {
+      setIsGenerating(true);
+      
+      // Convert base64 to blob
+      const base64Response = await fetch(imageData);
+      const blob = await base64Response.blob();
+      
+      // Upload to storage
+      const fileName = `${user.id}/${Date.now()}.jpg`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('reference-images')
+        .upload(fileName, blob, {
+          contentType: 'image/jpeg',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('reference-images')
+        .getPublicUrl(fileName);
+
+      setReferenceImageUrl(publicUrl);
+      setReferenceDescription(description);
+      toast.success("Reference image uploaded to session");
+    } catch (error) {
+      console.error('Error uploading reference image:', error);
+      toast.error("Failed to upload reference image");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleReferenceRemove = async () => {
+    if (referenceImageUrl && user?.id) {
+      try {
+        // Extract file path from URL
+        const urlParts = referenceImageUrl.split('/reference-images/');
+        if (urlParts.length === 2) {
+          await supabase.storage
+            .from('reference-images')
+            .remove([urlParts[1]]);
+        }
+      } catch (error) {
+        console.error('Error deleting reference image:', error);
+      }
+    }
+    
+    setReferenceImageUrl(null);
+    setReferenceDescription("");
+    toast.success("Reference image removed");
+  };
+
   const handleRefineImage = () => {
     if (!heroImage) return;
     setUserPrompt(`Refine the current image: `);
@@ -651,18 +747,10 @@ export default function ImageEditor() {
                 
                 {/* Reference Image Upload */}
                 <ReferenceUpload
-                  currentImage={referenceImage}
+                  currentImage={referenceImageUrl}
                   description={referenceDescription}
-                  onUpload={(url, desc) => {
-                    setReferenceImage(url);
-                    setReferenceDescription(desc);
-                    toast.success("Reference image added to session");
-                  }}
-                  onRemove={() => {
-                    setReferenceImage("");
-                    setReferenceDescription("");
-                    toast.info("Reference image removed");
-                  }}
+                  onUpload={handleReferenceUpload}
+                  onRemove={handleReferenceRemove}
                 />
 
                 {/* Chat Input Card - Takes remaining space */}
