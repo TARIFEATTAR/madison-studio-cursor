@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { OnboardingWelcome } from "@/components/onboarding/OnboardingWelcome";
 import { OnboardingBrandUpload } from "@/components/onboarding/OnboardingBrandUpload";
 import { OnboardingSuccess } from "@/components/onboarding/OnboardingSuccess";
@@ -52,7 +53,7 @@ export default function Onboarding() {
     navigate('/library');
   };
 
-  const handleComplete = (destination: string) => {
+  const handleComplete = async (destination: string) => {
     if (!user) return;
     
     // Clean up old progress
@@ -61,6 +62,26 @@ export default function Onboarding() {
     // Mark onboarding as complete using user-specific key
     localStorage.setItem(`onboarding_step_${user.id}`, 'completed');
     localStorage.setItem(`onboarding_completed_${user.id}`, 'true');
+    
+    // Trigger brand health analysis if brand knowledge was added
+    if (onboardingData.uploadContent) {
+      try {
+        const { data: orgs } = await supabase
+          .from('organizations')
+          .select('id')
+          .eq('created_by', user.id)
+          .maybeSingle();
+        
+        if (orgs?.id) {
+          // Fire and forget - don't wait for completion
+          supabase.functions.invoke('analyze-brand-health', {
+            body: { organizationId: orgs.id }
+          }).catch(err => console.error('Brand health analysis error:', err));
+        }
+      } catch (error) {
+        console.error('Error triggering brand health:', error);
+      }
+    }
     
     navigate(destination, { replace: true });
   };

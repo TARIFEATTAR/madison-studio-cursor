@@ -17,9 +17,38 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
     const generateSample = async () => {
       setIsGeneratingSample(true);
       try {
+        // Fetch any brand knowledge from website scrape
+        const { data: knowledgeData } = await supabase
+          .from('brand_knowledge')
+          .select('content')
+          .eq('organization_id', brandData.organizationId)
+          .eq('knowledge_type', 'website_scrape')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        let enhancedPrompt = `Write a 100-word brand introduction for ${brandData.brandName}`;
+        
+        if (brandData.industry) {
+          enhancedPrompt += `, a ${brandData.industry} brand`;
+        }
+
+        // If we have website scrape data, use it to inform the generation
+        if (knowledgeData?.content && typeof knowledgeData.content === 'object') {
+          const analysis = knowledgeData.content as any;
+          if (Array.isArray(analysis.tone) && analysis.tone.length > 0) {
+            enhancedPrompt += `. Tone should be: ${analysis.tone.join(', ')}`;
+          }
+          if (Array.isArray(analysis.brandValues) && analysis.brandValues.length > 0) {
+            enhancedPrompt += `. Core values: ${analysis.brandValues.join(', ')}`;
+          }
+        }
+
+        enhancedPrompt += '. Focus on brand essence and what makes them unique. Keep it elegant and concise.';
+
         const { data } = await supabase.functions.invoke('generate-with-claude', {
           body: {
-            prompt: `Write a 100-word brand introduction for ${brandData.brandName}, a ${brandData.industry} brand. Focus on brand essence and what makes them unique. Keep it elegant and concise.`,
+            prompt: enhancedPrompt,
             organizationId: brandData.organizationId,
             mode: "generate",
             styleOverlay: "TARIFE_NATIVE"

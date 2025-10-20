@@ -29,12 +29,21 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
   const handleContinue = async () => {
     if (!userName.trim() || !brandName.trim()) return;
 
-    // Save user name separately for dashboard personalization
-    localStorage.setItem('madison-user-name', userName.trim());
-
-    // Update organization with brand config
+    // Update organization with brand config AND user profile
     if (user) {
       try {
+        // Update user profile with full name
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            full_name: userName.trim() 
+          })
+          .eq('id', user.id);
+
+        if (profileError) {
+          console.error('Error updating profile:', profileError);
+        }
+
         // Find or create organization
         const { data: orgs } = await supabase
           .from('organizations')

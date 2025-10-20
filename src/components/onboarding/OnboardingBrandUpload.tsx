@@ -90,7 +90,32 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
 
         uploadContent = uploadedFile.name;
       } else if (selectedMethod === "website") {
-        uploadContent = websiteUrl;
+        const websiteUrlTrimmed = websiteUrl.trim();
+        
+        toast({
+          title: "Processing website...",
+          description: "Analyzing your brand's website for voice and style."
+        });
+
+        const { data: websiteData, error: websiteError } = await supabase.functions.invoke(
+          'scrape-brand-website',
+          {
+            body: {
+              url: websiteUrlTrimmed,
+              organizationId: org.id
+            }
+          }
+        );
+
+        if (websiteError) throw websiteError;
+        
+        // Show success toast with what was extracted
+        toast({
+          title: "✓ Website analyzed successfully",
+          description: "Brand voice, vocabulary, and writing style have been captured."
+        });
+
+        uploadContent = websiteUrlTrimmed;
       } else if (selectedMethod === "manual") {
         uploadContent = manualText;
 
