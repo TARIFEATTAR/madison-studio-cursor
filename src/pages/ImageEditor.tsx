@@ -167,7 +167,8 @@ export default function ImageEditor() {
         }));
         
         // Auto-save to DB with saved_to_library: false
-        await supabase.from("generated_images").insert({
+        const { error: insertError } = await supabase.from("generated_images").insert({
+          id: data.savedImageId || newImage.id,
           organization_id: orgId,
           user_id: user.id,
           session_id: sessionId,
@@ -181,6 +182,11 @@ export default function ImageEditor() {
           is_hero_image: imageOrder === 0,
           saved_to_library: false, // Not saved until user explicitly saves
         });
+        
+        if (insertError) {
+          console.error("Failed to save image to DB:", insertError);
+          toast.error("Image generated but not saved to database");
+        }
         
         const isComplete = currentSession.images.length + 1 === MAX_IMAGES_PER_SESSION;
         
