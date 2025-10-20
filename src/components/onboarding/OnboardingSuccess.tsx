@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Check, Sparkles, ArrowRight, BookOpen, Loader2 } from "lucide-react";
+import { Check, Sparkles, ArrowRight, BookOpen, Loader2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { VideoHelpTrigger } from "@/components/help/VideoHelpTrigger";
 import { supabase } from "@/integrations/supabase/client";
 
 interface OnboardingSuccessProps {
@@ -112,6 +113,24 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
               Ready to store your content
             </p>
           </div>
+        </div>
+
+        {/* Quick Start Video */}
+        <div className="mb-12 p-6 rounded-lg border-2 border-brass/30 bg-gradient-to-br from-brass/5 to-transparent">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brass to-gold/80 flex items-center justify-center">
+              <Video className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground">Welcome to Madison Studio</h3>
+              <p className="text-sm text-muted-foreground">4-minute overview to get you started</p>
+            </div>
+          </div>
+          <VideoHelpTrigger 
+            videoId="welcome-to-madison" 
+            variant="button"
+            className="w-full"
+          />
         </div>
 
         {/* Sample Content Preview */}

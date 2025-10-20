@@ -64,6 +64,16 @@ export const helpVideos: HelpVideo[] = [
     order: 2,
     keywords: ['brand', 'setup', 'identity', 'guidelines', 'voice'],
   },
+  {
+    id: 'understanding-brand-guidelines',
+    title: 'Understanding Brand Guidelines',
+    description: 'Learn what information Madison needs in your brand guidelines and see examples of well-structured documentation.',
+    duration: '3:30',
+    category: 'getting-started',
+    videoUrl: 'https://www.loom.com/embed/placeholder',
+    order: 3,
+    keywords: ['brand guidelines', 'documentation', 'templates', 'structure'],
+  },
 
   // Content Creation
   {

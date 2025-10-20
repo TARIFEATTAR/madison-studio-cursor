@@ -9,6 +9,7 @@ import { getIndustryOptions } from "@/config/industryTemplates";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { VideoHelpTrigger } from "@/components/help/VideoHelpTrigger";
 import madisonLogo from "@/assets/madison-horizontal-logo.png";
 
 interface OnboardingWelcomeProps {
@@ -134,9 +135,10 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
           <img src={madisonLogo} alt="MADISON" className="h-8" />
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" className="text-muted-foreground">
-            Watch Tutorial
-          </Button>
+          <VideoHelpTrigger 
+            videoId="setting-up-brand-identity" 
+            variant="button" 
+          />
           <button
             onClick={onSkip}
             className="p-2 rounded-sm opacity-70 hover:opacity-100 transition-opacity"

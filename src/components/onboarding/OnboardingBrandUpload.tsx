@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { VideoHelpTrigger } from "@/components/help/VideoHelpTrigger";
 import madisonLogo from "@/assets/madison-horizontal-logo.png";
 
 interface OnboardingBrandUploadProps {
@@ -179,9 +180,10 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
           <img src={madisonLogo} alt="MADISON" className="h-8" />
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" className="text-muted-foreground">
-            Watch Tutorial
-          </Button>
+          <VideoHelpTrigger 
+            videoId="understanding-brand-guidelines" 
+            variant="button" 
+          />
           <button
             onClick={onSkip}
             className="p-2 rounded-sm opacity-70 hover:opacity-100 transition-opacity"
