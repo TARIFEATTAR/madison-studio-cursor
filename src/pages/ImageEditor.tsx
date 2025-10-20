@@ -16,6 +16,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ReferenceUpload } from "@/components/image-editor/ReferenceUpload";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { GuidedPromptBuilder } from "@/components/image-editor/GuidedPromptBuilder";
 
 type ApprovalStatus = "pending" | "flagged" | "rejected";
 
@@ -50,6 +52,7 @@ export default function ImageEditor() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [madisonOpen, setMadisonOpen] = useState(false);
+  const [guidedModeEnabled, setGuidedModeEnabled] = useState(false);
   
   // Reference image state (per-session) - now stores URL instead of base64
   const [referenceImageUrl, setReferenceImageUrl] = useState<string | null>(null);
@@ -784,46 +787,74 @@ export default function ImageEditor() {
 
                 {/* Chat Input Card - Takes remaining space */}
                 <Card className="flex-1 p-4 bg-[#2F2A26] border-[#3D3935] shadow-sm flex flex-col min-h-0">
-                  <h3 className="text-xs font-semibold text-[#D4CFC8] tracking-wide mb-3">CREATE & REFINE</h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xs font-semibold text-[#D4CFC8] tracking-wide">CREATE & REFINE</h3>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="guided-mode" className="text-[10px] text-[#A8A39E] cursor-pointer">
+                        Guided Mode
+                      </Label>
+                      <Switch
+                        id="guided-mode"
+                        checked={guidedModeEnabled}
+                        onCheckedChange={setGuidedModeEnabled}
+                        className="data-[state=checked]:bg-brass"
+                      />
+                    </div>
+                  </div>
                   
                   <div className="flex-1 flex flex-col gap-3 min-h-0">
-                    {/* Textarea - Grows to fill space */}
-                    <Textarea
-                      value={userPrompt}
-                      onChange={(e) => setUserPrompt(e.target.value)}
-                      placeholder={referenceImageUrl 
-                        ? "Describe the SCENE for your product (e.g., 'on weathered sandstone with brass incense holder, soft smoke, golden hour lighting')..." 
-                        : "Describe the image you want to create..."}
-                      disabled={!canGenerateMore}
-                      className="flex-1 resize-none bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E] min-h-[100px]"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey && canGenerateMore) {
-                          e.preventDefault();
-                          handleGenerate();
-                        }
-                      }}
-                    />
-                    
-                    {/* Quick Refinements - Compact */}
-                    <div className="flex-shrink-0">
-                      <p className="text-xs text-[#A8A39E] mb-2 font-medium">QUICK REFINEMENTS</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {quickRefinements.map((refinement) => (
-                          <button
-                            key={refinement}
-                            onClick={() => {
-                              setUserPrompt(refinement);
-                              handleGenerate(refinement);
-                            }}
-                            disabled={!canGenerateMore}
-                            className="px-2 py-1 text-xs bg-[#252220] text-[#D4CFC8] border border-[#3D3935] rounded hover:bg-[#3D3935] hover:text-[#FFFCF5] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                          >
-                            <Wand2 className="w-3 h-3 inline mr-1" />
-                            {refinement}
-                          </button>
-                        ))}
+                    {guidedModeEnabled ? (
+                      /* Guided Mode - Formula-based builder */
+                      <div className="flex-1 overflow-y-auto pr-2">
+                        <GuidedPromptBuilder
+                          onPromptGenerated={(prompt) => {
+                            setUserPrompt(prompt);
+                            toast.success("Prompt built from formula!");
+                          }}
+                          brandContext={brandContext}
+                        />
                       </div>
-                    </div>
+                    ) : (
+                      /* Expert Mode - Free-form textarea */
+                      <>
+                        <Textarea
+                          value={userPrompt}
+                          onChange={(e) => setUserPrompt(e.target.value)}
+                          placeholder={referenceImageUrl 
+                            ? "Describe the SCENE for your product (e.g., 'on weathered sandstone with brass incense holder, soft smoke, golden hour lighting')..." 
+                            : "Describe the image you want to create..."}
+                          disabled={!canGenerateMore}
+                          className="flex-1 resize-none bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E] min-h-[100px]"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey && canGenerateMore) {
+                              e.preventDefault();
+                              handleGenerate();
+                            }
+                          }}
+                        />
+                        
+                        {/* Quick Refinements - Compact */}
+                        <div className="flex-shrink-0">
+                          <p className="text-xs text-[#A8A39E] mb-2 font-medium">QUICK REFINEMENTS</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {quickRefinements.map((refinement) => (
+                              <button
+                                key={refinement}
+                                onClick={() => {
+                                  setUserPrompt(refinement);
+                                  handleGenerate(refinement);
+                                }}
+                                disabled={!canGenerateMore}
+                                className="px-2 py-1 text-xs bg-[#252220] text-[#D4CFC8] border border-[#3D3935] rounded hover:bg-[#3D3935] hover:text-[#FFFCF5] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                              >
+                                <Wand2 className="w-3 h-3 inline mr-1" />
+                                {refinement}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
                     
                     {/* Generate Button + Progress */}
                     <div className="flex-shrink-0 space-y-2">
