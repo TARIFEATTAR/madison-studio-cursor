@@ -50,3 +50,6 @@ verify_jwt = true
 
 [functions.suggest-brand-knowledge]
 verify_jwt = true
+
+[functions.generate-madison-image]
+verify_jwt = true

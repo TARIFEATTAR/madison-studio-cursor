@@ -572,6 +572,77 @@ export type Database = {
           },
         ]
       }
+      generated_images: {
+        Row: {
+          archived_at: string | null
+          aspect_ratio: string
+          brand_colors_used: string[] | null
+          brand_style_tags: string[] | null
+          created_at: string | null
+          description: string | null
+          final_prompt: string
+          goal_type: string
+          id: string
+          image_url: string
+          is_archived: boolean | null
+          organization_id: string | null
+          output_format: string | null
+          saved_to_library: boolean | null
+          selected_template: string | null
+          updated_at: string | null
+          user_id: string
+          user_refinements: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          aspect_ratio: string
+          brand_colors_used?: string[] | null
+          brand_style_tags?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          final_prompt: string
+          goal_type: string
+          id?: string
+          image_url: string
+          is_archived?: boolean | null
+          organization_id?: string | null
+          output_format?: string | null
+          saved_to_library?: boolean | null
+          selected_template?: string | null
+          updated_at?: string | null
+          user_id: string
+          user_refinements?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          aspect_ratio?: string
+          brand_colors_used?: string[] | null
+          brand_style_tags?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          final_prompt?: string
+          goal_type?: string
+          id?: string
+          image_url?: string
+          is_archived?: boolean | null
+          organization_id?: string | null
+          output_format?: string | null
+          saved_to_library?: boolean | null
+          selected_template?: string | null
+          updated_at?: string | null
+          user_id?: string
+          user_refinements?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_images_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       google_calendar_sync: {
         Row: {
           calendar_id: string | null

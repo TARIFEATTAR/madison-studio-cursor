@@ -99,10 +99,95 @@ export const IMAGE_PROMPT_TEMPLATES = {
     lighting: 'Soft, spiritual natural light',
     composition: 'Environmental, suggests use context',
     style: 'Sanctuary photography, spiritual luxury aesthetic'
+  },
+
+  // E-commerce focused templates
+  'etsy-listing': {
+    aspectRatio: '1:1',
+    useCase: 'Etsy product listing, clean and trustworthy',
+    prompt: 'Studio product photography of {{PRODUCT_NAME}} on clean white background. Soft even lighting from 45-degree angle. Crisp focus, shows texture and quality. Professional e-commerce aesthetic, no distractions.',
+    lighting: 'Soft studio lighting, shadowless',
+    composition: 'Centered product, 20% breathing room, shows scale',
+    style: 'E-commerce standard, clean and honest'
+  },
+
+  'etsy-lifestyle': {
+    aspectRatio: '4:5',
+    useCase: 'Etsy lifestyle shot, shows product in context',
+    prompt: 'Lifestyle shot of {{PRODUCT_NAME}} in natural home setting. Wooden table, soft natural window light, authentic hands-on-product moment. Props suggest daily ritual. Warm inviting atmosphere.',
+    lighting: 'Natural window light, warm tones',
+    composition: 'Product in lower third, lifestyle context fills frame',
+    style: 'Authentic lifestyle, Etsy editorial'
+  },
+
+  'facebook-ad': {
+    aspectRatio: '1:1',
+    useCase: 'Facebook/Instagram ad, scroll-stopping visual',
+    prompt: 'Bold, eye-catching shot of {{PRODUCT_NAME}} with vibrant background gradient. High contrast, dramatic lighting creates depth. Product pops off screen. Designed for tiny mobile thumbnails.',
+    lighting: 'Dramatic side lighting, high contrast',
+    composition: 'Product dominates frame, bold negative space',
+    style: 'Advertising bold, stops scrollers'
+  },
+
+  'instagram-ad-vertical': {
+    aspectRatio: '9:16',
+    useCase: 'Instagram Stories ad, vertical format',
+    prompt: 'Vertical composition of {{PRODUCT_NAME}} with hands in frame showing scale/use. Blurred lifestyle background. Text-safe zones top and bottom. Eye-level perspective for intimacy.',
+    lighting: 'Soft natural light, flattering',
+    composition: 'Hands + product center, safe zones for text',
+    style: 'Native Instagram Stories aesthetic'
+  },
+
+  'website-hero-banner': {
+    aspectRatio: '21:9',
+    useCase: 'Website hero banner, cinematic landscape',
+    prompt: 'Cinematic ultra-wide shot of {{PRODUCT_NAME}} in epic environmental context. Dramatic lighting, massive negative space for headline text. Product small but identifiable, mood is everything.',
+    lighting: 'Cinematic (golden hour or moody)',
+    composition: 'Rule of thirds, product in lower/side third, sky/space dominates',
+    style: 'Cinematic brand film aesthetic'
+  },
+
+  'social-feed-square': {
+    aspectRatio: '1:1',
+    useCase: 'Instagram feed post, polished editorial',
+    prompt: 'Gallery-worthy shot of {{PRODUCT_NAME}} with editorial styling. Carefully curated props, tonal harmony, considered composition. Looks like it belongs in a design magazine.',
+    lighting: 'Editorial perfect lighting',
+    composition: 'Artfully arranged, balanced',
+    style: 'Editorial luxury, Kinfolk magazine'
+  },
+
+  'tiktok-product': {
+    aspectRatio: '9:16',
+    useCase: 'TikTok product showcase, dynamic vertical',
+    prompt: 'Dynamic vertical shot of {{PRODUCT_NAME}} with trendy props and textures. Bright colorful lighting, youthful energy, shows product clearly but with personality. Gen-Z aesthetic.',
+    lighting: 'Bright, saturated, colorful',
+    composition: 'Vertical, product fills frame with energy',
+    style: 'TikTok native, youthful and bold'
+  },
+
+  'ritual-process-vertical': {
+    aspectRatio: '9:16',
+    useCase: 'Short-form video stills showing the ritual of product use',
+    prompt: 'Cinematic vertical shot of hands slowly applying {{PRODUCT_NAME}}, captured mid-ritual. Warm side lighting, film grain texture. Focus on hands + product, blurred background suggests bathroom sanctuary. Intimate personal moment.',
+    lighting: 'Warm directional light (candle-like), film grain',
+    composition: 'Vertical, hands center, shallow depth',
+    style: 'Cinematic ritual, analog film grain'
   }
 };
 
 export type ImagePromptType = keyof typeof IMAGE_PROMPT_TEMPLATES;
+
+export const GOAL_TEMPLATES_MAP: Record<string, ImagePromptType[]> = {
+  'etsy-listing': ['etsy-listing', 'etsy-lifestyle', 'product-page'],
+  'facebook-ad': ['facebook-ad', 'instagram-ad-vertical', 'social-square'],
+  'instagram-post': ['social-feed-square', 'instagram-stories', 'lifestyle-sanctuary'],
+  'website-hero': ['website-hero-banner', 'homepage-hero', 'collection-overview'],
+  'social-post': ['instagram-stories', 'social-square', 'ritual-process-vertical']
+};
+
+export function getTemplatesForGoal(goal: string): ImagePromptType[] {
+  return GOAL_TEMPLATES_MAP[goal] || ['product-page', 'social-square', 'homepage-hero'];
+}
 
 /**
  * Build a complete image generation prompt based on product details and template

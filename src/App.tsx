@@ -31,6 +31,7 @@ import MarketplaceLibrary from "./pages/MarketplaceLibrary";
 import CreateEtsyListing from "./pages/marketplace/CreateEtsyListing";
 import CreateTikTokShopListing from "./pages/marketplace/CreateTikTokShopListing";
 import BrandHealth from "./pages/BrandHealth";
+import ImageEditor from "./pages/ImageEditor";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { AlertCircle } from "lucide-react";
@@ -157,6 +158,7 @@ const AppContent = () => {
                   <Route path="/marketplace/etsy" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Etsy Listing"><CreateEtsyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
                   <Route path="/marketplace/tiktok_shop" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create TikTok Shop Listing"><CreateTikTokShopListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
                   <Route path="/templates" element={<ProtectedRoute><RouteErrorBoundary routeName="Templates"><Templates /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/image-editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Editor"><ImageEditor /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/calendar" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
