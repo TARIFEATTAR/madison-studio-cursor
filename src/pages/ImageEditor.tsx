@@ -58,6 +58,7 @@ export default function ImageEditor() {
   const [referenceImageUrl, setReferenceImageUrl] = useState<string | null>(null);
   const [referenceDescription, setReferenceDescription] = useState("");
   const [brandContext, setBrandContext] = useState<any>(null);
+  const [isUploadingReference, setIsUploadingReference] = useState(false);
   
   // Fetch brand context on mount
   useEffect(() => {
@@ -386,7 +387,7 @@ export default function ImageEditor() {
     if (!user?.id) return;
 
     try {
-      setIsGenerating(true);
+      setIsUploadingReference(true);
       
       // Convert base64 to blob
       const base64Response = await fetch(imageData);
@@ -415,7 +416,7 @@ export default function ImageEditor() {
       console.error('Error uploading reference image:', error);
       toast.error("Failed to upload reference image");
     } finally {
-      setIsGenerating(false);
+      setIsUploadingReference(false);
     }
   };
 
@@ -782,6 +783,7 @@ export default function ImageEditor() {
                   description={referenceDescription}
                   onUpload={handleReferenceUpload}
                   onRemove={handleReferenceRemove}
+                  isUploading={isUploadingReference}
                 />
 
                 {/* Chat Input Card - Takes remaining space */}

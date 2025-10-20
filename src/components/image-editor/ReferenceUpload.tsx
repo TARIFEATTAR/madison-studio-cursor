@@ -3,30 +3,44 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { toast } from 'sonner';
 
 interface ReferenceUploadProps {
   currentImage: string | null;
   description: string;
   onUpload: (url: string, description: string) => void;
   onRemove: () => void;
+  isUploading?: boolean;
 }
 
-export function ReferenceUpload({ currentImage, description, onUpload, onRemove }: ReferenceUploadProps) {
+export function ReferenceUpload({ currentImage, description, onUpload, onRemove, isUploading = false }: ReferenceUploadProps) {
   const [localDescription, setLocalDescription] = useState(description);
   const [isOpen, setIsOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFile = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error('File too large (max 20MB)');
+      return;
+    }
     const reader = new FileReader();
     reader.onloadend = () => {
       onUpload(reader.result as string, localDescription);
       setIsOpen(true);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processFile(file);
   };
 
   return (
@@ -81,39 +95,48 @@ export function ReferenceUpload({ currentImage, description, onUpload, onRemove 
               </div>
             ) : (
               <>
-                <Label 
-                  htmlFor="reference-upload" 
-                  className="flex flex-col items-center justify-center p-6 border-2 border-dashed 
-                           border-[#3D3935] hover:border-brass/40 rounded cursor-pointer 
-                           transition-all duration-300 group"
-                >
-                  <Upload className="w-6 h-6 text-brass mb-2 group-hover:scale-110 transition-transform" />
-                  <span className="text-xs text-[#D4CFC8] text-center">
-                    Upload reference image (Max 20MB)
-                  </span>
-                  <span className="text-[10px] text-[#A8A39E] italic mt-1 text-center max-w-[200px]">
-                    Use for style, lighting, or composition reference
-                  </span>
-                </Label>
-                <Input
-                  id="reference-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-
-                <div>
-                  <Label className="text-xs text-[#D4CFC8] mb-1.5 block">
-                    Usage Notes (optional)
+                <>
+                  {isUploading && (
+                    <div className="flex items-center gap-2 text-xs text-[#D4CFC8]">
+                      <Loader2 className="w-4 h-4 animate-spin text-brass" />
+                      Uploading reference…
+                    </div>
+                  )}
+                  <Label 
+                    htmlFor="reference-upload" 
+                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={(e) => { e.preventDefault(); setIsDragging(false); const file = e.dataTransfer.files?.[0]; if (file) processFile(file); }}
+                    className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded cursor-pointer transition-all duration-300 group ${isDragging ? 'border-brass/60 bg-[#252220]/40' : 'border-[#3D3935] hover:border-brass/40'}`}
+                  >
+                    <Upload className="w-6 h-6 text-brass mb-2 group-hover:scale-110 transition-transform" />
+                    <span className="text-xs text-[#D4CFC8] text-center">
+                      Drag & drop or click to upload (Max 20MB)
+                    </span>
+                    <span className="text-[10px] text-[#A8A39E] italic mt-1 text-center max-w-[220px]">
+                      Main use: place your product into a new scene. Also works for style/lighting reference.
+                    </span>
                   </Label>
                   <Input
-                    value={localDescription}
-                    onChange={(e) => setLocalDescription(e.target.value)}
-                    placeholder="E.g., 'Use the lighting and angle from this photo'"
-                    className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E] text-xs"
+                    id="reference-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
                   />
-                </div>
+
+                  <div>
+                    <Label className="text-xs text-[#D4CFC8] mb-1.5 block">
+                      Usage Notes (optional)
+                    </Label>
+                    <Input
+                      value={localDescription}
+                      onChange={(e) => setLocalDescription(e.target.value)}
+                      placeholder="E.g., 'Place this exact product into the scene; match lighting/angle'"
+                      className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E] text-xs"
+                    />
+                  </div>
+                </>
               </>
             )}
           </div>
