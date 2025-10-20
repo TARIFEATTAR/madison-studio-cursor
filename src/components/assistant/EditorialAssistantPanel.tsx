@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, X, FileText, Loader2, Copy, Check } from "lucide-react";
+import { Send, X, FileText, Loader2, Copy, Check, Image as ImageIcon, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -56,8 +56,10 @@ export function EditorialAssistantPanel({ onClose, initialContent, sessionContex
   const [input, setInput] = useState(initialContent || "");
   const [isGenerating, setIsGenerating] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Persist messages to localStorage whenever they change
   useEffect(() => {
@@ -100,23 +102,51 @@ export function EditorialAssistantPanel({ onClose, initialContent, sessionContex
     // Removed auto-population to match new UX
   }, []);
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach((file) => {
+      if (file.size > 20 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Images must be under 20MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        setUploadedImages((prev) => [...prev, base64]);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Reset input
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const handleSend = async () => {
     console.log('[EditorialAssistant] handleSend called, input:', input, 'trimmed:', input.trim(), 'isGenerating:', isGenerating);
     
-    if (!input.trim() || isGenerating) {
+    if ((!input.trim() && uploadedImages.length === 0) || isGenerating) {
       console.log('[EditorialAssistant] Send blocked - empty input or generating');
       return;
     }
 
     const userMessage: Message = {
       role: "user",
-      content: input.trim(),
+      content: input.trim() || "Please analyze these images",
       timestamp: new Date(),
     };
 
     console.log('[EditorialAssistant] Sending message:', userMessage.content);
     setMessages((prev) => [...prev, userMessage]);
+    const imagesToSend = [...uploadedImages];
     setInput("");
+    setUploadedImages([]);
     setIsGenerating(true);
 
     try {
@@ -165,6 +195,7 @@ Be conversational, encouraging, and editorial in your tone.
           organizationId: currentOrganizationId,
           mode: "consult",
           userName: userName || undefined,
+          images: imagesToSend.length > 0 ? imagesToSend : undefined,
         },
       });
 
@@ -216,7 +247,7 @@ Be conversational, encouraging, and editorial in your tone.
   };
 
   return (
-    <div className="h-full flex flex-col max-w-full overflow-hidden" style={{ backgroundColor: "#FFFCF5" }}>
+    <div className="h-screen flex flex-col max-w-full" style={{ backgroundColor: "#FFFCF5" }}>
       {/* Header */}
       <div 
         className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0"
@@ -364,7 +395,48 @@ Be conversational, encouraging, and editorial in your tone.
         className="border-t p-3 sm:p-4 flex-shrink-0"
         style={{ borderColor: "#E5E0D8" }}
       >
+        {/* Image Previews */}
+        {uploadedImages.length > 0 && (
+          <div className="flex gap-2 mb-2 flex-wrap">
+            {uploadedImages.map((img, idx) => (
+              <div key={idx} className="relative group">
+                <img 
+                  src={img} 
+                  alt={`Upload ${idx + 1}`}
+                  className="w-16 h-16 object-cover rounded border"
+                  style={{ borderColor: "#D4CFC8" }}
+                />
+                <button
+                  onClick={() => setUploadedImages(prev => prev.filter((_, i) => i !== idx))}
+                  className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="flex gap-1.5 sm:gap-2 items-end w-full">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isGenerating}
+            className="h-[52px] w-[52px] sm:h-[60px] sm:w-[60px] flex-shrink-0"
+            style={{ color: "#6B6560" }}
+          >
+            <ImageIcon className="w-5 h-5" />
+          </Button>
           <Textarea
             ref={textareaRef}
             value={input}
@@ -390,7 +462,7 @@ Be conversational, encouraging, and editorial in your tone.
               console.log('[EditorialAssistant] Touch start', { input, isGenerating });
               e.currentTarget.click();
             }}
-            disabled={!input.trim() || isGenerating}
+            disabled={(!input.trim() && uploadedImages.length === 0) || isGenerating}
             className="h-[52px] w-[52px] sm:h-[60px] sm:w-[60px] flex-shrink-0 bg-gradient-to-r from-aged-brass to-antique-gold hover:opacity-90 active:opacity-80"
             style={{ color: "#1A1816" }}
           >

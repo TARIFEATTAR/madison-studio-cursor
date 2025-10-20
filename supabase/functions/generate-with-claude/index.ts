@@ -385,7 +385,7 @@ serve(async (req) => {
       throw new Error('ANTHROPIC_API_KEY is not configured');
     }
 
-    const { prompt, organizationId, mode = "generate", styleOverlay = "TARIFE_NATIVE", productData, contentType, userName } = await req.json();
+    const { prompt, organizationId, mode = "generate", styleOverlay = "TARIFE_NATIVE", productData, contentType, userName, images } = await req.json();
     
     // Verify user has access to the requested organization
     if (organizationId) {
@@ -1025,6 +1025,43 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
           await new Promise(resolve => setTimeout(resolve, delay));
         }
         
+        // Build message content - support multimodal if images provided
+        let messageContent: any;
+        
+        if (images && images.length > 0) {
+          // Multimodal message with images
+          const contentBlocks: any[] = [
+            {
+              type: 'text',
+              text: prompt
+            }
+          ];
+          
+          // Add each image as a content block
+          images.forEach((imageData: string) => {
+            // Extract base64 data and media type from data URL
+            const matches = imageData.match(/^data:([^;]+);base64,(.+)$/);
+            if (matches) {
+              const mediaType = matches[1];
+              const base64Data = matches[2];
+              
+              contentBlocks.push({
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: mediaType,
+                  data: base64Data
+                }
+              });
+            }
+          });
+          
+          messageContent = contentBlocks;
+        } else {
+          // Text-only message
+          messageContent = prompt;
+        }
+        
         const response = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {
@@ -1039,7 +1076,7 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
             messages: [
               {
                 role: 'user',
-                content: prompt
+                content: messageContent
               }
             ],
           }),
