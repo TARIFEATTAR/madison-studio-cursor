@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentOrganizationId } from "@/hooks/useIndustryConfig";
@@ -11,7 +11,8 @@ import { Download, Loader2, Sparkles, ArrowLeft, Save, Star, Wand2 } from "lucid
 import { useNavigate } from "react-router-dom";
 import { ExportOptions } from "@/components/image-editor/ExportOptions";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
-import madisonInsignia from "@/assets/madison-insignia-new.png";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { MadisonVerticalTab } from "@/components/assistant/MadisonVerticalTab";
 
 type GeneratedImage = {
   id: string;
@@ -56,6 +57,18 @@ export default function ImageEditor() {
   const canGenerateMore = currentSession.images.length < MAX_IMAGES_PER_SESSION;
   const progressText = `${currentSession.images.length}/${MAX_IMAGES_PER_SESSION}`;
   const heroImage = currentSession.images.find(img => img.isHero) || currentSession.images[0];
+
+  // Badge indicator for Madison
+  const [showMadisonBadge, setShowMadisonBadge] = useState(false);
+
+  useEffect(() => {
+    if (currentSession.images.length >= 3 && !madisonOpen) {
+      setShowMadisonBadge(true);
+    }
+    if (madisonOpen) {
+      setShowMadisonBadge(false);
+    }
+  }, [currentSession.images.length, madisonOpen]);
 
   const handleStartSession = () => {
     if (!sessionName.trim()) {
@@ -223,16 +236,27 @@ export default function ImageEditor() {
   ];
 
   return (
-    <div className="min-h-screen bg-vellum-cream flex">
-      {/* Madison Assistant Panel */}
-      {madisonOpen && (
-        <div className="w-96 border-r border-charcoal/10 bg-parchment-white flex-shrink-0">
+    <div className="min-h-screen bg-[#252220] flex">
+      {/* Madison Vertical Tab - Always Visible */}
+      <MadisonVerticalTab 
+        isOpen={madisonOpen}
+        onClick={() => setMadisonOpen(!madisonOpen)}
+        hasSuggestions={showMadisonBadge}
+      />
+
+      {/* Madison Drawer - Slides from Right */}
+      <Sheet open={madisonOpen} onOpenChange={setMadisonOpen}>
+        <SheetContent 
+          side="right" 
+          className="w-[300px] p-0 border-l border-[#3D3935]"
+          style={{ backgroundColor: '#2F2A26' }}
+        >
           <EditorialAssistantPanel
             onClose={() => setMadisonOpen(false)}
             initialContent="Help me generate the perfect product images for my brand"
           />
-        </div>
-      )}
+        </SheetContent>
+      </Sheet>
 
       <div className="flex-1 overflow-auto">
         <div className="max-w-[1800px] mx-auto p-6">
@@ -240,13 +264,13 @@ export default function ImageEditor() {
           <div className="mb-6 flex items-center justify-between">
             <div>
               <div className="flex items-center gap-3 mb-1">
-                <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
+                <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="text-[#FFFCF5] hover:bg-[#3D3935]">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back
                 </Button>
-                <h1 className="font-serif text-3xl text-ink-black">Madison Image Studio</h1>
+                <h1 className="font-serif text-3xl text-[#FFFCF5]">Madison Image Studio</h1>
               </div>
-              <p className="text-charcoal/70 text-sm">
+              <p className="text-[#D4CFC8] text-sm">
                 {hasNamedSession 
                   ? `Session: ${currentSession.name} • ${progressText} images`
                   : "E-commerce product photography sessions"
@@ -255,22 +279,13 @@ export default function ImageEditor() {
             </div>
             
             <div className="flex gap-2">
-              <Button
-                onClick={() => setMadisonOpen(!madisonOpen)}
-                variant="outline"
-                size="sm"
-                className={madisonOpen ? "bg-brass/10 border-brass/40" : ""}
-              >
-                <img src={madisonInsignia} alt="Madison" className="w-4 h-4 mr-2 opacity-80" />
-                {madisonOpen ? "Hide" : "Ask"} Madison
-              </Button>
-              
               {hasNamedSession && currentSession.images.length > 0 && (
                 <>
                   <Button
                     onClick={handleDownloadAll}
                     variant="outline"
                     size="sm"
+                    className="border-[#3D3935] text-[#D4CFC8] hover:bg-[#3D3935] hover:text-[#FFFCF5]"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download All
@@ -300,10 +315,10 @@ export default function ImageEditor() {
 
           {/* Session Name Input (if not started) */}
           {!hasNamedSession && (
-            <Card className="p-8 bg-parchment-white border-charcoal/10 shadow-sm mb-6 text-center max-w-2xl mx-auto">
+            <Card className="p-8 bg-[#2F2A26] border-[#3D3935] shadow-sm mb-6 text-center max-w-2xl mx-auto">
               <Sparkles className="w-12 h-12 text-brass/50 mx-auto mb-4" />
-              <h2 className="font-serif text-2xl text-ink-black mb-2">Start a New Session</h2>
-              <p className="text-charcoal/60 mb-6">
+              <h2 className="font-serif text-2xl text-[#FFFCF5] mb-2">Start a New Session</h2>
+              <p className="text-[#D4CFC8] mb-6">
                 Generate up to {MAX_IMAGES_PER_SESSION} product photos, pick your hero, and save to Library
               </p>
               
@@ -312,7 +327,7 @@ export default function ImageEditor() {
                   value={sessionName}
                   onChange={(e) => setSessionName(e.target.value)}
                   placeholder="e.g., Jasmine Perfume Bottle Photos"
-                  className="flex-1"
+                  className="flex-1 bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E]"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       handleStartSession();
@@ -335,7 +350,7 @@ export default function ImageEditor() {
               {/* Left Sidebar - Thumbnail Gallery */}
               <div className="w-32 flex-shrink-0 space-y-3">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-semibold text-charcoal/60 tracking-wide">SESSION</p>
+                  <p className="text-xs font-semibold text-[#D4CFC8] tracking-wide">SESSION</p>
                   <p className="text-xs font-bold text-brass">{progressText}</p>
                 </div>
                 
@@ -369,9 +384,9 @@ export default function ImageEditor() {
                 {Array.from({ length: Math.max(0, MAX_IMAGES_PER_SESSION - currentSession.images.length) }).map((_, i) => (
                   <div
                     key={`empty-${i}`}
-                    className="w-full aspect-square rounded border-2 border-dashed border-charcoal/10 bg-white/50 flex items-center justify-center"
+                    className="w-full aspect-square rounded border-2 border-dashed border-[#3D3935] bg-[#2F2A26]/50 flex items-center justify-center"
                   >
-                    <p className="text-xs text-charcoal/30 font-medium">
+                    <p className="text-xs text-[#A8A39E] font-medium">
                       {currentSession.images.length + i + 1}
                     </p>
                   </div>
@@ -381,12 +396,12 @@ export default function ImageEditor() {
               {/* Main Content Area */}
               <div className="flex-1 flex flex-col gap-6">
                 {/* Main Image Display - Starts at top */}
-                <Card className="flex-1 p-8 bg-white border-charcoal/10 shadow-sm min-h-[600px] flex items-center justify-center">
+                <Card className="flex-1 p-8 bg-[#2F2A26] border-[#3D3935] shadow-lg min-h-[600px] flex items-center justify-center">
                   {isGenerating ? (
                     <div className="text-center space-y-4">
                       <Loader2 className="w-12 h-12 text-brass animate-spin mx-auto" />
-                      <p className="text-charcoal/70">Generating your image...</p>
-                      <p className="text-xs text-charcoal/40">This may take 15-30 seconds</p>
+                      <p className="text-[#D4CFC8]">Generating your image...</p>
+                      <p className="text-xs text-[#A8A39E]">This may take 15-30 seconds</p>
                     </div>
                   ) : heroImage ? (
                     <div className="w-full max-w-4xl">
@@ -403,26 +418,26 @@ export default function ImageEditor() {
                           </div>
                         )}
                       </div>
-                      <div className="mt-4 p-3 bg-vellum-cream/50 rounded">
-                        <p className="text-xs text-charcoal/60 font-medium mb-1">PROMPT</p>
-                        <p className="text-sm text-charcoal/70 italic">"{heroImage.prompt}"</p>
+                      <div className="mt-4 p-3 bg-[#252220]/50 rounded">
+                        <p className="text-xs text-[#D4CFC8] font-medium mb-1">PROMPT</p>
+                        <p className="text-sm text-[#A8A39E] italic">"{heroImage.prompt}"</p>
                       </div>
                     </div>
                   ) : (
                     <div className="text-center space-y-3">
                       <Sparkles className="w-16 h-16 text-brass/30 mx-auto" />
-                      <p className="text-lg text-charcoal/70 font-medium">Generate your first image</p>
-                      <p className="text-sm text-charcoal/50">Describe the product photo you want below</p>
+                      <p className="text-lg text-[#FFFCF5] font-medium">Generate your first image</p>
+                      <p className="text-sm text-[#D4CFC8]">Describe the product photo you want below</p>
                     </div>
                   )}
                 </Card>
 
                 {/* Chat-Style Refinement Input with Integrated Controls */}
-                <Card className="p-6 bg-parchment-white border-charcoal/10 shadow-sm">
+                <Card className="p-6 bg-[#2F2A26] border-[#3D3935] shadow-sm">
                   <div className="space-y-4">
                     {/* Compact Export Settings */}
-                    <div className="pb-4 border-b border-charcoal/10">
-                      <label className="text-xs text-charcoal/60 font-medium mb-2 block">EXPORT SETTINGS</label>
+                    <div className="pb-4 border-b border-[#3D3935]">
+                      <label className="text-xs text-[#D4CFC8] font-medium mb-2 block">EXPORT SETTINGS</label>
                       <ExportOptions
                         aspectRatio={aspectRatio}
                         outputFormat={outputFormat}
@@ -439,7 +454,7 @@ export default function ImageEditor() {
                       : "Describe the product image you want to create..."
                     }
                     rows={3}
-                    className="resize-none bg-white border-charcoal/20 focus:border-brass"
+                    className="resize-none bg-[#252220] border-[#3D3935] focus:border-brass text-[#FFFCF5] placeholder:text-[#A8A39E]"
                     disabled={!canGenerateMore}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -450,8 +465,8 @@ export default function ImageEditor() {
                   
                   {!canGenerateMore && (
                     <div className="bg-brass/10 border border-brass/20 rounded p-3 text-center">
-                      <p className="text-sm text-brass font-medium">
-                        Session complete! Save to Library to start a new session.
+                      <p className="text-sm text-brass/90 font-medium">
+                        ✨ Session complete! Save to Library to start a new session.
                       </p>
                     </div>
                   )}
@@ -463,7 +478,7 @@ export default function ImageEditor() {
                           key={refinement}
                           onClick={() => setUserPrompt(refinement)}
                           disabled={!canGenerateMore}
-                          className="px-3 py-1 text-xs rounded-full bg-brass/10 text-brass hover:bg-brass/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="px-3 py-1 text-xs rounded-full bg-[#3D3935] text-[#D4CFC8] hover:bg-brass/20 hover:text-brass transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           {refinement}
                         </button>
@@ -490,7 +505,7 @@ export default function ImageEditor() {
                   </div>
                   
                   {canGenerateMore && (
-                    <p className="text-xs text-charcoal/40 text-right">
+                    <p className="text-xs text-[#A8A39E] text-right">
                       Press ⌘+Enter to generate • {MAX_IMAGES_PER_SESSION - currentSession.images.length} remaining
                     </p>
                   )}

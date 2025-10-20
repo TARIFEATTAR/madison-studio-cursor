@@ -67,6 +67,20 @@ export default {
         'derivative-product': "hsl(var(--derivative-product))",
         'derivative-sms': "hsl(var(--derivative-sms))",
         'derivative-linkedin': "hsl(var(--derivative-linkedin))",
+        studio: {
+          charcoal: '#252220',
+          card: '#2F2A26',
+          border: '#3D3935',
+          text: {
+            primary: '#FFFCF5',
+            secondary: '#D4CFC8',
+            muted: '#A8A39E',
+          },
+          accent: {
+            brass: '#B8956A',
+            glow: 'rgba(184, 149, 106, 0.15)',
+          }
+        },
       },
       fontFamily: {
         serif: ['Cormorant Garamond', 'serif'],
