@@ -9,10 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Download, Loader2, Sparkles, ArrowLeft, Save, Star, Wand2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { ExportOptions } from "@/components/image-editor/ExportOptions";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { MadisonVerticalTab } from "@/components/assistant/MadisonVerticalTab";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type GeneratedImage = {
   id: string;
@@ -402,11 +403,11 @@ export default function ImageEditor() {
             </Card>
           )}
 
-          {/* Main Layout: Gallery + Main Image + Chat */}
+          {/* Main Layout: 3-Column Layout - Gallery + Image + Chat Sidebar */}
           {sessionStarted && (
-            <div className="flex gap-6">
+            <div className="flex gap-6 h-[calc(100vh-180px)]">
               {/* Left Sidebar - Thumbnail Gallery */}
-              <div className="w-32 flex-shrink-0 space-y-3">
+              <div className="w-32 flex-shrink-0 space-y-3 overflow-y-auto">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-xs font-semibold text-[#D4CFC8] tracking-wide">SESSION</p>
                   <p className="text-xs font-bold text-brass">{progressText}</p>
@@ -451,10 +452,9 @@ export default function ImageEditor() {
                 ))}
               </div>
 
-              {/* Main Content Area */}
-              <div className="flex-1 flex flex-col gap-6">
-                {/* Main Image Display - Starts at top */}
-                <Card className="flex-1 p-8 bg-[#2F2A26] border-[#3D3935] shadow-lg min-h-[600px] flex items-center justify-center">
+              {/* Center - Main Image Display */}
+              <div className="flex-1 min-w-0">
+                <Card className="h-full p-6 bg-[#2F2A26] border-[#3D3935] shadow-lg flex flex-col items-center justify-center overflow-auto">
                   {isGenerating ? (
                     <div className="text-center space-y-4">
                       <Loader2 className="w-12 h-12 text-brass animate-spin mx-auto" />
@@ -462,12 +462,12 @@ export default function ImageEditor() {
                       <p className="text-xs text-[#A8A39E]">This may take 15-30 seconds</p>
                     </div>
                   ) : heroImage ? (
-                    <div className="w-full max-w-4xl">
-                      <div className="relative">
+                    <div className="w-full h-full flex flex-col items-center justify-center space-y-4">
+                      <div className="relative flex items-center justify-center max-h-[450px]">
                         <img
                           src={heroImage.imageUrl}
-                          alt="Hero product image"
-                          className="w-full h-auto rounded shadow-lg"
+                          alt="Generated Product"
+                          className="max-h-[450px] w-auto object-contain rounded shadow-lg"
                         />
                         {heroImage.isHero && (
                           <div className="absolute top-4 right-4 bg-brass text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg">
@@ -476,102 +476,142 @@ export default function ImageEditor() {
                           </div>
                         )}
                       </div>
-                      <div className="mt-4 p-3 bg-[#252220]/50 rounded">
-                        <p className="text-xs text-[#D4CFC8] font-medium mb-1">PROMPT</p>
-                        <p className="text-sm text-[#A8A39E] italic">"{heroImage.prompt}"</p>
+                      
+                      <div className="text-center max-w-md px-4">
+                        <p className="text-xs text-[#A8A39E] font-medium mb-2">GENERATION PROMPT</p>
+                        <p className="text-sm text-[#D4CFC8] italic line-clamp-3">"{heroImage.prompt}"</p>
                       </div>
                     </div>
                   ) : (
                     <div className="text-center space-y-3">
                       <Sparkles className="w-16 h-16 text-brass/30 mx-auto" />
                       <p className="text-lg text-[#FFFCF5] font-medium">Generate your first image</p>
-                      <p className="text-sm text-[#D4CFC8]">Describe the product photo you want below</p>
+                      <p className="text-sm text-[#D4CFC8]">Describe the product photo you want in the chat</p>
                     </div>
                   )}
                 </Card>
+              </div>
 
-                {/* Chat-Style Refinement Input with Integrated Controls */}
-                <Card className="p-6 bg-[#2F2A26] border-[#3D3935] shadow-sm">
-                  <div className="space-y-4">
-                    {/* Compact Export Settings */}
-                    <div className="pb-4 border-b border-[#3D3935]">
-                      <label className="text-xs text-[#D4CFC8] font-medium mb-2 block">EXPORT SETTINGS</label>
-                      <ExportOptions
-                        aspectRatio={aspectRatio}
-                        outputFormat={outputFormat}
-                        onAspectRatioChange={setAspectRatio}
-                        onOutputFormatChange={(value) => setOutputFormat(value as "png" | "jpeg" | "webp")}
-                      />
-                    </div>
-                  
-                  <Textarea
-                    value={userPrompt}
-                    onChange={(e) => setUserPrompt(e.target.value)}
-                    placeholder={currentSession.images.length > 0
-                      ? "Describe how to refine or create a variation..." 
-                      : "Describe the product image you want to create..."
-                    }
-                    rows={3}
-                    className="resize-none bg-[#252220] border-[#3D3935] focus:border-brass text-[#FFFCF5] placeholder:text-[#A8A39E]"
-                    disabled={!canGenerateMore}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                        handleGenerate();
-                      }
-                    }}
-                  />
-                  
-                  {!canGenerateMore && (
-                    <div className="bg-brass/10 border border-brass/20 rounded p-3 text-center">
-                      <p className="text-sm text-brass/90 font-medium">
-                        ✨ Session complete! Save to Library to start a new session.
-                      </p>
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-between items-center">
-                    <div className="flex flex-wrap gap-2">
-                      {quickRefinements.map((refinement) => (
-                        <button
-                          key={refinement}
-                          onClick={() => setUserPrompt(refinement)}
-                          disabled={!canGenerateMore}
-                          className="px-3 py-1 text-xs rounded-full bg-[#3D3935] text-[#D4CFC8] hover:bg-brass/20 hover:text-brass transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                          {refinement}
-                        </button>
-                      ))}
+              {/* Right Sidebar - Export Settings + Chat */}
+              <div className="w-80 flex-shrink-0 flex flex-col gap-4">
+                {/* Export Settings - Compact Card */}
+                <Card className="p-4 bg-[#2F2A26] border-[#3D3935] shadow-sm">
+                  <h3 className="text-xs font-semibold text-[#D4CFC8] tracking-wide mb-3">EXPORT SETTINGS</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs text-[#A8A39E] mb-1.5 block">Aspect Ratio</Label>
+                      <Select value={aspectRatio} onValueChange={setAspectRatio}>
+                        <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1:1">Square (1:1)</SelectItem>
+                          <SelectItem value="4:5">Portrait (4:5)</SelectItem>
+                          <SelectItem value="16:9">Landscape (16:9)</SelectItem>
+                          <SelectItem value="9:16">Vertical (9:16)</SelectItem>
+                          <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     
-                    <Button
-                      onClick={() => handleGenerate()}
-                      disabled={isGenerating || !userPrompt.trim() || !canGenerateMore}
-                      className="bg-brass hover:bg-brass/90 text-white"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4 mr-2" />
-                          {currentSession.images.length > 0 ? "Refine" : "Generate"}
-                        </>
-                      )}
-                    </Button>
+                    <div>
+                      <Label className="text-xs text-[#A8A39E] mb-1.5 block">Format</Label>
+                      <Select value={outputFormat} onValueChange={(value: "png" | "jpeg" | "webp") => setOutputFormat(value)}>
+                        <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="png">PNG</SelectItem>
+                          <SelectItem value="jpeg">JPEG</SelectItem>
+                          <SelectItem value="webp">WebP</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
+                </Card>
+
+                {/* Chat Input Card - Takes remaining space */}
+                <Card className="flex-1 p-4 bg-[#2F2A26] border-[#3D3935] shadow-sm flex flex-col min-h-0">
+                  <h3 className="text-xs font-semibold text-[#D4CFC8] tracking-wide mb-3">CREATE & REFINE</h3>
                   
-                  {canGenerateMore && (
-                    <p className="text-xs text-[#A8A39E] text-right">
-                      Press ⌘+Enter to generate • {MAX_IMAGES_PER_SESSION - currentSession.images.length} remaining
-                    </p>
-                  )}
-                </div>
-              </Card>
+                  <div className="flex-1 flex flex-col gap-3 min-h-0">
+                    {/* Textarea - Grows to fill space */}
+                    <Textarea
+                      value={userPrompt}
+                      onChange={(e) => setUserPrompt(e.target.value)}
+                      placeholder="Describe changes or a new image..."
+                      disabled={!canGenerateMore}
+                      className="flex-1 resize-none bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E] min-h-[100px]"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey && canGenerateMore) {
+                          e.preventDefault();
+                          handleGenerate();
+                        }
+                      }}
+                    />
+                    
+                    {/* Quick Refinements - Compact */}
+                    <div className="flex-shrink-0">
+                      <p className="text-xs text-[#A8A39E] mb-2 font-medium">QUICK REFINEMENTS</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {quickRefinements.map((refinement) => (
+                          <button
+                            key={refinement}
+                            onClick={() => {
+                              setUserPrompt(refinement);
+                              handleGenerate(refinement);
+                            }}
+                            disabled={!canGenerateMore}
+                            className="px-2 py-1 text-xs bg-[#252220] text-[#D4CFC8] border border-[#3D3935] rounded hover:bg-[#3D3935] hover:text-[#FFFCF5] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                          >
+                            <Wand2 className="w-3 h-3 inline mr-1" />
+                            {refinement}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Generate Button + Progress */}
+                    <div className="flex-shrink-0 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[#A8A39E]">
+                          <span className={canGenerateMore ? "text-brass font-semibold" : "text-orange-400 font-semibold"}>
+                            {MAX_IMAGES_PER_SESSION - currentSession.images.length}
+                          </span>
+                          {" / "}{MAX_IMAGES_PER_SESSION} remaining
+                        </span>
+                      </div>
+                      
+                      <Button
+                        onClick={() => handleGenerate()}
+                        disabled={isGenerating || !userPrompt.trim() || !canGenerateMore}
+                        className="w-full bg-brass hover:bg-brass/90 text-white disabled:opacity-50"
+                        size="sm"
+                      >
+                        {isGenerating ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            {currentSession.images.length === 0 ? "Generate" : "Generate"}
+                          </>
+                        )}
+                      </Button>
+
+                      {!canGenerateMore && (
+                        <p className="text-xs text-orange-400 bg-orange-400/10 border border-orange-400/20 rounded p-2">
+                          ✅ Session complete! Save to library to start a new session.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              </div>
             </div>
-          </div>
-        )}
+          )}
         </div>
       </div>
     </div>
