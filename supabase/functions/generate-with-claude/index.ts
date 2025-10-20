@@ -387,6 +387,29 @@ serve(async (req) => {
 
     const { prompt, organizationId, mode = "generate", styleOverlay = "TARIFE_NATIVE", productData, contentType, userName, images } = await req.json();
     
+    // Validate images if provided (limit count and size)
+    if (images && Array.isArray(images)) {
+      if (images.length > 3) {
+        return new Response(
+          JSON.stringify({ error: 'Too many images. Please upload up to 3 images.' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      const BYTES_LIMIT = 8 * 1024 * 1024; // ~8MB per image
+      for (const img of images) {
+        const match = /^data:([^;]+);base64,(.+)$/.exec(img);
+        if (!match) continue;
+        const base64 = match[2];
+        const sizeBytes = Math.floor((base64.length * 3) / 4);
+        if (sizeBytes > BYTES_LIMIT) {
+          return new Response(
+            JSON.stringify({ error: 'Image too large. Please upload images under 8MB.' }),
+            { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+    }
+    
     // Verify user has access to the requested organization
     if (organizationId) {
       const hasAccess = await verifyOrganizationAccess(user.id, organizationId);

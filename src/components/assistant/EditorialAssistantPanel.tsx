@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { Send, X, FileText, Loader2, Copy, Check, Image as ImageIcon, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
@@ -215,11 +214,12 @@ Be conversational, encouraging, and editorial in your tone.
         };
         setMessages((prev) => [...prev, assistantMessage]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating response:", error);
+      const message = error?.message || error?.error || 'Unable to reach the Editorial Director. Please try again.';
       toast({
         title: "Communication error",
-        description: "Unable to reach the Editorial Director. Please try again.",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -303,7 +303,7 @@ Be conversational, encouraging, and editorial in your tone.
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 px-6 py-6" ref={scrollRef}>
+      <div className="flex-1 overflow-y-auto px-6 py-6" ref={scrollRef}>
         <div className="space-y-4">
           {messages.map((message, index) => (
             <div key={index} className="space-y-2">
@@ -394,7 +394,7 @@ Be conversational, encouraging, and editorial in your tone.
             </div>
           )}
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Input */}
       <div 
