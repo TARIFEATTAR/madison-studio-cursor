@@ -112,10 +112,10 @@ export function EditorialAssistantPanel({ onClose, initialContent, sessionContex
     if (!files || files.length === 0) return;
 
     Array.from(files).forEach((file) => {
-      if (file.size > 20 * 1024 * 1024) {
+      if (file.size > 5 * 1024 * 1024) {
         toast({
           title: "File too large",
-          description: "Images must be under 20MB",
+          description: "Images must be under 5MB (Claude's limit)",
           variant: "destructive",
         });
         return;
@@ -253,7 +253,7 @@ Be conversational, encouraging, and editorial in your tone.
   };
 
   return (
-    <div className="h-full flex flex-col max-w-full" style={{ backgroundColor: "#FFFCF5" }}>
+    <div className="h-screen flex flex-col max-w-full" style={{ backgroundColor: "#FFFCF5" }}>
       {/* Header */}
       <div 
         className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0"

@@ -395,7 +395,7 @@ serve(async (req) => {
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      const BYTES_LIMIT = 8 * 1024 * 1024; // ~8MB per image
+      const BYTES_LIMIT = 5 * 1024 * 1024; // 5MB per image (Claude's limit)
       for (const img of images) {
         const match = /^data:([^;]+);base64,(.+)$/.exec(img);
         if (!match) continue;
@@ -403,7 +403,7 @@ serve(async (req) => {
         const sizeBytes = Math.floor((base64.length * 3) / 4);
         if (sizeBytes > BYTES_LIMIT) {
           return new Response(
-            JSON.stringify({ error: 'Image too large. Please upload images under 8MB.' }),
+            JSON.stringify({ error: 'Image too large. Claude API requires images under 5MB. Please compress or resize your image.' }),
             { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
