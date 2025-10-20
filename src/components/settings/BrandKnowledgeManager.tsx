@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { toast } from "sonner";
-import { Edit2, History, Power, PowerOff, Plus, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
+import { Edit2, History, Power, PowerOff, Plus, ChevronDown, ChevronRight, Loader2, AlertTriangle } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { format } from "date-fns";
 
@@ -29,10 +30,46 @@ export function BrandKnowledgeManager() {
   const [editContent, setEditContent] = useState<any>({});
   const [isSaving, setIsSaving] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['core_identity']));
+  const [duplicates, setDuplicates] = useState<string[]>([]);
+  const [consolidating, setConsolidating] = useState(false);
 
   useEffect(() => {
     loadBrandKnowledge();
   }, [currentOrganizationId]);
+
+  const handleConsolidateDuplicates = async () => {
+    if (!currentOrganizationId || duplicates.length === 0) return;
+
+    setConsolidating(true);
+    try {
+      // For each duplicate knowledge type, keep only the latest version
+      for (const knowledgeType of duplicates) {
+        const items = knowledgeItems
+          .filter(k => k.knowledge_type === knowledgeType && k.is_active)
+          .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+
+        // Keep the first (latest), deactivate the rest
+        const toDeactivate = items.slice(1);
+        
+        for (const item of toDeactivate) {
+          const { error } = await supabase
+            .from("brand_knowledge")
+            .update({ is_active: false })
+            .eq("id", item.id);
+
+          if (error) throw error;
+        }
+      }
+
+      toast.success(`Duplicates consolidated. Kept the latest version of ${duplicates.length} knowledge type(s)`);
+      await loadBrandKnowledge();
+    } catch (error) {
+      console.error("Error consolidating duplicates:", error);
+      toast.error("Failed to consolidate duplicates. Please try again.");
+    } finally {
+      setConsolidating(false);
+    }
+  };
 
   const loadBrandKnowledge = async () => {
     if (!currentOrganizationId) return;
@@ -48,6 +85,15 @@ export function BrandKnowledgeManager() {
 
       if (error) throw error;
       setKnowledgeItems(data || []);
+
+      // Check for duplicates
+      const typeCounts: Record<string, number> = {};
+      const activeKnowledge = (data || []).filter(k => k.is_active);
+      activeKnowledge.forEach((k: BrandKnowledge) => {
+        typeCounts[k.knowledge_type] = (typeCounts[k.knowledge_type] || 0) + 1;
+      });
+      const dupes = Object.keys(typeCounts).filter(type => typeCounts[type] > 1);
+      setDuplicates(dupes);
     } catch (error) {
       console.error('Error loading brand knowledge:', error);
       toast.error("Failed to load brand knowledge");
@@ -240,10 +286,29 @@ export function BrandKnowledgeManager() {
           Brand Knowledge Management
         </CardTitle>
         <CardDescription>
-          View, edit, and manage all brand knowledge entries from "Ask Madison"
+          Your single source of truth for brand knowledge. All brand information should be managed here.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {duplicates.length > 0 && (
+          <Alert className="bg-amber-50 border-amber-200">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="flex items-center justify-between">
+              <span className="text-amber-900 flex-1">
+                Found {duplicates.length} knowledge type(s) with duplicates: <strong>{duplicates.join(", ")}</strong>
+              </span>
+              <Button
+                onClick={handleConsolidateDuplicates}
+                disabled={consolidating}
+                variant="outline"
+                size="sm"
+                className="ml-4 border-amber-300 hover:bg-amber-100 shrink-0"
+              >
+                {consolidating ? "Fixing..." : "Auto-Fix Duplicates"}
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
         {Object.keys(groupedItems).length === 0 ? (
           <div className="text-center py-12 text-warm-gray">
             <p className="mb-2">No brand knowledge saved yet</p>
