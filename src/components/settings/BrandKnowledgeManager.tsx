@@ -68,7 +68,19 @@ export function BrandKnowledgeManager() {
   };
 
   const handleConsolidateDuplicates = async () => {
-    if (!currentOrganizationId || duplicates.length === 0) return;
+    if (!currentOrganizationId) {
+      toast.error("Organization not found");
+      return;
+    }
+
+    // Force a fresh scan first
+    await rescanForDuplicates();
+
+    if (duplicates.length === 0) {
+      setLastConsolidation({ status: 'success', message: '✓ No duplicates found - your brand knowledge is clean!' });
+      toast.success("✓ No duplicates found - your brand knowledge is clean!");
+      return;
+    }
 
     setConsolidating(true);
     setLastConsolidation(null);
@@ -96,15 +108,15 @@ export function BrandKnowledgeManager() {
         }
       }
 
-      const successMessage = `Successfully consolidated ${duplicates.length} knowledge type(s), removed ${totalConsolidated} duplicate entries`;
+      const successMessage = `✓ Successfully consolidated ${duplicates.length} knowledge type(s), removed ${totalConsolidated} duplicate entries`;
       setLastConsolidation({ status: 'success', message: successMessage });
       toast.success(successMessage);
       
       await loadBrandKnowledge();
-      await rescanForDuplicates(); // Rescan to update duplicate count
+      await rescanForDuplicates(); // Rescan to verify cleanup worked
     } catch (error) {
       console.error("Error consolidating duplicates:", error);
-      const errorMessage = "Failed to consolidate duplicates. Please try again.";
+      const errorMessage = "✗ Failed to consolidate duplicates. Please try again.";
       setLastConsolidation({ status: 'error', message: errorMessage });
       toast.error(errorMessage);
     } finally {

@@ -34,6 +34,15 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Fetch organization details including industry
+    const { data: orgData } = await supabase
+      .from('organizations')
+      .select('brand_config')
+      .eq('id', organizationId)
+      .single();
+
+    const brandIndustry = orgData?.brand_config?.industry || 'general';
+
     // Fetch all brand data
     const [brandKnowledge, products, collections, masterContent, derivatives] = await Promise.all([
       supabase.from('brand_knowledge').select('*').eq('organization_id', organizationId).eq('is_active', true),
@@ -56,6 +65,9 @@ serve(async (req) => {
     };
 
     const prompt = `You are a brand health analyzer. Analyze this organization's brand documentation completeness and identify gaps.
+
+BRAND INDUSTRY: ${brandIndustry}
+${brandIndustry === 'fragrance' ? '**THIS IS A FRAGRANCE/PERFUME/ATTAR BRAND - Do NOT recommend skincare, cosmetics, or beauty categories. Focus only on fragrance-related categories like personal_fragrance, home_fragrance, candles, incense.**' : ''}
 
 CURRENT BRAND SETUP:
 - Brand Knowledge Documents: ${context.brandKnowledge.length}
