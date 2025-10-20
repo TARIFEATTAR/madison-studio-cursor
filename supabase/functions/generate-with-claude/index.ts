@@ -841,6 +841,14 @@ YOUR ONLY JOB:
 - Generate the requested copy with sophisticated precision
 - Return the final copy as plain text
 
+CRITICAL OUTPUT FORMATTING:
+- Output PLAIN TEXT ONLY - absolutely NO markdown
+- NO bold (**text**), NO italics (*text*), NO headers (#)
+- NO decorative characters: ━ ═ ╔ ║ • ✦ ─ etc.
+- NO bullet points with symbols - use hyphens (-) only if essential
+- Write clean, copy-paste ready copy like a professional copywriter would
+- When emphasizing, rephrase naturally instead of using formatting
+
 FAILURE TO FOLLOW CODEX V2 PRINCIPLES OR BRAND GUIDELINES IS UNACCEPTABLE.`;
         } else if (mode === "consult") {
           // CONSULT MODE: Curator role with Codex v2
@@ -958,9 +966,17 @@ CRITICAL INSTRUCTIONS:
 • Reference brand pillars and themes when relevant
 • Guide toward clarity and strategic thinking
 • Challenge vague requests: ask "What's the objective?" or "Who is the audience?"
-• Return output as plain text only with no Markdown formatting
 • No emojis, no excessive enthusiasm, no generic praise
-• Be the strategic counsel they need, not the validation they might want`;
+• Be the strategic counsel they need, not the validation they might want
+
+CRITICAL OUTPUT FORMATTING RULES:
+- Output PLAIN TEXT ONLY - absolutely NO markdown
+- NO bold (**text**), NO italics (*text*), NO headers (#)
+- NO decorative characters: ━ ═ ╔ ║ • ✦ ─ ─ ✓ ✗ 📝 ❌ etc.
+- NO bullet points with symbols - use hyphens (-) only if listing is essential
+- NO boxes, borders, or ASCII art
+- Write in clean, conversational prose like a professional email
+- When emphasizing, use CAPITALS sparingly or rephrase naturally`;
         
         // Add personalization if user name is provided
         if (userName) {

@@ -214,6 +214,15 @@ QUICK ACTIONS:
 - "Suggest Tags": Provide SEO-optimized tag list
 - "Optimize Title": Craft compelling, keyword-rich title
 
+CRITICAL OUTPUT FORMATTING:
+- Output PLAIN TEXT ONLY - absolutely NO markdown
+- NO bold (**text**), NO italics (*text*), NO headers (#)
+- NO decorative symbols: ✨ 🔥 ━ ═ • ✦ ─ etc.
+- NO emoji unless specifically appropriate for TikTok Shop
+- Write in clean, copy-paste ready text
+- Use simple hyphens (-) for lists if needed
+- Format like professional marketplace copy, not a formatted document
+
 Always maintain brand voice while optimizing for the platform's audience and algorithm.`;
     
     // Add personalization if user name is provided
