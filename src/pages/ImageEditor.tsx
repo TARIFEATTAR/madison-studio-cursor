@@ -7,13 +7,17 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Download, Loader2, Sparkles, ArrowLeft, Save, Star, Wand2 } from "lucide-react";
+import { Download, Loader2, Sparkles, ArrowLeft, Save, Star, Wand2, CheckCircle, XCircle, Check, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { MadisonVerticalTab } from "@/components/assistant/MadisonVerticalTab";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ReferenceUpload } from "@/components/image-editor/ReferenceUpload";
+import { Badge } from "@/components/ui/badge";
+
+type ApprovalStatus = "pending" | "flagged" | "rejected";
 
 type GeneratedImage = {
   id: string;
@@ -21,6 +25,7 @@ type GeneratedImage = {
   prompt: string;
   timestamp: number;
   isHero?: boolean;
+  approvalStatus: ApprovalStatus;
 };
 
 type ImageSession = {
@@ -39,11 +44,16 @@ export default function ImageEditor() {
   
   const [aspectRatio, setAspectRatio] = useState<string>("1:1");
   const [outputFormat, setOutputFormat] = useState<"png" | "jpeg" | "webp">("png");
+  const [libraryCategory, setLibraryCategory] = useState<"content" | "marketplace" | "both">("content");
   
   const [userPrompt, setUserPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [madisonOpen, setMadisonOpen] = useState(false);
+  
+  // Reference image state (per-session)
+  const [referenceImage, setReferenceImage] = useState<string>("");
+  const [referenceDescription, setReferenceDescription] = useState<string>("");
   
   // Session management - Conversational start
   const [sessionId] = useState(crypto.randomUUID());
@@ -60,6 +70,11 @@ export default function ImageEditor() {
   const canGenerateMore = currentSession.images.length < MAX_IMAGES_PER_SESSION;
   const progressText = `${currentSession.images.length}/${MAX_IMAGES_PER_SESSION}`;
   const heroImage = currentSession.images.find(img => img.isHero) || currentSession.images[0];
+  
+  // Approval stats
+  const flaggedCount = currentSession.images.filter(img => img.approvalStatus === "flagged").length;
+  const rejectedCount = currentSession.images.filter(img => img.approvalStatus === "rejected").length;
+  const pendingCount = currentSession.images.filter(img => img.approvalStatus === "pending").length;
 
   // Badge indicator for Madison
   const [showMadisonBadge, setShowMadisonBadge] = useState(false);
@@ -145,7 +160,9 @@ export default function ImageEditor() {
           organizationId: orgId,
           userId: user.id,
           selectedTemplate: null,
-          userRefinements: currentSession.images.length > 0 ? prompt : null
+          userRefinements: currentSession.images.length > 0 ? prompt : null,
+          referenceImage: referenceImage || undefined,
+          referenceDescription: referenceDescription || undefined
         },
       });
 
@@ -157,7 +174,8 @@ export default function ImageEditor() {
           imageUrl: data.imageUrl,
           prompt,
           timestamp: Date.now(),
-          isHero: currentSession.images.length === 0
+          isHero: currentSession.images.length === 0,
+          approvalStatus: "pending"
         };
         
         const imageOrder = currentSession.images.length;
@@ -218,32 +236,56 @@ export default function ImageEditor() {
     toast.success("Hero image updated");
   };
 
+  const handleToggleApproval = (imageId: string) => {
+    setCurrentSession(prev => ({
+      ...prev,
+      images: prev.images.map(img => {
+        if (img.id === imageId) {
+          // Cycle: pending -> flagged -> rejected -> pending
+          const nextStatus: ApprovalStatus = 
+            img.approvalStatus === "pending" ? "flagged" :
+            img.approvalStatus === "flagged" ? "rejected" : "pending";
+          return { ...img, approvalStatus: nextStatus };
+        }
+        return img;
+      })
+    }));
+  };
+
   const handleSaveSession = async () => {
     if (!user || !orgId) return;
     
-    if (currentSession.images.length === 0) {
-      toast.error("Generate at least one image before saving");
+    const flaggedImages = currentSession.images.filter(img => img.approvalStatus === "flagged");
+    
+    if (flaggedImages.length === 0) {
+      toast.error("Please flag at least one image to save (click ✓ on thumbnails)");
       return;
     }
 
     setIsSaving(true);
 
     try {
-      // Update all images for this session to saved_to_library: true
+      // Get IDs of flagged images
+      const flaggedIds = flaggedImages.map(img => img.id);
+      
+      // Determine library category value
+      const libraryCategoryValue = libraryCategory === "both" ? "content,marketplace" : libraryCategory;
+      
+      // Update only flagged images to saved_to_library: true
       const { error: updateError } = await supabase
         .from("generated_images")
         .update({ 
           saved_to_library: true,
-          library_category: 'content' // Default to content library for Phase 1A
+          library_category: libraryCategoryValue
         })
-        .eq('session_id', sessionId);
+        .in('id', flaggedIds);
 
       if (updateError) throw updateError;
 
-      toast.success(`✅ Session saved: "${currentSession.name}" (${currentSession.images.length} images)`);
+      toast.success(`✅ Saved ${flaggedImages.length} approved images to ${libraryCategory === "both" ? "both libraries" : libraryCategory + " library"}`);
       
       // Reset for new session
-      window.location.reload(); // Simple reset for Phase 1A
+      window.location.reload();
       
     } catch (error) {
       console.error("Save error:", error);
@@ -254,13 +296,25 @@ export default function ImageEditor() {
   };
 
   const handleDownloadAll = () => {
-    currentSession.images.forEach((image, index) => {
+    const flaggedImages = currentSession.images.filter(img => img.approvalStatus === "flagged");
+    
+    if (flaggedImages.length === 0) {
+      toast.error("No approved images to download. Flag images first (✓).");
+      return;
+    }
+    
+    flaggedImages.forEach((image, index) => {
       const link = document.createElement('a');
       link.href = image.imageUrl;
       link.download = `${currentSession.name}-${index + 1}.${outputFormat}`;
       link.click();
     });
-    toast.success(`Downloaded ${currentSession.images.length} images`);
+    toast.success(`Downloaded ${flaggedImages.length} approved images`);
+  };
+  
+  const handleRefineImage = () => {
+    if (!heroImage) return;
+    setUserPrompt(`Refine the current image: `);
   };
 
   const quickRefinements = [
@@ -328,21 +382,34 @@ export default function ImageEditor() {
               </p>
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               {sessionStarted && currentSession.images.length > 0 && (
                 <>
+                  <div className="flex gap-2 text-xs text-[#D4CFC8] mr-2">
+                    <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-500/30">
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      {flaggedCount} Approved
+                    </Badge>
+                    {rejectedCount > 0 && (
+                      <Badge variant="secondary" className="bg-red-500/20 text-red-300 border-red-500/30">
+                        <XCircle className="w-3 h-3 mr-1" />
+                        {rejectedCount} Rejected
+                      </Badge>
+                    )}
+                  </div>
                   <Button
                     onClick={handleDownloadAll}
                     variant="outline"
                     size="sm"
                     className="border-[#3D3935] text-[#D4CFC8] hover:bg-[#3D3935] hover:text-[#FFFCF5]"
+                    disabled={flaggedCount === 0}
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    Download All
+                    Download Approved
                   </Button>
                   <Button
                     onClick={handleSaveSession}
-                    disabled={isSaving}
+                    disabled={isSaving || flaggedCount === 0}
                     size="sm"
                     className="bg-brass hover:bg-brass/90 text-white"
                   >
@@ -354,7 +421,7 @@ export default function ImageEditor() {
                     ) : (
                       <>
                         <Save className="w-4 h-4 mr-2" />
-                        Save to Library
+                        Save to Library ({flaggedCount})
                       </>
                     )}
                   </Button>
@@ -414,29 +481,53 @@ export default function ImageEditor() {
                 </div>
                 
                 {currentSession.images.map((image, index) => (
-                  <button
-                    key={image.id}
-                    onClick={() => handleSetHero(image.id)}
-                    className={`relative w-full aspect-square rounded border-2 transition-all overflow-hidden hover:scale-105 ${
-                      image.isHero
-                        ? "border-brass shadow-md ring-2 ring-brass/20"
-                        : "border-charcoal/20 hover:border-brass/50"
-                    }`}
-                  >
-                    <img
-                      src={image.imageUrl}
-                      alt={`Generation ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                    {image.isHero && (
-                      <div className="absolute top-1 right-1 bg-brass text-white rounded-full p-1">
-                        <Star className="w-3 h-3 fill-white" />
+                  <div key={image.id} className="relative">
+                    <button
+                      onClick={() => handleSetHero(image.id)}
+                      className={`relative w-full aspect-square rounded border-2 transition-all overflow-hidden hover:scale-105 ${
+                        image.isHero
+                          ? "border-brass shadow-md ring-2 ring-brass/20"
+                          : image.approvalStatus === "flagged"
+                          ? "border-green-500 ring-2 ring-green-500/20"
+                          : image.approvalStatus === "rejected"
+                          ? "border-red-500 ring-2 ring-red-500/20 opacity-50"
+                          : "border-charcoal/20 hover:border-brass/50"
+                      }`}
+                    >
+                      <img
+                        src={image.imageUrl}
+                        alt={`Generation ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      {image.isHero && (
+                        <div className="absolute top-1 right-1 bg-brass text-white rounded-full p-1">
+                          <Star className="w-3 h-3 fill-white" />
+                        </div>
+                      )}
+                      {image.approvalStatus === "flagged" && (
+                        <div className="absolute top-1 left-1 bg-green-500 text-white rounded-full p-1">
+                          <Check className="w-3 h-3" />
+                        </div>
+                      )}
+                      {image.approvalStatus === "rejected" && (
+                        <div className="absolute top-1 left-1 bg-red-500 text-white rounded-full p-1">
+                          <X className="w-3 h-3" />
+                        </div>
+                      )}
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-1">
+                        <p className="text-[10px] text-white text-center font-medium">{index + 1}</p>
                       </div>
-                    )}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-1">
-                      <p className="text-[10px] text-white text-center font-medium">{index + 1}</p>
-                    </div>
-                  </button>
+                    </button>
+                    <button
+                      onClick={() => handleToggleApproval(image.id)}
+                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#252220] border border-[#3D3935] rounded-full p-1 hover:bg-[#3D3935] transition-colors z-10"
+                      title={`Approval status: ${image.approvalStatus}`}
+                    >
+                      {image.approvalStatus === "pending" && <Check className="w-3 h-3 text-[#A8A39E]" />}
+                      {image.approvalStatus === "flagged" && <Check className="w-3 h-3 text-green-500" />}
+                      {image.approvalStatus === "rejected" && <X className="w-3 h-3 text-red-500" />}
+                    </button>
+                  </div>
                 ))}
                 
                 {/* Empty slots */}
@@ -475,6 +566,15 @@ export default function ImageEditor() {
                             HERO
                           </div>
                         )}
+                        <Button
+                          onClick={handleRefineImage}
+                          size="sm"
+                          variant="secondary"
+                          className="absolute top-4 left-4 bg-[#2F2A26]/90 hover:bg-[#2F2A26] border-[#3D3935] text-[#FFFCF5]"
+                        >
+                          <Wand2 className="w-4 h-4 mr-2" />
+                          Refine This
+                        </Button>
                       </div>
                       
                       <div className="text-center max-w-md px-4">
@@ -527,8 +627,43 @@ export default function ImageEditor() {
                         </SelectContent>
                       </Select>
                     </div>
+                    
+                    <div>
+                      <Label className="text-xs text-[#A8A39E] mb-1.5 block">Save to Library</Label>
+                      <Select value={libraryCategory} onValueChange={(v) => setLibraryCategory(v as any)}>
+                        <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="content">Content Library</SelectItem>
+                          <SelectItem value="marketplace">Marketplace Library</SelectItem>
+                          <SelectItem value="both">Both Libraries</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[10px] text-[#A8A39E] mt-1 leading-tight">
+                        {libraryCategory === "content" && "For social media & content"}
+                        {libraryCategory === "marketplace" && "For product listings"}
+                        {libraryCategory === "both" && "Save to both libraries"}
+                      </p>
+                    </div>
                   </div>
                 </Card>
+                
+                {/* Reference Image Upload */}
+                <ReferenceUpload
+                  currentImage={referenceImage}
+                  description={referenceDescription}
+                  onUpload={(url, desc) => {
+                    setReferenceImage(url);
+                    setReferenceDescription(desc);
+                    toast.success("Reference image added to session");
+                  }}
+                  onRemove={() => {
+                    setReferenceImage("");
+                    setReferenceDescription("");
+                    toast.info("Reference image removed");
+                  }}
+                />
 
                 {/* Chat Input Card - Takes remaining space */}
                 <Card className="flex-1 p-4 bg-[#2F2A26] border-[#3D3935] shadow-sm flex flex-col min-h-0">

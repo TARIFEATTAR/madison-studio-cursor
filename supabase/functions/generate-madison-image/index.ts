@@ -26,7 +26,9 @@ serve(async (req) => {
       aspectRatio,
       outputFormat = 'png',
       selectedTemplate,
-      userRefinements
+      userRefinements,
+      referenceImage,
+      referenceDescription
     } = await req.json();
 
     console.log('🎨 Generating Madison image:', {
@@ -36,6 +38,28 @@ serve(async (req) => {
     });
 
     // Generate image with NanoBanana
+    // Build message content with optional reference image
+    let messageContent: any;
+    
+    if (referenceImage) {
+      // Multi-modal message with reference image and text
+      messageContent = [
+        {
+          type: "text",
+          text: prompt + (referenceDescription ? `\n\nReference context: ${referenceDescription}` : "")
+        },
+        {
+          type: "image_url",
+          image_url: {
+            url: referenceImage
+          }
+        }
+      ];
+    } else {
+      // Text-only message
+      messageContent = prompt;
+    }
+    
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -44,7 +68,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash-image-preview',
-        messages: [{ role: 'user', content: prompt }],
+        messages: [{ role: 'user', content: messageContent }],
         modalities: ['image', 'text']
       }),
     });
