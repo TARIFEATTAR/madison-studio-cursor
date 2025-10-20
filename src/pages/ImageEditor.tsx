@@ -29,7 +29,7 @@ type ImageSession = {
   createdAt: number;
 };
 
-const MAX_IMAGES_PER_SESSION = 6;
+const MAX_IMAGES_PER_SESSION = 10;
 
 export default function ImageEditor() {
   const navigate = useNavigate();
@@ -44,15 +44,17 @@ export default function ImageEditor() {
   const [isSaving, setIsSaving] = useState(false);
   const [madisonOpen, setMadisonOpen] = useState(false);
   
-  // Session management
-  const [sessionName, setSessionName] = useState("");
-  const [hasNamedSession, setHasNamedSession] = useState(false);
+  // Session management - Conversational start
+  const [sessionId] = useState(crypto.randomUUID());
+  const [sessionStarted, setSessionStarted] = useState(false);
+  const [awaitingSessionName, setAwaitingSessionName] = useState(true);
   const [currentSession, setCurrentSession] = useState<ImageSession>({
-    id: crypto.randomUUID(),
+    id: sessionId,
     name: "",
     images: [],
     createdAt: Date.now()
   });
+  const [allPrompts, setAllPrompts] = useState<string[]>([]); // Track conversation
 
   const canGenerateMore = currentSession.images.length < MAX_IMAGES_PER_SESSION;
   const progressText = `${currentSession.images.length}/${MAX_IMAGES_PER_SESSION}`;
@@ -70,24 +72,56 @@ export default function ImageEditor() {
     }
   }, [currentSession.images.length, madisonOpen]);
 
-  const handleStartSession = () => {
-    if (!sessionName.trim()) {
-      toast.error("Please enter a session name");
-      return;
-    }
+  // Smart session name generator
+  const generateSessionName = (prompt: string): string => {
+    // Extract key nouns/concepts (basic implementation)
+    const cleanPrompt = prompt.toLowerCase()
+      .replace(/\b(generate|create|make|show|image|photo|picture|of|a|an|the)\b/gi, '')
+      .trim();
     
-    setCurrentSession(prev => ({ ...prev, name: sessionName }));
-    setHasNamedSession(true);
-    toast.success(`Session started: ${sessionName}`);
+    const words = cleanPrompt.split(/\s+/).filter(w => w.length > 3);
+    const keyWords = words.slice(0, 3).map(w => w.charAt(0).toUpperCase() + w.slice(1));
+    
+    return keyWords.length > 0 
+      ? `${keyWords.join(' ')} Photography`
+      : `Product Session ${new Date().toLocaleDateString()}`;
   };
 
-  const handleGenerate = async () => {
-    if (!userPrompt.trim() || !user || !orgId) {
+  // Handle first message - auto-name from prompt or use as session name
+  const handleFirstMessage = (message: string) => {
+    const looksLikePrompt = /\b(bottle|product|perfume|candle|desert|photo|light|background|show|generate|create)\b/i.test(message);
+    
+    let finalSessionName: string;
+    
+    if (looksLikePrompt || message.length > 50) {
+      // Auto-generate session name from prompt
+      finalSessionName = generateSessionName(message);
+      setCurrentSession(prev => ({ ...prev, name: finalSessionName }));
+      setAwaitingSessionName(false);
+      setSessionStarted(true);
+      
+      // Generate image directly
+      handleGenerate(message);
+    } else {
+      // User provided a session name
+      finalSessionName = message;
+      setCurrentSession(prev => ({ ...prev, name: finalSessionName }));
+      setAwaitingSessionName(false);
+      setSessionStarted(true);
+      
+      toast.success(`Session "${finalSessionName}" started! Describe your first image.`);
+    }
+  };
+
+  const handleGenerate = async (promptOverride?: string) => {
+    const prompt = promptOverride || userPrompt;
+    
+    if (!prompt.trim() || !user || !orgId) {
       toast.error("Please enter a prompt to generate an image");
       return;
     }
 
-    if (!hasNamedSession) {
+    if (!sessionStarted) {
       toast.error("Please start a session first");
       return;
     }
@@ -98,18 +132,19 @@ export default function ImageEditor() {
     }
 
     setIsGenerating(true);
+    setAllPrompts(prev => [...prev, prompt]); // Track prompts
 
     try {
       const { data, error } = await supabase.functions.invoke("generate-madison-image", {
         body: {
-          goalType: "product-photography", // Default goal
+          goalType: "product-photography",
           aspectRatio,
           outputFormat,
-          prompt: userPrompt,
+          prompt,
           organizationId: orgId,
           userId: user.id,
           selectedTemplate: null,
-          userRefinements: currentSession.images.length > 0 ? userPrompt : null
+          userRefinements: currentSession.images.length > 0 ? prompt : null
         },
       });
 
@@ -119,15 +154,33 @@ export default function ImageEditor() {
         const newImage: GeneratedImage = {
           id: data.id || crypto.randomUUID(),
           imageUrl: data.imageUrl,
-          prompt: userPrompt,
+          prompt,
           timestamp: Date.now(),
-          isHero: currentSession.images.length === 0 // First image is hero by default
+          isHero: currentSession.images.length === 0
         };
+        
+        const imageOrder = currentSession.images.length;
         
         setCurrentSession(prev => ({
           ...prev,
           images: [...prev.images, newImage]
         }));
+        
+        // Auto-save to DB with saved_to_library: false
+        await supabase.from("generated_images").insert({
+          organization_id: orgId,
+          user_id: user.id,
+          session_id: sessionId,
+          session_name: currentSession.name,
+          goal_type: "product-photography",
+          aspect_ratio: aspectRatio,
+          output_format: outputFormat,
+          final_prompt: prompt,
+          image_url: data.imageUrl,
+          image_order: imageOrder,
+          is_hero_image: imageOrder === 0,
+          saved_to_library: false, // Not saved until user explicitly saves
+        });
         
         const isComplete = currentSession.images.length + 1 === MAX_IMAGES_PER_SESSION;
         
@@ -137,7 +190,7 @@ export default function ImageEditor() {
             : `✨ Image generated! (${currentSession.images.length + 1}/${MAX_IMAGES_PER_SESSION})`
         );
         
-        setUserPrompt("");
+        if (!promptOverride) setUserPrompt("");
       }
     } catch (error) {
       console.error("Generation error:", error);
@@ -169,45 +222,21 @@ export default function ImageEditor() {
     setIsSaving(true);
 
     try {
-      // Save all images to the database with enhanced metadata
-      const imageRecords = currentSession.images.map((img, index) => ({
-        organization_id: orgId,
-        user_id: user.id,
-        goal_type: "product-photography",
-        aspect_ratio: aspectRatio,
-        output_format: outputFormat,
-        final_prompt: img.prompt,
-        image_url: img.imageUrl,
-        description: `${currentSession.name} - ${img.isHero ? 'Hero Image' : `Variation ${index + 1}`}`,
-        saved_to_library: true,
-        selected_template: currentSession.name, // Session name as template identifier
-        brand_style_tags: [
-          'madison-image-studio',
-          'product-photography',
-          img.isHero ? 'hero' : 'variation',
-          `session-${currentSession.id}`, // Link all images from same session
-          `${aspectRatio.replace(':', 'x')}`, // e.g., "1x1", "16x9"
-        ]
-      }));
-
-      const { error: saveError } = await supabase
+      // Update all images for this session to saved_to_library: true
+      const { error: updateError } = await supabase
         .from("generated_images")
-        .insert(imageRecords);
+        .update({ 
+          saved_to_library: true,
+          library_category: 'content' // Default to content library for Phase 1A
+        })
+        .eq('session_id', sessionId);
 
-      if (saveError) throw saveError;
+      if (updateError) throw updateError;
 
-      toast.success(`✅ Session saved to Library: "${currentSession.name}" (${imageRecords.length} images)`);
+      toast.success(`✅ Session saved: "${currentSession.name}" (${currentSession.images.length} images)`);
       
       // Reset for new session
-      setCurrentSession({
-        id: crypto.randomUUID(),
-        name: "",
-        images: [],
-        createdAt: Date.now()
-      });
-      setSessionName("");
-      setHasNamedSession(false);
-      setUserPrompt("");
+      window.location.reload(); // Simple reset for Phase 1A
       
     } catch (error) {
       console.error("Save error:", error);
@@ -253,7 +282,21 @@ export default function ImageEditor() {
         >
           <EditorialAssistantPanel
             onClose={() => setMadisonOpen(false)}
-            initialContent="Help me generate the perfect product images for my brand"
+            initialContent=""
+            sessionContext={{
+              sessionId: sessionId,
+              sessionName: currentSession.name || "New Session",
+              imagesGenerated: currentSession.images.length,
+              maxImages: MAX_IMAGES_PER_SESSION,
+              heroImage: heroImage ? {
+                imageUrl: heroImage.imageUrl,
+                prompt: heroImage.prompt
+              } : undefined,
+              allPrompts: allPrompts,
+              aspectRatio: aspectRatio,
+              outputFormat: outputFormat,
+              isImageStudio: true
+            }}
           />
         </SheetContent>
       </Sheet>
@@ -271,15 +314,15 @@ export default function ImageEditor() {
                 <h1 className="font-serif text-3xl text-[#FFFCF5]">Madison Image Studio</h1>
               </div>
               <p className="text-[#D4CFC8] text-sm">
-                {hasNamedSession 
+                {sessionStarted 
                   ? `Session: ${currentSession.name} • ${progressText} images`
-                  : "E-commerce product photography sessions"
+                  : "AI-powered product photography sessions"
                 }
               </p>
             </div>
             
             <div className="flex gap-2">
-              {hasNamedSession && currentSession.images.length > 0 && (
+              {sessionStarted && currentSession.images.length > 0 && (
                 <>
                   <Button
                     onClick={handleDownloadAll}
@@ -313,39 +356,48 @@ export default function ImageEditor() {
             </div>
           </div>
 
-          {/* Session Name Input (if not started) */}
-          {!hasNamedSession && (
-            <Card className="p-8 bg-[#2F2A26] border-[#3D3935] shadow-sm mb-6 text-center max-w-2xl mx-auto">
-              <Sparkles className="w-12 h-12 text-brass/50 mx-auto mb-4" />
-              <h2 className="font-serif text-2xl text-[#FFFCF5] mb-2">Start a New Session</h2>
-              <p className="text-[#D4CFC8] mb-6">
-                Generate up to {MAX_IMAGES_PER_SESSION} product photos, pick your hero, and save to Library
-              </p>
+          {/* Conversational Session Start */}
+          {!sessionStarted && (
+            <Card className="p-8 bg-[#2F2A26] border-[#3D3935] shadow-sm mb-6 max-w-2xl mx-auto">
+              <div className="text-center mb-6">
+                <Sparkles className="w-12 h-12 text-brass/50 mx-auto mb-4" />
+                <h2 className="font-serif text-2xl text-[#FFFCF5] mb-2">Madison Image Studio</h2>
+                <p className="text-[#D4CFC8]">
+                  Let's create something beautiful. Describe the product image you want, or name your session first.
+                </p>
+              </div>
               
-              <div className="flex gap-3 max-w-md mx-auto">
-                <Input
-                  value={sessionName}
-                  onChange={(e) => setSessionName(e.target.value)}
-                  placeholder="e.g., Jasmine Perfume Bottle Photos"
-                  className="flex-1 bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E]"
+              <div className="space-y-3">
+                <Textarea
+                  value={userPrompt}
+                  onChange={(e) => setUserPrompt(e.target.value)}
+                  placeholder="e.g., 'Desert Perfume Campaign' or 'Show a perfume bottle on desert sand at sunset'"
+                  rows={3}
+                  className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E]"
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleStartSession();
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleFirstMessage(userPrompt);
                     }
                   }}
                 />
                 <Button
-                  onClick={handleStartSession}
-                  className="bg-brass hover:bg-brass/90 text-white"
+                  onClick={() => handleFirstMessage(userPrompt)}
+                  disabled={!userPrompt.trim()}
+                  className="w-full bg-brass hover:bg-brass/90 text-white"
                 >
-                  Start Session
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Start Creating
                 </Button>
+                <p className="text-xs text-[#A8A39E] text-center">
+                  Up to {MAX_IMAGES_PER_SESSION} images per session • Auto-saved as you create
+                </p>
               </div>
             </Card>
           )}
 
           {/* Main Layout: Gallery + Main Image + Chat */}
-          {hasNamedSession && (
+          {sessionStarted && (
             <div className="flex gap-6">
               {/* Left Sidebar - Thumbnail Gallery */}
               <div className="w-32 flex-shrink-0 space-y-3">
@@ -486,7 +538,7 @@ export default function ImageEditor() {
                     </div>
                     
                     <Button
-                      onClick={handleGenerate}
+                      onClick={() => handleGenerate()}
                       disabled={isGenerating || !userPrompt.trim() || !canGenerateMore}
                       className="bg-brass hover:bg-brass/90 text-white"
                     >

@@ -583,12 +583,17 @@ export type Database = {
           final_prompt: string
           goal_type: string
           id: string
+          image_order: number | null
           image_url: string
           is_archived: boolean | null
+          is_hero_image: boolean | null
+          library_category: string | null
           organization_id: string | null
           output_format: string | null
           saved_to_library: boolean | null
           selected_template: string | null
+          session_id: string | null
+          session_name: string | null
           updated_at: string | null
           user_id: string
           user_refinements: string | null
@@ -603,12 +608,17 @@ export type Database = {
           final_prompt: string
           goal_type: string
           id?: string
+          image_order?: number | null
           image_url: string
           is_archived?: boolean | null
+          is_hero_image?: boolean | null
+          library_category?: string | null
           organization_id?: string | null
           output_format?: string | null
           saved_to_library?: boolean | null
           selected_template?: string | null
+          session_id?: string | null
+          session_name?: string | null
           updated_at?: string | null
           user_id: string
           user_refinements?: string | null
@@ -623,12 +633,17 @@ export type Database = {
           final_prompt?: string
           goal_type?: string
           id?: string
+          image_order?: number | null
           image_url?: string
           is_archived?: boolean | null
+          is_hero_image?: boolean | null
+          library_category?: string | null
           organization_id?: string | null
           output_format?: string | null
           saved_to_library?: boolean | null
           selected_template?: string | null
+          session_id?: string | null
+          session_name?: string | null
           updated_at?: string | null
           user_id?: string
           user_refinements?: string | null
@@ -1503,6 +1518,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_unsaved_image_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       has_organization_role: {
         Args: {
           _org_id: string

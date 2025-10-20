@@ -16,12 +16,28 @@ interface Message {
   timestamp: Date;
 }
 
+interface SessionContext {
+  sessionId: string;
+  sessionName: string;
+  imagesGenerated: number;
+  maxImages: number;
+  heroImage?: {
+    imageUrl: string;
+    prompt: string;
+  };
+  allPrompts: string[];
+  aspectRatio: string;
+  outputFormat: string;
+  isImageStudio: boolean;
+}
+
 interface EditorialAssistantPanelProps {
   onClose: () => void;
   initialContent?: string;
+  sessionContext?: SessionContext;
 }
 
-export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAssistantPanelProps) {
+export function EditorialAssistantPanel({ onClose, initialContent, sessionContext }: EditorialAssistantPanelProps) {
   const { toast } = useToast();
   const { currentOrganizationId } = useOnboarding();
   const { userName } = useUserProfile();
@@ -34,13 +50,22 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
 
   useEffect(() => {
     if (userName && messages.length === 0) {
-      setMessages([{
-        role: "assistant",
-        content: `Hi ${userName}! Your content is ready. I'm here to help you refine it. What would you like to improve?`,
-        timestamp: new Date(),
-      }]);
+      // Different greeting for Image Studio vs other contexts
+      if (sessionContext?.isImageStudio) {
+        setMessages([{
+          role: "assistant",
+          content: `Welcome to the Madison Image Studio, ${userName}! Let's create something beautiful together. What should we name this session, or would you like to dive straight into generating your first image?`,
+          timestamp: new Date(),
+        }]);
+      } else {
+        setMessages([{
+          role: "assistant",
+          content: `Hi ${userName}! I'm here to help you refine your content. What would you like to improve?`,
+          timestamp: new Date(),
+        }]);
+      }
     }
-  }, [userName]);
+  }, [userName, sessionContext]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -79,12 +104,44 @@ export function EditorialAssistantPanel({ onClose, initialContent }: EditorialAs
     setIsGenerating(true);
 
     try {
+      // Build studio context if in Image Studio
+      const studioContext = sessionContext?.isImageStudio ? `
+━━━ MADISON IMAGE STUDIO CONTEXT ━━━
+You are Madison, the AI Creative Director assisting in the Image Studio for AI-powered product photography.
+
+Session: "${sessionContext.sessionName || 'New Session'}"
+Progress: ${sessionContext.imagesGenerated}/${sessionContext.maxImages} images generated
+Export Settings: ${sessionContext.aspectRatio} • ${sessionContext.outputFormat}
+
+${sessionContext.heroImage ? 
+  `Current Hero Image: "${sessionContext.heroImage.prompt}"` : 
+  'No hero image selected yet'}
+
+${sessionContext.allPrompts.length > 0 ? `
+Previous Prompts in This Session:
+${sessionContext.allPrompts.map((p, i) => `  ${i + 1}. "${p}"`).join('\n')}
+` : ''}
+
+IMPORTANT INSTRUCTIONS:
+- Provide creative direction for AI image generation
+- Suggest prompt refinements for better compositions
+- Give lighting, angle, and styling advice tailored to their brand
+- Analyze brand alignment when asked
+- DO NOT suggest hiring photographers - the user is using AI generation
+- Reference specific images by number when discussing previous generations
+- Keep responses conversational and editorial (3-4 sentences max)
+- Act like a creative director guiding a photo shoot
+
+Be conversational, encouraging, and editorial in your tone.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+` : '';
+
       // Build conversation context for Claude
       const conversationContext = messages
-        .map((msg) => `${msg.role === "user" ? "User" : "Editorial Director"}: ${msg.content}`)
+        .map((msg) => `${msg.role === "user" ? "User" : "Madison"}: ${msg.content}`)
         .join("\n\n");
 
-      const prompt = `${conversationContext}\n\nUser: ${userMessage.content}\n\nEditorial Director:`;
+      const prompt = `${studioContext}\n\n${conversationContext}\n\nUser: ${userMessage.content}\n\nMadison:`;
 
       const { data, error } = await supabase.functions.invoke("generate-with-claude", {
         body: {
