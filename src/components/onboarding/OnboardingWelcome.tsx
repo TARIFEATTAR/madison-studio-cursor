@@ -32,7 +32,8 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
     // Update organization with brand config AND user profile
     if (user) {
       try {
-        // Update user profile with full name
+        // ALWAYS update user profile with the name they enter during onboarding
+        // This overrides any name from Google OAuth or email
         const { error: profileError } = await supabase
           .from('profiles')
           .update({ 
@@ -41,7 +42,14 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
           .eq('id', user.id);
 
         if (profileError) {
-          console.error('Error updating profile:', profileError);
+          console.error('[Onboarding] Error updating profile:', profileError);
+          toast({
+            title: "Warning",
+            description: "Your profile name may not have been saved. You can update it in Settings.",
+            variant: "destructive"
+          });
+        } else {
+          console.log('[Onboarding] Profile updated successfully with name:', userName.trim());
         }
 
         // Find or create organization
@@ -159,7 +167,7 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
           <div className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="userName" className="text-foreground text-base">
-                Your Name <span className="text-destructive">*</span>
+                Your First Name <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="userName"
@@ -169,7 +177,7 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
                 className="bg-input border-border/40 h-12 text-base"
               />
               <p className="text-sm text-muted-foreground">
-                We'll use this to personalize your experience
+                This is how Madison will address you throughout the platform
               </p>
             </div>
 
