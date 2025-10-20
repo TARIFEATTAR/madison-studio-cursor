@@ -41,12 +41,28 @@ export function EditorialAssistantPanel({ onClose, initialContent, sessionContex
   const { toast } = useToast();
   const { currentOrganizationId } = useOnboarding();
   const { userName } = useUserProfile();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const STORAGE_KEY = 'madison-image-studio-chat';
+  
+  // Load persisted messages on mount
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+  
   const [input, setInput] = useState(initialContent || "");
   const [isGenerating, setIsGenerating] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Persist messages to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+  }, [messages]);
 
   useEffect(() => {
     if (userName && messages.length === 0) {
@@ -223,14 +239,30 @@ Be conversational, encouraging, and editorial in your tone.
             <p className="text-xs" style={{ color: "#6B6560" }}>Editorial Director</p>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          className="h-8 w-8 p-0"
-        >
-          <X className="w-4 h-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              setMessages([]);
+              localStorage.removeItem(STORAGE_KEY);
+              toast({
+                title: "Conversation cleared",
+                description: "Chat history has been reset",
+              });
+            }}
+            className="text-xs px-2 py-1 rounded hover:bg-[#E5E0D8] transition-colors"
+            style={{ color: "#6B6560" }}
+          >
+            Clear
+          </button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-8 w-8 p-0"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Messages */}

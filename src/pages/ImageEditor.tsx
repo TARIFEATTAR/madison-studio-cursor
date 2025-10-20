@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Download, Loader2, Sparkles, ArrowLeft, Save, Star, Wand2, CheckCircle, XCircle, Check, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { MadisonVerticalTab } from "@/components/assistant/MadisonVerticalTab";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -455,42 +455,20 @@ export default function ImageEditor() {
 
   return (
     <div className="min-h-screen bg-[#252220] flex">
-      {/* Madison Vertical Tab - Always Visible */}
-      <MadisonVerticalTab 
-        isOpen={madisonOpen}
-        onClick={() => setMadisonOpen(!madisonOpen)}
-        hasSuggestions={showMadisonBadge}
-      />
+      {/* Madison Vertical Tab - Only visible when closed */}
+      {!madisonOpen && (
+        <MadisonVerticalTab 
+          isOpen={false}
+          onClick={() => setMadisonOpen(true)}
+          hasSuggestions={showMadisonBadge}
+        />
+      )}
 
-      {/* Madison Drawer - Slides from Right */}
-      <Sheet open={madisonOpen} onOpenChange={setMadisonOpen}>
-        <SheetContent 
-          side="right" 
-          className="w-[350px] p-0 border-l border-[#3D3935]"
-          style={{ backgroundColor: '#2F2A26' }}
-        >
-          <EditorialAssistantPanel
-            onClose={() => setMadisonOpen(false)}
-            initialContent=""
-            sessionContext={{
-              sessionId: sessionId,
-              sessionName: currentSession.name || "New Session",
-              imagesGenerated: currentSession.images.length,
-              maxImages: MAX_IMAGES_PER_SESSION,
-              heroImage: heroImage ? {
-                imageUrl: heroImage.imageUrl,
-                prompt: heroImage.prompt
-              } : undefined,
-              allPrompts: allPrompts,
-              aspectRatio: aspectRatio,
-              outputFormat: outputFormat,
-              isImageStudio: true
-            }}
-          />
-        </SheetContent>
-      </Sheet>
-
-      <div className="flex-1 overflow-auto">
+      {/* Main Layout with Resizable Panels */}
+      <ResizablePanelGroup direction="horizontal" className="flex-1">
+        {/* Main Studio Content */}
+        <ResizablePanel defaultSize={madisonOpen ? 70 : 100} minSize={50}>
+          <div className="h-full overflow-auto">
         <div className="max-w-[1800px] mx-auto p-6">
           {/* Header */}
           <div className="mb-6 flex items-center justify-between">
@@ -892,14 +870,45 @@ export default function ImageEditor() {
                           ✅ Session complete! Save to library to start a new session.
                         </p>
                       )}
-                    </div>
+                     </div>
                   </div>
                 </Card>
               </div>
             </div>
           )}
         </div>
-      </div>
+          </div>
+        </ResizablePanel>
+
+        {/* Madison Panel - Inline & Persistent */}
+        {madisonOpen && (
+          <>
+            <ResizableHandle withHandle className="bg-[#3D3935]" />
+            <ResizablePanel defaultSize={30} minSize={25} maxSize={40} className="w-[400px]">
+              <div className="h-full">
+                <EditorialAssistantPanel
+                  onClose={() => setMadisonOpen(false)}
+                  initialContent=""
+                  sessionContext={{
+                    sessionId: sessionId,
+                    sessionName: currentSession.name || "New Session",
+                    imagesGenerated: currentSession.images.length,
+                    maxImages: MAX_IMAGES_PER_SESSION,
+                    heroImage: heroImage ? {
+                      imageUrl: heroImage.imageUrl,
+                      prompt: heroImage.prompt
+                    } : undefined,
+                    allPrompts: allPrompts,
+                    aspectRatio: aspectRatio,
+                    outputFormat: outputFormat,
+                    isImageStudio: true
+                  }}
+                />
+              </div>
+            </ResizablePanel>
+          </>
+        )}
+      </ResizablePanelGroup>
     </div>
   );
 }
