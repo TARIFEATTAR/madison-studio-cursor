@@ -63,9 +63,16 @@ serve(async (req) => {
 
     // Add explicit reference image instructions if provided
     if (referenceImageUrl) {
-      enhancedPrompt = `REFERENCE IMAGE PROVIDED: Use the provided reference image for style, lighting, composition, or visual elements as requested by the user.\n\n${enhancedPrompt}`;
+      enhancedPrompt = `PRODUCT PLACEMENT INSTRUCTION:
+The reference image shows a product (bottle, item, object). Take this EXACT product and place it into the scene described below. Maintain the product's appearance, colors, shape, and design exactly as shown in the reference image.
+
+SCENE TO CREATE:
+${enhancedPrompt}
+
+IMPORTANT: The product in the reference image should be the focal point of the new scene. Do not regenerate or alter the product - use it as-is from the reference.`;
+      
       if (referenceDescription) {
-        enhancedPrompt += `\n\nReference Usage Instructions: ${referenceDescription}`;
+        enhancedPrompt += `\n\nAdditional Reference Notes: ${referenceDescription}`;
       }
     }
 

@@ -791,7 +791,9 @@ export default function ImageEditor() {
                     <Textarea
                       value={userPrompt}
                       onChange={(e) => setUserPrompt(e.target.value)}
-                      placeholder="Describe changes or a new image..."
+                      placeholder={referenceImageUrl 
+                        ? "Describe the SCENE for your product (e.g., 'on weathered sandstone with brass incense holder, soft smoke, golden hour lighting')..." 
+                        : "Describe the image you want to create..."}
                       disabled={!canGenerateMore}
                       className="flex-1 resize-none bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E] min-h-[100px]"
                       onKeyDown={(e) => {

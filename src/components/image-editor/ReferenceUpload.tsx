@@ -63,10 +63,21 @@ export function ReferenceUpload({ currentImage, description, onUpload, onRemove 
                     <X className="w-3 h-3" />
                   </Button>
                 </div>
-                <p className="text-xs text-[#A8A39E] italic leading-relaxed">
-                  <strong>How it works:</strong> The AI will use this image as style/composition reference. 
-                  For best results, describe what elements from the reference you want (e.g., "Use the lighting and composition from the reference image").
-                </p>
+                <div className="space-y-2">
+                  <p className="text-xs text-[#A8A39E] italic leading-relaxed">
+                    <strong>How it works:</strong> The AI will place your product from this reference into the scene you describe.
+                  </p>
+                  <div className="bg-[#252220]/50 border border-[#3D3935] rounded p-2 space-y-1">
+                    <p className="text-[10px] text-green-400 font-medium">✓ Good Prompt Example:</p>
+                    <p className="text-[10px] text-[#D4CFC8] leading-relaxed">
+                      "Place on weathered sandstone blocks with brass incense holder nearby, soft smoke wisps, warm golden hour lighting"
+                    </p>
+                    <p className="text-[10px] text-red-400 font-medium mt-2">✗ Avoid:</p>
+                    <p className="text-[10px] text-[#A8A39E] leading-relaxed">
+                      "Generate a perfume bottle" (Too generic - describe the SCENE instead)
+                    </p>
+                  </div>
+                </div>
               </div>
             ) : (
               <>
