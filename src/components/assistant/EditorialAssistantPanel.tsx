@@ -247,7 +247,7 @@ Be conversational, encouraging, and editorial in your tone.
   };
 
   return (
-    <div className="h-screen flex flex-col max-w-full" style={{ backgroundColor: "#FFFCF5" }}>
+    <div className="h-full flex flex-col max-w-full" style={{ backgroundColor: "#FFFCF5" }}>
       {/* Header */}
       <div 
         className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0"
