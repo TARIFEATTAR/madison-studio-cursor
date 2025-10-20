@@ -204,7 +204,35 @@ Be conversational, encouraging, and editorial in your tone.
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Parse specific backend errors
+        let errorMessage = 'Unable to reach the Editorial Director. Please try again.';
+        
+        // Try to parse structured error from edge function
+        if (error.context?.body) {
+          try {
+            const parsed = typeof error.context.body === 'string' 
+              ? JSON.parse(error.context.body) 
+              : error.context.body;
+            if (parsed.error) {
+              errorMessage = parsed.error;
+            }
+          } catch (e) {
+            console.error('Error parsing backend error:', e);
+          }
+        }
+        
+        // Handle HTTP status codes
+        if (error.message?.includes('402') || error.context?.status === 402) {
+          errorMessage = 'Payment required. Please add credits to your Lovable AI workspace.';
+        } else if (error.message?.includes('429') || error.context?.status === 429) {
+          errorMessage = 'Rate limit exceeded. Please try again in a moment.';
+        } else if (error.message?.includes('413') || error.context?.status === 413) {
+          errorMessage = 'Image too large. Claude requires images under 5MB. Please compress or resize.';
+        }
+        
+        throw new Error(errorMessage);
+      }
 
       if (data?.generatedContent) {
         const assistantMessage: Message = {
@@ -216,7 +244,7 @@ Be conversational, encouraging, and editorial in your tone.
       }
     } catch (error: any) {
       console.error("Error generating response:", error);
-      const message = error?.message || error?.error || 'Unable to reach the Editorial Director. Please try again.';
+      const message = error?.message || 'Unable to reach the Editorial Director. Please try again.';
       toast({
         title: "Communication error",
         description: message,
@@ -253,7 +281,7 @@ Be conversational, encouraging, and editorial in your tone.
   };
 
   return (
-    <div className="h-screen flex flex-col max-w-full" style={{ backgroundColor: "#FFFCF5" }}>
+    <div className="h-full flex flex-col max-w-full" style={{ backgroundColor: "#FFFCF5" }}>
       {/* Header */}
       <div 
         className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0"

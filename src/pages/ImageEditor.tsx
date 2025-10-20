@@ -225,43 +225,42 @@ export default function ImageEditor() {
 
       if (error) throw error;
 
-      if (data?.imageUrl) {
+      if (data?.imageUrl && data?.savedImageId) {
+        // Use the savedImageId from backend (edge function already inserted the row)
+        const savedId = data.savedImageId;
+        const imageOrder = currentSession.images.length;
+        
         const newImage: GeneratedImage = {
-          id: data.id || crypto.randomUUID(),
+          id: savedId, // Use backend-generated ID
           imageUrl: data.imageUrl,
           prompt,
           timestamp: Date.now(),
-          isHero: currentSession.images.length === 0,
+          isHero: imageOrder === 0,
           approvalStatus: "pending"
         };
-        
-        const imageOrder = currentSession.images.length;
         
         setCurrentSession(prev => ({
           ...prev,
           images: [...prev.images, newImage]
         }));
         
-        // Auto-save to DB with saved_to_library: false
-        const { error: insertError } = await supabase.from("generated_images").insert({
-          id: data.savedImageId || newImage.id,
-          organization_id: orgId,
-          user_id: user.id,
-          session_id: sessionId,
-          session_name: currentSession.name,
-          goal_type: "product-photography",
-          aspect_ratio: aspectRatio,
-          output_format: outputFormat,
-          final_prompt: prompt,
-          image_url: data.imageUrl,
-          image_order: imageOrder,
-          is_hero_image: imageOrder === 0,
-          saved_to_library: false, // Not saved until user explicitly saves
-        });
+        // Update the existing row with session-specific details
+        const { error: updateError } = await supabase
+          .from("generated_images")
+          .update({
+            session_id: sessionId,
+            session_name: currentSession.name,
+            image_order: imageOrder,
+            is_hero_image: imageOrder === 0,
+            aspect_ratio: aspectRatio,
+            output_format: outputFormat,
+            final_prompt: prompt,
+          })
+          .eq('id', savedId);
         
-        if (insertError) {
-          console.error("Failed to save image to DB:", insertError);
-          toast.error("Image generated but not saved to database");
+        if (updateError) {
+          console.error("Failed to update image in DB:", updateError);
+          toast.error("Image generated but metadata not saved");
         }
         
         const isComplete = currentSession.images.length + 1 === MAX_IMAGES_PER_SESSION;
