@@ -43,11 +43,17 @@ export function EditorialAssistantPanel({ onClose, initialContent, sessionContex
   const { userName } = useUserProfile();
   const STORAGE_KEY = 'madison-image-studio-chat';
   
-  // Load persisted messages on mount
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
+      if (!stored) return [];
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map((m: any) => ({
+        role: m.role === "assistant" ? "assistant" : "user",
+        content: String(m.content ?? ""),
+        timestamp: m.timestamp ? new Date(m.timestamp) : new Date()
+      })) as Message[];
     } catch {
       return [];
     }
