@@ -236,8 +236,8 @@ export default function Create() {
       // Show transition loader
       setShowTransitionLoader(true);
 
-      // Start database save (non-blocking)
-      const savePromise = supabase
+      // Save to database (wait for it to complete)
+      const { data: savedContent, error: saveError } = await supabase
         .from('master_content')
         .insert({
           title: contentName,
@@ -250,25 +250,23 @@ export default function Create() {
         .select()
         .single();
 
-      // Handle save in background
-      savePromise.then(({ data, error }) => {
-        if (error) {
-          console.error('Save failed:', error);
-          toast({
-            title: "Content saved locally",
-            description: "We'll retry saving to your library shortly.",
-          });
-        } else {
-          // Silent success - user is already in editor
-          localStorage.removeItem('draft-content-backup');
-        }
-      });
+      if (saveError) {
+        console.error('Save failed:', saveError);
+        toast({
+          title: "Content saved locally",
+          description: "We'll retry saving to your library shortly.",
+        });
+      } else {
+        // Success - clear local backup
+        localStorage.removeItem('draft-content-backup');
+        console.log('[Create] Content saved to database:', savedContent.id);
+      }
 
-      // Navigate immediately (slight delay for transition to show)
+      // Navigate immediately with the content ID
       setTimeout(() => {
         navigate("/editor", {
           state: { 
-            contentId: null, // Will be populated when save completes
+            contentId: savedContent?.id || null,
             content: generatedContent,
             contentType: format,
             productName: product,

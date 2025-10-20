@@ -95,6 +95,10 @@ export function DerivativeFullModal({
   const handleSaveEdit = () => {
     onEdit(editedContent);
     setIsEditing(false);
+    // Also save to library if handler is provided
+    if (onSaveToLibrary) {
+      onSaveToLibrary(editedContent);
+    }
   };
 
   const handleCancelEdit = () => {
