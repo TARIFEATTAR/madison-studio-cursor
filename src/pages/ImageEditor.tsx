@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Download, Loader2, Sparkles, ArrowLeft, Save, Star, Wand2, CheckCircle, XCircle, Check, X } from "lucide-react";
+import { Download, Loader2, Sparkles, ArrowLeft, Save, Star, Wand2, CheckCircle, XCircle, Check, X, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
@@ -18,6 +18,9 @@ import { ReferenceUpload } from "@/components/image-editor/ReferenceUpload";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { GuidedPromptBuilder } from "@/components/image-editor/GuidedPromptBuilder";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type ApprovalStatus = "pending" | "flagged" | "rejected";
 
@@ -43,6 +46,7 @@ export default function ImageEditor() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { orgId } = useCurrentOrganizationId();
+  const isMobile = useIsMobile();
   
   const [aspectRatio, setAspectRatio] = useState<string>("1:1");
   const [outputFormat, setOutputFormat] = useState<"png" | "jpeg" | "webp">("png");
@@ -452,6 +456,373 @@ export default function ImageEditor() {
     "Closer product shot"
   ];
 
+  // Mobile-specific render
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-[#252220] flex flex-col">
+        {/* Header */}
+        <div className="p-4 border-b border-[#3D3935]">
+          <div className="flex items-center justify-between mb-2">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="text-[#FFFCF5] hover:bg-[#3D3935]">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            {sessionStarted && currentSession.images.length > 0 && (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button size="sm" variant="outline" className="border-[#3D3935] text-[#D4CFC8]">
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Madison
+                    {showMadisonBadge && <span className="ml-2 w-2 h-2 bg-brass rounded-full" />}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[80vh] bg-[#FFFCF5] p-0">
+                  <EditorialAssistantPanel
+                    onClose={() => {}}
+                    initialContent=""
+                    sessionContext={{
+                      sessionId: sessionId,
+                      sessionName: currentSession.name || "New Session",
+                      imagesGenerated: currentSession.images.length,
+                      maxImages: MAX_IMAGES_PER_SESSION,
+                      heroImage: heroImage ? {
+                        imageUrl: heroImage.imageUrl,
+                        prompt: heroImage.prompt
+                      } : undefined,
+                      allPrompts: allPrompts,
+                      aspectRatio: aspectRatio,
+                      outputFormat: outputFormat,
+                      isImageStudio: true
+                    }}
+                  />
+                </SheetContent>
+              </Sheet>
+            )}
+          </div>
+          <h1 className="font-serif text-2xl text-[#FFFCF5]">Image Studio</h1>
+          <p className="text-[#D4CFC8] text-sm">
+            {sessionStarted 
+              ? `${currentSession.name} • ${progressText}`
+              : "AI-powered product photography"
+            }
+          </p>
+        </div>
+
+        {/* Action Buttons - Mobile */}
+        {sessionStarted && currentSession.images.length > 0 && (
+          <div className="p-4 border-b border-[#3D3935] flex flex-col gap-2">
+            <div className="flex gap-2 justify-between items-center">
+              <div className="flex gap-2 flex-wrap">
+                <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-500/30">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  {flaggedCount}
+                </Badge>
+                {rejectedCount > 0 && (
+                  <Badge variant="secondary" className="bg-red-500/20 text-red-300 border-red-500/30">
+                    <XCircle className="w-3 h-3 mr-1" />
+                    {rejectedCount}
+                  </Badge>
+                )}
+              </div>
+              <Button
+                onClick={handleDownloadAll}
+                variant="outline"
+                size="sm"
+                className="border-[#3D3935] text-[#D4CFC8] hover:bg-[#3D3935]"
+                disabled={flaggedCount === 0}
+              >
+                <Download className="w-4 h-4" />
+              </Button>
+            </div>
+            <Button
+              onClick={handleSaveSession}
+              disabled={isSaving || flaggedCount === 0}
+              className="w-full bg-brass hover:bg-brass/90 text-white"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save to Library ({flaggedCount})
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+
+        {/* Session Start - Mobile */}
+        {!sessionStarted && (
+          <div className="p-4 flex-1 flex items-center justify-center">
+            <Card className="p-6 bg-[#2F2A26] border-[#3D3935] w-full max-w-lg">
+              <div className="text-center mb-4">
+                <Sparkles className="w-10 h-10 text-brass/50 mx-auto mb-3" />
+                <h2 className="font-serif text-xl text-[#FFFCF5] mb-2">Start Creating</h2>
+                <p className="text-[#D4CFC8] text-sm">
+                  Describe your product image or name your session
+                </p>
+              </div>
+              
+              <div className="space-y-3">
+                <Textarea
+                  value={userPrompt}
+                  onChange={(e) => setUserPrompt(e.target.value)}
+                  placeholder="e.g., 'Desert Campaign' or 'Perfume on sand at sunset'"
+                  rows={3}
+                  className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E]"
+                />
+                <Button
+                  onClick={() => handleFirstMessage(userPrompt)}
+                  disabled={!userPrompt.trim()}
+                  className="w-full bg-brass hover:bg-brass/90 text-white"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Start Session
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Main Content - Mobile Tabs */}
+        {sessionStarted && (
+          <Tabs defaultValue="preview" className="flex-1 flex flex-col">
+            <TabsList className="w-full grid grid-cols-3 bg-[#2F2A26] border-b border-[#3D3935] rounded-none h-12">
+              <TabsTrigger value="preview" className="text-[#D4CFC8] data-[state=active]:text-[#FFFCF5] data-[state=active]:bg-[#3D3935]">
+                Preview
+              </TabsTrigger>
+              <TabsTrigger value="session" className="text-[#D4CFC8] data-[state=active]:text-[#FFFCF5] data-[state=active]:bg-[#3D3935]">
+                Session
+              </TabsTrigger>
+              <TabsTrigger value="create" className="text-[#D4CFC8] data-[state=active]:text-[#FFFCF5] data-[state=active]:bg-[#3D3935]">
+                Create
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Preview Tab */}
+            <TabsContent value="preview" className="flex-1 p-4 m-0">
+              <Card className="h-full p-4 bg-[#2F2A26] border-[#3D3935] flex flex-col items-center justify-center">
+                {isGenerating ? (
+                  <div className="text-center space-y-3">
+                    <Loader2 className="w-10 h-10 text-brass animate-spin mx-auto" />
+                    <p className="text-[#D4CFC8]">Generating...</p>
+                  </div>
+                ) : heroImage ? (
+                  <div className="w-full flex flex-col items-center space-y-3">
+                    <div className="relative w-full">
+                      <img
+                        src={heroImage.imageUrl}
+                        alt="Generated"
+                        className="w-full h-auto object-contain rounded"
+                      />
+                      {heroImage.isHero && (
+                        <div className="absolute top-2 right-2 bg-brass text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
+                          <Star className="w-3 h-3 fill-white" />
+                          HERO
+                        </div>
+                      )}
+                    </div>
+                    <div className="w-full">
+                      <p className="text-xs text-[#A8A39E] font-medium mb-1">PROMPT</p>
+                      <p className="text-sm text-[#D4CFC8] italic">"{heroImage.prompt}"</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center space-y-2">
+                    <Sparkles className="w-12 h-12 text-brass/30 mx-auto" />
+                    <p className="text-[#FFFCF5]">No image yet</p>
+                    <p className="text-sm text-[#D4CFC8]">Create your first image</p>
+                  </div>
+                )}
+              </Card>
+            </TabsContent>
+
+            {/* Session Tab */}
+            <TabsContent value="session" className="flex-1 p-4 m-0 overflow-auto">
+              <div className="grid grid-cols-2 gap-3">
+                {currentSession.images.map((image, index) => (
+                  <div key={image.id} className="relative">
+                    <button
+                      onClick={() => handleSetHero(image.id)}
+                      className={`relative w-full aspect-square rounded border-2 overflow-hidden ${
+                        image.isHero
+                          ? "border-brass ring-2 ring-brass/20"
+                          : image.approvalStatus === "flagged"
+                          ? "border-green-500 ring-2 ring-green-500/20"
+                          : image.approvalStatus === "rejected"
+                          ? "border-red-500 ring-2 ring-red-500/20 opacity-50"
+                          : "border-charcoal/20"
+                      }`}
+                    >
+                      <img
+                        src={image.imageUrl}
+                        alt={`${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      {image.isHero && (
+                        <div className="absolute top-1 right-1 bg-brass text-white rounded-full p-1">
+                          <Star className="w-3 h-3 fill-white" />
+                        </div>
+                      )}
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                        <p className="text-xs text-white font-medium">{index + 1}</p>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => handleToggleApproval(image.id)}
+                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#252220] border border-[#3D3935] rounded-full p-1.5 z-10"
+                    >
+                      {image.approvalStatus === "pending" && <Check className="w-4 h-4 text-[#A8A39E]" />}
+                      {image.approvalStatus === "flagged" && <Check className="w-4 h-4 text-green-500" />}
+                      {image.approvalStatus === "rejected" && <X className="w-4 h-4 text-red-500" />}
+                    </button>
+                  </div>
+                ))}
+                {Array.from({ length: Math.max(0, MAX_IMAGES_PER_SESSION - currentSession.images.length) }).map((_, i) => (
+                  <div
+                    key={`empty-${i}`}
+                    className="w-full aspect-square rounded border-2 border-dashed border-[#3D3935] bg-[#2F2A26]/50 flex items-center justify-center"
+                  >
+                    <p className="text-sm text-[#A8A39E]">{currentSession.images.length + i + 1}</p>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+
+            {/* Create Tab */}
+            <TabsContent value="create" className="flex-1 p-4 m-0 overflow-auto">
+              <div className="space-y-4">
+                {/* Export Settings */}
+                <Card className="p-4 bg-[#2F2A26] border-[#3D3935]">
+                  <h3 className="text-xs font-semibold text-[#D4CFC8] tracking-wide mb-3">EXPORT SETTINGS</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs text-[#A8A39E] mb-1.5 block">Aspect Ratio</Label>
+                      <Select value={aspectRatio} onValueChange={setAspectRatio}>
+                        <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1:1">Square (1:1)</SelectItem>
+                          <SelectItem value="4:5">Portrait (4:5)</SelectItem>
+                          <SelectItem value="16:9">Landscape (16:9)</SelectItem>
+                          <SelectItem value="9:16">Vertical (9:16)</SelectItem>
+                          <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs text-[#A8A39E] mb-1.5 block">Format</Label>
+                      <Select value={outputFormat} onValueChange={(value: "png" | "jpeg" | "webp") => setOutputFormat(value)}>
+                        <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="png">PNG</SelectItem>
+                          <SelectItem value="jpeg">JPEG</SelectItem>
+                          <SelectItem value="webp">WebP</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs text-[#A8A39E] mb-1.5 block">Save to Library</Label>
+                      <Select value={libraryCategory} onValueChange={(v) => setLibraryCategory(v as any)}>
+                        <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="content">Content Library</SelectItem>
+                          <SelectItem value="marketplace">Marketplace Library</SelectItem>
+                          <SelectItem value="both">Both Libraries</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Reference Upload */}
+                <ReferenceUpload
+                  currentImage={referenceImageUrl}
+                  description={referenceDescription}
+                  onUpload={handleReferenceUpload}
+                  onRemove={handleReferenceRemove}
+                  isUploading={isUploadingReference}
+                />
+
+                {/* Prompt Input */}
+                <Card className="p-4 bg-[#2F2A26] border-[#3D3935]">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xs font-semibold text-[#D4CFC8] tracking-wide">CREATE</h3>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="guided-mobile" className="text-xs text-[#A8A39E]">Guided</Label>
+                      <Switch
+                        id="guided-mobile"
+                        checked={guidedModeEnabled}
+                        onCheckedChange={setGuidedModeEnabled}
+                        className="data-[state=checked]:bg-brass"
+                      />
+                    </div>
+                  </div>
+                  
+                  {guidedModeEnabled ? (
+                    <GuidedPromptBuilder
+                      onPromptGenerated={(prompt) => {
+                        setUserPrompt(prompt);
+                        toast.success("Prompt built!");
+                      }}
+                      brandContext={brandContext}
+                    />
+                  ) : (
+                    <Textarea
+                      value={userPrompt}
+                      onChange={(e) => setUserPrompt(e.target.value)}
+                      placeholder="Describe your image..."
+                      disabled={!canGenerateMore}
+                      className="resize-none bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E] min-h-[100px] mb-3"
+                    />
+                  )}
+                  
+                  <div className="space-y-2">
+                    <div className="text-xs text-[#A8A39E] text-center">
+                      <span className={canGenerateMore ? "text-brass font-semibold" : "text-orange-400 font-semibold"}>
+                        {MAX_IMAGES_PER_SESSION - currentSession.images.length}
+                      </span>
+                      {" / "}{MAX_IMAGES_PER_SESSION} remaining
+                    </div>
+                    
+                    <Button
+                      onClick={() => handleGenerate()}
+                      disabled={isGenerating || !userPrompt.trim() || !canGenerateMore}
+                      className="w-full bg-brass hover:bg-brass/90 text-white"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Generate
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
+        )}
+      </div>
+    );
+  }
+
+  // Desktop render (unchanged)
   return (
     <div className="min-h-screen bg-[#252220] flex">
       {/* Madison Vertical Tab - Only visible when closed */}
