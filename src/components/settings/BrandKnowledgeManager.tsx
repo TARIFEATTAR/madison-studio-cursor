@@ -38,6 +38,8 @@ export function BrandKnowledgeManager() {
   const [lastConsolidation, setLastConsolidation] = useState<{ status: 'success' | 'error'; message: string } | null>(null);
   const [viewingDuplicates, setViewingDuplicates] = useState<string | null>(null);
   const [duplicateEntries, setDuplicateEntries] = useState<BrandKnowledge[]>([]);
+  const [showAllVersions, setShowAllVersions] = useState(false);
+  const [allVersions, setAllVersions] = useState<Record<string, BrandKnowledge[]>>({});
 
   
   useEffect(() => {
@@ -172,6 +174,36 @@ export function BrandKnowledgeManager() {
     } catch (error) {
       console.error('Error keeping version:', error);
       toast.error('Failed to consolidate duplicates');
+    }
+  };
+
+  const loadAllVersions = async () => {
+    if (!currentOrganizationId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('brand_knowledge')
+        .select('*')
+        .eq('organization_id', currentOrganizationId)
+        .order('knowledge_type', { ascending: true })
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Group by knowledge type
+      const grouped = (data || []).reduce((acc, item) => {
+        if (!acc[item.knowledge_type]) {
+          acc[item.knowledge_type] = [];
+        }
+        acc[item.knowledge_type].push(item);
+        return acc;
+      }, {} as Record<string, BrandKnowledge[]>);
+
+      setAllVersions(grouped);
+      setShowAllVersions(true);
+    } catch (error) {
+      console.error('Error loading all versions:', error);
+      toast.error('Failed to load version history');
     }
   };
 
@@ -427,6 +459,15 @@ export function BrandKnowledgeManager() {
               </div>
               <div className="flex items-center gap-2">
                 <Button
+                  onClick={loadAllVersions}
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                >
+                  <History className="w-3 h-3 mr-1" />
+                  View All Versions
+                </Button>
+                <Button
                   onClick={rescanForDuplicates}
                   variant="outline"
                   size="sm"
@@ -441,7 +482,7 @@ export function BrandKnowledgeManager() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                        className="border-orange-300 text-orange-600 hover:bg-orange-50"
                       >
                         <Eye className="w-3 h-3 mr-1" />
                         View Duplicates
