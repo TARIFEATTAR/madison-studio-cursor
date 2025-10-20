@@ -64,7 +64,11 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
                 brandName: brandName.trim(),
                 industry: industry || null,
                 primaryColor: primaryColor,
-                industryTemplate: industry || 'other'
+                industryTemplate: industry || 'other',
+                industry_config: {
+                  id: industry || 'other',
+                  name: INDUSTRY_OPTIONS.find(opt => opt.value === industry)?.label || 'Other'
+                }
               }
             })
             .select()
@@ -82,7 +86,11 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
                 brandName: brandName.trim(),
                 industry: industry || null,
                 primaryColor: primaryColor,
-                industryTemplate: industry || 'other'
+                industryTemplate: industry || 'other',
+                industry_config: {
+                  id: industry || 'other',
+                  name: INDUSTRY_OPTIONS.find(opt => opt.value === industry)?.label || 'Other'
+                }
               }
             })
             .eq('id', orgId);

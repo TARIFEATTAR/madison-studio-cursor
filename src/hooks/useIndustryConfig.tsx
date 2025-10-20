@@ -28,8 +28,11 @@ export function useIndustryConfig(organizationId: string | null) {
           return;
         }
 
-        const config = (data?.brand_config as any)?.industry_config;
-        if (config) {
+        const config = (data?.brand_config as any)?.industry_config || {
+          id: (data?.brand_config as any)?.industry,
+          name: null
+        };
+        if (config?.id) {
           setIndustryConfig(config);
           console.log("✅ Industry config loaded:", config);
         }
