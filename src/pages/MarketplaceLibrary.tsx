@@ -33,7 +33,8 @@ import {
   ShoppingCart,
   ExternalLink,
   ArrowUpDown,
-  X
+  X,
+  Trash2
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -73,6 +74,7 @@ export default function MarketplaceLibrary() {
         .from('marketplace_listings')
         .select('*')
         .eq('organization_id', currentOrganizationId)
+        .eq('is_archived', false)  // Only show non-archived listings
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
@@ -86,6 +88,32 @@ export default function MarketplaceLibrary() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (listingId: string) => {
+    if (!confirm('Are you sure you want to permanently delete this listing?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('marketplace_listings')
+        .delete()
+        .eq('id', listingId);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Listing deleted",
+        description: "Listing permanently deleted",
+      });
+      fetchListings();
+    } catch (error) {
+      console.error('Error deleting:', error);
+      toast({
+        title: "Error",
+        description: "Could not delete listing",
+        variant: "destructive",
+      });
     }
   };
 
@@ -402,9 +430,13 @@ export default function MarketplaceLibrary() {
                               View on Platform
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem onClick={() => handleArchive(listing.id)} className="text-destructive">
+                          <DropdownMenuItem onClick={() => handleArchive(listing.id)}>
                             <Archive className="w-4 h-4 mr-2" />
                             Archive
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDelete(listing.id)} className="text-destructive">
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete Permanently
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
