@@ -529,6 +529,54 @@ export default function Library() {
           refetch();
         }}
       />
+
+      {/* Madison Split Editor */}
+      {madisonContext && (
+        <MadisonSplitEditor
+          open={madisonOpen}
+          title={madisonContext.title}
+          initialContent={madisonContext.initialText}
+          onSave={async (newContent) => {
+            try {
+              const table = madisonContext.category === 'master' 
+                ? 'master_content' 
+                : madisonContext.category === 'derivative'
+                ? 'derivative_assets'
+                : 'outputs';
+              
+              const field = madisonContext.category === 'master' 
+                ? 'full_content' 
+                : 'generated_content';
+
+              const { error } = await supabase
+                .from(table)
+                .update({ [field]: newContent })
+                .eq('id', madisonContext.id);
+
+              if (error) throw error;
+
+              toast({
+                title: "Content saved",
+                description: "Your changes have been saved successfully.",
+              });
+              
+              setMadisonOpen(false);
+              setMadisonContext(null);
+              refetch();
+            } catch (error: any) {
+              toast({
+                title: "Save failed",
+                description: error.message,
+                variant: "destructive",
+              });
+            }
+          }}
+          onClose={() => {
+            setMadisonOpen(false);
+            setMadisonContext(null);
+          }}
+        />
+      )}
     </div>
   );
 }
