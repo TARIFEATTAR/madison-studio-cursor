@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowUpDown, X } from "lucide-react";
 import {
   Table,
@@ -63,6 +64,10 @@ export function ProductsTab() {
   const [searchFilter, setSearchFilter] = useState("");
   const [isImporting, setIsImporting] = useState(false);
   
+  // Bulk selection state
+  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
+  const [showBulkEditDialog, setShowBulkEditDialog] = useState(false);
+  
   // ADHD-friendly filters
   const [categoryFilter, setCategoryFilter] = useState<ProductCategory | "all">("all");
   const [collectionFilter, setCollectionFilter] = useState<string>("all");
@@ -91,6 +96,18 @@ export function ProductsTab() {
     benefits: "",
     usage: "",
     formulation_type: "",
+  });
+
+  // Bulk edit form state (only fields that should be updated)
+  const [bulkEditData, setBulkEditData] = useState({
+    updateCollection: false,
+    collection: "",
+    updateTone: false,
+    tone: "",
+    updateScentFamily: false,
+    scent_family: "",
+    updateCategory: false,
+    category: "personal_fragrance" as ProductCategory,
   });
 
   const resetForm = () => {
@@ -353,6 +370,134 @@ export function ProductsTab() {
     setCollectionFilter("all");
   };
 
+  // Bulk selection helpers
+  const isAllSelected = filteredAndSortedProducts.length > 0 && 
+    filteredAndSortedProducts.every(p => selectedProductIds.has(p.id));
+  
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedProductIds(new Set());
+    } else {
+      setSelectedProductIds(new Set(filteredAndSortedProducts.map(p => p.id)));
+    }
+  };
+
+  const toggleSelectProduct = (productId: string) => {
+    const newSelection = new Set(selectedProductIds);
+    if (newSelection.has(productId)) {
+      newSelection.delete(productId);
+    } else {
+      newSelection.add(productId);
+    }
+    setSelectedProductIds(newSelection);
+  };
+
+  const clearSelection = () => {
+    setSelectedProductIds(new Set());
+  };
+
+  // Bulk delete
+  const handleBulkDelete = async () => {
+    if (selectedProductIds.size === 0) return;
+    
+    if (!confirm(`Delete ${selectedProductIds.size} product${selectedProductIds.size === 1 ? '' : 's'}? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("brand_products")
+        .delete()
+        .in("id", Array.from(selectedProductIds));
+
+      if (error) throw error;
+
+      toast({
+        title: "Products deleted",
+        description: `${selectedProductIds.size} product${selectedProductIds.size === 1 ? '' : 's'} deleted successfully.`,
+      });
+
+      clearSelection();
+      refetch();
+    } catch (error) {
+      console.error("Error bulk deleting:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete products. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Bulk edit
+  const handleBulkEdit = () => {
+    if (selectedProductIds.size === 0) return;
+    setBulkEditData({
+      updateCollection: false,
+      collection: "",
+      updateTone: false,
+      tone: "",
+      updateScentFamily: false,
+      scent_family: "",
+      updateCategory: false,
+      category: "personal_fragrance",
+    });
+    setShowBulkEditDialog(true);
+  };
+
+  const handleBulkUpdate = async () => {
+    if (selectedProductIds.size === 0) return;
+
+    const updatePayload: any = {};
+    
+    if (bulkEditData.updateCollection) {
+      updatePayload.collection = bulkEditData.collection.trim() || null;
+    }
+    if (bulkEditData.updateTone) {
+      updatePayload.tone = bulkEditData.tone.trim() || null;
+    }
+    if (bulkEditData.updateScentFamily) {
+      updatePayload.scent_family = bulkEditData.scent_family.trim() || null;
+    }
+    if (bulkEditData.updateCategory) {
+      updatePayload.category = bulkEditData.category;
+    }
+
+    if (Object.keys(updatePayload).length === 0) {
+      toast({
+        title: "No fields selected",
+        description: "Please select at least one field to update.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("brand_products")
+        .update(updatePayload)
+        .in("id", Array.from(selectedProductIds));
+
+      if (error) throw error;
+
+      toast({
+        title: "Products updated",
+        description: `${selectedProductIds.size} product${selectedProductIds.size === 1 ? '' : 's'} updated successfully.`,
+      });
+
+      setShowBulkEditDialog(false);
+      clearSelection();
+      refetch();
+    } catch (error) {
+      console.error("Error bulk updating:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update products. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -485,6 +630,13 @@ export function ProductsTab() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={isAllSelected}
+                        onCheckedChange={toggleSelectAll}
+                        aria-label="Select all products"
+                      />
+                    </TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Type</TableHead>
@@ -494,7 +646,17 @@ export function ProductsTab() {
                 </TableHeader>
                 <TableBody>
                   {filteredAndSortedProducts.map((product) => (
-                    <TableRow key={product.id} className="cursor-pointer hover:bg-muted/50">
+                    <TableRow 
+                      key={product.id} 
+                      className={`cursor-pointer hover:bg-muted/50 ${selectedProductIds.has(product.id) ? 'bg-muted/30' : ''}`}
+                    >
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedProductIds.has(product.id)}
+                          onCheckedChange={() => toggleSelectProduct(product.id)}
+                          aria-label={`Select ${product.name}`}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">{product.name}</TableCell>
                       <TableCell>
                         <Badge variant="secondary">
@@ -530,6 +692,189 @@ export function ProductsTab() {
           )}
         </CardContent>
       </Card>
+
+      {/* Bulk Actions Toolbar */}
+      {selectedProductIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+          <Card className="shadow-lg border-2">
+            <CardContent className="flex items-center gap-4 p-4">
+              <span className="font-medium">
+                {selectedProductIds.size} product{selectedProductIds.size === 1 ? '' : 's'} selected
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBulkEdit}
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Edit Selected
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Selected
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearSelection}
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Clear
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Bulk Edit Dialog */}
+      <Dialog open={showBulkEditDialog} onOpenChange={setShowBulkEditDialog}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Bulk Edit Products</DialogTitle>
+            <DialogDescription>
+              Update {selectedProductIds.size} product{selectedProductIds.size === 1 ? '' : 's'}. Only checked fields will be updated.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {/* Collection Field */}
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="update-collection"
+                checked={bulkEditData.updateCollection}
+                onCheckedChange={(checked) => 
+                  setBulkEditData({ ...bulkEditData, updateCollection: !!checked })
+                }
+              />
+              <div className="flex-1 space-y-2">
+                <Label 
+                  htmlFor="bulk-collection"
+                  className={!bulkEditData.updateCollection ? 'text-muted-foreground' : ''}
+                >
+                  Collection
+                </Label>
+                <Input
+                  id="bulk-collection"
+                  value={bulkEditData.collection}
+                  onChange={(e) => setBulkEditData({ ...bulkEditData, collection: e.target.value })}
+                  placeholder="e.g., Humanities"
+                  disabled={!bulkEditData.updateCollection}
+                />
+              </div>
+            </div>
+
+            {/* Tone Field */}
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="update-tone"
+                checked={bulkEditData.updateTone}
+                onCheckedChange={(checked) => 
+                  setBulkEditData({ ...bulkEditData, updateTone: !!checked })
+                }
+              />
+              <div className="flex-1 space-y-2">
+                <Label 
+                  htmlFor="bulk-tone"
+                  className={!bulkEditData.updateTone ? 'text-muted-foreground' : ''}
+                >
+                  Brand Tone
+                </Label>
+                <Input
+                  id="bulk-tone"
+                  value={bulkEditData.tone}
+                  onChange={(e) => setBulkEditData({ ...bulkEditData, tone: e.target.value })}
+                  placeholder="e.g., Elegant, Luxurious"
+                  disabled={!bulkEditData.updateTone}
+                />
+              </div>
+            </div>
+
+            {/* Scent Family Field */}
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="update-scent-family"
+                checked={bulkEditData.updateScentFamily}
+                onCheckedChange={(checked) => 
+                  setBulkEditData({ ...bulkEditData, updateScentFamily: !!checked })
+                }
+              />
+              <div className="flex-1 space-y-2">
+                <Label 
+                  htmlFor="bulk-scent-family"
+                  className={!bulkEditData.updateScentFamily ? 'text-muted-foreground' : ''}
+                >
+                  Scent Family (Personal Fragrance)
+                </Label>
+                <Input
+                  id="bulk-scent-family"
+                  value={bulkEditData.scent_family}
+                  onChange={(e) => setBulkEditData({ ...bulkEditData, scent_family: e.target.value })}
+                  placeholder="e.g., Warm, Fresh, Woody, Floral"
+                  disabled={!bulkEditData.updateScentFamily}
+                />
+              </div>
+            </div>
+
+            {/* Category Field with Warning */}
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="update-category"
+                checked={bulkEditData.updateCategory}
+                onCheckedChange={(checked) => 
+                  setBulkEditData({ ...bulkEditData, updateCategory: !!checked })
+                }
+              />
+              <div className="flex-1 space-y-2">
+                <Label 
+                  htmlFor="bulk-category"
+                  className={!bulkEditData.updateCategory ? 'text-muted-foreground' : ''}
+                >
+                  Category
+                </Label>
+                <Select
+                  value={bulkEditData.category}
+                  onValueChange={(value: ProductCategory) => 
+                    setBulkEditData({ ...bulkEditData, category: value })
+                  }
+                  disabled={!bulkEditData.updateCategory}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="personal_fragrance">Personal Fragrance</SelectItem>
+                    <SelectItem value="home_fragrance">Home Fragrance</SelectItem>
+                    <SelectItem value="skincare">Skincare / Beauty</SelectItem>
+                  </SelectContent>
+                </Select>
+                {bulkEditData.updateCategory && (
+                  <p className="text-sm text-amber-600 flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                    <span>Changing category will clear category-specific fields on affected products.</span>
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowBulkEditDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleBulkUpdate}>
+              Update {selectedProductIds.size} Product{selectedProductIds.size === 1 ? '' : 's'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Add/Edit Dialog */}
       <Dialog open={showAddDialog || !!editingProduct} onOpenChange={(open) => {
