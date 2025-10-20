@@ -7,7 +7,7 @@ import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface ReferenceUploadProps {
-  currentImage: string;
+  currentImage: string | null;
   description: string;
   onUpload: (url: string, description: string) => void;
   onRemove: () => void;
@@ -63,8 +63,9 @@ export function ReferenceUpload({ currentImage, description, onUpload, onRemove 
                     <X className="w-3 h-3" />
                   </Button>
                 </div>
-                <p className="text-xs text-[#A8A39E] italic">
-                  This reference will guide all images in this session
+                <p className="text-xs text-[#A8A39E] italic leading-relaxed">
+                  <strong>How it works:</strong> The AI will use this image as style/composition reference. 
+                  For best results, describe what elements from the reference you want (e.g., "Use the lighting and composition from the reference image").
                 </p>
               </div>
             ) : (
@@ -77,10 +78,10 @@ export function ReferenceUpload({ currentImage, description, onUpload, onRemove 
                 >
                   <Upload className="w-6 h-6 text-brass mb-2 group-hover:scale-110 transition-transform" />
                   <span className="text-xs text-[#D4CFC8] text-center">
-                    Upload reference image
+                    Upload reference image (Max 20MB)
                   </span>
-                  <span className="text-[10px] text-[#A8A39E] italic mt-1">
-                    Optional: guides the generation
+                  <span className="text-[10px] text-[#A8A39E] italic mt-1 text-center max-w-[200px]">
+                    Use for style, lighting, or composition reference
                   </span>
                 </Label>
                 <Input
@@ -93,12 +94,12 @@ export function ReferenceUpload({ currentImage, description, onUpload, onRemove 
 
                 <div>
                   <Label className="text-xs text-[#D4CFC8] mb-1.5 block">
-                    Description (optional)
+                    Usage Notes (optional)
                   </Label>
                   <Input
                     value={localDescription}
                     onChange={(e) => setLocalDescription(e.target.value)}
-                    placeholder="Describe what to capture..."
+                    placeholder="E.g., 'Use the lighting and angle from this photo'"
                     className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E] text-xs"
                   />
                 </div>

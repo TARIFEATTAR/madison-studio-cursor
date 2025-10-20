@@ -45,7 +45,7 @@ serve(async (req) => {
     
     if (brandContext) {
       if (brandContext.colors && brandContext.colors.length > 0) {
-        enhancedPrompt += `\n\nBrand Colors: ${brandContext.colors.join(', ')}`;
+        enhancedPrompt += `\n\nBrand Colors to incorporate: ${brandContext.colors.join(', ')}`;
       }
       
       if (brandContext.styleKeywords && brandContext.styleKeywords.length > 0) {
@@ -58,6 +58,14 @@ serve(async (req) => {
       
       if (brandContext.productName) {
         enhancedPrompt += `\nProduct: ${brandContext.productName}`;
+      }
+    }
+
+    // Add explicit reference image instructions if provided
+    if (referenceImageUrl) {
+      enhancedPrompt = `REFERENCE IMAGE PROVIDED: Use the provided reference image for style, lighting, composition, or visual elements as requested by the user.\n\n${enhancedPrompt}`;
+      if (referenceDescription) {
+        enhancedPrompt += `\n\nReference Usage Instructions: ${referenceDescription}`;
       }
     }
 
@@ -86,7 +94,7 @@ serve(async (req) => {
       messageContent = [
         {
           type: "text",
-          text: enhancedPrompt + (referenceDescription ? `\n\nReference context: ${referenceDescription}` : "")
+          text: enhancedPrompt
         },
         {
           type: "image_url",

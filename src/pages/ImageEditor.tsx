@@ -126,6 +126,21 @@ export default function ImageEditor() {
     }
   }, [currentSession.images.length, madisonOpen]);
 
+  // Cleanup reference image on unmount (if user navigates away without saving)
+  useEffect(() => {
+    return () => {
+      if (referenceImageUrl && user?.id) {
+        const urlParts = referenceImageUrl.split('/reference-images/');
+        if (urlParts.length === 2) {
+          supabase.storage
+            .from('reference-images')
+            .remove([urlParts[1]])
+            .catch(err => console.error('Cleanup error:', err));
+        }
+      }
+    };
+  }, [referenceImageUrl, user?.id]);
+
   // Smart session name generator
   const generateSessionName = (prompt: string): string => {
     // Extract key nouns/concepts (basic implementation)
@@ -320,6 +335,20 @@ export default function ImageEditor() {
         .in('id', flaggedIds);
 
       if (updateError) throw updateError;
+
+      // Clean up reference image from storage
+      if (referenceImageUrl && user?.id) {
+        try {
+          const urlParts = referenceImageUrl.split('/reference-images/');
+          if (urlParts.length === 2) {
+            await supabase.storage
+              .from('reference-images')
+              .remove([urlParts[1]]);
+          }
+        } catch (error) {
+          console.error('Error cleaning up reference image:', error);
+        }
+      }
 
       toast.success(`✅ Saved ${flaggedImages.length} approved images to ${libraryCategory === "both" ? "both libraries" : libraryCategory + " library"}`);
       
