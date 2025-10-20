@@ -155,8 +155,8 @@ export default function ImageEditor() {
     setIsSaving(true);
 
     try {
-      // Save all images to the database
-      const imageRecords = currentSession.images.map(img => ({
+      // Save all images to the database with enhanced metadata
+      const imageRecords = currentSession.images.map((img, index) => ({
         organization_id: orgId,
         user_id: user.id,
         goal_type: goalType,
@@ -164,8 +164,16 @@ export default function ImageEditor() {
         output_format: outputFormat,
         final_prompt: img.prompt,
         image_url: img.imageUrl,
-        description: `${currentSession.name} - ${img.isHero ? 'Hero' : 'Variation'}`,
-        saved_to_library: true
+        description: `${currentSession.name} - ${img.isHero ? 'Hero Image' : `Variation ${index + 1}`}`,
+        saved_to_library: true,
+        selected_template: currentSession.name, // Session name as template identifier
+        brand_style_tags: [
+          'madison-image-studio',
+          goalType,
+          img.isHero ? 'hero' : 'variation',
+          `session-${currentSession.id}`, // Link all images from same session
+          `${aspectRatio.replace(':', 'x')}`, // e.g., "1x1", "16x9"
+        ]
       }));
 
       const { error: saveError } = await supabase
@@ -174,7 +182,7 @@ export default function ImageEditor() {
 
       if (saveError) throw saveError;
 
-      toast.success(`✅ Session saved to Library: "${currentSession.name}"`);
+      toast.success(`✅ Session saved to Library: "${currentSession.name}" (${imageRecords.length} images)`);
       
       // Reset for new session
       setCurrentSession({
