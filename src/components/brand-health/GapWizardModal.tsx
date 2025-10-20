@@ -154,13 +154,43 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
         content.description = formData.contentTemplate;
       }
 
-      // Insert brand knowledge
+      // Validate we have content to save
+      const hasContent = Object.values(content).some((v: any) =>
+        typeof v === 'string' ? v.trim().length > 0 : v && typeof v === 'object' ? Object.keys(v).length > 0 : false
+      );
+      if (!hasContent) {
+        toast.error("Please add content before saving.");
+        setIsSaving(false);
+        return;
+      }
+
+      // Deactivate existing active entries for this knowledge type and compute next version
+      const { data: existing, error: existingError } = await supabase
+        .from("brand_knowledge")
+        .select("id, version")
+        .eq("organization_id", orgMember.organization_id)
+        .eq("knowledge_type", knowledgeType)
+        .eq("is_active", true);
+      if (existingError) throw existingError;
+
+      let newVersion = 1;
+      if (existing && existing.length > 0) {
+        newVersion = Math.max(...existing.map((e: any) => (e.version ?? 1))) + 1;
+        const { error: deactivateError } = await supabase
+          .from("brand_knowledge")
+          .update({ is_active: false })
+          .in("id", existing.map((e: any) => e.id));
+        if (deactivateError) throw deactivateError;
+      }
+
+      // Insert brand knowledge as the latest active version
       const { error } = await supabase
         .from("brand_knowledge")
         .insert({
           organization_id: orgMember.organization_id,
           knowledge_type: knowledgeType,
           content: content,
+          version: newVersion,
           is_active: true,
         });
 
