@@ -203,20 +203,65 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    let imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
     const description = data.choices?.[0]?.message?.content;
 
     if (!imageUrl) {
       throw new Error('No image generated in response');
     }
 
-    // Save to database
-    const supabase = createClient(
+    // Create Supabase client
+    const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { data: savedImage, error: dbError } = await supabase
+    // Upload base64 image to Supabase Storage
+    if (imageUrl.startsWith('data:image/')) {
+      try {
+        console.log('📤 Uploading image to storage...');
+        
+        // Convert base64 to buffer
+        const base64Data = imageUrl.split(',')[1];
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        // Generate unique filename
+        const filename = `${organizationId}/${Date.now()}-${crypto.randomUUID()}.png`;
+        
+        // Upload to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabaseClient
+          .storage
+          .from('generated-images')
+          .upload(filename, bytes, {
+            contentType: 'image/png',
+            cacheControl: '3600',
+            upsert: false
+          });
+        
+        if (uploadError) {
+          console.error('⚠️ Storage upload failed:', uploadError);
+          // Continue with base64 if storage fails
+        } else {
+          // Get public URL
+          const { data: publicUrlData } = supabaseClient
+            .storage
+            .from('generated-images')
+            .getPublicUrl(filename);
+          
+          imageUrl = publicUrlData.publicUrl;
+          console.log('✅ Image uploaded to storage:', imageUrl);
+        }
+      } catch (storageError) {
+        console.error('⚠️ Error uploading to storage:', storageError);
+        // Continue with base64 if storage fails
+      }
+    }
+
+    const { data: savedImage, error: dbError } = await supabaseClient
       .from('generated_images')
       .insert({
         organization_id: organizationId,

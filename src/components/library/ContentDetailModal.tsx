@@ -143,12 +143,50 @@ export function ContentDetailModal({
   };
   
   const handleDownloadImage = () => {
-    const link = document.createElement('a');
-    link.href = getImageUrl();
-    link.download = `${content.title || 'image'}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const imageUrl = getImageUrl();
+    if (!imageUrl) return;
+    
+    // Check if it's a base64 data URI (old images)
+    if (imageUrl.startsWith('data:image/')) {
+      try {
+        // Convert base64 to blob and download
+        const arr = imageUrl.split(',');
+        const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/png';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const blob = new Blob([u8arr], { type: mime });
+        const blobUrl = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `${content.title || 'image'}.${mime.split('/')[1]}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      } catch (error) {
+        console.error('Failed to download base64 image:', error);
+        toast({
+          title: "Download failed",
+          description: "There was an error downloading the image.",
+          variant: "destructive"
+        });
+        return;
+      }
+    } else {
+      // Regular URL download (for storage-based images)
+      const link = document.createElement('a');
+      link.href = imageUrl;
+      link.download = `${content.title || 'image'}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+    
     toast({
       title: "Download started",
       description: "Your image is being downloaded.",
