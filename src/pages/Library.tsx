@@ -210,6 +210,13 @@ export default function Library() {
     }
 
     setIsDeleting(true);
+    
+    const deletionResults = {
+      successful: 0,
+      failed: 0,
+      errors: [] as string[]
+    };
+
     try {
       // Group items by source table
       const itemsByTable = {
@@ -226,59 +233,100 @@ export default function Library() {
         }
       });
 
-      // Delete from each table
-      const deletePromises = [];
-
-      if (itemsByTable.master_content.length > 0) {
-        deletePromises.push(
-          supabase
-            .from('master_content')
-            .delete()
-            .in('id', itemsByTable.master_content)
-        );
-      }
-
-      if (itemsByTable.outputs.length > 0) {
-        deletePromises.push(
-          supabase
-            .from('outputs')
-            .delete()
-            .in('id', itemsByTable.outputs)
-        );
-      }
-
+      // Delete from each table with CASCADE handling dependencies automatically
+      // Order: derivative_assets, master_content, outputs, generated_images
+      
+      // Delete derivative assets first (they may reference master_content)
       if (itemsByTable.derivative_assets.length > 0) {
-        deletePromises.push(
-          supabase
-            .from('derivative_assets')
-            .delete()
-            .in('id', itemsByTable.derivative_assets)
-        );
+        const { error } = await supabase
+          .from('derivative_assets')
+          .delete()
+          .in('id', itemsByTable.derivative_assets);
+        
+        if (error) {
+          console.error('Error deleting derivatives:', error);
+          deletionResults.failed += itemsByTable.derivative_assets.length;
+          deletionResults.errors.push(`Derivatives: ${error.message}`);
+        } else {
+          deletionResults.successful += itemsByTable.derivative_assets.length;
+        }
       }
 
+      // Delete master content (CASCADE will handle related derivatives and scheduled content)
+      if (itemsByTable.master_content.length > 0) {
+        const { error } = await supabase
+          .from('master_content')
+          .delete()
+          .in('id', itemsByTable.master_content);
+        
+        if (error) {
+          console.error('Error deleting master content:', error);
+          deletionResults.failed += itemsByTable.master_content.length;
+          deletionResults.errors.push(`Master content: ${error.message}`);
+        } else {
+          deletionResults.successful += itemsByTable.master_content.length;
+        }
+      }
+
+      // Delete outputs
+      if (itemsByTable.outputs.length > 0) {
+        const { error } = await supabase
+          .from('outputs')
+          .delete()
+          .in('id', itemsByTable.outputs);
+        
+        if (error) {
+          console.error('Error deleting outputs:', error);
+          deletionResults.failed += itemsByTable.outputs.length;
+          deletionResults.errors.push(`Outputs: ${error.message}`);
+        } else {
+          deletionResults.successful += itemsByTable.outputs.length;
+        }
+      }
+
+      // Delete generated images
       if (itemsByTable.generated_images.length > 0) {
-        deletePromises.push(
-          supabase
-            .from('generated_images')
-            .delete()
-            .in('id', itemsByTable.generated_images)
-        );
+        const { error } = await supabase
+          .from('generated_images')
+          .delete()
+          .in('id', itemsByTable.generated_images);
+        
+        if (error) {
+          console.error('Error deleting images:', error);
+          deletionResults.failed += itemsByTable.generated_images.length;
+          deletionResults.errors.push(`Images: ${error.message}`);
+        } else {
+          deletionResults.successful += itemsByTable.generated_images.length;
+        }
       }
 
-      await Promise.all(deletePromises);
-
-      toast({
-        title: "Items deleted",
-        description: `Successfully deleted ${selectedItems.size} item${selectedItems.size > 1 ? 's' : ''}`,
-      });
+      // Show results to user
+      if (deletionResults.failed === 0) {
+        toast({
+          title: "Deletion successful",
+          description: `Successfully deleted ${deletionResults.successful} item${deletionResults.successful > 1 ? 's' : ''}`,
+        });
+      } else if (deletionResults.successful > 0) {
+        toast({
+          title: "Partial deletion",
+          description: `Deleted ${deletionResults.successful} items. ${deletionResults.failed} failed: ${deletionResults.errors.join('; ')}`,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Deletion failed",
+          description: `All deletions failed: ${deletionResults.errors.join('; ')}`,
+          variant: "destructive"
+        });
+      }
 
       setSelectedItems(new Set());
       refetch();
     } catch (error) {
-      console.error('Error deleting items:', error);
+      console.error('Critical error during deletion:', error);
       toast({
         title: "Delete failed",
-        description: "Failed to delete selected items. Please try again.",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
         variant: "destructive"
       });
     } finally {

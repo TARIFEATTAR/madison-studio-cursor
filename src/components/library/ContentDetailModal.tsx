@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Edit2, Send, Copy, Check, FileDown, Calendar, MessageSquare, Download } from "lucide-react";
+import { Edit2, Send, Copy, Check, FileDown, Calendar, MessageSquare, Download, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type ContentCategory = "prompt" | "output" | "master" | "derivative";
 
@@ -51,6 +61,12 @@ export function ContentDetailModal({
   const [isCopied, setIsCopied] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [madisonDialogOpen, setMadisonDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [dependencyCounts, setDependencyCounts] = useState<{
+    derivatives: number;
+    scheduled: number;
+  }>({ derivatives: 0, scheduled: 0 });
   const [orgData, setOrgData] = useState<{
     name?: string;
     brandColor?: string;
@@ -213,7 +229,7 @@ export function ContentDetailModal({
     });
   };
 
-  // Fetch organization data when modal opens
+  // Fetch organization data and dependency counts when modal opens
   useEffect(() => {
     if (open && content?.organization_id) {
       supabase
@@ -253,7 +269,26 @@ export function ContentDetailModal({
           }
         });
     }
-  }, [open, content?.organization_id]);
+    
+    // Fetch dependency counts if this is archived master content
+    if (open && content?.is_archived && category === "master") {
+      Promise.all([
+        supabase
+          .from("derivative_assets")
+          .select("id", { count: 'exact', head: true })
+          .eq("master_content_id", content.id),
+        supabase
+          .from("scheduled_content")
+          .select("id", { count: 'exact', head: true })
+          .eq("content_id", content.id),
+      ]).then(([derivRes, schedRes]) => {
+        setDependencyCounts({
+          derivatives: derivRes.count || 0,
+          scheduled: schedRes.count || 0,
+        });
+      });
+    }
+  }, [open, content?.organization_id, content?.is_archived, content?.id, category]);
 
   const handleExport = async (format: 'pdf' | 'docx' | 'txt') => {
     setIsExporting(true);
@@ -291,6 +326,47 @@ export function ContentDetailModal({
       });
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const table =
+        category === "prompt"
+          ? "prompts"
+          : category === "output"
+          ? "outputs"
+          : category === "derivative"
+          ? "derivative_assets"
+          : category === "master"
+          ? "master_content"
+          : "generated_images";
+
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq("id", content.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Content deleted",
+        description: "The content has been permanently deleted.",
+      });
+
+      onOpenChange(false);
+      onUpdate?.();
+    } catch (error: any) {
+      console.error('Delete error:', error);
+      toast({
+        title: "Delete failed",
+        description: error.message || "Failed to delete content. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
     }
   };
 
@@ -474,6 +550,18 @@ export function ContentDetailModal({
                   Multiply
                 </Button>
               )}
+              
+              {content.is_archived && (
+                <Button
+                  onClick={() => setDeleteDialogOpen(true)}
+                  variant="destructive"
+                  size="sm"
+                  disabled={isDeleting}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {isDeleting ? "Deleting..." : "Delete Permanently"}
+                </Button>
+              )}
             </div>
           )}
 
@@ -492,6 +580,44 @@ export function ContentDetailModal({
           </div>
         </div>
       </DialogContent>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this content permanently?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete "{content.title || 'this content'}" 
+              from the archives.
+              {category === "master" && (dependencyCounts.derivatives > 0 || dependencyCounts.scheduled > 0) && (
+                <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-md">
+                  <p className="font-medium text-amber-900 dark:text-amber-100">
+                    This will also delete:
+                  </p>
+                  <ul className="mt-2 space-y-1 text-amber-800 dark:text-amber-200 text-sm">
+                    {dependencyCounts.derivatives > 0 && (
+                      <li>• {dependencyCounts.derivatives} derivative{dependencyCounts.derivatives > 1 ? 's' : ''}</li>
+                    )}
+                    {dependencyCounts.scheduled > 0 && (
+                      <li>• {dependencyCounts.scheduled} scheduled item{dependencyCounts.scheduled > 1 ? 's' : ''}</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete Permanently"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Madison Dialog */}
       <Dialog open={madisonDialogOpen} onOpenChange={setMadisonDialogOpen}>
