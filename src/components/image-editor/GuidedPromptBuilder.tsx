@@ -21,6 +21,22 @@ interface GuidedPromptBuilderProps {
   brandContext?: any;
 }
 
+// Prompt Formula Guide Content
+const PROMPT_FORMULA_GUIDE = {
+  title: "Simple Prompt Formula",
+  structure: [
+    { label: "Photo type", example: "motorsport photography" },
+    { label: "Subject + Action", example: "Red Bull F1 car driving on a race track" },
+    { label: "Environment", example: "race track setting" },
+    { label: "Color Scheme", example: "deep azure blue, red, and yellow colors with warm tones" },
+    { label: "Camera/Lens/Film", example: "35mm shallow depth of field" },
+    { label: "Lighting", example: "dramatic sunset backlighting" },
+    { label: "Composition", example: "center framing" },
+    { label: "Additional Details", example: "motion blur" }
+  ],
+  fullExample: "motorsport photography, Red Bull F1 car driving on a race track, deep azure blue, red, and yellow colors with warm tones, 35mm shallow depth of field, dramatic sunset backlighting, center framing, motion blur"
+};
+
 // Quick preset scenarios for common product photography needs
 const QUICK_PRESETS = [
   {
@@ -44,7 +60,7 @@ const QUICK_PRESETS = [
       shotType: SHOT_TYPES.PRODUCT.HERO,
       environment: ENVIRONMENTS.SETTINGS.DESERT,
       lighting: LIGHTING.NATURAL.GOLDEN_HOUR,
-      camera: CAMERA_LENS.PROFESSIONAL.DSLR_SHALLOW,
+      camera: CAMERA_LENS.PROFESSIONAL.NIKON_SHALLOW,
       mood: 'warm, organic, artisanal feel',
       colorScheme: 'warm desert tones, amber and sand'
     }
@@ -57,7 +73,7 @@ const QUICK_PRESETS = [
       shotType: SHOT_TYPES.PRODUCT.LIFESTYLE,
       environment: ENVIRONMENTS.SETTINGS.BOTANICAL,
       lighting: LIGHTING.NATURAL.OVERCAST,
-      camera: CAMERA_LENS.PROFESSIONAL.DSLR_SHARP,
+      camera: CAMERA_LENS.PROFESSIONAL.SONY_SHARP,
       mood: 'fresh, natural, organic aesthetic',
       colorScheme: 'natural greens and earth tones'
     }
@@ -96,7 +112,7 @@ const QUICK_PRESETS = [
       shotType: SHOT_TYPES.PRODUCT.HERO,
       environment: ENVIRONMENTS.SETTINGS.LUXURY,
       lighting: LIGHTING.STUDIO.DRAMATIC,
-      camera: CAMERA_LENS.PROFESSIONAL.DSLR_SHALLOW,
+      camera: CAMERA_LENS.SPECIALTY.HASSELBLAD_DIGITAL,
       mood: 'dramatic, high-fashion, editorial',
       colorScheme: 'rich jewel tones with gold accents'
     }
@@ -106,6 +122,7 @@ const QUICK_PRESETS = [
 export function GuidedPromptBuilder({ onPromptGenerated, brandContext }: GuidedPromptBuilderProps) {
   const [components, setComponents] = useState<PromptComponents>({});
   const [customDetails, setCustomDetails] = useState('');
+  const [showFormulaGuide, setShowFormulaGuide] = useState(false);
 
   const handlePresetClick = (preset: typeof QUICK_PRESETS[0]) => {
     setComponents(preset.components);
@@ -141,21 +158,46 @@ export function GuidedPromptBuilder({ onPromptGenerated, brandContext }: GuidedP
 
   return (
     <div className="space-y-4">
+      {/* Prompt Formula Guide Button - Above Presets */}
+      <Button
+        onClick={() => setShowFormulaGuide(!showFormulaGuide)}
+        variant="outline"
+        size="sm"
+        className="w-full bg-brass/10 border-brass/40 hover:bg-brass/20 text-[#FFFCF5] font-semibold"
+      >
+        <Wand2 className="w-4 h-4 mr-2" />
+        {showFormulaGuide ? 'Hide' : 'Show'} Simple Prompt Formula Guide
+      </Button>
+
+      {/* Collapsible Formula Guide */}
+      {showFormulaGuide && (
+        <Card className="bg-[#1F1A17] border-brass/40 p-4 space-y-3">
+          <h4 className="font-serif text-sm text-brass font-bold">{PROMPT_FORMULA_GUIDE.title}</h4>
+          
+          <div className="space-y-1.5">
+            {PROMPT_FORMULA_GUIDE.structure.map((item, idx) => (
+              <div key={idx} className="text-[10px] leading-relaxed">
+                <span className="text-brass font-semibold">[{item.label}]</span>
+                <span className="text-[#A8A39E]"> - e.g., </span>
+                <span className="text-[#D4CFC8] italic">{item.example}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="pt-3 border-t border-brass/20">
+            <p className="text-[9px] text-[#A8A39E] mb-2 uppercase tracking-wide">Full Example:</p>
+            <p className="text-[10px] text-[#FFFCF5] leading-relaxed bg-[#252220] p-2 rounded border border-brass/20">
+              {PROMPT_FORMULA_GUIDE.fullExample}
+            </p>
+          </div>
+        </Card>
+      )}
+
       {/* Quick Presets */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label className="text-xs text-[#D4CFC8] font-semibold tracking-wide">
-            QUICK PRESETS
-          </Label>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => window.open('/prompt-formula-guide', '_blank')}
-            className="text-[10px] text-brass hover:text-brass-glow h-6 px-2"
-          >
-            📋 View Prompt Formula
-          </Button>
-        </div>
+        <Label className="text-xs text-[#D4CFC8] font-semibold tracking-wide">
+          QUICK PRESETS
+        </Label>
         <div className="grid grid-cols-2 gap-2">
           {QUICK_PRESETS.map((preset) => (
             <Button
@@ -240,11 +282,19 @@ export function GuidedPromptBuilder({ onPromptGenerated, brandContext }: GuidedP
               <SelectValue placeholder="Select camera..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={CAMERA_LENS.PROFESSIONAL.DSLR_SHALLOW}>DSLR Shallow Focus</SelectItem>
-              <SelectItem value={CAMERA_LENS.PROFESSIONAL.DSLR_SHARP}>DSLR Sharp Focus</SelectItem>
-              <SelectItem value={CAMERA_LENS.PROFESSIONAL.MACRO}>Macro Lens</SelectItem>
-              <SelectItem value={CAMERA_LENS.FILM["35MM_FILM"]}>35mm Film</SelectItem>
-              <SelectItem value={CAMERA_LENS.FILM.POLAROID}>Polaroid</SelectItem>
+              <SelectItem value={CAMERA_LENS.PROFESSIONAL.DSLR_SHALLOW}>Canon R5 35mm f/1.4 (Shallow)</SelectItem>
+              <SelectItem value={CAMERA_LENS.PROFESSIONAL.DSLR_SHARP}>Canon R5 50mm f/1.8 (Sharp)</SelectItem>
+              <SelectItem value={CAMERA_LENS.PROFESSIONAL.NIKON_SHALLOW}>Nikon Z9 50mm f/1.2 (Ultra Shallow)</SelectItem>
+              <SelectItem value={CAMERA_LENS.PROFESSIONAL.SONY_SHARP}>Sony A7R IV 85mm f/1.4 (Portrait)</SelectItem>
+              <SelectItem value={CAMERA_LENS.PROFESSIONAL.MACRO}>Canon 100mm Macro f/2.8</SelectItem>
+              <SelectItem value={CAMERA_LENS.PROFESSIONAL.TELEPHOTO}>Canon 85mm f/1.2 (Portrait)</SelectItem>
+              <SelectItem value={CAMERA_LENS.FILM["35MM_FILM"]}>35mm Film (Kodak Portra 400)</SelectItem>
+              <SelectItem value={CAMERA_LENS.FILM.CINESTILL}>CineStill 800T Film</SelectItem>
+              <SelectItem value={CAMERA_LENS.FILM.FUJIFILM}>Fujifilm X100V (Classic Chrome)</SelectItem>
+              <SelectItem value={CAMERA_LENS.FILM.POLAROID}>Polaroid SX-70</SelectItem>
+              <SelectItem value={CAMERA_LENS.SPECIALTY.LEICA}>Leica M11 50mm Summilux</SelectItem>
+              <SelectItem value={CAMERA_LENS.SPECIALTY.HASSELBLAD_DIGITAL}>Hasselblad X2D 100C</SelectItem>
+              <SelectItem value={CAMERA_LENS.SPECIALTY.PHASE_ONE}>Phase One XF IQ4 150MP</SelectItem>
             </SelectContent>
           </Select>
         </div>

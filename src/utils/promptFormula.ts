@@ -49,24 +49,34 @@ export const SHOT_TYPES = {
 };
 
 /**
- * Camera & Lens Presets
- * Controls visual aesthetic and signature
+ * Camera & Lens Presets with Professional Specifications
+ * Each preset includes technical details for photorealistic AI generation
  */
 export const CAMERA_LENS = {
   PROFESSIONAL: {
-    DSLR_SHALLOW: "35mm DSLR, f/1.8 shallow depth of field",
-    DSLR_SHARP: "50mm DSLR, f/8 sharp focus",
-    MACRO: "macro lens, f/2.8",
-    WIDE: "24mm wide-angle lens"
+    DSLR_SHALLOW: "Canon EOS R5 with 35mm f/1.4 lens, shallow depth of field (f/1.4-f/2), creamy bokeh, professional DSLR quality",
+    DSLR_SHARP: "Canon EOS R5 with 50mm f/1.8 lens, sharp focus throughout (f/8-f/11), professional DSLR clarity",
+    MACRO: "Canon RF 100mm f/2.8L Macro lens, extreme close-up detail (1:1 magnification), f/2.8 aperture, razor-sharp subject isolation",
+    WIDE: "Canon RF 24mm f/1.4L lens, wide-angle perspective, environmental context, f/5.6 aperture for sharpness",
+    TELEPHOTO: "Canon RF 85mm f/1.2L lens, portrait compression, ultra-shallow depth of field (f/1.2), professional bokeh",
+    NIKON_SHALLOW: "Nikon Z9 with 50mm f/1.2 lens, ultra-shallow depth of field, creamy bokeh, cinematic look",
+    SONY_SHARP: "Sony A7R IV with 85mm f/1.4 GM lens, tack-sharp focus, professional portrait quality"
   },
   FILM: {
-    POLAROID: "Polaroid instant film aesthetic",
-    "35MM_FILM": "35mm film camera, Kodak Portra 400",
-    MEDIUM_FORMAT: "medium format film, Hasselblad aesthetic"
+    POLAROID: "Polaroid SX-70 instant film aesthetic, square format, soft vintage colors, slight vignette, nostalgic warmth",
+    "35MM_FILM": "35mm film camera with Kodak Portra 400, film grain texture, natural color reproduction, analog warmth",
+    MEDIUM_FORMAT: "Hasselblad 500C/M medium format film, 6x6 square format, exceptional detail and tonal range, professional film aesthetic",
+    CINESTILL: "35mm CineStill 800T film, halation glow around lights, cinematic color grading, night photography aesthetic",
+    FUJIFILM: "Fujifilm X100V with 23mm f/2 lens, classic chrome film simulation, street photography aesthetic"
   },
   MOBILE: {
-    IPHONE: "iPhone portrait mode",
-    ANDROID: "modern smartphone camera"
+    IPHONE: "iPhone 14 Pro portrait mode, computational photography, natural depth blur, smartphone quality",
+    ANDROID: "Google Pixel 7 Pro camera, computational HDR+, vibrant color processing, modern smartphone aesthetic"
+  },
+  SPECIALTY: {
+    LEICA: "Leica M11 rangefinder with 50mm Summilux f/1.4 lens, classic rangefinder rendering, exceptional color and contrast",
+    HASSELBLAD_DIGITAL: "Hasselblad X2D 100C medium format digital, 100MP resolution, exceptional detail and color depth",
+    PHASE_ONE: "Phase One XF IQ4 150MP, medium format digital back, maximum resolution and tonal range"
   }
 };
 
