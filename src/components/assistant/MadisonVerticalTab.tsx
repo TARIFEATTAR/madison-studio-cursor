@@ -16,7 +16,7 @@ export function MadisonVerticalTab({ isOpen, onClick, hasSuggestions }: MadisonV
         "w-20 md:flex items-center justify-center hidden",
         
         // Styling - brass gradient with subtle border
-        "bg-gradient-to-r from-brass via-aged-brass to-antique-gold",
+        "bg-gradient-to-r from-[hsl(var(--aged-brass))] via-[hsl(var(--aged-brass))] to-[hsl(var(--antique-gold))]",
         "border-t border-l border-brass/30 shadow-2xl rounded-tl-lg",
         
         // Hover effects

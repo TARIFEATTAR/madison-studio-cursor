@@ -74,7 +74,8 @@ serve(async (req) => {
       userRefinements,
       referenceImageUrl,
       referenceDescription,
-      brandContext
+      brandContext,
+      imageConstraints
     } = await req.json();
 
     console.log('🎨 Generating Madison image:', {
@@ -82,16 +83,37 @@ serve(async (req) => {
       aspectRatio,
       promptLength: prompt.length,
       hasBrandContext: !!brandContext,
-      hasReferenceImage: !!referenceImageUrl
+      hasReferenceImage: !!referenceImageUrl,
+      hasConstraints: !!imageConstraints
     });
 
     // Enhance prompt with brand context (works for any business vertical)
     let enhancedPrompt = prompt;
     
+    // Apply image constraints if provided
+    if (imageConstraints) {
+      // Apply rewrite rules
+      if (imageConstraints.rewriteRules) {
+        Object.entries(imageConstraints.rewriteRules).forEach(([from, to]) => {
+          const regex = new RegExp(from, 'gi');
+          enhancedPrompt = enhancedPrompt.replace(regex, to as string);
+        });
+      }
+      
+      // Remove prohibited terms
+      if (imageConstraints.prohibitedTerms && imageConstraints.prohibitedTerms.length > 0) {
+        imageConstraints.prohibitedTerms.forEach((term: string) => {
+          const regex = new RegExp(`\\b${term}\\b`, 'gi');
+          enhancedPrompt = enhancedPrompt.replace(regex, '');
+        });
+      }
+    }
+    
     // Add aspect ratio instructions to guide NanoBanana
     const aspectRatioInstructions: Record<string, string> = {
       '1:1': 'square composition with equal width and height',
       '4:5': 'vertical portrait orientation, slightly taller than wide',
+      '5:4': 'horizontal product listing, slightly wider than tall (Etsy preferred format)',
       '2:3': 'vertical Pinterest format, taller portrait orientation',
       '3:2': 'horizontal email/web banner format, slightly wider than tall',
       '16:9': 'wide landscape format, cinematic horizontal composition',
@@ -120,6 +142,11 @@ serve(async (req) => {
       if (brandContext.productName) {
         enhancedPrompt += `\nProduct: ${brandContext.productName}`;
       }
+    }
+    
+    // Append hard constraints at the end
+    if (imageConstraints?.hardInstructions) {
+      enhancedPrompt += `\n\n${imageConstraints.hardInstructions}`;
     }
 
     // Apply advanced prompt formula if reference image is provided

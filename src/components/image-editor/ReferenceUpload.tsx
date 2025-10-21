@@ -3,8 +3,9 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Loader2, Info } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 
 interface ReferenceUploadProps {
@@ -50,7 +51,17 @@ export function ReferenceUpload({ currentImage, description, onUpload, onRemove,
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ImageIcon className="w-4 h-4 text-brass" />
-              <h3 className="font-serif text-sm text-[#FFFCF5]">Reference Image</h3>
+              <h3 className="font-serif text-sm text-[#FFFCF5]">Add Reference Image</h3>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-3 h-3 text-aged-brass/60 hover:text-aged-brass cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p className="text-xs">Upload your product image to place it into a new scene or use it as a style/lighting reference.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
             {currentImage && (
               <span className="text-xs text-green-400">✓ Added</span>
@@ -58,7 +69,7 @@ export function ReferenceUpload({ currentImage, description, onUpload, onRemove,
           </div>
         </CollapsibleTrigger>
         
-        <CollapsibleContent>
+        <CollapsibleContent className="max-h-64 overflow-y-auto overscroll-contain">
           <div className="space-y-3 mt-3">
             {currentImage ? (
               <div className="space-y-2">

@@ -219,10 +219,10 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
               }`}
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brass to-gold/80 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[hsl(var(--aged-brass))] to-[hsl(var(--antique-gold))]/80 flex items-center justify-center">
                   <Upload className="w-6 h-6 text-white" />
                 </div>
-                <Badge variant="secondary" className="bg-gradient-to-r from-brass to-gold text-white">
+                <Badge variant="secondary" className="bg-gradient-to-r from-[hsl(var(--aged-brass))] to-[hsl(var(--antique-gold))] text-white">
                   Recommended
                 </Badge>
               </div>
@@ -240,7 +240,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
                   : "border-border/40 hover:border-border"
               }`}
             >
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brass to-gold/80 flex items-center justify-center mb-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[hsl(var(--aged-brass))] to-[hsl(var(--antique-gold))]/80 flex items-center justify-center mb-4">
                 <Globe className="w-6 h-6 text-white" />
               </div>
               <h3 className="font-semibold text-foreground mb-2">Scrape Website</h3>
@@ -257,7 +257,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
                   : "border-border/40 hover:border-border"
               }`}
             >
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brass to-gold/80 flex items-center justify-center mb-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[hsl(var(--aged-brass))] to-[hsl(var(--antique-gold))]/80 flex items-center justify-center mb-4">
                 <FileText className="w-6 h-6 text-white" />
               </div>
               <h3 className="font-semibold text-foreground mb-2">Manual Entry</h3>
@@ -342,7 +342,8 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
             <Button
               onClick={handleContinue}
               disabled={!isValid() || isProcessing}
-              className="flex-1 h-12 bg-gradient-to-r from-brass to-gold text-white hover:opacity-90 text-base"
+              variant="brassGradient"
+              className="flex-1 h-12 text-base"
             >
               {isProcessing ? "Processing..." : "Continue"}
               <ArrowRight className="ml-2 h-5 w-5" />

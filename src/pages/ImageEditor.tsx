@@ -63,6 +63,7 @@ export default function ImageEditor() {
   const [referenceImageUrl, setReferenceImageUrl] = useState<string | null>(null);
   const [referenceDescription, setReferenceDescription] = useState("");
   const [brandContext, setBrandContext] = useState<any>(null);
+  const [imageConstraints, setImageConstraints] = useState<any>(null);
   const [isUploadingReference, setIsUploadingReference] = useState(false);
   
   // Fetch brand context on mount
@@ -78,17 +79,18 @@ export default function ImageEditor() {
           .eq('id', orgId)
           .single();
 
-        // Fetch brand knowledge for voice/tone, style, and visual standards
+        // Fetch brand knowledge for voice/tone, style, visual standards, and image constraints
         const { data: brandKnowledge } = await supabase
           .from('brand_knowledge')
           .select('content, knowledge_type')
           .eq('organization_id', orgId)
           .eq('is_active', true)
-          .in('knowledge_type', ['brand_voice', 'brand_style', 'visual_standards']);
+          .in('knowledge_type', ['brand_voice', 'brand_style', 'visual_standards', 'image_constraints']);
 
         const voiceKnowledge = brandKnowledge?.find(k => k.knowledge_type === 'brand_voice');
         const styleKnowledge = brandKnowledge?.find(k => k.knowledge_type === 'brand_style');
         const visualStandards = brandKnowledge?.find(k => k.knowledge_type === 'visual_standards');
+        const constraints = brandKnowledge?.find(k => k.knowledge_type === 'image_constraints');
 
         setBrandContext({
           colors: (brandConfig?.brand_config as any)?.colors || [],
@@ -96,6 +98,10 @@ export default function ImageEditor() {
           styleKeywords: (styleKnowledge?.content as any)?.keywords || [],
           visualStandards: visualStandards?.content || null
         });
+        
+        if (constraints?.content) {
+          setImageConstraints(constraints.content);
+        }
       } catch (error) {
         console.error('Error fetching brand context:', error);
       }
@@ -990,7 +996,7 @@ export default function ImageEditor() {
           {sessionStarted && (
             <div className="flex gap-6 h-[calc(100vh-180px)] overflow-hidden">
               {/* Left Sidebar - Thumbnail Gallery */}
-              <div className="w-32 flex-shrink-0 space-y-3 overflow-y-auto">
+              <div className="w-32 flex-shrink-0 space-y-3 overflow-y-auto min-h-0 overscroll-contain">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-xs font-semibold text-[#D4CFC8] tracking-wide">SESSION</p>
                   <p className="text-xs font-bold text-brass">{progressText}</p>
@@ -1081,8 +1087,8 @@ export default function ImageEditor() {
               </div>
 
               {/* Center - Main Image Display */}
-              <div className="flex-1 min-w-0">
-                <Card className="h-full p-6 bg-[#2F2A26] border-[#3D3935] shadow-lg flex flex-col items-center justify-center overflow-auto">
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <Card className="h-full p-6 bg-[#2F2A26] border-[#3D3935] shadow-lg flex flex-col items-center justify-center overflow-y-auto">
                   {isGenerating ? (
                     <div className="text-center space-y-4">
                       <Loader2 className="w-12 h-12 text-brass animate-spin mx-auto" />
@@ -1140,7 +1146,7 @@ export default function ImageEditor() {
               </div>
 
               {/* Right Sidebar - Export Settings + Chat */}
-              <div className="w-80 flex-shrink-0 flex flex-col gap-4 overflow-y-auto min-h-0">
+              <div className="w-80 flex-shrink-0 flex flex-col gap-4 overflow-y-auto min-h-0 overscroll-contain">
                 {/* Export Settings - Compact Card */}
                 <Card className="p-4 bg-[#2F2A26] border-[#3D3935] shadow-sm">
                   <h3 className="text-xs font-semibold text-[#D4CFC8] tracking-wide mb-3">EXPORT SETTINGS</h3>

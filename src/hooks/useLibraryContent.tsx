@@ -29,11 +29,11 @@ export interface LibraryContentItem {
   finalPrompt?: string;
 }
 
-export const useLibraryContent = () => {
+export const useLibraryContent = (groupBySessions = false) => {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["library-content", user?.id],
+    queryKey: ["library-content", user?.id, groupBySessions],
     queryFn: async () => {
       if (!user) return [];
 
@@ -180,6 +180,66 @@ export const useLibraryContent = () => {
             };
           })
         );
+      }
+
+      // If grouping by sessions, aggregate generated_images
+      if (groupBySessions && generatedImages) {
+        const sessionMap = new Map<string, {
+          sessionId: string;
+          sessionName: string;
+          heroImage: string;
+          images: typeof generatedImages;
+          createdAt: Date;
+          archived: boolean;
+        }>();
+
+        generatedImages.forEach(img => {
+          const sessionId = img.session_id || img.id;
+          
+          if (!sessionMap.has(sessionId)) {
+            sessionMap.set(sessionId, {
+              sessionId,
+              sessionName: img.session_name || 'Generated Image',
+              heroImage: img.is_hero_image ? img.image_url : '',
+              images: [],
+              createdAt: new Date(img.created_at),
+              archived: img.is_archived || false
+            });
+          }
+          
+          const session = sessionMap.get(sessionId)!;
+          session.images.push(img);
+          
+          // Update hero image if this is the hero
+          if (img.is_hero_image || img.image_order === 0) {
+            session.heroImage = img.image_url;
+          }
+          
+          // Keep earliest creation date
+          const imgDate = new Date(img.created_at);
+          if (imgDate < session.createdAt) {
+            session.createdAt = imgDate;
+          }
+        });
+
+        // Convert sessions to library items
+        sessionMap.forEach(session => {
+          items.push({
+            id: session.sessionId,
+            title: session.sessionName,
+            contentType: "image-session",
+            collection: null,
+            content: session.heroImage,
+            createdAt: session.createdAt,
+            updatedAt: session.createdAt,
+            rating: null,
+            wordCount: session.images.length,
+            archived: session.archived,
+            status: "published",
+            sourceTable: "generated_images" as any,
+            imageUrl: session.heroImage,
+          });
+        });
       }
 
       // Sort all items by date (most recent first)

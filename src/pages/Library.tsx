@@ -357,7 +357,8 @@ export default function Library() {
             </div>
             <Button
               onClick={() => navigate("/create")}
-              className="bg-gradient-to-r from-brass to-brass-dark text-foreground hover:opacity-90"
+              variant="brassGradient"
+              size="lg"
             >
               <Plus className="w-4 h-4 mr-2" />
               Create New Content

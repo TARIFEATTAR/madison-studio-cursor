@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 const ASPECT_RATIOS = [
   { value: '1:1', label: 'Square (1:1)' },
   { value: '4:5', label: 'Portrait (4:5)' },
+  { value: '5:4', label: 'Etsy (5:4)' },
   { value: '2:3', label: 'Pinterest (2:3)' },
   { value: '3:2', label: 'Email/Web (3:2)' },
   { value: '16:9', label: 'Landscape (16:9)' },
@@ -14,7 +15,7 @@ const ASPECT_RATIOS = [
 ];
 
 const PLATFORM_PRESETS = [
-  { platform: 'Etsy', aspectRatio: '4:5', icon: '🛍️' },
+  { platform: 'Etsy', aspectRatio: '5:4', icon: '🛍️' },
   { platform: 'Instagram', aspectRatio: '4:5', icon: '📱' },
   { platform: 'Stories/TikTok', aspectRatio: '9:16', icon: '📹' },
   { platform: 'Pinterest', aspectRatio: '2:3', icon: '📌' },
