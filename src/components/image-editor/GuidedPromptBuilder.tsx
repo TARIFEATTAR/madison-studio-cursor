@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Wand2, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 import { 
   SHOT_TYPES, 
   LIGHTING, 
@@ -110,15 +111,27 @@ export function GuidedPromptBuilder({ onPromptGenerated, brandContext }: GuidedP
     setComponents(preset.components);
     const prompt = buildPromptFromComponents(preset.components, brandContext);
     onPromptGenerated(prompt);
+    
+    toast.success(`${preset.label} preset applied - Prompt generated!`);
   };
 
   const handleBuildPrompt = () => {
+    // Check if at least one component is selected
+    const hasComponents = Object.values(components).some(value => value !== undefined && value !== '');
+    
+    if (!hasComponents && !customDetails) {
+      toast.error("Please select at least one component (Shot Type, Environment, etc.) or add custom details");
+      return;
+    }
+    
     const finalComponents = {
       ...components,
       additionalDetails: customDetails || undefined
     };
     const prompt = buildPromptFromComponents(finalComponents, brandContext);
     onPromptGenerated(prompt);
+    
+    toast.success("Prompt generated from formula!");
   };
 
   const handleComponentChange = (key: keyof PromptComponents, value: string) => {

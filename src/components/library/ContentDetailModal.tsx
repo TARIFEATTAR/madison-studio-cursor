@@ -144,11 +144,19 @@ export function ContentDetailModal({
   
   const handleDownloadImage = () => {
     const imageUrl = getImageUrl();
-    if (!imageUrl) return;
     
-    // Check if it's a base64 data URI (old images)
-    if (imageUrl.startsWith('data:image/')) {
-      try {
+    if (!imageUrl) {
+      toast({
+        title: "Download failed",
+        description: "Image URL not found",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      // Check if it's a base64 data URI (old images)
+      if (imageUrl.startsWith('data:image/')) {
         // Convert base64 to blob and download
         const arr = imageUrl.split(',');
         const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/png';
@@ -168,29 +176,28 @@ export function ContentDetailModal({
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(blobUrl);
-      } catch (error) {
-        console.error('Failed to download base64 image:', error);
-        toast({
-          title: "Download failed",
-          description: "There was an error downloading the image.",
-          variant: "destructive"
-        });
-        return;
+      } else {
+        // Regular URL download (for storage-based images)
+        const link = document.createElement('a');
+        link.href = imageUrl;
+        link.download = `${content.title || 'image'}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       }
-    } else {
-      // Regular URL download (for storage-based images)
-      const link = document.createElement('a');
-      link.href = imageUrl;
-      link.download = `${content.title || 'image'}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      
+      toast({
+        title: "Download started",
+        description: "Your image is being downloaded.",
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: "Download failed",
+        description: error instanceof Error ? error.message : "An error occurred while downloading",
+        variant: "destructive"
+      });
     }
-    
-    toast({
-      title: "Download started",
-      description: "Your image is being downloaded.",
-    });
   };
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -423,14 +430,12 @@ export function ContentDetailModal({
 
               <Button
                 onClick={() => {
-                  if (onEditWithMadison) {
-                    onEditWithMadison(content, category);
-                  } else {
-                    setMadisonDialogOpen(true);
-                  }
+                  onEditWithMadison?.(content, category);
+                  onOpenChange(false);
                 }}
                 variant="outline"
                 size="sm"
+                disabled={!onEditWithMadison}
               >
                 <MessageSquare className="w-4 h-4 mr-2" />
                 Edit with Madison

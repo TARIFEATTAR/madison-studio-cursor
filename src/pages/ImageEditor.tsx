@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Download, Loader2, Sparkles, ArrowLeft, Save, Star, Wand2, CheckCircle, XCircle, Check, X, MessageCircle, Trash2 } from "lucide-react";
+import { Download, Loader2, Sparkles, ArrowLeft, Save, Star, Wand2, CheckCircle, XCircle, Check, X, MessageCircle, Trash2, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ReferenceUpload } from "@/components/image-editor/ReferenceUpload";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { GuidedPromptBuilder } from "@/components/image-editor/GuidedPromptBuilder";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -996,18 +997,21 @@ export default function ImageEditor() {
                 
                 {currentSession.images.map((image, index) => (
                   <div key={image.id} className="relative group">
-                    <button
-                      onClick={() => handleSetHero(image.id)}
-                      className={`relative w-full aspect-square rounded border-2 transition-all overflow-hidden hover:scale-105 ${
-                        image.isHero
-                          ? "border-brass shadow-md ring-2 ring-brass/20"
-                          : image.approvalStatus === "flagged"
-                          ? "border-green-500 ring-2 ring-green-500/20"
-                          : image.approvalStatus === "rejected"
-                          ? "border-red-500 ring-2 ring-red-500/20 opacity-50"
-                          : "border-charcoal/20 hover:border-brass/50"
-                      }`}
-                    >
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => handleSetHero(image.id)}
+                            className={`relative w-full aspect-square rounded border-2 transition-all overflow-hidden hover:scale-105 ${
+                              image.isHero
+                                ? "border-brass shadow-md ring-2 ring-brass/20"
+                                : image.approvalStatus === "flagged"
+                                ? "border-green-500 ring-2 ring-green-500/20"
+                                : image.approvalStatus === "rejected"
+                                ? "border-red-500 ring-2 ring-red-500/20 opacity-50"
+                                : "border-charcoal/20 hover:border-brass/50"
+                            }`}
+                          >
                       <img
                         src={image.imageUrl}
                         alt={`Generation ${index + 1}`}
@@ -1043,7 +1047,13 @@ export default function ImageEditor() {
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-1">
                         <p className="text-[10px] text-white text-center font-medium">{index + 1}</p>
                       </div>
-                    </button>
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">Click to view full size</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <button
                       onClick={() => handleToggleApproval(image.id)}
                       className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#252220] border border-[#3D3935] rounded-full p-1 hover:bg-[#3D3935] transition-colors z-10"
@@ -1086,10 +1096,20 @@ export default function ImageEditor() {
                           alt="Generated Product"
                           className="max-h-[450px] w-auto object-contain rounded shadow-lg"
                         />
-                        {heroImage.isHero && (
+                {heroImage.isHero && (
                           <div className="absolute top-4 right-4 bg-brass text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg">
                             <Star className="w-3 h-3 fill-white" />
                             HERO
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Info className="w-3 h-3 cursor-help ml-1" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p className="text-xs">Your main image for this session. Click thumbnails to change.</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </div>
                         )}
                         <Button
@@ -1185,8 +1205,8 @@ export default function ImageEditor() {
                 />
 
                 {/* Chat Input Card - Takes remaining space */}
-                <Card className="flex-1 p-4 bg-[#2F2A26] border-[#3D3935] shadow-sm flex flex-col min-h-0">
-                  <div className="flex items-center justify-between mb-3">
+                <Card className="flex-1 p-4 bg-[#2F2A26] border-[#3D3935] shadow-sm flex flex-col min-h-0 overflow-y-auto">
+                  <div className="flex items-center justify-between mb-3 sticky top-0 bg-[#2F2A26] z-10 pb-2">
                     <h3 className="text-xs font-semibold text-[#D4CFC8] tracking-wide">CREATE & REFINE</h3>
                     <div className="flex items-center gap-2">
                       <Label htmlFor="guided-mode" className="text-[10px] text-[#A8A39E] cursor-pointer">
@@ -1196,7 +1216,7 @@ export default function ImageEditor() {
                         id="guided-mode"
                         checked={guidedModeEnabled}
                         onCheckedChange={setGuidedModeEnabled}
-                        className="data-[state=checked]:bg-brass"
+                        className="data-[state=checked]:bg-brass data-[state=unchecked]:bg-[#3D3935] border-2 border-[#A8A39E]"
                       />
                     </div>
                   </div>
@@ -1233,25 +1253,27 @@ export default function ImageEditor() {
                         />
                         
                         {/* Quick Refinements - Compact */}
-                        <div className="flex-shrink-0">
-                          <p className="text-xs text-[#A8A39E] mb-2 font-medium">QUICK REFINEMENTS</p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {quickRefinements.map((refinement) => (
-                              <button
-                                key={refinement}
-                                onClick={() => {
-                                  setUserPrompt(refinement);
-                                  handleGenerate(refinement);
-                                }}
-                                disabled={!canGenerateMore}
-                                className="px-2 py-1 text-xs bg-[#252220] text-[#D4CFC8] border border-[#3D3935] rounded hover:bg-[#3D3935] hover:text-[#FFFCF5] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                              >
-                                <Wand2 className="w-3 h-3 inline mr-1" />
-                                {refinement}
-                              </button>
-                            ))}
+                        {heroImage && (
+                          <div className="flex-shrink-0 pt-3 border-t border-[#3D3935]">
+                            <p className="text-xs text-[#A8A39E] mb-2 font-medium">QUICK REFINEMENTS</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {quickRefinements.map((refinement) => (
+                                <button
+                                  key={refinement}
+                                  onClick={() => {
+                                    setUserPrompt(refinement);
+                                    handleGenerate(refinement);
+                                  }}
+                                  disabled={!canGenerateMore}
+                                  className="px-2 py-1 text-xs bg-[#252220] text-[#D4CFC8] border border-[#3D3935] rounded hover:bg-[#3D3935] hover:text-[#FFFCF5] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                >
+                                  <Wand2 className="w-3 h-3 inline mr-1" />
+                                  {refinement}
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </>
                     )}
                     
