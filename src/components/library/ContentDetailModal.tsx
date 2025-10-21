@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Edit2, Send, Copy, Check, FileDown, Calendar, MessageSquare } from "lucide-react";
+import { Edit2, Send, Copy, Check, FileDown, Calendar, MessageSquare, Download } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -60,6 +60,11 @@ export function ContentDetailModal({
 
   const contentType = content.content_type || content.asset_type;
   const subtypeLabel = contentType ? getContentSubtypeLabel(contentType) : null;
+  
+  // Detect if this is a visual asset (generated image)
+  const isVisualAsset = content.sourceTable === "generated_images" || 
+                        content.content_type === "visual-asset" ||
+                        content.asset_type === "visual-asset";
 
   const getContentText = () => {
     if (category === "prompt") return content.prompt_text;
@@ -67,6 +72,10 @@ export function ContentDetailModal({
     if (category === "master") return content.full_content;
     if (category === "derivative") return content.generated_content;
     return "";
+  };
+  
+  const getImageUrl = () => {
+    return content.imageUrl || content.image_url || content.content;
   };
 
   const handleEdit = () => {
@@ -116,13 +125,34 @@ export function ContentDetailModal({
   };
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(getContentText());
+    if (isVisualAsset) {
+      await navigator.clipboard.writeText(getImageUrl());
+      toast({
+        title: "Image URL copied",
+        description: "Image URL has been copied to your clipboard.",
+      });
+    } else {
+      await navigator.clipboard.writeText(getContentText());
+      toast({
+        title: "Copied to clipboard",
+        description: "Content has been copied to your clipboard.",
+      });
+    }
     setIsCopied(true);
-    toast({
-      title: "Copied to clipboard",
-      description: "Content has been copied to your clipboard.",
-    });
     setTimeout(() => setIsCopied(false), 2000);
+  };
+  
+  const handleDownloadImage = () => {
+    const link = document.createElement('a');
+    link.href = getImageUrl();
+    link.download = `${content.title || 'image'}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast({
+      title: "Download started",
+      description: "Your image is being downloaded.",
+    });
   };
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -251,7 +281,39 @@ export function ContentDetailModal({
 
         <div className="space-y-4 mt-6">
           {/* Content Display/Edit */}
-          {isEditing ? (
+          {isVisualAsset && !isEditing ? (
+            <div className="space-y-4">
+              <div className="bg-muted/30 rounded-lg p-6 border border-border/40">
+                <img 
+                  src={getImageUrl()} 
+                  alt={content.title || "Generated image"}
+                  className="w-full h-auto rounded-lg"
+                />
+              </div>
+              
+              {/* Image Metadata */}
+              <div className="bg-muted/20 rounded-lg p-4 border border-border/30 space-y-2 text-sm">
+                {content.final_prompt && (
+                  <div>
+                    <span className="font-medium text-muted-foreground">Prompt:</span>
+                    <p className="text-foreground mt-1">{content.final_prompt}</p>
+                  </div>
+                )}
+                {content.aspect_ratio && (
+                  <div>
+                    <span className="font-medium text-muted-foreground">Aspect Ratio:</span>
+                    <span className="ml-2 text-foreground">{content.aspect_ratio}</span>
+                  </div>
+                )}
+                {content.goal_type && (
+                  <div>
+                    <span className="font-medium text-muted-foreground">Goal:</span>
+                    <span className="ml-2 text-foreground capitalize">{content.goal_type}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : isEditing ? (
             <div className="space-y-3">
               <Textarea
                 ref={textareaRef}
@@ -284,17 +346,27 @@ export function ContentDetailModal({
           {/* Action Buttons */}
           {!isEditing && (
             <div className="flex items-center gap-2 pt-4 border-t border-border/40">
-              <Button onClick={handleEdit} variant="outline" size="sm">
-                <Edit2 className="w-4 h-4 mr-2" />
-                Edit
-              </Button>
+              {!isVisualAsset && (
+                <Button onClick={handleEdit} variant="outline" size="sm">
+                  <Edit2 className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
+              )}
+              
+              {isVisualAsset ? (
+                <Button onClick={handleDownloadImage} variant="outline" size="sm">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Image
+                </Button>
+              ) : null}
+              
               <Button onClick={handleCopy} variant="outline" size="sm">
                 {isCopied ? (
                   <Check className="w-4 h-4 mr-2" />
                 ) : (
                   <Copy className="w-4 h-4 mr-2" />
                 )}
-                {isCopied ? "Copied!" : "Copy"}
+                {isCopied ? "Copied!" : isVisualAsset ? "Copy URL" : "Copy"}
               </Button>
 
               {onSchedule && (

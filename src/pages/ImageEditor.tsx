@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Download, Loader2, Sparkles, ArrowLeft, Save, Star, Wand2, CheckCircle, XCircle, Check, X, MessageCircle } from "lucide-react";
+import { Download, Loader2, Sparkles, ArrowLeft, Save, Star, Wand2, CheckCircle, XCircle, Check, X, MessageCircle, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
@@ -310,6 +310,30 @@ export default function ImageEditor() {
         return img;
       })
     }));
+  };
+
+  const handleDeleteImage = async (imageId: string) => {
+    if (!confirm("Delete this image? This cannot be undone.")) return;
+    
+    try {
+      // Remove from session state
+      setCurrentSession(prev => ({
+        ...prev,
+        images: prev.images.filter(img => img.id !== imageId)
+      }));
+      
+      // Delete from database
+      const { error } = await supabase
+        .from("generated_images")
+        .delete()
+        .eq('id', imageId);
+      
+      if (error) throw error;
+      
+      toast.success("Image deleted from session");
+    } catch (error: any) {
+      toast.error("Error deleting image: " + error.message);
+    }
   };
 
   const handleSaveSession = async () => {
@@ -642,9 +666,9 @@ export default function ImageEditor() {
 
             {/* Session Tab */}
             <TabsContent value="session" className="flex-1 p-4 m-0 overflow-auto">
-              <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                 {currentSession.images.map((image, index) => (
-                  <div key={image.id} className="relative">
+                  <div key={image.id} className="relative group">
                     <button
                       onClick={() => handleSetHero(image.id)}
                       className={`relative w-full aspect-square rounded border-2 overflow-hidden ${
@@ -662,6 +686,18 @@ export default function ImageEditor() {
                         alt={`${index + 1}`}
                         className="w-full h-full object-cover"
                       />
+                      
+                      {/* Delete Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteImage(image.id);
+                        }}
+                        className="absolute top-2 left-2 p-1.5 rounded-full bg-black/60 hover:bg-red-600/90 backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 z-20"
+                      >
+                        <Trash2 className="w-3 h-3 text-white" />
+                      </button>
+                      
                       {image.isHero && (
                         <div className="absolute top-1 right-1 bg-brass text-white rounded-full p-1">
                           <Star className="w-3 h-3 fill-white" />
@@ -957,7 +993,7 @@ export default function ImageEditor() {
                 </div>
                 
                 {currentSession.images.map((image, index) => (
-                  <div key={image.id} className="relative">
+                  <div key={image.id} className="relative group">
                     <button
                       onClick={() => handleSetHero(image.id)}
                       className={`relative w-full aspect-square rounded border-2 transition-all overflow-hidden hover:scale-105 ${
@@ -975,6 +1011,18 @@ export default function ImageEditor() {
                         alt={`Generation ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
+                      
+                      {/* Delete Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteImage(image.id);
+                        }}
+                        className="absolute top-2 left-2 p-1.5 rounded-full bg-black/60 hover:bg-red-600/90 backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 z-20"
+                      >
+                        <Trash2 className="w-4 h-4 text-white" />
+                      </button>
+                      
                       {image.isHero && (
                         <div className="absolute top-1 right-1 bg-brass text-white rounded-full p-1">
                           <Star className="w-3 h-3 fill-white" />

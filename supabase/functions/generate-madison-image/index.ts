@@ -88,6 +88,19 @@ serve(async (req) => {
     // Enhance prompt with brand context (works for any business vertical)
     let enhancedPrompt = prompt;
     
+    // Add aspect ratio instructions to guide NanoBanana
+    const aspectRatioInstructions: Record<string, string> = {
+      '1:1': 'square composition with equal width and height',
+      '4:5': 'vertical portrait orientation, slightly taller than wide',
+      '16:9': 'wide landscape format, cinematic horizontal composition',
+      '9:16': 'tall vertical format, mobile-friendly portrait orientation',
+      '21:9': 'ultra-wide cinematic format, expansive landscape composition'
+    };
+    
+    if (aspectRatio && aspectRatioInstructions[aspectRatio]) {
+      enhancedPrompt = `Create a ${aspectRatioInstructions[aspectRatio]}. ${enhancedPrompt}`;
+    }
+    
     if (brandContext) {
       // Only add brand context if it exists - system works for ANY business
       if (brandContext.colors && brandContext.colors.length > 0) {
