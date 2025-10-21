@@ -42,7 +42,7 @@ const PROMPT_FORMULA_GUIDE = {
 
 const QUICK_PRESETS = [
   { id: 'hero', label: 'Hero Shot', icon: Camera, components: { shotType: SHOT_TYPES.PRODUCT.HERO, environment: ENVIRONMENTS.SURFACES.MARBLE, lighting: LIGHTING.STUDIO.THREE_POINT } },
-  { id: 'lifestyle', label: 'Lifestyle', icon: Palette, components: { shotType: SHOT_TYPES.PRODUCT.LIFESTYLE, environment: ENVIRONMENTS.SETTINGS.VANITY, lighting: LIGHTING.NATURAL.WINDOW } }
+  { id: 'lifestyle', label: 'Lifestyle', icon: Palette, components: { shotType: SHOT_TYPES.PRODUCT.LIFESTYLE, environment: ENVIRONMENTS.CONTEXTS.VANITY, lighting: LIGHTING.NATURAL.SIDE_LIT } }
 ];
 
 export function GuidedPromptBuilder({ onPromptGenerated, brandContext, hasReferenceImage = false }: GuidedPromptBuilderProps) {
@@ -138,7 +138,7 @@ export function GuidedPromptBuilder({ onPromptGenerated, brandContext, hasRefere
               <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] text-xs"><SelectValue placeholder="Choose lighting..." /></SelectTrigger>
               <SelectContent>
                 <SelectItem value={LIGHTING.NATURAL.GOLDEN_HOUR}>Golden Hour</SelectItem>
-                <SelectItem value={LIGHTING.NATURAL.WINDOW}>Soft Window Light</SelectItem>
+                <SelectItem value={LIGHTING.NATURAL.SIDE_LIT}>Soft Window Light</SelectItem>
                 <SelectItem value={LIGHTING.STUDIO.THREE_POINT}>Studio Three-Point</SelectItem>
               </SelectContent>
             </Select>

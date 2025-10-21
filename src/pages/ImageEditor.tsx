@@ -815,6 +815,7 @@ export default function ImageEditor() {
                         toast.success("Prompt built!");
                       }}
                       brandContext={brandContext}
+                      hasReferenceImage={!!referenceImageUrl}
                     />
                   ) : (
                     <Textarea
@@ -987,7 +988,7 @@ export default function ImageEditor() {
 
           {/* Main Layout: 3-Column Layout - Gallery + Image + Chat Sidebar */}
           {sessionStarted && (
-            <div className="flex gap-6 h-[calc(100vh-180px)]">
+            <div className="flex gap-6 h-[calc(100vh-180px)] overflow-hidden">
               {/* Left Sidebar - Thumbnail Gallery */}
               <div className="w-32 flex-shrink-0 space-y-3 overflow-y-auto">
                 <div className="flex items-center justify-between mb-3">
@@ -1139,7 +1140,7 @@ export default function ImageEditor() {
               </div>
 
               {/* Right Sidebar - Export Settings + Chat */}
-              <div className="w-80 flex-shrink-0 flex flex-col gap-4">
+              <div className="w-80 flex-shrink-0 flex flex-col gap-4 overflow-y-auto min-h-0">
                 {/* Export Settings - Compact Card */}
                 <Card className="p-4 bg-[#2F2A26] border-[#3D3935] shadow-sm">
                   <h3 className="text-xs font-semibold text-[#D4CFC8] tracking-wide mb-3">EXPORT SETTINGS</h3>
@@ -1231,6 +1232,7 @@ export default function ImageEditor() {
                             toast.success("Prompt built from formula!");
                           }}
                           brandContext={brandContext}
+                          hasReferenceImage={!!referenceImageUrl}
                         />
                       </div>
                     ) : (
