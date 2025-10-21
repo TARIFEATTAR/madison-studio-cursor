@@ -143,9 +143,19 @@ export function GuidedPromptBuilder({ onPromptGenerated, brandContext }: GuidedP
     <div className="space-y-4">
       {/* Quick Presets */}
       <div className="space-y-2">
-        <Label className="text-xs text-[#D4CFC8] font-semibold tracking-wide">
-          QUICK PRESETS
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label className="text-xs text-[#D4CFC8] font-semibold tracking-wide">
+            QUICK PRESETS
+          </Label>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => window.open('/prompt-formula-guide', '_blank')}
+            className="text-[10px] text-brass hover:text-brass-glow h-6 px-2"
+          >
+            📋 View Prompt Formula
+          </Button>
+        </div>
         <div className="grid grid-cols-2 gap-2">
           {QUICK_PRESETS.map((preset) => (
             <Button
