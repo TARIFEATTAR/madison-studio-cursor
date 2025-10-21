@@ -103,6 +103,14 @@ export function EditorialAssistantPanel({ onClose, initialContent, sessionContex
     }
   }, []);
 
+  // Ensure body scroll is never locked
+  useEffect(() => {
+    document.body.style.overflow = 'auto';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
+
   // Don't auto-populate - let user initiate the conversation
   useEffect(() => {
     // Removed auto-population to match new UX
@@ -156,6 +164,22 @@ export function EditorialAssistantPanel({ onClose, initialContent, sessionContex
     setIsGenerating(true);
 
     try {
+      // Fetch visual standards from brand knowledge if in Image Studio
+      let visualStandards = sessionContext?.visualStandards;
+      if (sessionContext?.isImageStudio && !visualStandards && currentOrganizationId) {
+        const { data: brandKnowledge } = await supabase
+          .from('brand_knowledge')
+          .select('content')
+          .eq('organization_id', currentOrganizationId)
+          .eq('knowledge_type', 'visual_standards')
+          .eq('is_active', true)
+          .maybeSingle();
+        
+        if (brandKnowledge) {
+          visualStandards = brandKnowledge.content;
+        }
+      }
+
       // Build studio context if in Image Studio
       const studioContext = sessionContext?.isImageStudio ? `
 ━━━ MADISON IMAGE STUDIO CONTEXT ━━━
@@ -174,41 +198,41 @@ Previous Prompts in This Session:
 ${sessionContext.allPrompts.map((p, i) => `  ${i + 1}. "${p}"`).join('\n')}
 ` : ''}
 
-${sessionContext.visualStandards ? `
+${visualStandards ? `
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    BRAND VISUAL STANDARDS                        ║
 ║           (MANDATORY - Follow these rules exactly)               ║
 ╚══════════════════════════════════════════════════════════════════╝
 
 ━━━ GOLDEN RULE ━━━
-${sessionContext.visualStandards.golden_rule || 'No golden rule defined'}
+${visualStandards.golden_rule || 'No golden rule defined'}
 
 ━━━ MANDATORY COLOR PALETTE ━━━
-${sessionContext.visualStandards.color_palette?.map((c: any) => 
+${visualStandards.color_palette?.map((c: any) => 
   `  • ${c.name} (${c.hex}): ${c.usage}`
 ).join('\n') || 'No color palette defined'}
 
 ━━━ LIGHTING MANDATES ━━━
-${sessionContext.visualStandards.lighting_mandates || 'No lighting mandates'}
+${visualStandards.lighting_mandates || 'No lighting mandates'}
 
 ━━━ APPROVED PROMPT TEMPLATES ━━━
-${sessionContext.visualStandards.templates?.map((t: any, i: number) => 
+${visualStandards.templates?.map((t: any, i: number) => 
   `  ${i + 1}. ${t.name} (${t.aspectRatio})\n     Template: "${t.prompt}"`
 ).join('\n\n') || 'No templates defined'}
 
 ━━━ FORBIDDEN ELEMENTS ━━━
-${sessionContext.visualStandards.forbidden_elements?.map((e: string) => 
+${visualStandards.forbidden_elements?.map((e: string) => 
   `  ✗ ${e}`
 ).join('\n') || 'No forbidden elements'}
 
 ━━━ APPROVED PROPS ━━━
-${sessionContext.visualStandards.approved_props?.map((p: string) => 
+${visualStandards.approved_props?.map((p: string) => 
   `  ✓ ${p}`
 ).join('\n') || 'No approved props'}
 
 FULL VISUAL STANDARDS DOCUMENT:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${sessionContext.visualStandards.raw_document || ''}
+${visualStandards.raw_document || ''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 CRITICAL MADISON INSTRUCTIONS:

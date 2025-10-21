@@ -215,7 +215,8 @@ export default function Library() {
       const itemsByTable = {
         master_content: [] as string[],
         outputs: [] as string[],
-        derivative_assets: [] as string[]
+        derivative_assets: [] as string[],
+        generated_images: [] as string[]
       };
 
       selectedItems.forEach(id => {
@@ -252,6 +253,15 @@ export default function Library() {
             .from('derivative_assets')
             .delete()
             .in('id', itemsByTable.derivative_assets)
+        );
+      }
+
+      if (itemsByTable.generated_images.length > 0) {
+        deletePromises.push(
+          supabase
+            .from('generated_images')
+            .delete()
+            .in('id', itemsByTable.generated_images)
         );
       }
 
