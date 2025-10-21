@@ -9,11 +9,21 @@ interface ImagePreviewProps {
 }
 
 export function ImagePreview({ images, isGenerating, referenceImage }: ImagePreviewProps) {
-  const handleDownload = (imageUrl: string) => {
-    const link = document.createElement('a');
-    link.href = imageUrl;
-    link.download = `madison-image-${Date.now()}.png`;
-    link.click();
+  const handleDownload = async (imageUrl: string) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `madison-image-${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+    }
   };
 
   return (
@@ -48,17 +58,17 @@ export function ImagePreview({ images, isGenerating, referenceImage }: ImagePrev
               <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
                 <Button
                   size="sm"
-                  variant="secondary"
+                  variant="brass"
                   onClick={() => handleDownload(img.url)}
-                  className="bg-parchment-white/95 backdrop-blur-sm hover:bg-brass/20"
+                  className="shadow-lg"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Download
                 </Button>
                 <Button 
                   size="sm" 
-                  variant="secondary"
-                  className="bg-parchment-white/95 backdrop-blur-sm hover:bg-brass/20"
+                  variant="brass"
+                  className="shadow-lg"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   Save to Library
