@@ -29,11 +29,25 @@ export function ImageSessionCard({
       onClick={onClick}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-[#252220]">
-        <img
-          src={heroImageUrl}
-          alt={sessionName}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
+        {heroImageUrl ? (
+          <img
+            src={heroImageUrl}
+            alt={sessionName}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => {
+              e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23252220" width="100" height="100"/%3E%3C/svg%3E';
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-charcoal/10">
+            <ImageIcon className="w-12 h-12 text-warm-gray/30" />
+          </div>
+        )}
+        <div className="absolute top-2 left-2">
+          <Badge className="bg-ink-black/90 text-aged-brass border border-aged-brass/30">
+            Session
+          </Badge>
+        </div>
         <div className="absolute top-2 right-2 flex gap-2">
           {archived && (
             <Badge variant="secondary" className="bg-charcoal/80 text-parchment-white">

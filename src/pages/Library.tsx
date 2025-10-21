@@ -249,64 +249,76 @@ export default function Library() {
       
       // Delete derivative assets first (they may reference master_content)
       if (itemsByTable.derivative_assets.length > 0) {
-        const { error } = await supabase
+        console.log('[Library] Deleting derivative_assets:', itemsByTable.derivative_assets);
+        const { error, data } = await supabase
           .from('derivative_assets')
           .delete()
-          .in('id', itemsByTable.derivative_assets);
+          .in('id', itemsByTable.derivative_assets)
+          .select();
         
         if (error) {
-          console.error('Error deleting derivatives:', error);
+          console.error('[Library] Error deleting derivatives:', error);
           deletionResults.failed += itemsByTable.derivative_assets.length;
-          deletionResults.errors.push(`Derivatives: ${error.message}`);
+          deletionResults.errors.push(`Derivatives: ${error.message} (Code: ${error.code})`);
         } else {
+          console.log('[Library] Deleted derivatives:', data);
           deletionResults.successful += itemsByTable.derivative_assets.length;
         }
       }
 
       // Delete master content (CASCADE will handle related derivatives and scheduled content)
       if (itemsByTable.master_content.length > 0) {
-        const { error } = await supabase
+        console.log('[Library] Deleting master_content:', itemsByTable.master_content);
+        const { error, data } = await supabase
           .from('master_content')
           .delete()
-          .in('id', itemsByTable.master_content);
+          .in('id', itemsByTable.master_content)
+          .select();
         
         if (error) {
-          console.error('Error deleting master content:', error);
+          console.error('[Library] Error deleting master content:', error);
           deletionResults.failed += itemsByTable.master_content.length;
-          deletionResults.errors.push(`Master content: ${error.message}`);
+          deletionResults.errors.push(`Master content: ${error.message} (Code: ${error.code})`);
         } else {
+          console.log('[Library] Deleted master content:', data);
           deletionResults.successful += itemsByTable.master_content.length;
         }
       }
 
       // Delete outputs
       if (itemsByTable.outputs.length > 0) {
-        const { error } = await supabase
+        console.log('[Library] Deleting outputs:', itemsByTable.outputs);
+        const { error, data } = await supabase
           .from('outputs')
           .delete()
-          .in('id', itemsByTable.outputs);
+          .in('id', itemsByTable.outputs)
+          .select();
         
         if (error) {
-          console.error('Error deleting outputs:', error);
+          console.error('[Library] Error deleting outputs:', error);
           deletionResults.failed += itemsByTable.outputs.length;
-          deletionResults.errors.push(`Outputs: ${error.message}`);
+          deletionResults.errors.push(`Outputs: ${error.message} (Code: ${error.code})`);
         } else {
+          console.log('[Library] Deleted outputs:', data);
           deletionResults.successful += itemsByTable.outputs.length;
         }
       }
 
       // Delete generated images
       if (itemsByTable.generated_images.length > 0) {
-        const { error } = await supabase
+        console.log('[Library] Deleting generated_images:', itemsByTable.generated_images);
+        const { error, data } = await supabase
           .from('generated_images')
           .delete()
-          .in('id', itemsByTable.generated_images);
+          .in('id', itemsByTable.generated_images)
+          .select();
         
         if (error) {
-          console.error('Error deleting images:', error);
+          console.error('[Library] Error deleting images:', error);
           deletionResults.failed += itemsByTable.generated_images.length;
-          deletionResults.errors.push(`Images: ${error.message}`);
+          deletionResults.errors.push(`Images: ${error.message} (Code: ${error.code})`);
         } else {
+          console.log('[Library] Deleted images:', data);
           deletionResults.successful += itemsByTable.generated_images.length;
         }
       }
@@ -508,13 +520,27 @@ export default function Library() {
                     archived={content.archived}
                     onClick={async () => {
                       // Fetch all images for this session
-                      const { data: images } = await supabase
+                      console.log('[Library] Fetching session images for:', content.id);
+                      const { data: images, error } = await supabase
                         .from('generated_images')
                         .select('*')
                         .eq('session_id', content.id)
+                        .eq('saved_to_library', true)
                         .order('image_order', { ascending: true });
                       
-                      if (images) {
+                      if (error) {
+                        console.error('[Library] Error fetching session images:', error);
+                        toast({
+                          title: "Error loading session",
+                          description: error.message,
+                          variant: "destructive"
+                        });
+                        return;
+                      }
+                      
+                      console.log('[Library] Fetched images:', images?.length || 0);
+                      
+                      if (images && images.length > 0) {
                         setSelectedSession({
                           sessionId: content.id,
                           sessionName: content.title,
@@ -526,6 +552,12 @@ export default function Library() {
                             isHero: img.is_hero_image || false
                           })),
                           archived: content.archived
+                        });
+                      } else {
+                        toast({
+                          title: "No images found",
+                          description: "This session doesn't have any saved images",
+                          variant: "destructive"
                         });
                       }
                     }}

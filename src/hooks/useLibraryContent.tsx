@@ -200,7 +200,7 @@ export const useLibraryContent = (groupBySessions = false) => {
             sessionMap.set(sessionId, {
               sessionId,
               sessionName: img.session_name || 'Generated Image',
-              heroImage: img.is_hero_image ? img.image_url : '',
+              heroImage: '',
               images: [],
               createdAt: new Date(img.created_at),
               archived: img.is_archived || false
@@ -210,8 +210,13 @@ export const useLibraryContent = (groupBySessions = false) => {
           const session = sessionMap.get(sessionId)!;
           session.images.push(img);
           
-          // Update hero image if this is the hero
-          if (img.is_hero_image || img.image_order === 0) {
+          // Update hero image - prioritize hero flag, then first image (order 0), then fallback to first in array
+          if (img.is_hero_image) {
+            session.heroImage = img.image_url;
+          } else if (img.image_order === 0 && !session.heroImage) {
+            session.heroImage = img.image_url;
+          } else if (!session.heroImage) {
+            // Fallback: use first image if no hero defined yet
             session.heroImage = img.image_url;
           }
           
