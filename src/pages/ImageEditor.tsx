@@ -20,6 +20,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { GuidedPromptBuilder } from "@/components/image-editor/GuidedPromptBuilder";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -741,25 +742,54 @@ export default function ImageEditor() {
             {/* Create Tab */}
             <TabsContent value="create" className="flex-1 p-4 m-0 overflow-auto">
               <div className="space-y-4">
-                {/* Export Settings */}
+                {/* Reference Upload - Moved to top */}
+                <ReferenceUpload
+                  currentImage={referenceImageUrl}
+                  description={referenceDescription}
+                  onUpload={handleReferenceUpload}
+                  onRemove={handleReferenceRemove}
+                  isUploading={isUploadingReference}
+                />
+
+                {/* Create & Refine with consolidated settings */}
                 <Card className="p-4 bg-[#2F2A26] border-[#3D3935]">
-                  <h3 className="text-xs font-semibold text-[#D4CFC8] tracking-wide mb-3">EXPORT SETTINGS</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <Label className="text-xs text-[#A8A39E] mb-1.5 block">Aspect Ratio</Label>
-                      <Select value={aspectRatio} onValueChange={setAspectRatio}>
-                        <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1:1">Square (1:1)</SelectItem>
-                          <SelectItem value="4:5">Portrait (4:5)</SelectItem>
-                          <SelectItem value="16:9">Landscape (16:9)</SelectItem>
-                          <SelectItem value="9:16">Vertical (9:16)</SelectItem>
-                          <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
-                        </SelectContent>
-                      </Select>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xs font-semibold text-[#D4CFC8] tracking-wide">CREATE & REFINE</h3>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="guided-mobile" className="text-xs text-[#A8A39E]">Guided</Label>
+                      <Switch
+                        id="guided-mobile"
+                        checked={guidedModeEnabled}
+                        onCheckedChange={setGuidedModeEnabled}
+                        className="data-[state=checked]:bg-brass"
+                      />
                     </div>
+                  </div>
+                  
+                  {guidedModeEnabled ? (
+                    <div className="mb-4">
+                      <GuidedPromptBuilder
+                        onPromptGenerated={(prompt) => {
+                          setUserPrompt(prompt);
+                          toast.success("Prompt built!");
+                        }}
+                        brandContext={brandContext}
+                        hasReferenceImage={!!referenceImageUrl}
+                      />
+                    </div>
+                  ) : (
+                    <Textarea
+                      value={userPrompt}
+                      onChange={(e) => setUserPrompt(e.target.value)}
+                      placeholder="Describe your image..."
+                      disabled={!canGenerateMore}
+                      className="resize-none bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E] min-h-[100px] mb-4"
+                    />
+                  )}
+                  
+                  {/* Output & Save Settings */}
+                  <div className="space-y-3 mb-4 pt-3 border-t border-[#3D3935]">
+                    <h4 className="text-xs font-semibold text-[#D4CFC8] tracking-wide">OUTPUT & SAVE</h4>
                     
                     <div>
                       <Label className="text-xs text-[#A8A39E] mb-1.5 block">Format</Label>
@@ -789,51 +819,37 @@ export default function ImageEditor() {
                       </Select>
                     </div>
                   </div>
-                </Card>
-
-                {/* Reference Upload */}
-                <ReferenceUpload
-                  currentImage={referenceImageUrl}
-                  description={referenceDescription}
-                  onUpload={handleReferenceUpload}
-                  onRemove={handleReferenceRemove}
-                  isUploading={isUploadingReference}
-                />
-
-                {/* Prompt Input */}
-                <Card className="p-4 bg-[#2F2A26] border-[#3D3935]">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-xs font-semibold text-[#D4CFC8] tracking-wide">CREATE</h3>
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor="guided-mobile" className="text-xs text-[#A8A39E]">Guided</Label>
-                      <Switch
-                        id="guided-mobile"
-                        checked={guidedModeEnabled}
-                        onCheckedChange={setGuidedModeEnabled}
-                        className="data-[state=checked]:bg-brass"
-                      />
-                    </div>
-                  </div>
                   
-                  {guidedModeEnabled ? (
-                    <GuidedPromptBuilder
-                      onPromptGenerated={(prompt) => {
-                        setUserPrompt(prompt);
-                        toast.success("Prompt built!");
-                      }}
-                      brandContext={brandContext}
-                      hasReferenceImage={!!referenceImageUrl}
-                    />
-                  ) : (
-                    <Textarea
-                      value={userPrompt}
-                      onChange={(e) => setUserPrompt(e.target.value)}
-                      placeholder="Describe your image..."
-                      disabled={!canGenerateMore}
-                      className="resize-none bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E] min-h-[100px] mb-3"
-                    />
-                  )}
+                  {/* Advanced Settings - Collapsible */}
+                  <Collapsible className="mb-4">
+                    <CollapsibleTrigger className="flex items-center justify-between w-full py-2 text-xs font-semibold text-[#D4CFC8] tracking-wide hover:text-brass transition-colors">
+                      ADVANCED
+                      <span className="text-[#A8A39E]">▼</span>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-3 space-y-2">
+                      <div>
+                        <Label className="text-xs text-[#A8A39E] mb-1.5 block">Aspect Ratio</Label>
+                        <Select value={aspectRatio} onValueChange={setAspectRatio}>
+                          <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1:1">Square (1:1)</SelectItem>
+                            <SelectItem value="4:5">Portrait (4:5)</SelectItem>
+                            <SelectItem value="5:4">Etsy (5:4)</SelectItem>
+                            <SelectItem value="16:9">Landscape (16:9)</SelectItem>
+                            <SelectItem value="9:16">Vertical (9:16)</SelectItem>
+                            <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[10px] text-[#A8A39E] mt-1.5 leading-relaxed">
+                          Guides composition but not a hard crop. For best results, describe your desired framing in the prompt.
+                        </p>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
                   
+                  {/* Generate Button */}
                   <div className="space-y-2">
                     <div className="text-xs text-[#A8A39E] text-center">
                       <span className={canGenerateMore ? "text-brass font-semibold" : "text-orange-400 font-semibold"}>
@@ -1146,64 +1162,9 @@ export default function ImageEditor() {
                 </Card>
               </div>
 
-              {/* Right Sidebar - Export Settings + Chat */}
+              {/* Right Sidebar - Reference + Create & Refine */}
               <div className="w-80 flex-shrink-0 flex flex-col gap-4 overflow-y-auto min-h-0 overscroll-contain">
-                {/* Export Settings - Compact Card */}
-                <Card className="p-4 bg-[#2F2A26] border-[#3D3935] shadow-sm">
-                  <h3 className="text-xs font-semibold text-[#D4CFC8] tracking-wide mb-3">EXPORT SETTINGS</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <Label className="text-xs text-[#A8A39E] mb-1.5 block">Aspect Ratio</Label>
-                      <Select value={aspectRatio} onValueChange={setAspectRatio}>
-                        <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1:1">Square (1:1)</SelectItem>
-                          <SelectItem value="4:5">Portrait (4:5)</SelectItem>
-                          <SelectItem value="16:9">Landscape (16:9)</SelectItem>
-                          <SelectItem value="9:16">Vertical (9:16)</SelectItem>
-                          <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div>
-                      <Label className="text-xs text-[#A8A39E] mb-1.5 block">Format</Label>
-                      <Select value={outputFormat} onValueChange={(value: "png" | "jpeg" | "webp") => setOutputFormat(value)}>
-                        <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="png">PNG</SelectItem>
-                          <SelectItem value="jpeg">JPEG</SelectItem>
-                          <SelectItem value="webp">WebP</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div>
-                      <Label className="text-xs text-[#A8A39E] mb-1.5 block">Save to Library</Label>
-                      <Select value={libraryCategory} onValueChange={(v) => setLibraryCategory(v as any)}>
-                        <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="content">Content Library</SelectItem>
-                          <SelectItem value="marketplace">Marketplace Library</SelectItem>
-                          <SelectItem value="both">Both Libraries</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <p className="text-[10px] text-[#A8A39E] mt-1 leading-tight">
-                        {libraryCategory === "content" && "For social media & content"}
-                        {libraryCategory === "marketplace" && "For product listings"}
-                        {libraryCategory === "both" && "Save to both libraries"}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-                
-                {/* Reference Image Upload */}
+                {/* Reference Image Upload - Moved to top */}
                 <ReferenceUpload
                   currentImage={referenceImageUrl}
                   description={referenceDescription}
@@ -1212,13 +1173,13 @@ export default function ImageEditor() {
                   isUploading={isUploadingReference}
                 />
 
-                {/* Chat Input Card - Takes remaining space */}
-                <Card className="flex-1 p-4 bg-[#2F2A26] border-[#3D3935] shadow-sm flex flex-col min-h-0 overflow-y-auto">
-                  <div className="flex items-center justify-between mb-3 sticky top-0 bg-[#2F2A26] z-10 pb-2">
+                {/* Create & Refine Card - Consolidated */}
+                <Card className="p-4 bg-[#2F2A26] border-[#3D3935] shadow-sm flex flex-col">
+                  <div className="flex items-center justify-between mb-3">
                     <h3 className="text-xs font-semibold text-[#D4CFC8] tracking-wide">CREATE & REFINE</h3>
                     <div className="flex items-center gap-2">
                       <Label htmlFor="guided-mode" className="text-[10px] text-[#A8A39E] cursor-pointer">
-                        Guided Mode
+                        Guided
                       </Label>
                       <Switch
                         id="guided-mode"
@@ -1231,8 +1192,8 @@ export default function ImageEditor() {
                   
                   <div className="flex-1 flex flex-col gap-3 min-h-0">
                     {guidedModeEnabled ? (
-                      /* Guided Mode - Formula-based builder */
-                      <div className="flex-1 overflow-y-auto pr-2">
+                      /* Guided Mode - Formula-based builder with internal scrolling */
+                      <div className="flex-1 min-h-0 overflow-y-auto pr-1">
                         <GuidedPromptBuilder
                           onPromptGenerated={(prompt) => {
                             setUserPrompt(prompt);
@@ -1286,6 +1247,70 @@ export default function ImageEditor() {
                       </>
                     )}
                     
+                    {/* Output & Save Settings */}
+                    <div className="flex-shrink-0 space-y-3 pt-3 border-t border-[#3D3935]">
+                      <h4 className="text-xs font-semibold text-[#D4CFC8] tracking-wide">OUTPUT & SAVE</h4>
+                      
+                      <div>
+                        <Label className="text-xs text-[#A8A39E] mb-1.5 block">Format</Label>
+                        <Select value={outputFormat} onValueChange={(value: "png" | "jpeg" | "webp") => setOutputFormat(value)}>
+                          <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="png">PNG</SelectItem>
+                            <SelectItem value="jpeg">JPEG</SelectItem>
+                            <SelectItem value="webp">WebP</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label className="text-xs text-[#A8A39E] mb-1.5 block">Save to Library</Label>
+                        <Select value={libraryCategory} onValueChange={(v) => setLibraryCategory(v as any)}>
+                          <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="content">Content Library</SelectItem>
+                            <SelectItem value="marketplace">Marketplace Library</SelectItem>
+                            <SelectItem value="both">Both Libraries</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    
+                    {/* Advanced Settings - Collapsible */}
+                    <div className="flex-shrink-0">
+                      <Collapsible>
+                        <CollapsibleTrigger className="flex items-center justify-between w-full py-2 text-xs font-semibold text-[#D4CFC8] tracking-wide hover:text-brass transition-colors">
+                          ADVANCED
+                          <span className="text-[#A8A39E]">▼</span>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="pt-3 space-y-2">
+                          <div>
+                            <Label className="text-xs text-[#A8A39E] mb-1.5 block">Aspect Ratio</Label>
+                            <Select value={aspectRatio} onValueChange={setAspectRatio}>
+                              <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1:1">Square (1:1)</SelectItem>
+                                <SelectItem value="4:5">Portrait (4:5)</SelectItem>
+                                <SelectItem value="5:4">Etsy (5:4)</SelectItem>
+                                <SelectItem value="16:9">Landscape (16:9)</SelectItem>
+                                <SelectItem value="9:16">Vertical (9:16)</SelectItem>
+                                <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <p className="text-[10px] text-[#A8A39E] mt-1.5 leading-relaxed">
+                              Guides composition but not a hard crop. For best results, describe your desired framing in the prompt.
+                            </p>
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    </div>
+                    
                     {/* Generate Button + Progress */}
                     <div className="flex-shrink-0 space-y-2">
                       <div className="flex items-center justify-between text-xs">
@@ -1311,7 +1336,7 @@ export default function ImageEditor() {
                         ) : (
                           <>
                             <Sparkles className="w-4 h-4 mr-2" />
-                            {currentSession.images.length === 0 ? "Generate" : "Generate"}
+                            Generate
                           </>
                         )}
                       </Button>
@@ -1321,7 +1346,7 @@ export default function ImageEditor() {
                           ✅ Session complete! Save to library to start a new session.
                         </p>
                       )}
-                     </div>
+                    </div>
                   </div>
                 </Card>
               </div>
