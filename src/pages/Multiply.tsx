@@ -20,7 +20,7 @@ import {
   Sparkles, Archive, Mail, MessageSquare, Tag,
   FileText, CheckCircle2, XCircle, ChevronDown, ChevronRight, Copy, 
   Calendar, Edit, Loader2, AlertCircle, Video, Bookmark,
-  Briefcase, Share2
+  Briefcase, Share2, ArrowLeft
 } from "lucide-react";
 import { EditorialDirectorSplitScreen } from "@/components/multiply/EditorialDirectorSplitScreen";
 import { SavePromptDialog } from "@/components/prompt-library/SavePromptDialog";
@@ -872,6 +872,32 @@ export default function Multiply() {
       <div className="container mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-6">
+          {selectedMaster && selectedViaNavigationRef.current && (
+            <div className="flex items-center gap-2 mb-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  navigate('/editor', {
+                    state: {
+                      contentId: selectedMaster.id,
+                      content: selectedMaster.content,
+                      contentName: selectedMaster.title,
+                      contentType: selectedMaster.contentType,
+                      collection: selectedMaster.collection
+                    }
+                  });
+                }}
+                className="text-aged-brass hover:text-aged-brass/80"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Editor
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Editing: {selectedMaster.title}
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-3 mb-2">
             <h1 className="font-serif text-4xl">Multiply</h1>
             <VideoHelpTrigger videoId="what-is-multiply" variant="icon" />

@@ -646,6 +646,28 @@ export default function Library() {
               setScheduleOpen(true);
             }
           }}
+          onEditWithMadison={(content, category) => {
+            setSelectedContent(null);
+            
+            // Determine text content based on category
+            let initialText = '';
+            if (category === 'master') {
+              initialText = content.full_content;
+            } else if (category === 'derivative' || category === 'output') {
+              initialText = content.generated_content;
+            }
+            
+            // Navigate to ContentEditor with full context
+            navigate('/editor', {
+              state: {
+                contentId: content.id,
+                content: initialText,
+                contentName: content.title,
+                contentType: content.content_type || 'Content',
+                category: category
+              }
+            });
+          }}
         />
       )}
 
