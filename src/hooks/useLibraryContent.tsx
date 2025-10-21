@@ -29,21 +29,49 @@ export interface LibraryContentItem {
   finalPrompt?: string;
 }
 
-export const useLibraryContent = (groupBySessions = false) => {
+export const useLibraryContent = (groupBySessions = false, page = 1, limit = 30) => {
   const { user } = useAuth();
+  const offset = (page - 1) * limit;
 
   return useQuery({
-    queryKey: ["library-content", user?.id, groupBySessions],
+    queryKey: ["library-content", user?.id, groupBySessions, page],
     queryFn: async () => {
       if (!user) return [];
 
       const items: LibraryContentItem[] = [];
 
-      // Fetch master content
-      const { data: masterContent, error: masterError } = await supabase
-        .from("master_content")
-        .select("*, brand_consistency_score, brand_analysis, last_brand_check_at")
-        .order("created_at", { ascending: false });
+      // Fetch all content in parallel using Promise.all
+      const [
+        { data: masterContent, error: masterError },
+        { data: outputs, error: outputsError },
+        { data: derivatives, error: derivativesError },
+        { data: generatedImages, error: imagesError }
+      ] = await Promise.all([
+        supabase
+          .from("master_content")
+          .select("id, title, content_type, collection, full_content, created_at, updated_at, quality_rating, is_archived, status, published_to, external_urls, publish_notes, brand_consistency_score, brand_analysis, last_brand_check_at")
+          .order("created_at", { ascending: false })
+          .range(offset, offset + limit - 1),
+        
+        supabase
+          .from("outputs")
+          .select("id, created_at, generated_content, quality_rating, is_archived, prompts(title, content_type, collection)")
+          .order("created_at", { ascending: false })
+          .range(offset, offset + limit - 1),
+        
+        supabase
+          .from("derivative_assets")
+          .select("id, asset_type, generated_content, created_at, quality_rating, is_archived, approval_status, published_to, external_urls, publish_notes, published_at, platform_specs, master_content(title, collection), brand_consistency_score, brand_analysis, last_brand_check_at")
+          .order("created_at", { ascending: false })
+          .range(offset, offset + limit - 1),
+        
+        supabase
+          .from("generated_images")
+          .select("id, session_id, session_name, image_url, created_at, is_archived, library_category, goal_type, aspect_ratio, final_prompt, is_hero_image, image_order")
+          .eq("saved_to_library", true)
+          .order("created_at", { ascending: false })
+          .range(offset, offset + limit - 1)
+      ]);
 
       if (masterError) {
         console.error("Error fetching master content:", masterError);
@@ -60,7 +88,7 @@ export const useLibraryContent = (groupBySessions = false) => {
               createdAt: new Date(item.created_at),
               updatedAt: new Date(item.updated_at),
               rating: item.quality_rating,
-              wordCount: item.word_count || item.full_content?.split(/\s+/).filter(Boolean).length || 0,
+              wordCount: item.full_content?.split(/\s+/).filter(Boolean).length || 0,
               archived: item.is_archived,
               status: item.status || "draft",
               sourceTable: "master_content" as const,
@@ -76,11 +104,6 @@ export const useLibraryContent = (groupBySessions = false) => {
       }
 
       // Fetch outputs
-      const { data: outputs, error: outputsError } = await supabase
-        .from("outputs")
-        .select("*, prompts(title, content_type, collection)")
-        .order("created_at", { ascending: false });
-
       if (outputsError) {
         console.error("Error fetching outputs:", outputsError);
       } else if (outputs) {
@@ -107,11 +130,6 @@ export const useLibraryContent = (groupBySessions = false) => {
       }
 
       // Fetch derivative assets
-      const { data: derivatives, error: derivativesError } = await supabase
-        .from("derivative_assets")
-        .select("*, master_content(title, collection), brand_consistency_score, brand_analysis, last_brand_check_at")
-        .order("created_at", { ascending: false });
-
       if (derivativesError) {
         console.error("Error fetching derivatives:", derivativesError);
       } else if (derivatives) {
@@ -144,12 +162,6 @@ export const useLibraryContent = (groupBySessions = false) => {
       }
 
       // Fetch generated images (from Madison Image Studio)
-      const { data: generatedImages, error: imagesError } = await supabase
-        .from("generated_images")
-        .select("*")
-        .eq("saved_to_library", true)
-        .order("created_at", { ascending: false });
-
       if (imagesError) {
         console.error("Error fetching generated images:", imagesError);
       } else if (generatedImages) {
@@ -252,6 +264,7 @@ export const useLibraryContent = (groupBySessions = false) => {
 
       return items;
     },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     enabled: !!user,
   });
 };

@@ -1163,192 +1163,197 @@ export default function ImageEditor() {
               </div>
 
               {/* Right Sidebar - Reference + Create & Refine */}
-              <div className="w-80 flex-shrink-0 flex flex-col gap-4 overflow-y-auto min-h-0 overscroll-contain">
-                {/* Reference Image Upload - Moved to top */}
-                <ReferenceUpload
-                  currentImage={referenceImageUrl}
-                  description={referenceDescription}
-                  onUpload={handleReferenceUpload}
-                  onRemove={handleReferenceRemove}
-                  isUploading={isUploadingReference}
-                />
+              <div className="w-80 flex-shrink-0 flex flex-col h-full">
+                {/* Scrollable content wrapper */}
+                <div className="flex-1 overflow-y-auto pb-4 space-y-4 min-h-0">
+                  {/* Reference Image Upload - Moved to top */}
+                  <ReferenceUpload
+                    currentImage={referenceImageUrl}
+                    description={referenceDescription}
+                    onUpload={handleReferenceUpload}
+                    onRemove={handleReferenceRemove}
+                    isUploading={isUploadingReference}
+                  />
 
-                {/* Create & Refine Card - Consolidated */}
-                <Card className="p-4 bg-[#2F2A26] border-[#3D3935] shadow-sm flex flex-col">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-xs font-semibold text-[#D4CFC8] tracking-wide">CREATE & REFINE</h3>
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor="guided-mode" className="text-[10px] text-[#A8A39E] cursor-pointer">
-                        Guided
-                      </Label>
-                      <Switch
-                        id="guided-mode"
-                        checked={guidedModeEnabled}
-                        onCheckedChange={setGuidedModeEnabled}
-                        className="data-[state=checked]:bg-brass data-[state=unchecked]:bg-[#3D3935] border-2 border-[#A8A39E]"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="flex-1 flex flex-col gap-3 min-h-0">
-                    {guidedModeEnabled ? (
-                      /* Guided Mode - Formula-based builder with internal scrolling */
-                      <div className="flex-1 min-h-0 overflow-y-auto pr-1">
-                        <GuidedPromptBuilder
-                          onPromptGenerated={(prompt) => {
-                            setUserPrompt(prompt);
-                            toast.success("Prompt built from formula!");
-                          }}
-                          brandContext={brandContext}
-                          hasReferenceImage={!!referenceImageUrl}
+                  {/* Create & Refine Card - Consolidated */}
+                  <Card className="p-4 bg-[#2F2A26] border-[#3D3935] shadow-sm flex flex-col">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-xs font-semibold text-[#D4CFC8] tracking-wide">CREATE & REFINE</h3>
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="guided-mode" className="text-[10px] text-[#A8A39E] cursor-pointer">
+                          Guided
+                        </Label>
+                        <Switch
+                          id="guided-mode"
+                          checked={guidedModeEnabled}
+                          onCheckedChange={setGuidedModeEnabled}
+                          className="data-[state=checked]:bg-brass data-[state=unchecked]:bg-[#3D3935] border-2 border-[#A8A39E]"
                         />
                       </div>
-                    ) : (
-                      /* Expert Mode - Free-form textarea */
-                      <>
-                        <Textarea
-                          value={userPrompt}
-                          onChange={(e) => setUserPrompt(e.target.value)}
-                          placeholder={referenceImageUrl 
-                            ? "Describe the SCENE for your product (e.g., 'on weathered sandstone with brass incense holder, soft smoke, golden hour lighting')..." 
-                            : "Describe the image you want to create..."}
-                          disabled={!canGenerateMore}
-                          className="flex-1 resize-none bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E] min-h-[100px]"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey && canGenerateMore) {
-                              e.preventDefault();
-                              handleGenerate();
-                            }
-                          }}
-                        />
-                        
-                        {/* Quick Refinements - Compact */}
-                        {heroImage && (
-                          <div className="flex-shrink-0 pt-3 border-t border-[#3D3935]">
-                            <p className="text-xs text-[#A8A39E] mb-2 font-medium">QUICK REFINEMENTS</p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {quickRefinements.map((refinement) => (
-                                <button
-                                  key={refinement}
-                                  onClick={() => {
-                                    setUserPrompt(refinement);
-                                    handleGenerate(refinement);
-                                  }}
-                                  disabled={!canGenerateMore}
-                                  className="px-2 py-1 text-xs bg-[#252220] text-[#D4CFC8] border border-[#3D3935] rounded hover:bg-[#3D3935] hover:text-[#FFFCF5] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                                >
-                                  <Wand2 className="w-3 h-3 inline mr-1" />
-                                  {refinement}
-                                </button>
-                              ))}
+                    </div>
+                    
+                    <div className="flex-1 flex flex-col gap-3 min-h-0">
+                      {guidedModeEnabled ? (
+                        /* Guided Mode - Formula-based builder with internal scrolling */
+                        <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+                          <GuidedPromptBuilder
+                            onPromptGenerated={(prompt) => {
+                              setUserPrompt(prompt);
+                              toast.success("Prompt built from formula!");
+                            }}
+                            brandContext={brandContext}
+                            hasReferenceImage={!!referenceImageUrl}
+                          />
+                        </div>
+                      ) : (
+                        /* Expert Mode - Free-form textarea */
+                        <>
+                          <Textarea
+                            value={userPrompt}
+                            onChange={(e) => setUserPrompt(e.target.value)}
+                            placeholder={referenceImageUrl 
+                              ? "Describe the SCENE for your product (e.g., 'on weathered sandstone with brass incense holder, soft smoke, golden hour lighting')..." 
+                              : "Describe the image you want to create..."}
+                            disabled={!canGenerateMore}
+                            className="flex-1 resize-none bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E] min-h-[100px]"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey && canGenerateMore) {
+                                e.preventDefault();
+                                handleGenerate();
+                              }
+                            }}
+                          />
+                          
+                          {/* Quick Refinements - Compact */}
+                          {heroImage && (
+                            <div className="flex-shrink-0 pt-3 border-t border-[#3D3935]">
+                              <p className="text-xs text-[#A8A39E] mb-2 font-medium">QUICK REFINEMENTS</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {quickRefinements.map((refinement) => (
+                                  <button
+                                    key={refinement}
+                                    onClick={() => {
+                                      setUserPrompt(refinement);
+                                      handleGenerate(refinement);
+                                    }}
+                                    disabled={!canGenerateMore}
+                                    className="px-2 py-1 text-xs bg-[#252220] text-[#D4CFC8] border border-[#3D3935] rounded hover:bg-[#3D3935] hover:text-[#FFFCF5] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                  >
+                                    <Wand2 className="w-3 h-3 inline mr-1" />
+                                    {refinement}
+                                  </button>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      </>
-                    )}
-                    
-                    {/* Output & Save Settings */}
-                    <div className="flex-shrink-0 space-y-3 pt-3 border-t border-[#3D3935]">
-                      <h4 className="text-xs font-semibold text-[#D4CFC8] tracking-wide">OUTPUT & SAVE</h4>
-                      
-                      <div>
-                        <Label className="text-xs text-[#A8A39E] mb-1.5 block">Format</Label>
-                        <Select value={outputFormat} onValueChange={(value: "png" | "jpeg" | "webp") => setOutputFormat(value)}>
-                          <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="png">PNG</SelectItem>
-                            <SelectItem value="jpeg">JPEG</SelectItem>
-                            <SelectItem value="webp">WebP</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div>
-                        <Label className="text-xs text-[#A8A39E] mb-1.5 block">Save to Library</Label>
-                        <Select value={libraryCategory} onValueChange={(v) => setLibraryCategory(v as any)}>
-                          <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="content">Content Library</SelectItem>
-                            <SelectItem value="marketplace">Marketplace Library</SelectItem>
-                            <SelectItem value="both">Both Libraries</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    
-                    {/* Advanced Settings - Collapsible */}
-                    <div className="flex-shrink-0">
-                      <Collapsible>
-                        <CollapsibleTrigger className="flex items-center justify-between w-full py-2 text-xs font-semibold text-[#D4CFC8] tracking-wide hover:text-brass transition-colors">
-                          ADVANCED
-                          <span className="text-[#A8A39E]">▼</span>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent className="pt-3 space-y-2">
-                          <div>
-                            <Label className="text-xs text-[#A8A39E] mb-1.5 block">Aspect Ratio</Label>
-                            <Select value={aspectRatio} onValueChange={setAspectRatio}>
-                              <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-sm">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="1:1">Square (1:1)</SelectItem>
-                                <SelectItem value="4:5">Portrait (4:5)</SelectItem>
-                                <SelectItem value="5:4">Etsy (5:4)</SelectItem>
-                                <SelectItem value="16:9">Landscape (16:9)</SelectItem>
-                                <SelectItem value="9:16">Vertical (9:16)</SelectItem>
-                                <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <p className="text-[10px] text-[#A8A39E] mt-1.5 leading-relaxed">
-                              Guides composition but not a hard crop. For best results, describe your desired framing in the prompt.
-                            </p>
-                          </div>
-                        </CollapsibleContent>
-                      </Collapsible>
-                    </div>
-                    
-                    {/* Generate Button + Progress */}
-                    <div className="flex-shrink-0 space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-[#A8A39E]">
-                          <span className={canGenerateMore ? "text-brass font-semibold" : "text-orange-400 font-semibold"}>
-                            {MAX_IMAGES_PER_SESSION - currentSession.images.length}
-                          </span>
-                          {" / "}{MAX_IMAGES_PER_SESSION} remaining
-                        </span>
-                      </div>
-                      
-                      <Button
-                        onClick={() => handleGenerate()}
-                        disabled={isGenerating || !userPrompt.trim() || !canGenerateMore}
-                        className="w-full bg-brass hover:bg-brass/90 text-white disabled:opacity-50"
-                        size="sm"
-                      >
-                        {isGenerating ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Generating...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="w-4 h-4 mr-2" />
-                            Generate
-                          </>
-                        )}
-                      </Button>
-
-                      {!canGenerateMore && (
-                        <p className="text-xs text-orange-400 bg-orange-400/10 border border-orange-400/20 rounded p-2">
-                          ✅ Session complete! Save to library to start a new session.
-                        </p>
+                          )}
+                        </>
                       )}
+                      
+                      {/* Output & Save Settings */}
+                      <div className="flex-shrink-0 space-y-3 pt-3 border-t border-[#3D3935]">
+                        <h4 className="text-xs font-semibold text-[#D4CFC8] tracking-wide">OUTPUT & SAVE</h4>
+                        
+                        <div>
+                          <Label className="text-xs text-[#A8A39E] mb-1.5 block">Format</Label>
+                          <Select value={outputFormat} onValueChange={(value: "png" | "jpeg" | "webp") => setOutputFormat(value)}>
+                            <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="png">PNG</SelectItem>
+                              <SelectItem value="jpeg">JPEG</SelectItem>
+                              <SelectItem value="webp">WebP</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <Label className="text-xs text-[#A8A39E] mb-1.5 block">Save to Library</Label>
+                          <Select value={libraryCategory} onValueChange={(v) => setLibraryCategory(v as any)}>
+                            <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="content">Content Library</SelectItem>
+                              <SelectItem value="marketplace">Marketplace Library</SelectItem>
+                              <SelectItem value="both">Both Libraries</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      {/* Advanced Settings - Collapsible */}
+                      <div className="flex-shrink-0">
+                        <Collapsible>
+                          <CollapsibleTrigger className="flex items-center justify-between w-full py-2 text-xs font-semibold text-[#D4CFC8] tracking-wide hover:text-brass transition-colors">
+                            ADVANCED
+                            <span className="text-[#A8A39E]">▼</span>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="pt-3 space-y-2">
+                            <div>
+                              <Label className="text-xs text-[#A8A39E] mb-1.5 block">Aspect Ratio</Label>
+                              <Select value={aspectRatio} onValueChange={setAspectRatio}>
+                                <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-sm">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="1:1">Square (1:1)</SelectItem>
+                                  <SelectItem value="4:5">Portrait (4:5)</SelectItem>
+                                  <SelectItem value="5:4">Etsy (5:4)</SelectItem>
+                                  <SelectItem value="16:9">Landscape (16:9)</SelectItem>
+                                  <SelectItem value="9:16">Vertical (9:16)</SelectItem>
+                                  <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <p className="text-[10px] text-[#A8A39E] mt-1.5 leading-relaxed">
+                                Guides composition but not a hard crop. For best results, describe your desired framing in the prompt.
+                              </p>
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      </div>
                     </div>
+                  </Card>
+                </div>
+                
+                {/* Sticky Generate Button - Outside scrollable area */}
+                <div className="flex-shrink-0 bg-[#2F2A26] border-t border-[#3D3935] p-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-[#A8A39E]">
+                        <span className={canGenerateMore ? "text-brass font-semibold" : "text-orange-400 font-semibold"}>
+                          {MAX_IMAGES_PER_SESSION - currentSession.images.length}
+                        </span>
+                        {" / "}{MAX_IMAGES_PER_SESSION} remaining
+                      </span>
+                    </div>
+                    
+                    <Button
+                      onClick={() => handleGenerate()}
+                      disabled={isGenerating || !userPrompt.trim() || !canGenerateMore}
+                      className="w-full bg-brass hover:bg-brass/90 text-white disabled:opacity-50"
+                      size="sm"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Generate
+                        </>
+                      )}
+                    </Button>
+
+                    {!canGenerateMore && (
+                      <p className="text-xs text-orange-400 bg-orange-400/10 border border-orange-400/20 rounded p-2">
+                        ✅ Session complete! Save to library to start a new session.
+                      </p>
+                    )}
                   </div>
-                </Card>
+                </div>
               </div>
             </div>
           )}

@@ -203,8 +203,11 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
             <p className="text-lg text-muted-foreground">
               Help our AI understand your brand's unique voice
             </p>
-            <p className="text-sm text-muted-foreground mt-4 max-w-2xl mx-auto">
-              💗 <strong>Why this matters:</strong> Our AI will learn your brand's unique voice, tone, and style to generate content that sounds authentically like you.
+            <p className="text-sm text-muted-foreground mt-4 max-w-2xl mx-auto leading-relaxed">
+              <strong>💡 What to upload:</strong> Brand guidelines, style guides, or product catalogs help Madison learn your brand voice, tone, and visual style. This ensures all generated content sounds authentically like your brand.
+            </p>
+            <p className="text-xs text-muted-foreground/80 mt-2">
+              You can always add or update these later in Settings.
             </p>
           </div>
 
@@ -340,6 +343,14 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
             </Button>
 
             <Button
+              onClick={onSkip}
+              variant="outline"
+              className="h-12 px-8 text-base"
+            >
+              Skip for now
+            </Button>
+
+            <Button
               onClick={handleContinue}
               disabled={!isValid() || isProcessing}
               variant="brassGradient"
@@ -348,15 +359,6 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
               {isProcessing ? "Processing..." : "Continue"}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-          </div>
-
-          <div className="text-center mt-4">
-            <button
-              onClick={onSkip}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Skip for now
-            </button>
           </div>
         </div>
       </div>

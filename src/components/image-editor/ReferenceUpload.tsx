@@ -46,7 +46,7 @@ export function ReferenceUpload({ currentImage, description, onUpload, onRemove,
 
   return (
     <Card className="bg-[#2F2A26] border-[#3D3935] p-4">
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Collapsible defaultOpen={true} open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger className="w-full">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
