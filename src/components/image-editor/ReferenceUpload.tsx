@@ -18,7 +18,7 @@ interface ReferenceUploadProps {
 
 export function ReferenceUpload({ currentImage, description, onUpload, onRemove, isUploading = false }: ReferenceUploadProps) {
   const [localDescription, setLocalDescription] = useState(description);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
 
   const processFile = (file: File) => {
