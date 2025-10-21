@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { LibraryFilters } from "@/components/library/LibraryFilters";
 import { ContentCard } from "@/components/library/ContentCard";
 import { ContentDetailModal } from "@/components/library/ContentDetailModal";
+import { ImageSessionCard } from "@/components/library/ImageSessionCard";
+import { ImageSessionModal } from "@/components/library/ImageSessionModal";
 import { EmptyState } from "@/components/library/EmptyState";
 import { SortOption } from "@/components/library/SortDropdown";
 import { useLibraryContent, LibraryContentItem } from "@/hooks/useLibraryContent";
@@ -17,7 +19,8 @@ import { MadisonSplitEditor } from "@/components/library/MadisonSplitEditor";
 export default function Library() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { data: libraryContent = [], isLoading, refetch } = useLibraryContent();
+  const [groupBySessions, setGroupBySessions] = useState(false);
+  const { data: libraryContent = [], isLoading, refetch } = useLibraryContent(groupBySessions);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedContentType, setSelectedContentType] = useState("all");
   const [selectedCollection, setSelectedCollection] = useState("all");
@@ -27,6 +30,14 @@ export default function Library() {
   const [selectedContent, setSelectedContent] = useState<LibraryContentItem | null>(null);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Session modal state
+  const [selectedSession, setSelectedSession] = useState<{
+    sessionId: string;
+    sessionName: string;
+    images: any[];
+    archived: boolean;
+  } | null>(null);
   
   // Schedule modal states
   const [scheduleOpen, setScheduleOpen] = useState(false);
@@ -366,20 +377,32 @@ export default function Library() {
           </div>
 
           {/* Filters */}
-          <LibraryFilters
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            selectedContentType={selectedContentType}
-            onContentTypeChange={setSelectedContentType}
-            selectedCollection={selectedCollection}
-            onCollectionChange={setSelectedCollection}
-            sortBy={sortBy}
-            onSortChange={setSortBy}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            showArchived={showArchived}
-            onShowArchivedChange={setShowArchived}
-          />
+          <div className="flex items-center justify-between gap-4">
+            <LibraryFilters
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              selectedContentType={selectedContentType}
+              onContentTypeChange={setSelectedContentType}
+              selectedCollection={selectedCollection}
+              onCollectionChange={setSelectedCollection}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              showArchived={showArchived}
+              onShowArchivedChange={setShowArchived}
+            />
+            
+            {/* Group by Sessions Toggle */}
+            <Button
+              variant={groupBySessions ? "brass" : "outline"}
+              size="sm"
+              onClick={() => setGroupBySessions(!groupBySessions)}
+              className="flex-shrink-0"
+            >
+              {groupBySessions ? "Showing Sessions" : "Group by Session"}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -471,45 +494,86 @@ export default function Library() {
               viewMode === "list" && "grid-cols-1"
             )}
           >
-            {filteredContent.map((content) => (
-              <ContentCard
-                key={content.id}
-                content={content}
-                onClick={() => setSelectedContent(content)}
-                viewMode={viewMode}
-                selectable={true}
-                selected={selectedItems.has(content.id)}
-                onToggleSelect={() => handleToggleSelection(content.id)}
-                onArchive={async () => {
-                  try {
-                    const table = content.sourceTable;
-                    const { error } = await supabase
-                      .from(table)
-                      .update({ 
-                        is_archived: !content.archived,
-                        archived_at: !content.archived ? new Date().toISOString() : null
-                      })
-                      .eq('id', content.id);
+            {filteredContent.map((content) => {
+              // Render session card for grouped image sessions
+              if (groupBySessions && content.contentType === "image-session") {
+                return (
+                  <ImageSessionCard
+                    key={content.id}
+                    sessionId={content.id}
+                    sessionName={content.title}
+                    heroImageUrl={content.imageUrl || content.content}
+                    imageCount={content.wordCount || 0}
+                    createdAt={content.createdAt}
+                    archived={content.archived}
+                    onClick={async () => {
+                      // Fetch all images for this session
+                      const { data: images } = await supabase
+                        .from('generated_images')
+                        .select('*')
+                        .eq('session_id', content.id)
+                        .order('image_order', { ascending: true });
+                      
+                      if (images) {
+                        setSelectedSession({
+                          sessionId: content.id,
+                          sessionName: content.title,
+                          images: images.map(img => ({
+                            id: img.id,
+                            imageUrl: img.image_url,
+                            finalPrompt: img.final_prompt,
+                            createdAt: new Date(img.created_at),
+                            isHero: img.is_hero_image || false
+                          })),
+                          archived: content.archived
+                        });
+                      }
+                    }}
+                  />
+                );
+              }
+              
+              // Render regular content card
+              return (
+                <ContentCard
+                  key={content.id}
+                  content={content}
+                  onClick={() => setSelectedContent(content)}
+                  viewMode={viewMode}
+                  selectable={true}
+                  selected={selectedItems.has(content.id)}
+                  onToggleSelect={() => handleToggleSelection(content.id)}
+                  onArchive={async () => {
+                    try {
+                      const table = content.sourceTable;
+                      const { error } = await supabase
+                        .from(table)
+                        .update({ 
+                          is_archived: !content.archived,
+                          archived_at: !content.archived ? new Date().toISOString() : null
+                        })
+                        .eq('id', content.id);
 
-                    if (error) throw error;
+                      if (error) throw error;
 
-                    toast({
-                      title: content.archived ? "Item unarchived" : "Item archived",
-                      description: `Successfully ${content.archived ? 'unarchived' : 'archived'} "${content.title}"`,
-                    });
+                      toast({
+                        title: content.archived ? "Item unarchived" : "Item archived",
+                        description: `Successfully ${content.archived ? 'unarchived' : 'archived'} "${content.title}"`,
+                      });
 
-                    refetch();
-                  } catch (error) {
-                    console.error('Error archiving item:', error);
-                    toast({
-                      title: "Archive failed",
-                      description: "Failed to archive item. Please try again.",
-                      variant: "destructive"
-                    });
-                  }
-                }}
-              />
-            ))}
+                      refetch();
+                    } catch (error) {
+                      console.error('Error archiving item:', error);
+                      toast({
+                        title: "Archive failed",
+                        description: "Failed to archive item. Please try again.",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                />
+              );
+            })}
           </div>
         )}
           </>
@@ -643,6 +707,22 @@ export default function Library() {
           onClose={() => {
             setMadisonOpen(false);
             setMadisonContext(null);
+          }}
+        />
+      )}
+      
+      {/* Image Session Modal */}
+      {selectedSession && (
+        <ImageSessionModal
+          sessionId={selectedSession.sessionId}
+          sessionName={selectedSession.sessionName}
+          images={selectedSession.images}
+          archived={selectedSession.archived}
+          open={!!selectedSession}
+          onClose={() => setSelectedSession(null)}
+          onUpdate={() => {
+            refetch();
+            setSelectedSession(null);
           }}
         />
       )}

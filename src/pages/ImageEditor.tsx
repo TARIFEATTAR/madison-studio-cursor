@@ -232,7 +232,8 @@ export default function ImageEditor() {
           userRefinements: currentSession.images.length > 0 ? prompt : null,
           referenceImageUrl: referenceImageUrl || undefined,
           referenceDescription: referenceDescription || undefined,
-          brandContext: brandContext || undefined
+          brandContext: brandContext || undefined,
+          imageConstraints: imageConstraints || undefined
         },
       });
 
