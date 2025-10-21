@@ -25,16 +25,16 @@ interface GuidedPromptBuilderProps {
 const PROMPT_FORMULA_GUIDE = {
   title: "Simple Prompt Formula",
   structure: [
-    { label: "Photo type", example: "motorsport photography" },
-    { label: "Subject + Action", example: "Red Bull F1 car driving on a race track" },
-    { label: "Environment", example: "race track setting" },
-    { label: "Color Scheme", example: "deep azure blue, red, and yellow colors with warm tones" },
-    { label: "Camera/Lens/Film", example: "35mm shallow depth of field" },
-    { label: "Lighting", example: "dramatic sunset backlighting" },
-    { label: "Composition", example: "center framing" },
-    { label: "Additional Details", example: "motion blur" }
+    { label: "Photo type", example: "e-commerce pack shot" },
+    { label: "Subject + Action", example: "luxury perfume bottle on sandstone block, static" },
+    { label: "Environment", example: "natural sandstone surface with soft shadows" },
+    { label: "Color Scheme", example: "warm amber and sand tones with golden accents" },
+    { label: "Camera/Lens/Film", example: "Canon R5 50mm f/1.8 sharp focus" },
+    { label: "Lighting", example: "soft natural window light from left" },
+    { label: "Composition", example: "centered with negative space" },
+    { label: "Additional Details", example: "subtle texture details, minimalist aesthetic" }
   ],
-  fullExample: "motorsport photography, Red Bull F1 car driving on a race track, deep azure blue, red, and yellow colors with warm tones, 35mm shallow depth of field, dramatic sunset backlighting, center framing, motion blur"
+  fullExample: "e-commerce pack shot, luxury perfume bottle on sandstone block, static, natural sandstone surface with soft shadows, warm amber and sand tones with golden accents, Canon R5 50mm f/1.8 sharp focus, soft natural window light from left, centered with negative space, subtle texture details, minimalist aesthetic"
 };
 
 // Quick preset scenarios for common product photography needs
