@@ -1,27 +1,30 @@
-import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Wand2, Sparkles } from 'lucide-react';
-import { toast } from 'sonner';
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Sparkles, Lightbulb, Camera, Palette, Info, Wand2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { 
   SHOT_TYPES, 
+  CAMERA_LENS, 
   LIGHTING, 
   ENVIRONMENTS, 
-  CAMERA_LENS,
   buildPromptFromComponents,
-  type PromptComponents 
-} from '@/utils/promptFormula';
+  buildProductPlacementPrompt,
+  type PromptComponents,
+  type BrandContext
+} from "@/utils/promptFormula";
 
 interface GuidedPromptBuilderProps {
   onPromptGenerated: (prompt: string) => void;
-  brandContext?: any;
+  brandContext?: BrandContext;
+  hasReferenceImage?: boolean;
 }
 
-// Prompt Formula Guide Content
 const PROMPT_FORMULA_GUIDE = {
   title: "Simple Prompt Formula",
   structure: [
@@ -37,306 +40,135 @@ const PROMPT_FORMULA_GUIDE = {
   fullExample: "e-commerce pack shot, luxury perfume bottle on sandstone block, static, natural sandstone surface with soft shadows, warm amber and sand tones with golden accents, Canon R5 50mm f/1.8 sharp focus, soft natural window light from left, centered with negative space, subtle texture details, minimalist aesthetic"
 };
 
-// Quick preset scenarios for common product photography needs
 const QUICK_PRESETS = [
-  {
-    id: 'luxury-marble',
-    label: 'Luxury Marble',
-    icon: '💎',
-    components: {
-      shotType: SHOT_TYPES.PRODUCT.HERO,
-      environment: ENVIRONMENTS.SURFACES.MARBLE,
-      lighting: LIGHTING.STUDIO.SOFT_BOX,
-      camera: CAMERA_LENS.PROFESSIONAL.DSLR_SHALLOW,
-      mood: 'elegant, high-end luxury aesthetic',
-      colorScheme: 'warm neutral tones'
-    }
-  },
-  {
-    id: 'desert-sandstone',
-    label: 'Desert Sandstone',
-    icon: '🏜️',
-    components: {
-      shotType: SHOT_TYPES.PRODUCT.HERO,
-      environment: ENVIRONMENTS.SETTINGS.DESERT,
-      lighting: LIGHTING.NATURAL.GOLDEN_HOUR,
-      camera: CAMERA_LENS.PROFESSIONAL.NIKON_SHALLOW,
-      mood: 'warm, organic, artisanal feel',
-      colorScheme: 'warm desert tones, amber and sand'
-    }
-  },
-  {
-    id: 'botanical-garden',
-    label: 'Botanical Garden',
-    icon: '🌿',
-    components: {
-      shotType: SHOT_TYPES.PRODUCT.LIFESTYLE,
-      environment: ENVIRONMENTS.SETTINGS.BOTANICAL,
-      lighting: LIGHTING.NATURAL.OVERCAST,
-      camera: CAMERA_LENS.PROFESSIONAL.SONY_SHARP,
-      mood: 'fresh, natural, organic aesthetic',
-      colorScheme: 'natural greens and earth tones'
-    }
-  },
-  {
-    id: 'minimalist-studio',
-    label: 'Clean Minimalist',
-    icon: '⚪',
-    components: {
-      shotType: SHOT_TYPES.PRODUCT.HERO,
-      environment: ENVIRONMENTS.SETTINGS.MINIMALIST,
-      lighting: LIGHTING.STUDIO.MINIMALIST,
-      camera: CAMERA_LENS.PROFESSIONAL.DSLR_SHARP,
-      mood: 'clean, modern, professional',
-      colorScheme: 'monochromatic whites and grays'
-    }
-  },
-  {
-    id: 'rustic-wood',
-    label: 'Rustic Wood',
-    icon: '🪵',
-    components: {
-      shotType: SHOT_TYPES.PRODUCT["3_4_ANGLE"],
-      environment: ENVIRONMENTS.SURFACES.WOOD,
-      lighting: LIGHTING.NATURAL.SIDE_LIT,
-      camera: CAMERA_LENS.FILM["35MM_FILM"],
-      mood: 'warm, handcrafted, artisanal',
-      colorScheme: 'warm wood tones, natural browns'
-    }
-  },
-  {
-    id: 'editorial-luxury',
-    label: 'Editorial Luxury',
-    icon: '✨',
-    components: {
-      shotType: SHOT_TYPES.PRODUCT.HERO,
-      environment: ENVIRONMENTS.SETTINGS.LUXURY,
-      lighting: LIGHTING.STUDIO.DRAMATIC,
-      camera: CAMERA_LENS.SPECIALTY.HASSELBLAD_DIGITAL,
-      mood: 'dramatic, high-fashion, editorial',
-      colorScheme: 'rich jewel tones with gold accents'
-    }
-  }
+  { id: 'hero', label: 'Hero Shot', icon: Camera, components: { shotType: SHOT_TYPES.PRODUCT.HERO, environment: ENVIRONMENTS.SURFACES.MARBLE, lighting: LIGHTING.STUDIO.THREE_POINT } },
+  { id: 'lifestyle', label: 'Lifestyle', icon: Palette, components: { shotType: SHOT_TYPES.PRODUCT.LIFESTYLE, environment: ENVIRONMENTS.SETTINGS.VANITY, lighting: LIGHTING.NATURAL.WINDOW } }
 ];
 
-export function GuidedPromptBuilder({ onPromptGenerated, brandContext }: GuidedPromptBuilderProps) {
+export function GuidedPromptBuilder({ onPromptGenerated, brandContext, hasReferenceImage = false }: GuidedPromptBuilderProps) {
   const [components, setComponents] = useState<PromptComponents>({});
-  const [customDetails, setCustomDetails] = useState('');
+  const [customDetails, setCustomDetails] = useState("");
   const [showFormulaGuide, setShowFormulaGuide] = useState(false);
+  const [builtPrompt, setBuiltPrompt] = useState<string>("");
 
   const handlePresetClick = (preset: typeof QUICK_PRESETS[0]) => {
     setComponents(preset.components);
-    const prompt = buildPromptFromComponents(preset.components, brandContext);
-    onPromptGenerated(prompt);
-    
-    toast.success(`${preset.label} preset applied - Prompt generated!`);
+    handleBuildPrompt();
   };
 
   const handleBuildPrompt = () => {
-    // Check if at least one component is selected
-    const hasComponents = Object.values(components).some(value => value !== undefined && value !== '');
-    
-    if (!hasComponents && !customDetails) {
-      toast.error("Please select at least one component (Shot Type, Environment, etc.) or add custom details");
-      return;
+    const finalComponents = { ...components, additionalDetails: customDetails || undefined };
+    let prompt: string;
+    if (hasReferenceImage && (components.environment || customDetails)) {
+      const sceneDescription = [components.environment, components.lighting, customDetails].filter(Boolean).join(', ');
+      prompt = buildProductPlacementPrompt(sceneDescription, brandContext);
+    } else {
+      prompt = buildPromptFromComponents(finalComponents, brandContext);
     }
-    
-    const finalComponents = {
-      ...components,
-      additionalDetails: customDetails || undefined
-    };
-    const prompt = buildPromptFromComponents(finalComponents, brandContext);
-    onPromptGenerated(prompt);
-    
-    toast.success("Prompt generated from formula!");
+    setBuiltPrompt(prompt);
+    toast.success("Prompt built!");
+  };
+
+  const handleUsePrompt = () => {
+    if (!builtPrompt) { toast.error("Build a prompt first"); return; }
+    onPromptGenerated(builtPrompt);
+    toast.success("Prompt sent to Create & Refine");
   };
 
   const handleComponentChange = (key: keyof PromptComponents, value: string) => {
-    const updated = { ...components, [key]: value };
-    setComponents(updated);
+    setComponents({ ...components, [key]: value });
   };
 
   return (
     <div className="space-y-4">
-      {/* Prompt Formula Guide Button - Above Presets */}
-      <Button
-        onClick={() => setShowFormulaGuide(!showFormulaGuide)}
-        variant="outline"
-        size="sm"
-        className="w-full bg-brass/10 border-brass/40 hover:bg-brass/20 text-[#FFFCF5] font-semibold"
-      >
-        <Wand2 className="w-4 h-4 mr-2" />
-        {showFormulaGuide ? 'Hide' : 'Show'} Simple Prompt Formula Guide
-      </Button>
-
-      {/* Collapsible Formula Guide */}
-      {showFormulaGuide && (
-        <Card className="bg-[#1F1A17] border-brass/40 p-4 space-y-3">
-          <h4 className="font-serif text-sm text-brass font-bold">{PROMPT_FORMULA_GUIDE.title}</h4>
-          
-          <div className="space-y-1.5">
-            {PROMPT_FORMULA_GUIDE.structure.map((item, idx) => (
-              <div key={idx} className="text-[10px] leading-relaxed">
-                <span className="text-brass font-semibold">[{item.label}]</span>
-                <span className="text-[#A8A39E]"> - e.g., </span>
-                <span className="text-[#D4CFC8] italic">{item.example}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="pt-3 border-t border-brass/20">
-            <p className="text-[9px] text-[#A8A39E] mb-2 uppercase tracking-wide">Full Example:</p>
-            <p className="text-[10px] text-[#FFFCF5] leading-relaxed bg-[#252220] p-2 rounded border border-brass/20">
-              {PROMPT_FORMULA_GUIDE.fullExample}
-            </p>
-          </div>
+      {hasReferenceImage && (
+        <Card className="bg-brass/10 border-brass/30 p-3">
+          <p className="text-xs text-[#FFFCF5] flex items-center gap-2">
+            <Info className="w-3 h-3 text-brass flex-shrink-0" />
+            <span><strong>Product Placement Mode:</strong> Describe the SCENE for your reference product.</span>
+          </p>
         </Card>
       )}
 
-      {/* Quick Presets */}
-      <div className="space-y-2">
-        <Label className="text-xs text-[#D4CFC8] font-semibold tracking-wide">
-          QUICK PRESETS
-        </Label>
+      <Card className="bg-[#2F2A26] border-[#3D3935] p-4">
+        <h3 className="font-serif text-sm text-[#FFFCF5] mb-3 flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-brass" />Quick Presets
+        </h3>
         <div className="grid grid-cols-2 gap-2">
-          {QUICK_PRESETS.map((preset) => (
-            <Button
-              key={preset.id}
-              onClick={() => handlePresetClick(preset)}
-              variant="outline"
-              size="sm"
-              className="h-auto py-2 px-3 bg-[#252220] border-[#3D3935] hover:bg-[#3D3935] hover:border-brass text-left flex items-start gap-2"
-            >
-              <span className="text-lg">{preset.icon}</span>
-              <span className="text-xs text-[#FFFCF5] flex-1">{preset.label}</span>
-            </Button>
-          ))}
+          {QUICK_PRESETS.map((preset) => {
+            const IconComponent = preset.icon;
+            return (
+              <Button key={preset.id} variant="outline" size="sm" onClick={() => handlePresetClick(preset)}
+                className="bg-[#252220] border-[#3D3935] hover:bg-[#3D3935] text-[#FFFCF5] h-auto py-2 px-3 flex flex-col items-start gap-1">
+                <div className="flex items-center gap-1.5 w-full">
+                  <IconComponent className="w-3 h-3 text-brass flex-shrink-0" />
+                  <span className="text-xs font-medium text-left">{preset.label}</span>
+                </div>
+              </Button>
+            );
+          })}
         </div>
-      </div>
+      </Card>
 
-      <div className="border-t border-[#3D3935] pt-4">
-        <Label className="text-xs text-[#A8A39E] mb-3 block">
-          OR BUILD YOUR OWN (Advanced)
-        </Label>
-
-        {/* Shot Type */}
-        <div className="space-y-1.5 mb-3">
-          <Label className="text-xs text-[#D4CFC8]">Shot Type</Label>
-          <Select value={components.shotType} onValueChange={(v) => handleComponentChange('shotType', v)}>
-            <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-xs">
-              <SelectValue placeholder="Select shot type..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={SHOT_TYPES.PRODUCT.HERO}>Hero Shot</SelectItem>
-              <SelectItem value={SHOT_TYPES.PRODUCT.CLOSE_UP}>Close-up</SelectItem>
-              <SelectItem value={SHOT_TYPES.PRODUCT.LIFESTYLE}>Lifestyle</SelectItem>
-              <SelectItem value={SHOT_TYPES.PRODUCT.FLAT_LAY}>Flat Lay</SelectItem>
-              <SelectItem value={SHOT_TYPES.PRODUCT["3_4_ANGLE"]}>3/4 Angle</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Environment */}
-        <div className="space-y-1.5 mb-3">
-          <Label className="text-xs text-[#D4CFC8]">Environment/Surface</Label>
-          <Select value={components.environment} onValueChange={(v) => handleComponentChange('environment', v)}>
-            <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-xs">
-              <SelectValue placeholder="Select environment..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ENVIRONMENTS.SURFACES.MARBLE}>Marble Surface</SelectItem>
-              <SelectItem value={ENVIRONMENTS.SURFACES.WOOD}>Wooden Table</SelectItem>
-              <SelectItem value={ENVIRONMENTS.SURFACES.SANDSTONE}>Sandstone Blocks</SelectItem>
-              <SelectItem value={ENVIRONMENTS.SURFACES.CONCRETE}>Concrete Platform</SelectItem>
-              <SelectItem value={ENVIRONMENTS.SETTINGS.MINIMALIST}>Minimalist White</SelectItem>
-              <SelectItem value={ENVIRONMENTS.SETTINGS.LUXURY}>Luxury Editorial</SelectItem>
-              <SelectItem value={ENVIRONMENTS.SETTINGS.BOTANICAL}>Botanical Garden</SelectItem>
-              <SelectItem value={ENVIRONMENTS.SETTINGS.DESERT}>Desert Landscape</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Lighting */}
-        <div className="space-y-1.5 mb-3">
-          <Label className="text-xs text-[#D4CFC8]">Lighting</Label>
-          <Select value={components.lighting} onValueChange={(v) => handleComponentChange('lighting', v)}>
-            <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-xs">
-              <SelectValue placeholder="Select lighting..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={LIGHTING.NATURAL.GOLDEN_HOUR}>Golden Hour</SelectItem>
-              <SelectItem value={LIGHTING.NATURAL.OVERCAST}>Soft Overcast</SelectItem>
-              <SelectItem value={LIGHTING.NATURAL.BACKLIT}>Dramatic Backlit</SelectItem>
-              <SelectItem value={LIGHTING.STUDIO.SOFT_BOX}>Studio Softbox</SelectItem>
-              <SelectItem value={LIGHTING.STUDIO.DRAMATIC}>Dramatic Studio</SelectItem>
-              <SelectItem value={LIGHTING.STUDIO.MINIMALIST}>Clean Minimalist</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Camera/Lens */}
-        <div className="space-y-1.5 mb-3">
-          <Label className="text-xs text-[#D4CFC8]">Camera Style</Label>
-          <Select value={components.camera} onValueChange={(v) => handleComponentChange('camera', v)}>
-            <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-xs">
-              <SelectValue placeholder="Select camera..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={CAMERA_LENS.PROFESSIONAL.DSLR_SHALLOW}>Canon R5 35mm f/1.4 (Shallow)</SelectItem>
-              <SelectItem value={CAMERA_LENS.PROFESSIONAL.DSLR_SHARP}>Canon R5 50mm f/1.8 (Sharp)</SelectItem>
-              <SelectItem value={CAMERA_LENS.PROFESSIONAL.NIKON_SHALLOW}>Nikon Z9 50mm f/1.2 (Ultra Shallow)</SelectItem>
-              <SelectItem value={CAMERA_LENS.PROFESSIONAL.SONY_SHARP}>Sony A7R IV 85mm f/1.4 (Portrait)</SelectItem>
-              <SelectItem value={CAMERA_LENS.PROFESSIONAL.MACRO}>Canon 100mm Macro f/2.8</SelectItem>
-              <SelectItem value={CAMERA_LENS.PROFESSIONAL.TELEPHOTO}>Canon 85mm f/1.2 (Portrait)</SelectItem>
-              <SelectItem value={CAMERA_LENS.FILM["35MM_FILM"]}>35mm Film (Kodak Portra 400)</SelectItem>
-              <SelectItem value={CAMERA_LENS.FILM.CINESTILL}>CineStill 800T Film</SelectItem>
-              <SelectItem value={CAMERA_LENS.FILM.FUJIFILM}>Fujifilm X100V (Classic Chrome)</SelectItem>
-              <SelectItem value={CAMERA_LENS.FILM.POLAROID}>Polaroid SX-70</SelectItem>
-              <SelectItem value={CAMERA_LENS.SPECIALTY.LEICA}>Leica M11 50mm Summilux</SelectItem>
-              <SelectItem value={CAMERA_LENS.SPECIALTY.HASSELBLAD_DIGITAL}>Hasselblad X2D 100C</SelectItem>
-              <SelectItem value={CAMERA_LENS.SPECIALTY.PHASE_ONE}>Phase One XF IQ4 150MP</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Custom Details */}
-        <div className="space-y-1.5 mb-3">
-          <Label className="text-xs text-[#D4CFC8]">Additional Details (Optional)</Label>
-          <Input
-            value={customDetails}
-            onChange={(e) => setCustomDetails(e.target.value)}
-            placeholder="E.g., 'with dried roses scattered nearby, soft smoke wisps'"
-            className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E] text-xs h-9"
-          />
-        </div>
-
-        <Button
-          onClick={handleBuildPrompt}
-          size="sm"
-          className="w-full bg-brass/20 hover:bg-brass/30 text-[#FFFCF5] border border-brass/40 h-8 text-xs"
-        >
-          <Wand2 className="w-3 h-3 mr-2" />
-          Build Prompt from Formula
-        </Button>
-      </div>
-
-      {/* Brand Context Indicator */}
-      {brandContext && (brandContext.colors?.length > 0 || brandContext.styleKeywords?.length > 0) && (
-        <div className="bg-[#252220]/50 border border-brass/20 rounded p-2 mt-3">
-          <p className="text-[10px] text-brass font-semibold mb-1">BRAND CONTEXT ACTIVE</p>
-          <div className="flex flex-wrap gap-1">
-            {brandContext.colors?.map((color: string) => (
-              <Badge key={color} variant="outline" className="text-[9px] border-brass/30 text-[#D4CFC8]">
-                {color}
-              </Badge>
-            ))}
-            {brandContext.styleKeywords?.map((keyword: string) => (
-              <Badge key={keyword} variant="outline" className="text-[9px] border-brass/30 text-[#D4CFC8]">
-                {keyword}
-              </Badge>
-            ))}
+      <Card className="bg-[#2F2A26] border-[#3D3935] p-4">
+        <h3 className="font-serif text-sm text-[#FFFCF5] mb-3 flex items-center gap-2">
+          <Camera className="w-4 h-4 text-brass" />Build Custom Prompt
+        </h3>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs text-[#D4CFC8]">Subject + Action</Label>
+            <Input value={components.subject || ""} onChange={(e) => handleComponentChange('subject', e.target.value)}
+              placeholder="E.g., luxury perfume bottle standing upright"
+              className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E] text-xs" />
           </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-[#D4CFC8]">Environment</Label>
+            <Select value={components.environment || ""} onValueChange={(value) => handleComponentChange('environment', value)}>
+              <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] text-xs"><SelectValue placeholder="Choose setting..." /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ENVIRONMENTS.SURFACES.MARBLE}>White Marble</SelectItem>
+                <SelectItem value={ENVIRONMENTS.SURFACES.WOOD}>Warm Wood</SelectItem>
+                <SelectItem value={ENVIRONMENTS.SETTINGS.DESERT}>Desert Landscape</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-[#D4CFC8]">Lighting</Label>
+            <Select value={components.lighting || ""} onValueChange={(value) => handleComponentChange('lighting', value)}>
+              <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] text-xs"><SelectValue placeholder="Choose lighting..." /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={LIGHTING.NATURAL.GOLDEN_HOUR}>Golden Hour</SelectItem>
+                <SelectItem value={LIGHTING.NATURAL.WINDOW}>Soft Window Light</SelectItem>
+                <SelectItem value={LIGHTING.STUDIO.THREE_POINT}>Studio Three-Point</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-[#D4CFC8]">Additional Details</Label>
+            <Input value={customDetails} onChange={(e) => setCustomDetails(e.target.value)}
+              placeholder="E.g., brass props, soft shadows, warm tones..."
+              className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E] text-xs" />
+          </div>
+          <Button onClick={handleBuildPrompt} className="w-full bg-brass hover:bg-brass/90 text-[#1A1816] text-xs font-medium">
+            <Lightbulb className="w-3 h-3 mr-1.5" />Build Prompt
+          </Button>
         </div>
+      </Card>
+
+      {builtPrompt && (
+        <Card className="bg-[#252220] border-brass/30 p-4">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="font-serif text-xs text-[#FFFCF5] flex items-center gap-1.5">
+                <Wand2 className="w-3 h-3 text-brass" />Built Prompt
+              </h4>
+              <Button size="sm" onClick={handleUsePrompt} className="bg-brass hover:bg-brass/90 text-[#1A1816] h-7 text-xs px-2">
+                Use This Prompt
+              </Button>
+            </div>
+            <Textarea value={builtPrompt} readOnly className="bg-[#2F2A26] border-[#3D3935] text-[#D4CFC8] text-xs leading-relaxed resize-none" rows={4} />
+          </div>
+        </Card>
       )}
     </div>
   );

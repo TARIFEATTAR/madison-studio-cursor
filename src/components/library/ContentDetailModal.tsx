@@ -91,7 +91,18 @@ export function ContentDetailModal({
   };
   
   const getImageUrl = () => {
-    return content.imageUrl || content.image_url || content.content;
+    if (!content) return null;
+    if (content.imageUrl) return content.imageUrl;
+    if (content.image_url) return content.image_url;
+    if (content.generated_content && typeof content.generated_content === 'string' && 
+        (content.generated_content.startsWith('data:image/') || content.generated_content.startsWith('http'))) {
+      return content.generated_content;
+    }
+    if (typeof content.content === 'string' && 
+        (content.content.startsWith('data:image/') || content.content.startsWith('http'))) {
+      return content.content;
+    }
+    return null;
   };
 
   const handleEdit = () => {
@@ -158,61 +169,38 @@ export function ContentDetailModal({
     setTimeout(() => setIsCopied(false), 2000);
   };
   
-  const handleDownloadImage = () => {
+  const handleDownloadImage = async () => {
     const imageUrl = getImageUrl();
-    
     if (!imageUrl) {
-      toast({
-        title: "Download failed",
-        description: "Image URL not found",
-        variant: "destructive"
-      });
+      toast({ title: "Image URL not found", variant: "destructive" });
       return;
     }
-    
+
     try {
-      // Check if it's a base64 data URI (old images)
       if (imageUrl.startsWith('data:image/')) {
-        // Convert base64 to blob and download
-        const arr = imageUrl.split(',');
-        const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/png';
-        const bstr = atob(arr[1]);
-        let n = bstr.length;
-        const u8arr = new Uint8Array(n);
-        while (n--) {
-          u8arr[n] = bstr.charCodeAt(n);
-        }
-        const blob = new Blob([u8arr], { type: mime });
-        const blobUrl = URL.createObjectURL(blob);
-        
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = `${content.title || 'image'}.${mime.split('/')[1]}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
-      } else {
-        // Regular URL download (for storage-based images)
         const link = document.createElement('a');
         link.href = imageUrl;
-        link.download = `${content.title || 'image'}.png`;
-        document.body.appendChild(link);
+        link.download = `${content?.title || 'image'}.png`;
         link.click();
-        document.body.removeChild(link);
+        toast({ title: "Image downloaded" });
+        return;
       }
-      
-      toast({
-        title: "Download started",
-        description: "Your image is being downloaded.",
-      });
+
+      const response = await fetch(imageUrl);
+      if (!response.ok) throw new Error('Failed to fetch');
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `${content?.title || 'image'}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+      toast({ title: "Image downloaded" });
     } catch (error) {
       console.error('Download error:', error);
-      toast({
-        title: "Download failed",
-        description: error instanceof Error ? error.message : "An error occurred while downloading",
-        variant: "destructive"
-      });
+      toast({ title: "Failed to download. Try right-click 'Save Image As'", variant: "destructive" });
     }
   };
 

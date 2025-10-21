@@ -29,6 +29,7 @@ interface SessionContext {
   outputFormat: string;
   isImageStudio: boolean;
   visualStandards?: any;
+  brandName?: string; // Added for brand-specific guidelines
 }
 
 interface EditorialAssistantPanelProps {
@@ -164,19 +165,58 @@ export function EditorialAssistantPanel({ onClose, initialContent, sessionContex
     setIsGenerating(true);
 
     try {
-      // Fetch visual standards from brand knowledge if in Image Studio
+      // Fetch brand-specific visual standards if in Image Studio
       let visualStandards = sessionContext?.visualStandards;
+      let loadedBrandName = '';
+      
       if (sessionContext?.isImageStudio && !visualStandards && currentOrganizationId) {
+        // Fetch all visual standards for the organization
         const { data: brandKnowledge } = await supabase
           .from('brand_knowledge')
           .select('content')
           .eq('organization_id', currentOrganizationId)
-          .eq('knowledge_type', 'visual_standards')
-          .eq('is_active', true)
-          .maybeSingle();
+          .in('knowledge_type', ['visual_standards', 'image_guidelines'])
+          .eq('is_active', true);
         
-        if (brandKnowledge) {
-          visualStandards = brandKnowledge.content;
+        // If brandName is provided, try to find brand-specific guidelines in content
+        if (sessionContext.brandName && brandKnowledge && brandKnowledge.length > 0) {
+          const brandName = sessionContext.brandName.toLowerCase();
+          const matchingBrand = brandKnowledge.find(k => {
+            const content = k.content as any;
+            const contentBrandName = content?.brand_name?.toLowerCase();
+            const aliases = content?.brand_aliases || [];
+            return contentBrandName === brandName || 
+                   aliases.some((alias: string) => alias.toLowerCase() === brandName);
+          });
+          
+          if (matchingBrand) {
+            visualStandards = matchingBrand.content;
+            loadedBrandName = (matchingBrand.content as any).brand_name || sessionContext.brandName;
+          }
+        }
+        
+        // Fallback to first visual standards if no brand match
+        if (!visualStandards && brandKnowledge && brandKnowledge.length > 0) {
+          visualStandards = brandKnowledge[0].content;
+          loadedBrandName = 'Organization defaults';
+        }
+        
+        // Final fallback to brand_config
+        if (!visualStandards) {
+          const { data: brandConfig } = await supabase
+            .from('organizations')
+            .select('brand_config')
+            .eq('id', currentOrganizationId)
+            .single();
+          
+          if (brandConfig?.brand_config) {
+            const config = brandConfig.brand_config as any;
+            visualStandards = {
+              color_palette: config.colors || [],
+              style_keywords: config.styleKeywords || []
+            };
+            loadedBrandName = 'Brand config colors/keywords';
+          }
         }
       }
 
@@ -201,6 +241,7 @@ ${sessionContext.allPrompts.map((p, i) => `  ${i + 1}. "${p}"`).join('\n')}
 ${visualStandards ? `
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    BRAND VISUAL STANDARDS                        ║
+║      ${loadedBrandName ? `(${loadedBrandName})` : ''}                                  ║
 ║           (MANDATORY - Follow these rules exactly)               ║
 ╚══════════════════════════════════════════════════════════════════╝
 
