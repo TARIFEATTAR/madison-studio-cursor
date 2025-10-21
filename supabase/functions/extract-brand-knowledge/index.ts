@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { extractedText, organizationId, documentName } = await req.json();
+    const { extractedText, organizationId, documentName, detectVisualStandards } = await req.json();
 
     if (!extractedText || !organizationId) {
       throw new Error('extractedText and organizationId are required');
@@ -25,9 +25,53 @@ serve(async (req) => {
     }
 
     console.log(`Extracting brand knowledge from ${documentName || 'document'} for org: ${organizationId}`);
+    
+    // Detect if this is a visual standards document
+    const isVisualStandards = detectVisualStandards || 
+      /visual|photo|image|lighting|color palette|aspect ratio|template|composition|forbidden element/i.test(extractedText.slice(0, 2000));
 
-    // Extraction prompt for Claude
-    const extractionPrompt = `You are a brand strategist analyzing brand guidelines for a luxury beauty brand to extract structured knowledge.
+    // Different extraction prompts based on document type
+    let extractionPrompt: string;
+    
+    if (isVisualStandards) {
+      extractionPrompt = `You are analyzing VISUAL STANDARDS for AI-generated product photography.
+
+Extract structured visual guidelines from this document:
+
+DOCUMENT TO ANALYZE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${extractedText.slice(0, 50000)} 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Return your analysis as a JSON object with this exact structure:
+
+{
+  "visual_standards": {
+    "golden_rule": "The overarching visual philosophy (e.g., 'If it looks like an ad, it fails')",
+    "color_palette": [
+      {
+        "name": "Stone Beige",
+        "hex": "#D8C8A9",
+        "usage": "Primary background color for product shots"
+      }
+    ],
+    "lighting_mandates": "Lighting requirements (e.g., 'Always golden hour, never harsh studio lighting')",
+    "templates": [
+      {
+        "name": "Hero Product Shot",
+        "aspectRatio": "4:5",
+        "prompt": "Example prompt template for this style"
+      }
+    ],
+    "forbidden_elements": ["chrome", "glossy surfaces", "white backgrounds"],
+    "approved_props": ["aged brass", "matte ceramic", "natural linen"],
+    "raw_document": "FULL EXTRACTED TEXT HERE - include everything"
+  }
+}
+
+CRITICAL: Extract ALL visual standards mentioned. Include the FULL raw document text.`;
+    } else {
+      extractionPrompt = `You are a brand strategist analyzing brand guidelines for a luxury beauty brand to extract structured knowledge.
 
 Analyze the following brand document and detect if it contains category-specific information for:
 - **Personal Fragrance**: Perfume oils, sprays, attars, essential oils, solid perfumes
@@ -101,6 +145,7 @@ CRITICAL INSTRUCTIONS:
 - Extract category-specific vocabulary and product types
 - For undetected categories, set detected: false with empty arrays
 - Return ONLY valid JSON, no additional commentary`;
+    }
 
     // Call Lovable AI (Claude)
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -161,20 +206,35 @@ CRITICAL INSTRUCTIONS:
     }
 
     console.log(`Successfully extracted brand knowledge from ${documentName}`);
-    console.log('Voice attributes:', parsedKnowledge.voice?.toneAttributes);
-    console.log('Approved terms count:', parsedKnowledge.vocabulary?.approvedTerms?.length);
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        voice: parsedKnowledge.voice,
-        vocabulary: parsedKnowledge.vocabulary,
-        examples: parsedKnowledge.examples,
-        structure: parsedKnowledge.structure,
-        categories: parsedKnowledge.categories || {}
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    
+    // Return different structure based on document type
+    if (isVisualStandards && parsedKnowledge.visual_standards) {
+      console.log('Visual standards detected:', parsedKnowledge.visual_standards.golden_rule);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          isVisualStandards: true,
+          visualStandards: parsedKnowledge.visual_standards
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } else {
+      console.log('Voice attributes:', parsedKnowledge.voice?.toneAttributes);
+      console.log('Approved terms count:', parsedKnowledge.vocabulary?.approvedTerms?.length);
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          isVisualStandards: false,
+          voice: parsedKnowledge.voice,
+          vocabulary: parsedKnowledge.vocabulary,
+          examples: parsedKnowledge.examples,
+          structure: parsedKnowledge.structure,
+          categories: parsedKnowledge.categories || {}
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
   } catch (error) {
     console.error('Error in extract-brand-knowledge:', error);

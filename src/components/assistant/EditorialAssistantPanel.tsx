@@ -28,6 +28,7 @@ interface SessionContext {
   aspectRatio: string;
   outputFormat: string;
   isImageStudio: boolean;
+  visualStandards?: any;
 }
 
 interface EditorialAssistantPanelProps {
@@ -171,6 +172,53 @@ ${sessionContext.heroImage ?
 ${sessionContext.allPrompts.length > 0 ? `
 Previous Prompts in This Session:
 ${sessionContext.allPrompts.map((p, i) => `  ${i + 1}. "${p}"`).join('\n')}
+` : ''}
+
+${sessionContext.visualStandards ? `
+╔══════════════════════════════════════════════════════════════════╗
+║                    BRAND VISUAL STANDARDS                        ║
+║           (MANDATORY - Follow these rules exactly)               ║
+╚══════════════════════════════════════════════════════════════════╝
+
+━━━ GOLDEN RULE ━━━
+${sessionContext.visualStandards.golden_rule || 'No golden rule defined'}
+
+━━━ MANDATORY COLOR PALETTE ━━━
+${sessionContext.visualStandards.color_palette?.map((c: any) => 
+  `  • ${c.name} (${c.hex}): ${c.usage}`
+).join('\n') || 'No color palette defined'}
+
+━━━ LIGHTING MANDATES ━━━
+${sessionContext.visualStandards.lighting_mandates || 'No lighting mandates'}
+
+━━━ APPROVED PROMPT TEMPLATES ━━━
+${sessionContext.visualStandards.templates?.map((t: any, i: number) => 
+  `  ${i + 1}. ${t.name} (${t.aspectRatio})\n     Template: "${t.prompt}"`
+).join('\n\n') || 'No templates defined'}
+
+━━━ FORBIDDEN ELEMENTS ━━━
+${sessionContext.visualStandards.forbidden_elements?.map((e: string) => 
+  `  ✗ ${e}`
+).join('\n') || 'No forbidden elements'}
+
+━━━ APPROVED PROPS ━━━
+${sessionContext.visualStandards.approved_props?.map((p: string) => 
+  `  ✓ ${p}`
+).join('\n') || 'No approved props'}
+
+FULL VISUAL STANDARDS DOCUMENT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${sessionContext.visualStandards.raw_document || ''}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CRITICAL MADISON INSTRUCTIONS:
+- Reference templates by name when suggesting prompts (e.g., "Use the Hero Product Shot template")
+- Always include color codes from the palette (e.g., "Stone Beige #D8C8A9")
+- Warn users if they request forbidden elements (e.g., "⚠️ Chrome is forbidden - use aged brass instead")
+- Inject lighting mandates into every prompt suggestion
+- Follow the golden rule religiously
+- Keep responses concise (3-4 sentences max)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ` : ''}
 
 IMPORTANT INSTRUCTIONS:

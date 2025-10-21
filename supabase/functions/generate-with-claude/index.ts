@@ -129,7 +129,7 @@ async function buildBrandContext(organizationId: string) {
   try {
     console.log(`Fetching brand context for organization: ${organizationId}`);
     
-    // Fetch brand knowledge entries
+    // Fetch brand knowledge entries (including visual standards)
     const { data: knowledgeData, error: knowledgeError } = await supabase
       .from('brand_knowledge')
       .select('knowledge_type, content')
@@ -139,6 +139,10 @@ async function buildBrandContext(organizationId: string) {
     if (knowledgeError) {
       console.error('Error fetching brand knowledge:', knowledgeError);
     }
+    
+    // Extract visual standards separately
+    const visualStandardsEntry = knowledgeData?.find(k => k.knowledge_type === 'visual_standards');
+    const visualStandards = visualStandardsEntry?.content as any;
     
     // Fetch organization brand config
     const { data: orgData, error: orgError } = await supabase
@@ -337,6 +341,71 @@ async function buildBrandContext(organizationId: string) {
       
       contextParts.push(`\n⚠️ CRITICAL: All guidelines from these documents are MANDATORY and MUST be followed exactly.`);
       contextParts.push(`╚${'═'.repeat(38)}╝\n`);
+    }
+    
+    // Add visual standards for AI image generation
+    if (visualStandards) {
+      contextParts.push('\n╔══════════════════════════════════════════════════════════════════╗');
+      contextParts.push('║         VISUAL STANDARDS FOR AI IMAGE GENERATION                 ║');
+      contextParts.push('║              (MANDATORY FOR IMAGE STUDIO)                        ║');
+      contextParts.push('╚══════════════════════════════════════════════════════════════════╝');
+      
+      if (visualStandards.golden_rule) {
+        contextParts.push('\n━━━ GOLDEN RULE ━━━');
+        contextParts.push(`✦ ${visualStandards.golden_rule}`);
+      }
+      
+      if (visualStandards.color_palette && visualStandards.color_palette.length > 0) {
+        contextParts.push('\n━━━ MANDATORY COLOR PALETTE ━━━');
+        contextParts.push('Use these exact colors in all image generation prompts:');
+        visualStandards.color_palette.forEach((color: any) => {
+          contextParts.push(`  • ${color.name} (${color.hex}): ${color.usage}`);
+        });
+      }
+      
+      if (visualStandards.lighting_mandates) {
+        contextParts.push('\n━━━ LIGHTING STANDARDS ━━━');
+        contextParts.push(`✦ ${visualStandards.lighting_mandates}`);
+      }
+      
+      if (visualStandards.templates && visualStandards.templates.length > 0) {
+        contextParts.push('\n━━━ APPROVED PROMPT TEMPLATES ━━━');
+        contextParts.push('Reference these templates by name when suggesting prompts:');
+        visualStandards.templates.forEach((template: any, index: number) => {
+          contextParts.push(`\n  ${index + 1}. ${template.name} (${template.aspectRatio})`);
+          contextParts.push(`     Template: "${template.prompt}"`);
+        });
+      }
+      
+      if (visualStandards.forbidden_elements && visualStandards.forbidden_elements.length > 0) {
+        contextParts.push('\n━━━ FORBIDDEN ELEMENTS ━━━');
+        contextParts.push('⚠️ NEVER suggest or allow these in prompts:');
+        visualStandards.forbidden_elements.forEach((element: string) => {
+          contextParts.push(`  ✗ ${element}`);
+        });
+      }
+      
+      if (visualStandards.approved_props && visualStandards.approved_props.length > 0) {
+        contextParts.push('\n━━━ APPROVED PROPS ━━━');
+        contextParts.push('✓ Use these props in compositions:');
+        visualStandards.approved_props.forEach((prop: string) => {
+          contextParts.push(`  • ${prop}`);
+        });
+      }
+      
+      if (visualStandards.raw_document) {
+        contextParts.push('\n━━━ FULL VISUAL STANDARDS DOCUMENT ━━━');
+        contextParts.push(visualStandards.raw_document);
+      }
+      
+      contextParts.push('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      contextParts.push('⚠️ CRITICAL MADISON INSTRUCTIONS:');
+      contextParts.push('- Reference templates by name (e.g., "Use the Hero Product Shot template")');
+      contextParts.push('- Always include hex color codes (e.g., "Stone Beige #D8C8A9")');
+      contextParts.push('- Warn users if they request forbidden elements');
+      contextParts.push('- Inject lighting mandates into every prompt suggestion');
+      contextParts.push('- Follow the golden rule in all creative direction');
+      contextParts.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     }
     
     const fullContext = contextParts.join('\n');

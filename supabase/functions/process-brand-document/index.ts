@@ -224,13 +224,18 @@ serve(async (req) => {
 
     // NEW: Extract structured brand knowledge using Claude
     console.log('[CHECKPOINT] Extracting structured brand knowledge with AI...');
+    
+    // Detect if this is a visual standards document
+    const isVisualStandards = /visual|photo|image|lighting|color palette|aspect ratio|template|composition|forbidden element/i.test(extractedText.slice(0, 2000));
+    
     const { data: extractionData, error: extractionError } = await supabase.functions.invoke(
       'extract-brand-knowledge',
       {
         body: { 
           extractedText,
           organizationId: document.organization_id,
-          documentName: document.file_name
+          documentName: document.file_name,
+          detectVisualStandards: isVisualStandards
         }
       }
     );
@@ -243,6 +248,19 @@ serve(async (req) => {
       
       // Save structured knowledge to brand_knowledge table
       const knowledgeInserts = [];
+      
+      // Handle visual standards separately
+      if (extractionData.isVisualStandards && extractionData.visualStandards) {
+        console.log('Saving visual standards to brand_knowledge...');
+        knowledgeInserts.push({
+          organization_id: document.organization_id,
+          document_id: documentId,
+          knowledge_type: 'visual_standards',
+          content: extractionData.visualStandards,
+          is_active: true,
+          version: 1
+        });
+      }
       
       if (extractionData.voice) {
         knowledgeInserts.push({

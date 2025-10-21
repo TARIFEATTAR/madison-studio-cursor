@@ -157,6 +157,32 @@ export function BrandGuidelinesTab() {
         </>
       )}
 
+      {/* Visual Standards for AI Image Generation */}
+      {currentOrganizationId && (
+        <>
+          <Card className="bg-paper-light border-cream-dark">
+            <CardHeader>
+              <CardTitle className="text-charcoal flex items-center gap-2">
+                <FileText className="w-5 h-5 text-brass" />
+                Visual Standards for AI Image Generation
+              </CardTitle>
+              <CardDescription>
+                Upload your brand's visual guidelines (photography rules, color palettes, lighting mandates, etc.) 
+                to train Madison's creative direction for AI-generated images
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BrandDocumentStatus 
+                organizationId={currentOrganizationId}
+                documents={brandDocuments}
+                onRetry={loadBrandDocuments}
+              />
+            </CardContent>
+          </Card>
+          <Separator className="my-8" />
+        </>
+      )}
+
       {/* Content Brief Worksheets */}
       <Card className="bg-paper-light border-cream-dark">
         <CardHeader>

@@ -77,21 +77,23 @@ export default function ImageEditor() {
           .eq('id', orgId)
           .single();
 
-        // Fetch brand knowledge for voice/tone and style
+        // Fetch brand knowledge for voice/tone, style, and visual standards
         const { data: brandKnowledge } = await supabase
           .from('brand_knowledge')
           .select('content, knowledge_type')
           .eq('organization_id', orgId)
           .eq('is_active', true)
-          .in('knowledge_type', ['brand_voice', 'brand_style']);
+          .in('knowledge_type', ['brand_voice', 'brand_style', 'visual_standards']);
 
         const voiceKnowledge = brandKnowledge?.find(k => k.knowledge_type === 'brand_voice');
         const styleKnowledge = brandKnowledge?.find(k => k.knowledge_type === 'brand_style');
+        const visualStandards = brandKnowledge?.find(k => k.knowledge_type === 'visual_standards');
 
         setBrandContext({
           colors: (brandConfig?.brand_config as any)?.colors || [],
           voiceTone: (voiceKnowledge?.content as any)?.tone || '',
-          styleKeywords: (styleKnowledge?.content as any)?.keywords || []
+          styleKeywords: (styleKnowledge?.content as any)?.keywords || [],
+          visualStandards: visualStandards?.content || null
         });
       } catch (error) {
         console.error('Error fetching brand context:', error);
@@ -1319,7 +1321,8 @@ export default function ImageEditor() {
                     allPrompts: allPrompts,
                     aspectRatio: aspectRatio,
                     outputFormat: outputFormat,
-                    isImageStudio: true
+                    isImageStudio: true,
+                    visualStandards: brandContext?.visualStandards || undefined
                   }}
                 />
               </div>
