@@ -92,6 +92,8 @@ serve(async (req) => {
     const aspectRatioInstructions: Record<string, string> = {
       '1:1': 'square composition with equal width and height',
       '4:5': 'vertical portrait orientation, slightly taller than wide',
+      '2:3': 'vertical Pinterest format, taller portrait orientation',
+      '3:2': 'horizontal email/web banner format, slightly wider than tall',
       '16:9': 'wide landscape format, cinematic horizontal composition',
       '9:16': 'tall vertical format, mobile-friendly portrait orientation',
       '21:9': 'ultra-wide cinematic format, expansive landscape composition'
