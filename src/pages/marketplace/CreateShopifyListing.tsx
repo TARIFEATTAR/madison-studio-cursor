@@ -218,27 +218,40 @@ const CreateShopifyListing = () => {
       return;
     }
 
-    // Refresh session to ensure we have a valid token
-    const { data: { session }, error: sessionError } = await supabase.auth.refreshSession();
-    console.log('[Push] Session refresh:', { 
-      hasSession: !!session, 
-      sessionError: sessionError?.message,
-      accessToken: session?.access_token?.substring(0, 20) + '...'
-    });
-
-    if (!session || sessionError) {
-      toast.error("Please log in again to push to Shopify");
-      return;
-    }
-
     setIsPushing(true);
     try {
+      // Refresh session to ensure valid token
+      console.log('Refreshing session before push...');
+      const { data: { session }, error: sessionError } = await supabase.auth.refreshSession();
+      
+      if (sessionError || !session) {
+        console.error('Session refresh failed:', sessionError);
+        toast.error("Please log in again");
+        setIsPushing(false);
+        return;
+      }
+
+      // Optional: Diagnostic check to verify gateway accepts our token
+      console.log('Running auth diagnostic check...');
+      const authCheck = await supabase.functions.invoke('check-auth');
+      console.log('[check-auth result]:', authCheck);
+      
+      if (authCheck.error) {
+        console.error('Auth check failed:', authCheck.error);
+        toast.error("Authentication issue detected. Please refresh and try again.");
+        setIsPushing(false);
+        return;
+      }
+
+      console.log('Pushing to Shopify with:', {
+        listing_id: currentListingId,
+        shopify_product_id: shopifyProductId
+      });
+
+      // Let Supabase SDK handle headers automatically (includes both Authorization and apikey)
       const { data, error } = await supabase.functions.invoke(
         'update-shopify-product',
         {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`
-          },
           body: { 
             listing_id: currentListingId,
             shopify_product_id: shopifyProductId
@@ -246,14 +259,31 @@ const CreateShopifyListing = () => {
         }
       );
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error pushing to Shopify:', error);
+        setPushStatus('failed');
+        toast.error(`Failed to push: ${error.message}`);
+        return;
+      }
+
+      console.log('Push response:', data);
+      
+      if (data?.error) {
+        setPushStatus('failed');
+        toast.error(data.error);
+        if (data.details) {
+          console.error('Shopify error details:', data.details);
+        }
+        return;
+      }
 
       setPushStatus('success');
       toast.success("Successfully pushed to Shopify!");
+      setExternalId(shopifyProductId);
     } catch (error: any) {
       console.error('Error pushing to Shopify:', error);
       setPushStatus('failed');
-      toast.error(error.message || "Failed to push to Shopify");
+      toast.error("Failed to push to Shopify");
     } finally {
       setIsPushing(false);
     }

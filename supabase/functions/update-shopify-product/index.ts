@@ -76,59 +76,83 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log('Fetching Shopify connection for org:', listing.organization_id);
+    // Try environment secrets first (recommended), fall back to DB
+    const envToken = Deno.env.get('SHOPIFY_ACCESS_TOKEN');
+    const envDomain = Deno.env.get('SHOPIFY_SHOP_DOMAIN');
+    
+    let shopDomain = envDomain;
+    let accessToken = envToken;
+    
+    // If no env secrets, try DB connection
+    if (!shopDomain || !accessToken) {
+      console.log('No env secrets found, fetching Shopify connection from DB for org:', listing.organization_id);
+      
+      const { data: connection, error: connectionError } = await supabaseClient
+        .from('shopify_connections')
+        .select('*')
+        .eq('organization_id', listing.organization_id)
+        .single();
 
-    // Fetch Shopify connection
-    const { data: connection, error: connectionError } = await supabaseClient
-      .from('shopify_connections')
-      .select('*')
-      .eq('organization_id', listing.organization_id)
-      .single();
+      if (connectionError || !connection) {
+        console.error('Error fetching Shopify connection:', connectionError);
+        return new Response(JSON.stringify({ 
+          error: 'Shopify not connected. Please add SHOPIFY_ACCESS_TOKEN and SHOPIFY_SHOP_DOMAIN secrets or connect via Settings.' 
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
 
-    if (connectionError || !connection) {
-      console.error('Error fetching Shopify connection:', connectionError);
-      return new Response(JSON.stringify({ error: 'Shopify not connected for this organization' }), {
+      shopDomain = connection.shop_domain;
+      accessToken = connection.access_token_encrypted;
+      
+      console.log('Shopify connection found in DB:', {
+        shopDomain: shopDomain,
+        hasAccessToken: !!accessToken,
+        tokenLength: accessToken?.length
+      });
+    } else {
+      console.log('Using Shopify credentials from environment secrets');
+    }
+    
+    // Validate credentials
+    if (!shopDomain || !accessToken) {
+      return new Response(JSON.stringify({ 
+        error: 'Shopify credentials incomplete. Missing shop domain or access token.' 
+      }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log('Shopify connection found:', {
-      shopDomain: connection.shop_domain,
-      hasAccessToken: !!connection.access_token_encrypted,
-      tokenLength: connection.access_token_encrypted?.length
-    });
-
     const platformData = listing.platform_data as any;
     
-    // Build the product update payload - only title, description, tags, type, vendor
-    // No variants = Shopify preserves existing price, inventory, SKU, weight
+    // Build minimal product update payload (title and description only)
+    // This requires only read_products, write_products scopes
     const productUpdate = {
       product: {
         id: effectiveShopifyId,
         title: listing.title || platformData?.title || '',
         body_html: platformData?.description || '',
-        product_type: platformData?.product_type || '',
-        vendor: platformData?.vendor || '',
-        tags: Array.isArray(platformData?.tags) ? platformData.tags.join(', ') : '',
       },
     };
 
     console.log('Pushing to Shopify:', productUpdate);
 
-    // Call Shopify Admin API
-    const shopifyUrl = `https://${connection.shop_domain}/admin/api/2024-01/products/${effectiveShopifyId}.json`;
+    // Call Shopify Admin API 2024-10
+    const shopifyUrl = `https://${shopDomain}/admin/api/2024-10/products/${effectiveShopifyId}.json`;
     console.log('Shopify API call:', {
       url: shopifyUrl,
       method: 'PUT',
-      hasToken: !!connection.access_token_encrypted,
+      hasToken: !!accessToken,
+      tokenPrefix: accessToken?.substring(0, 6) + '...',
       productId: effectiveShopifyId
     });
     
     const shopifyResponse = await fetch(shopifyUrl, {
       method: 'PUT',
       headers: {
-        'X-Shopify-Access-Token': connection.access_token_encrypted,
+        'X-Shopify-Access-Token': accessToken,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(productUpdate),
@@ -159,9 +183,18 @@ Deno.serve(async (req) => {
         })
         .eq('id', listing_id);
 
+      // Return helpful error message
+      let userMessage = 'Failed to push to Shopify';
+      if (shopifyResponse.status === 401) {
+        userMessage = 'Unauthorized: Please check your Shopify access token and ensure it has read_products and write_products scopes.';
+      } else if (shopifyResponse.status === 404) {
+        userMessage = 'Product not found in Shopify. Please verify the product ID.';
+      }
+
       return new Response(JSON.stringify({ 
-        error: 'Failed to push to Shopify',
-        details: errorText 
+        error: userMessage,
+        details: errorDetails,
+        status: shopifyResponse.status
       }), {
         status: shopifyResponse.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
