@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Download, Store, Upload } from "lucide-react";
+import { ArrowLeft, Save, Download, Store, Upload, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { getPlatform } from "@/config/marketplaceTemplates";
 import { BasicInformationSection } from "@/components/marketplace/sections/BasicInformationSection";
@@ -259,21 +260,43 @@ const CreateShopifyListing = () => {
                 Export CSV
               </Button>
               <div className="flex items-center gap-2">
+                {externalId && (
+                  <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+                    <Check className="w-3 h-3" />
+                    <span>ID: {externalId}</span>
+                  </div>
+                )}
                 <Input
                   placeholder="Shopify Product ID"
                   value={manualShopifyId}
                   onChange={(e) => setManualShopifyId(e.target.value)}
                   className="w-48 h-9"
                 />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handlePushToShopify}
-                  disabled={isPushing || !currentListingId || (!externalId && !manualShopifyId)}
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  {isPushing ? "Pushing..." : "Push to Shopify"}
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handlePushToShopify}
+                          disabled={isPushing || !currentListingId || (!externalId && !manualShopifyId)}
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          {isPushing ? "Pushing..." : "Push to Shopify"}
+                        </Button>
+                      </div>
+                    </TooltipTrigger>
+                    {(!currentListingId || (!externalId && !manualShopifyId)) && (
+                      <TooltipContent>
+                        <p>
+                          {!currentListingId && "Save draft first"}
+                          {currentListingId && !externalId && !manualShopifyId && "Select a synced product or enter Shopify Product ID"}
+                        </p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
               </div>
               <Button
                 size="sm"
@@ -297,8 +320,12 @@ const CreateShopifyListing = () => {
               productId={productId}
               onProductSelect={setProductId}
               onProductDataChange={(product) => {
+                console.log('Product selected:', product);
+                console.log('Shopify Product ID:', product?.shopify_product_id);
+                
                 if (product?.shopify_product_id) {
                   setExternalId(product.shopify_product_id);
+                  console.log('Set externalId to:', product.shopify_product_id);
                   
                   // Auto-fill form from product data
                   handleUpdate({
@@ -312,6 +339,7 @@ const CreateShopifyListing = () => {
                   toast.success("Product linked and form pre-filled!");
                 } else if (product) {
                   setExternalId(null);
+                  console.log('Product has no Shopify ID');
                   
                   // Still pre-fill even without Shopify ID
                   handleUpdate({
@@ -325,6 +353,7 @@ const CreateShopifyListing = () => {
                   toast.info("Product data loaded (no Shopify ID yet)");
                 } else {
                   setExternalId(null);
+                  console.log('No product selected');
                 }
               }}
             />

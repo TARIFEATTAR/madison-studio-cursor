@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, Sparkles } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Package, Sparkles, Check, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown } from "lucide-react";
 
 interface ProductAssociationSectionProps {
   productId: string | null;
@@ -94,7 +94,15 @@ export function ProductAssociationSection({ productId, onProductSelect, onProduc
                     <SelectItem value="none">None (Create standalone listing)</SelectItem>
                     {products.map((product) => (
                       <SelectItem key={product.id} value={product.id}>
-                        {product.name}
+                        <div className="flex items-center justify-between w-full gap-2">
+                          <span>{product.name}</span>
+                          {product.shopify_product_id && (
+                            <Badge variant="outline" className="ml-2 text-xs">
+                              <Check className="w-3 h-3 mr-1" />
+                              Synced
+                            </Badge>
+                          )}
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
