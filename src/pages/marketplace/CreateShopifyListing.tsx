@@ -4,6 +4,8 @@ import { ArrowLeft, Save, Download, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { getPlatform } from "@/config/marketplaceTemplates";
 import { BasicInformationSection } from "@/components/marketplace/sections/BasicInformationSection";
@@ -27,7 +29,8 @@ const CreateShopifyListing = () => {
     description: '',
     tags: [] as string[],
     sku: '',
-    weight: ''
+    weight: '',
+    quantity: '1'
   });
 
   const [productId, setProductId] = useState<string | null>(null);
@@ -39,6 +42,10 @@ const CreateShopifyListing = () => {
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleUpdate = (updates: any) => {
+    setFormData(prev => ({ ...prev, ...updates }));
   };
 
   const handleSave = async () => {
@@ -73,13 +80,14 @@ const CreateShopifyListing = () => {
         organization_id: orgMember.organization_id,
         platform: 'shopify',
         product_id: productId,
+        title: formData.title,
         listing_data: formData,
         status: 'draft' as const
       };
 
       const { error } = await supabase
         .from('marketplace_listings')
-        .insert(listingData);
+        .insert([listingData]);
 
       if (error) throw error;
 
@@ -189,48 +197,48 @@ const CreateShopifyListing = () => {
             />
 
             <BasicInformationSection
-              platform={platform}
-              formData={formData}
-              onInputChange={handleInputChange}
+              title={formData.title}
+              category={formData.category}
+              price={formData.price}
+              quantity={formData.quantity}
+              onUpdate={handleUpdate}
             />
 
             <DescriptionSection
-              platform={platform}
-              formData={formData}
-              onInputChange={handleInputChange}
+              description={formData.description}
+              onUpdate={(desc) => handleInputChange('description', desc)}
             />
 
             <SEOTagsSection
-              platform={platform}
-              formData={formData}
-              onInputChange={handleInputChange}
+              tags={formData.tags}
+              onUpdate={(tags) => handleInputChange('tags', tags)}
             />
 
             {/* Additional Shopify Fields */}
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4">Product Details</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">SKU (Optional)</label>
-                  <input
+                <div className="space-y-2">
+                  <Label htmlFor="sku">SKU (Optional)</Label>
+                  <Input
+                    id="sku"
                     type="text"
-                    className="w-full px-3 py-2 border rounded-md"
                     placeholder="e.g., NOIR-001"
                     value={formData.sku}
                     onChange={(e) => handleInputChange('sku', e.target.value)}
                   />
-                  <p className="text-xs text-muted-foreground mt-1">Stock Keeping Unit</p>
+                  <p className="text-xs text-muted-foreground">Stock Keeping Unit</p>
                 </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Weight in grams (Optional)</label>
-                  <input
+                <div className="space-y-2">
+                  <Label htmlFor="weight">Weight in grams (Optional)</Label>
+                  <Input
+                    id="weight"
                     type="number"
-                    className="w-full px-3 py-2 border rounded-md"
                     placeholder="0"
                     value={formData.weight}
                     onChange={(e) => handleInputChange('weight', e.target.value)}
                   />
-                  <p className="text-xs text-muted-foreground mt-1">For shipping calculations</p>
+                  <p className="text-xs text-muted-foreground">For shipping calculations</p>
                 </div>
               </div>
             </Card>
@@ -242,8 +250,8 @@ const CreateShopifyListing = () => {
               <MadisonAssistantPanel
                 platform="shopify"
                 formData={formData}
-                productId={productId}
-                onApplySuggestion={(field, value) => handleInputChange(field, value)}
+                productId={productId || undefined}
+                onUpdateField={handleUpdate}
               />
             </div>
           </div>
