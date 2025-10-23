@@ -29,6 +29,7 @@ export interface Product {
   formulationType: string | null;
   
   // Universal fields
+  description: string | null;
   usp: string | null;
   tone: string | null;
 }
@@ -80,6 +81,7 @@ export const useProducts = () => {
         formulationType: p.formulation_type,
         
         // Universal
+        description: p.description,
         usp: p.usp,
         tone: p.tone,
       }));

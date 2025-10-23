@@ -87,6 +87,23 @@ serve(async (req) => {
         ? scentFamilyTag.replace('scent_family:', '').trim()
         : null;
       
+      // Extract tone from tags (e.g., "tone:elegant")
+      const toneTag = tags.find((tag: string) => tag.startsWith('tone:'));
+      const tone = toneTag ? toneTag.replace('tone:', '').trim() : null;
+      
+      // Strip HTML from body_html for description
+      const description = product.body_html 
+        ? product.body_html
+            .replace(/<[^>]*>/g, '') // Remove HTML tags
+            .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
+            .replace(/&amp;/g, '&')  // Decode &amp;
+            .replace(/&lt;/g, '<')   // Decode &lt;
+            .replace(/&gt;/g, '>')   // Decode &gt;
+            .replace(/&quot;/g, '"') // Decode &quot;
+            .replace(/&#39;/g, "'")  // Decode &#39;
+            .trim()
+        : null;
+      
       return {
         organization_id,
         name: product.title,
@@ -98,8 +115,9 @@ serve(async (req) => {
         shopify_variant_id: variant.id?.toString(),
         shopify_sync_status: 'synced',
         last_shopify_sync: new Date().toISOString(),
-        usp: product.body_html ? product.body_html.substring(0, 500) : null,
-        tone: product.tags ? product.tags.split(',')[0] : null,
+        description: description,
+        usp: null, // To be filled manually with selling points
+        tone: tone,
       };
     });
 

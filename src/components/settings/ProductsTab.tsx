@@ -79,6 +79,7 @@ export function ProductsTab() {
     product_type: "",
     collection: "",
     // Universal
+    description: "",
     usp: "",
     tone: "",
     // Personal Fragrance
@@ -115,6 +116,7 @@ export function ProductsTab() {
       name: "",
       product_type: "",
       collection: "",
+      description: "",
       usp: "",
       tone: "",
       scent_family: "",
@@ -142,6 +144,7 @@ export function ProductsTab() {
       name: product.name,
       product_type: product.product_type || "",
       collection: product.collection || "",
+      description: product.description || "",
       usp: product.usp || "",
       tone: product.tone || "",
       scent_family: product.scentFamily || "",
@@ -169,6 +172,7 @@ export function ProductsTab() {
         name: formData.name.trim(),
         product_type: formData.product_type.trim() || null,
         collection: formData.collection.trim() || null,
+        description: formData.description.trim() || null,
         usp: formData.usp.trim() || null,
         tone: formData.tone.trim() || null,
       };
@@ -934,24 +938,44 @@ export function ProductsTab() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="usp">USP (Unique Selling Point)</Label>
+                <Label htmlFor="tone">Brand Tone</Label>
                 <Input
-                  id="usp"
-                  value={formData.usp}
-                  onChange={(e) => setFormData({ ...formData, usp: e.target.value })}
-                  placeholder="What makes this product special?"
+                  id="tone"
+                  value={formData.tone}
+                  onChange={(e) => setFormData({ ...formData, tone: e.target.value })}
+                  placeholder="e.g., Elegant, Playful, Luxurious"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="tone">Brand Tone</Label>
-              <Input
-                id="tone"
-                value={formData.tone}
-                onChange={(e) => setFormData({ ...formData, tone: e.target.value })}
-                placeholder="e.g., Elegant, Playful, Luxurious"
+              <Label htmlFor="description">Product Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Full product description from Shopify or entered manually..."
+                rows={4}
+                className="resize-y"
               />
+              <p className="text-xs text-muted-foreground">
+                The main product description (synced from Shopify or entered manually)
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="usp">USP (Unique Selling Points)</Label>
+              <Textarea
+                id="usp"
+                value={formData.usp}
+                onChange={(e) => setFormData({ ...formData, usp: e.target.value })}
+                placeholder="e.g., Alcohol-free • Lasts 8 hours • Vegan OR Long-lasting, cruelty-free fragrance"
+                rows={3}
+                className="resize-y"
+              />
+              <p className="text-xs text-muted-foreground">
+                Key selling points - format as bullet points (•), commas, or freeform text
+              </p>
             </div>
 
             {/* Personal Fragrance Fields */}
