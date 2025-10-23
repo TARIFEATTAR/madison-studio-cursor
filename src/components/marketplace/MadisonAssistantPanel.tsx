@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles, Tag, FileText, Send, Loader2 } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { Sparkles, Tag, FileText, Send, Loader2, Copy, CopyCheck } from "lucide-react";
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -15,6 +15,14 @@ interface Message {
   timestamp: Date;
 }
 
+export type MadisonAssistantHandle = {
+  generateDescription: () => void;
+  suggestTags: () => void;
+  optimizeTitle: () => void;
+  copyLastAsText: () => void;
+  copyLastAsHTML: () => void;
+};
+
 interface MadisonAssistantPanelProps {
   platform: string;
   formData: any;
@@ -23,13 +31,13 @@ interface MadisonAssistantPanelProps {
   productId?: string;
 }
 
-export function MadisonAssistantPanel({ 
+export const MadisonAssistantPanel = forwardRef<MadisonAssistantHandle, MadisonAssistantPanelProps>(function MadisonAssistantPanel({ 
   platform, 
   formData, 
   onUpdateField,
   organizationId,
   productId 
-}: MadisonAssistantPanelProps) {
+}: MadisonAssistantPanelProps, ref) {
   const { toast } = useToast();
   const { userName } = useUserProfile();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -60,6 +68,52 @@ What would you like me to help with?`;
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  const getLastAssistant = () => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "assistant") return messages[i];
+    }
+    return undefined;
+  };
+
+  const escapeHtml = (s: string) => s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  const toHtmlFromText = (text: string) => {
+    const lines = text.split("\n");
+    let html = "";
+    let inList = false;
+    let paragraph = "";
+
+    const flushParagraph = () => {
+      if (paragraph.trim()) {
+        html += `<p>${escapeHtml(paragraph.trim())}</p>`;
+        paragraph = "";
+      }
+    };
+
+    for (const raw of lines) {
+      const line = raw.replace(/\t/g, " ").trimEnd();
+      if (line.trim().startsWith("- ")) {
+        flushParagraph();
+        if (!inList) { html += "<ul>"; inList = true; }
+        html += `<li>${escapeHtml(line.trim().slice(2))}</li>`;
+      } else if (line.trim() === "") {
+        flushParagraph();
+        if (inList) { html += "</ul>"; inList = false; }
+      } else {
+        if (inList) { html += "</ul>"; inList = false; }
+        paragraph += (paragraph ? " " : "") + line;
+      }
+    }
+
+    flushParagraph();
+    if (inList) html += "</ul>";
+    return html;
+  };
+
 
   const handleSend = async (actionType?: string, customPrompt?: string) => {
     const userPrompt = customPrompt || input.trim();
@@ -219,6 +273,44 @@ What would you like me to help with?`;
     handleSend(action, prompts[action]);
   };
 
+  const copyLastAsText = async () => {
+    const last = getLastAssistant();
+    if (!last) return;
+    await navigator.clipboard.writeText(last.content);
+    toast({ title: "Copied", description: "Assistant text copied." });
+  };
+
+  const copyLastAsHTML = async () => {
+    const last = getLastAssistant();
+    if (!last) return;
+    const html = toHtmlFromText(last.content);
+    try {
+      const ClipboardItemAny: any = (window as any).ClipboardItem;
+      if (navigator.clipboard && ClipboardItemAny) {
+        await navigator.clipboard.write([
+          new ClipboardItemAny({
+            'text/html': new Blob([html], { type: 'text/html' }),
+            'text/plain': new Blob([last.content], { type: 'text/plain' })
+          })
+        ]);
+      } else {
+        await navigator.clipboard.writeText(html);
+      }
+      toast({ title: "Copied", description: "HTML copied for Shopify." });
+    } catch {
+      await navigator.clipboard.writeText(html);
+      toast({ title: "Copied", description: "HTML copied for Shopify." });
+    }
+  };
+
+  useImperativeHandle(ref, () => ({
+    generateDescription: () => handleQuickAction('description'),
+    suggestTags: () => handleQuickAction('tags'),
+    optimizeTitle: () => handleQuickAction('title'),
+    copyLastAsText,
+    copyLastAsHTML,
+  }));
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -355,4 +447,4 @@ What would you like me to help with?`;
       </CardContent>
     </Card>
   );
-}
+});
