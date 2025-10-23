@@ -153,6 +153,20 @@ serve(async (req) => {
 - Social proof and trends
 - Excitement and energy`,
         categories: ['Beauty & Personal Care', 'Home & Garden', 'Fashion', 'Lifestyle']
+      },
+      shopify: {
+        name: 'Shopify',
+        description: 'E-commerce platform - Professional product listings',
+        validation: { titleMaxLength: 255, descriptionMaxLength: 5000, tagsMax: 250 },
+        aiTemplate: `Create professional Shopify listing content with:
+- Clear, searchable product title optimized for Google Shopping
+- Detailed product description highlighting benefits and features
+- SEO-friendly language that converts browsers to buyers
+- Professional, trustworthy tone
+- Mobile-friendly formatting (short paragraphs, scannable)
+- Strategic use of tags for store organization and search
+- Technical accuracy and specifications`,
+        categories: ['Fragrance', 'Bath & Body', 'Home Fragrance', 'Candles', 'Gift Sets', 'Wellness']
       }
     };
 

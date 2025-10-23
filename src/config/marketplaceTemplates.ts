@@ -1,4 +1,4 @@
-import { Tag, ShoppingCart, Package } from "lucide-react";
+import { Tag, ShoppingCart, Package, Store } from "lucide-react";
 
 export interface PlatformField {
   id: string;
@@ -171,6 +171,114 @@ export const MARKETPLACE_PLATFORMS: Record<string, MarketplacePlatform> = {
       { value: 'home', label: 'Home & Garden' },
       { value: 'fashion', label: 'Fashion' },
       { value: 'lifestyle', label: 'Lifestyle' },
+      { value: 'wellness', label: 'Wellness' }
+    ]
+  },
+
+  shopify: {
+    id: 'shopify',
+    name: 'Shopify',
+    icon: Store,
+    color: 'green-500',
+    description: 'E-commerce platform - Professional product listings',
+    fields: [
+      {
+        id: 'title',
+        label: 'Product Title',
+        type: 'text',
+        maxLength: 255,
+        required: true,
+        placeholder: 'e.g., Noir de Nuit - Luxury Artisan Perfume Oil',
+        helpText: 'Max 255 characters. Clear, searchable product name.'
+      },
+      {
+        id: 'product_type',
+        label: 'Product Type',
+        type: 'text',
+        placeholder: 'e.g., Perfume Oil, Candle, Body Care',
+        helpText: 'Used for organization and filtering in your store'
+      },
+      {
+        id: 'vendor',
+        label: 'Vendor/Brand',
+        type: 'text',
+        placeholder: 'Your brand name',
+        helpText: 'Brand or manufacturer name'
+      },
+      {
+        id: 'category',
+        label: 'Product Category',
+        type: 'select',
+        required: true,
+        helpText: 'Choose the primary category'
+      },
+      {
+        id: 'price',
+        label: 'Price (USD)',
+        type: 'number',
+        required: true,
+        placeholder: '0.00',
+        helpText: 'Base selling price'
+      },
+      {
+        id: 'compare_at_price',
+        label: 'Compare at Price',
+        type: 'number',
+        placeholder: '0.00',
+        helpText: 'Original price for showing discounts (optional)'
+      },
+      {
+        id: 'description',
+        label: 'Product Description',
+        type: 'textarea',
+        maxLength: 5000,
+        required: true,
+        placeholder: 'Tell customers about your product...',
+        helpText: 'Rich product description with benefits and features. Max 5000 characters.'
+      },
+      {
+        id: 'tags',
+        label: 'Product Tags',
+        type: 'tags',
+        maxLength: 250,
+        helpText: 'Tags for search and organization (comma-separated, max 250 chars total)'
+      },
+      {
+        id: 'sku',
+        label: 'SKU',
+        type: 'text',
+        placeholder: 'e.g., NOIR-001',
+        helpText: 'Stock Keeping Unit for inventory tracking'
+      },
+      {
+        id: 'weight',
+        label: 'Weight (grams)',
+        type: 'number',
+        placeholder: '0',
+        helpText: 'Product weight for shipping calculations'
+      }
+    ],
+    validation: {
+      titleMaxLength: 255,
+      descriptionMaxLength: 5000,
+      tagsMax: 250
+    },
+    exportFormats: ['csv', 'json'],
+    aiPromptTemplate: `Create a Shopify product listing with:
+- Clear, professional product title optimized for search
+- Detailed product description highlighting benefits and features
+- SEO-friendly language for Google Shopping
+- Proper product categorization
+- Strategic use of tags for discovery
+- Professional, trustworthy tone
+- Technical accuracy and specifications`,
+    categories: [
+      { value: 'fragrance', label: 'Fragrance' },
+      { value: 'bath_body', label: 'Bath & Body' },
+      { value: 'home_fragrance', label: 'Home Fragrance' },
+      { value: 'candles', label: 'Candles' },
+      { value: 'gift_sets', label: 'Gift Sets' },
+      { value: 'accessories', label: 'Accessories' },
       { value: 'wellness', label: 'Wellness' }
     ]
   }
