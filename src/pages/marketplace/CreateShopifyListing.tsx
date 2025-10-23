@@ -218,15 +218,15 @@ const CreateShopifyListing = () => {
       return;
     }
 
-    // Verify we have an active session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    console.log('[Push] Session check:', { 
+    // Refresh session to ensure we have a valid token
+    const { data: { session }, error: sessionError } = await supabase.auth.refreshSession();
+    console.log('[Push] Session refresh:', { 
       hasSession: !!session, 
       sessionError: sessionError?.message,
       accessToken: session?.access_token?.substring(0, 20) + '...'
     });
 
-    if (!session) {
+    if (!session || sessionError) {
       toast.error("Please log in again to push to Shopify");
       return;
     }

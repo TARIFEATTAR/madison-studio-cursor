@@ -93,6 +93,12 @@ Deno.serve(async (req) => {
       });
     }
 
+    console.log('Shopify connection found:', {
+      shopDomain: connection.shop_domain,
+      hasAccessToken: !!connection.access_token_encrypted,
+      tokenLength: connection.access_token_encrypted?.length
+    });
+
     const platformData = listing.platform_data as any;
     
     // Build the product update payload - only title, description, tags, type, vendor
@@ -112,6 +118,13 @@ Deno.serve(async (req) => {
 
     // Call Shopify Admin API
     const shopifyUrl = `https://${connection.shop_domain}/admin/api/2024-01/products/${effectiveShopifyId}.json`;
+    console.log('Shopify API call:', {
+      url: shopifyUrl,
+      method: 'PUT',
+      hasToken: !!connection.access_token_encrypted,
+      productId: effectiveShopifyId
+    });
+    
     const shopifyResponse = await fetch(shopifyUrl, {
       method: 'PUT',
       headers: {
