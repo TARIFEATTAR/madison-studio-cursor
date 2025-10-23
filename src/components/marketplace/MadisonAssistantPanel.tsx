@@ -40,7 +40,8 @@ export function MadisonAssistantPanel({
 
   useEffect(() => {
     if (userName && messages.length === 0) {
-      const greeting = `Hi ${userName}! I'm Madison, your editorial assistant. I can help you create an ${platform === 'etsy' ? 'Etsy' : 'TikTok Shop'}-optimized listing that maintains your brand voice while maximizing discoverability.
+      const platformName = platform === 'etsy' ? 'Etsy' : platform === 'shopify' ? 'Shopify' : 'TikTok Shop';
+      const greeting = `Hi ${userName}! I'm Madison, your editorial assistant. I can help you create a ${platformName}-optimized listing that maintains your brand voice while maximizing discoverability.
 
 I see you're creating a listing for ${formData.productId ? "a product from your catalog" : "a new product"}. I can help you craft compelling copy that tells your product's story.
 
@@ -206,9 +207,12 @@ What would you like me to help with?`;
   };
 
   const handleQuickAction = (action: string) => {
+    const platformDesc = platform === 'etsy' ? 'artisan-focused Etsy' : platform === 'shopify' ? 'professional Shopify' : 'viral TikTok Shop';
+    const maxTags = platform === 'etsy' ? '13' : platform === 'shopify' ? '250 characters of' : '10';
+    
     const prompts: Record<string, string> = {
-      description: `Generate a compelling ${platform === 'etsy' ? 'artisan-focused Etsy' : 'viral TikTok Shop'} description for this product that matches our brand voice.`,
-      tags: `Suggest SEO-optimized tags for this product listing (max ${platform === 'etsy' ? '13' : '10'} tags).`,
+      description: `Generate a compelling ${platformDesc} description for this product that matches our brand voice.`,
+      tags: `Suggest SEO-optimized tags for this product listing (max ${maxTags} tags).`,
       title: `Create an optimized title for this product that balances keywords with brand voice.`
     };
     
