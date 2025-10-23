@@ -121,7 +121,8 @@ const CreateShopifyListing = () => {
         external_id: externalId,
         title: formData.title,
         platform_data: formData,
-        status: 'draft' as const
+        status: 'draft' as const,
+        created_by: user.id
       };
 
       const { data, error } = await supabase
