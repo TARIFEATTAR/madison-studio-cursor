@@ -404,6 +404,28 @@ What would you like me to help with?`;
                     <p className="whitespace-pre-wrap">{message.content}</p>
                   )}
                 </div>
+                {message.role === "assistant" && index === messages.length - 1 && !isGenerating && (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={copyLastAsText}
+                      className="flex-1 h-8 text-xs"
+                    >
+                      <Copy className="w-3 h-3 mr-1" />
+                      Copy as Text
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={copyLastAsHTML}
+                      className="flex-1 h-8 text-xs"
+                    >
+                      <Copy className="w-3 h-3 mr-1" />
+                      Copy as HTML
+                    </Button>
+                  </div>
+                )}
               </div>
             ))}
             {isGenerating && (

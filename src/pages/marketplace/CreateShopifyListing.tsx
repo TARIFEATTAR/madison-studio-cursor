@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, Download, Store, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { BasicInformationSection } from "@/components/marketplace/sections/Basic
 import { DescriptionSection } from "@/components/marketplace/sections/DescriptionSection";
 import { SEOTagsSection } from "@/components/marketplace/sections/SEOTagsSection";
 import { ProductAssociationSection } from "@/components/marketplace/sections/ProductAssociationSection";
-import { MadisonAssistantPanel } from "@/components/marketplace/MadisonAssistantPanel";
+import { MadisonAssistantPanel, MadisonAssistantHandle } from "@/components/marketplace/MadisonAssistantPanel";
 import { supabase } from "@/integrations/supabase/client";
 
 const CreateShopifyListing = () => {
@@ -39,6 +39,26 @@ const CreateShopifyListing = () => {
   const [isPushing, setIsPushing] = useState(false);
   const [currentListingId, setCurrentListingId] = useState<string | null>(null);
   const [pushStatus, setPushStatus] = useState<'pending' | 'success' | 'failed'>('pending');
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [manualShopifyId, setManualShopifyId] = useState('');
+  const madisonRef = useRef<MadisonAssistantHandle>(null);
+
+  // Fetch organization ID on mount
+  useEffect(() => {
+    const fetchOrgId = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const { data: orgMember } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (orgMember) setOrganizationId(orgMember.organization_id);
+    };
+    fetchOrgId();
+  }, []);
 
   if (!platform) {
     return <div>Platform configuration not found</div>;
@@ -96,15 +116,22 @@ const CreateShopifyListing = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase insert error:', error);
+        throw new Error(error.message || 'Failed to save to database');
+      }
+
+      if (!data) {
+        throw new Error('No data returned after save');
+      }
 
       setCurrentListingId(data.id);
       setPushStatus((data.push_status as 'pending' | 'success' | 'failed') || 'pending');
 
-      toast.success("Shopify listing saved!");
-    } catch (error) {
-      console.error('Save error:', error);
-      toast.error("Failed to save listing");
+      toast.success("Draft saved! You can now push to Shopify.");
+    } catch (error: any) {
+      console.error('Save error details:', error);
+      toast.error(error.message || "Failed to save listing");
     } finally {
       setIsSaving(false);
     }
@@ -116,8 +143,9 @@ const CreateShopifyListing = () => {
       return;
     }
 
-    if (!externalId) {
-      toast.error("Please link to a Shopify product (with Shopify Product ID) before pushing");
+    const shopifyProductId = externalId || manualShopifyId;
+    if (!shopifyProductId) {
+      toast.error("Please link a product or enter a Shopify Product ID");
       return;
     }
 
@@ -126,7 +154,10 @@ const CreateShopifyListing = () => {
       const { data, error } = await supabase.functions.invoke(
         'update-shopify-product',
         {
-          body: { listing_id: currentListingId }
+          body: { 
+            listing_id: currentListingId,
+            shopify_product_id: shopifyProductId
+          }
         }
       );
 
@@ -227,15 +258,23 @@ const CreateShopifyListing = () => {
                 <Download className="h-4 w-4 mr-2" />
                 Export CSV
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePushToShopify}
-                disabled={isPushing || !currentListingId || !externalId}
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                {isPushing ? "Pushing..." : "Push to Shopify"}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="Shopify Product ID"
+                  value={manualShopifyId}
+                  onChange={(e) => setManualShopifyId(e.target.value)}
+                  className="w-48 h-9"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePushToShopify}
+                  disabled={isPushing || !currentListingId || (!externalId && !manualShopifyId)}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {isPushing ? "Pushing..." : "Push to Shopify"}
+                </Button>
+              </div>
               <Button
                 size="sm"
                 onClick={handleSave}
@@ -303,6 +342,7 @@ const CreateShopifyListing = () => {
               onUpdate={(desc) => handleInputChange('description', desc)}
               formData={formData}
               onUpdateAll={handleUpdate}
+              madisonRef={madisonRef}
             />
 
             <SEOTagsSection
@@ -344,9 +384,11 @@ const CreateShopifyListing = () => {
           <div className="lg:col-span-1">
             <div className="sticky top-24">
               <MadisonAssistantPanel
+                ref={madisonRef}
                 platform="shopify"
                 formData={formData}
                 productId={productId || undefined}
+                organizationId={organizationId || undefined}
                 onUpdateField={handleUpdate}
               />
             </div>

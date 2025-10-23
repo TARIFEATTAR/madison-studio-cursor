@@ -7,15 +7,17 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { useState } from "react";
 import { getPlatform } from "@/config/marketplaceTemplates";
 import { RepurposeBlogDialog } from "./RepurposeBlogDialog";
+import { MadisonAssistantHandle } from "../MadisonAssistantPanel";
 
 interface DescriptionSectionProps {
   description: string;
   onUpdate: (description: string) => void;
   formData?: any;
   onUpdateAll?: (updates: any) => void;
+  madisonRef?: React.RefObject<MadisonAssistantHandle>;
 }
 
-export function DescriptionSection({ description, onUpdate, formData, onUpdateAll }: DescriptionSectionProps) {
+export function DescriptionSection({ description, onUpdate, formData, onUpdateAll, madisonRef }: DescriptionSectionProps) {
   const [isOpen, setIsOpen] = useState(true);
   const platform = getPlatform('etsy');
   const maxLength = platform?.validation.descriptionMaxLength || 5000;
@@ -67,6 +69,7 @@ export function DescriptionSection({ description, onUpdate, formData, onUpdateAl
                 variant="outline" 
                 size="sm"
                 className="text-aged-brass border-aged-brass/30 hover:bg-aged-brass/10"
+                onClick={() => madisonRef?.current?.generateDescription()}
               >
                 <Sparkles className="w-4 h-4 mr-2" />
                 Ask Madison to Generate
