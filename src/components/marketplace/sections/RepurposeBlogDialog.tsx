@@ -42,7 +42,7 @@ export function RepurposeBlogDialog({ onRepurpose }: RepurposeBlogDialogProps) {
         .from("master_content")
         .select("id, title, full_content, created_at")
         .eq("organization_id", orgMember.organization_id)
-        .eq("content_type", "blog")
+        .eq("content_type", "blog_article")
         .eq("is_archived", false)
         .order("created_at", { ascending: false })
         .limit(20);

@@ -260,10 +260,30 @@ const CreateShopifyListing = () => {
               onProductDataChange={(product) => {
                 if (product?.shopify_product_id) {
                   setExternalId(product.shopify_product_id);
-                  toast.success("Linked to Shopify product");
+                  
+                  // Auto-fill form from product data
+                  handleUpdate({
+                    title: product.name || '',
+                    description: product.description || '',
+                    category: product.category || '',
+                    product_type: product.product_type || '',
+                    vendor: product.collection || product.brand || '',
+                  });
+                  
+                  toast.success("Product linked and form pre-filled!");
                 } else if (product) {
                   setExternalId(null);
-                  toast.info("Product doesn't have a Shopify Product ID yet");
+                  
+                  // Still pre-fill even without Shopify ID
+                  handleUpdate({
+                    title: product.name || '',
+                    description: product.description || '',
+                    category: product.category || '',
+                    product_type: product.product_type || '',
+                    vendor: product.collection || product.brand || '',
+                  });
+                  
+                  toast.info("Product data loaded (no Shopify ID yet)");
                 } else {
                   setExternalId(null);
                 }

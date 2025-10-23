@@ -43,7 +43,7 @@ export function MadisonAssistantPanel({
       const platformName = platform === 'etsy' ? 'Etsy' : platform === 'shopify' ? 'Shopify' : 'TikTok Shop';
       const greeting = `Hi ${userName}! I'm Madison, your editorial assistant. I can help you create a ${platformName}-optimized listing that maintains your brand voice while maximizing discoverability.
 
-I see you're creating a listing for ${formData.productId ? "a product from your catalog" : "a new product"}. I can help you craft compelling copy that tells your product's story.
+I see you're creating a listing for ${productId ? "a product from your catalog" : "a new product"}. I can help you craft compelling copy that tells your product's story.
 
 What would you like me to help with?`;
       
@@ -53,7 +53,7 @@ What would you like me to help with?`;
         timestamp: new Date(),
       }]);
     }
-  }, [userName, platform, formData.productId]);
+  }, [userName, platform, productId]);
 
   useEffect(() => {
     if (scrollRef.current) {
