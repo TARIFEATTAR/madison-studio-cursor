@@ -34,6 +34,7 @@ const CreateShopifyListing = () => {
   });
 
   const [productId, setProductId] = useState<string | null>(null);
+  const [externalId, setExternalId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isPushing, setIsPushing] = useState(false);
   const [currentListingId, setCurrentListingId] = useState<string | null>(null);
@@ -83,8 +84,9 @@ const CreateShopifyListing = () => {
         organization_id: orgMember.organization_id,
         platform: 'shopify',
         product_id: productId,
+        external_id: externalId,
         title: formData.title,
-        listing_data: formData,
+        platform_data: formData,
         status: 'draft' as const
       };
 
@@ -114,8 +116,8 @@ const CreateShopifyListing = () => {
       return;
     }
 
-    if (!productId) {
-      toast.error("Please link to a Shopify product before pushing");
+    if (!externalId) {
+      toast.error("Please link to a Shopify product (with Shopify Product ID) before pushing");
       return;
     }
 
@@ -229,7 +231,7 @@ const CreateShopifyListing = () => {
                 variant="outline"
                 size="sm"
                 onClick={handlePushToShopify}
-                disabled={isPushing || !currentListingId || !productId}
+                disabled={isPushing || !currentListingId || !externalId}
               >
                 <Upload className="h-4 w-4 mr-2" />
                 {isPushing ? "Pushing..." : "Push to Shopify"}
@@ -255,6 +257,17 @@ const CreateShopifyListing = () => {
             <ProductAssociationSection
               productId={productId}
               onProductSelect={setProductId}
+              onProductDataChange={(product) => {
+                if (product?.shopify_product_id) {
+                  setExternalId(product.shopify_product_id);
+                  toast.success("Linked to Shopify product");
+                } else if (product) {
+                  setExternalId(null);
+                  toast.info("Product doesn't have a Shopify Product ID yet");
+                } else {
+                  setExternalId(null);
+                }
+              }}
             />
 
             <BasicInformationSection
@@ -268,6 +281,8 @@ const CreateShopifyListing = () => {
             <DescriptionSection
               description={formData.description}
               onUpdate={(desc) => handleInputChange('description', desc)}
+              formData={formData}
+              onUpdateAll={handleUpdate}
             />
 
             <SEOTagsSection

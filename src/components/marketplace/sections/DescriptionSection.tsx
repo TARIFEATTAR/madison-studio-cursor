@@ -2,17 +2,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { FileText, ChevronDown, Sparkles, FileSearch } from "lucide-react";
+import { FileText, ChevronDown, Sparkles } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 import { getPlatform } from "@/config/marketplaceTemplates";
+import { RepurposeBlogDialog } from "./RepurposeBlogDialog";
 
 interface DescriptionSectionProps {
   description: string;
   onUpdate: (description: string) => void;
+  formData?: any;
+  onUpdateAll?: (updates: any) => void;
 }
 
-export function DescriptionSection({ description, onUpdate }: DescriptionSectionProps) {
+export function DescriptionSection({ description, onUpdate, formData, onUpdateAll }: DescriptionSectionProps) {
   const [isOpen, setIsOpen] = useState(true);
   const platform = getPlatform('etsy');
   const maxLength = platform?.validation.descriptionMaxLength || 5000;
@@ -68,14 +71,18 @@ export function DescriptionSection({ description, onUpdate }: DescriptionSection
                 <Sparkles className="w-4 h-4 mr-2" />
                 Ask Madison to Generate
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="text-charcoal/70 border-charcoal/20"
-              >
-                <FileSearch className="w-4 h-4 mr-2" />
-                Repurpose from Blog Post
-              </Button>
+              <RepurposeBlogDialog
+                onRepurpose={(title, desc, tags) => {
+                  onUpdate(desc);
+                  if (onUpdateAll) {
+                    onUpdateAll({
+                      title: formData?.title || title,
+                      description: desc,
+                      tags: [...(formData?.tags || []), ...tags]
+                    });
+                  }
+                }}
+              />
             </div>
           </CardContent>
         </CollapsibleContent>

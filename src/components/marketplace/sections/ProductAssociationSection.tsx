@@ -10,9 +10,10 @@ import { ChevronDown } from "lucide-react";
 interface ProductAssociationSectionProps {
   productId: string | null;
   onProductSelect: (productId: string | null) => void;
+  onProductDataChange?: (productData: any) => void;
 }
 
-export function ProductAssociationSection({ productId, onProductSelect }: ProductAssociationSectionProps) {
+export function ProductAssociationSection({ productId, onProductSelect, onProductDataChange }: ProductAssociationSectionProps) {
   const { user } = useAuth();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,7 +76,16 @@ export function ProductAssociationSection({ productId, onProductSelect }: Produc
                 </label>
                 <Select 
                   value={productId || undefined} 
-                  onValueChange={(value) => onProductSelect(value === 'none' ? null : value)}
+                  onValueChange={(value) => {
+                    if (value === 'none') {
+                      onProductSelect(null);
+                      onProductDataChange?.(null);
+                    } else {
+                      onProductSelect(value);
+                      const product = products.find(p => p.id === value);
+                      onProductDataChange?.(product);
+                    }
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select product from database..." />
