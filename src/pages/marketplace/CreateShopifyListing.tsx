@@ -64,6 +64,20 @@ const CreateShopifyListing = () => {
     }
   }, []);
 
+  // Monitor listing ID changes for debugging
+  useEffect(() => {
+    const normalizedExternalId = externalId?.trim() || null;
+    const normalizedManualId = manualShopifyId?.trim() || null;
+    const canPush = Boolean(currentListingId && (normalizedExternalId || normalizedManualId));
+    
+    console.log('[ListingID Changed]', { 
+      currentListingId, 
+      externalId: normalizedExternalId, 
+      manualShopifyId: normalizedManualId,
+      canPush
+    });
+  }, [currentListingId, externalId, manualShopifyId]);
+
   if (!platform) {
     return <div>Platform configuration not found</div>;
   }
@@ -146,16 +160,26 @@ const CreateShopifyListing = () => {
       }
 
       if (listingId) {
+        // Immediately update state and localStorage
         setCurrentListingId(listingId);
         localStorage.setItem('shopify_listing_id', listingId);
         setPushStatus((data?.push_status as 'pending' | 'success' | 'failed') || 'pending');
+        
+        // Force a re-render check
+        setTimeout(() => {
+          console.log('[Save] Listing ID updated, button should now be enabled');
+        }, 0);
       }
       
       // Show success state with timestamp
       setSaveSuccess(true);
       const now = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
       setSavedTimestamp(now);
-      toast.success(currentListingId ? "Listing updated!" : "Draft saved!");
+      toast.success(
+        listingId 
+          ? `Listing saved! (ID: ${listingId.slice(0, 8)}...)` 
+          : "Draft saved!"
+      );
       
       // Compute canPush for debugging
       const normalizedExternalId = externalId?.trim() || null;
@@ -248,6 +272,22 @@ const CreateShopifyListing = () => {
     toast.success("CSV exported! Upload to Shopify via Products > Import");
   };
 
+  // Compute button enabled state using latest values
+  const normalizedExternalId = externalId?.trim() || null;
+  const normalizedManualId = manualShopifyId?.trim() || null;
+  const isPushButtonEnabled = Boolean(
+    currentListingId && 
+    (normalizedExternalId || normalizedManualId) && 
+    !isPushing
+  );
+
+  console.log('[Render] Push button state:', { 
+    currentListingId, 
+    normalizedExternalId, 
+    normalizedManualId, 
+    isPushButtonEnabled 
+  });
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -325,9 +365,9 @@ const CreateShopifyListing = () => {
                         <Button
                           size="sm"
                           onClick={handlePushToShopify}
-                          disabled={isPushing || !currentListingId || (!externalId?.trim() && !manualShopifyId?.trim())}
+                          disabled={!isPushButtonEnabled}
                           className={`transition-all ${
-                            currentListingId && (externalId?.trim() || manualShopifyId?.trim())
+                            isPushButtonEnabled
                               ? "bg-aged-brass hover:bg-aged-brass/90 text-white"
                               : "bg-muted text-muted-foreground"
                           }`}
