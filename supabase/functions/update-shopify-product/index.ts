@@ -11,6 +11,12 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Log incoming headers for debugging
+    console.log('Incoming headers:', {
+      hasAuth: !!req.headers.get('Authorization'),
+      authHeader: req.headers.get('Authorization')?.substring(0, 20) + '...'
+    });
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -22,6 +28,12 @@ Deno.serve(async (req) => {
     );
 
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    
+    console.log('Auth check result:', { 
+      hasUser: !!user, 
+      userId: user?.id,
+      userError: userError?.message 
+    });
     if (userError || !user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
@@ -111,7 +123,19 @@ Deno.serve(async (req) => {
 
     if (!shopifyResponse.ok) {
       const errorText = await shopifyResponse.text();
-      console.error('Shopify API error:', errorText);
+      let errorDetails;
+      try {
+        errorDetails = JSON.parse(errorText);
+      } catch {
+        errorDetails = errorText;
+      }
+
+      console.error('Shopify API error:', {
+        status: shopifyResponse.status,
+        statusText: shopifyResponse.statusText,
+        url: shopifyUrl,
+        error: errorDetails
+      });
       
       // Update listing with error
       await supabaseClient

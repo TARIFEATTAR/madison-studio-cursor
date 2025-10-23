@@ -218,11 +218,27 @@ const CreateShopifyListing = () => {
       return;
     }
 
+    // Verify we have an active session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    console.log('[Push] Session check:', { 
+      hasSession: !!session, 
+      sessionError: sessionError?.message,
+      accessToken: session?.access_token?.substring(0, 20) + '...'
+    });
+
+    if (!session) {
+      toast.error("Please log in again to push to Shopify");
+      return;
+    }
+
     setIsPushing(true);
     try {
       const { data, error } = await supabase.functions.invoke(
         'update-shopify-product',
         {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
+          },
           body: { 
             listing_id: currentListingId,
             shopify_product_id: shopifyProductId
