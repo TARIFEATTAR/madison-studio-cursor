@@ -87,7 +87,7 @@ export function BasicInformationSection({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="price" className="text-sm font-medium mb-2 block">
-                  Price (USD) <span className="text-red-500">*</span>
+                  Price (USD) <span className="text-muted-foreground text-xs">(Optional)</span>
                 </Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal/60">$</span>
@@ -97,7 +97,7 @@ export function BasicInformationSection({
                     step="0.01"
                     value={price}
                     onChange={(e) => onUpdate({ price: e.target.value })}
-                    placeholder="0.00"
+                    placeholder="Leave empty if not applicable"
                     className="pl-7"
                   />
                 </div>
@@ -105,7 +105,7 @@ export function BasicInformationSection({
 
               <div>
                 <Label htmlFor="quantity" className="text-sm font-medium mb-2 block">
-                  Quantity <span className="text-red-500">*</span>
+                  Quantity <span className="text-muted-foreground text-xs">(Optional)</span>
                 </Label>
                 <Input
                   id="quantity"
@@ -113,7 +113,7 @@ export function BasicInformationSection({
                   min="1"
                   value={quantity}
                   onChange={(e) => onUpdate({ quantity: e.target.value })}
-                  placeholder="1"
+                  placeholder="Defaults to 1 if not specified"
                 />
               </div>
             </div>

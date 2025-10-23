@@ -37,6 +37,7 @@ const CreateShopifyListing = () => {
   const [productId, setProductId] = useState<string | null>(null);
   const [externalId, setExternalId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [isPushing, setIsPushing] = useState(false);
   const [currentListingId, setCurrentListingId] = useState<string | null>(null);
   const [pushStatus, setPushStatus] = useState<'pending' | 'success' | 'failed'>('pending');
@@ -74,17 +75,13 @@ const CreateShopifyListing = () => {
   };
 
   const handleSave = async () => {
-    // Validation
+    // Validate only essential required fields
     if (!formData.title.trim()) {
       toast.error("Please add a product title");
       return;
     }
     if (!formData.description.trim()) {
       toast.error("Please add a product description");
-      return;
-    }
-    if (!formData.price) {
-      toast.error("Please set a price");
       return;
     }
 
@@ -128,8 +125,22 @@ const CreateShopifyListing = () => {
 
       setCurrentListingId(data.id);
       setPushStatus((data.push_status as 'pending' | 'success' | 'failed') || 'pending');
-
-      toast.success("Draft saved! You can now push to Shopify.");
+      
+      // Show success state
+      setSaveSuccess(true);
+      toast.success(currentListingId ? "Listing updated!" : "Draft saved!");
+      
+      // Log state for debugging
+      console.log('Save successful:', { 
+        listingId: data.id, 
+        externalId, 
+        canPush: !!(data.id && (externalId || manualShopifyId))
+      });
+      
+      // Reset success state after 3 seconds
+      setTimeout(() => {
+        setSaveSuccess(false);
+      }, 3000);
     } catch (error: any) {
       console.error('Save error details:', error);
       toast.error(error.message || "Failed to save listing");
@@ -260,30 +271,42 @@ const CreateShopifyListing = () => {
                 Export CSV
               </Button>
               <div className="flex items-center gap-2">
-                {externalId && (
-                  <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
-                    <Check className="w-3 h-3" />
-                    <span>ID: {externalId}</span>
+                {externalId ? (
+                  <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 border border-green-200 px-3 py-2 rounded-lg">
+                    <Check className="w-4 h-4" />
+                    <div className="text-xs">
+                      <p className="font-semibold">ID: {externalId}</p>
+                      <p className="text-green-700/80">From linked product</p>
+                    </div>
                   </div>
+                ) : (
+                  <Input
+                    placeholder="Or enter Shopify Product ID"
+                    value={manualShopifyId}
+                    onChange={(e) => setManualShopifyId(e.target.value)}
+                    className="w-56 h-9 text-sm"
+                  />
                 )}
-                <Input
-                  placeholder="Shopify Product ID"
-                  value={manualShopifyId}
-                  onChange={(e) => setManualShopifyId(e.target.value)}
-                  className="w-48 h-9"
-                />
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div>
                         <Button
-                          variant="outline"
                           size="sm"
                           onClick={handlePushToShopify}
                           disabled={isPushing || !currentListingId || (!externalId && !manualShopifyId)}
+                          className={`transition-all ${
+                            currentListingId && (externalId || manualShopifyId)
+                              ? "bg-aged-brass hover:bg-aged-brass/90 text-white"
+                              : "bg-muted text-muted-foreground"
+                          }`}
                         >
                           <Upload className="h-4 w-4 mr-2" />
-                          {isPushing ? "Pushing..." : "Push to Shopify"}
+                          {isPushing ? (
+                            <span className="animate-pulse">Pushing...</span>
+                          ) : (
+                            "Push to Shopify"
+                          )}
                         </Button>
                       </div>
                     </TooltipTrigger>
@@ -302,9 +325,22 @@ const CreateShopifyListing = () => {
                 size="sm"
                 onClick={handleSave}
                 disabled={isSaving}
+                variant={saveSuccess ? "default" : "outline"}
+                className={`flex items-center gap-2 transition-all ${
+                  saveSuccess ? "bg-aged-brass hover:bg-aged-brass/90 text-white" : ""
+                }`}
               >
-                <Save className="h-4 w-4 mr-2" />
-                {isSaving ? "Saving..." : "Save Draft"}
+                {saveSuccess ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Saved!
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    {isSaving ? "Saving..." : "Save Draft"}
+                  </>
+                )}
               </Button>
             </div>
           </div>
