@@ -228,18 +228,13 @@ const CreateShopifyListing = () => {
                 Export CSV
               </Button>
               <Button
-                type="button"
-                variant={!currentListingId || !externalId ? "outline" : "default"}
+                variant="outline"
                 size="sm"
                 onClick={handlePushToShopify}
                 disabled={isPushing || !currentListingId || !externalId}
-                className="cursor-pointer disabled:cursor-not-allowed"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                {isPushing ? "Pushing..." : 
-                 !currentListingId ? "Save Draft First" : 
-                 !externalId ? "Link Product First" : 
-                 "Push to Shopify"}
+                {isPushing ? "Pushing..." : "Push to Shopify"}
               </Button>
               <Button
                 size="sm"
