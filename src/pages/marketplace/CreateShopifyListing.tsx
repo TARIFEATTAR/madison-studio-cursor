@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { getPlatform } from "@/config/marketplaceTemplates";
-import { BasicInformationSection } from "@/components/marketplace/sections/BasicInformationSection";
+
 import { DescriptionSection } from "@/components/marketplace/sections/DescriptionSection";
 import { SEOTagsSection } from "@/components/marketplace/sections/SEOTagsSection";
 import { ProductAssociationSection } from "@/components/marketplace/sections/ProductAssociationSection";
@@ -22,16 +22,10 @@ const CreateShopifyListing = () => {
 
   const [formData, setFormData] = useState({
     title: '',
-    product_type: '',
-    vendor: '',
-    category: '',
-    price: '',
-    compare_at_price: '',
     description: '',
     tags: [] as string[],
-    sku: '',
-    weight: '',
-    quantity: '1'
+    product_type: '',
+    vendor: ''
   });
 
   const [productId, setProductId] = useState<string | null>(null);
@@ -228,22 +222,16 @@ const CreateShopifyListing = () => {
     // Shopify CSV format
     const csvContent = [
       // Header
-      ['Handle', 'Title', 'Body (HTML)', 'Vendor', 'Product Category', 'Type', 'Tags', 'Published', 'Variant Price', 'Variant Compare At Price', 'Variant SKU', 'Variant Grams', 'Image Src'].join(','),
+      ['Handle', 'Title', 'Body (HTML)', 'Vendor', 'Type', 'Tags', 'Published'].join(','),
       // Data row
       [
         formData.title.toLowerCase().replace(/\s+/g, '-'),
         `"${formData.title}"`,
         `"${formData.description.replace(/"/g, '""')}"`,
         formData.vendor || '',
-        formData.category || '',
         formData.product_type || '',
         `"${formData.tags.join(', ')}"`,
-        'FALSE',
-        formData.price || '',
-        formData.compare_at_price || '',
-        formData.sku || '',
-        formData.weight || '',
-        ''
+        'FALSE'
       ].join(',')
     ].join('\n');
 
@@ -399,53 +387,51 @@ const CreateShopifyListing = () => {
               productId={productId}
               onProductSelect={setProductId}
               onProductDataChange={(product) => {
-                console.log('Product selected:', product);
-                console.log('Shopify Product ID:', product?.shopify_product_id);
-                
                 if (product?.shopify_product_id) {
-                  // Normalize to string (already done in ProductAssociationSection, but be safe)
                   const normalizedId = String(product.shopify_product_id);
                   setExternalId(normalizedId);
-                  console.log('Set externalId to:', normalizedId);
                   
-                  // Auto-fill form from product data
                   handleUpdate({
                     title: product.name || '',
                     description: product.description || '',
-                    category: product.category || '',
                     product_type: product.product_type || '',
                     vendor: product.collection || product.brand || '',
                   });
                   
-                  toast.success("Product linked and form pre-filled!");
+                  toast.success("Product linked!");
                 } else if (product) {
                   setExternalId(null);
-                  console.log('Product has no Shopify ID');
-                  
-                  // Still pre-fill even without Shopify ID
                   handleUpdate({
                     title: product.name || '',
                     description: product.description || '',
-                    category: product.category || '',
                     product_type: product.product_type || '',
                     vendor: product.collection || product.brand || '',
                   });
-                  
-                  toast.info("Product data loaded (no Shopify ID yet)");
-                } else {
-                  setExternalId(null);
-                  console.log('No product selected');
+                  toast.info("Product data loaded");
                 }
               }}
             />
 
-            <BasicInformationSection
-              title={formData.title}
-              category={formData.category}
-              price={formData.price}
-              quantity={formData.quantity}
-              onUpdate={handleUpdate}
-            />
+            <Card className="p-6">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="title" className="text-sm font-medium">
+                    Product Title <span className="text-red-500">*</span>
+                  </Label>
+                  <span className="text-xs text-charcoal/60">
+                    {formData.title.length}/255
+                  </span>
+                </div>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  placeholder="e.g., Arabian Jasmine - Premium Fragrance Oil"
+                  maxLength={255}
+                  className="text-lg"
+                />
+              </div>
+            </Card>
 
             <DescriptionSection
               description={formData.description}
@@ -459,35 +445,6 @@ const CreateShopifyListing = () => {
               tags={formData.tags}
               onUpdate={(tags) => handleInputChange('tags', tags)}
             />
-
-            {/* Additional Shopify Fields */}
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Product Details</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="sku">SKU (Optional)</Label>
-                  <Input
-                    id="sku"
-                    type="text"
-                    placeholder="e.g., NOIR-001"
-                    value={formData.sku}
-                    onChange={(e) => handleInputChange('sku', e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">Stock Keeping Unit</p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="weight">Weight in grams (Optional)</Label>
-                  <Input
-                    id="weight"
-                    type="number"
-                    placeholder="0"
-                    value={formData.weight}
-                    onChange={(e) => handleInputChange('weight', e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">For shipping calculations</p>
-                </div>
-              </div>
-            </Card>
           </div>
 
           {/* Right: Madison Assistant */}

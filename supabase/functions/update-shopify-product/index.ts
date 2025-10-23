@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { listing_id } = await req.json();
+    const { listing_id, shopify_product_id } = await req.json();
     
     if (!listing_id) {
       return new Response(JSON.stringify({ error: 'listing_id is required' }), {
@@ -55,9 +55,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check if listing has external_id (Shopify product ID)
-    if (!listing.external_id) {
-      return new Response(JSON.stringify({ error: 'Listing not linked to Shopify product' }), {
+    // Use passed shopify_product_id or fall back to listing's external_id
+    const effectiveShopifyId = shopify_product_id || listing.external_id;
+    if (!effectiveShopifyId) {
+      return new Response(JSON.stringify({ error: 'Shopify Product ID required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -82,29 +83,23 @@ Deno.serve(async (req) => {
 
     const platformData = listing.platform_data as any;
     
-    // Build the product update payload
+    // Build the product update payload - only title, description, tags, type, vendor
+    // No variants = Shopify preserves existing price, inventory, SKU, weight
     const productUpdate = {
       product: {
-        id: listing.external_id,
+        id: effectiveShopifyId,
         title: listing.title || platformData?.title || '',
         body_html: platformData?.description || '',
-        product_type: platformData?.productType || '',
-        vendor: platformData?.brand || '',
+        product_type: platformData?.product_type || '',
+        vendor: platformData?.vendor || '',
         tags: Array.isArray(platformData?.tags) ? platformData.tags.join(', ') : '',
-        variants: platformData?.price ? [{
-          price: platformData.price,
-          sku: platformData?.sku || '',
-          weight: platformData?.weight ? parseFloat(platformData.weight) : null,
-          weight_unit: platformData?.weightUnit || 'lb',
-          inventory_quantity: platformData?.quantity || 0,
-        }] : undefined,
       },
     };
 
     console.log('Pushing to Shopify:', productUpdate);
 
     // Call Shopify Admin API
-    const shopifyUrl = `https://${connection.shop_domain}/admin/api/2024-01/products/${listing.external_id}.json`;
+    const shopifyUrl = `https://${connection.shop_domain}/admin/api/2024-01/products/${effectiveShopifyId}.json`;
     const shopifyResponse = await fetch(shopifyUrl, {
       method: 'PUT',
       headers: {
@@ -139,14 +134,14 @@ Deno.serve(async (req) => {
     const shopifyData = await shopifyResponse.json();
     console.log('Shopify update successful:', shopifyData);
 
-    // Update listing with success
+    // Update listing with success and save the effective Shopify ID
     await supabaseClient
       .from('marketplace_listings')
       .update({
+        external_id: effectiveShopifyId,
         push_status: 'success',
         push_error: null,
         last_pushed_at: new Date().toISOString(),
-        last_synced_at: new Date().toISOString(),
       })
       .eq('id', listing_id);
 
@@ -156,7 +151,7 @@ Deno.serve(async (req) => {
       .insert({
         organization_id: listing.organization_id,
         product_id: listing.product_id,
-        shopify_product_id: listing.external_id,
+        shopify_product_id: effectiveShopifyId,
         published_content: platformData,
         published_by: user.id,
       });
@@ -164,7 +159,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        shopify_product_id: listing.external_id,
+        shopify_product_id: effectiveShopifyId,
         message: 'Successfully pushed to Shopify'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
