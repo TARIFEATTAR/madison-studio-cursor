@@ -74,19 +74,24 @@ export function ProductAssociationSection({ productId, onProductSelect, onProduc
                 <label className="text-sm font-medium text-ink-black mb-2 block">
                   Link to Existing Product (Optional)
                 </label>
-                <Select 
-                  value={productId || undefined} 
-                  onValueChange={(value) => {
-                    if (value === 'none') {
-                      onProductSelect(null);
-                      onProductDataChange?.(null);
-                    } else {
-                      onProductSelect(value);
-                      const product = products.find(p => p.id === value);
-                      onProductDataChange?.(product);
-                    }
-                  }}
-                >
+                  <Select 
+                    value={productId || undefined} 
+                    onValueChange={(value) => {
+                      if (value === 'none') {
+                        onProductSelect(null);
+                        onProductDataChange?.(null);
+                      } else {
+                        onProductSelect(value);
+                        const product = products.find(p => p.id === value);
+                        // Normalize shopify_product_id to string
+                        const normalizedProduct = product ? {
+                          ...product,
+                          shopify_product_id: product.shopify_product_id ? String(product.shopify_product_id) : null
+                        } : null;
+                        onProductDataChange?.(normalizedProduct);
+                      }
+                    }}
+                  >
                   <SelectTrigger>
                     <SelectValue placeholder="Select product from database..." />
                   </SelectTrigger>

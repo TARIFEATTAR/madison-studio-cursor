@@ -38,6 +38,7 @@ const CreateShopifyListing = () => {
   const [externalId, setExternalId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [savedTimestamp, setSavedTimestamp] = useState<string | null>(null);
   const [isPushing, setIsPushing] = useState(false);
   const [currentListingId, setCurrentListingId] = useState<string | null>(null);
   const [pushStatus, setPushStatus] = useState<'pending' | 'success' | 'failed'>('pending');
@@ -45,7 +46,7 @@ const CreateShopifyListing = () => {
   const [manualShopifyId, setManualShopifyId] = useState('');
   const madisonRef = useRef<MadisonAssistantHandle>(null);
 
-  // Fetch organization ID on mount
+  // Fetch organization ID on mount and rehydrate listing ID
   useEffect(() => {
     const fetchOrgId = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -60,6 +61,13 @@ const CreateShopifyListing = () => {
       if (orgMember) setOrganizationId(orgMember.organization_id);
     };
     fetchOrgId();
+    
+    // Rehydrate listing ID from localStorage
+    const savedListingId = localStorage.getItem('shopify_listing_id');
+    if (savedListingId && !currentListingId) {
+      console.log('[Rehydrate] Restoring listing ID from localStorage:', savedListingId);
+      setCurrentListingId(savedListingId);
+    }
   }, []);
 
   if (!platform) {
@@ -75,7 +83,7 @@ const CreateShopifyListing = () => {
   };
 
   const handleSave = async () => {
-    // Validate only essential required fields
+    // Validate only essential required fields (title and description)
     if (!formData.title.trim()) {
       toast.error("Please add a product title");
       return;
@@ -119,22 +127,52 @@ const CreateShopifyListing = () => {
         throw new Error(error.message || 'Failed to save to database');
       }
 
-      if (!data) {
-        throw new Error('No data returned after save');
+      let listingId = data?.id;
+
+      if (!listingId) {
+        // Fallback: query for the just-created listing
+        console.log('[Save] No ID returned, querying for created listing...');
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('marketplace_listings')
+          .select('id')
+          .eq('organization_id', orgMember.organization_id)
+          .eq('platform', 'shopify')
+          .eq('title', formData.title)
+          .eq('created_by', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (fallbackError) {
+          console.error('Fallback query error:', fallbackError);
+          throw new Error('Failed to retrieve saved listing');
+        }
+        
+        listingId = fallbackData?.id;
       }
 
-      setCurrentListingId(data.id);
-      setPushStatus((data.push_status as 'pending' | 'success' | 'failed') || 'pending');
+      if (listingId) {
+        setCurrentListingId(listingId);
+        localStorage.setItem('shopify_listing_id', listingId);
+        setPushStatus((data?.push_status as 'pending' | 'success' | 'failed') || 'pending');
+      }
       
-      // Show success state
+      // Show success state with timestamp
       setSaveSuccess(true);
+      const now = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      setSavedTimestamp(now);
       toast.success(currentListingId ? "Listing updated!" : "Draft saved!");
       
-      // Log state for debugging
-      console.log('Save successful:', { 
-        listingId: data.id, 
-        externalId, 
-        canPush: !!(data.id && (externalId || manualShopifyId))
+      // Compute canPush for debugging
+      const normalizedExternalId = externalId?.trim() || null;
+      const normalizedManualId = manualShopifyId?.trim() || null;
+      const canPush = Boolean(listingId && (normalizedExternalId || normalizedManualId));
+      
+      console.log('[Save] Success:', { 
+        listingId, 
+        externalId: normalizedExternalId,
+        manualShopifyId: normalizedManualId,
+        canPush 
       });
       
       // Reset success state after 3 seconds
@@ -271,6 +309,11 @@ const CreateShopifyListing = () => {
                 Export CSV
               </Button>
               <div className="flex items-center gap-2">
+                {savedTimestamp && (
+                  <span className="text-xs text-charcoal/60">
+                    Saved at {savedTimestamp}
+                  </span>
+                )}
                 {externalId ? (
                   <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 border border-green-200 px-3 py-2 rounded-lg">
                     <Check className="w-4 h-4" />
@@ -294,9 +337,9 @@ const CreateShopifyListing = () => {
                         <Button
                           size="sm"
                           onClick={handlePushToShopify}
-                          disabled={isPushing || !currentListingId || (!externalId && !manualShopifyId)}
+                          disabled={isPushing || !currentListingId || (!externalId?.trim() && !manualShopifyId?.trim())}
                           className={`transition-all ${
-                            currentListingId && (externalId || manualShopifyId)
+                            currentListingId && (externalId?.trim() || manualShopifyId?.trim())
                               ? "bg-aged-brass hover:bg-aged-brass/90 text-white"
                               : "bg-muted text-muted-foreground"
                           }`}
@@ -310,11 +353,11 @@ const CreateShopifyListing = () => {
                         </Button>
                       </div>
                     </TooltipTrigger>
-                    {(!currentListingId || (!externalId && !manualShopifyId)) && (
+                    {(!currentListingId || (!externalId?.trim() && !manualShopifyId?.trim())) && (
                       <TooltipContent>
                         <p>
                           {!currentListingId && "Save draft first"}
-                          {currentListingId && !externalId && !manualShopifyId && "Select a synced product or enter Shopify Product ID"}
+                          {currentListingId && !externalId?.trim() && !manualShopifyId?.trim() && "Select a synced product or enter Shopify Product ID"}
                         </p>
                       </TooltipContent>
                     )}
@@ -360,8 +403,10 @@ const CreateShopifyListing = () => {
                 console.log('Shopify Product ID:', product?.shopify_product_id);
                 
                 if (product?.shopify_product_id) {
-                  setExternalId(product.shopify_product_id);
-                  console.log('Set externalId to:', product.shopify_product_id);
+                  // Normalize to string (already done in ProductAssociationSection, but be safe)
+                  const normalizedId = String(product.shopify_product_id);
+                  setExternalId(normalizedId);
+                  console.log('Set externalId to:', normalizedId);
                   
                   // Auto-fill form from product data
                   handleUpdate({
