@@ -110,10 +110,11 @@ export function RepurposeBlogDialog({ onRepurpose }: RepurposeBlogDialogProps) {
             <div className="space-y-3">
               {blogPosts.map((post) => (
                 <button
+                  type="button"
                   key={post.id}
                   onClick={() => handleRepurpose(post)}
                   disabled={repurposing}
-                  className="w-full p-4 border rounded-lg hover:bg-accent/50 transition-colors text-left disabled:opacity-50"
+                  className="w-full p-4 border rounded-lg hover:bg-accent/50 transition-colors text-left disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
