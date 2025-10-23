@@ -61,23 +61,44 @@ serve(async (req) => {
 
     console.log(`Fetched ${products.length} products from Shopify`);
 
+    // Log tag parsing for debugging
+    if (products.length > 0) {
+      const sampleProduct = products[0];
+      console.log(`Sample product tags: ${sampleProduct.tags}`);
+      console.log(`Sample product type: ${sampleProduct.product_type}`);
+    }
+
     // Map Shopify products to brand_products schema
     const mappedProducts = products.map((product: any) => {
       const variant = product.variants?.[0] || {};
       
+      // Parse Shopify tags for Madison-specific metadata
+      const tags = product.tags ? product.tags.split(',').map((t: string) => t.trim()) : [];
+
+      // Extract collection from tags (e.g., "collection:Humanities")
+      const collectionTag = tags.find((tag: string) => tag.startsWith('collection:'));
+      const collection = collectionTag 
+        ? collectionTag.replace('collection:', '').trim()
+        : product.product_type || 'Uncategorized';
+
+      // Extract scent_family from tags (e.g., "scent_family:warm")
+      const scentFamilyTag = tags.find((tag: string) => tag.startsWith('scent_family:'));
+      const scent_family = scentFamilyTag 
+        ? scentFamilyTag.replace('scent_family:', '').trim()
+        : null;
+      
       return {
         organization_id,
         name: product.title,
-        collection: product.product_type || 'Uncategorized',
-        category: 'personal_fragrance', // Default category, can be customized
+        collection: collection,
+        scent_family: scent_family,
+        category: 'personal_fragrance',
         product_type: product.product_type,
         shopify_product_id: product.id.toString(),
         shopify_variant_id: variant.id?.toString(),
         shopify_sync_status: 'synced',
         last_shopify_sync: new Date().toISOString(),
-        // Additional fields from Shopify
         usp: product.body_html ? product.body_html.substring(0, 500) : null,
-        // Tags can be used for scent families or other metadata
         tone: product.tags ? product.tags.split(',')[0] : null,
       };
     });
