@@ -256,12 +256,16 @@ export type Database = {
           formulation_type: string | null
           id: string
           key_ingredients: string | null
+          last_shopify_sync: string | null
           middle_notes: string | null
           name: string
           organization_id: string
           product_type: string | null
           scent_family: string | null
           scent_profile: string | null
+          shopify_product_id: string | null
+          shopify_sync_status: string | null
+          shopify_variant_id: string | null
           tone: string | null
           top_notes: string | null
           updated_at: string
@@ -279,12 +283,16 @@ export type Database = {
           formulation_type?: string | null
           id?: string
           key_ingredients?: string | null
+          last_shopify_sync?: string | null
           middle_notes?: string | null
           name: string
           organization_id: string
           product_type?: string | null
           scent_family?: string | null
           scent_profile?: string | null
+          shopify_product_id?: string | null
+          shopify_sync_status?: string | null
+          shopify_variant_id?: string | null
           tone?: string | null
           top_notes?: string | null
           updated_at?: string
@@ -302,12 +310,16 @@ export type Database = {
           formulation_type?: string | null
           id?: string
           key_ingredients?: string | null
+          last_shopify_sync?: string | null
           middle_notes?: string | null
           name?: string
           organization_id?: string
           product_type?: string | null
           scent_family?: string | null
           scent_profile?: string | null
+          shopify_product_id?: string | null
+          shopify_sync_status?: string | null
+          shopify_variant_id?: string | null
           tone?: string | null
           top_notes?: string | null
           updated_at?: string
@@ -1377,6 +1389,92 @@ export type Database = {
           },
         ]
       }
+      shopify_connections: {
+        Row: {
+          access_token_encrypted: string
+          created_at: string | null
+          id: string
+          last_synced_at: string | null
+          organization_id: string
+          shop_domain: string
+          sync_status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          access_token_encrypted: string
+          created_at?: string | null
+          id?: string
+          last_synced_at?: string | null
+          organization_id: string
+          shop_domain: string
+          sync_status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          access_token_encrypted?: string
+          created_at?: string | null
+          id?: string
+          last_synced_at?: string | null
+          organization_id?: string
+          shop_domain?: string
+          sync_status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopify_connections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shopify_publish_log: {
+        Row: {
+          id: string
+          organization_id: string
+          product_id: string | null
+          published_at: string | null
+          published_by: string | null
+          published_content: Json
+          shopify_product_id: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          product_id?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          published_content?: Json
+          shopify_product_id: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          product_id?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          published_content?: Json
+          shopify_product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopify_publish_log_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shopify_publish_log_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "brand_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       super_admins: {
         Row: {
           created_at: string | null
@@ -1524,10 +1622,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_unsaved_image_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      cleanup_unsaved_image_sessions: { Args: never; Returns: number }
       has_organization_role: {
         Args: {
           _org_id: string
@@ -1540,10 +1635,7 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
-      is_super_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       content_type: "product" | "email" | "social" | "visual" | "blog"

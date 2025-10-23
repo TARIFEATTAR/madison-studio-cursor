@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Package, Users, Bell, CreditCard, FolderKanban, Sparkles, Target } from "lucide-react";
+import { Building2, Package, Users, Bell, CreditCard, FolderKanban, Sparkles, Target, Plug } from "lucide-react";
 import { ProductsTab } from "@/components/settings/ProductsTab";
 import { BrandGuidelinesTab } from "@/components/settings/BrandGuidelinesTab";
 import { TeamTab } from "@/components/settings/TeamTab";
@@ -9,6 +9,7 @@ import { BillingTab } from "@/components/settings/BillingTab";
 import { CollectionsTab } from "@/components/settings/CollectionsTab";
 import { MadisonTrainingTab } from "@/components/settings/MadisonTrainingTab";
 import { GoalsTab } from "@/components/settings/GoalsTab";
+import { IntegrationsTab } from "@/components/settings/IntegrationsTab";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -115,6 +116,13 @@ export default function Settings() {
                 <CreditCard className="w-4 h-4" />
                 <span className="hidden xs:inline">Billing</span>
               </TabsTrigger>
+              <TabsTrigger 
+                value="integrations"
+                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal px-2 sm:px-3 py-1.5 gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0"
+              >
+                <Plug className="w-4 h-4" />
+                <span className="hidden xs:inline">Integrations</span>
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="brand">
@@ -147,6 +155,10 @@ export default function Settings() {
 
             <TabsContent value="billing">
               <BillingTab />
+            </TabsContent>
+
+            <TabsContent value="integrations">
+              <IntegrationsTab />
             </TabsContent>
           </Tabs>
         </div>
