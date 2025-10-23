@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Download, Store } from "lucide-react";
+import { ArrowLeft, Save, Download, Store, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -35,6 +35,9 @@ const CreateShopifyListing = () => {
 
   const [productId, setProductId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPushing, setIsPushing] = useState(false);
+  const [currentListingId, setCurrentListingId] = useState<string | null>(null);
+  const [pushStatus, setPushStatus] = useState<'pending' | 'success' | 'failed'>('pending');
 
   if (!platform) {
     return <div>Platform configuration not found</div>;
@@ -85,19 +88,56 @@ const CreateShopifyListing = () => {
         status: 'draft' as const
       };
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('marketplace_listings')
-        .insert([listingData]);
+        .insert([listingData])
+        .select()
+        .single();
 
       if (error) throw error;
 
+      setCurrentListingId(data.id);
+      setPushStatus((data.push_status as 'pending' | 'success' | 'failed') || 'pending');
+
       toast.success("Shopify listing saved!");
-      navigate('/marketplace-library');
     } catch (error) {
       console.error('Save error:', error);
       toast.error("Failed to save listing");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handlePushToShopify = async () => {
+    if (!currentListingId) {
+      toast.error("Please save your listing first");
+      return;
+    }
+
+    if (!productId) {
+      toast.error("Please link to a Shopify product before pushing");
+      return;
+    }
+
+    setIsPushing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        'update-shopify-product',
+        {
+          body: { listing_id: currentListingId }
+        }
+      );
+
+      if (error) throw error;
+
+      setPushStatus('success');
+      toast.success("Successfully pushed to Shopify!");
+    } catch (error: any) {
+      console.error('Error pushing to Shopify:', error);
+      setPushStatus('failed');
+      toast.error(error.message || "Failed to push to Shopify");
+    } finally {
+      setIsPushing(false);
     }
   };
 
@@ -164,6 +204,18 @@ const CreateShopifyListing = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {pushStatus === 'success' && (
+                <span className="text-xs text-green-600 flex items-center gap-1">
+                  <span className="inline-block w-2 h-2 bg-green-600 rounded-full"></span>
+                  Synced
+                </span>
+              )}
+              {pushStatus === 'failed' && (
+                <span className="text-xs text-red-600 flex items-center gap-1">
+                  <span className="inline-block w-2 h-2 bg-red-600 rounded-full"></span>
+                  Push failed
+                </span>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -172,6 +224,15 @@ const CreateShopifyListing = () => {
               >
                 <Download className="h-4 w-4 mr-2" />
                 Export CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePushToShopify}
+                disabled={isPushing || !currentListingId || !productId}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {isPushing ? "Pushing..." : "Push to Shopify"}
               </Button>
               <Button
                 size="sm"

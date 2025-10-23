@@ -862,11 +862,14 @@ export type Database = {
           external_url: string | null
           id: string
           is_archived: boolean | null
+          last_pushed_at: string | null
           last_synced_at: string | null
           organization_id: string
           platform: string
           platform_data: Json
           product_id: string | null
+          push_error: string | null
+          push_status: string | null
           status: string | null
           title: string
           updated_at: string | null
@@ -879,11 +882,14 @@ export type Database = {
           external_url?: string | null
           id?: string
           is_archived?: boolean | null
+          last_pushed_at?: string | null
           last_synced_at?: string | null
           organization_id: string
           platform: string
           platform_data?: Json
           product_id?: string | null
+          push_error?: string | null
+          push_status?: string | null
           status?: string | null
           title: string
           updated_at?: string | null
@@ -896,11 +902,14 @@ export type Database = {
           external_url?: string | null
           id?: string
           is_archived?: boolean | null
+          last_pushed_at?: string | null
           last_synced_at?: string | null
           organization_id?: string
           platform?: string
           platform_data?: Json
           product_id?: string | null
+          push_error?: string | null
+          push_status?: string | null
           status?: string | null
           title?: string
           updated_at?: string | null
