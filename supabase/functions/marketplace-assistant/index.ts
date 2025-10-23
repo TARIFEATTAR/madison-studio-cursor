@@ -119,7 +119,7 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    console.log('Marketplace assistant request:', { platform, actionType, hasProduct: !!productId });
+    console.log('Marketplace assistant request:', { platform, actionType, hasProduct: !!productId, organizationId, productId });
 
     // Gather context
     const [madisonConfig, brandKnowledge, productData] = await Promise.all([
@@ -127,6 +127,11 @@ serve(async (req) => {
       organizationId ? getBrandKnowledge(organizationId) : Promise.resolve(''),
       productId && organizationId ? getProductData(productId, organizationId) : Promise.resolve(null)
     ]);
+
+    // Debug logging
+    console.log('Madison config fetched:', !!madisonConfig, madisonConfig ? `${madisonConfig.substring(0, 100)}...` : 'EMPTY');
+    console.log('Brand knowledge fetched:', !!brandKnowledge, brandKnowledge ? `Length: ${brandKnowledge.length} chars` : 'EMPTY');
+    console.log('Product data fetched:', !!productData, productData ? productData.name : 'NONE');
 
     // Platform-specific templates
     const platformTemplates: Record<string, any> = {
