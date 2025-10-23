@@ -53,3 +53,6 @@ verify_jwt = true
 
 [functions.generate-madison-image]
 verify_jwt = true
+
+[functions.update-shopify-product]
+verify_jwt = true
