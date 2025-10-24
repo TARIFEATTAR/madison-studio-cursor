@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface InviteMemberDialogProps {
   open: boolean;
@@ -29,6 +30,7 @@ export function InviteMemberDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,10 +73,44 @@ export function InviteMemberDialog({
         throw error;
       }
 
-      toast({
-        title: "Invitation sent!",
-        description: `${email} will be added to your team when they sign up or log in.`,
-      });
+      // Get organization name
+      const { data: orgData } = await supabase
+        .from("organizations")
+        .select("name")
+        .eq("id", organizationId)
+        .single();
+
+      // Send invitation email
+      try {
+        const { error: emailError } = await supabase.functions.invoke("send-team-invitation", {
+          body: {
+            email: email.toLowerCase().trim(),
+            organizationName: orgData?.name || "your team",
+            role: role,
+            invitedByName: user?.user_metadata?.full_name || user?.email || "A team member",
+            appUrl: window.location.origin,
+          },
+        });
+
+        if (emailError) {
+          console.error("Email send error:", emailError);
+          toast({
+            title: "Invitation created",
+            description: "The invitation was created but the email could not be sent. The member can still join by signing up.",
+          });
+        } else {
+          toast({
+            title: "Invitation sent!",
+            description: `${email} has been invited via email.`,
+          });
+        }
+      } catch (emailError) {
+        console.error("Email send error:", emailError);
+        toast({
+          title: "Invitation created",
+          description: "The invitation was created but the email could not be sent. The member can still join by signing up.",
+        });
+      }
 
       // Refresh invitations list
       queryClient.invalidateQueries({ queryKey: ["team-invitations", organizationId] });
