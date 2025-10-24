@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Lightbulb, FileText, PenTool, X, Send, Loader2, Bookmark, Upload, Search } from "lucide-react";
+import { Lightbulb, FileText, PenTool, X, Send, Loader2, Bookmark, Upload, Search, ChevronDown, ChevronUp } from "lucide-react";
 import penNibIcon from "@/assets/pen-nib-icon-new.png";
 import { createRoot } from "react-dom/client";
 import ScriptoraLoadingAnimation from "@/components/forge/ScriptoraLoadingAnimation";
@@ -42,6 +42,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 export default function Create() {
   const navigate = useNavigate();
@@ -118,6 +123,7 @@ export default function Create() {
   const [savePromptDialogOpen, setSavePromptDialogOpen] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [formatPickerOpen, setFormatPickerOpen] = useState(false);
+  const [advancedOptionsOpen, setAdvancedOptionsOpen] = useState(false);
 
   const handleSubmit = () => {
     // Only format is required
@@ -680,24 +686,13 @@ export default function Create() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 mb-4">
-              <Button
-                variant="outline"
-                onClick={() => setUploadDialogOpen(true)}
-                className="flex items-center justify-center gap-2 border-brass text-brass hover:bg-brass/10 w-full md:w-auto"
-              >
-                <Upload className="w-4 h-4" />
-                Upload Worksheet
-              </Button>
-              <VideoHelpTrigger videoId="understanding-content-worksheets" variant="icon" />
-            </div>
             <p className="text-base text-warm-gray">
-              Choose your product and format. Add optional details for more targeted content. Our AI will handle the rest.
+              Fill out the brief below and Madison will craft the perfect content.
             </p>
           </div>
 
           {/* Form Container */}
-          <div className="p-8 rounded-xl border border-warm-gray/20 space-y-6 bg-parchment-white">
+          <div className="p-8 rounded-xl border border-warm-gray/20 space-y-8 bg-parchment-white">
             {/* Product - Optional */}
             <div>
               <Label htmlFor="product" className="text-base mb-2 text-ink-black">
@@ -831,100 +826,122 @@ export default function Create() {
             {/* Target Audience - Optional */}
             <div>
               <Label htmlFor="audience" className="text-base mb-2 text-ink-black">
-                Target Audience
+                Audience <span className="text-warm-gray text-sm font-normal">(Optional)</span>
               </Label>
-              <Select value={audience} onValueChange={setAudience}>
-                <SelectTrigger
-                  id="audience"
-                  className="mt-2 bg-parchment-white border-warm-gray/20"
-                >
-                  <SelectValue placeholder="Select audience..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="luxury">Luxury Consumers</SelectItem>
-                  <SelectItem value="wellness">Wellness Enthusiasts</SelectItem>
-                  <SelectItem value="gifts">Gift Shoppers</SelectItem>
-                  <SelectItem value="connoisseurs">Fragrance Connoisseurs</SelectItem>
-                  <SelectItem value="new">New Customers</SelectItem>
-                </SelectContent>
-              </Select>
+              <Input
+                id="audience"
+                value={audience}
+                onChange={(e) => setAudience(e.target.value)}
+                placeholder="e.g., Luxury beauty enthusiasts, Gift shoppers, New customers"
+                className="mt-2 bg-parchment-white border-warm-gray/20 text-ink-black"
+              />
               <p className="text-xs italic mt-2 text-warm-gray/70">
-                Who is this content for? Helps AI tailor message and tone
+                Who is this content for? Helps Madison tailor message and tone
               </p>
             </div>
 
             {/* Content Goal - Optional */}
             <div>
               <Label htmlFor="goal" className="text-base mb-2 text-ink-black">
-                Content Goal
+                Goal <span className="text-warm-gray text-sm font-normal">(Optional)</span>
               </Label>
-              <Select value={goal} onValueChange={setGoal}>
-                <SelectTrigger
-                  id="goal"
-                  className="mt-2 bg-parchment-white border-warm-gray/20"
-                >
-                  <SelectValue placeholder="Select goal..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sales">Drive Sales</SelectItem>
-                  <SelectItem value="awareness">Build Awareness</SelectItem>
-                  <SelectItem value="educate">Educate Audience</SelectItem>
-                  <SelectItem value="nurture">Nurture Relationships</SelectItem>
-                  <SelectItem value="launch">Launch Product</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs italic mt-2 text-warm-gray/70">
-                What should this content achieve? Guides AI on CTA and focus
-              </p>
-            </div>
-
-            {/* Style Overlay - Optional */}
-            <div>
-              <Label htmlFor="style" className="text-base mb-2 text-ink-black">
-                Style Overlay
-              </Label>
-              <Select value={style} onValueChange={setStyle}>
-                <SelectTrigger
-                  id="style"
-                  className="mt-2 bg-parchment-white border-warm-gray/20"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tarife-native">Tarife—Brand (Default)</SelectItem>
-                  <SelectItem value="poetic">Poetic & Evocative</SelectItem>
-                  <SelectItem value="direct">Direct & Practical</SelectItem>
-                  <SelectItem value="story">Storytelling & Narrative</SelectItem>
-                  <SelectItem value="minimal">Minimal & Modern</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs italic mt-2 text-warm-gray/70">
-                Choose the writing style that best fits your content needs
-              </p>
-            </div>
-
-            {/* Additional Editorial Direction - Optional */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label htmlFor="context" className="text-base text-ink-black">
-                  Additional Editorial Direction
-                </Label>
-                <span className="text-xs text-warm-gray/70">
-                  {additionalContext.length} / 1000 characters
-                </span>
-              </div>
-              <Textarea
-                id="context"
-                value={additionalContext}
-                onChange={(e) => setAdditionalContext(e.target.value)}
-                placeholder="Provide specific requirements or creative mandates..."
-                className="mt-2 min-h-[120px] bg-vellum-cream border-warm-gray/20 text-ink-black"
-                maxLength={1000}
+              <Input
+                id="goal"
+                value={goal}
+                onChange={(e) => setGoal(e.target.value)}
+                placeholder="e.g., Drive product awareness, Build brand loyalty, Launch new collection"
+                className="mt-2 bg-parchment-white border-warm-gray/20 text-ink-black"
               />
               <p className="text-xs italic mt-2 text-warm-gray/70">
-                Any specific themes, angles, seasonal notes, or key messages to include (max 1000 characters)
+                What should this content achieve? Guides Madison on CTA and focus
               </p>
             </div>
+
+            {/* Advanced Options Collapsible */}
+            <Collapsible
+              open={advancedOptionsOpen}
+              onOpenChange={setAdvancedOptionsOpen}
+              className="border-t border-warm-gray/20 pt-6"
+            >
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full flex items-center justify-between hover:bg-brass/5 text-ink-black p-4"
+                >
+                  <span className="text-base font-medium">
+                    Advanced Options
+                  </span>
+                  {advancedOptionsOpen ? (
+                    <ChevronUp className="w-5 h-5 text-brass" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-brass" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+              
+              <CollapsibleContent className="space-y-6 pt-4">
+                {/* Upload Worksheet */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setUploadDialogOpen(true)}
+                    className="flex items-center justify-center gap-2 border-brass text-brass hover:bg-brass/10 w-full md:w-auto"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Upload Worksheet
+                  </Button>
+                  <VideoHelpTrigger videoId="understanding-content-worksheets" variant="icon" />
+                </div>
+
+                {/* Style Overlay */}
+                <div>
+                  <Label htmlFor="style" className="text-base mb-2 text-ink-black">
+                    Style Overlay
+                  </Label>
+                  <Select value={style} onValueChange={setStyle}>
+                    <SelectTrigger
+                      id="style"
+                      className="mt-2 bg-parchment-white border-warm-gray/20"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tarife-native">Tarife—Brand (Default)</SelectItem>
+                      <SelectItem value="poetic">Poetic & Evocative</SelectItem>
+                      <SelectItem value="direct">Direct & Practical</SelectItem>
+                      <SelectItem value="story">Storytelling & Narrative</SelectItem>
+                      <SelectItem value="minimal">Minimal & Modern</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs italic mt-2 text-warm-gray/70">
+                    Choose the writing style that best fits your content needs
+                  </p>
+                </div>
+
+                {/* Additional Editorial Direction */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor="context" className="text-base text-ink-black">
+                      Additional Editorial Direction
+                    </Label>
+                    <span className="text-xs text-warm-gray/70">
+                      {additionalContext.length} / 1000 characters
+                    </span>
+                  </div>
+                  <Textarea
+                    id="context"
+                    value={additionalContext}
+                    onChange={(e) => setAdditionalContext(e.target.value)}
+                    placeholder="Provide specific requirements or creative mandates..."
+                    className="mt-2 min-h-[120px] bg-vellum-cream border-warm-gray/20 text-ink-black"
+                    maxLength={1000}
+                  />
+                  <p className="text-xs italic mt-2 text-warm-gray/70">
+                    Any specific themes, angles, seasonal notes, or key messages to include (max 1000 characters)
+                  </p>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
 
           {/* Actions */}
@@ -933,11 +950,11 @@ export default function Create() {
             <div className="flex flex-col gap-3 md:hidden">
               <Button
                 onClick={handleSubmit}
-                disabled={!product || !format}
+                disabled={!format}
                 className="w-full gap-2 min-h-[44px] bg-gradient-to-r from-brass to-brass-glow hover:opacity-90 text-ink-black font-semibold disabled:from-warm-gray/20 disabled:to-warm-gray/20 disabled:text-warm-gray"
               >
                 <PenTool className="w-5 h-5" />
-                <span>Create Content</span>
+                <span>Generate</span>
               </Button>
               
               {format && (
@@ -959,11 +976,18 @@ export default function Create() {
                 Cancel
               </Button>
               
+              <button
+                onClick={() => setThinkModeExpanded(true)}
+                className="w-full text-sm text-brass hover:underline mt-2"
+              >
+                Not sure what to write? Try Think Mode
+              </button>
+              
               <p className="text-xs text-center mt-2 text-warm-gray/70">
-                {!product || !format ? (
-                  <span className="text-brass">Select product and format to continue</span>
+                {!format ? (
+                  <span className="text-brass">Select a format to continue</span>
                 ) : (
-                  "Headlines and subjects will be AI-generated."
+                  "Madison will generate complete content based on your brief"
                 )}
               </p>
             </div>
@@ -994,17 +1018,23 @@ export default function Create() {
               <div className="text-right">
                 <Button
                   onClick={handleSubmit}
-                  disabled={!product || !format}
+                  disabled={!format}
                   className="gap-2 px-8 bg-gradient-to-r from-brass to-brass-glow hover:opacity-90 text-ink-black font-semibold disabled:from-warm-gray/20 disabled:to-warm-gray/20 disabled:text-warm-gray"
                 >
                   <PenTool className="w-5 h-5" />
-                  <span className="text-base">Create Content</span>
+                  <span className="text-base">Generate</span>
                 </Button>
+                <button
+                  onClick={() => setThinkModeExpanded(true)}
+                  className="block text-sm text-brass hover:underline mt-2 ml-auto"
+                >
+                  Not sure what to write? Try Think Mode
+                </button>
                 <p className="text-xs mt-2 text-warm-gray/70">
-                  {!product || !format ? (
-                    <span className="text-brass">Select product and format to continue</span>
+                  {!format ? (
+                    <span className="text-brass">Select a format to continue</span>
                   ) : (
-                    "Headlines and subjects will be AI-generated. You'll refine in the editor."
+                    "Madison will generate complete content based on your brief"
                   )}
                 </p>
               </div>
