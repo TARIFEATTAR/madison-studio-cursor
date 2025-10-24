@@ -3,8 +3,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -487,9 +488,15 @@ serve(async (req) => {
 
     console.log(`Authenticated request from user: ${user.id}`);
     
-    if (!ANTHROPIC_API_KEY) {
-      throw new Error('ANTHROPIC_API_KEY is not configured');
+    // Check which API is available - prefer Anthropic, fallback to Lovable AI
+    const useAnthropicAPI = !!ANTHROPIC_API_KEY;
+    const useLovableAI = !useAnthropicAPI && !!LOVABLE_API_KEY;
+    
+    if (!useAnthropicAPI && !useLovableAI) {
+      throw new Error('No AI API configured. Please set either ANTHROPIC_API_KEY or use Lovable AI.');
     }
+    
+    console.log(`Using ${useAnthropicAPI ? 'Anthropic Claude' : 'Lovable AI (Gemini)'} for generation`);
 
     const { prompt, organizationId, mode = "generate", styleOverlay = "TARIFE_NATIVE", productData, contentType, userName, images, product_id } = await req.json();
     
@@ -1277,42 +1284,95 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
           messageContent = prompt;
         }
         
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'x-api-key': ANTHROPIC_API_KEY,
-            'anthropic-version': '2023-06-01',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 4096,
-            system: systemPrompt,
-            messages: [
-              {
-                role: 'user',
-                content: messageContent
-              }
-            ],
-          }),
-        });
+        let response: Response;
+        let data: any;
+        
+        if (useAnthropicAPI) {
+          // Use Anthropic Claude API
+          response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+              'x-api-key': ANTHROPIC_API_KEY!,
+              'anthropic-version': '2023-06-01',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'claude-sonnet-4-20250514',
+              max_tokens: 4096,
+              system: systemPrompt,
+              messages: [
+                {
+                  role: 'user',
+                  content: messageContent
+                }
+              ],
+            }),
+          });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`Claude API error (attempt ${attempt + 1}):`, response.status, errorText);
-          
-          // Only retry on 500 errors
-          if (response.status === 500) {
-            lastError = new Error(`Claude API error: ${response.status} - ${errorText}`);
-            continue; // Try again
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Claude API error (attempt ${attempt + 1}):`, response.status, errorText);
+            
+            // Check for credit/billing errors
+            if (response.status === 429 || response.status === 402 || errorText.includes('credit')) {
+              throw new Error('Anthropic API credits exhausted. Please add credits or contact support.');
+            }
+            
+            // Only retry on 500 errors
+            if (response.status === 500) {
+              lastError = new Error(`Claude API error: ${response.status} - ${errorText}`);
+              continue; // Try again
+            }
+            
+            // For other errors, fail immediately
+            throw new Error(`Claude API error: ${response.status} - ${errorText}`);
           }
-          
-          // For other errors, fail immediately
-          throw new Error(`Claude API error: ${response.status} - ${errorText}`);
-        }
 
-        const data = await response.json();
-        generatedContent = data.content[0].text;
+          data = await response.json();
+          generatedContent = data.content[0].text;
+        } else {
+          // Use Lovable AI (Gemini) as fallback
+          const messages: any[] = [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: typeof messageContent === 'string' ? messageContent : prompt }
+          ];
+          
+          response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'google/gemini-2.5-flash',
+              messages: messages,
+              stream: false,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Lovable AI error (attempt ${attempt + 1}):`, response.status, errorText);
+            
+            if (response.status === 429) {
+              throw new Error('Rate limit exceeded. Please try again in a moment.');
+            }
+            if (response.status === 402) {
+              throw new Error('Lovable AI credits exhausted. Please add credits in Settings → Workspace → Usage.');
+            }
+            
+            // Only retry on 500 errors
+            if (response.status === 500) {
+              lastError = new Error(`Lovable AI error: ${response.status} - ${errorText}`);
+              continue;
+            }
+            
+            throw new Error(`Lovable AI error: ${response.status} - ${errorText}`);
+          }
+
+          data = await response.json();
+          generatedContent = data.choices[0].message.content;
+        }
         
         // Success - break out of retry loop
         break;

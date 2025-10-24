@@ -218,7 +218,7 @@ export default function ImageEditor() {
   const handleGenerate = async (promptOverride?: string) => {
     const prompt = promptOverride || userPrompt;
     
-    if (!userPrompt.trim()) {
+    if (!prompt.trim()) {
       toast.error("Please describe the image you want to create");
       return;
     }
