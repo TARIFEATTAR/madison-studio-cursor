@@ -488,15 +488,19 @@ serve(async (req) => {
 
     console.log(`Authenticated request from user: ${user.id}`);
     
-    // Check which API is available - prefer Anthropic, fallback to Lovable AI
-    const useAnthropicAPI = !!ANTHROPIC_API_KEY;
-    const useLovableAI = !useAnthropicAPI && !!LOVABLE_API_KEY;
+    // Determine model availability - prefer Anthropic, fallback to Lovable AI when credits/rate limits block requests
+    const hasAnthropicAPI = !!ANTHROPIC_API_KEY;
+    const hasLovableAI = !!LOVABLE_API_KEY;
     
-    if (!useAnthropicAPI && !useLovableAI) {
-      throw new Error('No AI API configured. Please set either ANTHROPIC_API_KEY or use Lovable AI.');
+    if (!hasAnthropicAPI && !hasLovableAI) {
+      throw new Error('No AI API configured. Please set ANTHROPIC_API_KEY or LOVABLE_API_KEY.');
     }
     
-    console.log(`Using ${useAnthropicAPI ? 'Anthropic Claude' : 'Lovable AI (Gemini)'} for generation`);
+    if (hasAnthropicAPI && hasLovableAI) {
+      console.log('Using Anthropic Claude as primary with Lovable AI fallback');
+    } else {
+      console.log(`Using ${hasAnthropicAPI ? 'Anthropic Claude' : 'Lovable AI (Gemini)'} for generation`);
+    }
 
     const { prompt, organizationId, mode = "generate", styleOverlay = "TARIFE_NATIVE", productData, contentType, userName, images, product_id } = await req.json();
     
@@ -1287,7 +1291,7 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
         let response: Response;
         let data: any;
         
-        if (useAnthropicAPI) {
+        if (hasAnthropicAPI) {
           // Use Anthropic Claude API
           response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
@@ -1313,11 +1317,44 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
             const errorText = await response.text();
             console.error(`Claude API error (attempt ${attempt + 1}):`, response.status, errorText);
             
-            // Check for credit/billing errors
-            if (response.status === 429 || response.status === 402 || errorText.includes('credit')) {
-              throw new Error('Anthropic API credits exhausted. Please add credits or contact support.');
+            // If Anthropic is unavailable due to credits/rate limits and Lovable is configured, fall back immediately
+            const lower = errorText.toLowerCase();
+            const isCreditOrRateLimit = response.status === 429 || response.status === 402 || lower.includes('credit') || lower.includes('rate');
+            if (isCreditOrRateLimit && hasLovableAI) {
+              console.log('Falling back to Lovable AI (Gemini) due to Anthropic limitation');
+              const messages: any[] = [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: typeof messageContent === 'string' ? messageContent : prompt }
+              ];
+              const lovableResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  model: 'google/gemini-2.5-flash',
+                  messages: messages,
+                  stream: false,
+                }),
+              });
+
+              if (!lovableResp.ok) {
+                const lovableErr = await lovableResp.text();
+                console.error('Lovable AI fallback failed:', lovableResp.status, lovableErr);
+                // If fallback also fails with 500, retry; otherwise bubble up a combined error
+                if (lovableResp.status === 500) {
+                  lastError = new Error(`Lovable AI error: ${lovableResp.status} - ${lovableErr}`);
+                  continue;
+                }
+                throw new Error(`Lovable AI error: ${lovableResp.status} - ${lovableErr}`);
+              }
+
+              const lovableData = await lovableResp.json();
+              generatedContent = lovableData.choices[0].message.content;
+              break; // Success via fallback
             }
-            
+
             // Only retry on 500 errors
             if (response.status === 500) {
               lastError = new Error(`Claude API error: ${response.status} - ${errorText}`);
