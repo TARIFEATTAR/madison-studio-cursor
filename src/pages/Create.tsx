@@ -938,7 +938,7 @@ export default function Create() {
                 Cancel
               </Button>
               
-              {additionalContext.trim() && (
+              {format && (
                 <Button
                   variant="outline"
                   onClick={() => setSavePromptDialogOpen(true)}
@@ -983,8 +983,23 @@ export default function Create() {
       <SavePromptDialog
         open={savePromptDialogOpen}
         onOpenChange={setSavePromptDialogOpen}
-        promptText={additionalContext}
-        suggestedTitle={`${format} - ${product}`}
+        promptText={(() => {
+          const promptParts = [
+            product && product !== "none" && `Product: ${product}`,
+            `Format: ${format}`,
+            audience && `Target Audience: ${audience}`,
+            goal && `Content Goal: ${goal}`,
+            additionalContext && `\nAdditional Direction: ${additionalContext}`
+          ].filter(Boolean).join('\n');
+          return promptParts;
+        })()}
+        suggestedTitle={product && product !== "none" ? `${format} - ${product}` : format}
+        onSaved={() => {
+          toast({
+            title: "Template saved",
+            description: "You can now use this prompt from your library",
+          });
+        }}
       />
 
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
