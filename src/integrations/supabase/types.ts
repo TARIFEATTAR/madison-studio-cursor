@@ -607,6 +607,7 @@ export type Database = {
           organization_id: string | null
           output_format: string | null
           reference_image_url: string | null
+          reference_images: Json | null
           saved_to_library: boolean | null
           selected_template: string | null
           session_id: string | null
@@ -634,6 +635,7 @@ export type Database = {
           organization_id?: string | null
           output_format?: string | null
           reference_image_url?: string | null
+          reference_images?: Json | null
           saved_to_library?: boolean | null
           selected_template?: string | null
           session_id?: string | null
@@ -661,6 +663,7 @@ export type Database = {
           organization_id?: string | null
           output_format?: string | null
           reference_image_url?: string | null
+          reference_images?: Json | null
           saved_to_library?: boolean | null
           selected_template?: string | null
           session_id?: string | null

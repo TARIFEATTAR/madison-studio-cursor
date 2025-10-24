@@ -72,8 +72,7 @@ serve(async (req) => {
       outputFormat = 'png',
       selectedTemplate,
       userRefinements,
-      referenceImageUrl,
-      referenceDescription,
+      referenceImages, // Now an array of {url, description, label}
       brandContext,
       imageConstraints
     } = await req.json();
@@ -83,7 +82,8 @@ serve(async (req) => {
       aspectRatio,
       promptLength: prompt.length,
       hasBrandContext: !!brandContext,
-      hasReferenceImage: !!referenceImageUrl,
+      hasReferenceImages: !!referenceImages && referenceImages.length > 0,
+      referenceImageCount: referenceImages?.length || 0,
       hasConstraints: !!imageConstraints
     });
 
@@ -136,49 +136,79 @@ serve(async (req) => {
       enhancedPrompt += `\n\n${imageConstraints.hardInstructions}`;
     }
 
-    // Apply advanced prompt formula if reference image is provided
-    if (referenceImageUrl) {
-      enhancedPrompt = buildProductPlacementPrompt(enhancedPrompt, brandContext);
-      
-      if (referenceDescription) {
-        enhancedPrompt += `\n\nAdditional Reference Notes: ${referenceDescription}`;
+    // Apply advanced prompt formula if reference images are provided
+    if (referenceImages && referenceImages.length > 0) {
+      if (referenceImages.length === 1) {
+        // Single reference - use existing product placement prompt
+        enhancedPrompt = buildProductPlacementPrompt(enhancedPrompt, brandContext);
+        if (referenceImages[0].description) {
+          enhancedPrompt += `\n\nReference Notes: ${referenceImages[0].description}`;
+        }
+      } else {
+        // Multiple references - build multi-image composite prompt
+        enhancedPrompt = `MULTI-REFERENCE IMAGE COMPOSITION:
+You have ${referenceImages.length} reference images. Combine them according to the scene description below.
+
+REFERENCE IMAGES:
+${referenceImages.map((img: any, idx: number) => `${idx + 1}. ${img.label}: ${img.description || 'Use as-is from image'}`).join('\n')}
+
+SCENE TO CREATE:
+${enhancePromptWithFormula(enhancedPrompt, brandContext)}
+
+COMPOSITION REQUIREMENTS:
+- Maintain exact appearance of products/subjects from their reference images
+- Use background reference for environment and setting
+- Apply style/lighting references to the overall composition
+- Create a cohesive, professionally composed image that integrates all references naturally
+- Ensure proper lighting consistency across all elements
+
+PHOTOGRAPHIC QUALITY:
+- Shot Type: Professional product photography with multi-element composition
+- Camera/Lens: DSLR quality with appropriate depth of field
+- Lighting: Unified lighting that makes all elements feel part of the same scene
+- The composition should feel natural, not like separate elements pasted together`;
       }
     }
 
-    // Build message content with optional reference image
+    // Build message content with optional reference images (supports multiple)
     let messageContent: any;
     
-    if (referenceImageUrl) {
-      // Fetch reference image from storage
-      let referenceImageData = referenceImageUrl;
-      
-      // If it's a Supabase storage URL, fetch it
-      if (referenceImageUrl.includes('/storage/v1/object/public/')) {
-        try {
-          const imageResponse = await fetch(referenceImageUrl);
-          if (imageResponse.ok) {
-            const imageBuffer = await imageResponse.arrayBuffer();
-            const base64 = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
-            referenceImageData = `data:image/jpeg;base64,${base64}`;
-          }
-        } catch (error) {
-          console.error('Failed to fetch reference image:', error);
-        }
-      }
-      
-      // Multi-modal message with reference image and text
-      messageContent = [
+    if (referenceImages && referenceImages.length > 0) {
+      // Multi-modal message with reference images and text
+      const contentParts: any[] = [
         {
           type: "text",
           text: enhancedPrompt
-        },
-        {
-          type: "image_url",
-          image_url: {
-            url: referenceImageData
-          }
         }
       ];
+      
+      // Fetch and add all reference images
+      for (const refImage of referenceImages) {
+        let imageData = refImage.url;
+        
+        // If it's a Supabase storage URL, fetch and convert to base64
+        if (refImage.url.includes('/storage/v1/object/public/')) {
+          try {
+            const imageResponse = await fetch(refImage.url);
+            if (imageResponse.ok) {
+              const imageBuffer = await imageResponse.arrayBuffer();
+              const base64 = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+              imageData = `data:image/jpeg;base64,${base64}`;
+            }
+          } catch (error) {
+            console.error(`Failed to fetch reference image ${refImage.label}:`, error);
+          }
+        }
+        
+        contentParts.push({
+          type: "image_url",
+          image_url: {
+            url: imageData
+          }
+        });
+      }
+      
+      messageContent = contentParts;
     } else {
       // Text-only message
       messageContent = enhancedPrompt;
@@ -298,7 +328,7 @@ serve(async (req) => {
         final_prompt: prompt,
         image_url: imageUrl,
         description: description,
-        reference_image_url: referenceImageUrl,
+        reference_images: referenceImages || [],
         brand_context_used: brandContext
       })
       .select()

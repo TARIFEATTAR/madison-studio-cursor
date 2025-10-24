@@ -100,9 +100,13 @@ export default function ImageEditor() {
     }
   }, [location.state]);
   
-  // Reference image state (per-session) - now stores URL instead of base64
-  const [referenceImageUrl, setReferenceImageUrl] = useState<string | null>(null);
-  const [referenceDescription, setReferenceDescription] = useState("");
+  // Reference images state (now supports multiple images)
+  type ReferenceImage = {
+    url: string;
+    description: string;
+    label: "Background" | "Product" | "Style Reference";
+  };
+  const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
   const [brandContext, setBrandContext] = useState<any>(null);
   const [imageConstraints, setImageConstraints] = useState<any>(null);
   const [isUploadingReference, setIsUploadingReference] = useState(false);
@@ -182,20 +186,22 @@ export default function ImageEditor() {
     }
   }, [currentSession.images.length, madisonOpen]);
 
-  // Cleanup reference image on unmount (if user navigates away without saving)
+  // Cleanup reference images on unmount (if user navigates away without saving)
   useEffect(() => {
     return () => {
-      if (referenceImageUrl && user?.id) {
-        const urlParts = referenceImageUrl.split('/reference-images/');
-        if (urlParts.length === 2) {
-          supabase.storage
-            .from('reference-images')
-            .remove([urlParts[1]])
-            .catch(err => console.error('Cleanup error:', err));
-        }
+      if (referenceImages.length > 0 && user?.id) {
+        referenceImages.forEach(img => {
+          const urlParts = img.url.split('/reference-images/');
+          if (urlParts.length === 2) {
+            supabase.storage
+              .from('reference-images')
+              .remove([urlParts[1]])
+              .catch(err => console.error('Cleanup error:', err));
+          }
+        });
       }
     };
-  }, [referenceImageUrl, user?.id]);
+  }, [referenceImages, user?.id]);
 
   // Smart session name generator - auto-update from first prompt
   const generateSessionName = (prompt: string): string => {
@@ -244,8 +250,7 @@ export default function ImageEditor() {
           userId: user.id,
           selectedTemplate: null,
           userRefinements: currentSession.images.length > 0 ? prompt : null,
-          referenceImageUrl: referenceImageUrl || undefined,
-          referenceDescription: referenceDescription || undefined,
+          referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
           brandContext: brandContext || undefined,
           imageConstraints: imageConstraints || undefined
         },
@@ -316,7 +321,7 @@ export default function ImageEditor() {
                 session_id: sessionId,
                 session_name: currentSession.name,
                 brand_context_used: brandContext,
-                reference_image_used: !!referenceImageUrl,
+                reference_images_used: referenceImages.length > 0,
                 generated_at: new Date().toISOString()
               }
             });
@@ -428,17 +433,23 @@ export default function ImageEditor() {
 
       if (updateError) throw updateError;
 
-      // Clean up reference image from storage
-      if (referenceImageUrl && user?.id) {
+      // Clean up reference images from storage
+      if (referenceImages.length > 0 && user?.id) {
         try {
-          const urlParts = referenceImageUrl.split('/reference-images/');
-          if (urlParts.length === 2) {
+          const filePaths = referenceImages
+            .map(img => {
+              const urlParts = img.url.split('/reference-images/');
+              return urlParts.length === 2 ? urlParts[1] : null;
+            })
+            .filter(Boolean);
+          
+          if (filePaths.length > 0) {
             await supabase.storage
               .from('reference-images')
-              .remove([urlParts[1]]);
+              .remove(filePaths as string[]);
           }
         } catch (error) {
-          console.error('Error cleaning up reference image:', error);
+          console.error('Error cleaning up reference images:', error);
         }
       }
 
@@ -472,7 +483,7 @@ export default function ImageEditor() {
     toast.success(`Downloaded ${flaggedImages.length} approved images`);
   };
   
-  const handleReferenceUpload = async (imageData: string, description: string) => {
+  const handleReferenceUpload = async (imageData: string, description: string, label: ReferenceImage["label"]) => {
     if (!user?.id) return;
 
     try {
@@ -498,9 +509,9 @@ export default function ImageEditor() {
         .from('reference-images')
         .getPublicUrl(fileName);
 
-      setReferenceImageUrl(publicUrl);
-      setReferenceDescription(description);
-      toast.success("Reference image uploaded to session");
+      // Add to reference images array
+      setReferenceImages(prev => [...prev, { url: publicUrl, description, label }]);
+      toast.success(`${label} reference uploaded`);
     } catch (error) {
       console.error('Error uploading reference image:', error);
       toast.error("Failed to upload reference image");
@@ -509,11 +520,12 @@ export default function ImageEditor() {
     }
   };
 
-  const handleReferenceRemove = async () => {
-    if (referenceImageUrl && user?.id) {
+  const handleReferenceRemove = async (index: number) => {
+    const imageToRemove = referenceImages[index];
+    if (imageToRemove && user?.id) {
       try {
         // Extract file path from URL
-        const urlParts = referenceImageUrl.split('/reference-images/');
+        const urlParts = imageToRemove.url.split('/reference-images/');
         if (urlParts.length === 2) {
           await supabase.storage
             .from('reference-images')
@@ -524,8 +536,7 @@ export default function ImageEditor() {
       }
     }
     
-    setReferenceImageUrl(null);
-    setReferenceDescription("");
+    setReferenceImages(prev => prev.filter((_, i) => i !== index));
     toast.success("Reference image removed");
   };
 
@@ -761,8 +772,7 @@ export default function ImageEditor() {
               <div className="space-y-4">
                 {/* Reference Upload - Moved to top */}
                 <ReferenceUpload
-                  currentImage={referenceImageUrl}
-                  description={referenceDescription}
+                  images={referenceImages}
                   onUpload={handleReferenceUpload}
                   onRemove={handleReferenceRemove}
                   isUploading={isUploadingReference}
@@ -791,7 +801,7 @@ export default function ImageEditor() {
                           toast.success("Prompt built!");
                         }}
                         brandContext={brandContext}
-                        hasReferenceImage={!!referenceImageUrl}
+                            hasReferenceImage={referenceImages.length > 0}
                       />
                     </div>
                   ) : (
@@ -1143,8 +1153,7 @@ export default function ImageEditor() {
                 <div className="flex-1 overflow-y-auto pb-4 space-y-4 min-h-0">
                   {/* Reference Image Upload - Moved to top */}
                   <ReferenceUpload
-                    currentImage={referenceImageUrl}
-                    description={referenceDescription}
+                    images={referenceImages}
                     onUpload={handleReferenceUpload}
                     onRemove={handleReferenceRemove}
                     isUploading={isUploadingReference}
@@ -1177,7 +1186,7 @@ export default function ImageEditor() {
                               toast.success("Prompt built from formula!");
                             }}
                             brandContext={brandContext}
-                            hasReferenceImage={!!referenceImageUrl}
+                            hasReferenceImage={referenceImages.length > 0}
                           />
                         </div>
                       ) : (
@@ -1186,8 +1195,8 @@ export default function ImageEditor() {
                           <Textarea
                             value={userPrompt}
                             onChange={(e) => setUserPrompt(e.target.value)}
-                            placeholder={referenceImageUrl 
-                              ? "Describe the SCENE for your product (e.g., 'on weathered sandstone with brass incense holder, soft smoke, golden hour lighting')..." 
+                            placeholder={referenceImages.length > 0 
+                              ? "Describe the SCENE for your products (e.g., 'Combine desert background with my product, using the warm lighting from reference 3')..." 
                               : "Describe the image you want to create..."}
                             disabled={!canGenerateMore}
                             className="flex-1 resize-none bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E] min-h-[100px]"
