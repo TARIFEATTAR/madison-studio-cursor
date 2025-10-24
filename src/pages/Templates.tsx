@@ -60,7 +60,6 @@ const TemplatesContent = () => {
   const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedQuickAccess, setSelectedQuickAccess] = useState<string | null>(null);
-  const [selectedCollection, setSelectedCollection] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("comfortable");
@@ -68,7 +67,6 @@ const TemplatesContent = () => {
   // Clear all filters
   const clearAllFilters = () => {
     setSelectedQuickAccess(null);
-    setSelectedCollection(null);
     setSelectedCategory(null);
   };
 
@@ -122,28 +120,16 @@ const TemplatesContent = () => {
       );
     }
 
-    // Collection filter
-    if (selectedCollection) {
-      filtered = filtered.filter(p => p.collection === selectedCollection);
-    }
-
-    // Category filter - check meta_instructions.category or map from content_type
+    // Category filter - check additional_context.image_type
     if (selectedCategory) {
       filtered = filtered.filter(p => {
-        const promptCategory = (p.meta_instructions as any)?.category;
-        if (promptCategory) {
-          return promptCategory === selectedCategory;
-        } else {
-          // Fallback: map content_type to category
-          const mapping = contentTypeMapping.find(m => m.keys.includes(p.content_type));
-          const categoryKey = mapping?.name.toLowerCase();
-          return categoryKey === selectedCategory;
-        }
+        const imageType = (p.additional_context as any)?.image_type;
+        return imageType === selectedCategory;
       });
     }
 
     return filtered;
-  }, [allPrompts, selectedQuickAccess, selectedCollection, selectedCategory]);
+  }, [allPrompts, selectedQuickAccess, selectedCategory]);
 
   // Filter prompts by search query
   const displayedPrompts = useMemo(() => {
@@ -415,10 +401,8 @@ const TemplatesContent = () => {
         <aside className="w-[280px] border-r border-charcoal/10 bg-parchment-white flex-shrink-0 overflow-y-auto">
           <PromptLibrarySidebar
             onQuickAccessSelect={setSelectedQuickAccess}
-            onCollectionSelect={setSelectedCollection}
             onCategorySelect={setSelectedCategory}
             selectedQuickAccess={selectedQuickAccess}
-            selectedCollection={selectedCollection}
             selectedCategory={selectedCategory}
             onClearFilters={clearAllFilters}
           />
@@ -455,16 +439,11 @@ const TemplatesContent = () => {
                             setSelectedQuickAccess(value);
                             setMobileFiltersOpen(false);
                           }}
-                          onCollectionSelect={(value) => {
-                            setSelectedCollection(value);
-                            setMobileFiltersOpen(false);
-                          }}
                           onCategorySelect={(value) => {
                             setSelectedCategory(value);
                             setMobileFiltersOpen(false);
                           }}
                           selectedQuickAccess={selectedQuickAccess}
-                          selectedCollection={selectedCollection}
                           selectedCategory={selectedCategory}
                           onClearFilters={clearAllFilters}
                         />
@@ -507,20 +486,12 @@ const TemplatesContent = () => {
         {/* PROMPTS GRID - Scrollable main content */}
         <main className="flex-1 overflow-y-auto px-8 py-6 bg-vellum-cream">
           {/* Active Filters Display (Mobile) */}
-          {isMobile && (selectedQuickAccess || selectedCollection || selectedCategory) && (
+          {isMobile && (selectedQuickAccess || selectedCategory) && (
             <div className="mb-4 flex gap-2 flex-wrap">
               {selectedQuickAccess && (
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted rounded-full text-sm">
                   <span>{selectedQuickAccess}</span>
                   <button onClick={() => setSelectedQuickAccess(null)} className="hover:text-destructive">
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              )}
-              {selectedCollection && (
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted rounded-full text-sm">
-                  <span>{selectedCollection}</span>
-                  <button onClick={() => setSelectedCollection(null)} className="hover:text-destructive">
                     <X className="w-3 h-3" />
                   </button>
                 </div>

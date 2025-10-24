@@ -312,6 +312,7 @@ export default function ImageEditor() {
               collection: 'Image Studio',
               content_type: 'visual',
               additional_context: {
+                image_type: 'product', // Default to product, can be enhanced later with UI
                 aspect_ratio: aspectRatio,
                 output_format: outputFormat,
                 goal_type: 'product-photography',
