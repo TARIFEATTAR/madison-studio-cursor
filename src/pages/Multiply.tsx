@@ -27,6 +27,7 @@ import { SavePromptDialog } from "@/components/prompt-library/SavePromptDialog";
 import { ScheduleButton } from "@/components/forge/ScheduleButton";
 import { SmartAmplifyPanel } from "@/components/multiply/SmartAmplifyPanel";
 import { DerivativeFullModal } from "@/components/amplify/DerivativeFullModal";
+import { DerivativeTypeSelector } from "@/components/multiply/DerivativeTypeSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useSmartAmplify } from "@/hooks/useSmartAmplify";
@@ -198,6 +199,10 @@ export default function Multiply() {
   const [splitScreenMode, setSplitScreenMode] = useState(false);
   const [selectedDerivativeForDirector, setSelectedDerivativeForDirector] = useState<DerivativeContent | null>(null);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  
+  // 🚧 FEATURE FLAG: Toggle between old and new DerivativeTypeSelector
+  // Set to false to test the new component, true to use old code
+  const useOldSelector = false;
   const [saveTitle, setSaveTitle] = useState("");
   const [userContent, setUserContent] = useState<MasterContent | null>(null);
   const [savePromptDialogOpen, setSavePromptDialogOpen] = useState(false);
@@ -1008,51 +1013,17 @@ export default function Multiply() {
                     />
                   )}
 
-                  {/* Derivative Type Selector */}
-                  <div className="space-y-4">
-                    <h3 className="font-medium">Select derivative types to generate:</h3>
-                    
-                    {/* Most Popular */}
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-3">MOST POPULAR</p>
-                      <div className="grid grid-cols-3 gap-3">
-                        {TOP_DERIVATIVE_TYPES.map((type) => (
-                          <Card 
-                            key={type.id} 
-                            onClick={() => toggleTypeSelection(type.id)} 
-                            className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedTypes.has(type.id) ? "ring-2 ring-brass bg-brass/5" : ""}`}
-                          >
-                            <div className="space-y-2">
-                              <div className="flex items-start justify-between">
-                                <Checkbox checked={selectedTypes.has(type.id)} className="mt-1" />
-                                {type.iconImage ? (
-                                  <img src={type.iconImage} alt={type.name} className="w-8 h-8" />
-                                ) : type.icon && (
-                                  <type.icon className="w-8 h-8" style={{ color: type.iconColor }} />
-                                )}
-                              </div>
-                              <div>
-                                <h4 className="font-medium text-sm">{type.name}</h4>
-                                <p className="text-xs text-muted-foreground line-clamp-2">{type.description}</p>
-                                {type.charLimit && (
-                                  <p className="text-xs text-muted-foreground mt-1">Max: {type.charLimit} chars</p>
-                                )}
-                              </div>
-                            </div>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* More Options - Collapsible */}
-                    <Collapsible open={showMoreOptions} onOpenChange={setShowMoreOptions}>
-                      <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                        {showMoreOptions ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                        MORE OPTIONS
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="mt-3">
+                  {/* Derivative Type Selector - Feature Flag Toggle */}
+                  {useOldSelector ? (
+                    /* OLD CODE - Keep for safety */
+                    <div className="space-y-4">
+                      <h3 className="font-medium">Select derivative types to generate:</h3>
+                      
+                      {/* Most Popular */}
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-3">MOST POPULAR</p>
                         <div className="grid grid-cols-3 gap-3">
-                          {ADDITIONAL_DERIVATIVE_TYPES.map((type) => (
+                          {TOP_DERIVATIVE_TYPES.map((type) => (
                             <Card 
                               key={type.id} 
                               onClick={() => toggleTypeSelection(type.id)} 
@@ -1078,25 +1049,75 @@ export default function Multiply() {
                             </Card>
                           ))}
                         </div>
-                      </CollapsibleContent>
-                    </Collapsible>
+                      </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex items-center justify-between pt-4">
-                      <Button variant="outline" size="sm" onClick={selectAll}>
-                        Select All
-                      </Button>
-                      <Button 
-                        onClick={generateDerivatives} 
-                        disabled={isGenerating || selectedTypes.size === 0} 
-                        size="lg" 
-                        className="gap-2"
-                      >
-                        {isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
-                        {isGenerating ? "Generating..." : `Generate ${selectedTypes.size} Derivative${selectedTypes.size !== 1 ? "s" : ""}`}
-                      </Button>
+                      {/* More Options - Collapsible */}
+                      <Collapsible open={showMoreOptions} onOpenChange={setShowMoreOptions}>
+                        <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                          {showMoreOptions ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                          MORE OPTIONS
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="mt-3">
+                          <div className="grid grid-cols-3 gap-3">
+                            {ADDITIONAL_DERIVATIVE_TYPES.map((type) => (
+                              <Card 
+                                key={type.id} 
+                                onClick={() => toggleTypeSelection(type.id)} 
+                                className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedTypes.has(type.id) ? "ring-2 ring-brass bg-brass/5" : ""}`}
+                              >
+                                <div className="space-y-2">
+                                  <div className="flex items-start justify-between">
+                                    <Checkbox checked={selectedTypes.has(type.id)} className="mt-1" />
+                                    {type.iconImage ? (
+                                      <img src={type.iconImage} alt={type.name} className="w-8 h-8" />
+                                    ) : type.icon && (
+                                      <type.icon className="w-8 h-8" style={{ color: type.iconColor }} />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <h4 className="font-medium text-sm">{type.name}</h4>
+                                    <p className="text-xs text-muted-foreground line-clamp-2">{type.description}</p>
+                                    {type.charLimit && (
+                                      <p className="text-xs text-muted-foreground mt-1">Max: {type.charLimit} chars</p>
+                                    )}
+                                  </div>
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center justify-between pt-4">
+                        <Button variant="outline" size="sm" onClick={selectAll}>
+                          Select All
+                        </Button>
+                        <Button 
+                          onClick={generateDerivatives} 
+                          disabled={isGenerating || selectedTypes.size === 0} 
+                          size="lg" 
+                          className="gap-2"
+                        >
+                          {isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                          {isGenerating ? "Generating..." : `Generate ${selectedTypes.size} Derivative${selectedTypes.size !== 1 ? "s" : ""}`}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    /* NEW COMPONENT - Testing */
+                    <DerivativeTypeSelector
+                      topTypes={TOP_DERIVATIVE_TYPES}
+                      additionalTypes={ADDITIONAL_DERIVATIVE_TYPES}
+                      selectedTypes={selectedTypes}
+                      onToggleType={toggleTypeSelection}
+                      onSelectAll={selectAll}
+                      onGenerate={generateDerivatives}
+                      isGenerating={isGenerating}
+                      showMoreOptions={showMoreOptions}
+                      onToggleMoreOptions={setShowMoreOptions}
+                    />
+                  )}
 
                   {/* Generated Results */}
                   {Object.keys(derivativesByType).length > 0 && (
