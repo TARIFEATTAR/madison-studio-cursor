@@ -232,18 +232,6 @@ const CreateShopifyListing = () => {
         return;
       }
 
-      // Optional: Diagnostic check to verify gateway accepts our token
-      console.log('Running auth diagnostic check...');
-      const authCheck = await supabase.functions.invoke('check-auth');
-      console.log('[check-auth result]:', authCheck);
-      
-      if (authCheck.error) {
-        console.error('Auth check failed:', authCheck.error);
-        toast.error("Authentication issue detected. Please refresh and try again.");
-        setIsPushing(false);
-        return;
-      }
-
       console.log('Pushing to Shopify with:', {
         listing_id: currentListingId,
         shopify_product_id: shopifyProductId
