@@ -109,21 +109,8 @@ serve(async (req) => {
       }
     }
     
-    // Add aspect ratio instructions to guide NanoBanana
-    const aspectRatioInstructions: Record<string, string> = {
-      '1:1': 'square composition with equal width and height',
-      '4:5': 'vertical portrait orientation, slightly taller than wide',
-      '5:4': 'horizontal product listing, slightly wider than tall (Etsy preferred format)',
-      '2:3': 'vertical Pinterest format, taller portrait orientation',
-      '3:2': 'horizontal email/web banner format, slightly wider than tall',
-      '16:9': 'wide landscape format, cinematic horizontal composition',
-      '9:16': 'tall vertical format, mobile-friendly portrait orientation',
-      '21:9': 'ultra-wide cinematic format, expansive landscape composition'
-    };
-    
-    if (aspectRatio && aspectRatioInstructions[aspectRatio]) {
-      enhancedPrompt = `Create a ${aspectRatioInstructions[aspectRatio]}. ${enhancedPrompt}`;
-    }
+    // Aspect ratio is now handled via image_config API parameter (see line 209)
+    // This provides precise control over image dimensions
     
     if (brandContext) {
       // Only add brand context if it exists - system works for ANY business
@@ -197,17 +184,25 @@ serve(async (req) => {
       messageContent = enhancedPrompt;
     }
     
+    // Build request body with proper aspect ratio configuration
+    const requestBody: any = {
+      model: 'google/gemini-2.5-flash-image-preview',
+      messages: [{ role: 'user', content: messageContent }],
+      modalities: ['image', 'text']
+    };
+    
+    // Add aspect ratio via image_config for precise dimension control
+    if (aspectRatio) {
+      requestBody.image_config = { aspect_ratio: aspectRatio };
+    }
+    
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-image-preview',
-        messages: [{ role: 'user', content: messageContent }],
-        modalities: ['image', 'text']
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
