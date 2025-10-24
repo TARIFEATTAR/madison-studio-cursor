@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Download, Store, Upload, Check, MoreVertical } from "lucide-react";
+import { ArrowLeft, Save, Download, Store, Upload, Check, MoreVertical, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { getPlatform } from "@/config/marketplaceTemplates";
 
@@ -16,6 +17,12 @@ import { SEOTagsSection } from "@/components/marketplace/sections/SEOTagsSection
 import { ProductAssociationSection } from "@/components/marketplace/sections/ProductAssociationSection";
 import { MadisonAssistantPanel, MadisonAssistantHandle } from "@/components/marketplace/MadisonAssistantPanel";
 import { supabase } from "@/integrations/supabase/client";
+
+// Detect mobile devices
+const isMobile = typeof window !== 'undefined' && (
+  window.innerWidth < 768 || 
+  /iPhone|Android|iPad/i.test(navigator.userAgent)
+);
 
 const CreateShopifyListing = () => {
   const navigate = useNavigate();
@@ -39,6 +46,7 @@ const CreateShopifyListing = () => {
   const [pushStatus, setPushStatus] = useState<'pending' | 'success' | 'failed'>('pending');
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [manualShopifyId, setManualShopifyId] = useState('');
+  const [sessionAlert, setSessionAlert] = useState<string | null>(null);
   const madisonRef = useRef<MadisonAssistantHandle>(null);
 
   // Fetch organization ID on mount and rehydrate listing ID
@@ -89,6 +97,27 @@ const CreateShopifyListing = () => {
 
   const handleUpdate = (updates: any) => {
     setFormData(prev => ({ ...prev, ...updates }));
+  };
+
+  // Ensure fresh session, especially for mobile
+  const ensureFreshSession = async () => {
+    if (isMobile) {
+      await supabase.auth.refreshSession();
+    }
+    let { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      await supabase.auth.refreshSession();
+      ({ data: { session } } = await supabase.auth.getSession());
+    }
+    return session;
+  };
+
+  // Helper to invoke with explicit Authorization header
+  const invokeUpdate = async (listingId: string, productId: string, token: string) => {
+    return await supabase.functions.invoke('update-shopify-product', {
+      headers: { Authorization: `Bearer ${token}` },
+      body: { listing_id: listingId, shopify_product_id: productId },
+    });
   };
 
   const saveOrUpdateListing = async (): Promise<string | null> => {
@@ -270,96 +299,73 @@ const CreateShopifyListing = () => {
       return;
     }
 
+    setSessionAlert(null);
     setIsPushing(true);
+
     try {
       // Step 1: Save/update listing to ensure DB has latest data
-      console.log('Saving latest changes before push...');
+      toast.info('Saving latest changes...');
       const listingId = await saveOrUpdateListing();
       if (!listingId) {
-        toast.error("Failed to save listing. Please try again.");
-        setIsPushing(false);
-        return;
+        throw new Error('Failed to save listing');
       }
       setCurrentListingId(listingId);
 
-      // Step 2: Refresh session to ensure valid token
-      console.log('Refreshing session before push...');
-      const { data: { session }, error: sessionError } = await supabase.auth.refreshSession();
-      
-      if (sessionError || !session) {
-        console.error('Session refresh failed:', sessionError);
-        toast.error("Please log in again");
-        setIsPushing(false);
-        return;
+      // Step 2: Ensure fresh session with explicit token
+      const session = await ensureFreshSession();
+      if (!session?.access_token) {
+        setSessionAlert('Your session expired. Please sign in again.');
+        throw new Error('No active session. Please log in again.');
       }
 
-      console.log('Pushing to Shopify with:', {
+      console.log('[Push] Invoking with explicit auth:', {
         listing_id: listingId,
         shopify_product_id: shopifyProductId
       });
 
-      // Step 3: Invoke edge function
-      const { data, error } = await supabase.functions.invoke(
-        'update-shopify-product',
-        {
-          body: { 
-            listing_id: listingId,
-            shopify_product_id: shopifyProductId
-          }
-        }
-      );
+      // Step 3: First attempt with explicit Authorization header
+      let { data, error } = await invokeUpdate(listingId, shopifyProductId, session.access_token);
 
       // Step 4: Handle 401 with retry (mobile session quirks)
-      if (error && (error.message?.includes('401') || error.message?.includes('Unauthorized'))) {
-        console.log('Unauthorized on first attempt, refreshing and retrying...');
+      if (error?.message?.includes('401') || data?.status === 401) {
+        console.log('[Push] 401 on first attempt; refreshing and retrying...');
         await supabase.auth.refreshSession();
+        const { data: s2 } = await supabase.auth.getSession();
         
-        const retryResult = await supabase.functions.invoke('update-shopify-product', {
-          body: { 
-            listing_id: listingId,
-            shopify_product_id: shopifyProductId
+        const retry = await invokeUpdate(
+          listingId, 
+          shopifyProductId, 
+          s2?.session?.access_token || ''
+        );
+        
+        if (retry.error || retry.data?.error) {
+          if (isMobile) {
+            setSessionAlert('Your session expired. Please sign in again.');
           }
-        });
-        
-        if (!retryResult.error) {
-          setPushStatus('success');
-          toast.success("✅ Successfully synced to Shopify");
-          setExternalId(shopifyProductId);
-          return;
+          throw new Error(retry.data?.error || retry.error?.message || 'Failed to push after retry');
         }
         
-        // If retry also failed, show error
-        console.error('Retry also failed:', retryResult.error);
-        setPushStatus('failed');
-        toast.error(retryResult.data?.error || "Failed to push after retry");
+        toast.success('✅ Successfully synced to Shopify.');
+        setPushStatus('success');
+        setExternalId(shopifyProductId);
         return;
       }
 
-      if (error) {
-        console.error('Error pushing to Shopify:', error);
-        setPushStatus('failed');
-        toast.error(`Failed to push: ${error.message}`);
-        return;
+      if (error || data?.error) {
+        throw new Error(data?.error || error?.message || 'Push failed');
       }
 
-      console.log('Push response:', data);
-      
-      if (data?.error) {
-        setPushStatus('failed');
-        toast.error(data.error);
-        if (data.details) {
-          console.error('Shopify error details:', data.details);
-        }
-        return;
-      }
-
+      console.log('[Push] Success:', data);
+      toast.success('✅ Successfully synced to Shopify.');
       setPushStatus('success');
-      toast.success("✅ Successfully synced to Shopify");
       setExternalId(shopifyProductId);
-    } catch (error: any) {
-      console.error('Error pushing to Shopify:', error);
+    } catch (err: any) {
+      console.error('[Push] Error:', err);
       setPushStatus('failed');
-      toast.error(error.message || "Failed to push to Shopify");
+      toast.error(`❌ Push failed: ${err.message}`);
+      if (import.meta.env.DEV) {
+        console.error('[Push] Full error details:', err);
+      }
     } finally {
       setIsPushing(false);
     }
@@ -459,6 +465,14 @@ const CreateShopifyListing = () => {
                       </SheetDescription>
                     </SheetHeader>
                     <div className="mt-6 space-y-4">
+                      {/* Session alert for mobile */}
+                      {sessionAlert && (
+                        <Alert variant="destructive">
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertDescription>{sessionAlert}</AlertDescription>
+                        </Alert>
+                      )}
+
                       {/* Status indicators */}
                       <div className="flex flex-col gap-2">
                         {pushStatus === 'success' && (
