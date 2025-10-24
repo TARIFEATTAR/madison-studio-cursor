@@ -813,7 +813,7 @@ export default function ImageEditor() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="content">Content Library</SelectItem>
-                          <SelectItem value="marketplace">Marketplace Library</SelectItem>
+                          <SelectItem value="marketplace">Listing Templates</SelectItem>
                           <SelectItem value="both">Both Libraries</SelectItem>
                         </SelectContent>
                       </Select>
@@ -1275,7 +1275,7 @@ export default function ImageEditor() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="content">Content Library</SelectItem>
-                              <SelectItem value="marketplace">Marketplace Library</SelectItem>
+                              <SelectItem value="marketplace">Listing Templates</SelectItem>
                               <SelectItem value="both">Both Libraries</SelectItem>
                             </SelectContent>
                           </Select>

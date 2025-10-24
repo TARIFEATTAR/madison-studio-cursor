@@ -77,7 +77,7 @@ export function AppSidebar() {
     },
     ...(isEcommerce ? [
       { 
-        title: "Marketplace Library", 
+        title: "Listing Templates", 
         url: "/marketplace-library", 
         icon: Store 
       }

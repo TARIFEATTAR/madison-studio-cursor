@@ -155,7 +155,7 @@ const AppContent = () => {
                   <Route path="/editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Editor"><ContentEditor /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/multiply" element={<ProtectedRoute><RouteErrorBoundary routeName="Multiply"><Multiply /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/marketplace" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Marketplace"><Marketplace /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
-                  <Route path="/marketplace-library" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Marketplace Library"><MarketplaceLibrary /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
+                  <Route path="/marketplace-library" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Listing Templates"><MarketplaceLibrary /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
                   <Route path="/marketplace/etsy" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Etsy Listing"><CreateEtsyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
                   <Route path="/marketplace/tiktok_shop" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create TikTok Shop Listing"><CreateTikTokShopListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
                   <Route path="/marketplace/shopify" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Shopify Listing"><CreateShopifyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
@@ -185,7 +185,7 @@ const AppContent = () => {
             <Route path="/editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Editor"><ContentEditor /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/multiply" element={<ProtectedRoute><RouteErrorBoundary routeName="Multiply"><Multiply /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/marketplace" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Marketplace"><Marketplace /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
-            <Route path="/marketplace-library" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Marketplace Library"><MarketplaceLibrary /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
+            <Route path="/marketplace-library" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Listing Templates"><MarketplaceLibrary /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
             <Route path="/marketplace/etsy" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Etsy Listing"><CreateEtsyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
             <Route path="/marketplace/tiktok_shop" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create TikTok Shop Listing"><CreateTikTokShopListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
             <Route path="/marketplace/shopify" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Shopify Listing"><CreateShopifyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />

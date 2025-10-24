@@ -257,8 +257,8 @@ export default function MarketplaceLibrary() {
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-serif font-bold text-ink-black">Marketplace Library</h1>
-              <p className="text-charcoal/70 mt-1">Manage all your marketplace listings</p>
+              <h1 className="text-3xl font-serif font-bold text-ink-black">Listing Templates</h1>
+              <p className="text-charcoal/70 mt-1">Pre-written listings you can export and publish to your marketplace</p>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
