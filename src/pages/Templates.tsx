@@ -44,6 +44,7 @@ export interface Prompt {
   is_template: boolean;
   effectiveness_score: number | null;
   meta_instructions?: any;
+  additional_context?: any;
 }
 
 type SortOption = "recent" | "most-used" | "highest-rated" | "effectiveness";
@@ -95,6 +96,7 @@ const TemplatesContent = () => {
         .select("*")
         .eq("organization_id", currentOrganizationId!)
         .eq("is_archived", false)
+        .eq("deliverable_format", "image_prompt")
         .order("updated_at", { ascending: false });
 
       if (error) throw error;
@@ -431,10 +433,10 @@ const TemplatesContent = () => {
             <div className="flex items-start justify-between mb-6">
               <div>
                 <h1 className="text-3xl font-serif text-foreground font-semibold mb-2">
-                  Prompt Library
+                  Image Recipe Library
                 </h1>
                 <p className="text-muted-foreground text-sm">
-                  Your prompts, perfectly organized • No more scattered spreadsheets
+                  Save and reuse your best image prompts for consistent visual content
                 </p>
               </div>
               <div className="flex gap-3">
@@ -556,9 +558,9 @@ const TemplatesContent = () => {
             <div className="flex items-center justify-center py-12">
               <div className="text-center max-w-md">
                 <FileText className="w-16 h-16 mx-auto mb-4 text-border" />
-                <h3 className="text-xl font-semibold text-foreground mb-2">No prompts found</h3>
+                <h3 className="text-xl font-semibold text-foreground mb-2">No image recipes saved yet</h3>
                 <p className="text-muted-foreground mb-6">
-                  {searchQuery ? "Try adjusting your search or filters" : "Get started by creating your first prompt template"}
+                  {searchQuery ? "Try adjusting your search or filters" : "Generate images in the Image Studio to automatically save your prompts here"}
                 </p>
                 <Button
                   onClick={() => setShowQuickStart(true)}

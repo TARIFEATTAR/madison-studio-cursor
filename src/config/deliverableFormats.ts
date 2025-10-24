@@ -183,8 +183,8 @@ export const DELIVERABLE_CATEGORIES: DeliverableCategory[] = [
       },
       {
         value: "image_prompt",
-        label: "Image Prompt",
-        description: "AI image generation prompt",
+        label: "Image Recipe",
+        description: "Saved AI image prompt for reuse",
         icon: ImageIcon,
       },
       {

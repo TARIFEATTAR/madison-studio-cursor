@@ -71,7 +71,7 @@ export function AppSidebar() {
       icon: Calendar 
     },
     { 
-      title: "Prompt Library", 
+      title: "Image Recipes", 
       url: "/templates", 
       icon: FileText 
     },

@@ -1,5 +1,6 @@
-import { Sparkles, Copy, Check, Star, TrendingUp, Clock, Tag, Calendar, Edit2 } from "lucide-react";
+import { Sparkles, Copy, Check, Star, TrendingUp, Clock, Tag, Calendar, Edit2, Image } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCollections } from "@/hooks/useCollections";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -44,6 +45,7 @@ const PromptDetailModal = ({
   onUse,
   onUpdate,
 }: PromptDetailModalProps) => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { collections } = useCollections();
   const [copied, setCopied] = useState(false);
@@ -51,6 +53,21 @@ const PromptDetailModal = ({
   const [editedTitle, setEditedTitle] = useState(prompt.title);
   const [editedCollection, setEditedCollection] = useState(prompt.collection);
   const [editedTags, setEditedTags] = useState(prompt.tags?.join(", ") || "");
+
+  const handleLoadInImageStudio = () => {
+    navigate("/image-editor", {
+      state: { 
+        loadedPrompt: prompt.prompt_text,
+        aspectRatio: prompt.additional_context?.aspect_ratio,
+        outputFormat: prompt.additional_context?.output_format
+      }
+    });
+    onClose();
+    toast({
+      title: "Loaded in Image Studio",
+      description: "Your image recipe is ready to use",
+    });
+  };
 
   const copyPrompt = () => {
     navigator.clipboard.writeText(prompt.prompt_text);
@@ -324,14 +341,11 @@ const PromptDetailModal = ({
             </Button>
           )}
           <Button
-            onClick={() => {
-              onUse();
-              onClose();
-            }}
+            onClick={handleLoadInImageStudio}
             className="flex-1 gap-2"
           >
-            <Sparkles className="w-4 h-4" />
-            Use This Template
+            <Image className="w-4 h-4" />
+            Load in Image Studio
           </Button>
         </div>
       </DialogContent>

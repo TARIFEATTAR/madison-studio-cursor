@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentOrganizationId } from "@/hooks/useIndustryConfig";
@@ -46,6 +47,7 @@ const MAX_IMAGES_PER_SESSION = 10;
 
 export default function ImageEditor() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { orgId } = useCurrentOrganizationId();
   const isMobile = useIsMobile();
@@ -59,6 +61,20 @@ export default function ImageEditor() {
   const [isSaving, setIsSaving] = useState(false);
   const [madisonOpen, setMadisonOpen] = useState(false);
   const [guidedModeEnabled, setGuidedModeEnabled] = useState(false);
+
+  // Load prompt from navigation state if present (from Image Recipe Library)
+  useEffect(() => {
+    if (location.state?.loadedPrompt) {
+      setUserPrompt(location.state.loadedPrompt);
+      if (location.state.aspectRatio) setAspectRatio(location.state.aspectRatio);
+      if (location.state.outputFormat) setOutputFormat(location.state.outputFormat);
+      
+      toast.success("Image recipe loaded - Ready to generate!");
+      
+      // Clear state
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
   
   // Reference image state (per-session) - now stores URL instead of base64
   const [referenceImageUrl, setReferenceImageUrl] = useState<string | null>(null);
@@ -276,6 +292,45 @@ export default function ImageEditor() {
         if (updateError) {
           console.error("Failed to update image in DB:", updateError);
           toast.error("Image generated but metadata not saved");
+        }
+        
+        // Auto-save image prompt to prompts table for Image Recipe Library
+        try {
+          const truncatedPrompt = prompt.length > 50 ? `${prompt.substring(0, 50)}...` : prompt;
+          
+          const { error: promptError } = await supabase
+            .from('prompts')
+            .insert({
+              organization_id: orgId,
+              created_by: user.id,
+              title: `Image: ${truncatedPrompt}`,
+              deliverable_format: 'image_prompt',
+              prompt_text: prompt,
+              is_auto_saved: true,
+              is_template: false,
+              category: 'visual_content',
+              collection: 'Image Studio',
+              content_type: 'visual',
+              additional_context: {
+                aspect_ratio: aspectRatio,
+                output_format: outputFormat,
+                goal_type: 'product-photography',
+                session_id: sessionId,
+                session_name: currentSession.name,
+                brand_context_used: brandContext,
+                reference_image_used: !!referenceImageUrl,
+                generated_at: new Date().toISOString()
+              }
+            });
+
+          if (promptError) {
+            console.warn("Image prompt not saved to library:", promptError);
+          } else {
+            console.log("✓ Image prompt auto-saved to Image Recipe Library");
+          }
+        } catch (error) {
+          console.error("Auto-save prompt failed:", error);
+          // Don't block the user flow
         }
         
         const isComplete = currentSession.images.length + 1 === MAX_IMAGES_PER_SESSION;

@@ -14,8 +14,6 @@ import { useBrandContext } from "@/hooks/useBrandContext";
 import { useToast } from "@/hooks/use-toast";
 import { generateSmartName } from "@/lib/promptNaming";
 import { detectCategory } from "@/lib/promptCategorization";
-import { RecentPromptsDropdown } from "@/components/forge/RecentPromptsDropdown";
-import { TemplatesDropdown } from "@/components/forge/TemplatesDropdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1094,22 +1092,6 @@ export default function Create() {
               </CollapsibleTrigger>
               
               <CollapsibleContent className="space-y-6 pt-4">
-                {/* Quick-load Prompts (moved here to reduce distraction) */}
-                <div className="space-y-2">
-                  <Label className="text-base text-ink-black">Load Saved Briefs</Label>
-                  <div className="flex flex-wrap gap-3">
-                    <RecentPromptsDropdown
-                      organizationId={currentOrganizationId}
-                      onSelect={handleLoadPrompt}
-                    />
-                    <TemplatesDropdown
-                      organizationId={currentOrganizationId}
-                      onSelect={handleLoadPrompt}
-                    />
-                  </div>
-                  <p className="text-xs text-warm-gray/70">Apply a recent auto-save or a library template.</p>
-                </div>
-
                 {/* Style Overlay */}
                 <div>
                   <Label htmlFor="style" className="text-base mb-2 text-ink-black">
