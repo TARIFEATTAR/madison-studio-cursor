@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useProducts } from "@/hooks/useProducts";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useBrandContext } from "@/hooks/useBrandContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +55,7 @@ export default function Create() {
   const { currentOrganizationId } = useOnboarding();
   const { products, loading: productsLoading } = useProducts();
   const { userName } = useUserProfile();
+  const { brandName } = useBrandContext(currentOrganizationId);
   const { toast } = useToast();
 
   
@@ -938,7 +940,9 @@ export default function Create() {
                     <SelectContent className="bg-white">
                       <SelectItem value="tarife-native">
                         <div className="flex flex-col">
-                          <span className="font-medium">Brand Voice (Default)</span>
+                          <span className="font-medium">
+                            {brandName ? `${brandName} Voice` : "Your Brand Voice (Default)"}
+                          </span>
                           <span className="text-xs text-warm-gray">Rich storytelling, sensory depth</span>
                         </div>
                       </SelectItem>
