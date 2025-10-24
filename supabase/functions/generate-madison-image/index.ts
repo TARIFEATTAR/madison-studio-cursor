@@ -189,14 +189,34 @@ PHOTOGRAPHIC QUALITY:
         // If it's a Supabase storage URL, fetch and convert to base64
         if (refImage.url.includes('/storage/v1/object/public/')) {
           try {
+            console.log(`📥 Fetching reference image: ${refImage.label}`);
             const imageResponse = await fetch(refImage.url);
-            if (imageResponse.ok) {
-              const imageBuffer = await imageResponse.arrayBuffer();
-              const base64 = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
-              imageData = `data:image/jpeg;base64,${base64}`;
+            
+            if (!imageResponse.ok) {
+              throw new Error(`HTTP ${imageResponse.status}: ${imageResponse.statusText}`);
             }
+            
+            const imageBuffer = await imageResponse.arrayBuffer();
+            const uint8Array = new Uint8Array(imageBuffer);
+            
+            // Convert to base64 in chunks to avoid stack overflow
+            let binary = '';
+            const chunkSize = 8192;
+            for (let i = 0; i < uint8Array.length; i += chunkSize) {
+              const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
+              binary += String.fromCharCode(...chunk);
+            }
+            const base64 = btoa(binary);
+            
+            // Determine content type from response headers
+            const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
+            imageData = `data:${contentType};base64,${base64}`;
+            
+            console.log(`✅ Converted reference image ${refImage.label} (${(uint8Array.length / 1024).toFixed(1)}KB)`);
           } catch (error) {
-            console.error(`Failed to fetch reference image ${refImage.label}:`, error);
+            const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+            console.error(`❌ Failed to fetch reference image ${refImage.label}:`, errorMsg);
+            throw new Error(`Failed to load reference image "${refImage.label}": ${errorMsg}`);
           }
         }
         
@@ -237,7 +257,7 @@ PHOTOGRAPHIC QUALITY:
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ NanoBanana error:', response.status, errorText);
+      console.error('❌ Image generation API error:', response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
@@ -252,8 +272,18 @@ PHOTOGRAPHIC QUALITY:
           { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+      
+      if (response.status === 400) {
+        return new Response(
+          JSON.stringify({ error: `Invalid image generation request: ${errorText}` }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
-      throw new Error(`NanoBanana API error: ${response.status}`);
+      return new Response(
+        JSON.stringify({ error: `Image generation failed (${response.status}): ${errorText}` }),
+        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const data = await response.json();
@@ -351,9 +381,19 @@ PHOTOGRAPHIC QUALITY:
     );
 
   } catch (error) {
-    console.error('❌ Error in generate-madison-image:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    console.error('❌ Error in generate-madison-image:', errorMessage);
+    if (errorStack) {
+      console.error('Stack trace:', errorStack);
+    }
+    
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ 
+        error: errorMessage,
+        details: 'Image generation failed. Please try again or contact support if the issue persists.'
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

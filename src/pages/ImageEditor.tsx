@@ -346,7 +346,23 @@ export default function ImageEditor() {
       }
     } catch (error) {
       console.error("Generation error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to generate image");
+      
+      // Extract error message from Supabase function error
+      let errorMessage = "Failed to generate image";
+      
+      if (error && typeof error === 'object') {
+        const err = error as any;
+        // Check for FunctionsHttpError with detailed message
+        if (err.message) {
+          errorMessage = err.message;
+        }
+        // Check for nested error object from edge function
+        if (err.context?.body?.error) {
+          errorMessage = err.context.body.error;
+        }
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsGenerating(false);
     }
