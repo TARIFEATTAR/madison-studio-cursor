@@ -702,7 +702,7 @@ export default function Create() {
                 value={product} 
                 onValueChange={(value) => {
                   setProduct(value);
-                  const selectedProduct = products.find(p => p.name === value);
+                  const selectedProduct = products.find(p => p.id === value);
                   setProductData(selectedProduct || null);
                 }}
                 disabled={productsLoading || products.length === 0}
@@ -724,7 +724,7 @@ export default function Create() {
                 </div>
               </SelectItem>
                   {products.map((p) => (
-                    <SelectItem key={p.id} value={p.name}>
+                    <SelectItem key={p.id} value={p.id}>
                       {p.name}
                     </SelectItem>
                   ))}
@@ -828,13 +828,28 @@ export default function Create() {
               <Label htmlFor="audience" className="text-base mb-2 text-ink-black">
                 Audience <span className="text-warm-gray text-sm font-normal">(Optional)</span>
               </Label>
-              <Input
-                id="audience"
-                value={audience}
-                onChange={(e) => setAudience(e.target.value)}
-                placeholder="e.g., Luxury beauty enthusiasts, Gift shoppers, New customers"
-                className="mt-2 bg-parchment-white border-warm-gray/20 text-ink-black"
-              />
+              <Select value={audience} onValueChange={setAudience}>
+                <SelectTrigger
+                  id="audience"
+                  className="mt-2 bg-parchment-white border-warm-gray/20"
+                >
+                  <SelectValue placeholder="Select target audience (or leave blank)" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="none">
+                    <span className="text-warm-gray">No specific audience</span>
+                  </SelectItem>
+                  <SelectItem value="luxury_beauty_enthusiasts">Luxury Beauty Enthusiasts</SelectItem>
+                  <SelectItem value="gift_shoppers">Gift Shoppers</SelectItem>
+                  <SelectItem value="new_customers">New Customers</SelectItem>
+                  <SelectItem value="loyal_customers">Loyal Customers / VIP</SelectItem>
+                  <SelectItem value="fragrance_collectors">Fragrance Collectors</SelectItem>
+                  <SelectItem value="wellness_seekers">Wellness & Self-Care Seekers</SelectItem>
+                  <SelectItem value="eco_conscious">Eco-Conscious Consumers</SelectItem>
+                  <SelectItem value="young_professionals">Young Professionals (25-35)</SelectItem>
+                  <SelectItem value="mature_luxury">Mature Luxury Buyers (45+)</SelectItem>
+                </SelectContent>
+              </Select>
               <p className="text-xs italic mt-2 text-warm-gray/70">
                 Who is this content for? Helps Madison tailor message and tone
               </p>
@@ -845,13 +860,28 @@ export default function Create() {
               <Label htmlFor="goal" className="text-base mb-2 text-ink-black">
                 Goal <span className="text-warm-gray text-sm font-normal">(Optional)</span>
               </Label>
-              <Input
-                id="goal"
-                value={goal}
-                onChange={(e) => setGoal(e.target.value)}
-                placeholder="e.g., Drive product awareness, Build brand loyalty, Launch new collection"
-                className="mt-2 bg-parchment-white border-warm-gray/20 text-ink-black"
-              />
+              <Select value={goal} onValueChange={setGoal}>
+                <SelectTrigger
+                  id="goal"
+                  className="mt-2 bg-parchment-white border-warm-gray/20"
+                >
+                  <SelectValue placeholder="Select content goal (or leave blank)" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="none">
+                    <span className="text-warm-gray">No specific goal</span>
+                  </SelectItem>
+                  <SelectItem value="drive_awareness">Drive Product Awareness</SelectItem>
+                  <SelectItem value="build_loyalty">Build Brand Loyalty</SelectItem>
+                  <SelectItem value="launch_collection">Launch New Collection</SelectItem>
+                  <SelectItem value="increase_conversions">Increase Conversions / Sales</SelectItem>
+                  <SelectItem value="educate_customers">Educate Customers</SelectItem>
+                  <SelectItem value="seasonal_campaign">Seasonal Campaign / Promotion</SelectItem>
+                  <SelectItem value="reengagement">Re-engage Inactive Customers</SelectItem>
+                  <SelectItem value="build_community">Build Community / Social Engagement</SelectItem>
+                  <SelectItem value="thought_leadership">Establish Thought Leadership</SelectItem>
+                </SelectContent>
+              </Select>
               <p className="text-xs italic mt-2 text-warm-gray/70">
                 What should this content achieve? Guides Madison on CTA and focus
               </p>
@@ -905,12 +935,37 @@ export default function Create() {
                     >
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="tarife-native">Tarife—Brand (Default)</SelectItem>
-                      <SelectItem value="poetic">Poetic & Evocative</SelectItem>
-                      <SelectItem value="direct">Direct & Practical</SelectItem>
-                      <SelectItem value="story">Storytelling & Narrative</SelectItem>
-                      <SelectItem value="minimal">Minimal & Modern</SelectItem>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="tarife-native">
+                        <div className="flex flex-col">
+                          <span className="font-medium">Brand Voice (Default)</span>
+                          <span className="text-xs text-warm-gray">Rich storytelling, sensory depth</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="poetic">
+                        <div className="flex flex-col">
+                          <span className="font-medium">J. Peterman Style</span>
+                          <span className="text-xs text-warm-gray">Narrative adventure, romantic</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="direct">
+                        <div className="flex flex-col">
+                          <span className="font-medium">Ogilvy Style</span>
+                          <span className="text-xs text-warm-gray">Sophisticated persuasion, factual</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="story">
+                        <div className="flex flex-col">
+                          <span className="font-medium">Hybrid Narrative</span>
+                          <span className="text-xs text-warm-gray">Balanced elegance, versatile</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="minimal">
+                        <div className="flex flex-col">
+                          <span className="font-medium">Minimal & Modern</span>
+                          <span className="text-xs text-warm-gray">Clean, concise, contemporary</span>
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs italic mt-2 text-warm-gray/70">
