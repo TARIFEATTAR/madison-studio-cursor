@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Download, Store, Upload, Check } from "lucide-react";
+import { ArrowLeft, Save, Download, Store, Upload, Check, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { getPlatform } from "@/config/marketplaceTemplates";
 
@@ -339,29 +340,170 @@ const CreateShopifyListing = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/marketplace')}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Marketplace
-              </Button>
-              <Separator orientation="vertical" className="h-6" />
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-green-500/10">
-                  <Store className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-semibold">Create Shopify Listing</h1>
-                  <p className="text-sm text-muted-foreground">E-commerce platform - Professional product listings</p>
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <div className="flex flex-col gap-3 sm:gap-4">
+            {/* Row 1: Navigation + Title + Mobile Actions */}
+            <div className="flex items-center justify-between gap-2">
+              {/* Left side: Back button + Title */}
+              <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/marketplace')}
+                  className="shrink-0"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span className="hidden md:inline ml-2">Back to Marketplace</span>
+                </Button>
+                <Separator orientation="vertical" className="h-6 hidden sm:block" />
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <div className="p-2 rounded-lg bg-green-500/10 shrink-0">
+                    <Store className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <h1 className="text-base sm:text-lg md:text-xl font-semibold truncate">Create Shopify Listing</h1>
+                    <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block truncate">E-commerce platform - Professional product listings</p>
+                  </div>
                 </div>
               </div>
+              
+              {/* Right side: Mobile sheet trigger + Desktop save button */}
+              <div className="flex items-center gap-2 shrink-0">
+                {/* Mobile: Show sheet trigger + save button */}
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="sm" className="md:hidden">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="h-[85vh]">
+                    <SheetHeader>
+                      <SheetTitle>Listing Actions</SheetTitle>
+                      <SheetDescription>
+                        Manage your Shopify listing
+                      </SheetDescription>
+                    </SheetHeader>
+                    <div className="mt-6 space-y-4">
+                      {/* Status indicators */}
+                      <div className="flex flex-col gap-2">
+                        {pushStatus === 'success' && (
+                          <div className="text-sm text-green-600 flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                            <span className="inline-block w-2 h-2 bg-green-600 rounded-full"></span>
+                            <span>Synced with Shopify</span>
+                          </div>
+                        )}
+                        {pushStatus === 'failed' && (
+                          <div className="text-sm text-red-600 flex items-center gap-2 p-3 bg-red-50 rounded-lg border border-red-200">
+                            <span className="inline-block w-2 h-2 bg-red-600 rounded-full"></span>
+                            <span>Push failed</span>
+                          </div>
+                        )}
+                        {savedTimestamp && (
+                          <div className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
+                            Saved at {savedTimestamp}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Export CSV */}
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={handleExportCSV}
+                        disabled={!formData.title || !formData.description}
+                        className="w-full h-12"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Export CSV
+                      </Button>
+                      
+                      {/* Shopify Product ID */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Shopify Product ID</Label>
+                        {externalId ? (
+                          <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 border border-green-200 p-3 rounded-lg">
+                            <Check className="w-4 h-4 shrink-0" />
+                            <div className="text-xs">
+                              <p className="font-semibold">ID: {externalId}</p>
+                              <p className="text-green-700/80">From linked product</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <Input
+                            placeholder="Enter Shopify Product ID"
+                            value={manualShopifyId}
+                            onChange={(e) => setManualShopifyId(e.target.value)}
+                            className="h-12 text-base"
+                          />
+                        )}
+                      </div>
+                      
+                      {/* Push to Shopify */}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>
+                              <Button
+                                size="lg"
+                                onClick={handlePushToShopify}
+                                disabled={!isPushButtonEnabled}
+                                className={`w-full h-12 transition-all ${
+                                  isPushButtonEnabled
+                                    ? "bg-aged-brass hover:bg-aged-brass/90 text-white"
+                                    : "bg-muted text-muted-foreground"
+                                }`}
+                              >
+                                <Upload className="h-4 w-4 mr-2" />
+                                {isPushing ? (
+                                  <span className="animate-pulse">Pushing...</span>
+                                ) : (
+                                  "Push to Shopify"
+                                )}
+                              </Button>
+                            </div>
+                          </TooltipTrigger>
+                          {(!currentListingId || (!externalId?.trim() && !manualShopifyId?.trim())) && (
+                            <TooltipContent>
+                              <p>
+                                {!currentListingId && "Save draft first"}
+                                {currentListingId && !externalId?.trim() && !manualShopifyId?.trim() && "Select a synced product or enter Shopify Product ID"}
+                              </p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+                
+                {/* Save button - visible on all screen sizes */}
+                <Button
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  variant={saveSuccess ? "default" : "outline"}
+                  className={`flex items-center gap-2 transition-all h-9 ${
+                    saveSuccess ? "bg-aged-brass hover:bg-aged-brass/90 text-white" : ""
+                  }`}
+                >
+                  {saveSuccess ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span className="hidden sm:inline">Saved!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      <span className="hidden sm:inline">{isSaving ? "Saving..." : "Save Draft"}</span>
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
+            
+            {/* Row 2: Desktop-only action buttons */}
+            <div className="hidden md:flex items-center justify-end gap-2 flex-wrap">
+              {/* Status indicators */}
               {pushStatus === 'success' && (
                 <span className="text-xs text-green-600 flex items-center gap-1">
                   <span className="inline-block w-2 h-2 bg-green-600 rounded-full"></span>
@@ -374,6 +516,8 @@ const CreateShopifyListing = () => {
                   Push failed
                 </span>
               )}
+              
+              {/* Export CSV */}
               <Button
                 variant="outline"
                 size="sm"
@@ -383,6 +527,8 @@ const CreateShopifyListing = () => {
                 <Download className="h-4 w-4 mr-2" />
                 Export CSV
               </Button>
+              
+              {/* Shopify Product ID section */}
               <div className="flex items-center gap-2">
                 {savedTimestamp && (
                   <span className="text-xs text-charcoal/60">
@@ -405,6 +551,8 @@ const CreateShopifyListing = () => {
                     className="w-56 h-9 text-sm"
                   />
                 )}
+                
+                {/* Push to Shopify */}
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -439,27 +587,6 @@ const CreateShopifyListing = () => {
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <Button
-                size="sm"
-                onClick={handleSave}
-                disabled={isSaving}
-                variant={saveSuccess ? "default" : "outline"}
-                className={`flex items-center gap-2 transition-all ${
-                  saveSuccess ? "bg-aged-brass hover:bg-aged-brass/90 text-white" : ""
-                }`}
-              >
-                {saveSuccess ? (
-                  <>
-                    <Check className="w-4 h-4" />
-                    Saved!
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4" />
-                    {isSaving ? "Saving..." : "Save Draft"}
-                  </>
-                )}
-              </Button>
             </div>
           </div>
         </div>
