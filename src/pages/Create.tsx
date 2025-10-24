@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Lightbulb, FileText, PenTool, X, Send, Loader2, Bookmark, Upload, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Lightbulb, FileText, PenTool, X, Send, Loader2, Upload, Search, ChevronDown, ChevronUp } from "lucide-react";
 import penNibIcon from "@/assets/pen-nib-icon-new.png";
 import { createRoot } from "react-dom/client";
 import ScriptoraLoadingAnimation from "@/components/forge/ScriptoraLoadingAnimation";
@@ -26,7 +26,6 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { NameContentDialog } from "@/components/forge/NameContentDialog";
-import { SavePromptDialog } from "@/components/prompt-library/SavePromptDialog";
 import { WorksheetUpload } from "@/components/forge/WorksheetUpload";
 import { VideoHelpTrigger } from "@/components/help/VideoHelpTrigger";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -148,7 +147,6 @@ export default function Create() {
   const [isThinking, setIsThinking] = useState(false);
   const [showTransitionLoader, setShowTransitionLoader] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [savePromptDialogOpen, setSavePromptDialogOpen] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [formatPickerOpen, setFormatPickerOpen] = useState(false);
   const [advancedOptionsOpen, setAdvancedOptionsOpen] = useState(false);
@@ -1183,17 +1181,6 @@ export default function Create() {
                 <span>Generate</span>
               </Button>
               
-              {format && (
-                <Button
-                  variant="outline"
-                  onClick={() => setSavePromptDialogOpen(true)}
-                  className="w-full gap-2 min-h-[44px] border-brass text-brass hover:bg-brass/10"
-                >
-                  <Bookmark className="w-4 h-4" />
-                  Save as Template
-                </Button>
-              )}
-              
               <Button
                 variant="ghost"
                 onClick={handleCancel}
@@ -1228,17 +1215,6 @@ export default function Create() {
                 >
                   Cancel
                 </Button>
-                
-                {format && (
-                  <Button
-                    variant="outline"
-                    onClick={() => setSavePromptDialogOpen(true)}
-                    className="gap-2 border-brass text-brass hover:bg-brass/10"
-                  >
-                    <Bookmark className="w-4 h-4" />
-                    Save as Template
-                  </Button>
-                )}
               </div>
 
               <div className="text-right">
@@ -1278,27 +1254,6 @@ export default function Create() {
         onConfirm={handleGenerateContent}
       />
       
-      <SavePromptDialog
-        open={savePromptDialogOpen}
-        onOpenChange={setSavePromptDialogOpen}
-        promptText={(() => {
-          const promptParts = [
-            product && product !== "none" && `Product: ${product}`,
-            `Format: ${format}`,
-            audience && `Target Audience: ${audience}`,
-            goal && `Content Goal: ${goal}`,
-            additionalContext && `\nAdditional Direction: ${additionalContext}`
-          ].filter(Boolean).join('\n');
-          return promptParts;
-        })()}
-        suggestedTitle={product && product !== "none" ? `${format} - ${product}` : format}
-        onSaved={() => {
-          toast({
-            title: "Template saved",
-            description: "You can now use this prompt from your library",
-          });
-        }}
-      />
 
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
         <DialogContent className="max-w-2xl">
