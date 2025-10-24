@@ -221,6 +221,8 @@ export default function MarketplaceLibrary() {
 
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
+      case 'shopify':
+        return <ShoppingCart className="w-5 h-5" />;
       case 'etsy':
         return <Tag className="w-5 h-5" />;
       case 'tiktok_shop':
@@ -232,8 +234,9 @@ export default function MarketplaceLibrary() {
 
   const getPlatformBadge = (platform: string) => {
     const colors = {
-      etsy: "bg-charcoal/10 text-charcoal/70 border-charcoal/20",
-      tiktok_shop: "bg-warm-gray/10 text-charcoal/70 border-warm-gray/20"
+      shopify: "bg-green-500/10 text-green-700 border-green-500/20",
+      etsy: "bg-orange-500/10 text-orange-700 border-orange-500/20",
+      tiktok_shop: "bg-charcoal/10 text-charcoal/70 border-charcoal/20"
     };
     return colors[platform as keyof typeof colors] || "bg-charcoal/5 text-charcoal/60";
   };
@@ -265,6 +268,10 @@ export default function MarketplaceLibrary() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => navigate('/marketplace/shopify')}>
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  Shopify Listing
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/marketplace/etsy')}>
                   <Tag className="w-4 h-4 mr-2" />
                   Etsy Listing
@@ -315,7 +322,15 @@ export default function MarketplaceLibrary() {
             </Badge>
             <Badge
               variant="outline"
-              className={platformFilter === "etsy" ? "cursor-pointer bg-aged-brass/10 text-aged-brass border-aged-brass/20" : "cursor-pointer bg-charcoal/10 text-charcoal/70 border-charcoal/20 hover:bg-charcoal/15"}
+              className={platformFilter === "shopify" ? "cursor-pointer bg-aged-brass/10 text-aged-brass border-aged-brass/20" : "cursor-pointer bg-green-500/10 text-green-700 border-green-500/20 hover:bg-green-500/15"}
+              onClick={() => setPlatformFilter("shopify")}
+            >
+              <ShoppingCart className="w-3 h-3 mr-1" />
+              Shopify
+            </Badge>
+            <Badge
+              variant="outline"
+              className={platformFilter === "etsy" ? "cursor-pointer bg-aged-brass/10 text-aged-brass border-aged-brass/20" : "cursor-pointer bg-orange-500/10 text-orange-700 border-orange-500/20 hover:bg-orange-500/15"}
               onClick={() => setPlatformFilter("etsy")}
             >
               <Tag className="w-3 h-3 mr-1" />
@@ -323,7 +338,7 @@ export default function MarketplaceLibrary() {
             </Badge>
             <Badge
               variant="outline"
-              className={platformFilter === "tiktok_shop" ? "cursor-pointer bg-aged-brass/10 text-aged-brass border-aged-brass/20" : "cursor-pointer bg-warm-gray/10 text-charcoal/70 border-warm-gray/20 hover:bg-warm-gray/15"}
+              className={platformFilter === "tiktok_shop" ? "cursor-pointer bg-aged-brass/10 text-aged-brass border-aged-brass/20" : "cursor-pointer bg-charcoal/10 text-charcoal/70 border-charcoal/20 hover:bg-charcoal/15"}
               onClick={() => setPlatformFilter("tiktok_shop")}
             >
               <ShoppingCart className="w-3 h-3 mr-1" />
@@ -402,7 +417,7 @@ export default function MarketplaceLibrary() {
                       <div className="flex items-center gap-2">
                         {getPlatformIcon(listing.platform)}
                         <Badge className={getPlatformBadge(listing.platform)}>
-                          {listing.platform === 'etsy' ? 'Etsy' : 'TikTok Shop'}
+                          {listing.platform === 'shopify' ? 'Shopify' : listing.platform === 'etsy' ? 'Etsy' : 'TikTok Shop'}
                         </Badge>
                       </div>
                       <DropdownMenu>
