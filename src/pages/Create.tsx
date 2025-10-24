@@ -1093,6 +1093,7 @@ export default function Create() {
                 </Button>
               </CollapsibleTrigger>
               
+              <CollapsibleContent className="space-y-6 pt-4">
                 {/* Quick-load Prompts (moved here to reduce distraction) */}
                 <div className="space-y-2">
                   <Label className="text-base text-ink-black">Load Saved Briefs</Label>
