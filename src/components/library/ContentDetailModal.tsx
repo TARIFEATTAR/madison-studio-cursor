@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Edit2, Send, Copy, Check, FileDown, Calendar, MessageSquare, Download, Trash2 } from "lucide-react";
+import { Edit2, Send, Copy, Check, FileDown, Calendar, MessageSquare, Download, Trash2, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -63,6 +63,8 @@ export function ContentDetailModal({
   const [madisonDialogOpen, setMadisonDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedTitle, setEditedTitle] = useState("");
   const [dependencyCounts, setDependencyCounts] = useState<{
     derivatives: number;
     scheduled: number;
@@ -108,6 +110,56 @@ export function ContentDetailModal({
   const handleEdit = () => {
     setEditedContent(getContentText());
     setIsEditing(true);
+  };
+  
+  const handleEditTitle = () => {
+    setEditedTitle(content.title || "");
+    setIsEditingTitle(true);
+  };
+  
+  const handleSaveTitle = async () => {
+    if (!editedTitle.trim()) {
+      toast({
+        title: "Title cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      const table =
+        category === "prompt"
+          ? "prompts"
+          : category === "output"
+          ? "outputs"
+          : category === "derivative"
+          ? "derivative_assets"
+          : category === "master"
+          ? "master_content"
+          : "generated_images";
+
+      const { error } = await supabase
+        .from(table)
+        .update({ title: editedTitle.trim() })
+        .eq("id", content.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Title updated",
+        description: "Content title has been renamed successfully",
+      });
+      
+      content.title = editedTitle.trim(); // Update local content object
+      setIsEditingTitle(false);
+      onUpdate?.();
+    } catch (error: any) {
+      toast({
+        title: "Failed to update title",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSave = async () => {
@@ -364,9 +416,41 @@ export function ContentDetailModal({
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <DialogTitle className="text-2xl font-serif mb-3">
-                {content.title || "Content Details"}
-              </DialogTitle>
+              {isEditingTitle ? (
+                <div className="flex items-center gap-2 mb-3">
+                  <input
+                    type="text"
+                    value={editedTitle}
+                    onChange={(e) => setEditedTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveTitle();
+                      if (e.key === 'Escape') setIsEditingTitle(false);
+                    }}
+                    className="text-2xl font-serif px-3 py-1 border rounded flex-1"
+                    autoFocus
+                  />
+                  <Button onClick={handleSaveTitle} size="sm" variant="default">
+                    <Check className="w-4 h-4" />
+                  </Button>
+                  <Button onClick={() => setIsEditingTitle(false)} size="sm" variant="ghost">
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 mb-3 group">
+                  <DialogTitle className="text-2xl font-serif">
+                    {content.title || "Content Details"}
+                  </DialogTitle>
+                  <Button 
+                    onClick={handleEditTitle} 
+                    size="sm" 
+                    variant="ghost"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              )}
               
               {/* Badges */}
               <div className="flex items-center gap-2 flex-wrap">

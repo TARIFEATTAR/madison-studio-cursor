@@ -25,7 +25,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { NameContentDialog } from "@/components/forge/NameContentDialog";
 import { WorksheetUpload } from "@/components/forge/WorksheetUpload";
 import { VideoHelpTrigger } from "@/components/help/VideoHelpTrigger";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -141,7 +140,6 @@ export default function Create() {
   
   // Dialog state
   const [thinkModeExpanded, setThinkModeExpanded] = useState(false);
-  const [nameDialogOpen, setNameDialogOpen] = useState(false);
   const [thinkModeInput, setThinkModeInput] = useState("");
   const [thinkModeMessages, setThinkModeMessages] = useState<Array<{id: string, role: string, content: string}>>([]);
   const [isThinking, setIsThinking] = useState(false);
@@ -162,8 +160,16 @@ export default function Create() {
       return;
     }
     
-    // Open name dialog
-    setNameDialogOpen(true);
+    // Auto-generate name like Image Studio does
+    const contentName = generateSmartName({
+      deliverable_format: format,
+      product_name: productData?.name,
+      style_overlay: style,
+      goal: goal
+    });
+    
+    // Directly generate content with auto-name
+    handleGenerateContent(contentName);
   };
 
   const handleGenerateContent = async (contentName: string) => {
@@ -180,7 +186,6 @@ export default function Create() {
       };
     
     localStorage.setItem('madison-content-brief', JSON.stringify(briefData));
-    setNameDialogOpen(false);
     setIsGenerating(true);
     
     // Show loading overlay
@@ -1229,12 +1234,6 @@ export default function Create() {
 
       {/* Dialogs and Loaders */}
       {showTransitionLoader && <TransitionLoader onComplete={() => setShowTransitionLoader(false)} />}
-      
-      <NameContentDialog
-        open={nameDialogOpen}
-        onOpenChange={setNameDialogOpen}
-        onConfirm={handleGenerateContent}
-      />
       
 
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
