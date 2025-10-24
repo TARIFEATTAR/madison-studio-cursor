@@ -414,23 +414,30 @@ export default function Create() {
         console.log('[LoadPrompt] Loaded from additional_context.full_brief');
       } else {
         // Very old template with no metadata - just set the format from content_type
-        const contentTypeMap: Record<string, string> = {
-          'email': 'Email',
-          'social': 'Social Media Post',
-          'blog': 'Blog Post',
-          'product': 'Product Description'
+        // Map legacy content_type to new deliverable value keys
+        const contentTypeValueMap: Record<string, string> = {
+          email: 'email_campaign',
+          social: 'social_media_post',
+          blog: 'blog_article',
+          product: 'product_description'
         };
         
-        if (prompt.content_type && contentTypeMap[prompt.content_type]) {
-          setFormat(contentTypeMap[prompt.content_type]);
-          console.log('[LoadPrompt] Set format from content_type:', contentTypeMap[prompt.content_type]);
+        if (prompt.content_type && contentTypeValueMap[prompt.content_type]) {
+          setFormat(contentTypeValueMap[prompt.content_type]);
+          console.log('[LoadPrompt] Set format from content_type:', contentTypeValueMap[prompt.content_type]);
         }
         
-        // Show a warning that this is an old template
+        // Always populate the editorial direction with the template text for legacy items
+        if (prompt.prompt_text) {
+          setAdditionalContext(prompt.prompt_text);
+          console.log('[LoadPrompt] Set additionalContext from prompt_text');
+        }
+        
+        // Show a gentle notice
         toast({
-          title: "⚠️ Legacy Template",
-          description: "This template doesn't have saved settings. Only the format was loaded.",
-          variant: "default"
+          title: 'Legacy Template loaded',
+          description: 'We mapped the format and inserted the template text into Advanced Options.',
+          variant: 'default'
         });
       }
     }
