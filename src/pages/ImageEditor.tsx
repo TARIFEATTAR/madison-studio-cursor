@@ -127,13 +127,11 @@ export default function ImageEditor() {
     fetchBrandContext();
   }, [orgId]);
   
-  // Session management - Conversational start
+  // Session management - Auto-start
   const [sessionId] = useState(crypto.randomUUID());
-  const [sessionStarted, setSessionStarted] = useState(false);
-  const [awaitingSessionName, setAwaitingSessionName] = useState(true);
   const [currentSession, setCurrentSession] = useState<ImageSession>({
     id: sessionId,
-    name: "",
+    name: `Session ${new Date().toLocaleDateString()}`,
     images: [],
     createdAt: Date.now()
   });
@@ -175,9 +173,8 @@ export default function ImageEditor() {
     };
   }, [referenceImageUrl, user?.id]);
 
-  // Smart session name generator
+  // Smart session name generator - auto-update from first prompt
   const generateSessionName = (prompt: string): string => {
-    // Extract key nouns/concepts (basic implementation)
     const cleanPrompt = prompt.toLowerCase()
       .replace(/\b(generate|create|make|show|image|photo|picture|of|a|an|the)\b/gi, '')
       .trim();
@@ -186,33 +183,8 @@ export default function ImageEditor() {
     const keyWords = words.slice(0, 3).map(w => w.charAt(0).toUpperCase() + w.slice(1));
     
     return keyWords.length > 0 
-      ? `${keyWords.join(' ')} Photography`
-      : `Product Session ${new Date().toLocaleDateString()}`;
-  };
-
-  // Handle first message - auto-name from prompt or use as session name
-  const handleFirstMessage = (message: string) => {
-    const looksLikePrompt = /\b(bottle|product|perfume|candle|desert|photo|light|background|show|generate|create)\b/i.test(message);
-    
-    let finalSessionName: string;
-    
-    if (looksLikePrompt || message.length > 50) {
-      // Auto-generate session name from prompt
-      finalSessionName = generateSessionName(message);
-      setCurrentSession(prev => ({ ...prev, name: finalSessionName }));
-      setAwaitingSessionName(false);
-      setSessionStarted(true);
-      
-      toast.success(`Session "${finalSessionName}" started! Describe your image to generate it.`);
-    } else {
-      // User provided a session name
-      finalSessionName = message;
-      setCurrentSession(prev => ({ ...prev, name: finalSessionName }));
-      setAwaitingSessionName(false);
-      setSessionStarted(true);
-      
-      toast.success(`Session "${finalSessionName}" started! Describe your first image.`);
-    }
+      ? `${keyWords.join(' ')} Session`
+      : `Session ${new Date().toLocaleDateString()}`;
   };
 
   const handleGenerate = async (promptOverride?: string) => {
@@ -223,14 +195,15 @@ export default function ImageEditor() {
       return;
     }
 
-    if (!sessionStarted) {
-      toast.error("Please start a session first");
-      return;
-    }
-
     if (!canGenerateMore) {
       toast.error("Session complete! Save this session to start a new one.");
       return;
+    }
+
+    // Auto-update session name from first prompt
+    if (currentSession.images.length === 0 && currentSession.name.includes("Session")) {
+      const newName = generateSessionName(prompt);
+      setCurrentSession(prev => ({ ...prev, name: newName }));
     }
 
     setIsGenerating(true);
@@ -558,7 +531,7 @@ export default function ImageEditor() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
-            {sessionStarted && currentSession.images.length > 0 && (
+            {currentSession.images.length > 0 && (
               <Sheet>
                 <SheetTrigger asChild>
                   <Button size="sm" variant="outline" className="border-[#3D3935] text-[#D4CFC8]">
@@ -592,7 +565,7 @@ export default function ImageEditor() {
           </div>
           <h1 className="font-serif text-2xl text-[#FFFCF5]">Image Studio</h1>
           <p className="text-[#D4CFC8] text-sm">
-            {sessionStarted 
+            {currentSession.images.length > 0
               ? `${currentSession.name} • ${progressText}`
               : "AI-powered product photography"
             }
@@ -600,7 +573,7 @@ export default function ImageEditor() {
         </div>
 
         {/* Action Buttons - Mobile */}
-        {sessionStarted && currentSession.images.length > 0 && (
+        {currentSession.images.length > 0 && (
           <div className="p-4 border-b border-[#3D3935] flex flex-col gap-2">
             <div className="flex gap-2 justify-between items-center">
               <div className="flex gap-2 flex-wrap">
@@ -645,42 +618,8 @@ export default function ImageEditor() {
           </div>
         )}
 
-        {/* Session Start - Mobile */}
-        {!sessionStarted && (
-          <div className="p-4 flex-1 flex items-center justify-center">
-            <Card className="p-6 bg-[#2F2A26] border-[#3D3935] w-full max-w-lg">
-              <div className="text-center mb-4">
-                <Sparkles className="w-10 h-10 text-brass/50 mx-auto mb-3" />
-                <h2 className="font-serif text-xl text-[#FFFCF5] mb-2">Start Creating</h2>
-                <p className="text-[#D4CFC8] text-sm">
-                  Describe your product image or name your session
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                <Textarea
-                  value={userPrompt}
-                  onChange={(e) => setUserPrompt(e.target.value)}
-                  placeholder="e.g., 'Desert Campaign' or 'Perfume on sand at sunset'"
-                  rows={3}
-                  className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E]"
-                />
-                <Button
-                  onClick={() => handleFirstMessage(userPrompt)}
-                  disabled={!userPrompt.trim()}
-                  className="w-full bg-brass hover:bg-brass/90 text-white"
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Start Session
-                </Button>
-              </div>
-            </Card>
-          </div>
-        )}
-
         {/* Main Content - Mobile Tabs */}
-        {sessionStarted && (
-          <Tabs defaultValue="preview" className="flex-1 flex flex-col">
+        <Tabs defaultValue="create" className="flex-1 flex flex-col">
             <TabsList className="w-full grid grid-cols-3 bg-[#2F2A26] border-b border-[#3D3935] rounded-none h-12">
               <TabsTrigger value="preview" className="text-[#D4CFC8] data-[state=active]:text-[#FFFCF5] data-[state=active]:bg-[#3D3935]">
                 Preview
@@ -725,7 +664,7 @@ export default function ImageEditor() {
                   <div className="text-center space-y-2">
                     <Sparkles className="w-12 h-12 text-brass/30 mx-auto" />
                     <p className="text-[#FFFCF5]">No image yet</p>
-                    <p className="text-sm text-[#D4CFC8]">Create your first image</p>
+                    <p className="text-sm text-[#D4CFC8]">Go to Create tab to start</p>
                   </div>
                 )}
               </Card>
@@ -936,12 +875,11 @@ export default function ImageEditor() {
               </div>
             </TabsContent>
           </Tabs>
-        )}
       </div>
     );
   }
 
-  // Desktop render (unchanged)
+  // Desktop Layout
   return (
     <div className="min-h-screen bg-[#252220] flex">
       {/* Madison Vertical Tab - Only visible when closed */}
@@ -958,7 +896,7 @@ export default function ImageEditor() {
         {/* Main Studio Content */}
         <ResizablePanel defaultSize={madisonOpen ? 70 : 100} minSize={50}>
           <div className="h-full overflow-auto">
-        <div className="max-w-[1800px] mx-auto p-6">
+            <div className="max-w-[1800px] mx-auto p-6">
           {/* Header */}
           <div className="mb-6 flex items-center justify-between">
             <div>
@@ -970,7 +908,7 @@ export default function ImageEditor() {
                 <h1 className="font-serif text-3xl text-[#FFFCF5]">Madison Image Studio</h1>
               </div>
               <p className="text-[#D4CFC8] text-sm">
-                {sessionStarted 
+                {currentSession.images.length > 0
                   ? `Session: ${currentSession.name} • ${progressText} images`
                   : "AI-powered product photography sessions"
                 }
@@ -978,7 +916,7 @@ export default function ImageEditor() {
             </div>
             
             <div className="flex gap-2 items-center">
-              {sessionStarted && currentSession.images.length > 0 && (
+              {currentSession.images.length > 0 && (
                 <>
                   <div className="flex gap-2 text-xs text-[#D4CFC8] mr-2">
                     <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-500/30">
@@ -1025,49 +963,8 @@ export default function ImageEditor() {
             </div>
           </div>
 
-          {/* Conversational Session Start */}
-          {!sessionStarted && (
-            <Card className="p-8 bg-[#2F2A26] border-[#3D3935] shadow-sm mb-6 max-w-2xl mx-auto">
-              <div className="text-center mb-6">
-                <Sparkles className="w-12 h-12 text-brass/50 mx-auto mb-4" />
-                <h2 className="font-serif text-2xl text-[#FFFCF5] mb-2">Madison Image Studio</h2>
-                <p className="text-[#D4CFC8]">
-                  Let's create something beautiful. Describe the product image you want, or name your session first.
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                <Textarea
-                  value={userPrompt}
-                  onChange={(e) => setUserPrompt(e.target.value)}
-                  placeholder="e.g., 'Desert Perfume Campaign' or 'Show a perfume bottle on desert sand at sunset'"
-                  rows={3}
-                  className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E]"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleFirstMessage(userPrompt);
-                    }
-                  }}
-                />
-                <Button
-                  onClick={() => handleFirstMessage(userPrompt)}
-                  disabled={!userPrompt.trim()}
-                  className="w-full bg-brass hover:bg-brass/90 text-white"
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Start Creating
-                </Button>
-                <p className="text-xs text-[#A8A39E] text-center">
-                  Up to {MAX_IMAGES_PER_SESSION} images per session • Auto-saved as you create
-                </p>
-              </div>
-            </Card>
-          )}
-
           {/* Main Layout: 3-Column Layout - Gallery + Image + Chat Sidebar */}
-          {sessionStarted && (
-            <div className="flex gap-6 h-[calc(100vh-180px)] overflow-hidden">
+          <div className="flex gap-6 h-[calc(100vh-180px)] overflow-hidden">
               {/* Left Sidebar - Thumbnail Gallery */}
               <div className="w-32 flex-shrink-0 space-y-3 overflow-y-auto min-h-0 overscroll-contain">
                 <div className="flex items-center justify-between mb-3">
@@ -1412,8 +1309,7 @@ export default function ImageEditor() {
                 </div>
               </div>
             </div>
-          )}
-        </div>
+          </div>
           </div>
         </ResizablePanel>
 
