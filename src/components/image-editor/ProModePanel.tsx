@@ -28,17 +28,17 @@ export function ProModePanel({ onControlsChange, initialValues = {} }: ProModePa
   const environmentOptions = getEnvironmentOptions();
 
   const handleCameraChange = (value: string) => {
-    const newControls = { ...initialValues, camera: value };
+    const newControls = { ...initialValues, camera: value === "none" ? undefined : value };
     onControlsChange(newControls);
   };
 
   const handleLightingChange = (value: string) => {
-    const newControls = { ...initialValues, lighting: value };
+    const newControls = { ...initialValues, lighting: value === "none" ? undefined : value };
     onControlsChange(newControls);
   };
 
   const handleEnvironmentChange = (value: string) => {
-    const newControls = { ...initialValues, environment: value };
+    const newControls = { ...initialValues, environment: value === "none" ? undefined : value };
     onControlsChange(newControls);
   };
 
@@ -84,12 +84,12 @@ export function ProModePanel({ onControlsChange, initialValues = {} }: ProModePa
             <Camera className="h-3.5 w-3.5" />
             Camera & Lens
           </Label>
-          <Select value={initialValues.camera || ""} onValueChange={handleCameraChange}>
+          <Select value={initialValues.camera || "none"} onValueChange={handleCameraChange}>
             <SelectTrigger className="h-9 bg-[#252220] border-[#3D3935] text-[#FFFCF5] text-sm">
               <SelectValue placeholder="Select camera setup..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {cameraOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
@@ -105,12 +105,12 @@ export function ProModePanel({ onControlsChange, initialValues = {} }: ProModePa
             <Sun className="h-3.5 w-3.5" />
             Lighting Setup
           </Label>
-          <Select value={initialValues.lighting || ""} onValueChange={handleLightingChange}>
+          <Select value={initialValues.lighting || "none"} onValueChange={handleLightingChange}>
             <SelectTrigger className="h-9 bg-[#252220] border-[#3D3935] text-[#FFFCF5] text-sm">
               <SelectValue placeholder="Select lighting..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {lightingOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
@@ -126,12 +126,12 @@ export function ProModePanel({ onControlsChange, initialValues = {} }: ProModePa
             <MapPin className="h-3.5 w-3.5" />
             Environment & Surface
           </Label>
-          <Select value={initialValues.environment || ""} onValueChange={handleEnvironmentChange}>
+          <Select value={initialValues.environment || "none"} onValueChange={handleEnvironmentChange}>
             <SelectTrigger className="h-9 bg-[#252220] border-[#3D3935] text-[#FFFCF5] text-sm">
               <SelectValue placeholder="Select environment..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {environmentOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}

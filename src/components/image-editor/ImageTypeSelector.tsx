@@ -33,10 +33,7 @@ export function ImageTypeSelector({ value, onChange }: ImageTypeSelectorProps) {
       <Label className="text-xs text-[#A8A39E] mb-1.5 block">Image Category</Label>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-sm">
-          <div className="flex items-center gap-2">
-            <Icon className="h-4 w-4 text-[#A8A39E]" />
-            <SelectValue />
-          </div>
+          <SelectValue />
         </SelectTrigger>
         <SelectContent>
           {IMAGE_TYPES.map((type) => {
