@@ -281,3 +281,42 @@ PHOTOGRAPHIC REQUIREMENTS:
 
 IMPORTANT: Do not regenerate or alter the product - use it as-is from the reference image. Only the scene, environment, and context around it should change.`;
 }
+
+/**
+ * Get camera/lens options for Pro Mode selector
+ */
+export function getCameraOptions() {
+  return Object.entries(CAMERA_LENS).flatMap(([category, lenses]) => 
+    Object.entries(lenses).map(([key, value]) => ({
+      value: `${category}.${key}`,
+      label: value.split(',')[0].trim(),
+      full: value
+    }))
+  );
+}
+
+/**
+ * Get lighting options for Pro Mode selector
+ */
+export function getLightingOptions() {
+  return Object.entries(LIGHTING).flatMap(([category, lights]) =>
+    Object.entries(lights).map(([key, value]) => ({
+      value: `${category}.${key}`,
+      label: key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' '),
+      full: value
+    }))
+  );
+}
+
+/**
+ * Get environment options for Pro Mode selector
+ */
+export function getEnvironmentOptions() {
+  return Object.entries(ENVIRONMENTS).flatMap(([category, envs]) =>
+    Object.entries(envs).map(([key, value]) => ({
+      value: `${category}.${key}`,
+      label: key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' '),
+      full: value
+    }))
+  );
+}

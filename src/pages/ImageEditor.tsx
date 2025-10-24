@@ -48,6 +48,8 @@ import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssista
 import { MadisonVerticalTab } from "@/components/assistant/MadisonVerticalTab";
 import { ReferenceUpload } from "@/components/image-editor/ReferenceUpload";
 import { GuidedPromptBuilder } from "@/components/image-editor/GuidedPromptBuilder";
+import { ImageTypeSelector } from "@/components/image-editor/ImageTypeSelector";
+import { ProModePanel, ProModeControls } from "@/components/image-editor/ProModePanel";
 
 type ApprovalStatus = "pending" | "flagged" | "rejected";
 
@@ -85,6 +87,8 @@ export default function ImageEditor() {
   const [isSaving, setIsSaving] = useState(false);
   const [madisonOpen, setMadisonOpen] = useState(false);
   const [guidedModeEnabled, setGuidedModeEnabled] = useState(false);
+  const [imageType, setImageType] = useState<string>("product");
+  const [proModeControls, setProModeControls] = useState<ProModeControls>({});
 
   // Load prompt from navigation state if present (from Image Recipe Library)
   useEffect(() => {
@@ -302,7 +306,7 @@ export default function ImageEditor() {
           
           const { error: promptError } = await supabase
             .from('prompts')
-            .insert({
+            .insert([{
               organization_id: orgId,
               created_by: user.id,
               title: `Image: ${truncatedPrompt}`,
@@ -314,7 +318,7 @@ export default function ImageEditor() {
               collection: 'Image Studio',
               content_type: 'visual',
               additional_context: {
-                image_type: 'product', // Default to product, can be enhanced later with UI
+                image_type: imageType,
                 aspect_ratio: aspectRatio,
                 output_format: outputFormat,
                 goal_type: 'product-photography',
@@ -322,9 +326,11 @@ export default function ImageEditor() {
                 session_name: currentSession.name,
                 brand_context_used: brandContext,
                 reference_images_used: referenceImages.length > 0,
+                pro_mode_enabled: !!(proModeControls.camera || proModeControls.lighting || proModeControls.environment),
+                pro_mode_settings: proModeControls as any,
                 generated_at: new Date().toISOString()
-              }
-            });
+              } as any
+            }]);
 
           if (promptError) {
             console.warn("Image prompt not saved to library:", promptError);
@@ -869,7 +875,7 @@ export default function ImageEditor() {
                       ADVANCED
                       <span className="text-[#A8A39E]">▼</span>
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="pt-3 space-y-2">
+                    <CollapsibleContent className="pt-3 space-y-3">
                       <div>
                         <Label className="text-xs text-[#A8A39E] mb-1.5 block">Aspect Ratio</Label>
                         <Select value={aspectRatio} onValueChange={setAspectRatio}>
@@ -888,6 +894,13 @@ export default function ImageEditor() {
                         <p className="text-[10px] text-[#A8A39E] mt-1.5 leading-relaxed">
                           Guides composition but not a hard crop. For best results, describe your desired framing in the prompt.
                         </p>
+                      </div>
+                      
+                      <div className="pt-2 border-t border-[#3D3935]/50">
+                        <ProModePanel
+                          onControlsChange={setProModeControls}
+                          initialValues={proModeControls}
+                        />
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
@@ -1253,6 +1266,8 @@ export default function ImageEditor() {
                       <div className="flex-shrink-0 space-y-3 pt-3 border-t border-[#3D3935]">
                         <h4 className="text-xs font-semibold text-[#D4CFC8] tracking-wide">OUTPUT & SAVE</h4>
                         
+                        <ImageTypeSelector value={imageType} onChange={setImageType} />
+                        
                         <div>
                           <Label className="text-xs text-[#A8A39E] mb-1.5 block">Format</Label>
                           <Select value={outputFormat} onValueChange={(value: "png" | "jpeg" | "webp") => setOutputFormat(value)}>
@@ -1308,6 +1323,13 @@ export default function ImageEditor() {
                               <p className="text-[10px] text-[#A8A39E] mt-1.5 leading-relaxed">
                                 Guides composition but not a hard crop. For best results, describe your desired framing in the prompt.
                               </p>
+                            </div>
+                            
+                            <div className="pt-2 border-t border-[#3D3935]/50">
+                              <ProModePanel
+                                onControlsChange={setProModeControls}
+                                initialValues={proModeControls}
+                              />
                             </div>
                           </CollapsibleContent>
                         </Collapsible>
