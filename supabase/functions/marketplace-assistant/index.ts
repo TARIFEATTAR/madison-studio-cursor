@@ -38,7 +38,7 @@ async function getMadisonSystemConfig() {
   }
 }
 
-// Helper to fetch brand knowledge
+// Helper to fetch brand knowledge (STANDARDIZED)
 async function getBrandKnowledge(organizationId: string) {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
   
@@ -49,16 +49,52 @@ async function getBrandKnowledge(organizationId: string) {
       .eq('organization_id', organizationId)
       .eq('is_active', true);
     
-    if (error || !data) return '';
+    if (error || !data) {
+      console.warn('[BRAND CONTEXT] No brand knowledge found');
+      return '';
+    }
     
-    const knowledgeParts = data.map(k => {
-      const contentStr = typeof k.content === 'object' 
-        ? JSON.stringify(k.content, null, 2) 
-        : k.content;
-      return `${k.knowledge_type.toUpperCase()}:\n${contentStr}`;
-    });
+    console.log(`[BRAND CONTEXT] Loaded ${data.length} brand knowledge entries`);
     
-    return knowledgeParts.join('\n\n');
+    const contextParts = [];
+    contextParts.push('\n╔══════════════════════════════════════════════════════════════════╗');
+    contextParts.push('║          MANDATORY BRAND GUIDELINES - FOLLOW EXACTLY             ║');
+    contextParts.push('║         (Client-specific brand voice and requirements)           ║');
+    contextParts.push('╚══════════════════════════════════════════════════════════════════╝');
+    
+    const knowledgeMap = new Map();
+    data.forEach(k => knowledgeMap.set(k.knowledge_type, k.content));
+    
+    // PRIORITY 1: Brand Voice
+    const voiceData = knowledgeMap.get('brand_voice') as any;
+    if (voiceData) {
+      contextParts.push('\n━━━ BRAND VOICE PROFILE (HIGHEST PRIORITY) ━━━');
+      if (voiceData.toneAttributes) contextParts.push(`✦ Tone: ${voiceData.toneAttributes.join(', ')}`);
+      if (voiceData.writingStyle) contextParts.push(`✦ Style: ${voiceData.writingStyle}`);
+    }
+    
+    // PRIORITY 2: Vocabulary
+    const vocabularyData = knowledgeMap.get('vocabulary') as any;
+    if (vocabularyData) {
+      contextParts.push('\n━━━ VOCABULARY RULES ━━━');
+      if (vocabularyData.forbiddenPhrases) {
+        contextParts.push('✦ FORBIDDEN PHRASES (NEVER USE):');
+        vocabularyData.forbiddenPhrases.forEach((phrase: string) => {
+          contextParts.push(`   ✗ "${phrase}"`);
+        });
+      }
+    }
+    
+    // Add other knowledge types
+    for (const [type, content] of knowledgeMap.entries()) {
+      if (type !== 'brand_voice' && type !== 'vocabulary') {
+        contextParts.push(`\n━━━ ${type.toUpperCase().replace(/_/g, ' ')} ━━━`);
+        const contentStr = typeof content === 'object' ? JSON.stringify(content, null, 2) : content;
+        contextParts.push(contentStr);
+      }
+    }
+    
+    return contextParts.join('\n');
   } catch (error) {
     console.error('Error fetching brand knowledge:', error);
     return '';

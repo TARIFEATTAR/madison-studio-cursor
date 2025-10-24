@@ -129,6 +129,13 @@ async function buildBrandContext(organizationId: string) {
   try {
     console.log(`Fetching brand context for organization: ${organizationId}`);
     
+    // Fetch Madison system config
+    const { data: madisonSystemData } = await supabase
+      .from('madison_system_config')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+    
     // Fetch brand knowledge entries (including visual standards)
     const { data: knowledgeData, error: knowledgeError } = await supabase
       .from('brand_knowledge')
@@ -167,18 +174,48 @@ async function buildBrandContext(organizationId: string) {
       console.error('Error fetching brand documents:', docsError);
     }
     
-    // Build context string with strong emphasis
+    // Build context string with proper hierarchy
     const contextParts = [];
     
+    // LAYER 1: Madison's System Training (Foundation)
+    if (madisonSystemData) {
+      contextParts.push('\n╔══════════════════════════════════════════════════════════════════╗');
+      contextParts.push('║              MADISON\'S CORE EDITORIAL TRAINING                   ║');
+      contextParts.push('║         (Your foundational AI editorial guidelines)             ║');
+      contextParts.push('╚══════════════════════════════════════════════════════════════════╝');
+      
+      if (madisonSystemData.persona) {
+        contextParts.push('\n━━━ MADISON\'S PERSONA ━━━');
+        contextParts.push(madisonSystemData.persona);
+      }
+      
+      if (madisonSystemData.editorial_philosophy) {
+        contextParts.push('\n━━━ EDITORIAL PHILOSOPHY ━━━');
+        contextParts.push(madisonSystemData.editorial_philosophy);
+      }
+      
+      if (madisonSystemData.forbidden_phrases) {
+        contextParts.push('\n━━━ FORBIDDEN PHRASES (NEVER USE) ━━━');
+        contextParts.push(madisonSystemData.forbidden_phrases);
+      }
+      
+      if (madisonSystemData.quality_standards) {
+        contextParts.push('\n━━━ QUALITY STANDARDS ━━━');
+        contextParts.push(madisonSystemData.quality_standards);
+      }
+    }
+    
+    // LAYER 2: Client Brand Knowledge
     if (orgData?.name) {
-      contextParts.push(`ORGANIZATION: ${orgData.name}`);
+      contextParts.push(`\n\nORGANIZATION: ${orgData.name}`);
     }
     
     // Add structured brand knowledge with enhanced formatting
     if (knowledgeData && knowledgeData.length > 0) {
-      contextParts.push('\n╔═══════════════════════════════════════════════════════════╗');
-      contextParts.push('║          MANDATORY BRAND GUIDELINES - FOLLOW EXACTLY      ║');
-      contextParts.push('╚═══════════════════════════════════════════════════════════╝');
+      contextParts.push('\n╔══════════════════════════════════════════════════════════════════╗');
+      contextParts.push('║          MANDATORY BRAND GUIDELINES - FOLLOW EXACTLY             ║');
+      contextParts.push('║         (Client-specific brand voice and requirements)           ║');
+      contextParts.push('╚══════════════════════════════════════════════════════════════════╝');
       
       // Organize by knowledge type for better prompt structure
       const voiceData = knowledgeData.find(k => k.knowledge_type === 'brand_voice')?.content as any;

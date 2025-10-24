@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Helper function to fetch Madison's system training
+// Helper function to fetch Madison's system training (STANDARDIZED)
 async function getMadisonSystemConfig(supabaseClient: any) {
   try {
     const { data, error } = await supabaseClient
@@ -19,15 +19,29 @@ async function getMadisonSystemConfig(supabaseClient: any) {
     if (error || !data) return '';
     
     const configParts = [];
-    configParts.push('\n=== MADISON\'S SYSTEM TRAINING ===');
+    configParts.push('\n╔══════════════════════════════════════════════════════════════════╗');
+    configParts.push('║              MADISON\'S CORE EDITORIAL TRAINING                   ║');
+    configParts.push('║         (Your foundational AI editorial guidelines)             ║');
+    configParts.push('╚══════════════════════════════════════════════════════════════════╝');
     
-    if (data.persona) configParts.push(`\nPersona: ${data.persona}`);
-    if (data.editorial_philosophy) configParts.push(`\nEditorial Philosophy: ${data.editorial_philosophy}`);
-    if (data.writing_influences) configParts.push(`\nWriting Influences: ${data.writing_influences}`);
-    if (data.voice_spectrum) configParts.push(`\nVoice Spectrum: ${data.voice_spectrum}`);
-    if (data.forbidden_phrases) configParts.push(`\nForbidden Phrases: ${data.forbidden_phrases}`);
-    if (data.quality_standards) configParts.push(`\nQuality Standards: ${data.quality_standards}`);
+    if (data.persona) {
+      configParts.push('\n━━━ MADISON\'S PERSONA ━━━');
+      configParts.push(data.persona);
+    }
+    if (data.editorial_philosophy) {
+      configParts.push('\n━━━ EDITORIAL PHILOSOPHY ━━━');
+      configParts.push(data.editorial_philosophy);
+    }
+    if (data.forbidden_phrases) {
+      configParts.push('\n━━━ FORBIDDEN PHRASES (NEVER USE) ━━━');
+      configParts.push(data.forbidden_phrases);
+    }
+    if (data.quality_standards) {
+      configParts.push('\n━━━ QUALITY STANDARDS ━━━');
+      configParts.push(data.quality_standards);
+    }
     
+    console.log('[BRAND CONTEXT] Madison system config loaded');
     return configParts.join('\n');
   } catch (error) {
     console.error('Error fetching Madison system config:', error);
@@ -35,10 +49,10 @@ async function getMadisonSystemConfig(supabaseClient: any) {
   }
 }
 
-// Helper function to build brand context from database
+// Helper function to build brand context from database (STANDARDIZED)
 async function buildBrandContext(supabaseClient: any, organizationId: string) {
   try {
-    console.log(`Fetching brand context for organization: ${organizationId}`);
+    console.log(`[BRAND CONTEXT] Fetching for organization: ${organizationId}`);
     
     // Fetch brand knowledge entries
     const { data: knowledgeData, error: knowledgeError } = await supabaseClient
@@ -62,24 +76,52 @@ async function buildBrandContext(supabaseClient: any, organizationId: string) {
       console.error('Error fetching organization:', orgError);
     }
     
-    // Build context string
+    // Build context string with consistent formatting
     const contextParts = [];
     
+    contextParts.push('\n╔══════════════════════════════════════════════════════════════════╗');
+    contextParts.push('║          MANDATORY BRAND GUIDELINES - FOLLOW EXACTLY             ║');
+    contextParts.push('║         (Client-specific brand voice and requirements)           ║');
+    contextParts.push('╚══════════════════════════════════════════════════════════════════╝');
+    
     if (orgData?.name) {
-      contextParts.push(`ORGANIZATION: ${orgData.name}`);
+      contextParts.push(`\n✦ ORGANIZATION: ${orgData.name}`);
     }
     
-    // Add brand knowledge sections
+    // Add brand knowledge sections with proper structure
     if (knowledgeData && knowledgeData.length > 0) {
-      contextParts.push('\n=== BRAND KNOWLEDGE ===');
-      for (const entry of knowledgeData) {
-        contextParts.push(`\n--- ${entry.knowledge_type.toUpperCase()} ---`);
-        
-        // Handle JSONB content
-        if (typeof entry.content === 'object') {
-          contextParts.push(JSON.stringify(entry.content, null, 2));
-        } else {
-          contextParts.push(String(entry.content));
+      const knowledgeMap = new Map();
+      knowledgeData.forEach((k: any) => knowledgeMap.set(k.knowledge_type, k.content));
+      
+      // PRIORITY 1: Brand Voice
+      const voiceData = knowledgeMap.get('brand_voice') as any;
+      if (voiceData) {
+        contextParts.push('\n━━━ BRAND VOICE PROFILE (HIGHEST PRIORITY) ━━━');
+        if (voiceData.toneAttributes) contextParts.push(`✦ Tone: ${voiceData.toneAttributes.join(', ')}`);
+        if (voiceData.writingStyle) contextParts.push(`✦ Style: ${voiceData.writingStyle}`);
+      }
+      
+      // PRIORITY 2: Vocabulary
+      const vocabularyData = knowledgeMap.get('vocabulary') as any;
+      if (vocabularyData) {
+        contextParts.push('\n━━━ VOCABULARY RULES ━━━');
+        if (vocabularyData.forbiddenPhrases) {
+          contextParts.push('✦ FORBIDDEN PHRASES (NEVER USE):');
+          vocabularyData.forbiddenPhrases.forEach((phrase: string) => {
+            contextParts.push(`   ✗ "${phrase}"`);
+          });
+        }
+      }
+      
+      // Add other knowledge types
+      for (const [type, content] of knowledgeMap.entries()) {
+        if (type !== 'brand_voice' && type !== 'vocabulary') {
+          contextParts.push(`\n━━━ ${type.toUpperCase().replace(/_/g, ' ')} ━━━`);
+          if (typeof content === 'object') {
+            contextParts.push(JSON.stringify(content, null, 2));
+          } else {
+            contextParts.push(String(content));
+          }
         }
       }
     }
@@ -88,13 +130,13 @@ async function buildBrandContext(supabaseClient: any, organizationId: string) {
     if (orgData?.brand_config) {
       const config = orgData.brand_config as any;
       if (config.brand_colors) {
-        contextParts.push('\n=== BRAND VISUAL GUIDELINES ===');
-        contextParts.push(`Colors: ${JSON.stringify(config.brand_colors)}`);
+        contextParts.push('\n━━━ VISUAL STANDARDS ━━━');
+        contextParts.push(`✦ BRAND COLORS: ${config.brand_colors.join(', ')}`);
       }
     }
     
     const fullContext = contextParts.join('\n');
-    console.log(`Built brand context (${fullContext.length} characters)`);
+    console.log(`[BRAND CONTEXT] Built ${fullContext.length} characters, ${knowledgeData?.length || 0} knowledge entries`);
     
     return fullContext;
   } catch (error) {
