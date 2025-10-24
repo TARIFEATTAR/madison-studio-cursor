@@ -200,6 +200,7 @@ export default function Create() {
           mode: "generate",
           styleOverlay: style.toUpperCase().replace(/-/g, '_'),
           productData,
+          product_id: product && product !== "none" ? product : null, // Pass product ID for database lookup
           contentType: format // Pass the content type so Madison knows what format to use
         }
       });

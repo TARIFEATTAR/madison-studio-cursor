@@ -454,7 +454,7 @@ serve(async (req) => {
       throw new Error('ANTHROPIC_API_KEY is not configured');
     }
 
-    const { prompt, organizationId, mode = "generate", styleOverlay = "TARIFE_NATIVE", productData, contentType, userName, images } = await req.json();
+    const { prompt, organizationId, mode = "generate", styleOverlay = "TARIFE_NATIVE", productData, contentType, userName, images, product_id } = await req.json();
     
     // Validate images if provided (limit count and size)
     if (images && Array.isArray(images)) {
@@ -501,6 +501,27 @@ serve(async (req) => {
     }
     if (productData) {
       console.log('Product category:', productData.category);
+    }
+
+    // Fetch full product data from database if product_id is provided
+    let enrichedProductData = productData;
+    if (product_id && organizationId) {
+      console.log('Fetching product data from database for ID:', product_id);
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const { data: dbProductData, error: productError } = await supabase
+        .from('brand_products')
+        .select('*')
+        .eq('id', product_id)
+        .eq('organization_id', organizationId)
+        .maybeSingle();
+      
+      if (productError) {
+        console.error('Error fetching product data:', productError);
+      } else if (dbProductData) {
+        console.log('Product data fetched from database:', dbProductData.name);
+        // Merge database data with any passed productData (database takes priority)
+        enrichedProductData = { ...productData, ...dbProductData };
+      }
     }
 
     // Build brand-aware system prompt based on mode
@@ -721,12 +742,12 @@ beauty through reduction, meaning through precision.`
     
     // Build category-specific product context
     let productContext = '';
-    if (productData && productData.category) {
-      const categoryPromptBuilder = CATEGORY_PROMPTS[productData.category as keyof typeof CATEGORY_PROMPTS];
+    if (enrichedProductData && enrichedProductData.category) {
+      const categoryPromptBuilder = CATEGORY_PROMPTS[enrichedProductData.category as keyof typeof CATEGORY_PROMPTS];
       if (categoryPromptBuilder) {
-        productContext = categoryPromptBuilder(productData);
+        productContext = categoryPromptBuilder(enrichedProductData);
       }
-    } else if (!productData) {
+    } else if (!enrichedProductData) {
       // No product selected - brand-level request
       productContext = `
 ╔══════════════════════════════════════════════════════════════════╗
@@ -745,8 +766,43 @@ DO NOT invent or reference specific products, SKUs, or product details.
 `;
     }
     
+    // Build mandatory product specifications section (Phase 1 fix)
+    let mandatoryProductSpecs = '';
+    if (enrichedProductData && enrichedProductData.category === 'personal_fragrance') {
+      const contextParts = [];
+      
+      contextParts.push('\n╔══════════════════════════════════════════════════════════════════╗');
+      contextParts.push('║           MANDATORY PRODUCT SPECIFICATIONS                       ║');
+      contextParts.push('║        (THESE MUST BE REFERENCED IN YOUR OUTPUT)                ║');
+      contextParts.push('╚══════════════════════════════════════════════════════════════════╝');
+      
+      contextParts.push('\n━━━ FRAGRANCE PROFILE ━━━');
+      if (enrichedProductData.top_notes) contextParts.push(`✦ TOP NOTES (opening): ${enrichedProductData.top_notes}`);
+      if (enrichedProductData.middle_notes) contextParts.push(`✦ MIDDLE NOTES (heart): ${enrichedProductData.middle_notes}`);
+      if (enrichedProductData.base_notes) contextParts.push(`✦ BASE NOTES (dry-down): ${enrichedProductData.base_notes}`);
+      if (enrichedProductData.scent_family) contextParts.push(`✦ SCENT FAMILY: ${enrichedProductData.scent_family}`);
+      
+      contextParts.push('\n⚠️ CRITICAL RULE FOR FRAGRANCE DESCRIPTIONS:');
+      contextParts.push('1. You MUST weave these specific notes into your description');
+      contextParts.push('2. DO NOT invent or substitute different notes');
+      contextParts.push('3. Reference at least 2-3 specific note names from the data above');
+      contextParts.push('4. Use sensory language to describe how these notes interact');
+      
+      if (enrichedProductData.collection) {
+        contextParts.push(`\n━━━ COLLECTION CONTEXT ━━━`);
+        contextParts.push(`✦ Collection: ${enrichedProductData.collection}`);
+        contextParts.push('\n⚠️ COLLECTION MENTION RULES:');
+        contextParts.push('- Mention the collection name ONCE at most (if contextually relevant)');
+        contextParts.push('- DO NOT repeat the collection name in every paragraph');
+        contextParts.push('- Focus on the PRODUCT itself, not the collection branding');
+        contextParts.push('- The collection provides context for tone, not a phrase to repeat');
+      }
+      
+      mandatoryProductSpecs = contextParts.join('\n');
+    }
+    
     // Product guidance for system prompt
-    const productGuidance = productData 
+    const productGuidance = enrichedProductData 
       ? `\n⚠️ PRODUCT-SPECIFIC COPY: This request is for a specific product. Reference product details naturally.`
       : `\n⚠️ BRAND-LEVEL COPY: No specific product selected. Write at the brand/organizational level. Focus on brand values, mission, or general offerings.`;
     
@@ -761,11 +817,41 @@ DO NOT invent or reference specific products, SKUs, or product details.
 
 ${brandContext}
 
+${mandatoryProductSpecs}
+
 ${productContext}
 
 ${selectedStyleOverlay}
 
 ${productGuidance}
+
+╔══════════════════════════════════════════════════════════════════╗
+║              CONTENT GENERATION HIERARCHY                        ║
+║           (Follow This Order of Priority)                        ║
+╚══════════════════════════════════════════════════════════════════╝
+
+1. PRODUCT DATA FIRST:
+   - If fragrance notes are provided, you MUST use them verbatim
+   - If scent family is specified, describe within that family
+   - Never invent or substitute product specifications
+   - Product details are your SOURCE OF TRUTH
+
+2. BRAND VOICE SECOND:
+   - Apply the brand voice TO the product data, not instead of it
+   - Use approved vocabulary to describe the specific product
+   - Brand voice shapes HOW you say it, not WHAT you say
+
+3. COLLECTION CONTEXT LAST:
+   - Mention collection name 0-1 times maximum
+   - Focus on the product, not the brand architecture
+   - Collection provides tonal context, not repetitive branding
+
+━━━ PRE-FLIGHT CHECKLIST (Ask yourself before sending output) ━━━
+☑ Did I use the specific fragrance notes provided (not made-up ones)?
+☑ Did I avoid repeating the collection name?
+☑ Is this description specific to THIS product (not generic)?
+☑ Would a customer understand what this smells like?
+☑ Am I writing about the PRODUCT, not just the COLLECTION?
 
 ╔══════════════════════════════════════════════════════════════════╗
 ║                      GLOBAL SYSTEM PROMPT                         ║
