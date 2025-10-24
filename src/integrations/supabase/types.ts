@@ -1174,87 +1174,145 @@ export type Database = {
       }
       prompts: {
         Row: {
+          additional_context: Json | null
           archived_at: string | null
+          audience: string | null
+          auto_generated_name: string | null
           avg_quality_rating: number | null
           base_notes: string | null
+          category: string | null
           collection: string
+          content_id: string | null
           content_type: Database["public"]["Enums"]["content_type"]
           created_at: string | null
           created_by: string | null
+          custom_instructions: string | null
+          deliverable_format: string | null
+          edit_percentage: number | null
           effectiveness_score: number | null
+          goal: string | null
           id: string
           is_archived: boolean
+          is_auto_saved: boolean | null
+          is_favorited: boolean | null
           is_template: boolean | null
           last_used_at: string | null
           meta_instructions: Json | null
           middle_notes: string | null
+          on_brand_score: number | null
           organization_id: string
           parent_prompt_id: string | null
+          product_id: string | null
           prompt_text: string
           scent_family: Database["public"]["Enums"]["scent_family"] | null
+          style_overlay: string | null
           tags: string[] | null
           times_used: number | null
           title: string
           top_notes: string | null
           transparency_statement: string | null
           updated_at: string | null
+          user_custom_name: string | null
           version: number | null
+          was_multiplied: boolean | null
+          was_scheduled: boolean | null
         }
         Insert: {
+          additional_context?: Json | null
           archived_at?: string | null
+          audience?: string | null
+          auto_generated_name?: string | null
           avg_quality_rating?: number | null
           base_notes?: string | null
+          category?: string | null
           collection: string
+          content_id?: string | null
           content_type: Database["public"]["Enums"]["content_type"]
           created_at?: string | null
           created_by?: string | null
+          custom_instructions?: string | null
+          deliverable_format?: string | null
+          edit_percentage?: number | null
           effectiveness_score?: number | null
+          goal?: string | null
           id?: string
           is_archived?: boolean
+          is_auto_saved?: boolean | null
+          is_favorited?: boolean | null
           is_template?: boolean | null
           last_used_at?: string | null
           meta_instructions?: Json | null
           middle_notes?: string | null
+          on_brand_score?: number | null
           organization_id: string
           parent_prompt_id?: string | null
+          product_id?: string | null
           prompt_text: string
           scent_family?: Database["public"]["Enums"]["scent_family"] | null
+          style_overlay?: string | null
           tags?: string[] | null
           times_used?: number | null
           title: string
           top_notes?: string | null
           transparency_statement?: string | null
           updated_at?: string | null
+          user_custom_name?: string | null
           version?: number | null
+          was_multiplied?: boolean | null
+          was_scheduled?: boolean | null
         }
         Update: {
+          additional_context?: Json | null
           archived_at?: string | null
+          audience?: string | null
+          auto_generated_name?: string | null
           avg_quality_rating?: number | null
           base_notes?: string | null
+          category?: string | null
           collection?: string
+          content_id?: string | null
           content_type?: Database["public"]["Enums"]["content_type"]
           created_at?: string | null
           created_by?: string | null
+          custom_instructions?: string | null
+          deliverable_format?: string | null
+          edit_percentage?: number | null
           effectiveness_score?: number | null
+          goal?: string | null
           id?: string
           is_archived?: boolean
+          is_auto_saved?: boolean | null
+          is_favorited?: boolean | null
           is_template?: boolean | null
           last_used_at?: string | null
           meta_instructions?: Json | null
           middle_notes?: string | null
+          on_brand_score?: number | null
           organization_id?: string
           parent_prompt_id?: string | null
+          product_id?: string | null
           prompt_text?: string
           scent_family?: Database["public"]["Enums"]["scent_family"] | null
+          style_overlay?: string | null
           tags?: string[] | null
           times_used?: number | null
           title?: string
           top_notes?: string | null
           transparency_statement?: string | null
           updated_at?: string | null
+          user_custom_name?: string | null
           version?: number | null
+          was_multiplied?: boolean | null
+          was_scheduled?: boolean | null
         }
         Relationships: [
+          {
+            foreignKeyName: "prompts_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "master_content"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "prompts_organization_id_fkey"
             columns: ["organization_id"]
@@ -1267,6 +1325,13 @@ export type Database = {
             columns: ["parent_prompt_id"]
             isOneToOne: false
             referencedRelation: "prompts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prompts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "brand_products"
             referencedColumns: ["id"]
           },
         ]
