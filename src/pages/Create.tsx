@@ -369,13 +369,71 @@ export default function Create() {
   };
 
   const handleLoadPrompt = async (prompt: any) => {
-    // Pre-fill form with prompt data
-    if (prompt.product_id) setProduct(prompt.product_id);
-    if (prompt.deliverable_format) setFormat(prompt.deliverable_format);
-    if (prompt.audience) setAudience(prompt.audience);
-    if (prompt.goal) setGoal(prompt.goal);
-    if (prompt.style_overlay) setStyle(prompt.style_overlay);
-    if (prompt.custom_instructions) setAdditionalContext(prompt.custom_instructions);
+    console.log('[LoadPrompt] Loading prompt:', prompt);
+    
+    // Check if this is an auto-saved prompt (has rich metadata) or a legacy template
+    const isAutoSaved = prompt.is_auto_saved === true;
+    
+    if (isAutoSaved) {
+      // NEW: Auto-saved prompts have rich metadata
+      if (prompt.product_id) {
+        setProduct(prompt.product_id);
+        console.log('[LoadPrompt] Set product_id:', prompt.product_id);
+      }
+      if (prompt.deliverable_format) {
+        setFormat(prompt.deliverable_format);
+        console.log('[LoadPrompt] Set format:', prompt.deliverable_format);
+      }
+      if (prompt.audience) {
+        setAudience(prompt.audience);
+        console.log('[LoadPrompt] Set audience:', prompt.audience);
+      }
+      if (prompt.goal) {
+        setGoal(prompt.goal);
+        console.log('[LoadPrompt] Set goal:', prompt.goal);
+      }
+      if (prompt.style_overlay) {
+        setStyle(prompt.style_overlay);
+        console.log('[LoadPrompt] Set style:', prompt.style_overlay);
+      }
+      if (prompt.custom_instructions) {
+        setAdditionalContext(prompt.custom_instructions);
+        console.log('[LoadPrompt] Set custom_instructions');
+      }
+    } else {
+      // LEGACY: Old templates only have content_type and prompt_text
+      // Try to parse the additional_context JSONB for backward compatibility
+      if (prompt.additional_context?.full_brief) {
+        const brief = prompt.additional_context.full_brief;
+        if (brief.product_id) setProduct(brief.product_id);
+        if (brief.deliverable_format) setFormat(brief.deliverable_format);
+        if (brief.target_audience) setAudience(brief.target_audience);
+        if (brief.content_goal) setGoal(brief.content_goal);
+        if (brief.style_overlay) setStyle(brief.style_overlay);
+        if (brief.additional_context) setAdditionalContext(brief.additional_context);
+        console.log('[LoadPrompt] Loaded from additional_context.full_brief');
+      } else {
+        // Very old template with no metadata - just set the format from content_type
+        const contentTypeMap: Record<string, string> = {
+          'email': 'Email',
+          'social': 'Social Media Post',
+          'blog': 'Blog Post',
+          'product': 'Product Description'
+        };
+        
+        if (prompt.content_type && contentTypeMap[prompt.content_type]) {
+          setFormat(contentTypeMap[prompt.content_type]);
+          console.log('[LoadPrompt] Set format from content_type:', contentTypeMap[prompt.content_type]);
+        }
+        
+        // Show a warning that this is an old template
+        toast({
+          title: "⚠️ Legacy Template",
+          description: "This template doesn't have saved settings. Only the format was loaded.",
+          variant: "default"
+        });
+      }
+    }
 
     // Update use count
     await supabase
@@ -387,7 +445,7 @@ export default function Create() {
       .eq('id', prompt.id);
 
     toast({
-      title: "Prompt Loaded",
+      title: "✓ Prompt Loaded",
       description: `Loaded: ${prompt.user_custom_name || prompt.auto_generated_name || prompt.title}`,
     });
 
