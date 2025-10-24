@@ -8,6 +8,8 @@ import QualityRating from "@/components/QualityRating";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useToast } from "@/hooks/use-toast";
 import { AnimatePresence } from "framer-motion";
+import { AutosaveIndicator } from "@/components/ui/autosave-indicator";
+import { AUTOSAVE_CONFIG } from "@/config/autosaveConfig";
 import { supabase } from "@/integrations/supabase/client";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -222,11 +224,11 @@ export default function ContentEditorPage() {
     return editableContent;
   }, [editableContent, htmlToPlainText]);
   
-  const { saveStatus, forceSave } = useAutoSave({
+  const { saveStatus, lastSavedAt, forceSave } = useAutoSave({
     content: getContentForSave(),
     contentId,
     contentName: title,
-    delay: 800
+    delay: AUTOSAVE_CONFIG.AGGRESSIVE_DELAY
   });
 
   // Load content on mount
@@ -1052,6 +1054,14 @@ export default function ContentEditorPage() {
             <span className="text-xs sm:text-sm text-muted-foreground px-1 sm:px-2">
               {wordCount}w
             </span>
+
+            {/* Autosave Indicator - Hidden on mobile */}
+            <div className="hidden md:block">
+              <AutosaveIndicator 
+                saveStatus={saveStatus} 
+                lastSavedAt={lastSavedAt}
+              />
+            </div>
 
             <div className="hidden lg:block">
               <QualityRating 

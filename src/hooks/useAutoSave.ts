@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { AUTOSAVE_CONFIG } from "@/config/autosaveConfig";
 
 export type SaveStatus = "unsaved" | "saving" | "saved";
 
@@ -14,9 +15,10 @@ export function useAutoSave({
   content, 
   contentId, 
   contentName,
-  delay = 3000 
+  delay = AUTOSAVE_CONFIG.STANDARD_DELAY 
 }: UseAutoSaveProps) {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved");
+  const [lastSavedAt, setLastSavedAt] = useState<Date | undefined>(undefined);
   const timeoutRef = useRef<NodeJS.Timeout>();
   const lastSavedContent = useRef<string>(content);
 
@@ -76,7 +78,10 @@ export function useAutoSave({
       }
 
       lastSavedContent.current = content;
+      const savedTime = new Date();
+      setLastSavedAt(savedTime);
       setSaveStatus("saved");
+      console.log('[AutoSave] Saved at:', savedTime.toLocaleTimeString());
     } catch (error) {
       console.error("[AutoSave] Error:", error);
       setSaveStatus("unsaved");
@@ -88,5 +93,10 @@ export function useAutoSave({
     await save();
   };
 
-  return { saveStatus, forceSave };
+  const forceSaveAndGetTimestamp = async (): Promise<Date | undefined> => {
+    await save();
+    return lastSavedAt;
+  };
+
+  return { saveStatus, lastSavedAt, forceSave, forceSaveAndGetTimestamp };
 }

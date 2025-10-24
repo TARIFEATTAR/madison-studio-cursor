@@ -1,20 +1,32 @@
-import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { X, Save } from "lucide-react";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
+import { AutosaveIndicator } from "@/components/ui/autosave-indicator";
+import { useAutoSave } from "@/hooks/useAutoSave";
+import { AUTOSAVE_CONFIG } from "@/config/autosaveConfig";
+import { useState, useEffect, useRef } from "react";
 
 interface MadisonSplitEditorProps {
   open: boolean;
-  title?: string;
+  title: string;
   initialContent: string;
-  onSave: (newContent: string) => Promise<void> | void;
+  contentId?: string;
+  onSave: (content: string) => void;
   onClose: () => void;
 }
 
-export function MadisonSplitEditor({ open, title, initialContent, onSave, onClose }: MadisonSplitEditorProps) {
+export function MadisonSplitEditor({ open, title, initialContent, contentId, onSave, onClose }: MadisonSplitEditorProps) {
   const [content, setContent] = useState(initialContent);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-save with standard delay
+  const { saveStatus, lastSavedAt, forceSave } = useAutoSave({
+    content,
+    contentId,
+    contentName: title,
+    delay: AUTOSAVE_CONFIG.STANDARD_DELAY
+  });
 
   useEffect(() => {
     if (open) {
@@ -24,14 +36,23 @@ export function MadisonSplitEditor({ open, title, initialContent, onSave, onClos
     }
   }, [open, initialContent]);
 
+  const handleSave = async () => {
+    await forceSave();
+    onSave(content);
+  };
+
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: "hsl(var(--background))" }}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b" style={{ borderColor: "hsl(var(--border))" }}>
-        <div className="min-w-0">
+        <div className="flex items-center gap-4 min-w-0">
           <h2 className="font-serif text-base sm:text-lg truncate">{title || "Edit with Madison"}</h2>
+          <AutosaveIndicator 
+            saveStatus={saveStatus} 
+            lastSavedAt={lastSavedAt}
+          />
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -44,7 +65,7 @@ export function MadisonSplitEditor({ open, title, initialContent, onSave, onClos
           </Button>
           <Button
             size="sm"
-            onClick={() => onSave(content)}
+            onClick={handleSave}
           >
             <Save className="w-4 h-4 mr-2" />
             Save

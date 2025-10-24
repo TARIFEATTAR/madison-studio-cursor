@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X, Sparkles, Mail, Instagram, Twitter, Tag, MessageSquare, FileText, Save, CheckCircle2, XCircle, Maximize2, Minimize2, GripVertical } from "lucide-react";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
+import { AutosaveIndicator } from "@/components/ui/autosave-indicator";
+import { useAutoSave } from "@/hooks/useAutoSave";
+import { AUTOSAVE_CONFIG } from "@/config/autosaveConfig";
 
 interface DerivativeContent {
   id: string;
@@ -82,6 +85,14 @@ export function EditorialDirectorSplitScreen({
     derivative.sequenceEmails || []
   );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Auto-save with standard delay
+  const { saveStatus, lastSavedAt } = useAutoSave({
+    content: editedContent,
+    contentId: selectedDerivativeId,
+    contentName: `Derivative ${selectedDerivativeId}`,
+    delay: AUTOSAVE_CONFIG.STANDARD_DELAY
+  });
   
   // Draggable window state - safe initial position
   const [windowPosition, setWindowPosition] = useState(() => {
@@ -338,6 +349,10 @@ export function EditorialDirectorSplitScreen({
             <X className="w-4 h-4 mr-2" />
             Exit Editor
           </Button>
+          <AutosaveIndicator 
+            saveStatus={saveStatus} 
+            lastSavedAt={lastSavedAt}
+          />
         </div>
         
         <h1 className="text-lg font-serif font-semibold" style={{ color: "#1A1816" }}>
