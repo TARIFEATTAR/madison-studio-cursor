@@ -14,11 +14,19 @@ import { useToast } from "@/hooks/use-toast";
 import { contentTypeMapping, getContentTypeDisplayName } from "@/utils/contentTypeMapping";
 import { getAllCategories } from "@/config/categoryTemplates";
 import { getCollectionTemplatesForIndustry } from "@/config/collectionTemplates";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 interface SavePromptDialogProps {
   open: boolean;
@@ -37,6 +45,7 @@ export function SavePromptDialog({
 }: SavePromptDialogProps) {
   const { currentOrganizationId } = useOnboarding();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -233,61 +242,96 @@ export function SavePromptDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-ink-black">
-            <Bookmark className="w-5 h-5 text-brass" />
+          <DialogTitle className="flex items-center gap-2 text-ink-black text-lg sm:text-xl">
+            <Bookmark className="w-4 h-4 sm:w-5 sm:h-5 text-brass" />
             Save as Prompt Template
           </DialogTitle>
-          <DialogDescription className="text-warm-gray">
+          <DialogDescription className="text-warm-gray text-sm">
             Create a reusable template from this prompt for future use
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-4 sm:space-y-6 py-4">
           {/* Prompt Preview with Edit */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <Label className="text-sm font-medium text-ink-black">
                 Prompt Text
               </Label>
-              <Popover open={showPlaceholderSuggestions} onOpenChange={setShowPlaceholderSuggestions}>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="gap-1 text-xs border-[#B8956A] text-[#B8956A] hover:bg-[#B8956A]/10"
-                  >
-                    <Plus className="w-3 h-3" />
-                    Add Placeholder
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64 p-2 bg-[#FFFCF5]" align="end">
-                  <div className="space-y-1">
-                    <p className="text-xs text-[#6B6560] px-2 py-1 font-medium">
-                      Click to insert:
-                    </p>
-                    {placeholderSuggestions.map((suggestion) => (
-                      <button
-                        key={suggestion.value}
-                        onClick={() => handleInsertPlaceholder(suggestion.value)}
-                        className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-[#B8956A]/10 transition-colors flex items-center justify-between group"
-                      >
-                        <span className="text-[#2F2A26]">{suggestion.label}</span>
-                        <code className="text-xs text-[#B8956A] opacity-60 group-hover:opacity-100">
-                          {suggestion.value}
-                        </code>
-                      </button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
+              {isMobile ? (
+                <Sheet open={showPlaceholderSuggestions} onOpenChange={setShowPlaceholderSuggestions}>
+                  <SheetTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-1 text-xs min-h-[44px] border-[#B8956A] text-[#B8956A] hover:bg-[#B8956A]/10"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Add Placeholder
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="bg-[#FFFCF5] h-[50vh]">
+                    <SheetHeader>
+                      <SheetTitle>Insert Placeholder</SheetTitle>
+                    </SheetHeader>
+                    <div className="space-y-2 mt-4 overflow-y-auto max-h-[calc(50vh-80px)]">
+                      {placeholderSuggestions.map((suggestion) => (
+                        <button
+                          key={suggestion.value}
+                          onClick={() => handleInsertPlaceholder(suggestion.value)}
+                          className="w-full text-left px-4 py-3 min-h-[48px] rounded-lg hover:bg-[#B8956A]/10 transition-colors flex items-center justify-between active:bg-[#B8956A]/20"
+                        >
+                          <span className="text-[#2F2A26] font-medium">{suggestion.label}</span>
+                          <code className="text-sm text-[#B8956A]">
+                            {suggestion.value}
+                          </code>
+                        </button>
+                      ))}
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              ) : (
+                <Popover open={showPlaceholderSuggestions} onOpenChange={setShowPlaceholderSuggestions}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-1 text-xs border-[#B8956A] text-[#B8956A] hover:bg-[#B8956A]/10"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Add Placeholder
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-2 bg-[#FFFCF5]" align="end">
+                    <div className="space-y-1">
+                      <p className="text-xs text-[#6B6560] px-2 py-1 font-medium">
+                        Click to insert:
+                      </p>
+                      {placeholderSuggestions.map((suggestion) => (
+                        <button
+                          key={suggestion.value}
+                          onClick={() => handleInsertPlaceholder(suggestion.value)}
+                          className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-[#B8956A]/10 transition-colors flex items-center justify-between group"
+                        >
+                          <span className="text-[#2F2A26]">{suggestion.label}</span>
+                          <code className="text-xs text-[#B8956A] opacity-60 group-hover:opacity-100">
+                            {suggestion.value}
+                          </code>
+                        </button>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
             </div>
             <Textarea
               value={editedPromptText}
               onChange={(e) => setEditedPromptText(e.target.value)}
-              className="bg-parchment-white border-warm-gray/20 min-h-[120px] font-mono text-sm"
+              className="bg-parchment-white border-warm-gray/20 min-h-[150px] sm:min-h-[120px] font-mono text-sm touch-auto"
               placeholder="Enter your prompt text here. Use {{PLACEHOLDER}} syntax for dynamic values."
             />
             <p className="text-xs text-[#6B6560] mt-1">
@@ -336,7 +380,7 @@ export function SavePromptDialog({
                 setSelectedContentType(""); // Reset content type when category changes
               }}
             >
-              <SelectTrigger className="bg-parchment-white border-warm-gray/20">
+              <SelectTrigger className="bg-parchment-white border-warm-gray/20 min-h-[48px] sm:min-h-[40px]">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
@@ -356,7 +400,7 @@ export function SavePromptDialog({
                 Content Type *
               </Label>
               <Select value={selectedContentType} onValueChange={setSelectedContentType}>
-                <SelectTrigger className="bg-parchment-white border-warm-gray/20">
+                <SelectTrigger className="bg-parchment-white border-warm-gray/20 min-h-[48px] sm:min-h-[40px]">
                   <SelectValue placeholder="Select content type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -378,7 +422,7 @@ export function SavePromptDialog({
               Collection
             </Label>
             <Select value={selectedCollection} onValueChange={setSelectedCollection}>
-              <SelectTrigger className="bg-parchment-white border-warm-gray/20">
+              <SelectTrigger className="bg-parchment-white border-warm-gray/20 min-h-[48px] sm:min-h-[40px]">
                 <SelectValue placeholder="Select collection..." />
               </SelectTrigger>
               <SelectContent>
@@ -530,28 +574,28 @@ export function SavePromptDialog({
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-warm-gray/20">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t border-warm-gray/20">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isSaving}
-            className="border-warm-gray/20 text-warm-gray hover:bg-warm-gray/5"
+            className="w-full sm:w-auto min-h-[44px] border-warm-gray/20 text-warm-gray hover:bg-warm-gray/5"
           >
             Cancel
           </Button>
           <Button
             onClick={handleSave}
             disabled={isSaving || !title.trim()}
-            className="bg-gradient-to-r from-brass to-brass-glow hover:from-brass-glow hover:to-brass text-white"
+            className="w-full sm:w-auto min-h-[44px] gap-2 bg-gradient-to-r from-brass to-brass-glow hover:from-brass-glow hover:to-brass text-ink-black font-semibold"
           >
             {isSaving ? (
               <>
-                <span className="animate-spin mr-2">⏳</span>
+                <span className="animate-spin">⏳</span>
                 Saving...
               </>
             ) : (
               <>
-                <Bookmark className="w-4 h-4 mr-2" />
+                <Bookmark className="w-4 h-4" />
                 Save Template
               </>
             )}

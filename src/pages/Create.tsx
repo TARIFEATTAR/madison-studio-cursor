@@ -928,44 +928,86 @@ export default function Create() {
           </div>
 
           {/* Actions */}
-          <div className="mt-8 pt-6 flex items-center justify-between border-t border-warm-gray/20">
-            <div className="flex items-center gap-3">
+          <div className="mt-8 pt-6 border-t border-warm-gray/20">
+            {/* Mobile Layout (< 768px) */}
+            <div className="flex flex-col gap-3 md:hidden">
               <Button
-                variant="ghost"
-                onClick={handleCancel}
-                className="text-warm-gray hover:text-charcoal"
+                onClick={handleSubmit}
+                disabled={!product || !format}
+                className="w-full gap-2 min-h-[44px] bg-gradient-to-r from-brass to-brass-glow hover:opacity-90 text-ink-black font-semibold disabled:from-warm-gray/20 disabled:to-warm-gray/20 disabled:text-warm-gray"
               >
-                Cancel
+                <PenTool className="w-5 h-5" />
+                <span>Create Content</span>
               </Button>
               
               {format && (
                 <Button
                   variant="outline"
                   onClick={() => setSavePromptDialogOpen(true)}
-                  className="gap-2 border-brass text-brass hover:bg-brass/10"
+                  className="w-full gap-2 min-h-[44px] border-brass text-brass hover:bg-brass/10"
                 >
                   <Bookmark className="w-4 h-4" />
                   Save as Template
                 </Button>
               )}
-            </div>
-
-            <div className="text-right">
+              
               <Button
-                onClick={handleSubmit}
-                disabled={!product || !format}
-                className="gap-2 px-8 bg-gradient-to-r from-brass to-brass-glow hover:opacity-90 text-ink-black font-semibold disabled:from-warm-gray/20 disabled:to-warm-gray/20 disabled:text-warm-gray disabled:cursor-not-allowed transition-all"
+                variant="ghost"
+                onClick={handleCancel}
+                className="w-full min-h-[44px] text-warm-gray hover:text-charcoal"
               >
-                <PenTool className="w-5 h-5" />
-                <span className="text-base">Create Content</span>
+                Cancel
               </Button>
-              <p className="text-xs mt-2 text-warm-gray/70">
+              
+              <p className="text-xs text-center mt-2 text-warm-gray/70">
                 {!product || !format ? (
                   <span className="text-brass">Select product and format to continue</span>
                 ) : (
-                  "Headlines and subjects will be AI-generated. You'll refine in the editor."
+                  "Headlines and subjects will be AI-generated."
                 )}
               </p>
+            </div>
+
+            {/* Desktop Layout (≥ 768px) */}
+            <div className="hidden md:flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  onClick={handleCancel}
+                  className="text-warm-gray hover:text-charcoal"
+                >
+                  Cancel
+                </Button>
+                
+                {format && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setSavePromptDialogOpen(true)}
+                    className="gap-2 border-brass text-brass hover:bg-brass/10"
+                  >
+                    <Bookmark className="w-4 h-4" />
+                    Save as Template
+                  </Button>
+                )}
+              </div>
+
+              <div className="text-right">
+                <Button
+                  onClick={handleSubmit}
+                  disabled={!product || !format}
+                  className="gap-2 px-8 bg-gradient-to-r from-brass to-brass-glow hover:opacity-90 text-ink-black font-semibold disabled:from-warm-gray/20 disabled:to-warm-gray/20 disabled:text-warm-gray"
+                >
+                  <PenTool className="w-5 h-5" />
+                  <span className="text-base">Create Content</span>
+                </Button>
+                <p className="text-xs mt-2 text-warm-gray/70">
+                  {!product || !format ? (
+                    <span className="text-brass">Select product and format to continue</span>
+                  ) : (
+                    "Headlines and subjects will be AI-generated. You'll refine in the editor."
+                  )}
+                </p>
+              </div>
             </div>
           </div>
         </div>
