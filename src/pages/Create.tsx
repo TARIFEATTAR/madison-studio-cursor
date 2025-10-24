@@ -96,12 +96,36 @@ export default function Create() {
           description: `"${prompt.title}" fields auto-populated`,
         });
       } else {
-        // Legacy behavior: dump everything into additional context
-        setAdditionalContext(prompt.prompt_text);
-        
+        // Legacy/simple templates: map best-effort and prefill
+        // 1) Try full_brief from additional_context
+        if (prompt.additional_context?.full_brief) {
+          const brief = prompt.additional_context.full_brief;
+          if (brief.product_id) setProduct(brief.product_id);
+          if (brief.deliverable_format) setFormat(brief.deliverable_format);
+          if (brief.target_audience) setAudience(brief.target_audience);
+          if (brief.content_goal) setGoal(brief.content_goal);
+          if (brief.style_overlay) setStyle(brief.style_overlay);
+          if (brief.additional_context) setAdditionalContext(brief.additional_context);
+        } else {
+          // 2) Map legacy content_type → current deliverable value keys
+          const contentTypeValueMap: Record<string, string> = {
+            email: 'email_campaign',
+            social: 'social_media_post',
+            blog: 'blog_article',
+            product: 'product_description',
+            visual: 'image_prompt'
+          };
+          if (prompt.content_type && contentTypeValueMap[prompt.content_type]) {
+            setFormat(contentTypeValueMap[prompt.content_type]);
+          }
+          // 3) Always drop the template text into Additional Editorial Direction
+          if (prompt.prompt_text) setAdditionalContext(prompt.prompt_text);
+        }
+        // Surface it to the user and open Advanced Options so they see the text
+        setAdvancedOptionsOpen(true);
         toast({
-          title: "Template loaded",
-          description: `"${prompt.title}" is ready to use`,
+          title: 'Template loaded',
+          description: `"${prompt.title}" applied. Edit details in Advanced Options.`,
         });
       }
       
@@ -843,14 +867,7 @@ export default function Create() {
             
             {/* Quick-fill dropdowns */}
             <div className="flex flex-wrap gap-3 mb-4">
-              <RecentPromptsDropdown
-                organizationId={currentOrganizationId}
-                onSelect={handleLoadPrompt}
-              />
-              <TemplatesDropdown
-                organizationId={currentOrganizationId}
-                onSelect={handleLoadPrompt}
-              />
+{/* Quick-fill dropdowns moved to Advanced Options to reduce distraction */}
             </div>
             
             <p className="text-base text-warm-gray">
@@ -1076,18 +1093,20 @@ export default function Create() {
                 </Button>
               </CollapsibleTrigger>
               
-              <CollapsibleContent className="space-y-6 pt-4">
-                {/* Upload Worksheet */}
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setUploadDialogOpen(true)}
-                    className="flex items-center justify-center gap-2 border-brass text-brass hover:bg-brass/10 w-full md:w-auto"
-                  >
-                    <Upload className="w-4 h-4" />
-                    Upload Worksheet
-                  </Button>
-                  <VideoHelpTrigger videoId="understanding-content-worksheets" variant="icon" />
+                {/* Quick-load Prompts (moved here to reduce distraction) */}
+                <div className="space-y-2">
+                  <Label className="text-base text-ink-black">Load Saved Briefs</Label>
+                  <div className="flex flex-wrap gap-3">
+                    <RecentPromptsDropdown
+                      organizationId={currentOrganizationId}
+                      onSelect={handleLoadPrompt}
+                    />
+                    <TemplatesDropdown
+                      organizationId={currentOrganizationId}
+                      onSelect={handleLoadPrompt}
+                    />
+                  </div>
+                  <p className="text-xs text-warm-gray/70">Apply a recent auto-save or a library template.</p>
                 </div>
 
                 {/* Style Overlay */}
