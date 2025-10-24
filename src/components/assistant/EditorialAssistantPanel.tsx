@@ -42,9 +42,21 @@ export function EditorialAssistantPanel({ onClose, initialContent, sessionContex
   const { toast } = useToast();
   const { currentOrganizationId } = useOnboarding();
   const { userName } = useUserProfile();
-  const STORAGE_KEY = 'madison-image-studio-chat';
+  
+  // Context-specific storage key
+  const STORAGE_KEY = sessionContext?.isImageStudio && sessionContext.sessionId
+    ? `madison-chat-image-${sessionContext.sessionId}`
+    : 'madison-chat-content-editor';
+  
+  const isContentEditor = !sessionContext?.isImageStudio;
   
   const [messages, setMessages] = useState<Message[]>(() => {
+    // Clear chat for Content Editor on each open (fresh context)
+    if (isContentEditor) {
+      return [];
+    }
+    
+    // Persist chat for Image Studio sessions
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (!stored) return [];
@@ -64,6 +76,7 @@ export function EditorialAssistantPanel({ onClose, initialContent, sessionContex
   const [isGenerating, setIsGenerating] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [shouldAutoSubmit, setShouldAutoSubmit] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -112,10 +125,26 @@ export function EditorialAssistantPanel({ onClose, initialContent, sessionContex
     };
   }, []);
 
-  // Don't auto-populate - let user initiate the conversation
+  // Auto-submit initialContent for Content Editor context
   useEffect(() => {
-    // Removed auto-population to match new UX
-  }, []);
+    if (isContentEditor && initialContent && messages.length === 1 && !isGenerating && !shouldAutoSubmit) {
+      // Wait 500ms for greeting to render, then trigger auto-submit
+      const timer = setTimeout(() => {
+        setShouldAutoSubmit(true);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isContentEditor, initialContent, messages.length, isGenerating, shouldAutoSubmit]);
+
+  // Handle auto-submit trigger
+  useEffect(() => {
+    if (shouldAutoSubmit && input && !isGenerating) {
+      setShouldAutoSubmit(false);
+      handleSend();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldAutoSubmit, input, isGenerating]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
