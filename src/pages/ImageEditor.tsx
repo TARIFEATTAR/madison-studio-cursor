@@ -22,7 +22,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { GuidedPromptBuilder } from "@/components/image-editor/GuidedPromptBuilder";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 type ApprovalStatus = "pending" | "flagged" | "rejected";
@@ -299,8 +299,6 @@ export default function ImageEditor() {
 
           if (promptError) {
             console.warn("Image prompt not saved to library:", promptError);
-          } else {
-            console.log("✓ Image prompt auto-saved to Image Recipe Library");
           }
         } catch (error) {
           console.error("Auto-save prompt failed:", error);
