@@ -1,29 +1,53 @@
+// React & Router
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+
+// External Libraries
+import { toast } from "sonner";
+
+// Supabase & Hooks
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentOrganizationId } from "@/hooks/useIndustryConfig";
-import { toast } from "sonner";
-import { Card } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-mobile";
+
+// UI Components
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Download, Loader2, Sparkles, ArrowLeft, Save, Star, Wand2, CheckCircle, XCircle, Check, X, MessageCircle, Trash2, Info } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { MadisonVerticalTab } from "@/components/assistant/MadisonVerticalTab";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ReferenceUpload } from "@/components/image-editor/ReferenceUpload";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { GuidedPromptBuilder } from "@/components/image-editor/GuidedPromptBuilder";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+
+// Icons
+import { 
+  Download, 
+  Loader2, 
+  Sparkles, 
+  ArrowLeft, 
+  Save, 
+  Star, 
+  Wand2, 
+  CheckCircle, 
+  XCircle, 
+  Check, 
+  X, 
+  MessageCircle, 
+  Trash2, 
+  Info 
+} from "lucide-react";
+
+// Feature Components
+import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
+import { MadisonVerticalTab } from "@/components/assistant/MadisonVerticalTab";
+import { ReferenceUpload } from "@/components/image-editor/ReferenceUpload";
+import { GuidedPromptBuilder } from "@/components/image-editor/GuidedPromptBuilder";
 
 type ApprovalStatus = "pending" | "flagged" | "rejected";
 

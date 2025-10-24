@@ -144,10 +144,7 @@ export function EditorialAssistantPanel({ onClose, initialContent, sessionContex
   };
 
   const handleSend = async () => {
-    console.log('[EditorialAssistant] handleSend called, input:', input, 'trimmed:', input.trim(), 'isGenerating:', isGenerating);
-    
     if ((!input.trim() && uploadedImages.length === 0) || isGenerating) {
-      console.log('[EditorialAssistant] Send blocked - empty input or generating');
       return;
     }
 
@@ -157,7 +154,6 @@ export function EditorialAssistantPanel({ onClose, initialContent, sessionContex
       timestamp: new Date(),
     };
 
-    console.log('[EditorialAssistant] Sending message:', userMessage.content);
     setMessages((prev) => [...prev, userMessage]);
     const imagesToSend = [...uploadedImages];
     setInput("");
@@ -601,12 +597,10 @@ Be conversational, encouraging, and editorial in your tone.
           <Button
             type="button"
             onClick={(e) => {
-              console.log('[EditorialAssistant] Button clicked', { input, isGenerating, trimmed: input.trim() });
               e.preventDefault();
               handleSend();
             }}
             onTouchStart={(e) => {
-              console.log('[EditorialAssistant] Touch start', { input, isGenerating });
               e.currentTarget.click();
             }}
             disabled={(!input.trim() && uploadedImages.length === 0) || isGenerating}

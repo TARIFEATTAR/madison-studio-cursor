@@ -270,8 +270,6 @@ export default function Multiply() {
       
       // If we have a specific ID from url/state/localStorage, fetch it immediately
       if (selectedId && selectionSource !== 'fallback') {
-        console.log(`[Multiply] Selected source: ${selectionSource}, id: ${selectedId}`);
-        
         try {
           const { data, error } = await supabase
             .from('master_content')
@@ -292,7 +290,6 @@ export default function Multiply() {
               charCount: data.full_content?.length || 0,
             };
             
-            console.log(`[Multiply] Selected master id: ${masterContent.id}, title: ${masterContent.title}, chars: ${masterContent.charCount}`);
             setSelectedMaster(masterContent);
             selectedViaNavigationRef.current = true;
             
@@ -335,12 +332,10 @@ export default function Multiply() {
             charCount: item.full_content?.length || 0,
           }));
           
-          console.log('[Multiply] Loaded from DB:', formatted.length, 'items');
           setMasterContentList(formatted);
           
           // Only auto-select from database if we didn't arrive via navigation
           if (!selectedMaster && !selectedViaNavigationRef.current) {
-            console.log('[Multiply] Auto-selecting first item from list');
             setSelectedMaster(formatted[0]);
           }
         }
@@ -440,7 +435,6 @@ export default function Multiply() {
 
     try {
       // Re-fetch latest content to ensure we have the most up-to-date version
-      console.log('[Multiply] Re-fetching latest content for:', selectedMaster.id);
       const { data: latestContent, error: fetchError } = await supabase
         .from('master_content')
         .select('id, title, content_type, full_content, word_count, collection')
@@ -454,12 +448,6 @@ export default function Multiply() {
       
       const contentId = selectedMaster.id;
       const masterContentToUse = latestContent.full_content || selectedMaster.content;
-      
-      console.log('[Multiply] Generating derivatives with:', {
-        masterId: contentId,
-        contentLength: masterContentToUse.length,
-        preview: masterContentToUse.substring(0, 100)
-      });
       
       const { data, error } = await supabase.functions.invoke('repurpose-content', {
         body: {
@@ -678,7 +666,7 @@ export default function Multiply() {
   };
 
   const handleScheduleDerivative = () => {
-    console.log('Schedule clicked - using ScheduleButton component');
+    // Schedule functionality handled by ScheduleButton component
   };
 
   const handleArchiveDerivative = async () => {

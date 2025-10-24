@@ -204,8 +204,6 @@ export default function Create() {
 
       const fullPrompt = `${promptParts}\n\n[EXECUTE THIS BRIEF IMMEDIATELY. OUTPUT ONLY THE FINAL COPY. NO QUESTIONS OR ANALYSIS.]`;
 
-      console.log('Calling AI with organization:', currentOrganizationId);
-
       // ENHANCED AUTO-SAVE: Capture rich metadata for intelligent reuse
       try {
         // Generate smart name
@@ -273,8 +271,6 @@ export default function Create() {
         if (promptError) {
           console.error("Error saving prompt:", promptError);
           // Don't block user flow - auto-save is best-effort
-        } else {
-          console.log("✓ Prompt auto-saved with enhanced metadata");
         }
       } catch (error) {
         console.error("Auto-save failed:", error);
@@ -297,8 +293,6 @@ export default function Create() {
       if (error) throw error;
 
       const generatedContent = stripMarkdown(data?.generatedContent || "");
-      
-      console.log('AI generated content, length:', generatedContent.length);
       
       // Save to database
       const { data: { user } } = await supabase.auth.getUser();
@@ -349,7 +343,6 @@ export default function Create() {
       } else {
         // Success - clear local backup
         localStorage.removeItem('draft-content-backup');
-        console.log('[Create] Content saved to database:', savedContent.id);
       }
 
       // Navigate immediately with the content ID
@@ -389,8 +382,6 @@ export default function Create() {
   };
 
   const handleLoadPrompt = async (prompt: any) => {
-    console.log('[LoadPrompt] Loading prompt:', prompt);
-    
     // Check if this is an auto-saved prompt (has rich metadata) or a legacy template
     const isAutoSaved = prompt.is_auto_saved === true;
     
@@ -398,27 +389,21 @@ export default function Create() {
       // NEW: Auto-saved prompts have rich metadata
       if (prompt.product_id) {
         setProduct(prompt.product_id);
-        console.log('[LoadPrompt] Set product_id:', prompt.product_id);
       }
       if (prompt.deliverable_format) {
         setFormat(prompt.deliverable_format);
-        console.log('[LoadPrompt] Set format:', prompt.deliverable_format);
       }
       if (prompt.audience) {
         setAudience(prompt.audience);
-        console.log('[LoadPrompt] Set audience:', prompt.audience);
       }
       if (prompt.goal) {
         setGoal(prompt.goal);
-        console.log('[LoadPrompt] Set goal:', prompt.goal);
       }
       if (prompt.style_overlay) {
         setStyle(prompt.style_overlay);
-        console.log('[LoadPrompt] Set style:', prompt.style_overlay);
       }
       if (prompt.custom_instructions) {
         setAdditionalContext(prompt.custom_instructions);
-        console.log('[LoadPrompt] Set custom_instructions');
       }
     } else {
       // LEGACY: Old templates only have content_type and prompt_text
@@ -431,7 +416,6 @@ export default function Create() {
         if (brief.content_goal) setGoal(brief.content_goal);
         if (brief.style_overlay) setStyle(brief.style_overlay);
         if (brief.additional_context) setAdditionalContext(brief.additional_context);
-        console.log('[LoadPrompt] Loaded from additional_context.full_brief');
       } else {
         // Very old template with no metadata - just set the format from content_type
         // Map legacy content_type to new deliverable value keys
@@ -444,13 +428,11 @@ export default function Create() {
         
         if (prompt.content_type && contentTypeValueMap[prompt.content_type]) {
           setFormat(contentTypeValueMap[prompt.content_type]);
-          console.log('[LoadPrompt] Set format from content_type:', contentTypeValueMap[prompt.content_type]);
         }
         
         // Always populate the editorial direction with the template text for legacy items
         if (prompt.prompt_text) {
           setAdditionalContext(prompt.prompt_text);
-          console.log('[LoadPrompt] Set additionalContext from prompt_text');
         }
         
         // Show a gentle notice
