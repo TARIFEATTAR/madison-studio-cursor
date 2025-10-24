@@ -212,15 +212,15 @@ export default function ImageEditor() {
       setSessionStarted(true);
       
       toast.success(`Session "${finalSessionName}" started! Describe your first image.`);
+    }
+  };
+
+  const handleGenerate = async (promptOverride?: string) => {
+    const prompt = promptOverride || userPrompt;
+    
     if (!userPrompt.trim()) {
       toast.error("Please describe the image you want to create");
       return;
-    }
-
-    // Auto-generate session name from first prompt if this is the first generation
-    if (currentSession.images.length === 0 && currentSession.name.includes('Session -') && !currentSession.name.includes('...')) {
-      const autoName = generateAutoSessionName(userPrompt);
-      setCurrentSession(prev => ({ ...prev, name: autoName }));
     }
 
     if (!sessionStarted) {
