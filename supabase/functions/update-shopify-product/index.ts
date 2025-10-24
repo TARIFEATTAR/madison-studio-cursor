@@ -132,11 +132,63 @@ Deno.serve(async (req) => {
 
     const platformData = listing.platform_data as any;
     
-    // Build minimal product update payload (description only for reliability)
+    // Helper: Convert plain text to HTML for Shopify
+    const convertTextToHTML = (text: string): string => {
+      if (!text) return '';
+      const lines = text.split('\n');
+      const output: string[] = [];
+      let inBulletList = false;
+      let inNumberedList = false;
+      let paragraphBuffer: string[] = [];
+
+      const flushParagraph = () => {
+        if (paragraphBuffer.length > 0) {
+          const content = paragraphBuffer.join('<br>\n').trim();
+          if (content) output.push(`<p>${content}</p>`);
+          paragraphBuffer = [];
+        }
+      };
+
+      const closeLists = () => {
+        if (inBulletList) { output.push('</ul>'); inBulletList = false; }
+        if (inNumberedList) { output.push('</ol>'); inNumberedList = false; }
+      };
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) { closeLists(); flushParagraph(); continue; }
+        
+        if (/^[-*]\s+/.test(trimmed)) {
+          flushParagraph();
+          if (inNumberedList) { output.push('</ol>'); inNumberedList = false; }
+          if (!inBulletList) { output.push('<ul>'); inBulletList = true; }
+          output.push(`<li>${trimmed.replace(/^[-*]\s+/, '')}</li>`);
+          continue;
+        }
+        
+        if (/^\d+\.\s+/.test(trimmed)) {
+          flushParagraph();
+          if (inBulletList) { output.push('</ul>'); inBulletList = false; }
+          if (!inNumberedList) { output.push('<ol>'); inNumberedList = true; }
+          output.push(`<li>${trimmed.replace(/^\d+\.\s+/, '')}</li>`);
+          continue;
+        }
+        
+        closeLists();
+        paragraphBuffer.push(trimmed);
+      }
+      
+      closeLists();
+      flushParagraph();
+      return output.join('\n');
+    };
+    
+    // Build minimal product update payload with HTML-formatted description
+    const descriptionHTML = convertTextToHTML(platformData?.description || '');
     const productUpdate = {
       product: {
         id: parseInt(effectiveShopifyId),
-        body_html: platformData?.description || '',
+        body_html: descriptionHTML,
       },
     };
 
