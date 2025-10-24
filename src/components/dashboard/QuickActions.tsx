@@ -21,7 +21,7 @@ function ActionButton({ icon, label, route, priority }: ActionButtonProps) {
         "flex flex-col items-center justify-center gap-2 p-4 rounded-lg transition-all duration-200",
         "hover:-translate-y-1 hover:shadow-md",
         "bg-parchment-white border border-charcoal/10",
-        priority && "ring-2 ring-brass shadow-[0_0_16px_rgba(184,149,106,0.4)] animate-pulse"
+        priority && "ring-2 ring-brass shadow-[0_0_16px_rgba(184,149,106,0.4)]"
       )}
     >
       <div className={cn(
