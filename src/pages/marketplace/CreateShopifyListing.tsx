@@ -112,12 +112,38 @@ const CreateShopifyListing = () => {
     return session;
   };
 
-  // Helper to invoke with explicit Authorization header
-  const invokeUpdate = async (listingId: string, productId: string, token: string) => {
+  // Helper to invoke with explicit headers (SDK path)
+  const invokeViaSDK = async (listingId: string, productId: string, token: string) => {
     return await supabase.functions.invoke('update-shopify-product', {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        'x-client-info': 'supabase-js/2',
+      },
       body: { listing_id: listingId, shopify_product_id: productId },
     });
+  };
+
+  // Fallback: raw fetch directly to functions endpoint
+  const invokeViaFetch = async (listingId: string, productId: string, token: string) => {
+    const baseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const url = `${baseUrl}/functions/v1/update-shopify-product`;
+    
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ listing_id: listingId, shopify_product_id: productId }),
+    });
+    
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      return { data, error: new Error(data?.error || data?.message || `HTTP ${resp.status}`) };
+    }
+    return { data, error: null };
   };
 
   const saveOrUpdateListing = async (): Promise<string | null> => {
@@ -318,25 +344,30 @@ const CreateShopifyListing = () => {
         throw new Error('No active session. Please log in again.');
       }
 
-      console.log('[Push] Invoking with explicit auth:', {
+      const token = session.access_token;
+      console.log('[Push] Invoking with explicit auth (SDK):', {
         listing_id: listingId,
         shopify_product_id: shopifyProductId
       });
 
-      // Step 3: First attempt with explicit Authorization header
-      let { data, error } = await invokeUpdate(listingId, shopifyProductId, session.access_token);
+      // Step 3: First attempt via SDK with explicit headers
+      let { data, error } = await invokeViaSDK(listingId, shopifyProductId, token);
 
-      // Step 4: Handle 401 with retry (mobile session quirks)
-      if (error?.message?.includes('401') || data?.status === 401) {
-        console.log('[Push] 401 on first attempt; refreshing and retrying...');
+      // Step 4: Detect 401 or missing auth header
+      const is401 =
+        error?.message?.includes('401') ||
+        data?.status === 401 ||
+        error?.message?.toLowerCase().includes('missing authorization header');
+
+      if (is401) {
+        console.log('[Push] 401 or missing auth header detected; refreshing + raw fetch fallback...');
+        
+        // Refresh session and retry with raw fetch
         await supabase.auth.refreshSession();
         const { data: s2 } = await supabase.auth.getSession();
+        const token2 = s2?.session?.access_token || '';
         
-        const retry = await invokeUpdate(
-          listingId, 
-          shopifyProductId, 
-          s2?.session?.access_token || ''
-        );
+        const retry = await invokeViaFetch(listingId, shopifyProductId, token2);
         
         if (retry.error || retry.data?.error) {
           if (isMobile) {

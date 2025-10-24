@@ -17,6 +17,10 @@ Deno.serve(async (req) => {
       authHeader: req.headers.get('Authorization')?.substring(0, 20) + '...'
     });
 
+    // Extract token explicitly from Authorization header
+    const authHeader = req.headers.get('Authorization') || '';
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -27,7 +31,8 @@ Deno.serve(async (req) => {
       }
     );
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    // Bind token explicitly to auth.getUser()
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
     
     console.log('Auth check result:', { 
       hasUser: !!user, 
