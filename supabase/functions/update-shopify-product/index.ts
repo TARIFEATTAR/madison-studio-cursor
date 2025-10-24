@@ -127,20 +127,18 @@ Deno.serve(async (req) => {
 
     const platformData = listing.platform_data as any;
     
-    // Build minimal product update payload (title and description only)
-    // This requires only read_products, write_products scopes
+    // Build minimal product update payload (description only for reliability)
     const productUpdate = {
       product: {
-        id: effectiveShopifyId,
-        title: listing.title || platformData?.title || '',
+        id: parseInt(effectiveShopifyId),
         body_html: platformData?.description || '',
       },
     };
 
     console.log('Pushing to Shopify:', productUpdate);
 
-    // Call Shopify Admin API 2024-10
-    const shopifyUrl = `https://${shopDomain}/admin/api/2024-10/products/${effectiveShopifyId}.json`;
+    // Call Shopify Admin API 2025-10
+    const shopifyUrl = `https://${shopDomain}/admin/api/2025-10/products/${effectiveShopifyId}.json`;
     console.log('Shopify API call:', {
       url: shopifyUrl,
       method: 'PUT',

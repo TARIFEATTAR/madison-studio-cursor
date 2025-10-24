@@ -91,6 +91,62 @@ const CreateShopifyListing = () => {
     setFormData(prev => ({ ...prev, ...updates }));
   };
 
+  const saveOrUpdateListing = async (): Promise<string | null> => {
+    // If we have a listing ID, update it with latest data
+    if (currentListingId) {
+      const { error } = await supabase
+        .from('marketplace_listings')
+        .update({
+          title: formData.title,
+          platform_data: formData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', currentListingId);
+      
+      if (error) throw error;
+      return currentListingId;
+    }
+    
+    // Otherwise, insert new listing
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data: orgMember } = await supabase
+      .from('organization_members')
+      .select('organization_id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!orgMember) throw new Error('Organization not found');
+
+    const listingData = {
+      organization_id: orgMember.organization_id,
+      platform: 'shopify',
+      product_id: productId,
+      external_id: externalId,
+      title: formData.title,
+      platform_data: formData,
+      status: 'draft' as const,
+      created_by: user.id
+    };
+
+    const { data, error } = await supabase
+      .from('marketplace_listings')
+      .insert([listingData])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    const listingId = data?.id;
+    if (listingId) {
+      setCurrentListingId(listingId);
+      localStorage.setItem('shopify_listing_id', listingId);
+    }
+    
+    return listingId || null;
+  };
+
   const handleSave = async () => {
     // Validate only essential required fields (title and description)
     if (!formData.title.trim()) {
@@ -208,11 +264,6 @@ const CreateShopifyListing = () => {
   };
 
   const handlePushToShopify = async () => {
-    if (!currentListingId) {
-      toast.error("Please save your listing first");
-      return;
-    }
-
     const shopifyProductId = externalId || manualShopifyId;
     if (!shopifyProductId) {
       toast.error("Please link a product or enter a Shopify Product ID");
@@ -221,7 +272,17 @@ const CreateShopifyListing = () => {
 
     setIsPushing(true);
     try {
-      // Refresh session to ensure valid token
+      // Step 1: Save/update listing to ensure DB has latest data
+      console.log('Saving latest changes before push...');
+      const listingId = await saveOrUpdateListing();
+      if (!listingId) {
+        toast.error("Failed to save listing. Please try again.");
+        setIsPushing(false);
+        return;
+      }
+      setCurrentListingId(listingId);
+
+      // Step 2: Refresh session to ensure valid token
       console.log('Refreshing session before push...');
       const { data: { session }, error: sessionError } = await supabase.auth.refreshSession();
       
@@ -233,20 +294,46 @@ const CreateShopifyListing = () => {
       }
 
       console.log('Pushing to Shopify with:', {
-        listing_id: currentListingId,
+        listing_id: listingId,
         shopify_product_id: shopifyProductId
       });
 
-      // Let Supabase SDK handle headers automatically (includes both Authorization and apikey)
+      // Step 3: Invoke edge function
       const { data, error } = await supabase.functions.invoke(
         'update-shopify-product',
         {
           body: { 
-            listing_id: currentListingId,
+            listing_id: listingId,
             shopify_product_id: shopifyProductId
           }
         }
       );
+
+      // Step 4: Handle 401 with retry (mobile session quirks)
+      if (error && (error.message?.includes('401') || error.message?.includes('Unauthorized'))) {
+        console.log('Unauthorized on first attempt, refreshing and retrying...');
+        await supabase.auth.refreshSession();
+        
+        const retryResult = await supabase.functions.invoke('update-shopify-product', {
+          body: { 
+            listing_id: listingId,
+            shopify_product_id: shopifyProductId
+          }
+        });
+        
+        if (!retryResult.error) {
+          setPushStatus('success');
+          toast.success("✅ Successfully synced to Shopify");
+          setExternalId(shopifyProductId);
+          return;
+        }
+        
+        // If retry also failed, show error
+        console.error('Retry also failed:', retryResult.error);
+        setPushStatus('failed');
+        toast.error(retryResult.data?.error || "Failed to push after retry");
+        return;
+      }
 
       if (error) {
         console.error('Error pushing to Shopify:', error);
@@ -267,12 +354,12 @@ const CreateShopifyListing = () => {
       }
 
       setPushStatus('success');
-      toast.success("Successfully pushed to Shopify!");
+      toast.success("✅ Successfully synced to Shopify");
       setExternalId(shopifyProductId);
     } catch (error: any) {
       console.error('Error pushing to Shopify:', error);
       setPushStatus('failed');
-      toast.error("Failed to push to Shopify");
+      toast.error(error.message || "Failed to push to Shopify");
     } finally {
       setIsPushing(false);
     }
