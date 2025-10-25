@@ -45,6 +45,10 @@ import { MadisonVerticalTab } from "@/components/assistant/MadisonVerticalTab";
 import { ReferenceUpload } from "@/components/image-editor/ReferenceUpload";
 import { ImageChainBreadcrumb } from "@/components/image-editor/ImageChainBreadcrumb";
 import { RefinementPanel } from "@/components/image-editor/RefinementPanel";
+import { ProModePanel, ProModeControls } from "@/components/image-editor/ProModePanel";
+
+// Prompt Formula Utilities
+import { CAMERA_LENS, LIGHTING, ENVIRONMENTS } from "@/utils/promptFormula";
 
 type ApprovalStatus = "pending" | "flagged" | "rejected";
 
@@ -83,6 +87,12 @@ export default function ImageEditor() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showProMode, setShowProMode] = useState(false);
+  
+  // Pro Mode Controls State
+  const [proModeControls, setProModeControls] = useState<ProModeControls>({});
+  
+  // Style Preset State
+  const [stylePreset, setStylePreset] = useState<'photorealistic' | 'artistic' | 'minimalist' | null>(null);
   
   // Chain prompting state
   const [selectedForRefinement, setSelectedForRefinement] = useState<GeneratedImage | null>(null);
@@ -166,6 +176,51 @@ export default function ImageEditor() {
     return words.length > 30 ? words.substring(0, 30) + '...' : words;
   };
 
+  /**
+   * Enhance user prompt with Pro Mode controls and style presets
+   */
+  const enhancePromptWithControls = (basePrompt: string): string => {
+    let enhanced = basePrompt;
+    
+    // Apply Pro Mode camera/lens preset
+    if (proModeControls.camera) {
+      const [category, key] = proModeControls.camera.split('.');
+      const cameraPreset = CAMERA_LENS[category as keyof typeof CAMERA_LENS]?.[key as any];
+      if (cameraPreset) {
+        enhanced += `, ${cameraPreset}`;
+      }
+    }
+    
+    // Apply lighting preset
+    if (proModeControls.lighting) {
+      const [category, key] = proModeControls.lighting.split('.');
+      const lightingPreset = LIGHTING[category as keyof typeof LIGHTING]?.[key as any];
+      if (lightingPreset) {
+        enhanced += `, ${lightingPreset}`;
+      }
+    }
+    
+    // Apply environment preset
+    if (proModeControls.environment) {
+      const [category, key] = proModeControls.environment.split('.');
+      const environmentPreset = ENVIRONMENTS[category as keyof typeof ENVIRONMENTS]?.[key as any];
+      if (environmentPreset) {
+        enhanced += `, ${environmentPreset}`;
+      }
+    }
+    
+    // Apply style preset modifiers
+    if (stylePreset === 'photorealistic') {
+      enhanced += ', photorealistic, ultra-detailed, high resolution, professional photography quality';
+    } else if (stylePreset === 'artistic') {
+      enhanced += ', artistic, creative composition, expressive, painterly aesthetic, stylized rendering';
+    } else if (stylePreset === 'minimalist') {
+      enhanced += ', minimalist, clean composition, simple elegant design, ample negative space, refined aesthetics';
+    }
+    
+    return enhanced;
+  };
+
   const handleGenerate = async () => {
     if (!mainPrompt.trim() || !user) {
       toast.error("Please enter a prompt");
@@ -180,18 +235,22 @@ export default function ImageEditor() {
     setIsGenerating(true);
     
     try {
-      // Call the edge function
+      // Call the edge function with enhanced prompt
+      const enhancedPrompt = enhancePromptWithControls(mainPrompt);
       const { data: functionData, error: functionError } = await supabase.functions.invoke(
         'generate-madison-image',
         {
           body: {
-            prompt: mainPrompt,
+            prompt: enhancedPrompt,
             aspectRatio,
             outputFormat,
             referenceImages: referenceImages.map(r => ({ url: r.url, description: r.description })),
             brandContext: brandContext || undefined,
             isRefinement: false,
-            organizationId: orgId
+            organizationId: orgId,
+            // Pass Pro Mode metadata for logging/tracking
+            proModeControls: Object.keys(proModeControls).length > 0 ? proModeControls : undefined,
+            stylePreset: stylePreset || undefined
           }
         }
       );
@@ -597,11 +656,21 @@ export default function ImageEditor() {
             ) : (
               <Card className="p-3 space-y-3 bg-zinc-900/50 border-zinc-800">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-zinc-100">Create Image</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-zinc-100">Create Image</h3>
+                    {/* Active Pro Mode Indicator */}
+                    {(Object.keys(proModeControls).length > 0 || stylePreset) && (
+                      <Badge variant="secondary" className="text-xs">
+                        <Settings className="w-3 h-3 mr-1" />
+                        {Object.keys(proModeControls).length + (stylePreset ? 1 : 0)} active
+                      </Badge>
+                    )}
+                  </div>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowProMode(!showProMode)}
+                    className={cn(showProMode && "bg-zinc-800")}
                   >
                     <Settings className="w-4 h-4 mr-2" />
                     {showProMode ? 'Simple' : 'Pro'}
@@ -616,37 +685,103 @@ export default function ImageEditor() {
                 />
 
                 <Collapsible open={showProMode}>
-                  <CollapsibleContent className="space-y-4 pt-4 border-t">
-                    <div className="space-y-2">
-                      <Label className="text-xs">Aspect Ratio</Label>
-                      <Select value={aspectRatio} onValueChange={setAspectRatio}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1:1">Square (1:1)</SelectItem>
-                          <SelectItem value="4:3">Standard (4:3)</SelectItem>
-                          <SelectItem value="16:9">Widescreen (16:9)</SelectItem>
-                          <SelectItem value="9:16">Portrait (9:16)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <CollapsibleContent className="space-y-4 pt-4 border-t border-zinc-700">
+                    {/* Pro Mode Controls */}
+                    <ProModePanel
+                      onControlsChange={setProModeControls}
+                      initialValues={proModeControls}
+                    />
+                    
+                    {/* Aspect Ratio & Format */}
+                    <div className="space-y-3 pt-3 border-t border-zinc-700">
+                      <div className="space-y-2">
+                        <Label className="text-xs text-zinc-400">Aspect Ratio</Label>
+                        <Select value={aspectRatio} onValueChange={setAspectRatio}>
+                          <SelectTrigger className="bg-zinc-900/80 border-zinc-700">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1:1">Square (1:1)</SelectItem>
+                            <SelectItem value="4:5">Portrait (4:5)</SelectItem>
+                            <SelectItem value="5:4">Etsy (5:4)</SelectItem>
+                            <SelectItem value="2:3">Pinterest (2:3)</SelectItem>
+                            <SelectItem value="3:2">Email/Web (3:2)</SelectItem>
+                            <SelectItem value="16:9">Landscape (16:9)</SelectItem>
+                            <SelectItem value="9:16">Vertical (9:16)</SelectItem>
+                            <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                    <div className="space-y-2">
-                      <Label className="text-xs">Output Format</Label>
-                      <Select value={outputFormat} onValueChange={(v: any) => setOutputFormat(v)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="png">PNG</SelectItem>
-                          <SelectItem value="jpeg">JPEG</SelectItem>
-                          <SelectItem value="webp">WebP</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="space-y-2">
+                        <Label className="text-xs text-zinc-400">Output Format</Label>
+                        <Select value={outputFormat} onValueChange={(v: any) => setOutputFormat(v)}>
+                          <SelectTrigger className="bg-zinc-900/80 border-zinc-700">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="png">PNG</SelectItem>
+                            <SelectItem value="jpeg">JPEG</SelectItem>
+                            <SelectItem value="webp">WebP</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </CollapsibleContent>
                 </Collapsible>
+
+                {/* Clear All Settings Button */}
+                {(stylePreset || Object.keys(proModeControls).length > 0) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setStylePreset(null);
+                      setProModeControls({});
+                      toast.success("Settings cleared");
+                    }}
+                    className="w-full text-xs h-7 text-zinc-400 hover:text-zinc-100"
+                  >
+                    Clear all settings
+                  </Button>
+                )}
+
+                {/* Style Presets */}
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    variant={stylePreset === 'photorealistic' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setStylePreset(prev => prev === 'photorealistic' ? null : 'photorealistic')}
+                    className={cn(
+                      "h-8 text-xs",
+                      stylePreset === 'photorealistic' && "bg-blue-600 hover:bg-blue-700"
+                    )}
+                  >
+                    📸 Photorealistic
+                  </Button>
+                  <Button
+                    variant={stylePreset === 'artistic' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setStylePreset(prev => prev === 'artistic' ? null : 'artistic')}
+                    className={cn(
+                      "h-8 text-xs",
+                      stylePreset === 'artistic' && "bg-purple-600 hover:bg-purple-700"
+                    )}
+                  >
+                    🎨 Artistic
+                  </Button>
+                  <Button
+                    variant={stylePreset === 'minimalist' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setStylePreset(prev => prev === 'minimalist' ? null : 'minimalist')}
+                    className={cn(
+                      "h-8 text-xs",
+                      stylePreset === 'minimalist' && "bg-slate-600 hover:bg-slate-700"
+                    )}
+                  >
+                    ✨ Minimalist
+                  </Button>
+                </div>
 
                 <Button
                   onClick={handleGenerate}
