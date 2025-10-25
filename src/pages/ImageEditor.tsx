@@ -50,6 +50,7 @@ import { ProModePanel, ProModeControls } from "@/components/image-editor/ProMode
 import { GeneratingLoader } from "@/components/forge/GeneratingLoader";
 import ThumbnailRibbon from "@/components/image-editor/ThumbnailRibbon";
 import MadisonPanel from "@/components/image-editor/MadisonPanel";
+import ShotTypeDropdown from "@/components/image-editor/ShotTypeDropdown";
 
 // Prompt Formula Utilities
 import { CAMERA_LENS, LIGHTING, ENVIRONMENTS } from "@/utils/promptFormula";
@@ -667,6 +668,28 @@ export default function ImageEditor() {
 
           {/* Prompt Bar (Fixed Bottom) */}
           <footer className="flex items-center gap-3 px-6 py-4 border-t border-zinc-800 bg-zinc-900 backdrop-blur-sm sticky bottom-0 z-[15]">
+            <ShotTypeDropdown 
+              onSelect={async (shotType) => {
+                setMainPrompt(shotType.prompt);
+                
+                // Log shot type selection to backend
+                try {
+                  const { data: { session } } = await supabase.auth.getSession();
+                  if (session?.access_token && user?.id && orgId) {
+                    await supabase.functions.invoke('log-shot-type', {
+                      body: {
+                        organization_id: orgId,
+                        session_id: currentSession?.id || null,
+                        label: shotType.label,
+                        prompt: shotType.prompt
+                      }
+                    });
+                  }
+                } catch (error) {
+                  console.error('Failed to log shot type:', error);
+                }
+              }}
+            />
             <Textarea
               value={mainPrompt}
               onChange={(e) => setMainPrompt(e.target.value)}

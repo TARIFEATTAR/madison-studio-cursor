@@ -1574,6 +1574,44 @@ export type Database = {
           },
         ]
       }
+      shot_types: {
+        Row: {
+          created_at: string | null
+          id: string
+          label: string
+          organization_id: string | null
+          prompt: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          label: string
+          organization_id?: string | null
+          prompt: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          label?: string
+          organization_id?: string | null
+          prompt?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shot_types_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       super_admins: {
         Row: {
           created_at: string | null
