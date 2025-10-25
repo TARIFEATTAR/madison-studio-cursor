@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { CollapsibleTrigger, Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -124,6 +125,7 @@ export default function ImageEditor() {
   const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
   const [brandContext, setBrandContext] = useState<any>(null);
   const [isMadisonOpen, setIsMadisonOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"create" | "gallery">("create");
   const [productImage, setProductImage] = useState<{ url: string; file: File } | null>(null);
   
   // Load prompt from navigation state if present
@@ -320,6 +322,11 @@ export default function ImageEditor() {
 
       setAllPrompts(prev => [...prev, { role: 'user', content: mainPrompt }]);
       toast.success("Image generated successfully!");
+      
+      // Auto-switch to gallery tab on mobile after generation
+      if (isMobile) {
+        setActiveTab("gallery");
+      }
       
     } catch (error: any) {
       console.error('Generation error:', error);
@@ -532,200 +539,260 @@ export default function ImageEditor() {
           )}
         </header>
 
-        {/* Mobile Content */}
-        <div className="flex-1 px-4 py-4 space-y-4 overflow-y-auto">
-          {/* Large Prompt Textarea */}
-          <div className="space-y-2">
-            <Label className="text-studio-text-primary text-sm">Describe your image</Label>
-            <Textarea
-              value={mainPrompt}
-              onChange={(e) => setMainPrompt(e.target.value)}
-              placeholder="Describe your image idea..."
-              rows={4}
-              className="w-full bg-studio-card border-studio-border text-studio-text-primary placeholder:text-studio-text-muted focus-visible:ring-aged-brass/50"
-              disabled={isGenerating}
-            />
-          </div>
+        {/* Mobile Tabs */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "create" | "gallery")} className="flex-1 flex flex-col">
+          <TabsList className="w-full grid grid-cols-2 bg-studio-card border-b border-studio-border rounded-none h-12">
+            <TabsTrigger 
+              value="create" 
+              className="data-[state=active]:bg-studio-charcoal data-[state=active]:text-aged-brass data-[state=active]:border-b-2 data-[state=active]:border-aged-brass rounded-none"
+            >
+              Create
+            </TabsTrigger>
+            <TabsTrigger 
+              value="gallery"
+              className="data-[state=active]:bg-studio-charcoal data-[state=active]:text-aged-brass data-[state=active]:border-b-2 data-[state=active]:border-aged-brass rounded-none"
+            >
+              Gallery ({currentSession.images.length})
+            </TabsTrigger>
+          </TabsList>
 
-          {/* Reference Image Upload */}
-          <div className="space-y-2">
-            <Label className="text-studio-text-primary text-sm">Reference Image (optional)</Label>
-            <MobileReferenceUpload
-              image={productImage}
-              onUpload={(file, url) => setProductImage({ file, url })}
-              onRemove={() => setProductImage(null)}
-            />
-          </div>
+          {/* Create Tab */}
+          <TabsContent value="create" className="flex-1 px-4 py-4 space-y-4 overflow-y-auto mt-0">
+            {/* Large Prompt Textarea */}
+            <div className="space-y-2">
+              <Label className="text-studio-text-primary text-sm">Describe your image</Label>
+              <Textarea
+                value={mainPrompt}
+                onChange={(e) => setMainPrompt(e.target.value)}
+                placeholder="Describe your image idea..."
+                rows={4}
+                className="w-full bg-studio-card border-studio-border text-studio-text-primary placeholder:text-studio-text-muted focus-visible:ring-aged-brass/50"
+                disabled={isGenerating}
+              />
+            </div>
 
-          {/* Shot Type Selector */}
-          <div className="space-y-2">
-            <Label className="text-studio-text-primary text-sm">Shot Type</Label>
-            <MobileShotTypeSelector
-              onSelect={async (shotType) => {
-                setMainPrompt(shotType.prompt);
-                toast.success(`${shotType.label} style applied`);
-                
-                try {
-                  const { data: { session } } = await supabase.auth.getSession();
-                  if (session?.access_token && user?.id && orgId) {
-                    await supabase.functions.invoke('log-shot-type', {
-                      body: {
-                        organization_id: orgId,
-                        session_id: currentSession?.id || null,
-                        label: shotType.label,
-                        prompt: shotType.prompt
-                      }
-                    });
-                  }
-                } catch (error) {
-                  console.error('Failed to log shot type:', error);
-                }
-              }}
-            />
-          </div>
+            {/* Reference Image Upload */}
+            <div className="space-y-2">
+              <Label className="text-studio-text-primary text-sm">Reference Image (optional)</Label>
+              <MobileReferenceUpload
+                image={productImage}
+                onUpload={(file, url) => setProductImage({ file, url })}
+                onRemove={() => setProductImage(null)}
+              />
+            </div>
 
-          {/* Aspect Ratio Selector */}
-          <div className="space-y-2">
-            <Label className="text-studio-text-primary text-sm">Size</Label>
-            <MobileAspectRatioSelector
-              value={aspectRatio}
-              onChange={setAspectRatio}
-            />
-          </div>
-
-          {/* Generate Button */}
-          <Button
-            onClick={handleGenerate}
-            disabled={!mainPrompt.trim() || isGenerating || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
-            size="lg"
-            variant="brass"
-            className="w-full h-12"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-5 h-5 mr-2" />
-                Generate Image
-              </>
-            )}
-          </Button>
-
-          {/* Generated Images Section */}
-          {currentSession.images.length > 0 && (
-            <div className="space-y-4 pt-4 border-t border-studio-border">
-              {/* Hero Image */}
-              {heroImage && (
-                <div className="relative w-full rounded-lg overflow-hidden border border-studio-border bg-studio-card">
-                  <div className="relative w-full" style={{ aspectRatio: aspectRatio.replace(':', '/') }}>
-                    <img
-                      src={heroImage.imageUrl}
-                      alt="Generated"
-                      className="absolute inset-0 w-full h-full object-contain"
-                    />
-                  </div>
-                  <div className="absolute top-2 right-2 flex gap-2">
-                    <Button
-                      size="sm"
-                      variant={heroImage.approvalStatus === 'flagged' ? 'default' : 'secondary'}
-                      onClick={() => handleToggleApproval(heroImage.id)}
-                      className="bg-studio-card/90 backdrop-blur-sm h-8 w-8 p-0"
-                    >
-                      <Heart className={cn("w-4 h-4", heroImage.approvalStatus === 'flagged' && "fill-current")} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={async () => {
-                        try {
-                          let downloadUrl = heroImage.imageUrl;
-                          
-                          if (heroImage.imageUrl.startsWith('data:')) {
-                            downloadUrl = heroImage.imageUrl;
-                          } else {
-                            const response = await fetch(heroImage.imageUrl, { mode: 'cors' });
-                            const blob = await response.blob();
-                            downloadUrl = URL.createObjectURL(blob);
-                          }
-                          
-                          const link = document.createElement('a');
-                          link.href = downloadUrl;
-                          link.download = `madison-image-${Date.now()}.webp`;
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                          
-                          if (!heroImage.imageUrl.startsWith('data:')) {
-                            URL.revokeObjectURL(downloadUrl);
-                          }
-                          
-                          toast.success("Image downloaded!");
-                        } catch (error) {
-                          console.error('Download failed:', error);
-                          toast.error("Failed to download image");
+            {/* Shot Type Selector */}
+            <div className="space-y-2">
+              <Label className="text-studio-text-primary text-sm">Shot Type</Label>
+              <MobileShotTypeSelector
+                onSelect={async (shotType) => {
+                  setMainPrompt(shotType.prompt);
+                  toast.success(`${shotType.label} style applied`);
+                  
+                  try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session?.access_token && user?.id && orgId) {
+                      await supabase.functions.invoke('log-shot-type', {
+                        body: {
+                          organization_id: orgId,
+                          session_id: currentSession?.id || null,
+                          label: shotType.label,
+                          prompt: shotType.prompt
                         }
-                      }}
-                      className="bg-studio-card/90 backdrop-blur-sm h-8 w-8 p-0"
-                    >
-                      <Download className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Thumbnail Carousel */}
-              {currentSession.images.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                  {currentSession.images.map((img, index) => (
-                    <button
-                      key={img.id}
-                      onClick={() => handleSetHero(img.id)}
-                      className={cn(
-                        "shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all",
-                        img.isHero
-                          ? "border-aged-brass"
-                          : "border-studio-border hover:border-studio-border/80"
-                      )}
-                    >
-                      <img
-                        src={img.imageUrl}
-                        alt={`Generated ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
+                      });
+                    }
+                  } catch (error) {
+                    console.error('Failed to log shot type:', error);
+                  }
+                }}
+              />
             </div>
-          )}
 
-          {/* Empty State */}
-          {currentSession.images.length === 0 && !isGenerating && (
-            <div className="flex flex-col items-center justify-center text-center py-12 space-y-4">
-              <Sparkles className="w-16 h-16 text-aged-brass opacity-40" />
-              <div>
-                <h3 className="text-xl font-semibold text-aged-paper mb-2">
-                  Ready to create
-                </h3>
-                <p className="text-studio-text-muted">
-                  Fill in the details above and tap generate
-                </p>
+            {/* Aspect Ratio Selector */}
+            <div className="space-y-2">
+              <Label className="text-studio-text-primary text-sm">Size</Label>
+              <MobileAspectRatioSelector
+                value={aspectRatio}
+                onChange={setAspectRatio}
+              />
+            </div>
+
+            {/* Generate Button */}
+            <Button
+              onClick={handleGenerate}
+              disabled={!mainPrompt.trim() || isGenerating || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
+              size="lg"
+              variant="brass"
+              className="w-full h-12"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Generate Image
+                </>
+              )}
+            </Button>
+
+            {/* Empty State Hint */}
+            {currentSession.images.length === 0 && (
+              <div className="text-center py-8 text-studio-text-muted text-sm">
+                <p>Fill in the details above and tap Generate Image</p>
+                <p className="mt-2">Your creations will appear in the Gallery tab</p>
               </div>
-            </div>
-          )}
+            )}
+          </TabsContent>
 
-          {/* Generating Overlay */}
-          {isGenerating && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-50">
-              <Loader2 className="w-12 h-12 text-aged-brass animate-spin mb-4" />
-              <p className="text-aged-paper text-lg font-medium">Generating magic...</p>
-              <p className="text-studio-text-muted text-sm mt-2">This may take a moment</p>
-            </div>
-          )}
-        </div>
+          {/* Gallery Tab */}
+          <TabsContent value="gallery" className="flex-1 px-4 py-4 overflow-y-auto mt-0">
+            {currentSession.images.length > 0 ? (
+              <div className="space-y-4">
+                {/* Hero Image */}
+                {heroImage && (
+                  <div className="relative w-full rounded-lg overflow-hidden border border-studio-border bg-studio-card">
+                    <div className="relative w-full" style={{ aspectRatio: aspectRatio.replace(':', '/') }}>
+                      <img
+                        src={heroImage.imageUrl}
+                        alt="Generated"
+                        className="absolute inset-0 w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="absolute top-2 right-2 flex gap-2">
+                      <Button
+                        size="sm"
+                        variant={heroImage.approvalStatus === 'flagged' ? 'default' : 'secondary'}
+                        onClick={() => handleToggleApproval(heroImage.id)}
+                        className="bg-studio-card/90 backdrop-blur-sm h-8 w-8 p-0"
+                      >
+                        <Heart className={cn("w-4 h-4", heroImage.approvalStatus === 'flagged' && "fill-current")} />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={async () => {
+                          try {
+                            let downloadUrl = heroImage.imageUrl;
+                            
+                            if (heroImage.imageUrl.startsWith('data:')) {
+                              downloadUrl = heroImage.imageUrl;
+                            } else {
+                              const response = await fetch(heroImage.imageUrl, { mode: 'cors' });
+                              const blob = await response.blob();
+                              downloadUrl = URL.createObjectURL(blob);
+                            }
+                            
+                            const link = document.createElement('a');
+                            link.href = downloadUrl;
+                            link.download = `madison-image-${Date.now()}.webp`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            
+                            if (!heroImage.imageUrl.startsWith('data:')) {
+                              URL.revokeObjectURL(downloadUrl);
+                            }
+                            
+                            toast.success("Image downloaded!");
+                          } catch (error) {
+                            console.error('Download failed:', error);
+                            toast.error("Failed to download image");
+                          }
+                        }}
+                        className="bg-studio-card/90 backdrop-blur-sm h-8 w-8 p-0"
+                      >
+                        <Download className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Thumbnail Carousel */}
+                {currentSession.images.length > 1 && (
+                  <div className="space-y-2">
+                    <Label className="text-studio-text-primary text-sm">All Images ({currentSession.images.length})</Label>
+                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                      {currentSession.images.map((img, index) => (
+                        <button
+                          key={img.id}
+                          onClick={() => handleSetHero(img.id)}
+                          className={cn(
+                            "shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all",
+                            img.isHero
+                              ? "border-aged-brass"
+                              : "border-studio-border hover:border-studio-border/80"
+                          )}
+                        >
+                          <img
+                            src={img.imageUrl}
+                            alt={`Generated ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setActiveTab("create")}
+                    className="flex-1"
+                  >
+                    Create Another
+                  </Button>
+                  {flaggedCount > 0 && (
+                    <Button
+                      onClick={handleSaveSession}
+                      disabled={isSaving}
+                      variant="brass"
+                      className="flex-1"
+                    >
+                      {isSaving ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : (
+                        <Save className="w-4 h-4 mr-2" />
+                      )}
+                      Save ({flaggedCount})
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center h-full space-y-4">
+                <Sparkles className="w-16 h-16 text-aged-brass opacity-40" />
+                <div>
+                  <h3 className="text-xl font-semibold text-aged-paper mb-2">
+                    No images yet
+                  </h3>
+                  <p className="text-studio-text-muted mb-4">
+                    Create your first image in the Create tab
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => setActiveTab("create")}
+                  >
+                    Go to Create
+                  </Button>
+                </div>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        {/* Generating Overlay */}
+        {isGenerating && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+            <Loader2 className="w-12 h-12 text-aged-brass animate-spin mb-4" />
+            <p className="text-aged-paper text-lg font-medium">Generating magic...</p>
+            <p className="text-studio-text-muted text-sm mt-2">This may take a moment</p>
+          </div>
+        )}
 
         {/* Madison Floating Button */}
         <MadisonFloatingButton onClick={() => setIsMadisonOpen(true)} />
