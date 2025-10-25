@@ -43,15 +43,13 @@ import {
 } from "lucide-react";
 
 // Feature Components
-import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
-import { MadisonVerticalTab } from "@/components/assistant/MadisonVerticalTab";
 import { ReferenceUpload } from "@/components/image-editor/ReferenceUpload";
 import { ImageChainBreadcrumb } from "@/components/image-editor/ImageChainBreadcrumb";
 import { RefinementPanel } from "@/components/image-editor/RefinementPanel";
 import { ProModePanel, ProModeControls } from "@/components/image-editor/ProModePanel";
 import { GeneratingLoader } from "@/components/forge/GeneratingLoader";
 import ThumbnailRibbon from "@/components/image-editor/ThumbnailRibbon";
-import MadisonDock from "@/components/image-editor/MadisonDock";
+import MadisonPanel from "@/components/image-editor/MadisonPanel";
 
 // Prompt Formula Utilities
 import { CAMERA_LENS, LIGHTING, ENVIRONMENTS } from "@/utils/promptFormula";
@@ -118,7 +116,7 @@ export default function ImageEditor() {
   };
   const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
   const [brandContext, setBrandContext] = useState<any>(null);
-  const [madisonOpen, setMadisonOpen] = useState(false);
+  const [isMadisonOpen, setIsMadisonOpen] = useState(false);
   
   // Load prompt from navigation state if present
   useEffect(() => {
@@ -554,6 +552,16 @@ export default function ImageEditor() {
               </>
             )}
           </Button>
+
+          {/* Ask Madison Button */}
+          <Button
+            onClick={() => setIsMadisonOpen(!isMadisonOpen)}
+            variant="outline"
+            className="border-aged-brass text-aged-brass hover:bg-aged-brass hover:text-zinc-950 font-medium px-4"
+          >
+            <Sparkles className="w-4 h-4 mr-2" />
+            Ask Madison
+          </Button>
         </div>
       </header>
 
@@ -751,16 +759,6 @@ export default function ImageEditor() {
         )}
       </main>{/* close wrapper */}
 
-      {/* Madison Chat Dock */}
-      <MadisonDock
-        sessionCount={currentSession.images.length}
-        maxImages={MAX_IMAGES_PER_SESSION}
-        onSendMessage={async (message) => {
-          // Implement Madison AI response here
-          console.log('User message:', message);
-          // TODO: Call Madison AI assistant with session context
-        }}
-      />
 
       {/* Refinement Modal Overlay */}
       {refinementMode && selectedForRefinement && (
@@ -779,35 +777,16 @@ export default function ImageEditor() {
       )}
 
       {/* Madison Panel */}
-      <MadisonVerticalTab 
-        isOpen={madisonOpen}
-        onClick={() => setMadisonOpen(!madisonOpen)}
+      <MadisonPanel
+        sessionCount={currentSession.images.length}
+        maxImages={MAX_IMAGES_PER_SESSION}
+        isOpen={isMadisonOpen}
+        onToggle={() => setIsMadisonOpen(!isMadisonOpen)}
+        onSendMessage={async (message) => {
+          console.log("Madison message:", message);
+          // TODO: Integrate with Madison AI backend
+        }}
       />
-      
-      {madisonOpen && (
-        <div className="fixed right-0 top-0 bottom-0 w-[320px] z-50 bg-zinc-900 border-l border-zinc-800 shadow-2xl">
-          <EditorialAssistantPanel 
-            onClose={() => setMadisonOpen(false)}
-            initialContent=""
-            darkMode={true}
-            sessionContext={{
-              sessionId,
-              sessionName: currentSession.name,
-              imagesGenerated: currentSession.images.length,
-              maxImages: MAX_IMAGES_PER_SESSION,
-              heroImage: heroImage ? {
-                imageUrl: heroImage.imageUrl,
-                prompt: heroImage.prompt
-              } : undefined,
-              allPrompts: allPrompts.filter(p => p.role === 'user').map(p => p.content),
-              aspectRatio,
-              outputFormat,
-              isImageStudio: true,
-              visualStandards: brandContext?.knowledge?.filter((k: any) => k.knowledge_type === 'visual_standards')
-            }}
-          />
-        </div>
-      )}
     </div>
   );
 }
