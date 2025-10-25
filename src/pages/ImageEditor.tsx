@@ -92,7 +92,8 @@ export default function ImageEditor() {
   const { orgId } = useCurrentOrganizationId();
   const isMobile = useIsMobile();
   
-  const [aspectRatio, setAspectRatio] = useState<string>("1:1");
+  const [marketplace, setMarketplace] = useState<string>("etsy");
+  const [aspectRatio, setAspectRatio] = useState<string>("5:4");
   const [outputFormat, setOutputFormat] = useState<"png" | "jpeg" | "webp">("png");
   
   const [mainPrompt, setMainPrompt] = useState("");
@@ -614,6 +615,7 @@ export default function ImageEditor() {
               <MobileAspectRatioSelector
                 value={aspectRatio}
                 onChange={setAspectRatio}
+                marketplace={marketplace}
               />
             </div>
 
