@@ -41,6 +41,7 @@ import {
 
 // Feature Components
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
+import { MadisonVerticalTab } from "@/components/assistant/MadisonVerticalTab";
 import { ReferenceUpload } from "@/components/image-editor/ReferenceUpload";
 import { ImageChainBreadcrumb } from "@/components/image-editor/ImageChainBreadcrumb";
 import { RefinementPanel } from "@/components/image-editor/RefinementPanel";
@@ -104,6 +105,7 @@ export default function ImageEditor() {
   };
   const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
   const [brandContext, setBrandContext] = useState<any>(null);
+  const [madisonOpen, setMadisonOpen] = useState(false);
   
   // Load prompt from navigation state if present
   useEffect(() => {
@@ -437,10 +439,10 @@ export default function ImageEditor() {
   const flaggedCount = currentSession.images.filter(img => img.approvalStatus === 'flagged').length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+    <div className="min-h-screen bg-zinc-950">
       {/* Header */}
-      <header className="border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <header className="border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-md sticky top-0 z-10">
+        <div className="container mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -450,12 +452,12 @@ export default function ImageEditor() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-lg font-semibold">Image Studio</h1>
-              <p className="text-xs text-muted-foreground">Powered by Nano Banana</p>
+              <h1 className="text-lg font-semibold text-zinc-100">Image Studio</h1>
+              <p className="text-xs text-zinc-400">Powered by Nano Banana</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm text-zinc-400">
               {currentSession.images.length} / {MAX_IMAGES_PER_SESSION}
             </span>
             {flaggedCount > 0 && (
@@ -469,15 +471,15 @@ export default function ImageEditor() {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="container mx-auto px-4 py-4 max-w-[1600px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-4">
           
-          {/* Left: Image Display & Chain (2 columns) */}
-          <div className="lg:col-span-2 space-y-4">
+          {/* Left: Image Display & Chain */}
+          <div className="space-y-3">
             {/* Hero Image Display */}
             {heroImage ? (
-              <Card className="overflow-hidden border-2">
-                <div className="relative aspect-square bg-muted">
+              <Card className="overflow-hidden border-2 border-zinc-800 bg-zinc-900/50">
+                <div className="relative aspect-square bg-zinc-950">
                   <img 
                     src={heroImage.imageUrl} 
                     alt="Generated" 
@@ -500,7 +502,7 @@ export default function ImageEditor() {
                     </Button>
                   </div>
                 </div>
-                <div className="p-4 space-y-3">
+                <div className="p-3 space-y-2">
                   {heroImage.chainDepth > 0 && (
                     <ImageChainBreadcrumb
                       currentImage={heroImage}
@@ -508,7 +510,7 @@ export default function ImageEditor() {
                       onImageClick={handleJumpToChainImage}
                     />
                   )}
-                  <p className="text-sm text-muted-foreground">{heroImage.prompt}</p>
+                  <p className="text-sm text-zinc-400">{heroImage.prompt}</p>
                   <div className="flex gap-2">
                     <Button
                       onClick={() => handleStartRefinement(heroImage)}
@@ -530,18 +532,18 @@ export default function ImageEditor() {
                 </div>
               </Card>
             ) : (
-              <Card className="aspect-square flex items-center justify-center border-2 border-dashed">
+              <Card className="aspect-square flex items-center justify-center border-2 border-dashed border-zinc-700 bg-zinc-900/50">
                 <div className="text-center p-8">
-                  <ImageIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-medium mb-2">No images yet</h3>
-                  <p className="text-sm text-muted-foreground">Generate your first image to get started</p>
+                  <ImageIcon className="w-16 h-16 mx-auto mb-4 text-zinc-600" />
+                  <h3 className="text-lg font-medium mb-2 text-zinc-100">No images yet</h3>
+                  <p className="text-sm text-zinc-400">Generate your first image to get started</p>
                 </div>
               </Card>
             )}
 
             {/* Thumbnail Gallery */}
             {currentSession.images.length > 0 && (
-              <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+              <div className="grid grid-cols-6 md:grid-cols-8 gap-2">
                 {currentSession.images.map((img) => (
                   <button
                     key={img.id}
@@ -566,13 +568,13 @@ export default function ImageEditor() {
             )}
           </div>
 
-          {/* Right: Controls (1 column) */}
-          <div className="space-y-4">
+          {/* Right: Controls */}
+          <div className="space-y-3">
             {/* Reference Upload */}
-            <Card className="p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Upload className="w-4 h-4 text-muted-foreground" />
-                <h3 className="font-medium text-sm">Reference Images</h3>
+            <Card className="p-3 bg-zinc-900/50 border-zinc-800">
+              <div className="flex items-center gap-2 mb-2">
+                <Upload className="w-4 h-4 text-zinc-400" />
+                <h3 className="font-medium text-sm text-zinc-100">Reference Images</h3>
               </div>
               <ReferenceUpload
                 images={referenceImages}
@@ -593,9 +595,9 @@ export default function ImageEditor() {
                 }}
               />
             ) : (
-              <Card className="p-4 space-y-4">
+              <Card className="p-3 space-y-3 bg-zinc-900/50 border-zinc-800">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-medium">Create Image</h3>
+                  <h3 className="font-medium text-zinc-100">Create Image</h3>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -610,7 +612,7 @@ export default function ImageEditor() {
                   value={mainPrompt}
                   onChange={(e) => setMainPrompt(e.target.value)}
                   placeholder="Describe the image you want to create..."
-                  className="min-h-[120px] resize-none"
+                  className="min-h-[80px] resize-none bg-zinc-900/80 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
                 />
 
                 <Collapsible open={showProMode}>
@@ -669,11 +671,11 @@ export default function ImageEditor() {
 
             {/* Brand Context Info */}
             {brandContext && (
-              <Card className="p-3 bg-accent/20">
+              <Card className="p-3 bg-zinc-900/30 border-zinc-800">
                 <div className="flex items-start gap-2">
-                  <Info className="w-4 h-4 mt-0.5 text-muted-foreground flex-shrink-0" />
-                  <div className="text-xs text-muted-foreground">
-                    <p className="font-medium mb-1">Brand Context Active</p>
+                  <Info className="w-4 h-4 mt-0.5 text-zinc-400 flex-shrink-0" />
+                  <div className="text-xs text-zinc-400">
+                    <p className="font-medium mb-1 text-zinc-300">Brand Context Active</p>
                     <p>Images will align with your brand guidelines</p>
                   </div>
                 </div>
@@ -683,11 +685,36 @@ export default function ImageEditor() {
         </div>
       </div>
 
-      {/* Editorial Assistant */}
-      <EditorialAssistantPanel 
-        onClose={() => {}}
-        initialContent=""
+      {/* Madison Panel */}
+      <MadisonVerticalTab 
+        isOpen={madisonOpen}
+        onClick={() => setMadisonOpen(!madisonOpen)}
       />
+      
+      {madisonOpen && (
+        <div className="fixed right-0 top-0 bottom-0 w-[400px] md:w-[500px] z-50 bg-zinc-900 border-l border-zinc-800 shadow-2xl">
+          <EditorialAssistantPanel 
+            onClose={() => setMadisonOpen(false)}
+            initialContent=""
+            darkMode={true}
+            sessionContext={{
+              sessionId,
+              sessionName: currentSession.name,
+              imagesGenerated: currentSession.images.length,
+              maxImages: MAX_IMAGES_PER_SESSION,
+              heroImage: heroImage ? {
+                imageUrl: heroImage.imageUrl,
+                prompt: heroImage.prompt
+              } : undefined,
+              allPrompts: allPrompts.filter(p => p.role === 'user').map(p => p.content),
+              aspectRatio,
+              outputFormat,
+              isImageStudio: true,
+              visualStandards: brandContext?.knowledge?.filter((k: any) => k.knowledge_type === 'visual_standards')
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

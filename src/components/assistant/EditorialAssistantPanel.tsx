@@ -36,9 +36,15 @@ interface EditorialAssistantPanelProps {
   onClose: () => void;
   initialContent?: string;
   sessionContext?: SessionContext;
+  darkMode?: boolean;
 }
 
-export function EditorialAssistantPanel({ onClose, initialContent, sessionContext }: EditorialAssistantPanelProps) {
+export function EditorialAssistantPanel({ 
+  onClose, 
+  initialContent, 
+  sessionContext,
+  darkMode = false
+}: EditorialAssistantPanelProps) {
   const { toast } = useToast();
   const { currentOrganizationId } = useOnboarding();
   const { userName } = useUserProfile();
@@ -419,11 +425,14 @@ Be conversational, encouraging, and editorial in your tone.
   };
 
   return (
-    <div className="h-full flex flex-col max-w-full" style={{ backgroundColor: "#FFFCF5" }}>
+    <div 
+      className="h-full flex flex-col max-w-full" 
+      style={{ backgroundColor: darkMode ? "#18181B" : "#FFFCF5" }}
+    >
       {/* Header */}
       <div 
         className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0"
-        style={{ borderColor: "#E5E0D8" }}
+        style={{ borderColor: darkMode ? "#27272A" : "#E5E0D8" }}
       >
         <div className="flex items-center gap-3">
           <div 
@@ -436,10 +445,10 @@ Be conversational, encouraging, and editorial in your tone.
             M
           </div>
           <div>
-            <h3 className="font-serif text-lg font-semibold" style={{ color: "#1A1816" }}>
+            <h3 className="font-serif text-lg font-semibold" style={{ color: darkMode ? "#FAFAFA" : "#1A1816" }}>
               Madison
             </h3>
-            <p className="text-xs" style={{ color: "#6B6560" }}>Editorial Director</p>
+            <p className="text-xs" style={{ color: darkMode ? "#A1A1AA" : "#6B6560" }}>Editorial Director</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -452,8 +461,13 @@ Be conversational, encouraging, and editorial in your tone.
                 description: "Chat history has been reset",
               });
             }}
-            className="text-xs px-2 py-1 rounded hover:bg-[#E5E0D8] transition-colors"
-            style={{ color: "#6B6560" }}
+            className="text-xs px-2 py-1 rounded transition-colors"
+            style={{ 
+              color: darkMode ? "#A1A1AA" : "#6B6560",
+              backgroundColor: darkMode ? "transparent" : "transparent"
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = darkMode ? "#27272A" : "#E5E0D8"}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
           >
             Clear
           </button>
@@ -497,8 +511,11 @@ Be conversational, encouraging, and editorial in your tone.
               <div
                 className="rounded-lg px-4 py-3 text-sm leading-relaxed prose prose-sm max-w-none"
                 style={{
-                  backgroundColor: message.role === "user" ? "#E8DCC8" : "#F5EFE3",
-                  color: "#1A1816"
+                  backgroundColor: message.role === "user" 
+                    ? (darkMode ? "#27272A" : "#E8DCC8")
+                    : (darkMode ? "#18181B" : "#F5EFE3"),
+                  color: darkMode ? "#FAFAFA" : "#1A1816",
+                  border: darkMode ? "1px solid #3F3F46" : "none"
                 }}
               >
                 {message.role === "assistant" ? (
@@ -529,7 +546,7 @@ Be conversational, encouraging, and editorial in your tone.
                   size="sm"
                   onClick={() => handleCopy(message.content, index)}
                   className="text-xs h-8 gap-1"
-                  style={{ color: "#6B6560" }}
+                  style={{ color: darkMode ? "#A1A1AA" : "#6B6560" }}
                 >
                   {copiedIndex === index ? (
                     <>
@@ -555,7 +572,7 @@ Be conversational, encouraging, and editorial in your tone.
                 >
                   <Loader2 className="w-3 h-3 animate-spin" style={{ color: "#FFFCF5" }} />
                 </div>
-                <span className="text-xs" style={{ color: "#6B6560" }}>Madison is thinking...</span>
+                <span className="text-xs" style={{ color: darkMode ? "#A1A1AA" : "#6B6560" }}>Madison is thinking...</span>
               </div>
             </div>
           )}
@@ -565,7 +582,7 @@ Be conversational, encouraging, and editorial in your tone.
       {/* Input */}
       <div 
         className="border-t p-3 sm:p-4 flex-shrink-0"
-        style={{ borderColor: "#E5E0D8" }}
+        style={{ borderColor: darkMode ? "#27272A" : "#E5E0D8" }}
       >
         {/* Image Previews */}
         {uploadedImages.length > 0 && (
@@ -576,7 +593,7 @@ Be conversational, encouraging, and editorial in your tone.
                   src={img} 
                   alt={`Upload ${idx + 1}`}
                   className="w-16 h-16 object-cover rounded border"
-                  style={{ borderColor: "#D4CFC8" }}
+                  style={{ borderColor: darkMode ? "#3F3F46" : "#D4CFC8" }}
                 />
                 <button
                   onClick={() => setUploadedImages(prev => prev.filter((_, i) => i !== idx))}
@@ -605,7 +622,7 @@ Be conversational, encouraging, and editorial in your tone.
             onClick={() => fileInputRef.current?.click()}
             disabled={isGenerating}
             className="h-[52px] w-[52px] sm:h-[60px] sm:w-[60px] flex-shrink-0"
-            style={{ color: "#6B6560" }}
+            style={{ color: darkMode ? "#A1A1AA" : "#6B6560" }}
           >
             <ImageIcon className="w-5 h-5" />
           </Button>
@@ -617,9 +634,9 @@ Be conversational, encouraging, and editorial in your tone.
             placeholder="Ask for feedback or suggestions..."
             className="min-h-[52px] sm:min-h-[60px] max-h-[160px] resize-none border flex-1"
             style={{
-              backgroundColor: "#FFFFFF",
-              borderColor: "#D4CFC8",
-              color: "#1A1816"
+              backgroundColor: darkMode ? "#18181B" : "#FFFFFF",
+              borderColor: darkMode ? "#3F3F46" : "#D4CFC8",
+              color: darkMode ? "#FAFAFA" : "#1A1816"
             }}
             disabled={isGenerating}
           />
@@ -643,7 +660,7 @@ Be conversational, encouraging, and editorial in your tone.
             )}
           </Button>
         </div>
-        <p className="text-xs mt-2 text-center px-1 break-words" style={{ color: "#A8A39E" }}>
+        <p className="text-xs mt-2 text-center px-1 break-words" style={{ color: darkMode ? "#71717A" : "#A8A39E" }}>
           Press Enter to send • Shift + Enter for new line
         </p>
       </div>
