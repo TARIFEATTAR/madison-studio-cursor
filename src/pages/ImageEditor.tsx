@@ -50,6 +50,8 @@ import { ReferenceUpload } from "@/components/image-editor/ReferenceUpload";
 import { GuidedPromptBuilder } from "@/components/image-editor/GuidedPromptBuilder";
 import { ImageTypeSelector } from "@/components/image-editor/ImageTypeSelector";
 import { ProModePanel, ProModeControls } from "@/components/image-editor/ProModePanel";
+import { ImageChainBreadcrumb } from "@/components/image-editor/ImageChainBreadcrumb";
+import { RefinementPanel } from "@/components/image-editor/RefinementPanel";
 
 type ApprovalStatus = "pending" | "flagged" | "rejected";
 
@@ -60,6 +62,11 @@ type GeneratedImage = {
   timestamp: number;
   isHero?: boolean;
   approvalStatus: ApprovalStatus;
+  // Chain tracking
+  parentImageId?: string;
+  chainDepth: number;
+  isChainOrigin: boolean;
+  refinementInstruction?: string;
 };
 
 type ImageSession = {
@@ -89,6 +96,10 @@ export default function ImageEditor() {
   const [guidedModeEnabled, setGuidedModeEnabled] = useState(false);
   const [imageType, setImageType] = useState<string>("product");
   const [proModeControls, setProModeControls] = useState<ProModeControls>({});
+  
+  // Chain prompting state
+  const [selectedForRefinement, setSelectedForRefinement] = useState<GeneratedImage | null>(null);
+  const [refinementMode, setRefinementMode] = useState(false);
 
   // Load prompt from navigation state if present (from Image Recipe Library)
   useEffect(() => {
@@ -273,7 +284,12 @@ export default function ImageEditor() {
           prompt,
           timestamp: Date.now(),
           isHero: imageOrder === 0,
-          approvalStatus: "pending"
+          approvalStatus: "pending",
+          // Initialize chain fields
+          parentImageId: undefined,
+          chainDepth: 0,
+          isChainOrigin: true,
+          refinementInstruction: undefined
         };
         
         setCurrentSession(prev => ({
@@ -565,6 +581,127 @@ export default function ImageEditor() {
   const handleRefineImage = () => {
     if (!heroImage) return;
     setUserPrompt(`Refine the current image: `);
+  };
+  
+  // Chain prompting handlers
+  const MAX_CHAIN_DEPTH = 5;
+  
+  const handleStartRefinement = (image: GeneratedImage) => {
+    // Check chain depth limit
+    if (image.chainDepth >= MAX_CHAIN_DEPTH) {
+      toast.error(`Maximum chain depth reached (${MAX_CHAIN_DEPTH} iterations). This image can't be refined further.`);
+      return;
+    }
+    
+    setSelectedForRefinement(image);
+    setRefinementMode(true);
+    
+    toast.info(`Refining from image ${currentSession.images.indexOf(image) + 1}`);
+  };
+
+  const handleRefine = async (refinementInstruction: string) => {
+    if (!selectedForRefinement || !refinementInstruction.trim()) return;
+    
+    if (!canGenerateMore) {
+      toast.error("Session complete! Save this session to start a new one.");
+      return;
+    }
+    
+    setIsGenerating(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-madison-image", {
+        body: {
+          goalType: "product-photography",
+          aspectRatio,
+          outputFormat,
+          prompt: selectedForRefinement.prompt,
+          refinementInstruction,
+          organizationId: orgId,
+          userId: user.id,
+          parentImageId: selectedForRefinement.id,
+          parentPrompt: selectedForRefinement.prompt,
+          isRefinement: true,
+          brandContext: brandContext || undefined,
+          imageConstraints: imageConstraints || undefined
+        },
+      });
+      
+      if (error) throw error;
+      
+      if (data?.imageUrl && data?.savedImageId) {
+        const imageOrder = currentSession.images.length;
+        
+        const newImage: GeneratedImage = {
+          id: data.savedImageId,
+          imageUrl: data.imageUrl,
+          prompt: selectedForRefinement.prompt, // Keep original prompt
+          timestamp: Date.now(),
+          isHero: false,
+          approvalStatus: "pending",
+          parentImageId: selectedForRefinement.id,
+          chainDepth: selectedForRefinement.chainDepth + 1,
+          isChainOrigin: false,
+          refinementInstruction
+        };
+        
+        setCurrentSession(prev => ({
+          ...prev,
+          images: [...prev.images, newImage]
+        }));
+        
+        // Update DB with session details
+        await supabase
+          .from("generated_images")
+          .update({
+            session_id: sessionId,
+            session_name: currentSession.name,
+            image_order: imageOrder,
+            is_hero_image: false
+          })
+          .eq('id', data.savedImageId);
+        
+        toast.success(`✨ Refinement generated! (${currentSession.images.length + 1}/${MAX_IMAGES_PER_SESSION})`);
+        
+        // Exit refinement mode
+        setRefinementMode(false);
+        setSelectedForRefinement(null);
+      }
+    } catch (error) {
+      console.error("Refinement error:", error);
+      
+      let errorMessage = "Failed to generate refinement";
+      if (error && typeof error === 'object') {
+        const err = error as any;
+        if (err.message) errorMessage = err.message;
+        if (err.context?.body?.error) errorMessage = err.context.body.error;
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleJumpToChainImage = (imageId: string) => {
+    const image = currentSession.images.find(img => img.id === imageId);
+    if (image) {
+      handleSetHero(imageId);
+    }
+  };
+
+  const getImageChainIndicator = (image: GeneratedImage): React.ReactNode => {
+    if (image.isChainOrigin && hasChildren(image.id)) {
+      return <Badge variant="secondary" className="text-xs">Origin</Badge>;
+    }
+    if (image.chainDepth > 0) {
+      return <Badge variant="outline" className="text-xs">Chain {image.chainDepth}</Badge>;
+    }
+    return null;
+  };
+
+  const hasChildren = (imageId: string): boolean => {
+    return currentSession.images.some(img => img.parentImageId === imageId);
   };
 
   const quickRefinements = [
@@ -1033,7 +1170,11 @@ export default function ImageEditor() {
                   <p className="text-xs font-bold text-brass">{progressText}</p>
                 </div>
                 
-                {currentSession.images.map((image, index) => (
+                {currentSession.images.map((image, index) => {
+                  const chainIndicator = getImageChainIndicator(image);
+                  const isChainParent = hasChildren(image.id);
+                  
+                  return (
                   <div key={image.id} className="relative group">
                     <TooltipProvider>
                       <Tooltip>
@@ -1048,7 +1189,7 @@ export default function ImageEditor() {
                                 : image.approvalStatus === "rejected"
                                 ? "border-red-500 ring-2 ring-red-500/20 opacity-50"
                                 : "border-charcoal/20 hover:border-brass/50"
-                            }`}
+                            } ${isChainParent ? "border-l-4 border-l-blue-500" : ""}`}
                           >
                       <img
                         src={image.imageUrl}
@@ -1056,13 +1197,20 @@ export default function ImageEditor() {
                         className="w-full h-full object-cover"
                       />
                       
+                      {/* Chain depth indicator */}
+                      {image.chainDepth > 0 && (
+                        <div className="absolute top-1 left-1 bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded font-semibold">
+                          ↻{image.chainDepth}
+                        </div>
+                      )}
+                      
                       {/* Delete Button */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteImage(image.id);
                         }}
-                        className="absolute top-2 left-2 p-1.5 rounded-full bg-black/60 hover:bg-red-600/90 backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 z-20"
+                        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 hover:bg-red-600/90 backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 z-20"
                       >
                         <Trash2 className="w-4 h-4 text-white" />
                       </button>
@@ -1088,7 +1236,11 @@ export default function ImageEditor() {
                           </button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className="text-xs">Click to view full size</p>
+                          <p className="text-xs">
+                            {image.chainDepth > 0 
+                              ? `Chain depth ${image.chainDepth}: ${image.refinementInstruction?.substring(0, 30) || 'refinement'}...`
+                              : "Click to view full size"}
+                          </p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -1102,7 +1254,8 @@ export default function ImageEditor() {
                       {image.approvalStatus === "rejected" && <X className="w-3 h-3 text-red-500" />}
                     </button>
                   </div>
-                ))}
+                  );
+                })}
                 
                 {/* Empty slots */}
                 {Array.from({ length: Math.max(0, MAX_IMAGES_PER_SESSION - currentSession.images.length) }).map((_, i) => (
@@ -1128,7 +1281,16 @@ export default function ImageEditor() {
                     </div>
                   ) : heroImage ? (
                     <div className="w-full h-full flex flex-col items-center justify-center space-y-4">
-                      <div className="relative flex items-center justify-center max-h-[450px]">
+                      {/* Chain Breadcrumb */}
+                      {heroImage.chainDepth > 0 && (
+                        <ImageChainBreadcrumb
+                          currentImage={heroImage}
+                          allImages={currentSession.images}
+                          onImageClick={handleJumpToChainImage}
+                        />
+                      )}
+                      
+                      <div className="relative flex items-center justify-center max-h-[450px] group">
                         <img
                           src={heroImage.imageUrl}
                           alt="Generated Product"
@@ -1150,20 +1312,27 @@ export default function ImageEditor() {
                             </TooltipProvider>
                           </div>
                         )}
-                        <Button
-                          onClick={handleRefineImage}
-                          size="sm"
-                          variant="secondary"
-                          className="absolute top-4 left-4 bg-[#2F2A26]/90 hover:bg-[#2F2A26] border-[#3D3935] text-[#FFFCF5]"
-                        >
-                          <Wand2 className="w-4 h-4 mr-2" />
-                          Refine This
-                        </Button>
+                        
+                        {/* Refine This Button */}
+                        {!refinementMode && heroImage.chainDepth < MAX_CHAIN_DEPTH && (
+                          <Button
+                            onClick={() => handleStartRefinement(heroImage)}
+                            size="sm"
+                            variant="secondary"
+                            className="absolute top-4 left-4 bg-[#2F2A26]/90 hover:bg-[#2F2A26] border-[#3D3935] text-[#FFFCF5] opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Wand2 className="w-4 h-4 mr-2" />
+                            Refine This
+                          </Button>
+                        )}
                       </div>
                       
                       <div className="text-center max-w-md px-4">
                         <p className="text-xs text-[#A8A39E] font-medium mb-2">GENERATION PROMPT</p>
                         <p className="text-sm text-[#D4CFC8] italic line-clamp-3">"{heroImage.prompt}"</p>
+                        {heroImage.refinementInstruction && (
+                          <p className="text-xs text-blue-400 mt-1">Refinement: {heroImage.refinementInstruction}</p>
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -1206,7 +1375,19 @@ export default function ImageEditor() {
                     </div>
                     
                     <div className="flex-1 flex flex-col gap-3 min-h-0">
-                      {guidedModeEnabled ? (
+                      {refinementMode && selectedForRefinement ? (
+                        /* Refinement Mode - Show RefinementPanel */
+                        <div className="flex-1 min-h-0 overflow-y-auto">
+                          <RefinementPanel
+                            baseImage={selectedForRefinement}
+                            onRefine={handleRefine}
+                            onCancel={() => {
+                              setRefinementMode(false);
+                              setSelectedForRefinement(null);
+                            }}
+                          />
+                        </div>
+                      ) : guidedModeEnabled ? (
                         /* Guided Mode - Formula-based builder with internal scrolling */
                         <div className="flex-1 min-h-0 overflow-y-auto pr-1">
                           <GuidedPromptBuilder
@@ -1338,47 +1519,49 @@ export default function ImageEditor() {
                   </Card>
                 </div>
                 
-                {/* Sticky Generate Button - Outside scrollable area */}
-                <div className="flex-shrink-0 bg-[#2F2A26] border-t border-[#3D3935] p-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-[#A8A39E]">
-                        <span className={canGenerateMore ? "text-brass font-semibold" : "text-orange-400 font-semibold"}>
-                          {MAX_IMAGES_PER_SESSION - currentSession.images.length}
+                {/* Sticky Generate Button - Only show when NOT in refinement mode */}
+                {!refinementMode && (
+                  <div className="flex-shrink-0 bg-[#2F2A26] border-t border-[#3D3935] p-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[#A8A39E]">
+                          <span className={canGenerateMore ? "text-brass font-semibold" : "text-orange-400 font-semibold"}>
+                            {MAX_IMAGES_PER_SESSION - currentSession.images.length}
+                          </span>
+                          {" / "}{MAX_IMAGES_PER_SESSION} remaining
                         </span>
-                        {" / "}{MAX_IMAGES_PER_SESSION} remaining
-                      </span>
-                    </div>
-                    
-                    <Button
-                      onClick={() => handleGenerate()}
-                      disabled={isGenerating || !userPrompt.trim() || !canGenerateMore}
-                      className="w-full bg-brass hover:bg-brass/90 text-white disabled:opacity-50"
-                      size="sm"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4 mr-2" />
-                          Generate
-                        </>
-                      )}
-                    </Button>
+                      </div>
+                      
+                      <Button
+                        onClick={() => handleGenerate()}
+                        disabled={isGenerating || !userPrompt.trim() || !canGenerateMore}
+                        className="w-full bg-brass hover:bg-brass/90 text-white disabled:opacity-50"
+                        size="sm"
+                      >
+                        {isGenerating ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            Generate
+                          </>
+                        )}
+                      </Button>
 
-                    {!canGenerateMore && (
-                      <p className="text-xs text-orange-400 bg-orange-400/10 border border-orange-400/20 rounded p-2">
-                        ✅ Session complete! Save to library to start a new session.
-                      </p>
-                    )}
+                      {!canGenerateMore && (
+                        <p className="text-xs text-orange-400 bg-orange-400/10 border border-orange-400/20 rounded p-2">
+                          ✅ Session complete! Save to library to start a new session.
+                        </p>
+                      )}
+                    </div>
                   </div>
+                )}
                 </div>
               </div>
             </div>
-          </div>
           </div>
         </ResizablePanel>
 

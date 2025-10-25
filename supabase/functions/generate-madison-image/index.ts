@@ -53,6 +53,38 @@ PHOTOGRAPHIC REQUIREMENTS:
 IMPORTANT: Do not regenerate or alter the product - use it as-is from the reference image. Only the scene, environment, lighting, and context around it should change according to the description above.`;
 }
 
+/**
+ * Smart prompt combination for chain refinements
+ */
+function buildChainPrompt(
+  originalPrompt: string,
+  refinement: string,
+  depth: number
+): string {
+  // Extract base elements from original prompt
+  const baseElements = originalPrompt
+    .replace(/\b(with|featuring|showing|adjust:|refinement:)\b.*/gi, '')
+    .trim();
+  
+  // Combine intelligently based on refinement type
+  const lowerRefinement = refinement.toLowerCase();
+  
+  if (lowerRefinement.match(/\b(darker|brighter|lighter|warmer|cooler)\b/i)) {
+    return `${originalPrompt}. Adjust: ${refinement}`;
+  }
+  
+  if (lowerRefinement.match(/\b(add|include|with)\b/i)) {
+    return `${originalPrompt}. ${refinement}`;
+  }
+  
+  if (lowerRefinement.match(/\b(remove|without|exclude)\b/i)) {
+    return `${baseElements}. ${refinement}`;
+  }
+  
+  // Default: append refinement
+  return `${originalPrompt}. Refinement: ${refinement}`;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -74,7 +106,12 @@ serve(async (req) => {
       userRefinements,
       referenceImages, // Now an array of {url, description, label}
       brandContext,
-      imageConstraints
+      imageConstraints,
+      // Chain prompting parameters
+      parentImageId,
+      isRefinement,
+      refinementInstruction,
+      parentPrompt
     } = await req.json();
 
     console.log('🎨 Generating Madison image:', {
@@ -84,11 +121,57 @@ serve(async (req) => {
       hasBrandContext: !!brandContext,
       hasReferenceImages: !!referenceImages && referenceImages.length > 0,
       referenceImageCount: referenceImages?.length || 0,
-      hasConstraints: !!imageConstraints
+      hasConstraints: !!imageConstraints,
+      isChainRefinement: !!isRefinement,
+      parentImageId: parentImageId || null
     });
 
+    // Create Supabase client for chain mode and general operations
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+    
+    // Handle chain refinement mode
+    let parentChainDepth = 0;
+    let actualReferenceImages = referenceImages || [];
+    
+    if (isRefinement && parentImageId) {
+      console.log('⛓️ Chain refinement mode - fetching parent image');
+      
+      // Fetch parent image data
+      const { data: parentImage, error: parentError } = await supabaseClient
+        .from('generated_images')
+        .select('image_url, final_prompt, chain_depth')
+        .eq('id', parentImageId)
+        .single();
+      
+      if (parentError) {
+        console.error('❌ Failed to fetch parent image:', parentError);
+        throw new Error('Parent image not found for chain refinement');
+      }
+      
+      if (parentImage) {
+        parentChainDepth = parentImage.chain_depth || 0;
+        console.log(`📊 Parent chain depth: ${parentChainDepth}`);
+        
+        // Auto-include parent image as primary reference
+        const chainReferenceImage = {
+          url: parentImage.image_url,
+          label: 'Product' as const,
+          description: 'Previous iteration from chain'
+        };
+        
+        // Prepend to reference images array
+        actualReferenceImages = [chainReferenceImage, ...actualReferenceImages];
+        console.log('✅ Added parent image as reference for chain refinement');
+      }
+    }
+
     // Enhance prompt with brand context (works for any business vertical)
-    let enhancedPrompt = prompt;
+    let enhancedPrompt = isRefinement && refinementInstruction 
+      ? buildChainPrompt(parentPrompt || prompt, refinementInstruction, parentChainDepth)
+      : prompt;
     
     // Apply image constraints if provided
     if (imageConstraints) {
@@ -137,20 +220,20 @@ serve(async (req) => {
     }
 
     // Apply advanced prompt formula if reference images are provided
-    if (referenceImages && referenceImages.length > 0) {
-      if (referenceImages.length === 1) {
+    if (actualReferenceImages && actualReferenceImages.length > 0) {
+      if (actualReferenceImages.length === 1) {
         // Single reference - use existing product placement prompt
         enhancedPrompt = buildProductPlacementPrompt(enhancedPrompt, brandContext);
-        if (referenceImages[0].description) {
-          enhancedPrompt += `\n\nReference Notes: ${referenceImages[0].description}`;
+        if (actualReferenceImages[0].description) {
+          enhancedPrompt += `\n\nReference Notes: ${actualReferenceImages[0].description}`;
         }
       } else {
         // Multiple references - build multi-image composite prompt
         enhancedPrompt = `MULTI-REFERENCE IMAGE COMPOSITION:
-You have ${referenceImages.length} reference images. Combine them according to the scene description below.
+You have ${actualReferenceImages.length} reference images. Combine them according to the scene description below.
 
 REFERENCE IMAGES:
-${referenceImages.map((img: any, idx: number) => `${idx + 1}. ${img.label}: ${img.description || 'Use as-is from image'}`).join('\n')}
+${actualReferenceImages.map((img: any, idx: number) => `${idx + 1}. ${img.label}: ${img.description || 'Use as-is from image'}`).join('\n')}
 
 SCENE TO CREATE:
 ${enhancePromptWithFormula(enhancedPrompt, brandContext)}
@@ -173,7 +256,7 @@ PHOTOGRAPHIC QUALITY:
     // Build message content with optional reference images (supports multiple)
     let messageContent: any;
     
-    if (referenceImages && referenceImages.length > 0) {
+    if (actualReferenceImages && actualReferenceImages.length > 0) {
       // Multi-modal message with reference images and text
       const contentParts: any[] = [
         {
@@ -182,14 +265,8 @@ PHOTOGRAPHIC QUALITY:
         }
       ];
       
-      // Create Supabase client for downloading images from storage
-      const supabaseClient = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-      );
-      
       // Fetch and add all reference images
-      for (const refImage of referenceImages) {
+      for (const refImage of actualReferenceImages) {
         let imageData = refImage.url;
         
         // If it's a Supabase storage URL, fetch it directly (public bucket)
@@ -304,12 +381,6 @@ PHOTOGRAPHIC QUALITY:
       throw new Error('No image generated in response');
     }
 
-    // Create Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
     // Upload base64 image to Supabase Storage
     if (imageUrl.startsWith('data:image/')) {
       try {
@@ -365,11 +436,16 @@ PHOTOGRAPHIC QUALITY:
         output_format: outputFormat,
         selected_template: selectedTemplate,
         user_refinements: userRefinements,
-        final_prompt: prompt,
+        final_prompt: enhancedPrompt,
         image_url: imageUrl,
         description: description,
-        reference_images: referenceImages || [],
-        brand_context_used: brandContext
+        reference_images: actualReferenceImages,
+        brand_context_used: brandContext,
+        // Chain tracking fields
+        parent_image_id: isRefinement ? parentImageId : null,
+        chain_depth: isRefinement ? parentChainDepth + 1 : 0,
+        is_chain_origin: !isRefinement,
+        refinement_instruction: isRefinement ? refinementInstruction : null
       })
       .select()
       .single();

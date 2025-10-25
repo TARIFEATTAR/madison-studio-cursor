@@ -594,6 +594,7 @@ export type Database = {
           brand_colors_used: string[] | null
           brand_context_used: Json | null
           brand_style_tags: string[] | null
+          chain_depth: number | null
           created_at: string | null
           description: string | null
           final_prompt: string
@@ -602,12 +603,15 @@ export type Database = {
           image_order: number | null
           image_url: string
           is_archived: boolean | null
+          is_chain_origin: boolean | null
           is_hero_image: boolean | null
           library_category: string | null
           organization_id: string | null
           output_format: string | null
+          parent_image_id: string | null
           reference_image_url: string | null
           reference_images: Json | null
+          refinement_instruction: string | null
           saved_to_library: boolean | null
           selected_template: string | null
           session_id: string | null
@@ -622,6 +626,7 @@ export type Database = {
           brand_colors_used?: string[] | null
           brand_context_used?: Json | null
           brand_style_tags?: string[] | null
+          chain_depth?: number | null
           created_at?: string | null
           description?: string | null
           final_prompt: string
@@ -630,12 +635,15 @@ export type Database = {
           image_order?: number | null
           image_url: string
           is_archived?: boolean | null
+          is_chain_origin?: boolean | null
           is_hero_image?: boolean | null
           library_category?: string | null
           organization_id?: string | null
           output_format?: string | null
+          parent_image_id?: string | null
           reference_image_url?: string | null
           reference_images?: Json | null
+          refinement_instruction?: string | null
           saved_to_library?: boolean | null
           selected_template?: string | null
           session_id?: string | null
@@ -650,6 +658,7 @@ export type Database = {
           brand_colors_used?: string[] | null
           brand_context_used?: Json | null
           brand_style_tags?: string[] | null
+          chain_depth?: number | null
           created_at?: string | null
           description?: string | null
           final_prompt?: string
@@ -658,12 +667,15 @@ export type Database = {
           image_order?: number | null
           image_url?: string
           is_archived?: boolean | null
+          is_chain_origin?: boolean | null
           is_hero_image?: boolean | null
           library_category?: string | null
           organization_id?: string | null
           output_format?: string | null
+          parent_image_id?: string | null
           reference_image_url?: string | null
           reference_images?: Json | null
+          refinement_instruction?: string | null
           saved_to_library?: boolean | null
           selected_template?: string | null
           session_id?: string | null
@@ -678,6 +690,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_images_parent_image_id_fkey"
+            columns: ["parent_image_id"]
+            isOneToOne: false
+            referencedRelation: "generated_images"
             referencedColumns: ["id"]
           },
         ]
