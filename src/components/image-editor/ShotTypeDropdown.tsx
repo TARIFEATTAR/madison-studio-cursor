@@ -30,7 +30,7 @@ interface ShotTypeDropdownProps {
 }
 
 export default function ShotTypeDropdown({ onSelect, className }: ShotTypeDropdownProps) {
-  const [selected, setSelected] = useState("Shot Type");
+  const [selected, setSelected] = useState(SHOT_TYPES[0].label);
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedType = SHOT_TYPES.find(st => st.label === e.target.value);
@@ -48,7 +48,7 @@ export default function ShotTypeDropdown({ onSelect, className }: ShotTypeDropdo
         "bg-zinc-800 text-zinc-100 border border-zinc-700",
         "rounded-md px-3 py-2 text-sm",
         "focus:border-aged-brass focus:outline-none focus:ring-1 focus:ring-aged-brass/50",
-        "hover:border-zinc-600 transition-colors",
+        "hover:bg-zinc-700 hover:border-zinc-600 transition-colors",
         "cursor-pointer appearance-none",
         "h-10",
         className
@@ -61,9 +61,8 @@ export default function ShotTypeDropdown({ onSelect, className }: ShotTypeDropdo
         paddingRight: "2.5rem"
       }}
     >
-      <option disabled>Shot Type</option>
       {SHOT_TYPES.map(st => (
-        <option key={st.label} value={st.label}>
+        <option key={st.label} value={st.label} className="bg-zinc-900 text-zinc-100">
           {st.label}
         </option>
       ))}

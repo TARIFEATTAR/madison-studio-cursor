@@ -531,28 +531,28 @@ export default function ImageEditor() {
 
           {/* Aspect Ratio */}
           <Select value={aspectRatio} onValueChange={setAspectRatio}>
-            <SelectTrigger className="w-[140px] bg-zinc-800 border-zinc-700 text-zinc-100">
+            <SelectTrigger className="w-[140px] bg-zinc-800 border-zinc-700 text-zinc-100 hover:bg-zinc-700 transition-colors">
               <SelectValue placeholder="Aspect Ratio" />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-zinc-700">
-              <SelectItem value="1:1">1:1 Square</SelectItem>
-              <SelectItem value="16:9">16:9 Landscape</SelectItem>
-              <SelectItem value="9:16">9:16 Portrait</SelectItem>
-              <SelectItem value="4:3">4:3 Classic</SelectItem>
-              <SelectItem value="4:5">4:5 Portrait</SelectItem>
-              <SelectItem value="5:4">5:4 Etsy</SelectItem>
+            <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-100">
+              <SelectItem value="1:1" className="text-zinc-100">1:1 Square</SelectItem>
+              <SelectItem value="16:9" className="text-zinc-100">16:9 Landscape</SelectItem>
+              <SelectItem value="9:16" className="text-zinc-100">9:16 Portrait</SelectItem>
+              <SelectItem value="4:3" className="text-zinc-100">4:3 Classic</SelectItem>
+              <SelectItem value="4:5" className="text-zinc-100">4:5 Portrait</SelectItem>
+              <SelectItem value="5:4" className="text-zinc-100">5:4 Etsy</SelectItem>
             </SelectContent>
           </Select>
 
           {/* Output Format */}
           <Select value={outputFormat} onValueChange={(v: any) => setOutputFormat(v)}>
-            <SelectTrigger className="w-[120px] bg-zinc-800 border-zinc-700 text-zinc-100">
+            <SelectTrigger className="w-[120px] bg-zinc-800 border-zinc-700 text-zinc-100 hover:bg-zinc-700 transition-colors">
               <SelectValue placeholder="Output" />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-zinc-700">
-              <SelectItem value="png">PNG</SelectItem>
-              <SelectItem value="jpeg">JPG</SelectItem>
-              <SelectItem value="webp">WEBP</SelectItem>
+            <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-100">
+              <SelectItem value="png" className="text-zinc-100">PNG</SelectItem>
+              <SelectItem value="jpeg" className="text-zinc-100">JPG</SelectItem>
+              <SelectItem value="webp" className="text-zinc-100">WEBP</SelectItem>
             </SelectContent>
           </Select>
 
@@ -640,7 +640,24 @@ export default function ImageEditor() {
                   <Button
                     size="sm"
                     variant="secondary"
-                    onClick={() => window.open(heroImage.imageUrl, '_blank')}
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(heroImage.imageUrl);
+                        const blob = await response.blob();
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `madison-${Date.now()}.${outputFormat}`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                        toast.success("Image downloaded!");
+                      } catch (error) {
+                        console.error('Download failed:', error);
+                        toast.error("Failed to download image");
+                      }
+                    }}
                     className="bg-zinc-900/90 backdrop-blur-sm"
                   >
                     <Download className="w-4 h-4" />
