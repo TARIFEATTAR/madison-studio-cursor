@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CollapsibleTrigger, Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 // Icons
@@ -37,7 +38,8 @@ import {
   ImageIcon,
   ChevronDown,
   ChevronUp,
-  Upload
+  Upload,
+  X
 } from "lucide-react";
 
 // Feature Components
@@ -458,289 +460,276 @@ export default function ImageEditor() {
   const flaggedCount = currentSession.images.filter(img => img.approvalStatus === 'flagged').length;
 
   return (
-    <div className="min-h-screen bg-zinc-950">
-      {/* Header */}
-      <header className="border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-md sticky top-0 z-10">
-        <div className="container mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(-1)}
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div>
-              <h1 className="text-lg font-semibold text-zinc-100">Image Studio</h1>
-              <p className="text-xs text-zinc-400">Powered by Nano Banana</p>
-            </div>
+    <div className="flex flex-col h-screen bg-zinc-950 text-aged-paper">
+      {/* Top Toolbar */}
+      <header className="flex items-center justify-between px-6 py-3 border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-30">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="text-zinc-400 hover:text-aged-paper"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-lg font-semibold text-aged-brass">Image Studio</h1>
+            <p className="text-xs text-zinc-500">Powered by Nano Banana</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-zinc-400">
-              {currentSession.images.length} / {MAX_IMAGES_PER_SESSION}
-            </span>
-            {flaggedCount > 0 && (
-              <Button onClick={handleSaveSession} disabled={isSaving} size="sm">
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                Save ({flaggedCount})
-              </Button>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          {/* Aspect Ratio */}
+          <Select value={aspectRatio} onValueChange={setAspectRatio}>
+            <SelectTrigger className="w-40 bg-zinc-800 border-zinc-700 text-zinc-100">
+              <SelectValue placeholder="Aspect Ratio" />
+            </SelectTrigger>
+            <SelectContent className="bg-zinc-900 border-zinc-700">
+              <SelectItem value="1:1">1:1 Square</SelectItem>
+              <SelectItem value="16:9">16:9 Landscape</SelectItem>
+              <SelectItem value="9:16">9:16 Portrait</SelectItem>
+              <SelectItem value="4:3">4:3 Classic</SelectItem>
+              <SelectItem value="4:5">4:5 Portrait</SelectItem>
+              <SelectItem value="5:4">5:4 Etsy</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Output Format */}
+          <Select value={outputFormat} onValueChange={(v: any) => setOutputFormat(v)}>
+            <SelectTrigger className="w-32 bg-zinc-800 border-zinc-700 text-zinc-100">
+              <SelectValue placeholder="Format" />
+            </SelectTrigger>
+            <SelectContent className="bg-zinc-900 border-zinc-700">
+              <SelectItem value="png">PNG</SelectItem>
+              <SelectItem value="jpeg">JPG</SelectItem>
+              <SelectItem value="webp">WEBP</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Pro Mode Toggle */}
+          <Button
+            variant="outline"
+            onClick={() => setShowProMode(!showProMode)}
+            className={showProMode 
+              ? 'bg-aged-brass/10 border-aged-brass text-aged-brass hover:bg-aged-brass/20' 
+              : 'bg-zinc-800 border-zinc-700 text-zinc-100 hover:bg-zinc-700'
+            }
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Pro Mode
+            {Object.keys(proModeControls).length > 0 && (
+              <Badge variant="secondary" className="ml-2 text-xs">
+                {Object.keys(proModeControls).length}
+              </Badge>
             )}
-          </div>
+          </Button>
+
+          {/* Save Button */}
+          {flaggedCount > 0 && (
+            <Button onClick={handleSaveSession} disabled={isSaving} variant="outline">
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+              Save ({flaggedCount})
+            </Button>
+          )}
+
+          {/* Generate Button */}
+          <Button
+            onClick={handleGenerate}
+            disabled={!mainPrompt.trim() || isGenerating || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
+            size="lg"
+            variant="brass"
+            className="px-6"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Wand2 className="w-4 h-4 mr-2" />
+                Generate
+              </>
+            )}
+          </Button>
         </div>
       </header>
 
-      {/* Main Content - Improved Layout */}
-      <div className="flex-1 overflow-hidden">
-        <div className="h-full grid grid-cols-[280px_1fr] gap-4 p-6 max-w-[1500px] mx-auto">
-          {/* Left Sidebar: Controls */}
-          <div className="relative z-10 space-y-3 overflow-y-auto pr-2 pb-32">
-            {/* Reference Images */}
-            <Card className="p-4 bg-zinc-900/50 border-zinc-800 hover:border-aged-brass/30 transition-colors">
-              <div className="flex items-center gap-2 mb-3">
-                <ImageIcon className="w-4 h-4 text-aged-brass" />
-                <h3 className="font-medium text-sm text-zinc-100">Reference Images</h3>
+      {/* Main Layout */}
+      <main className="flex flex-1 overflow-hidden relative">
+        {/* Center Viewport (Fixed) */}
+        <section className="flex-1 flex flex-col relative">
+          {/* Image Viewport */}
+          <div className="flex-1 bg-zinc-900/30 flex items-center justify-center relative overflow-hidden">
+            {heroImage ? (
+              <div className="relative w-full h-full flex items-center justify-center p-8">
+                <img 
+                  src={heroImage.imageUrl} 
+                  alt="Generated" 
+                  className="max-w-full max-h-full object-contain rounded-lg border-2 border-zinc-800"
+                />
+                <div className="absolute top-8 right-8 flex gap-2">
+                  <Button
+                    size="sm"
+                    variant={heroImage.approvalStatus === 'flagged' ? 'default' : 'secondary'}
+                    onClick={() => handleToggleApproval(heroImage.id)}
+                    className="bg-zinc-900/90 backdrop-blur-sm"
+                  >
+                    <Heart className={cn("w-4 h-4", heroImage.approvalStatus === 'flagged' && "fill-current")} />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => window.open(heroImage.imageUrl, '_blank')}
+                    className="bg-zinc-900/90 backdrop-blur-sm"
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
-              <ReferenceUpload
-                images={referenceImages}
-                onUpload={handleReferenceUpload}
-                onRemove={handleReferenceRemove}
-                maxImages={3}
-              />
-            </Card>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center space-y-4 p-8">
+                <Sparkles className="w-20 h-20 text-aged-brass opacity-40" />
+                <div>
+                  <h3 className="text-2xl font-semibold text-aged-paper mb-2">
+                    Your Canvas Awaits
+                  </h3>
+                  <p className="text-zinc-400 text-lg">
+                    Describe your vision below and watch Madison bring it to life
+                  </p>
+                </div>
+              </div>
+            )}
 
-            {/* Pro Mode Collapsible */}
-            <Collapsible open={showProMode} onOpenChange={setShowProMode}>
-              <CollapsibleContent>
-                <Card className="p-4 bg-zinc-900/50 border-zinc-800">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-medium text-sm text-zinc-100">Pro Mode</h3>
-                      {(Object.keys(proModeControls).length > 0) && (
-                        <Badge variant="secondary" className="text-xs">
-                          {Object.keys(proModeControls).length} active
-                        </Badge>
-                      )}
-                    </div>
+            {/* Generating Overlay */}
+            {isGenerating && (
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-20">
+                <Loader2 className="w-12 h-12 text-aged-brass animate-spin mb-4" />
+                <p className="text-aged-paper text-lg font-medium">Generating magic...</p>
+                <p className="text-zinc-400 text-sm mt-2">This may take a moment</p>
+              </div>
+            )}
+          </div>
+
+          {/* Thumbnail Carousel */}
+          {currentSession.images.length > 0 && (
+            <div className="flex gap-2 p-3 overflow-x-auto border-t border-zinc-800 bg-zinc-900/50 scrollbar-thin scrollbar-thumb-zinc-700">
+              {currentSession.images.map((img, idx) => (
+                <button
+                  key={img.id}
+                  onClick={() => handleSetHero(img.id)}
+                  className={`w-24 h-24 rounded-md overflow-hidden shrink-0 border-2 transition-all ${
+                    heroImage?.imageUrl === img.imageUrl
+                      ? 'border-aged-brass shadow-lg scale-105'
+                      : 'border-zinc-700 hover:border-zinc-600 opacity-70 hover:opacity-100'
+                  }`}
+                >
+                  <img 
+                    src={img.imageUrl} 
+                    alt={`Generation ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  {img.approvalStatus === 'flagged' && (
+                    <Heart className="absolute top-1 right-1 w-3 h-3 fill-aged-brass text-aged-brass" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Prompt Bar (Fixed Bottom) */}
+          <footer className="flex items-center gap-3 px-6 py-4 border-t border-zinc-800 bg-zinc-900/80 backdrop-blur-sm sticky bottom-0">
+            <Textarea
+              value={mainPrompt}
+              onChange={(e) => setMainPrompt(e.target.value)}
+              placeholder="Describe the image you want to create..."
+              className="flex-1 min-h-[60px] max-h-[120px] resize-none bg-zinc-800 border-zinc-700 text-aged-paper placeholder:text-zinc-500"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleGenerate();
+                }
+              }}
+            />
+            <Button
+              onClick={handleGenerate}
+              disabled={!mainPrompt.trim() || isGenerating || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
+              size="lg"
+              variant="brass"
+              className="h-[60px] px-6"
+            >
+              {isGenerating ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Wand2 className="w-5 h-5" />
+              )}
+            </Button>
+          </footer>
+        </section>
+
+        {/* Pro Mode Drawer (Overlay) */}
+        {showProMode && (
+          <>
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/40 z-40"
+              onClick={() => setShowProMode(false)}
+            />
+            
+            {/* Drawer */}
+            <aside className="fixed right-0 top-[69px] bottom-0 w-96 border-l border-zinc-800 bg-zinc-900 shadow-2xl z-50 overflow-y-auto animate-in slide-in-from-right duration-300">
+              <ScrollArea className="h-full">
+                <div className="p-6 space-y-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-aged-brass">Pro Mode Settings</h2>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowProMode(false)}
+                      className="text-zinc-400 hover:text-aged-paper"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  {/* Reference Images */}
+                  <div>
+                    <h3 className="text-sm font-medium text-aged-paper mb-3">Reference Images</h3>
+                    <ReferenceUpload
+                      images={referenceImages}
+                      onUpload={handleReferenceUpload}
+                      onRemove={handleReferenceRemove}
+                      maxImages={3}
+                    />
+                  </div>
+
+                  {/* Pro Mode Controls */}
+                  <div>
+                    <h3 className="text-sm font-medium text-aged-paper mb-3">Advanced Controls</h3>
                     <ProModePanel
                       onControlsChange={setProModeControls}
                       initialValues={proModeControls}
                     />
                   </div>
-                </Card>
-              </CollapsibleContent>
-            </Collapsible>
 
-            {/* Output Settings */}
-            <Card className="p-4 bg-zinc-900/50 border-zinc-800">
-              <h3 className="font-medium text-sm text-zinc-100 mb-3">Output Settings</h3>
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label className="text-xs text-zinc-400">Aspect Ratio</Label>
-                  <Select value={aspectRatio} onValueChange={setAspectRatio}>
-                    <SelectTrigger className="bg-zinc-900/90 border-zinc-700 text-zinc-100">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="z-50 bg-zinc-900 text-zinc-100 border border-zinc-700 shadow-xl">
-                      <SelectItem value="1:1" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">Square (1:1)</SelectItem>
-                      <SelectItem value="4:5" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">Portrait (4:5)</SelectItem>
-                      <SelectItem value="5:4" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">Etsy (5:4)</SelectItem>
-                      <SelectItem value="2:3" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">Pinterest (2:3)</SelectItem>
-                      <SelectItem value="3:2" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">Email/Web (3:2)</SelectItem>
-                      <SelectItem value="16:9" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">Landscape (16:9)</SelectItem>
-                      <SelectItem value="9:16" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">Vertical (9:16)</SelectItem>
-                      <SelectItem value="21:9" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">Ultra-wide (21:9)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-xs text-zinc-400">Output Format</Label>
-                  <Select value={outputFormat} onValueChange={(v: any) => setOutputFormat(v)}>
-                    <SelectTrigger className="bg-zinc-900/90 border-zinc-700 text-zinc-100">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="z-50 bg-zinc-900 text-zinc-100 border border-zinc-700 shadow-xl">
-                      <SelectItem value="png" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">PNG</SelectItem>
-                      <SelectItem value="jpeg" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">JPEG</SelectItem>
-                      <SelectItem value="webp" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">WebP</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </Card>
-
-            {/* Brand Context Info */}
-            {brandContext && (
-              <Card className="p-3 bg-zinc-900/30 border-zinc-800">
-                <div className="flex items-start gap-2">
-                  <Info className="w-4 h-4 mt-0.5 text-zinc-400 flex-shrink-0" />
-                  <div className="text-xs text-zinc-400">
-                    <p className="font-medium mb-1 text-zinc-300">Brand Context Active</p>
-                    <p>Images will align with your brand guidelines</p>
-                  </div>
-                </div>
-              </Card>
-            )}
-          </div>
-
-          {/* Right: Canvas Display */}
-          <div className="relative z-0 space-y-3 overflow-y-auto">
-            {/* Hero Image Display */}
-            {heroImage ? (
-              <Card className="overflow-hidden border-2 border-zinc-800 bg-zinc-900/50 max-w-[800px]">
-                <div className="relative w-full" style={{ maxHeight: '50vh' }}>
-                  <img 
-                    src={heroImage.imageUrl} 
-                    alt="Generated" 
-                    className="w-full h-full object-contain"
-                  />
-                  <div className="absolute top-4 right-4 flex gap-2">
-                    <Button
-                      size="sm"
-                      variant={heroImage.approvalStatus === 'flagged' ? 'default' : 'secondary'}
-                      onClick={() => handleToggleApproval(heroImage.id)}
-                    >
-                      <Heart className={cn("w-4 h-4", heroImage.approvalStatus === 'flagged' && "fill-current")} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => window.open(heroImage.imageUrl, '_blank')}
-                    >
-                      <Download className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-                <div className="p-4 space-y-2">
-                  {heroImage.chainDepth > 0 && (
-                    <ImageChainBreadcrumb
-                      currentImage={heroImage}
-                      allImages={currentSession.images}
-                      onImageClick={handleJumpToChainImage}
-                    />
-                  )}
-                  <p className="text-sm text-zinc-400">{heroImage.prompt}</p>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => handleStartRefinement(heroImage)}
-                      variant="outline"
-                      size="sm"
-                      disabled={heroImage.chainDepth >= 5}
-                    >
-                      <Wand2 className="w-4 h-4 mr-2" />
-                      Refine This
-                    </Button>
-                    <Button
-                      onClick={() => handleDeleteImage(heroImage.id)}
-                      variant="ghost"
-                      size="sm"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            ) : (
-              <Card className="aspect-video max-w-[800px] flex items-center justify-center border-2 border-dashed border-zinc-700 bg-zinc-900/50">
-                <div className="text-center p-8">
-                  <ImageIcon className="w-16 h-16 mx-auto mb-4 text-zinc-600" />
-                  <h3 className="text-lg font-medium mb-2 text-zinc-100">No images yet</h3>
-                  <p className="text-sm text-zinc-400">Generate your first image to get started</p>
-                </div>
-              </Card>
-            )}
-
-            {/* Thumbnail Gallery */}
-            {currentSession.images.length > 1 && (
-              <div className="grid grid-cols-4 md:grid-cols-6 gap-2 max-w-[800px]">
-                {currentSession.images.map((img) => (
-                  <button
-                    key={img.id}
-                    onClick={() => handleSetHero(img.id)}
-                    className={cn(
-                      "relative aspect-square rounded-lg overflow-hidden border-2 transition-all hover:scale-105",
-                      img.isHero ? "border-primary ring-2 ring-primary" : "border-zinc-700"
-                    )}
-                  >
-                    <img src={img.imageUrl} alt="" className="w-full h-full object-cover" />
-                    {img.chainDepth > 0 && (
-                      <div className="absolute bottom-1 right-1 bg-background/90 text-xs px-1.5 py-0.5 rounded">
-                        +{img.chainDepth}
+                  {/* Brand Context Info */}
+                  {brandContext && (
+                    <Card className="p-3 bg-zinc-800/50 border-zinc-700">
+                      <div className="flex items-start gap-2">
+                        <Info className="w-4 h-4 mt-0.5 text-zinc-400 flex-shrink-0" />
+                        <div className="text-xs text-zinc-400">
+                          <p className="font-medium mb-1 text-zinc-300">Brand Context Active</p>
+                          <p>Images will align with your brand guidelines</p>
+                        </div>
                       </div>
-                    )}
-                    {img.approvalStatus === 'flagged' && (
-                      <Heart className="absolute top-1 right-1 w-4 h-4 fill-primary text-primary" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Bottom Action Bar - Part of Right Column */}
-            <div className="mt-6 w-full max-w-[800px]">
-              <div className="bg-zinc-900/95 backdrop-blur-md border border-zinc-800 rounded-lg p-4">
-                {/* Main Prompt Input */}
-                <div className="mb-3">
-                  <Textarea
-                    placeholder="Describe the image you want to create... (Cmd+Enter to generate)"
-                    value={mainPrompt}
-                    onChange={(e) => setMainPrompt(e.target.value)}
-                    className="min-h-[70px] max-h-[100px] bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-500 resize-none"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                        handleGenerate();
-                      }
-                    }}
-                  />
+                    </Card>
+                  )}
                 </div>
-
-                {/* Control Strip */}
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => setShowProMode(!showProMode)}
-                    className={cn(
-                      "h-11 border-zinc-700 bg-zinc-800 text-zinc-100 hover:bg-zinc-700",
-                      showProMode && "border-aged-brass bg-aged-brass/10 text-aged-brass hover:bg-aged-brass/20"
-                    )}
-                  >
-                    <Settings className="w-4 h-4" />
-                    Pro Mode
-                    {Object.keys(proModeControls).length > 0 && (
-                      <Badge variant="secondary" className="ml-2 text-xs">
-                        {Object.keys(proModeControls).length}
-                      </Badge>
-                    )}
-                  </Button>
-
-                  <Button
-                    variant="brass"
-                    size="lg"
-                    onClick={handleGenerate}
-                    disabled={isGenerating || !mainPrompt.trim() || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
-                    className="flex-1 h-11"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Generating...
-                      </>
-                    ) : currentSession.images.length >= MAX_IMAGES_PER_SESSION ? (
-                      `Session Full (${MAX_IMAGES_PER_SESSION}/${MAX_IMAGES_PER_SESSION})`
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4" />
-                        Generate
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+              </ScrollArea>
+            </aside>
+          </>
+        )}
+      </main>
 
       {/* Refinement Modal Overlay */}
       {refinementMode && selectedForRefinement && (
@@ -788,9 +777,6 @@ export default function ImageEditor() {
           />
         </div>
       )}
-
-      {/* Global Generating Overlay */}
-      {isGenerating && <GeneratingLoader />}
     </div>
   );
 }
