@@ -252,6 +252,28 @@ export default function ImageEditor() {
         }));
       }
       
+      // Determine if Pro Mode controls are active
+      const hasProModeControls = Object.keys(proModeControls).length > 0;
+      const proModePayload = hasProModeControls ? proModeControls : undefined;
+      
+      // Log generation payload for debugging
+      console.log('🎨 Image Generation Payload:', {
+        prompt: enhancedPrompt,
+        aspectRatio,
+        outputFormat,
+        proModeEnabled: showProMode,
+        proModeControls: proModePayload,
+        hasReferenceImages: generationReferenceImages.length > 0,
+        hasBrandContext: !!brandContext
+      });
+      
+      // Show appropriate toast message
+      if (hasProModeControls) {
+        toast.success("Generating with Pro Mode settings...", {
+          description: "Advanced parameters applied"
+        });
+      }
+      
       const { data: functionData, error: functionError } = await supabase.functions.invoke(
         'generate-madison-image',
         {
@@ -265,7 +287,7 @@ export default function ImageEditor() {
             referenceImages: generationReferenceImages,
             brandContext: brandContext || undefined,
             isRefinement: false,
-            proModeControls: Object.keys(proModeControls).length > 0 ? proModeControls : undefined
+            proModeControls: proModePayload
           }
         }
       );
@@ -568,7 +590,7 @@ export default function ImageEditor() {
             <Settings className="w-4 h-4 mr-2" />
             Pro Mode
             {Object.keys(proModeControls).length > 0 && (
-              <Badge variant="secondary" className="ml-2 text-xs">
+              <Badge variant="secondary" className="ml-2 text-xs bg-aged-brass/20 text-aged-brass border-aged-brass/30">
                 {Object.keys(proModeControls).length}
               </Badge>
             )}
@@ -588,7 +610,7 @@ export default function ImageEditor() {
             disabled={!mainPrompt.trim() || isGenerating || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
             size="lg"
             variant="brass"
-            className="px-6"
+            className="px-6 relative"
           >
             {isGenerating ? (
               <>
@@ -599,6 +621,9 @@ export default function ImageEditor() {
               <>
                 <Wand2 className="w-4 h-4 mr-2" />
                 Generate
+                {Object.keys(proModeControls).length > 0 && (
+                  <span className="ml-1 text-[10px] opacity-70">Pro</span>
+                )}
               </>
             )}
           </Button>
@@ -748,6 +773,19 @@ export default function ImageEditor() {
 
           {/* Prompt Bar (Fixed Bottom) */}
           <footer className="border-t border-zinc-800 bg-zinc-900 backdrop-blur-sm sticky bottom-0 z-[15]">
+            {/* Pro Mode Status Indicator */}
+            {Object.keys(proModeControls).length > 0 && (
+              <div className="px-6 py-2 border-b border-zinc-800/50 bg-aged-brass/5">
+                <div className="flex items-center gap-2 text-xs">
+                  <Settings className="w-3 h-3 text-aged-brass" />
+                  <span className="text-aged-brass font-medium">Pro Mode Active</span>
+                  <span className="text-zinc-400">—</span>
+                  <span className="text-zinc-400">
+                    Advanced settings applied ({Object.keys(proModeControls).length} parameter{Object.keys(proModeControls).length > 1 ? 's' : ''})
+                  </span>
+                </div>
+              </div>
+            )}
             <div className="px-6 py-4">
               {/* Horizontal Layout: Drop Zone + Prompt + Generate Button */}
               <div className="flex items-stretch gap-3">
@@ -842,7 +880,14 @@ export default function ImageEditor() {
 
                   {/* Pro Mode Controls */}
                   <div>
-                    <h3 className="text-sm font-medium text-aged-paper mb-3">Advanced Controls</h3>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-medium text-aged-paper">Advanced Controls</h3>
+                      {Object.keys(proModeControls).length > 0 && (
+                        <Badge className="bg-aged-brass/20 text-aged-brass border-aged-brass/30 text-xs">
+                          {Object.keys(proModeControls).length} Active
+                        </Badge>
+                      )}
+                    </div>
                     <ProModePanel
                       onControlsChange={setProModeControls}
                       initialValues={proModeControls}
