@@ -66,7 +66,7 @@ export default function MobileGeneratedImageView({
         <Button
           onClick={onSave}
           size="lg"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6"
+          className="bg-aged-brass hover:bg-aged-brass/90 text-aged-paper px-6 font-semibold"
         >
           Save Image
         </Button>
@@ -98,7 +98,7 @@ export default function MobileGeneratedImageView({
             <img
               src={imageUrl}
               alt="Thumbnail"
-              className="w-24 h-24 object-cover rounded-lg border-2 border-blue-500"
+              className="w-24 h-24 object-cover rounded-lg border-2 border-aged-brass"
             />
           </div>
         </div>
@@ -140,7 +140,7 @@ export default function MobileGeneratedImageView({
           <Button
             onClick={onRegenerate}
             disabled={!prompt.trim() || isGenerating}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full bg-aged-brass hover:bg-aged-brass/90 text-aged-paper font-semibold"
             size="lg"
           >
             {isGenerating ? (
