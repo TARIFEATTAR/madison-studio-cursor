@@ -717,25 +717,11 @@ export default function ImageEditor() {
 
           {/* Prompt Bar (Fixed Bottom) */}
           <footer className="border-t border-zinc-800 bg-zinc-900 backdrop-blur-sm sticky bottom-0 z-[15]">
-            <div className="px-6 py-4 space-y-3">
-              {/* Prompt with Upload Chip + Button */}
-              <div className="flex items-start gap-3">
-                <div className="flex-1 space-y-3">
-                  <Textarea
-                    value={mainPrompt}
-                    onChange={(e) => setMainPrompt(e.target.value)}
-                    placeholder="Describe the image you want to create..."
-                    className="w-full min-h-[44px] max-h-[120px] resize-none bg-[#111111] border-zinc-700 text-[#F5F1E8] placeholder:text-zinc-500 focus-visible:ring-aged-brass/50"
-                    style={{ color: '#F5F1E8' }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleGenerate();
-                      }
-                    }}
-                  />
-                  
-                  {/* Inline Upload Chip */}
+            <div className="px-6 py-4">
+              {/* Horizontal Layout: Drop Zone + Prompt + Generate Button */}
+              <div className="flex items-stretch gap-3">
+                {/* Drop Zone - 20-25% width */}
+                <div className="w-1/4 min-w-[180px] max-w-[240px]">
                   <ProductImageUpload
                     productImage={productImage}
                     onUpload={setProductImage}
@@ -743,13 +729,30 @@ export default function ImageEditor() {
                     disabled={isGenerating}
                   />
                 </div>
-                
+
+                {/* Prompt Field - 55-60% width */}
+                <Textarea
+                  value={mainPrompt}
+                  onChange={(e) => setMainPrompt(e.target.value)}
+                  placeholder="Describe the image you want to create..."
+                  className="flex-1 min-h-[48px] max-h-[120px] resize-none bg-[#111111] border-zinc-700 text-[#F5F1E8] placeholder:text-zinc-500 focus-visible:ring-aged-brass/50"
+                  style={{ color: '#F5F1E8' }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleGenerate();
+                    }
+                  }}
+                  disabled={isGenerating}
+                />
+
+                {/* Generate Button - 15-20% width */}
                 <Button
                   onClick={handleGenerate}
                   disabled={!mainPrompt.trim() || isGenerating || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
                   size="lg"
                   variant="brass"
-                  className="h-[44px] px-6 self-start"
+                  className="h-12 px-6 min-w-[140px] max-w-[180px] self-stretch"
                 >
                   {isGenerating ? (
                     <>

@@ -18,7 +18,6 @@ export const ProductImageUpload = ({
   disabled = false,
 }: ProductImageUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
-  const [isHovering, setIsHovering] = useState(false);
   const { toast } = useToast();
 
   const processFile = (file: File) => {
@@ -59,38 +58,36 @@ export const ProductImageUpload = ({
     if (file) processFile(file);
   };
 
-  // Compact chip when image is uploaded
+  // When image is uploaded - compact chip inside drop zone
   if (productImage) {
     return (
-      <div className="flex items-center gap-2 h-9 px-3 py-1 bg-[#1A1A1A] border border-white/8 rounded-md">
-        <Upload className="w-4 h-4 text-[#B8956A] flex-shrink-0" />
-        <span className="text-xs font-medium text-[#E0E0E0] truncate">
-          {productImage.file.name}
-        </span>
-        <span className="text-xs text-[#B8956A] whitespace-nowrap ml-auto">
-          — Enhancement Mode Active
-        </span>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onRemove}
-          disabled={disabled}
-          className="text-zinc-400 hover:text-red-400 hover:bg-transparent h-6 w-6 p-0 ml-2 flex-shrink-0"
-        >
-          <X className="h-3.5 w-3.5" />
-        </Button>
+      <div className="flex flex-col items-center justify-center h-12 px-3 py-2 bg-[#1A1A1A] border border-[#B8956A] rounded-md transition-all duration-200">
+        <div className="flex items-center gap-2 w-full">
+          <Upload className="w-4 h-4 text-[#B8956A] flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-[#E0E0E0] truncate">
+              {productImage.file.name}
+            </p>
+            <p className="text-[10px] text-[#B8956A]">Enhancement Mode Active</p>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onRemove}
+            disabled={disabled}
+            className="text-zinc-400 hover:text-red-400 hover:bg-transparent h-6 w-6 p-0 flex-shrink-0"
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
     );
   }
 
-  // Hidden dropzone when no image - only shows on hover
+  // Default drop zone state - always visible
   return (
-    <div 
-      className="relative"
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
-    >
+    <div className="relative h-12">
       <label
         htmlFor="product-image-upload"
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
@@ -101,28 +98,21 @@ export const ProductImageUpload = ({
           const file = e.dataTransfer.files?.[0];
           if (file && !disabled) processFile(file);
         }}
-        className={`flex items-center gap-2 h-9 px-3 py-1 border rounded-md cursor-pointer transition-all duration-200 ${
+        className={`flex flex-col items-center justify-center h-full px-3 py-2 border-dashed rounded-md cursor-pointer transition-all duration-200 ${
           isDragging 
-            ? 'border-[#B8956A] bg-[#B8956A]/10' 
-            : isHovering
-            ? 'border-white/12 bg-[#1A1A1A]'
-            : 'border-transparent bg-transparent'
+            ? 'border-[#B8956A] bg-[#B8956A]/10 shadow-[0_0_8px_rgba(184,149,106,0.5)]' 
+            : 'border-white/8 bg-[#111111] hover:border-white/12 hover:bg-[#1A1A1A]'
         } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-        title="💡 Upload your product image if you want Madison to use it directly in the scene."
+        title="Upload your product image for Madison to use directly in the scene."
       >
-        <Upload className={`w-4 h-4 transition-all ${
-          isDragging || isHovering ? 'text-[#B8956A]' : 'text-zinc-600'
-        }`} />
-        <span className={`text-xs transition-all ${
-          isDragging || isHovering ? 'text-[#E0E0E0]' : 'text-zinc-600'
-        }`}>
-          {isDragging ? 'Drop image here' : 'Upload product image'}
-        </span>
-        {(isDragging || isHovering) && (
-          <span className="text-[10px] text-zinc-500 ml-auto">
-            Max 20MB
+        <div className="flex items-center gap-2">
+          <Upload className={`w-4 h-4 transition-all ${
+            isDragging ? 'text-[#B8956A]' : 'text-[#E0E0E0]'
+          }`} />
+          <span className="text-xs font-medium text-[#E0E0E0]">
+            {isDragging ? 'Drop Image Here' : 'Upload or Drop Image'}
           </span>
-        )}
+        </div>
       </label>
       <Input
         id="product-image-upload"
