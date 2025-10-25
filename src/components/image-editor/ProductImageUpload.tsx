@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Upload, X } from "lucide-react";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -19,10 +18,10 @@ export const ProductImageUpload = ({
   disabled = false,
 }: ProductImageUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   const { toast } = useToast();
 
   const processFile = (file: File) => {
-    // Validation
     if (!file.type.startsWith('image/')) {
       toast({
         title: "Invalid file type",
@@ -41,7 +40,6 @@ export const ProductImageUpload = ({
       return;
     }
     
-    // Convert to base64
     const reader = new FileReader();
     reader.onloadend = () => {
       onUpload({
@@ -61,39 +59,39 @@ export const ProductImageUpload = ({
     if (file) processFile(file);
   };
 
+  // Compact chip when image is uploaded
   if (productImage) {
     return (
-      <div className="flex items-center gap-3 p-2 bg-[#111111] border border-[#B8956A] rounded-lg">
-        <img 
-          src={productImage.url} 
-          alt="Product" 
-          className="w-12 h-12 object-cover rounded border border-zinc-700"
-        />
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-[#F5F1E8] truncate">
-            {productImage.file.name}
-          </p>
-          <p className="text-[10px] text-[#B8956A]">
-            Enhancement mode active
-          </p>
-        </div>
+      <div className="flex items-center gap-2 h-9 px-3 py-1 bg-[#1A1A1A] border border-white/8 rounded-md">
+        <Upload className="w-4 h-4 text-[#B8956A] flex-shrink-0" />
+        <span className="text-xs font-medium text-[#E0E0E0] truncate">
+          {productImage.file.name}
+        </span>
+        <span className="text-xs text-[#B8956A] whitespace-nowrap ml-auto">
+          — Enhancement Mode Active
+        </span>
         <Button
           type="button"
           variant="ghost"
           size="sm"
           onClick={onRemove}
           disabled={disabled}
-          className="text-red-400 hover:text-red-300 hover:bg-red-400/10 h-8 w-8 p-0"
+          className="text-zinc-400 hover:text-red-400 hover:bg-transparent h-6 w-6 p-0 ml-2 flex-shrink-0"
         >
-          <X className="h-4 w-4" />
+          <X className="h-3.5 w-3.5" />
         </Button>
       </div>
     );
   }
 
+  // Hidden dropzone when no image - only shows on hover
   return (
-    <div className="relative">
-      <Label
+    <div 
+      className="relative"
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
+      <label
         htmlFor="product-image-upload"
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
@@ -103,21 +101,29 @@ export const ProductImageUpload = ({
           const file = e.dataTransfer.files?.[0];
           if (file && !disabled) processFile(file);
         }}
-        aria-label="Upload a product image"
-        className={`flex flex-col items-center justify-center p-3 border border-dashed rounded-lg cursor-pointer transition-all duration-300 group ${
+        className={`flex items-center gap-2 h-9 px-3 py-1 border rounded-md cursor-pointer transition-all duration-200 ${
           isDragging 
-            ? 'border-[#B8956A] bg-[#B8956A]/8' 
-            : 'border-zinc-700 bg-zinc-900/30 hover:border-[#B8956A]/60 hover:bg-[#B8956A]/5'
+            ? 'border-[#B8956A] bg-[#B8956A]/10' 
+            : isHovering
+            ? 'border-white/12 bg-[#1A1A1A]'
+            : 'border-transparent bg-transparent'
         } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        title="💡 Upload your product image if you want Madison to use it directly in the scene."
       >
-        <Upload className="w-5 h-5 text-[#B8956A] mb-1 group-hover:scale-110 transition-transform" />
-        <span className="text-xs text-[#F5F1E8] text-center">
-          Upload or Drag & Drop Here
+        <Upload className={`w-4 h-4 transition-all ${
+          isDragging || isHovering ? 'text-[#B8956A]' : 'text-zinc-600'
+        }`} />
+        <span className={`text-xs transition-all ${
+          isDragging || isHovering ? 'text-[#E0E0E0]' : 'text-zinc-600'
+        }`}>
+          {isDragging ? 'Drop image here' : 'Upload product image'}
         </span>
-        <span className="text-[10px] text-[#B8956A] italic mt-0.5 text-center">
-          Max 20MB
-        </span>
-      </Label>
+        {(isDragging || isHovering) && (
+          <span className="text-[10px] text-zinc-500 ml-auto">
+            Max 20MB
+          </span>
+        )}
+      </label>
       <Input
         id="product-image-upload"
         type="file"
@@ -128,4 +134,4 @@ export const ProductImageUpload = ({
       />
     </div>
   );
-};
+}

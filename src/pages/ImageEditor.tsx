@@ -692,8 +692,8 @@ export default function ImageEditor() {
           {/* Prompt Bar (Fixed Bottom) */}
           <footer className="border-t border-zinc-800 bg-zinc-900 backdrop-blur-sm sticky bottom-0 z-[15]">
             <div className="px-6 py-4 space-y-3">
-              {/* Top Row: Shot Type + Prompt + Button */}
-              <div className="flex items-end gap-3">
+              {/* Shot Type + Prompt with Upload Chip + Button */}
+              <div className="flex items-start gap-3">
                 <ShotTypeDropdown 
                   onSelect={async (shotType) => {
                     setMainPrompt(shotType.prompt);
@@ -716,25 +716,37 @@ export default function ImageEditor() {
                     }
                   }}
                 />
-                <Textarea
-                  value={mainPrompt}
-                  onChange={(e) => setMainPrompt(e.target.value)}
-                  placeholder="Describe the image you want to create..."
-                  className="flex-1 min-h-[44px] max-h-[120px] resize-none bg-[#111111] border-zinc-700 text-[#F5F1E8] placeholder:text-zinc-500 focus-visible:ring-aged-brass/50"
-                  style={{ color: '#F5F1E8' }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleGenerate();
-                    }
-                  }}
-                />
+                
+                <div className="flex-1 space-y-3">
+                  <Textarea
+                    value={mainPrompt}
+                    onChange={(e) => setMainPrompt(e.target.value)}
+                    placeholder="Describe the image you want to create..."
+                    className="w-full min-h-[44px] max-h-[120px] resize-none bg-[#111111] border-zinc-700 text-[#F5F1E8] placeholder:text-zinc-500 focus-visible:ring-aged-brass/50"
+                    style={{ color: '#F5F1E8' }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleGenerate();
+                      }
+                    }}
+                  />
+                  
+                  {/* Inline Upload Chip */}
+                  <ProductImageUpload
+                    productImage={productImage}
+                    onUpload={setProductImage}
+                    onRemove={() => setProductImage(null)}
+                    disabled={isGenerating}
+                  />
+                </div>
+                
                 <Button
                   onClick={handleGenerate}
                   disabled={!mainPrompt.trim() || isGenerating || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
                   size="lg"
                   variant="brass"
-                  className="h-[44px] px-6"
+                  className="h-[44px] px-6 self-start"
                 >
                   {isGenerating ? (
                     <>
@@ -748,29 +760,6 @@ export default function ImageEditor() {
                     </>
                   )}
                 </Button>
-              </div>
-
-              {/* Contextual Help Text */}
-              <p className="text-xs text-zinc-500 italic">
-                Want to refine your existing photo? Upload your image below and describe the desired outcome. Madison will edit your image based on your chosen Shot Type.
-              </p>
-
-              {/* Bottom Row: Product Image Upload */}
-              <div className="flex items-start gap-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-medium text-[#F5F1E8]">🖼️ Product Image (optional)</span>
-                  </div>
-                  <ProductImageUpload
-                    productImage={productImage}
-                    onUpload={setProductImage}
-                    onRemove={() => setProductImage(null)}
-                    disabled={isGenerating}
-                  />
-                  <p className="text-[10px] text-[#B8956A] mt-1 italic">
-                    💡 Tip: Upload your product image if you want Madison to use it directly in the scene.
-                  </p>
-                </div>
               </div>
             </div>
           </footer>
