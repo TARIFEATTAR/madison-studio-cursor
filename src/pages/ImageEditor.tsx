@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
+import { CollapsibleTrigger, Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 
 // Icons
@@ -36,6 +36,7 @@ import {
   Trash2,
   ImageIcon,
   ChevronDown,
+  ChevronUp,
   Upload
 } from "lucide-react";
 
@@ -90,9 +91,6 @@ export default function ImageEditor() {
   
   // Pro Mode Controls State
   const [proModeControls, setProModeControls] = useState<ProModeControls>({});
-  
-  // Style Preset State
-  const [stylePreset, setStylePreset] = useState<'photorealistic' | 'artistic' | 'minimalist' | null>(null);
   
   // Chain prompting state
   const [selectedForRefinement, setSelectedForRefinement] = useState<GeneratedImage | null>(null);
@@ -177,7 +175,7 @@ export default function ImageEditor() {
   };
 
   /**
-   * Enhance user prompt with Pro Mode controls and style presets
+   * Enhance user prompt with Pro Mode controls
    */
   const enhancePromptWithControls = (basePrompt: string): string => {
     let enhanced = basePrompt;
@@ -209,15 +207,6 @@ export default function ImageEditor() {
       }
     }
     
-    // Apply style preset modifiers
-    if (stylePreset === 'photorealistic') {
-      enhanced += ', photorealistic, ultra-detailed, high resolution, professional photography quality';
-    } else if (stylePreset === 'artistic') {
-      enhanced += ', artistic, creative composition, expressive, painterly aesthetic, stylized rendering';
-    } else if (stylePreset === 'minimalist') {
-      enhanced += ', minimalist, clean composition, simple elegant design, ample negative space, refined aesthetics';
-    }
-    
     return enhanced;
   };
 
@@ -235,23 +224,22 @@ export default function ImageEditor() {
     setIsGenerating(true);
     
     try {
-      // Call the edge function with enhanced prompt
+      // Call the edge function with enhanced prompt - backend handles ALL persistence
       const enhancedPrompt = enhancePromptWithControls(mainPrompt);
       const { data: functionData, error: functionError } = await supabase.functions.invoke(
         'generate-madison-image',
         {
           body: {
             prompt: enhancedPrompt,
-            userId: user.id, // FIX: Pass userId to prevent null constraint violation
+            userId: user.id,
+            organizationId: orgId,
+            goalType: 'product_photography', // Pass goalType for backend insert
             aspectRatio,
             outputFormat,
-            referenceImages: referenceImages.map(r => ({ url: r.url, description: r.description })),
+            referenceImages: referenceImages.map(r => ({ url: r.url, description: r.description, label: r.label })),
             brandContext: brandContext || undefined,
             isRefinement: false,
-            organizationId: orgId,
-            // Pass Pro Mode metadata for logging/tracking
-            proModeControls: Object.keys(proModeControls).length > 0 ? proModeControls : undefined,
-            stylePreset: stylePreset || undefined
+            proModeControls: Object.keys(proModeControls).length > 0 ? proModeControls : undefined
           }
         }
       );
@@ -259,28 +247,9 @@ export default function ImageEditor() {
       if (functionError) throw functionError;
       if (!functionData?.imageUrl) throw new Error("No image URL returned");
 
-      // Save to database
-      const imageId = crypto.randomUUID();
-      const { error: insertError } = await supabase
-        .from('generated_images')
-        .insert({
-          image_url: functionData.imageUrl,
-          final_prompt: mainPrompt,
-          prompt: mainPrompt,
-          goal_type: 'product_photography',
-          session_id: sessionId,
-          user_id: user?.id || '',
-          organization_id: orgId || '',
-          aspect_ratio: aspectRatio,
-          output_format: outputFormat,
-          chain_depth: 0,
-          is_chain_origin: true
-        });
-
-      if (insertError) throw insertError;
-
+      // Backend already saved the image - just update UI with returned data
       const newImage: GeneratedImage = {
-        id: imageId,
+        id: functionData.savedImageId || crypto.randomUUID(),
         imageUrl: functionData.imageUrl,
         prompt: mainPrompt,
         timestamp: Date.now(),
@@ -425,16 +394,17 @@ export default function ImageEditor() {
         {
           body: {
             prompt: selectedForRefinement.prompt,
-            userId: user.id, // FIX: Pass userId to prevent null constraint violation
+            userId: user.id,
+            organizationId: orgId,
+            goalType: 'product_photography', // Pass goalType for backend insert
             parentPrompt: selectedForRefinement.prompt,
             aspectRatio,
             outputFormat,
-            referenceImages: referenceImages.map(r => ({ url: r.url, description: r.description })),
+            referenceImages: referenceImages.map(r => ({ url: r.url, description: r.description, label: r.label })),
             brandContext: brandContext || undefined,
             isRefinement: true,
             refinementInstruction,
-            parentImageId: selectedForRefinement.id,
-            organizationId: orgId
+            parentImageId: selectedForRefinement.id
           }
         }
       );
@@ -442,29 +412,9 @@ export default function ImageEditor() {
       if (functionError) throw functionError;
       if (!functionData?.imageUrl) throw new Error("No image returned");
 
-      const newImageId = crypto.randomUUID();
-      const { error: insertError } = await supabase
-        .from('generated_images')
-        .insert({
-          image_url: functionData.imageUrl,
-          final_prompt: selectedForRefinement.prompt,
-          prompt: selectedForRefinement.prompt,
-          goal_type: 'product_photography',
-          session_id: sessionId,
-          user_id: user?.id || '',
-          organization_id: orgId || '',
-          aspect_ratio: aspectRatio,
-          output_format: outputFormat,
-          parent_image_id: selectedForRefinement.id,
-          chain_depth: selectedForRefinement.chainDepth + 1,
-          is_chain_origin: false,
-          refinement_instruction: refinementInstruction
-        });
-
-      if (insertError) throw insertError;
-
+      // Backend already saved the image - just update UI with returned data
       const newImage: GeneratedImage = {
-        id: newImageId,
+        id: functionData.savedImageId || crypto.randomUUID(),
         imageUrl: functionData.imageUrl,
         prompt: selectedForRefinement.prompt,
         timestamp: Date.now(),
@@ -579,18 +529,18 @@ export default function ImageEditor() {
                 <div className="space-y-2">
                   <Label className="text-xs text-zinc-400">Aspect Ratio</Label>
                   <Select value={aspectRatio} onValueChange={setAspectRatio}>
-                    <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-100">
+                    <SelectTrigger className="bg-zinc-900/90 border-zinc-700 text-zinc-100">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-zinc-800 border-zinc-700 z-50">
-                      <SelectItem value="1:1" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">Square (1:1)</SelectItem>
-                      <SelectItem value="4:5" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">Portrait (4:5)</SelectItem>
-                      <SelectItem value="5:4" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">Etsy (5:4)</SelectItem>
-                      <SelectItem value="2:3" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">Pinterest (2:3)</SelectItem>
-                      <SelectItem value="3:2" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">Email/Web (3:2)</SelectItem>
-                      <SelectItem value="16:9" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">Landscape (16:9)</SelectItem>
-                      <SelectItem value="9:16" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">Vertical (9:16)</SelectItem>
-                      <SelectItem value="21:9" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">Ultra-wide (21:9)</SelectItem>
+                    <SelectContent className="z-50 bg-zinc-900 text-zinc-100 border border-zinc-700 shadow-xl">
+                      <SelectItem value="1:1" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">Square (1:1)</SelectItem>
+                      <SelectItem value="4:5" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">Portrait (4:5)</SelectItem>
+                      <SelectItem value="5:4" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">Etsy (5:4)</SelectItem>
+                      <SelectItem value="2:3" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">Pinterest (2:3)</SelectItem>
+                      <SelectItem value="3:2" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">Email/Web (3:2)</SelectItem>
+                      <SelectItem value="16:9" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">Landscape (16:9)</SelectItem>
+                      <SelectItem value="9:16" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">Vertical (9:16)</SelectItem>
+                      <SelectItem value="21:9" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">Ultra-wide (21:9)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -598,13 +548,13 @@ export default function ImageEditor() {
                 <div className="space-y-2">
                   <Label className="text-xs text-zinc-400">Output Format</Label>
                   <Select value={outputFormat} onValueChange={(v: any) => setOutputFormat(v)}>
-                    <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-100">
+                    <SelectTrigger className="bg-zinc-900/90 border-zinc-700 text-zinc-100">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-zinc-800 border-zinc-700 z-50">
-                      <SelectItem value="png" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">PNG</SelectItem>
-                      <SelectItem value="jpeg" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">JPEG</SelectItem>
-                      <SelectItem value="webp" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">WebP</SelectItem>
+                    <SelectContent className="z-50 bg-zinc-900 text-zinc-100 border border-zinc-700 shadow-xl">
+                      <SelectItem value="png" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">PNG</SelectItem>
+                      <SelectItem value="jpeg" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">JPEG</SelectItem>
+                      <SelectItem value="webp" className="text-zinc-100 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-100">WebP</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -737,10 +687,10 @@ export default function ImageEditor() {
         </div>
       )}
 
-      {/* Bottom Bar: Generation Interface - Constrained Width */}
+      {/* Bottom Bar: Generation Interface - Constrained Within Canvas Area */}
       <div className="fixed bottom-0 left-[280px] right-0 bg-zinc-900/95 backdrop-blur-lg border-t border-zinc-800 z-20">
-        <div className="px-6 py-4 max-w-[1320px]">
-          <div className="flex items-end gap-3 max-w-[900px]">
+        <div className="px-6 py-4">
+          <div className="flex items-end gap-3 max-w-[900px] mx-auto">
             {/* Main Prompt Textarea */}
             <div className="flex-1">
               <Textarea
@@ -758,56 +708,19 @@ export default function ImageEditor() {
 
             {/* Control Strip */}
             <div className="flex flex-col gap-2">
-              {/* Top Row: Style Presets */}
-              <div className="flex gap-2">
-                <Button
-                  variant={stylePreset === 'photorealistic' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setStylePreset(prev => prev === 'photorealistic' ? null : 'photorealistic')}
-                  className={cn(
-                    "h-8 px-3 text-xs whitespace-nowrap",
-                    stylePreset === 'photorealistic' && "bg-blue-600 hover:bg-blue-700"
-                  )}
-                >
-                  📸 Photorealistic
-                </Button>
-                <Button
-                  variant={stylePreset === 'artistic' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setStylePreset(prev => prev === 'artistic' ? null : 'artistic')}
-                  className={cn(
-                    "h-8 px-3 text-xs whitespace-nowrap",
-                    stylePreset === 'artistic' && "bg-amber-600 hover:bg-amber-700"
-                  )}
-                >
-                  🎨 Artistic
-                </Button>
-                <Button
-                  variant={stylePreset === 'minimalist' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setStylePreset(prev => prev === 'minimalist' ? null : 'minimalist')}
-                  className={cn(
-                    "h-8 px-3 text-xs whitespace-nowrap",
-                    stylePreset === 'minimalist' && "bg-slate-600 hover:bg-slate-700"
-                  )}
-                >
-                  ✨ Minimalist
-                </Button>
-              </div>
-
-              {/* Bottom Row: Pro Mode Toggle + Generate */}
+              {/* Pro Mode Toggle + Generate Button */}
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setShowProMode(!showProMode)}
-                  className={cn("h-10 px-3", showProMode && "bg-zinc-700")}
+                  className={cn("h-10 px-3 text-zinc-100 border-zinc-700 hover:bg-zinc-800", showProMode && "bg-zinc-700")}
                 >
                   <Settings className="w-4 h-4 mr-2" />
                   Pro
-                  {(Object.keys(proModeControls).length > 0 || stylePreset) && (
+                  {Object.keys(proModeControls).length > 0 && (
                     <Badge variant="secondary" className="ml-2 text-xs">
-                      {Object.keys(proModeControls).length + (stylePreset ? 1 : 0)}
+                      {Object.keys(proModeControls).length}
                     </Badge>
                   )}
                 </Button>
@@ -815,7 +728,7 @@ export default function ImageEditor() {
                 <Button
                   onClick={handleGenerate}
                   disabled={isGenerating || !mainPrompt.trim() || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
-                  className="h-10 px-6 bg-blue-600 hover:bg-blue-700"
+                  className="h-10 px-6 bg-amber-500 hover:bg-amber-600 text-zinc-900 font-semibold"
                   size="lg"
                 >
                   {isGenerating ? (
@@ -845,7 +758,7 @@ export default function ImageEditor() {
       />
       
       {madisonOpen && (
-        <div className="fixed right-0 top-0 bottom-0 w-[360px] z-50 bg-zinc-900 border-l border-zinc-800 shadow-2xl">
+        <div className="fixed right-0 top-0 bottom-0 w-[320px] z-50 bg-zinc-900 border-l border-zinc-800 shadow-2xl">
           <EditorialAssistantPanel 
             onClose={() => setMadisonOpen(false)}
             initialContent=""
