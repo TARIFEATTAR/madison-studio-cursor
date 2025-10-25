@@ -6,6 +6,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 interface Message {
   id: string;
@@ -67,6 +69,8 @@ export default function MadisonPanel({
     return () => window.removeEventListener('keydown', handleKeyboard);
   }, [isOpen, onToggle]);
 
+  const { currentOrganizationId } = useOnboarding();
+
   const handleSend = async () => {
     if (!inputValue.trim() || isSending) return;
 
@@ -78,26 +82,54 @@ export default function MadisonPanel({
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const messageToSend = inputValue.trim();
     setInputValue("");
     setIsSending(true);
 
     try {
+      // Allow external hook-in, but always ensure we reply
       if (onSendMessage) {
-        await onSendMessage(inputValue.trim());
-      } else {
-        // Default mock response
-        setTimeout(() => {
-          const madisonMessage: Message = {
-            id: crypto.randomUUID(),
-            role: "madison",
-            content: "I'm here to help with your image generation. What would you like to refine?",
-            timestamp: Date.now()
-          };
-          setMessages(prev => [...prev, madisonMessage]);
-        }, 1000);
+        try { await onSendMessage(messageToSend); } catch {}
       }
-    } catch (error) {
-      console.error('Error sending message:', error);
+
+      // Build short conversation context
+      const conversation = messages
+        .map(m => `${m.role === 'user' ? 'User' : 'Madison'}: ${m.content}`)
+        .join("\n\n");
+
+      const prompt = `${conversation}\n\nUser: ${messageToSend}\n\nMadison:`;
+
+      const { data, error } = await supabase.functions.invoke("generate-with-claude", {
+        body: {
+          prompt,
+          organizationId: currentOrganizationId,
+          mode: "consult",
+        },
+      });
+
+      if (error) throw error;
+
+      const content: string = data?.generatedContent || "Let's refine this. Tell me the key product, surface, angle, and lighting you want.";
+
+      setMessages(prev => [...prev, {
+        id: crypto.randomUUID(),
+        role: "madison",
+        content,
+        timestamp: Date.now(),
+      }]);
+    } catch (err: any) {
+      console.error("Madison chat error:", err);
+      toast({
+        title: "Assistant error",
+        description: err?.message || "Unable to reach Madison right now.",
+        variant: "destructive",
+      });
+      setMessages(prev => [...prev, {
+        id: crypto.randomUUID(),
+        role: "madison",
+        content: "I'm having trouble connecting. Please try again in a moment.",
+        timestamp: Date.now(),
+      }]);
     } finally {
       setIsSending(false);
     }
