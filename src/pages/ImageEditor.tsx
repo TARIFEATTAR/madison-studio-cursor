@@ -51,6 +51,7 @@ import { RefinementPanel } from "@/components/image-editor/RefinementPanel";
 import { ProModePanel, ProModeControls } from "@/components/image-editor/ProModePanel";
 import { GeneratingLoader } from "@/components/forge/GeneratingLoader";
 import ThumbnailRibbon from "@/components/image-editor/ThumbnailRibbon";
+import MadisonDock from "@/components/image-editor/MadisonDock";
 
 // Prompt Formula Utilities
 import { CAMERA_LENS, LIGHTING, ENVIRONMENTS } from "@/utils/promptFormula";
@@ -748,7 +749,18 @@ export default function ImageEditor() {
             </aside>
           </>
         )}
-      </main>
+      </main>{/* close wrapper */}
+
+      {/* Madison Chat Dock */}
+      <MadisonDock
+        sessionCount={currentSession.images.length}
+        maxImages={MAX_IMAGES_PER_SESSION}
+        onSendMessage={async (message) => {
+          // Implement Madison AI response here
+          console.log('User message:', message);
+          // TODO: Call Madison AI assistant with session context
+        }}
+      />
 
       {/* Refinement Modal Overlay */}
       {refinementMode && selectedForRefinement && (
