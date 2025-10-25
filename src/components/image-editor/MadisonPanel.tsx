@@ -112,7 +112,7 @@ export default function MadisonPanel({
   if (isMobile) {
     return (
       <Sheet open={isOpen} onOpenChange={onToggle}>
-        <SheetContent side="bottom" className="h-[70vh] bg-zinc-950 border-zinc-800">
+        <SheetContent side="bottom" className="h-[95vh] bg-zinc-950 border-zinc-800">
           <SheetHeader className="border-b border-zinc-800 pb-3 mb-4">
             <div className="flex items-center gap-3">
               <Sparkles className="w-5 h-5 text-aged-brass" />
@@ -123,7 +123,7 @@ export default function MadisonPanel({
             </div>
           </SheetHeader>
 
-          <ScrollArea className="h-[calc(70vh-140px)] px-1">
+          <ScrollArea className="h-[calc(95vh-140px)] px-1">
             <div className="space-y-4 pb-4">
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-8">
@@ -168,7 +168,7 @@ export default function MadisonPanel({
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Ask Madison for feedback…"
-              className="flex-1 min-h-[44px] max-h-[100px] resize-none bg-zinc-900 border-zinc-700 text-aged-paper placeholder:text-zinc-500"
+              className="flex-1 min-h-[44px] max-h-[100px] resize-none bg-zinc-900 border-zinc-700 text-studio-text-primary placeholder:text-studio-text-muted"
               disabled={isSending}
             />
             <Button
@@ -265,7 +265,7 @@ export default function MadisonPanel({
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask Madison for feedback…"
-          className="flex-1 min-h-[44px] max-h-[120px] resize-none bg-zinc-900 border-zinc-700 text-aged-paper placeholder:text-zinc-500 focus-visible:ring-aged-brass/50"
+          className="flex-1 min-h-[44px] max-h-[120px] resize-none bg-zinc-900 border-zinc-700 text-studio-text-primary placeholder:text-studio-text-muted focus-visible:ring-aged-brass/50"
           disabled={isSending}
         />
         <Button

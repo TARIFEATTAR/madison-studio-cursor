@@ -40,7 +40,9 @@ import {
   ChevronDown,
   ChevronUp,
   Upload,
-  X
+  X,
+  MessageCircle,
+  Menu
 } from "lucide-react";
 
 // Feature Components
@@ -56,7 +58,7 @@ import { ProductImageUpload } from "@/components/image-editor/ProductImageUpload
 import MobileShotTypeSelector from "@/components/image-editor/MobileShotTypeSelector";
 import MobileAspectRatioSelector from "@/components/image-editor/MobileAspectRatioSelector";
 import MobileReferenceUpload from "@/components/image-editor/MobileReferenceUpload";
-import MadisonFloatingButton from "@/components/image-editor/MadisonFloatingButton";
+
 
 // Prompt Formula Utilities
 import { CAMERA_LENS, LIGHTING, ENVIRONMENTS } from "@/utils/promptFormula";
@@ -522,27 +524,39 @@ export default function ImageEditor() {
   if (isMobile) {
     return (
       <div className="flex flex-col min-h-screen bg-studio-charcoal text-aged-paper pb-16">
-        {/* Mobile Header */}
-        <header className="flex items-center justify-between px-4 py-3 border-b border-studio-border bg-studio-card/50 backdrop-blur-sm sticky top-0 z-20">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="text-studio-text-muted hover:text-aged-paper"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h1 className="text-base font-semibold text-aged-brass">Image Studio</h1>
-          {flaggedCount > 0 && (
-            <Button onClick={handleSaveSession} disabled={isSaving} variant="outline" size="sm">
-              <Save className="w-4 h-4" />
+        {/* Mobile Header - Compact */}
+        <header className="flex items-center justify-between px-4 py-2 border-b border-studio-border bg-studio-card/50 backdrop-blur-sm sticky top-0 z-20 h-10">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="text-studio-text-muted hover:text-aged-paper h-6 w-6 p-0"
+            >
+              <Menu className="w-4 h-4" />
             </Button>
-          )}
+            <h1 className="text-sm font-semibold text-aged-brass">Image Studio</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMadisonOpen(true)}
+              className="text-aged-brass hover:text-aged-brass/80 h-8 w-8 p-0"
+            >
+              <MessageCircle className="w-4 h-4" />
+            </Button>
+            {flaggedCount > 0 && (
+              <Button onClick={handleSaveSession} disabled={isSaving} variant="outline" size="sm" className="h-8">
+                <Save className="w-3.5 h-3.5" />
+              </Button>
+            )}
+          </div>
         </header>
 
-        {/* Mobile Tabs */}
+        {/* Mobile Tabs - Compact */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "create" | "gallery")} className="flex-1 flex flex-col">
-          <TabsList className="w-full grid grid-cols-2 bg-studio-card border-b border-studio-border rounded-none h-12">
+          <TabsList className="w-full grid grid-cols-2 bg-studio-card border-b border-studio-border rounded-none h-10">
             <TabsTrigger 
               value="create" 
               className="data-[state=active]:bg-studio-charcoal data-[state=active]:text-aged-brass data-[state=active]:border-b-2 data-[state=active]:border-aged-brass rounded-none"
@@ -557,8 +571,8 @@ export default function ImageEditor() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Create Tab */}
-          <TabsContent value="create" className="flex-1 px-4 py-4 space-y-4 overflow-y-auto mt-0">
+          {/* Create Tab - Tighter Spacing */}
+          <TabsContent value="create" className="flex-1 px-4 py-3 space-y-3 overflow-y-auto mt-0">
             {/* Large Prompt Textarea */}
             <div className="space-y-2">
               <Label className="text-studio-text-primary text-sm">Describe your image</Label>
@@ -566,7 +580,7 @@ export default function ImageEditor() {
                 value={mainPrompt}
                 onChange={(e) => setMainPrompt(e.target.value)}
                 placeholder="Describe your image idea..."
-                rows={4}
+                rows={3}
                 className="w-full bg-studio-card border-studio-border text-studio-text-primary placeholder:text-studio-text-muted focus-visible:ring-aged-brass/50"
                 disabled={isGenerating}
               />
@@ -796,10 +810,7 @@ export default function ImageEditor() {
           </div>
         )}
 
-        {/* Madison Floating Button */}
-        <MadisonFloatingButton onClick={() => setIsMadisonOpen(true)} />
-
-        {/* Madison Panel (Bottom Sheet) */}
+        {/* Madison Panel (Full-Screen Bottom Sheet) */}
         <MadisonPanel
           sessionCount={currentSession.images.length}
           maxImages={MAX_IMAGES_PER_SESSION}
