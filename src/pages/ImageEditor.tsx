@@ -18,12 +18,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
 
 // Icons
 import { 
@@ -32,24 +29,19 @@ import {
   Sparkles, 
   ArrowLeft, 
   Save, 
-  Star, 
+  Heart,
   Wand2, 
-  CheckCircle, 
-  XCircle, 
-  Check, 
-  X, 
-  MessageCircle, 
-  Trash2, 
-  Info 
+  Settings,
+  Info,
+  Trash2,
+  ImageIcon,
+  ChevronDown,
+  Upload
 } from "lucide-react";
 
 // Feature Components
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
-import { MadisonVerticalTab } from "@/components/assistant/MadisonVerticalTab";
 import { ReferenceUpload } from "@/components/image-editor/ReferenceUpload";
-import { GuidedPromptBuilder } from "@/components/image-editor/GuidedPromptBuilder";
-import { ImageTypeSelector } from "@/components/image-editor/ImageTypeSelector";
-import { ProModePanel, ProModeControls } from "@/components/image-editor/ProModePanel";
 import { ImageChainBreadcrumb } from "@/components/image-editor/ImageChainBreadcrumb";
 import { RefinementPanel } from "@/components/image-editor/RefinementPanel";
 
@@ -62,7 +54,6 @@ type GeneratedImage = {
   timestamp: number;
   isHero?: boolean;
   approvalStatus: ApprovalStatus;
-  // Chain tracking
   parentImageId?: string;
   chainDepth: number;
   isChainOrigin: boolean;
@@ -83,39 +74,29 @@ export default function ImageEditor() {
   const location = useLocation();
   const { user } = useAuth();
   const { orgId } = useCurrentOrganizationId();
-  const isMobile = useIsMobile();
   
   const [aspectRatio, setAspectRatio] = useState<string>("1:1");
   const [outputFormat, setOutputFormat] = useState<"png" | "jpeg" | "webp">("png");
-  const [libraryCategory, setLibraryCategory] = useState<"content" | "marketplace" | "both">("content");
   
-  const [userPrompt, setUserPrompt] = useState("");
+  const [mainPrompt, setMainPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [madisonOpen, setMadisonOpen] = useState(false);
-  const [guidedModeEnabled, setGuidedModeEnabled] = useState(false);
-  const [imageType, setImageType] = useState<string>("product");
-  const [proModeControls, setProModeControls] = useState<ProModeControls>({});
+  const [showProMode, setShowProMode] = useState(false);
   
   // Chain prompting state
   const [selectedForRefinement, setSelectedForRefinement] = useState<GeneratedImage | null>(null);
   const [refinementMode, setRefinementMode] = useState(false);
 
-  // Load prompt from navigation state if present (from Image Recipe Library)
-  useEffect(() => {
-    if (location.state?.loadedPrompt) {
-      setUserPrompt(location.state.loadedPrompt);
-      if (location.state.aspectRatio) setAspectRatio(location.state.aspectRatio);
-      if (location.state.outputFormat) setOutputFormat(location.state.outputFormat);
-      
-      toast.success("Image recipe loaded - Ready to generate!");
-      
-      // Clear state
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state]);
+  // Session state
+  const [sessionId] = useState(() => crypto.randomUUID());
+  const [currentSession, setCurrentSession] = useState<ImageSession>({
+    id: sessionId,
+    name: "New Session",
+    images: [],
+    createdAt: Date.now()
+  });
+  const [allPrompts, setAllPrompts] = useState<Array<{role: string, content: string}>>([]);
   
-  // Reference images state (now supports multiple images)
   type ReferenceImage = {
     url: string;
     description: string;
@@ -123,44 +104,41 @@ export default function ImageEditor() {
   };
   const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
   const [brandContext, setBrandContext] = useState<any>(null);
-  const [imageConstraints, setImageConstraints] = useState<any>(null);
-  const [isUploadingReference, setIsUploadingReference] = useState(false);
   
-  // Fetch brand context on mount
+  // Load prompt from navigation state if present
+  useEffect(() => {
+    if (location.state?.loadedPrompt) {
+      setMainPrompt(location.state.loadedPrompt);
+      if (location.state.aspectRatio) setAspectRatio(location.state.aspectRatio);
+      if (location.state.outputFormat) setOutputFormat(location.state.outputFormat);
+      toast.success("Image recipe loaded!");
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+  
+  // Fetch brand context
   useEffect(() => {
     const fetchBrandContext = async () => {
       if (!orgId) return;
-
       try {
-        // Fetch brand configuration for colors
         const { data: brandConfig } = await supabase
           .from('organizations')
           .select('brand_config')
           .eq('id', orgId)
           .single();
 
-        // Fetch brand knowledge for voice/tone, style, visual standards, and image constraints
         const { data: brandKnowledge } = await supabase
           .from('brand_knowledge')
           .select('content, knowledge_type')
           .eq('organization_id', orgId)
           .eq('is_active', true)
-          .in('knowledge_type', ['brand_voice', 'brand_style', 'visual_standards', 'image_constraints']);
+          .in('knowledge_type', ['brand_voice', 'brand_style', 'visual_standards']);
 
-        const voiceKnowledge = brandKnowledge?.find(k => k.knowledge_type === 'brand_voice');
-        const styleKnowledge = brandKnowledge?.find(k => k.knowledge_type === 'brand_style');
-        const visualStandards = brandKnowledge?.find(k => k.knowledge_type === 'visual_standards');
-        const constraints = brandKnowledge?.find(k => k.knowledge_type === 'image_constraints');
-
-        setBrandContext({
-          colors: (brandConfig?.brand_config as any)?.colors || [],
-          voiceTone: (voiceKnowledge?.content as any)?.tone || '',
-          styleKeywords: (styleKnowledge?.content as any)?.keywords || [],
-          visualStandards: visualStandards?.content || null
-        });
-        
-        if (constraints?.content) {
-          setImageConstraints(constraints.content);
+        if (brandConfig || brandKnowledge?.length) {
+          setBrandContext({
+            config: brandConfig,
+            knowledge: brandKnowledge
+          });
         }
       } catch (error) {
         console.error('Error fetching brand context:', error);
@@ -170,221 +148,98 @@ export default function ImageEditor() {
     fetchBrandContext();
   }, [orgId]);
   
-  // Session management - Auto-start
-  const [sessionId] = useState(crypto.randomUUID());
-  const [currentSession, setCurrentSession] = useState<ImageSession>({
-    id: sessionId,
-    name: `Session ${new Date().toLocaleDateString()}`,
-    images: [],
-    createdAt: Date.now()
-  });
-  const [allPrompts, setAllPrompts] = useState<string[]>([]); // Track conversation
-
-  const canGenerateMore = currentSession.images.length < MAX_IMAGES_PER_SESSION;
-  const progressText = `${currentSession.images.length}/${MAX_IMAGES_PER_SESSION}`;
-  const heroImage = currentSession.images.find(img => img.isHero) || currentSession.images[0];
-  
-  // Approval stats
-  const flaggedCount = currentSession.images.filter(img => img.approvalStatus === "flagged").length;
-  const rejectedCount = currentSession.images.filter(img => img.approvalStatus === "rejected").length;
-  const pendingCount = currentSession.images.filter(img => img.approvalStatus === "pending").length;
-
-  // Badge indicator for Madison
-  const [showMadisonBadge, setShowMadisonBadge] = useState(false);
-
-  useEffect(() => {
-    if (currentSession.images.length >= 3 && !madisonOpen) {
-      setShowMadisonBadge(true);
-    }
-    if (madisonOpen) {
-      setShowMadisonBadge(false);
-    }
-  }, [currentSession.images.length, madisonOpen]);
-
-  // Cleanup reference images on unmount (if user navigates away without saving)
+  // Cleanup reference images on unmount
   useEffect(() => {
     return () => {
-      if (referenceImages.length > 0 && user?.id) {
-        referenceImages.forEach(img => {
-          const urlParts = img.url.split('/reference-images/');
-          if (urlParts.length === 2) {
-            supabase.storage
-              .from('reference-images')
-              .remove([urlParts[1]])
-              .catch(err => console.error('Cleanup error:', err));
-          }
-        });
-      }
+      referenceImages.forEach(ref => {
+        if (ref.url.includes('image-editor-reference')) {
+          supabase.storage.from('images').remove([ref.url]);
+        }
+      });
     };
-  }, [referenceImages, user?.id]);
+  }, []);
 
-  // Smart session name generator - auto-update from first prompt
-  const generateSessionName = (prompt: string): string => {
-    const cleanPrompt = prompt.toLowerCase()
-      .replace(/\b(generate|create|make|show|image|photo|picture|of|a|an|the)\b/gi, '')
-      .trim();
-    
-    const words = cleanPrompt.split(/\s+/).filter(w => w.length > 3);
-    const keyWords = words.slice(0, 3).map(w => w.charAt(0).toUpperCase() + w.slice(1));
-    
-    return keyWords.length > 0 
-      ? `${keyWords.join(' ')} Session`
-      : `Session ${new Date().toLocaleDateString()}`;
+  const generateSessionName = (prompt: string) => {
+    const words = prompt.split(' ').slice(0, 4).join(' ');
+    return words.length > 30 ? words.substring(0, 30) + '...' : words;
   };
 
-  const handleGenerate = async (promptOverride?: string) => {
-    const prompt = promptOverride || userPrompt;
-    
-    if (!prompt.trim()) {
-      toast.error("Please describe the image you want to create");
+  const handleGenerate = async () => {
+    if (!mainPrompt.trim() || !user) {
+      toast.error("Please enter a prompt");
       return;
     }
 
-    if (!canGenerateMore) {
-      toast.error("Session complete! Save this session to start a new one.");
+    if (currentSession.images.length >= MAX_IMAGES_PER_SESSION) {
+      toast.error(`Session limit reached (${MAX_IMAGES_PER_SESSION} images). Please save this session first.`);
       return;
-    }
-
-    // Auto-update session name from first prompt
-    if (currentSession.images.length === 0 && currentSession.name.includes("Session")) {
-      const newName = generateSessionName(prompt);
-      setCurrentSession(prev => ({ ...prev, name: newName }));
     }
 
     setIsGenerating(true);
-    setAllPrompts(prev => [...prev, prompt]); // Track prompts
-
+    
     try {
-      const { data, error } = await supabase.functions.invoke("generate-madison-image", {
-        body: {
-          goalType: "product-photography",
-          aspectRatio,
-          outputFormat,
-          prompt,
-          organizationId: orgId,
-          userId: user.id,
-          selectedTemplate: null,
-          userRefinements: currentSession.images.length > 0 ? prompt : null,
-          referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
-          brandContext: brandContext || undefined,
-          imageConstraints: imageConstraints || undefined
-        },
-      });
-
-      if (error) throw error;
-
-      if (data?.imageUrl && data?.savedImageId) {
-        // Use the savedImageId from backend (edge function already inserted the row)
-        const savedId = data.savedImageId;
-        const imageOrder = currentSession.images.length;
-        
-        const newImage: GeneratedImage = {
-          id: savedId, // Use backend-generated ID
-          imageUrl: data.imageUrl,
-          prompt,
-          timestamp: Date.now(),
-          isHero: imageOrder === 0,
-          approvalStatus: "pending",
-          // Initialize chain fields
-          parentImageId: undefined,
-          chainDepth: 0,
-          isChainOrigin: true,
-          refinementInstruction: undefined
-        };
-        
-        setCurrentSession(prev => ({
-          ...prev,
-          images: [...prev.images, newImage]
-        }));
-        
-        // Update the existing row with session-specific details
-        const { error: updateError } = await supabase
-          .from("generated_images")
-          .update({
-            session_id: sessionId,
-            session_name: currentSession.name,
-            image_order: imageOrder,
-            is_hero_image: imageOrder === 0,
-            aspect_ratio: aspectRatio,
-            output_format: outputFormat,
-            final_prompt: prompt,
-          })
-          .eq('id', savedId);
-        
-        if (updateError) {
-          console.error("Failed to update image in DB:", updateError);
-          toast.error("Image generated but metadata not saved");
-        }
-        
-        // Auto-save image prompt to prompts table for Image Recipe Library
-        try {
-          const truncatedPrompt = prompt.length > 50 ? `${prompt.substring(0, 50)}...` : prompt;
-          
-          const { error: promptError } = await supabase
-            .from('prompts')
-            .insert([{
-              organization_id: orgId,
-              created_by: user.id,
-              title: `Image: ${truncatedPrompt}`,
-              deliverable_format: 'image_prompt',
-              prompt_text: prompt,
-              is_auto_saved: true,
-              is_template: false,
-              category: 'visual_content',
-              collection: 'Image Studio',
-              content_type: 'visual',
-              additional_context: {
-                image_type: imageType,
-                aspect_ratio: aspectRatio,
-                output_format: outputFormat,
-                goal_type: 'product-photography',
-                session_id: sessionId,
-                session_name: currentSession.name,
-                brand_context_used: brandContext,
-                reference_images_used: referenceImages.length > 0,
-                pro_mode_enabled: !!(proModeControls.camera || proModeControls.lighting || proModeControls.environment),
-                pro_mode_settings: proModeControls as any,
-                generated_at: new Date().toISOString()
-              } as any
-            }]);
-
-          if (promptError) {
-            console.warn("Image prompt not saved to library:", promptError);
+      // Call the edge function
+      const { data: functionData, error: functionError } = await supabase.functions.invoke(
+        'generate-madison-image',
+        {
+          body: {
+            prompt: mainPrompt,
+            aspectRatio,
+            outputFormat,
+            referenceImages: referenceImages.map(r => ({ url: r.url, description: r.description })),
+            brandContext: brandContext || undefined,
+            isRefinement: false,
+            organizationId: orgId
           }
-        } catch (error) {
-          console.error("Auto-save prompt failed:", error);
-          // Don't block the user flow
         }
-        
-        const isComplete = currentSession.images.length + 1 === MAX_IMAGES_PER_SESSION;
-        
-        toast.success(
-          isComplete 
-            ? `✨ Session complete! (${MAX_IMAGES_PER_SESSION}/${MAX_IMAGES_PER_SESSION}) Ready to save.`
-            : `✨ Image generated! (${currentSession.images.length + 1}/${MAX_IMAGES_PER_SESSION})`
-        );
-        
-        if (!promptOverride) setUserPrompt("");
-      }
-    } catch (error) {
-      console.error("Generation error:", error);
+      );
+
+      if (functionError) throw functionError;
+      if (!functionData?.imageUrl) throw new Error("No image URL returned");
+
+      // Save to database
+      const imageId = crypto.randomUUID();
+      const { error: insertError } = await supabase
+        .from('generated_images')
+        .insert({
+          image_url: functionData.imageUrl,
+          final_prompt: mainPrompt,
+          prompt: mainPrompt,
+          goal_type: 'product_photography',
+          session_id: sessionId,
+          user_id: user?.id || '',
+          organization_id: orgId || '',
+          aspect_ratio: aspectRatio,
+          output_format: outputFormat,
+          chain_depth: 0,
+          is_chain_origin: true
+        });
+
+      if (insertError) throw insertError;
+
+      const newImage: GeneratedImage = {
+        id: imageId,
+        imageUrl: functionData.imageUrl,
+        prompt: mainPrompt,
+        timestamp: Date.now(),
+        isHero: currentSession.images.length === 0,
+        approvalStatus: "pending",
+        chainDepth: 0,
+        isChainOrigin: true
+      };
+
+      setCurrentSession(prev => ({
+        ...prev,
+        name: prev.images.length === 0 ? generateSessionName(mainPrompt) : prev.name,
+        images: [...prev.images, newImage]
+      }));
+
+      setAllPrompts(prev => [...prev, { role: 'user', content: mainPrompt }]);
+      toast.success("Image generated successfully!");
       
-      // Extract error message from Supabase function error
-      let errorMessage = "Failed to generate image";
-      
-      if (error && typeof error === 'object') {
-        const err = error as any;
-        // Check for FunctionsHttpError with detailed message
-        if (err.message) {
-          errorMessage = err.message;
-        }
-        // Check for nested error object from edge function
-        if (err.context?.body?.error) {
-          errorMessage = err.context.body.error;
-        }
-      }
-      
-      toast.error(errorMessage);
+    } catch (error: any) {
+      console.error('Generation error:', error);
+      toast.error(error.message || "Failed to generate image");
     } finally {
       setIsGenerating(false);
     }
@@ -398,589 +253,387 @@ export default function ImageEditor() {
         isHero: img.id === imageId
       }))
     }));
-    toast.success("Hero image updated");
   };
 
   const handleToggleApproval = (imageId: string) => {
     setCurrentSession(prev => ({
       ...prev,
       images: prev.images.map(img => {
-        if (img.id === imageId) {
-          // Cycle: pending -> flagged -> rejected -> pending
-          const nextStatus: ApprovalStatus = 
-            img.approvalStatus === "pending" ? "flagged" :
-            img.approvalStatus === "flagged" ? "rejected" : "pending";
-          return { ...img, approvalStatus: nextStatus };
-        }
-        return img;
+        if (img.id !== imageId) return img;
+        const nextStatus: ApprovalStatus = 
+          img.approvalStatus === "pending" ? "flagged" :
+          img.approvalStatus === "flagged" ? "rejected" : "pending";
+        return { ...img, approvalStatus: nextStatus };
       })
     }));
   };
 
   const handleDeleteImage = async (imageId: string) => {
-    if (!confirm("Delete this image? This cannot be undone.")) return;
-    
     try {
-      // Remove from session state
-      setCurrentSession(prev => ({
-        ...prev,
-        images: prev.images.filter(img => img.id !== imageId)
-      }));
+      await supabase.from('generated_images').delete().eq('id', imageId);
       
-      // Delete from database
-      const { error } = await supabase
-        .from("generated_images")
-        .delete()
-        .eq('id', imageId);
+      setCurrentSession(prev => {
+        const newImages = prev.images.filter(img => img.id !== imageId);
+        if (newImages.length > 0 && !newImages.some(img => img.isHero)) {
+          newImages[0].isHero = true;
+        }
+        return { ...prev, images: newImages };
+      });
       
-      if (error) throw error;
-      
-      toast.success("Image deleted from session");
-    } catch (error: any) {
-      toast.error("Error deleting image: " + error.message);
+      toast.success("Image deleted");
+    } catch (error) {
+      toast.error("Failed to delete image");
     }
   };
 
   const handleSaveSession = async () => {
-    if (!user || !orgId) return;
-    
-    const flaggedImages = currentSession.images.filter(img => img.approvalStatus === "flagged");
-    
+    const flaggedImages = currentSession.images.filter(img => img.approvalStatus === 'flagged');
     if (flaggedImages.length === 0) {
-      toast.error("Please flag at least one image to save (click ✓ on thumbnails)");
+      toast.error("Please flag at least one image to save");
       return;
     }
 
     setIsSaving(true);
-
     try {
-      // Get IDs of flagged images
-      const flaggedIds = flaggedImages.map(img => img.id);
-      
-      // Determine library category value
-      const libraryCategoryValue = libraryCategory === "both" ? "content,marketplace" : libraryCategory;
-      
-      // Update only flagged images to saved_to_library: true
-      const { error: updateError } = await supabase
-        .from("generated_images")
-        .update({ 
-          saved_to_library: true,
-          library_category: libraryCategoryValue
-        })
-        .in('id', flaggedIds);
+      // Update generated_images to mark as saved
+      for (const image of flaggedImages) {
+        const { error } = await supabase
+          .from('generated_images')
+          .update({ saved_to_library: true })
+          .eq('id', image.id);
+        
+        if (error) throw error;
+      }
 
-      if (updateError) throw updateError;
-
-      // Clean up reference images from storage
-      if (referenceImages.length > 0 && user?.id) {
-        try {
-          const filePaths = referenceImages
-            .map(img => {
-              const urlParts = img.url.split('/reference-images/');
-              return urlParts.length === 2 ? urlParts[1] : null;
-            })
-            .filter(Boolean);
-          
-          if (filePaths.length > 0) {
-            await supabase.storage
-              .from('reference-images')
-              .remove(filePaths as string[]);
-          }
-        } catch (error) {
-          console.error('Error cleaning up reference images:', error);
+      // Cleanup references
+      for (const ref of referenceImages) {
+        if (ref.url.includes('image-editor-reference')) {
+          await supabase.storage.from('images').remove([ref.url]);
         }
       }
 
-      toast.success(`✅ Saved ${flaggedImages.length} approved images to ${libraryCategory === "both" ? "both libraries" : libraryCategory + " library"}`);
+      toast.success(`Saved ${flaggedImages.length} images to library!`);
       
-      // Reset for new session
-      window.location.reload();
+      // Reset session
+      setCurrentSession({
+        id: crypto.randomUUID(),
+        name: "New Session",
+        images: [],
+        createdAt: Date.now()
+      });
+      setReferenceImages([]);
+      setMainPrompt("");
       
     } catch (error) {
-      console.error("Save error:", error);
+      console.error('Save error:', error);
       toast.error("Failed to save session");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDownloadAll = () => {
-    const flaggedImages = currentSession.images.filter(img => img.approvalStatus === "flagged");
-    
-    if (flaggedImages.length === 0) {
-      toast.error("No approved images to download. Flag images first (✓).");
-      return;
-    }
-    
-    flaggedImages.forEach((image, index) => {
-      const link = document.createElement('a');
-      link.href = image.imageUrl;
-      link.download = `${currentSession.name}-${index + 1}.${outputFormat}`;
-      link.click();
-    });
-    toast.success(`Downloaded ${flaggedImages.length} approved images`);
-  };
-  
-  const handleReferenceUpload = async (imageData: string, description: string, label: ReferenceImage["label"]) => {
-    if (!user?.id) return;
-
-    try {
-      setIsUploadingReference(true);
-      
-      // Convert base64 to blob
-      const base64Response = await fetch(imageData);
-      const blob = await base64Response.blob();
-      
-      // Upload to storage
-      const fileName = `${user.id}/${Date.now()}.jpg`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('reference-images')
-        .upload(fileName, blob, {
-          contentType: 'image/jpeg',
-          upsert: true
-        });
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('reference-images')
-        .getPublicUrl(fileName);
-
-      // Add to reference images array
-      setReferenceImages(prev => [...prev, { url: publicUrl, description, label }]);
-      toast.success(`${label} reference uploaded`);
-    } catch (error) {
-      console.error('Error uploading reference image:', error);
-      toast.error("Failed to upload reference image");
-    } finally {
-      setIsUploadingReference(false);
-    }
+  const handleReferenceUpload = (url: string, description: string, label: "Background" | "Product" | "Style Reference") => {
+    setReferenceImages(prev => [...prev, { url, description, label }]);
+    toast.success("Reference added");
   };
 
-  const handleReferenceRemove = async (index: number) => {
-    const imageToRemove = referenceImages[index];
-    if (imageToRemove && user?.id) {
-      try {
-        // Extract file path from URL
-        const urlParts = imageToRemove.url.split('/reference-images/');
-        if (urlParts.length === 2) {
-          await supabase.storage
-            .from('reference-images')
-            .remove([urlParts[1]]);
-        }
-      } catch (error) {
-        console.error('Error deleting reference image:', error);
-      }
-    }
-    
+  const handleReferenceRemove = (index: number) => {
     setReferenceImages(prev => prev.filter((_, i) => i !== index));
-    toast.success("Reference image removed");
+    toast.success("Reference removed");
   };
 
-  const handleRefineImage = () => {
-    if (!heroImage) return;
-    setUserPrompt(`Refine the current image: `);
-  };
-  
-  // Chain prompting handlers
-  const MAX_CHAIN_DEPTH = 5;
-  
   const handleStartRefinement = (image: GeneratedImage) => {
-    // Check chain depth limit
-    if (image.chainDepth >= MAX_CHAIN_DEPTH) {
-      toast.error(`Maximum chain depth reached (${MAX_CHAIN_DEPTH} iterations). This image can't be refined further.`);
+    if (image.chainDepth >= 5) {
+      toast.error("Maximum refinement depth reached");
       return;
     }
-    
     setSelectedForRefinement(image);
     setRefinementMode(true);
-    
-    toast.info(`Refining from image ${currentSession.images.indexOf(image) + 1}`);
   };
 
   const handleRefine = async (refinementInstruction: string) => {
-    if (!selectedForRefinement || !refinementInstruction.trim()) return;
-    
-    if (!canGenerateMore) {
-      toast.error("Session complete! Save this session to start a new one.");
-      return;
-    }
+    if (!selectedForRefinement || !user) return;
     
     setIsGenerating(true);
+    setRefinementMode(false);
     
     try {
-      const { data, error } = await supabase.functions.invoke("generate-madison-image", {
-        body: {
-          goalType: "product-photography",
-          aspectRatio,
-          outputFormat,
+      const { data: functionData, error: functionError } = await supabase.functions.invoke(
+        'generate-madison-image',
+        {
+          body: {
+            prompt: selectedForRefinement.prompt,
+            parentPrompt: selectedForRefinement.prompt,
+            aspectRatio,
+            outputFormat,
+            referenceImages: referenceImages.map(r => ({ url: r.url, description: r.description })),
+            brandContext: brandContext || undefined,
+            isRefinement: true,
+            refinementInstruction,
+            parentImageId: selectedForRefinement.id,
+            organizationId: orgId
+          }
+        }
+      );
+
+      if (functionError) throw functionError;
+      if (!functionData?.imageUrl) throw new Error("No image returned");
+
+      const newImageId = crypto.randomUUID();
+      const { error: insertError } = await supabase
+        .from('generated_images')
+        .insert({
+          image_url: functionData.imageUrl,
+          final_prompt: selectedForRefinement.prompt,
           prompt: selectedForRefinement.prompt,
-          refinementInstruction,
-          organizationId: orgId,
-          userId: user.id,
-          parentImageId: selectedForRefinement.id,
-          parentPrompt: selectedForRefinement.prompt,
-          isRefinement: true,
-          brandContext: brandContext || undefined,
-          imageConstraints: imageConstraints || undefined
-        },
-      });
+          goal_type: 'product_photography',
+          session_id: sessionId,
+          user_id: user?.id || '',
+          organization_id: orgId || '',
+          aspect_ratio: aspectRatio,
+          output_format: outputFormat,
+          parent_image_id: selectedForRefinement.id,
+          chain_depth: selectedForRefinement.chainDepth + 1,
+          is_chain_origin: false,
+          refinement_instruction: refinementInstruction
+        });
+
+      if (insertError) throw insertError;
+
+      const newImage: GeneratedImage = {
+        id: newImageId,
+        imageUrl: functionData.imageUrl,
+        prompt: selectedForRefinement.prompt,
+        timestamp: Date.now(),
+        isHero: true,
+        approvalStatus: "pending",
+        parentImageId: selectedForRefinement.id,
+        chainDepth: selectedForRefinement.chainDepth + 1,
+        isChainOrigin: false,
+        refinementInstruction
+      };
+
+      setCurrentSession(prev => ({
+        ...prev,
+        images: prev.images.map(img => ({ ...img, isHero: false })).concat({ ...newImage, isHero: true })
+      }));
+
+      toast.success("Refinement complete!");
+      setSelectedForRefinement(null);
       
-      if (error) throw error;
-      
-      if (data?.imageUrl && data?.savedImageId) {
-        const imageOrder = currentSession.images.length;
-        
-        const newImage: GeneratedImage = {
-          id: data.savedImageId,
-          imageUrl: data.imageUrl,
-          prompt: selectedForRefinement.prompt, // Keep original prompt
-          timestamp: Date.now(),
-          isHero: false,
-          approvalStatus: "pending",
-          parentImageId: selectedForRefinement.id,
-          chainDepth: selectedForRefinement.chainDepth + 1,
-          isChainOrigin: false,
-          refinementInstruction
-        };
-        
-        setCurrentSession(prev => ({
-          ...prev,
-          images: [...prev.images, newImage]
-        }));
-        
-        // Update DB with session details
-        await supabase
-          .from("generated_images")
-          .update({
-            session_id: sessionId,
-            session_name: currentSession.name,
-            image_order: imageOrder,
-            is_hero_image: false
-          })
-          .eq('id', data.savedImageId);
-        
-        toast.success(`✨ Refinement generated! (${currentSession.images.length + 1}/${MAX_IMAGES_PER_SESSION})`);
-        
-        // Exit refinement mode
-        setRefinementMode(false);
-        setSelectedForRefinement(null);
-      }
-    } catch (error) {
-      console.error("Refinement error:", error);
-      
-      let errorMessage = "Failed to generate refinement";
-      if (error && typeof error === 'object') {
-        const err = error as any;
-        if (err.message) errorMessage = err.message;
-        if (err.context?.body?.error) errorMessage = err.context.body.error;
-      }
-      
-      toast.error(errorMessage);
+    } catch (error: any) {
+      console.error('Refinement error:', error);
+      toast.error(error.message || "Failed to refine image");
     } finally {
       setIsGenerating(false);
     }
   };
 
   const handleJumpToChainImage = (imageId: string) => {
-    const image = currentSession.images.find(img => img.id === imageId);
-    if (image) {
-      handleSetHero(imageId);
-    }
+    handleSetHero(imageId);
   };
 
-  const getImageChainIndicator = (image: GeneratedImage): React.ReactNode => {
-    if (image.isChainOrigin && hasChildren(image.id)) {
-      return <Badge variant="secondary" className="text-xs">Origin</Badge>;
-    }
-    if (image.chainDepth > 0) {
-      return <Badge variant="outline" className="text-xs">Chain {image.chainDepth}</Badge>;
-    }
-    return null;
-  };
+  const heroImage = currentSession.images.find(img => img.isHero);
+  const flaggedCount = currentSession.images.filter(img => img.approvalStatus === 'flagged').length;
 
-  const hasChildren = (imageId: string): boolean => {
-    return currentSession.images.some(img => img.parentImageId === imageId);
-  };
-
-  const quickRefinements = [
-    "More dramatic lighting",
-    "Different angle",
-    "Clean white background",
-    "Add soft shadows",
-    "Closer product shot"
-  ];
-
-  // Mobile-specific render
-  if (isMobile) {
-    return (
-      <div className="min-h-screen bg-[#252220] flex flex-col">
-        {/* Header */}
-        <div className="p-4 border-b border-[#3D3935]">
-          <div className="flex items-center justify-between mb-2">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="text-[#FFFCF5] hover:bg-[#3D3935]">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+      {/* Header */}
+      <header className="border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft className="w-5 h-5" />
             </Button>
-            {currentSession.images.length > 0 && (
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button size="sm" variant="outline" className="border-[#3D3935] text-[#D4CFC8]">
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Madison
-                    {showMadisonBadge && <span className="ml-2 w-2 h-2 bg-brass rounded-full" />}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="bottom" className="h-[80vh] bg-[#FFFCF5] p-0">
-                  <EditorialAssistantPanel
-                    onClose={() => {}}
-                    initialContent=""
-                    sessionContext={{
-                      sessionId: sessionId,
-                      sessionName: currentSession.name || "New Session",
-                      imagesGenerated: currentSession.images.length,
-                      maxImages: MAX_IMAGES_PER_SESSION,
-                      heroImage: heroImage ? {
-                        imageUrl: heroImage.imageUrl,
-                        prompt: heroImage.prompt
-                      } : undefined,
-                      allPrompts: allPrompts,
-                      aspectRatio: aspectRatio,
-                      outputFormat: outputFormat,
-                      isImageStudio: true
-                    }}
-                  />
-                </SheetContent>
-              </Sheet>
+            <div>
+              <h1 className="text-lg font-semibold">Image Studio</h1>
+              <p className="text-xs text-muted-foreground">Powered by Nano Banana</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              {currentSession.images.length} / {MAX_IMAGES_PER_SESSION}
+            </span>
+            {flaggedCount > 0 && (
+              <Button onClick={handleSaveSession} disabled={isSaving} size="sm">
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                Save ({flaggedCount})
+              </Button>
             )}
           </div>
-          <h1 className="font-serif text-2xl text-[#FFFCF5]">Image Studio</h1>
-          <p className="text-[#D4CFC8] text-sm">
-            {currentSession.images.length > 0
-              ? `${currentSession.name} • ${progressText}`
-              : "AI-powered product photography"
-            }
-          </p>
         </div>
+      </header>
 
-        {/* Action Buttons - Mobile */}
-        {currentSession.images.length > 0 && (
-          <div className="p-4 border-b border-[#3D3935] flex flex-col gap-2">
-            <div className="flex gap-2 justify-between items-center">
-              <div className="flex gap-2 flex-wrap">
-                <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-500/30">
-                  <CheckCircle className="w-3 h-3 mr-1" />
-                  {flaggedCount}
-                </Badge>
-                {rejectedCount > 0 && (
-                  <Badge variant="secondary" className="bg-red-500/20 text-red-300 border-red-500/30">
-                    <XCircle className="w-3 h-3 mr-1" />
-                    {rejectedCount}
-                  </Badge>
-                )}
-              </div>
-              <Button
-                onClick={handleDownloadAll}
-                variant="outline"
-                size="sm"
-                className="border-[#3D3935] text-[#D4CFC8] hover:bg-[#3D3935]"
-                disabled={flaggedCount === 0}
-              >
-                <Download className="w-4 h-4" />
-              </Button>
-            </div>
-            <Button
-              onClick={handleSaveSession}
-              disabled={isSaving || flaggedCount === 0}
-              className="w-full bg-brass hover:bg-brass/90 text-white"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Save to Library ({flaggedCount})
-                </>
-              )}
-            </Button>
-          </div>
-        )}
-
-        {/* Main Content - Mobile Tabs */}
-        <Tabs defaultValue="create" className="flex-1 flex flex-col">
-            <TabsList className="w-full grid grid-cols-3 bg-[#2F2A26] border-b border-[#3D3935] rounded-none h-12">
-              <TabsTrigger value="preview" className="text-[#D4CFC8] data-[state=active]:text-[#FFFCF5] data-[state=active]:bg-[#3D3935]">
-                Preview
-              </TabsTrigger>
-              <TabsTrigger value="session" className="text-[#D4CFC8] data-[state=active]:text-[#FFFCF5] data-[state=active]:bg-[#3D3935]">
-                Session
-              </TabsTrigger>
-              <TabsTrigger value="create" className="text-[#D4CFC8] data-[state=active]:text-[#FFFCF5] data-[state=active]:bg-[#3D3935]">
-                Create
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Preview Tab */}
-            <TabsContent value="preview" className="flex-1 p-4 m-0">
-              <Card className="h-full p-4 bg-[#2F2A26] border-[#3D3935] flex flex-col items-center justify-center">
-                {isGenerating ? (
-                  <div className="text-center space-y-3">
-                    <Loader2 className="w-10 h-10 text-brass animate-spin mx-auto" />
-                    <p className="text-[#D4CFC8]">Generating...</p>
-                  </div>
-                ) : heroImage ? (
-                  <div className="w-full flex flex-col items-center space-y-3">
-                    <div className="relative w-full">
-                      <img
-                        src={heroImage.imageUrl}
-                        alt="Generated"
-                        className="w-full h-auto object-contain rounded"
-                      />
-                      {heroImage.isHero && (
-                        <div className="absolute top-2 right-2 bg-brass text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
-                          <Star className="w-3 h-3 fill-white" />
-                          HERO
-                        </div>
-                      )}
-                    </div>
-                    <div className="w-full">
-                      <p className="text-xs text-[#A8A39E] font-medium mb-1">PROMPT</p>
-                      <p className="text-sm text-[#D4CFC8] italic">"{heroImage.prompt}"</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center space-y-2">
-                    <Sparkles className="w-12 h-12 text-brass/30 mx-auto" />
-                    <p className="text-[#FFFCF5]">No image yet</p>
-                    <p className="text-sm text-[#D4CFC8]">Go to Create tab to start</p>
-                  </div>
-                )}
-              </Card>
-            </TabsContent>
-
-            {/* Session Tab */}
-            <TabsContent value="session" className="flex-1 p-4 m-0 overflow-auto">
-                <div className="grid grid-cols-2 gap-3">
-                {currentSession.images.map((image, index) => (
-                  <div key={image.id} className="relative group">
-                    <button
-                      onClick={() => handleSetHero(image.id)}
-                      className={`relative w-full aspect-square rounded border-2 overflow-hidden ${
-                        image.isHero
-                          ? "border-brass ring-2 ring-brass/20"
-                          : image.approvalStatus === "flagged"
-                          ? "border-green-500 ring-2 ring-green-500/20"
-                          : image.approvalStatus === "rejected"
-                          ? "border-red-500 ring-2 ring-red-500/20 opacity-50"
-                          : "border-charcoal/20"
-                      }`}
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Left: Image Display & Chain (2 columns) */}
+          <div className="lg:col-span-2 space-y-4">
+            {/* Hero Image Display */}
+            {heroImage ? (
+              <Card className="overflow-hidden border-2">
+                <div className="relative aspect-square bg-muted">
+                  <img 
+                    src={heroImage.imageUrl} 
+                    alt="Generated" 
+                    className="w-full h-full object-contain"
+                  />
+                  <div className="absolute top-4 right-4 flex gap-2">
+                    <Button
+                      size="sm"
+                      variant={heroImage.approvalStatus === 'flagged' ? 'default' : 'secondary'}
+                      onClick={() => handleToggleApproval(heroImage.id)}
                     >
-                      <img
-                        src={image.imageUrl}
-                        alt={`${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      
-                      {/* Delete Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteImage(image.id);
-                        }}
-                        className="absolute top-2 left-2 p-1.5 rounded-full bg-black/60 hover:bg-red-600/90 backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 z-20"
-                      >
-                        <Trash2 className="w-3 h-3 text-white" />
-                      </button>
-                      
-                      {image.isHero && (
-                        <div className="absolute top-1 right-1 bg-brass text-white rounded-full p-1">
-                          <Star className="w-3 h-3 fill-white" />
-                        </div>
-                      )}
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-                        <p className="text-xs text-white font-medium">{index + 1}</p>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => handleToggleApproval(image.id)}
-                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#252220] border border-[#3D3935] rounded-full p-1.5 z-10"
+                      <Heart className={cn("w-4 h-4", heroImage.approvalStatus === 'flagged' && "fill-current")} />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => window.open(heroImage.imageUrl, '_blank')}
                     >
-                      {image.approvalStatus === "pending" && <Check className="w-4 h-4 text-[#A8A39E]" />}
-                      {image.approvalStatus === "flagged" && <Check className="w-4 h-4 text-green-500" />}
-                      {image.approvalStatus === "rejected" && <X className="w-4 h-4 text-red-500" />}
-                    </button>
+                      <Download className="w-4 h-4" />
+                    </Button>
                   </div>
-                ))}
-                {Array.from({ length: Math.max(0, MAX_IMAGES_PER_SESSION - currentSession.images.length) }).map((_, i) => (
-                  <div
-                    key={`empty-${i}`}
-                    className="w-full aspect-square rounded border-2 border-dashed border-[#3D3935] bg-[#2F2A26]/50 flex items-center justify-center"
-                  >
-                    <p className="text-sm text-[#A8A39E]">{currentSession.images.length + i + 1}</p>
-                  </div>
-                ))}
-              </div>
-            </TabsContent>
-
-            {/* Create Tab */}
-            <TabsContent value="create" className="flex-1 p-4 m-0 overflow-auto">
-              <div className="space-y-4">
-                {/* Reference Upload - Moved to top */}
-                <ReferenceUpload
-                  images={referenceImages}
-                  onUpload={handleReferenceUpload}
-                  onRemove={handleReferenceRemove}
-                  isUploading={isUploadingReference}
-                />
-
-                {/* Create & Refine with consolidated settings */}
-                <Card className="p-4 bg-[#2F2A26] border-[#3D3935]">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-xs font-semibold text-[#D4CFC8] tracking-wide">CREATE & REFINE</h3>
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor="guided-mobile" className="text-xs text-[#A8A39E]">Guided</Label>
-                      <Switch
-                        id="guided-mobile"
-                        checked={guidedModeEnabled}
-                        onCheckedChange={setGuidedModeEnabled}
-                        className="data-[state=checked]:bg-brass"
-                      />
-                    </div>
-                  </div>
-                  
-                  {guidedModeEnabled ? (
-                    <div className="mb-4">
-                      <GuidedPromptBuilder
-                        onPromptGenerated={(prompt) => {
-                          setUserPrompt(prompt);
-                          toast.success("Prompt built!");
-                        }}
-                        brandContext={brandContext}
-                            hasReferenceImage={referenceImages.length > 0}
-                      />
-                    </div>
-                  ) : (
-                    <Textarea
-                      value={userPrompt}
-                      onChange={(e) => setUserPrompt(e.target.value)}
-                      placeholder="Describe your image..."
-                      disabled={!canGenerateMore}
-                      className="resize-none bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E] min-h-[100px] mb-4"
+                </div>
+                <div className="p-4 space-y-3">
+                  {heroImage.chainDepth > 0 && (
+                    <ImageChainBreadcrumb
+                      currentImage={heroImage}
+                      allImages={currentSession.images}
+                      onImageClick={handleJumpToChainImage}
                     />
                   )}
-                  
-                  {/* Output & Save Settings */}
-                  <div className="space-y-3 mb-4 pt-3 border-t border-[#3D3935]">
-                    <h4 className="text-xs font-semibold text-[#D4CFC8] tracking-wide">OUTPUT & SAVE</h4>
-                    
-                    <div>
-                      <Label className="text-xs text-[#A8A39E] mb-1.5 block">Format</Label>
-                      <Select value={outputFormat} onValueChange={(value: "png" | "jpeg" | "webp") => setOutputFormat(value)}>
-                        <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5]">
+                  <p className="text-sm text-muted-foreground">{heroImage.prompt}</p>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleStartRefinement(heroImage)}
+                      variant="outline"
+                      size="sm"
+                      disabled={heroImage.chainDepth >= 5}
+                    >
+                      <Wand2 className="w-4 h-4 mr-2" />
+                      Refine This
+                    </Button>
+                    <Button
+                      onClick={() => handleDeleteImage(heroImage.id)}
+                      variant="ghost"
+                      size="sm"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ) : (
+              <Card className="aspect-square flex items-center justify-center border-2 border-dashed">
+                <div className="text-center p-8">
+                  <ImageIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-medium mb-2">No images yet</h3>
+                  <p className="text-sm text-muted-foreground">Generate your first image to get started</p>
+                </div>
+              </Card>
+            )}
+
+            {/* Thumbnail Gallery */}
+            {currentSession.images.length > 0 && (
+              <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+                {currentSession.images.map((img) => (
+                  <button
+                    key={img.id}
+                    onClick={() => handleSetHero(img.id)}
+                    className={cn(
+                      "relative aspect-square rounded-lg overflow-hidden border-2 transition-all hover:scale-105",
+                      img.isHero ? "border-primary ring-2 ring-primary" : "border-transparent"
+                    )}
+                  >
+                    <img src={img.imageUrl} alt="" className="w-full h-full object-cover" />
+                    {img.chainDepth > 0 && (
+                      <div className="absolute bottom-1 right-1 bg-background/90 text-xs px-1.5 py-0.5 rounded">
+                        +{img.chainDepth}
+                      </div>
+                    )}
+                    {img.approvalStatus === 'flagged' && (
+                      <Heart className="absolute top-1 right-1 w-4 h-4 fill-primary text-primary" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Right: Controls (1 column) */}
+          <div className="space-y-4">
+            {/* Reference Upload */}
+            <Card className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Upload className="w-4 h-4 text-muted-foreground" />
+                <h3 className="font-medium text-sm">Reference Images</h3>
+              </div>
+              <ReferenceUpload
+                images={referenceImages}
+                onUpload={handleReferenceUpload}
+                onRemove={handleReferenceRemove}
+                maxImages={3}
+              />
+            </Card>
+
+            {/* Refinement or Generation */}
+            {refinementMode && selectedForRefinement ? (
+              <RefinementPanel
+                baseImage={selectedForRefinement}
+                onRefine={handleRefine}
+                onCancel={() => {
+                  setRefinementMode(false);
+                  setSelectedForRefinement(null);
+                }}
+              />
+            ) : (
+              <Card className="p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium">Create Image</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowProMode(!showProMode)}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    {showProMode ? 'Simple' : 'Pro'}
+                  </Button>
+                </div>
+
+                <Textarea
+                  value={mainPrompt}
+                  onChange={(e) => setMainPrompt(e.target.value)}
+                  placeholder="Describe the image you want to create..."
+                  className="min-h-[120px] resize-none"
+                />
+
+                <Collapsible open={showProMode}>
+                  <CollapsibleContent className="space-y-4 pt-4 border-t">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Aspect Ratio</Label>
+                      <Select value={aspectRatio} onValueChange={setAspectRatio}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1:1">Square (1:1)</SelectItem>
+                          <SelectItem value="4:3">Standard (4:3)</SelectItem>
+                          <SelectItem value="16:9">Widescreen (16:9)</SelectItem>
+                          <SelectItem value="9:16">Portrait (9:16)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs">Output Format</Label>
+                      <Select value={outputFormat} onValueChange={(v: any) => setOutputFormat(v)}>
+                        <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -990,611 +643,51 @@ export default function ImageEditor() {
                         </SelectContent>
                       </Select>
                     </div>
-                    
-                    <div>
-                      <Label className="text-xs text-[#A8A39E] mb-1.5 block">Save to Library</Label>
-                      <Select value={libraryCategory} onValueChange={(v) => setLibraryCategory(v as any)}>
-                        <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="content">Content Library</SelectItem>
-                          <SelectItem value="marketplace">Listing Templates</SelectItem>
-                          <SelectItem value="both">Both Libraries</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  {/* Advanced Settings - Collapsible */}
-                  <Collapsible className="mb-4">
-                    <CollapsibleTrigger className="flex items-center justify-between w-full py-2 text-xs font-semibold text-[#D4CFC8] tracking-wide hover:text-brass transition-colors">
-                      ADVANCED
-                      <span className="text-[#A8A39E]">▼</span>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="pt-3 space-y-3">
-                      <div>
-                        <Label className="text-xs text-[#A8A39E] mb-1.5 block">Aspect Ratio</Label>
-                        <Select value={aspectRatio} onValueChange={setAspectRatio}>
-                          <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1:1">Square (1:1)</SelectItem>
-                            <SelectItem value="4:5">Portrait (4:5)</SelectItem>
-                            <SelectItem value="5:4">Etsy (5:4)</SelectItem>
-                            <SelectItem value="16:9">Landscape (16:9)</SelectItem>
-                            <SelectItem value="9:16">Vertical (9:16)</SelectItem>
-                            <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <p className="text-[10px] text-[#A8A39E] mt-1.5 leading-relaxed">
-                          Guides composition but not a hard crop. For best results, describe your desired framing in the prompt.
-                        </p>
-                      </div>
-                      
-                      <div className="pt-2 border-t border-[#3D3935]/50">
-                        <ProModePanel
-                          onControlsChange={setProModeControls}
-                          initialValues={proModeControls}
-                        />
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                  
-                  {/* Generate Button */}
-                  <div className="space-y-2">
-                    <div className="text-xs text-[#A8A39E] text-center">
-                      <span className={canGenerateMore ? "text-brass font-semibold" : "text-orange-400 font-semibold"}>
-                        {MAX_IMAGES_PER_SESSION - currentSession.images.length}
-                      </span>
-                      {" / "}{MAX_IMAGES_PER_SESSION} remaining
-                    </div>
-                    
-                    <Button
-                      onClick={() => handleGenerate()}
-                      disabled={isGenerating || !userPrompt.trim() || !canGenerateMore}
-                      className="w-full bg-brass hover:bg-brass/90 text-white"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4 mr-2" />
-                          Generate
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
-      </div>
-    );
-  }
+                  </CollapsibleContent>
+                </Collapsible>
 
-  // Desktop Layout
-  return (
-    <div className="min-h-screen bg-[#252220] flex">
-      {/* Madison Vertical Tab - Only visible when closed */}
-      {!madisonOpen && (
-        <MadisonVerticalTab 
-          isOpen={false}
-          onClick={() => setMadisonOpen(true)}
-          hasSuggestions={showMadisonBadge}
-        />
-      )}
-
-      {/* Main Layout with Resizable Panels */}
-      <ResizablePanelGroup direction="horizontal" className="flex-1">
-        {/* Main Studio Content */}
-        <ResizablePanel defaultSize={madisonOpen ? 70 : 100} minSize={50}>
-          <div className="h-full overflow-auto">
-            <div className="max-w-[1800px] mx-auto p-6">
-          {/* Header */}
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="text-[#FFFCF5] hover:bg-[#3D3935]">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back
-                </Button>
-                <h1 className="font-serif text-3xl text-[#FFFCF5]">Madison Image Studio</h1>
-              </div>
-              <p className="text-[#D4CFC8] text-sm">
-                {currentSession.images.length > 0
-                  ? `Session: ${currentSession.name} • ${progressText} images`
-                  : "AI-powered product photography sessions"
-                }
-              </p>
-            </div>
-            
-            <div className="flex gap-2 items-center">
-              {currentSession.images.length > 0 && (
-                <>
-                  <div className="flex gap-2 text-xs text-[#D4CFC8] mr-2">
-                    <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-500/30">
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      {flaggedCount} Approved
-                    </Badge>
-                    {rejectedCount > 0 && (
-                      <Badge variant="secondary" className="bg-red-500/20 text-red-300 border-red-500/30">
-                        <XCircle className="w-3 h-3 mr-1" />
-                        {rejectedCount} Rejected
-                      </Badge>
-                    )}
-                  </div>
-                  <Button
-                    onClick={handleDownloadAll}
-                    variant="outline"
-                    size="sm"
-                    className="border-[#3D3935] text-[#D4CFC8] hover:bg-[#3D3935] hover:text-[#FFFCF5]"
-                    disabled={flaggedCount === 0}
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download Approved
-                  </Button>
-                  <Button
-                    onClick={handleSaveSession}
-                    disabled={isSaving || flaggedCount === 0}
-                    size="sm"
-                    className="bg-brass hover:bg-brass/90 text-white"
-                  >
-                    {isSaving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4 mr-2" />
-                        Save to Library ({flaggedCount})
-                      </>
-                    )}
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Main Layout: 3-Column Layout - Gallery + Image + Chat Sidebar */}
-          <div className="flex gap-6 h-[calc(100vh-180px)] overflow-hidden">
-              {/* Left Sidebar - Thumbnail Gallery */}
-              <div className="w-32 flex-shrink-0 space-y-3 overflow-y-auto min-h-0 overscroll-contain">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-semibold text-[#D4CFC8] tracking-wide">SESSION</p>
-                  <p className="text-xs font-bold text-brass">{progressText}</p>
-                </div>
-                
-                {currentSession.images.map((image, index) => {
-                  const chainIndicator = getImageChainIndicator(image);
-                  const isChainParent = hasChildren(image.id);
-                  
-                  return (
-                  <div key={image.id} className="relative group">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            onClick={() => handleSetHero(image.id)}
-                            className={`relative w-full aspect-square rounded border-2 transition-all overflow-hidden hover:scale-105 ${
-                              image.isHero
-                                ? "border-brass shadow-md ring-2 ring-brass/20"
-                                : image.approvalStatus === "flagged"
-                                ? "border-green-500 ring-2 ring-green-500/20"
-                                : image.approvalStatus === "rejected"
-                                ? "border-red-500 ring-2 ring-red-500/20 opacity-50"
-                                : "border-charcoal/20 hover:border-brass/50"
-                            } ${isChainParent ? "border-l-4 border-l-blue-500" : ""}`}
-                          >
-                      <img
-                        src={image.imageUrl}
-                        alt={`Generation ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      
-                      {/* Chain depth indicator */}
-                      {image.chainDepth > 0 && (
-                        <div className="absolute top-1 left-1 bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded font-semibold">
-                          ↻{image.chainDepth}
-                        </div>
-                      )}
-                      
-                      {/* Delete Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteImage(image.id);
-                        }}
-                        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 hover:bg-red-600/90 backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 z-20"
-                      >
-                        <Trash2 className="w-4 h-4 text-white" />
-                      </button>
-                      
-                      {image.isHero && (
-                        <div className="absolute top-1 right-1 bg-brass text-white rounded-full p-1">
-                          <Star className="w-3 h-3 fill-white" />
-                        </div>
-                      )}
-                      {image.approvalStatus === "flagged" && (
-                        <div className="absolute top-1 left-1 bg-green-500 text-white rounded-full p-1">
-                          <Check className="w-3 h-3" />
-                        </div>
-                      )}
-                      {image.approvalStatus === "rejected" && (
-                        <div className="absolute top-1 left-1 bg-red-500 text-white rounded-full p-1">
-                          <X className="w-3 h-3" />
-                        </div>
-                      )}
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-1">
-                        <p className="text-[10px] text-white text-center font-medium">{index + 1}</p>
-                      </div>
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="text-xs">
-                            {image.chainDepth > 0 
-                              ? `Chain depth ${image.chainDepth}: ${image.refinementInstruction?.substring(0, 30) || 'refinement'}...`
-                              : "Click to view full size"}
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <button
-                      onClick={() => handleToggleApproval(image.id)}
-                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#252220] border border-[#3D3935] rounded-full p-1 hover:bg-[#3D3935] transition-colors z-10"
-                      title={`Approval status: ${image.approvalStatus}`}
-                    >
-                      {image.approvalStatus === "pending" && <Check className="w-3 h-3 text-[#A8A39E]" />}
-                      {image.approvalStatus === "flagged" && <Check className="w-3 h-3 text-green-500" />}
-                      {image.approvalStatus === "rejected" && <X className="w-3 h-3 text-red-500" />}
-                    </button>
-                  </div>
-                  );
-                })}
-                
-                {/* Empty slots */}
-                {Array.from({ length: Math.max(0, MAX_IMAGES_PER_SESSION - currentSession.images.length) }).map((_, i) => (
-                  <div
-                    key={`empty-${i}`}
-                    className="w-full aspect-square rounded border-2 border-dashed border-[#3D3935] bg-[#2F2A26]/50 flex items-center justify-center"
-                  >
-                    <p className="text-xs text-[#A8A39E] font-medium">
-                      {currentSession.images.length + i + 1}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Center - Main Image Display */}
-              <div className="flex-1 min-w-0 overflow-hidden">
-                <Card className="h-full p-6 bg-[#2F2A26] border-[#3D3935] shadow-lg flex flex-col items-center justify-center overflow-y-auto">
+                <Button
+                  onClick={handleGenerate}
+                  disabled={isGenerating || !mainPrompt.trim()}
+                  className="w-full"
+                  size="lg"
+                >
                   {isGenerating ? (
-                    <div className="text-center space-y-4">
-                      <Loader2 className="w-12 h-12 text-brass animate-spin mx-auto" />
-                      <p className="text-[#D4CFC8]">Generating your image...</p>
-                      <p className="text-xs text-[#A8A39E]">This may take 15-30 seconds</p>
-                    </div>
-                  ) : heroImage ? (
-                    <div className="w-full h-full flex flex-col items-center justify-center space-y-4">
-                      {/* Chain Breadcrumb */}
-                      {heroImage.chainDepth > 0 && (
-                        <ImageChainBreadcrumb
-                          currentImage={heroImage}
-                          allImages={currentSession.images}
-                          onImageClick={handleJumpToChainImage}
-                        />
-                      )}
-                      
-                      <div className="relative flex items-center justify-center max-h-[450px] group">
-                        <img
-                          src={heroImage.imageUrl}
-                          alt="Generated Product"
-                          className="max-h-[450px] w-auto object-contain rounded shadow-lg"
-                        />
-                {heroImage.isHero && (
-                          <div className="absolute top-4 right-4 bg-brass text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg">
-                            <Star className="w-3 h-3 fill-white" />
-                            HERO
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Info className="w-3 h-3 cursor-help ml-1" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p className="text-xs">Your main image for this session. Click thumbnails to change.</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </div>
-                        )}
-                        
-                        {/* Refine This Button */}
-                        {!refinementMode && heroImage.chainDepth < MAX_CHAIN_DEPTH && (
-                          <Button
-                            onClick={() => handleStartRefinement(heroImage)}
-                            size="sm"
-                            variant="secondary"
-                            className="absolute top-4 left-4 bg-[#2F2A26]/90 hover:bg-[#2F2A26] border-[#3D3935] text-[#FFFCF5] opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Wand2 className="w-4 h-4 mr-2" />
-                            Refine This
-                          </Button>
-                        )}
-                      </div>
-                      
-                      <div className="text-center max-w-md px-4">
-                        <p className="text-xs text-[#A8A39E] font-medium mb-2">GENERATION PROMPT</p>
-                        <p className="text-sm text-[#D4CFC8] italic line-clamp-3">"{heroImage.prompt}"</p>
-                        {heroImage.refinementInstruction && (
-                          <p className="text-xs text-blue-400 mt-1">Refinement: {heroImage.refinementInstruction}</p>
-                        )}
-                      </div>
-                    </div>
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Generating...
+                    </>
                   ) : (
-                    <div className="text-center space-y-3">
-                      <Sparkles className="w-16 h-16 text-brass/30 mx-auto" />
-                      <p className="text-lg text-[#FFFCF5] font-medium">Generate your first image</p>
-                      <p className="text-sm text-[#D4CFC8]">Describe the product photo you want in the chat</p>
-                    </div>
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Generate Image
+                    </>
                   )}
-                </Card>
-              </div>
+                </Button>
+              </Card>
+            )}
 
-              {/* Right Sidebar - Reference + Create & Refine */}
-              <div className="w-80 flex-shrink-0 flex flex-col h-full">
-                {/* Scrollable content wrapper */}
-                <div className="flex-1 overflow-y-auto pb-4 space-y-4 min-h-0">
-                  {/* Reference Image Upload - Moved to top */}
-                  <ReferenceUpload
-                    images={referenceImages}
-                    onUpload={handleReferenceUpload}
-                    onRemove={handleReferenceRemove}
-                    isUploading={isUploadingReference}
-                  />
-
-                  {/* Create & Refine Card - Consolidated */}
-                  <Card className="p-4 bg-[#2F2A26] border-[#3D3935] shadow-sm flex flex-col">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-xs font-semibold text-[#D4CFC8] tracking-wide">CREATE & REFINE</h3>
-                      <div className="flex items-center gap-2">
-                        <Label htmlFor="guided-mode" className="text-[10px] text-[#A8A39E] cursor-pointer">
-                          Guided
-                        </Label>
-                        <Switch
-                          id="guided-mode"
-                          checked={guidedModeEnabled}
-                          onCheckedChange={setGuidedModeEnabled}
-                          className="data-[state=checked]:bg-brass data-[state=unchecked]:bg-[#3D3935] border-2 border-[#A8A39E]"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="flex-1 flex flex-col gap-3 min-h-0">
-                      {refinementMode && selectedForRefinement ? (
-                        /* Refinement Mode - Show RefinementPanel */
-                        <div className="flex-1 min-h-0 overflow-y-auto">
-                          <RefinementPanel
-                            baseImage={selectedForRefinement}
-                            onRefine={handleRefine}
-                            onCancel={() => {
-                              setRefinementMode(false);
-                              setSelectedForRefinement(null);
-                            }}
-                          />
-                        </div>
-                      ) : guidedModeEnabled ? (
-                        /* Guided Mode - Formula-based builder with internal scrolling */
-                        <div className="flex-1 min-h-0 overflow-y-auto pr-1">
-                          <GuidedPromptBuilder
-                            onPromptGenerated={(prompt) => {
-                              setUserPrompt(prompt);
-                              toast.success("Prompt built from formula!");
-                            }}
-                            brandContext={brandContext}
-                            hasReferenceImage={referenceImages.length > 0}
-                          />
-                        </div>
-                      ) : (
-                        /* Expert Mode - Free-form textarea */
-                        <>
-                          <Textarea
-                            value={userPrompt}
-                            onChange={(e) => setUserPrompt(e.target.value)}
-                            placeholder={referenceImages.length > 0 
-                              ? "Describe the SCENE for your products (e.g., 'Combine desert background with my product, using the warm lighting from reference 3')..." 
-                              : "Describe the image you want to create..."}
-                            disabled={!canGenerateMore}
-                            className="flex-1 resize-none bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E] min-h-[100px]"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && !e.shiftKey && canGenerateMore) {
-                                e.preventDefault();
-                                handleGenerate();
-                              }
-                            }}
-                          />
-                          
-                          {/* Quick Refinements - Compact */}
-                          {heroImage && (
-                            <div className="flex-shrink-0 pt-3 border-t border-[#3D3935]">
-                              <p className="text-xs text-[#A8A39E] mb-2 font-medium">QUICK REFINEMENTS</p>
-                              <div className="flex flex-wrap gap-1.5">
-                                {quickRefinements.map((refinement) => (
-                                  <button
-                                    key={refinement}
-                                    onClick={() => {
-                                      setUserPrompt(refinement);
-                                      handleGenerate(refinement);
-                                    }}
-                                    disabled={!canGenerateMore}
-                                    className="px-2 py-1 text-xs bg-[#252220] text-[#D4CFC8] border border-[#3D3935] rounded hover:bg-[#3D3935] hover:text-[#FFFCF5] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                                  >
-                                    <Wand2 className="w-3 h-3 inline mr-1" />
-                                    {refinement}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </>
-                      )}
-                      
-                      {/* Output & Save Settings */}
-                      <div className="flex-shrink-0 space-y-3 pt-3 border-t border-[#3D3935]">
-                        <h4 className="text-xs font-semibold text-[#D4CFC8] tracking-wide">OUTPUT & SAVE</h4>
-                        
-                        <ImageTypeSelector value={imageType} onChange={setImageType} />
-                        
-                        <div>
-                          <Label className="text-xs text-[#A8A39E] mb-1.5 block">Format</Label>
-                          <Select value={outputFormat} onValueChange={(value: "png" | "jpeg" | "webp") => setOutputFormat(value)}>
-                            <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-sm">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="png">PNG</SelectItem>
-                              <SelectItem value="jpeg">JPEG</SelectItem>
-                              <SelectItem value="webp">WebP</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        
-                        <div>
-                          <Label className="text-xs text-[#A8A39E] mb-1.5 block">Save to Library</Label>
-                          <Select value={libraryCategory} onValueChange={(v) => setLibraryCategory(v as any)}>
-                            <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-sm">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="content">Content Library</SelectItem>
-                              <SelectItem value="marketplace">Listing Templates</SelectItem>
-                              <SelectItem value="both">Both Libraries</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      
-                      {/* Advanced Settings - Collapsible */}
-                      <div className="flex-shrink-0">
-                        <Collapsible>
-                          <CollapsibleTrigger className="flex items-center justify-between w-full py-2 text-xs font-semibold text-[#D4CFC8] tracking-wide hover:text-brass transition-colors">
-                            ADVANCED
-                            <span className="text-[#A8A39E]">▼</span>
-                          </CollapsibleTrigger>
-                          <CollapsibleContent className="pt-3 space-y-2">
-                            <div>
-                              <Label className="text-xs text-[#A8A39E] mb-1.5 block">Aspect Ratio</Label>
-                              <Select value={aspectRatio} onValueChange={setAspectRatio}>
-                                <SelectTrigger className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] h-9 text-sm">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="1:1">Square (1:1)</SelectItem>
-                                  <SelectItem value="4:5">Portrait (4:5)</SelectItem>
-                                  <SelectItem value="5:4">Etsy (5:4)</SelectItem>
-                                  <SelectItem value="16:9">Landscape (16:9)</SelectItem>
-                                  <SelectItem value="9:16">Vertical (9:16)</SelectItem>
-                                  <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <p className="text-[10px] text-[#A8A39E] mt-1.5 leading-relaxed">
-                                Guides composition but not a hard crop. For best results, describe your desired framing in the prompt.
-                              </p>
-                            </div>
-                            
-                            <div className="pt-2 border-t border-[#3D3935]/50">
-                              <ProModePanel
-                                onControlsChange={setProModeControls}
-                                initialValues={proModeControls}
-                              />
-                            </div>
-                          </CollapsibleContent>
-                        </Collapsible>
-                      </div>
-                    </div>
-                  </Card>
-                </div>
-                
-                {/* Sticky Generate Button - Only show when NOT in refinement mode */}
-                {!refinementMode && (
-                  <div className="flex-shrink-0 bg-[#2F2A26] border-t border-[#3D3935] p-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-[#A8A39E]">
-                          <span className={canGenerateMore ? "text-brass font-semibold" : "text-orange-400 font-semibold"}>
-                            {MAX_IMAGES_PER_SESSION - currentSession.images.length}
-                          </span>
-                          {" / "}{MAX_IMAGES_PER_SESSION} remaining
-                        </span>
-                      </div>
-                      
-                      <Button
-                        onClick={() => handleGenerate()}
-                        disabled={isGenerating || !userPrompt.trim() || !canGenerateMore}
-                        className="w-full bg-brass hover:bg-brass/90 text-white disabled:opacity-50"
-                        size="sm"
-                      >
-                        {isGenerating ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Generating...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="w-4 h-4 mr-2" />
-                            Generate
-                          </>
-                        )}
-                      </Button>
-
-                      {!canGenerateMore && (
-                        <p className="text-xs text-orange-400 bg-orange-400/10 border border-orange-400/20 rounded p-2">
-                          ✅ Session complete! Save to library to start a new session.
-                        </p>
-                      )}
-                    </div>
+            {/* Brand Context Info */}
+            {brandContext && (
+              <Card className="p-3 bg-accent/20">
+                <div className="flex items-start gap-2">
+                  <Info className="w-4 h-4 mt-0.5 text-muted-foreground flex-shrink-0" />
+                  <div className="text-xs text-muted-foreground">
+                    <p className="font-medium mb-1">Brand Context Active</p>
+                    <p>Images will align with your brand guidelines</p>
                   </div>
-                )}
                 </div>
-              </div>
-            </div>
+              </Card>
+            )}
           </div>
-        </ResizablePanel>
+        </div>
+      </div>
 
-        {/* Madison Panel - Inline & Persistent */}
-        {madisonOpen && (
-          <>
-            <ResizableHandle withHandle className="bg-[#3D3935]" />
-            <ResizablePanel defaultSize={30} minSize={25} maxSize={40} className="w-[400px]">
-              <div className="h-full">
-                <EditorialAssistantPanel
-                  onClose={() => setMadisonOpen(false)}
-                  initialContent=""
-                  sessionContext={{
-                    sessionId: sessionId,
-                    sessionName: currentSession.name || "New Session",
-                    imagesGenerated: currentSession.images.length,
-                    maxImages: MAX_IMAGES_PER_SESSION,
-                    heroImage: heroImage ? {
-                      imageUrl: heroImage.imageUrl,
-                      prompt: heroImage.prompt
-                    } : undefined,
-                    allPrompts: allPrompts,
-                    aspectRatio: aspectRatio,
-                    outputFormat: outputFormat,
-                    isImageStudio: true,
-                    visualStandards: brandContext?.visualStandards || undefined
-                  }}
-                />
-              </div>
-            </ResizablePanel>
-          </>
-        )}
-      </ResizablePanelGroup>
+      {/* Editorial Assistant */}
+      <EditorialAssistantPanel 
+        onClose={() => {}}
+        initialContent=""
+      />
     </div>
   );
 }
