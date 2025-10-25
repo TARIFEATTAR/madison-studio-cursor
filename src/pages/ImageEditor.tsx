@@ -503,9 +503,35 @@ export default function ImageEditor() {
         </div>
         
         <div className="flex items-center gap-3">
+          {/* Shot Type */}
+          <ShotTypeDropdown 
+            onSelect={async (shotType) => {
+              setMainPrompt(shotType.prompt);
+              toast.success(`${shotType.label} style applied`);
+              
+              // Log shot type selection to backend
+              try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.access_token && user?.id && orgId) {
+                  await supabase.functions.invoke('log-shot-type', {
+                    body: {
+                      organization_id: orgId,
+                      session_id: currentSession?.id || null,
+                      label: shotType.label,
+                      prompt: shotType.prompt
+                    }
+                  });
+                }
+              } catch (error) {
+                console.error('Failed to log shot type:', error);
+              }
+            }}
+            className="w-[160px] bg-zinc-800 border-zinc-700 text-zinc-100"
+          />
+
           {/* Aspect Ratio */}
           <Select value={aspectRatio} onValueChange={setAspectRatio}>
-            <SelectTrigger className="w-40 bg-zinc-800 border-zinc-700 text-zinc-100">
+            <SelectTrigger className="w-[140px] bg-zinc-800 border-zinc-700 text-zinc-100">
               <SelectValue placeholder="Aspect Ratio" />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -520,8 +546,8 @@ export default function ImageEditor() {
 
           {/* Output Format */}
           <Select value={outputFormat} onValueChange={(v: any) => setOutputFormat(v)}>
-            <SelectTrigger className="w-32 bg-zinc-800 border-zinc-700 text-zinc-100">
-              <SelectValue placeholder="Format" />
+            <SelectTrigger className="w-[120px] bg-zinc-800 border-zinc-700 text-zinc-100">
+              <SelectValue placeholder="Output" />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
               <SelectItem value="png">PNG</SelectItem>
@@ -692,31 +718,8 @@ export default function ImageEditor() {
           {/* Prompt Bar (Fixed Bottom) */}
           <footer className="border-t border-zinc-800 bg-zinc-900 backdrop-blur-sm sticky bottom-0 z-[15]">
             <div className="px-6 py-4 space-y-3">
-              {/* Shot Type + Prompt with Upload Chip + Button */}
+              {/* Prompt with Upload Chip + Button */}
               <div className="flex items-start gap-3">
-                <ShotTypeDropdown 
-                  onSelect={async (shotType) => {
-                    setMainPrompt(shotType.prompt);
-                    
-                    // Log shot type selection to backend
-                    try {
-                      const { data: { session } } = await supabase.auth.getSession();
-                      if (session?.access_token && user?.id && orgId) {
-                        await supabase.functions.invoke('log-shot-type', {
-                          body: {
-                            organization_id: orgId,
-                            session_id: currentSession?.id || null,
-                            label: shotType.label,
-                            prompt: shotType.prompt
-                          }
-                        });
-                      }
-                    } catch (error) {
-                      console.error('Failed to log shot type:', error);
-                    }
-                  }}
-                />
-                
                 <div className="flex-1 space-y-3">
                   <Textarea
                     value={mainPrompt}

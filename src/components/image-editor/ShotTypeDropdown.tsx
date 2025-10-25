@@ -45,16 +45,16 @@ export default function ShotTypeDropdown({ onSelect, className }: ShotTypeDropdo
       value={selected}
       onChange={handleChange}
       className={cn(
-        "bg-[#111111] text-[#F5F1E8] border border-zinc-800",
+        "bg-zinc-800 text-zinc-100 border border-zinc-700",
         "rounded-md px-3 py-2 text-sm",
         "focus:border-aged-brass focus:outline-none focus:ring-1 focus:ring-aged-brass/50",
-        "hover:border-aged-brass/50 transition-colors",
+        "hover:border-zinc-600 transition-colors",
         "cursor-pointer appearance-none",
-        "w-[160px] h-[44px]",
+        "h-10",
         className
       )}
       style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23F5F1E8' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23e4e4e7' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
         backgroundRepeat: "no-repeat",
         backgroundPosition: "right 0.75rem center",
         backgroundSize: "12px",
