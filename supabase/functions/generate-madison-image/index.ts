@@ -192,37 +192,21 @@ PHOTOGRAPHIC QUALITY:
       for (const refImage of referenceImages) {
         let imageData = refImage.url;
         
-        // If it's a Supabase storage URL, download using Storage client
+        // If it's a Supabase storage URL, fetch it directly (public bucket)
         if (refImage.url.includes('/storage/v1/object/public/')) {
           try {
             console.log(`📥 Downloading reference image: ${refImage.label}`);
             console.log(`📍 URL: ${refImage.url}`);
             
-            // Extract file path from public URL
-            // Format: https://.../storage/v1/object/public/reference-images/{filepath}
-            const urlParts = refImage.url.split('/reference-images/');
-            if (urlParts.length < 2) {
-              throw new Error('Invalid storage URL format');
-            }
-            const filePath = urlParts[1];
-            console.log(`📂 File path: ${filePath}`);
+            // Fetch the image directly from the public URL
+            const imageResponse = await fetch(refImage.url);
             
-            // Download using Supabase Storage client (handles auth automatically)
-            const { data: imageBlob, error } = await supabaseClient
-              .storage
-              .from('reference-images')
-              .download(filePath);
-            
-            if (error) {
-              throw new Error(`Storage download failed: ${error.message}`);
+            if (!imageResponse.ok) {
+              throw new Error(`HTTP ${imageResponse.status}: ${imageResponse.statusText}`);
             }
             
-            if (!imageBlob) {
-              throw new Error('No data returned from storage');
-            }
-            
-            // Convert blob to ArrayBuffer
-            const imageBuffer = await imageBlob.arrayBuffer();
+            // Get the image as array buffer
+            const imageBuffer = await imageResponse.arrayBuffer();
             const uint8Array = new Uint8Array(imageBuffer);
             
             // Convert to base64 in chunks to avoid stack overflow
@@ -234,8 +218,8 @@ PHOTOGRAPHIC QUALITY:
             }
             const base64 = btoa(binary);
             
-            // Determine content type from blob type
-            const contentType = imageBlob.type || 'image/jpeg';
+            // Determine content type from response headers
+            const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
             imageData = `data:${contentType};base64,${base64}`;
             
             console.log(`✅ Converted reference image ${refImage.label} (${(uint8Array.length / 1024).toFixed(1)}KB)`);
