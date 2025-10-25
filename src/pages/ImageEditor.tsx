@@ -542,7 +542,7 @@ export default function ImageEditor() {
               onChange={(e) => setMainPrompt(e.target.value)}
               placeholder="Describe your image idea..."
               rows={4}
-              className="w-full bg-studio-card border-studio-border text-aged-paper placeholder:text-studio-text-tertiary focus-visible:ring-aged-brass/50"
+              className="w-full bg-studio-card border-studio-border text-studio-text-primary placeholder:text-studio-text-muted focus-visible:ring-aged-brass/50"
               disabled={isGenerating}
             />
           </div>
@@ -619,12 +619,14 @@ export default function ImageEditor() {
             <div className="space-y-4 pt-4 border-t border-studio-border">
               {/* Hero Image */}
               {heroImage && (
-                <div className="relative w-full rounded-lg overflow-hidden border border-studio-border">
-                  <img
-                    src={heroImage.imageUrl}
-                    alt="Generated"
-                    className="w-full object-contain bg-studio-card"
-                  />
+                <div className="relative w-full rounded-lg overflow-hidden border border-studio-border bg-studio-card">
+                  <div className="relative w-full" style={{ aspectRatio: aspectRatio.replace(':', '/') }}>
+                    <img
+                      src={heroImage.imageUrl}
+                      alt="Generated"
+                      className="absolute inset-0 w-full h-full object-contain"
+                    />
+                  </div>
                   <div className="absolute top-2 right-2 flex gap-2">
                     <Button
                       size="sm"
