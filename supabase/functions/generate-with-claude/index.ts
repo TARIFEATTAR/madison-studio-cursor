@@ -1335,6 +1335,7 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
                 body: JSON.stringify({
                   model: 'google/gemini-2.5-flash',
                   messages: messages,
+                  max_tokens: 4096,
                   stream: false,
                 }),
               });
@@ -1383,6 +1384,7 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
             body: JSON.stringify({
               model: 'google/gemini-2.5-flash',
               messages: messages,
+              max_tokens: 4096,
               stream: false,
             }),
           });
