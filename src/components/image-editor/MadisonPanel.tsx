@@ -3,6 +3,7 @@ import { X, Sparkles, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 interface Message {
@@ -19,6 +20,7 @@ interface MadisonPanelProps {
   onToggle: () => void;
   onSendMessage?: (message: string) => Promise<void>;
   initialMessages?: Message[];
+  isMobile?: boolean;
 }
 
 export default function MadisonPanel({
@@ -27,7 +29,8 @@ export default function MadisonPanel({
   isOpen,
   onToggle,
   onSendMessage,
-  initialMessages = []
+  initialMessages = [],
+  isMobile = false
 }: MadisonPanelProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputValue, setInputValue] = useState("");
@@ -105,6 +108,85 @@ export default function MadisonPanel({
     }
   };
 
+  // Mobile: Bottom Sheet
+  if (isMobile) {
+    return (
+      <Sheet open={isOpen} onOpenChange={onToggle}>
+        <SheetContent side="bottom" className="h-[70vh] bg-zinc-950 border-zinc-800">
+          <SheetHeader className="border-b border-zinc-800 pb-3 mb-4">
+            <div className="flex items-center gap-3">
+              <Sparkles className="w-5 h-5 text-aged-brass" />
+              <SheetTitle className="text-aged-brass">Madison</SheetTitle>
+              <span className="text-xs text-zinc-500 font-medium">
+                Session {sessionCount}/{maxImages}
+              </span>
+            </div>
+          </SheetHeader>
+
+          <ScrollArea className="h-[calc(70vh-140px)] px-1">
+            <div className="space-y-4 pb-4">
+              {messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center py-8">
+                  <Sparkles className="w-10 h-10 text-aged-brass/40 mb-3" />
+                  <p className="text-zinc-400 text-sm">
+                    Madison is ready to assist with your image generation.
+                  </p>
+                  <p className="text-zinc-500 text-xs mt-2">
+                    Ask for feedback, refinements, or creative suggestions.
+                  </p>
+                </div>
+              ) : (
+                messages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={cn(
+                      "flex w-full",
+                      msg.role === "user" ? "justify-end" : "justify-start"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "max-w-[85%] rounded-lg px-3 py-2 text-sm",
+                        msg.role === "madison"
+                          ? "bg-zinc-900 text-aged-paper border border-zinc-800 font-serif"
+                          : "bg-aged-brass/10 text-aged-paper border border-aged-brass/30"
+                      )}
+                    >
+                      {msg.content}
+                    </div>
+                  </div>
+                ))
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
+
+          <div className="absolute bottom-4 left-4 right-4 flex items-end gap-2 border-t border-zinc-800 pt-3 bg-zinc-950">
+            <Textarea
+              ref={textareaRef}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask Madison for feedback…"
+              className="flex-1 min-h-[44px] max-h-[100px] resize-none bg-zinc-900 border-zinc-700 text-aged-paper placeholder:text-zinc-500"
+              disabled={isSending}
+            />
+            <Button
+              onClick={handleSend}
+              disabled={!inputValue.trim() || isSending}
+              size="icon"
+              variant="brass"
+              className="h-[44px] w-[44px] shrink-0"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // Desktop: Side Panel
   return (
     <div
       className={cn(

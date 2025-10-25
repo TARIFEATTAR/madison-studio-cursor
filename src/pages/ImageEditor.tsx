@@ -52,6 +52,10 @@ import ThumbnailRibbon from "@/components/image-editor/ThumbnailRibbon";
 import MadisonPanel from "@/components/image-editor/MadisonPanel";
 import ShotTypeDropdown from "@/components/image-editor/ShotTypeDropdown";
 import { ProductImageUpload } from "@/components/image-editor/ProductImageUpload";
+import MobileShotTypeSelector from "@/components/image-editor/MobileShotTypeSelector";
+import MobileAspectRatioSelector from "@/components/image-editor/MobileAspectRatioSelector";
+import MobileReferenceUpload from "@/components/image-editor/MobileReferenceUpload";
+import MadisonFloatingButton from "@/components/image-editor/MadisonFloatingButton";
 
 // Prompt Formula Utilities
 import { CAMERA_LENS, LIGHTING, ENVIRONMENTS } from "@/utils/promptFormula";
@@ -85,6 +89,7 @@ export default function ImageEditor() {
   const location = useLocation();
   const { user } = useAuth();
   const { orgId } = useCurrentOrganizationId();
+  const isMobile = useIsMobile();
   
   const [aspectRatio, setAspectRatio] = useState<string>("1:1");
   const [outputFormat, setOutputFormat] = useState<"png" | "jpeg" | "webp">("png");
@@ -505,6 +510,237 @@ export default function ImageEditor() {
   const heroImage = currentSession.images.find(img => img.isHero);
   const flaggedCount = currentSession.images.filter(img => img.approvalStatus === 'flagged').length;
 
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <div className="flex flex-col min-h-screen bg-studio-charcoal text-aged-paper pb-16">
+        {/* Mobile Header */}
+        <header className="flex items-center justify-between px-4 py-3 border-b border-studio-border bg-studio-card/50 backdrop-blur-sm sticky top-0 z-20">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="text-studio-text-muted hover:text-aged-paper"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <h1 className="text-base font-semibold text-aged-brass">Image Studio</h1>
+          {flaggedCount > 0 && (
+            <Button onClick={handleSaveSession} disabled={isSaving} variant="outline" size="sm">
+              <Save className="w-4 h-4" />
+            </Button>
+          )}
+        </header>
+
+        {/* Mobile Content */}
+        <div className="flex-1 px-4 py-4 space-y-4 overflow-y-auto">
+          {/* Large Prompt Textarea */}
+          <div className="space-y-2">
+            <Label className="text-studio-text-primary text-sm">Describe your image</Label>
+            <Textarea
+              value={mainPrompt}
+              onChange={(e) => setMainPrompt(e.target.value)}
+              placeholder="Describe your image idea..."
+              rows={4}
+              className="w-full bg-studio-card border-studio-border text-aged-paper placeholder:text-studio-text-tertiary focus-visible:ring-aged-brass/50"
+              disabled={isGenerating}
+            />
+          </div>
+
+          {/* Reference Image Upload */}
+          <div className="space-y-2">
+            <Label className="text-studio-text-primary text-sm">Reference Image (optional)</Label>
+            <MobileReferenceUpload
+              image={productImage}
+              onUpload={(file, url) => setProductImage({ file, url })}
+              onRemove={() => setProductImage(null)}
+            />
+          </div>
+
+          {/* Shot Type Selector */}
+          <div className="space-y-2">
+            <Label className="text-studio-text-primary text-sm">Shot Type</Label>
+            <MobileShotTypeSelector
+              onSelect={async (shotType) => {
+                setMainPrompt(shotType.prompt);
+                toast.success(`${shotType.label} style applied`);
+                
+                try {
+                  const { data: { session } } = await supabase.auth.getSession();
+                  if (session?.access_token && user?.id && orgId) {
+                    await supabase.functions.invoke('log-shot-type', {
+                      body: {
+                        organization_id: orgId,
+                        session_id: currentSession?.id || null,
+                        label: shotType.label,
+                        prompt: shotType.prompt
+                      }
+                    });
+                  }
+                } catch (error) {
+                  console.error('Failed to log shot type:', error);
+                }
+              }}
+            />
+          </div>
+
+          {/* Aspect Ratio Selector */}
+          <div className="space-y-2">
+            <Label className="text-studio-text-primary text-sm">Size</Label>
+            <MobileAspectRatioSelector
+              value={aspectRatio}
+              onChange={setAspectRatio}
+            />
+          </div>
+
+          {/* Generate Button */}
+          <Button
+            onClick={handleGenerate}
+            disabled={!mainPrompt.trim() || isGenerating || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
+            size="lg"
+            variant="brass"
+            className="w-full h-12"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-5 h-5 mr-2" />
+                Generate Image
+              </>
+            )}
+          </Button>
+
+          {/* Generated Images Section */}
+          {currentSession.images.length > 0 && (
+            <div className="space-y-4 pt-4 border-t border-studio-border">
+              {/* Hero Image */}
+              {heroImage && (
+                <div className="relative w-full rounded-lg overflow-hidden border border-studio-border">
+                  <img
+                    src={heroImage.imageUrl}
+                    alt="Generated"
+                    className="w-full object-contain bg-studio-card"
+                  />
+                  <div className="absolute top-2 right-2 flex gap-2">
+                    <Button
+                      size="sm"
+                      variant={heroImage.approvalStatus === 'flagged' ? 'default' : 'secondary'}
+                      onClick={() => handleToggleApproval(heroImage.id)}
+                      className="bg-studio-card/90 backdrop-blur-sm h-8 w-8 p-0"
+                    >
+                      <Heart className={cn("w-4 h-4", heroImage.approvalStatus === 'flagged' && "fill-current")} />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={async () => {
+                        try {
+                          let downloadUrl = heroImage.imageUrl;
+                          
+                          if (heroImage.imageUrl.startsWith('data:')) {
+                            downloadUrl = heroImage.imageUrl;
+                          } else {
+                            const response = await fetch(heroImage.imageUrl, { mode: 'cors' });
+                            const blob = await response.blob();
+                            downloadUrl = URL.createObjectURL(blob);
+                          }
+                          
+                          const link = document.createElement('a');
+                          link.href = downloadUrl;
+                          link.download = `madison-image-${Date.now()}.webp`;
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                          
+                          if (!heroImage.imageUrl.startsWith('data:')) {
+                            URL.revokeObjectURL(downloadUrl);
+                          }
+                          
+                          toast.success("Image downloaded!");
+                        } catch (error) {
+                          console.error('Download failed:', error);
+                          toast.error("Failed to download image");
+                        }
+                      }}
+                      className="bg-studio-card/90 backdrop-blur-sm h-8 w-8 p-0"
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Thumbnail Carousel */}
+              {currentSession.images.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {currentSession.images.map((img, index) => (
+                    <button
+                      key={img.id}
+                      onClick={() => handleSetHero(img.id)}
+                      className={cn(
+                        "shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all",
+                        img.isHero
+                          ? "border-aged-brass"
+                          : "border-studio-border hover:border-studio-border/80"
+                      )}
+                    >
+                      <img
+                        src={img.imageUrl}
+                        alt={`Generated ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Empty State */}
+          {currentSession.images.length === 0 && !isGenerating && (
+            <div className="flex flex-col items-center justify-center text-center py-12 space-y-4">
+              <Sparkles className="w-16 h-16 text-aged-brass opacity-40" />
+              <div>
+                <h3 className="text-xl font-semibold text-aged-paper mb-2">
+                  Ready to create
+                </h3>
+                <p className="text-studio-text-muted">
+                  Fill in the details above and tap generate
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Generating Overlay */}
+          {isGenerating && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+              <Loader2 className="w-12 h-12 text-aged-brass animate-spin mb-4" />
+              <p className="text-aged-paper text-lg font-medium">Generating magic...</p>
+              <p className="text-studio-text-muted text-sm mt-2">This may take a moment</p>
+            </div>
+          )}
+        </div>
+
+        {/* Madison Floating Button */}
+        <MadisonFloatingButton onClick={() => setIsMadisonOpen(true)} />
+
+        {/* Madison Panel (Bottom Sheet) */}
+        <MadisonPanel
+          sessionCount={currentSession.images.length}
+          maxImages={MAX_IMAGES_PER_SESSION}
+          isOpen={isMadisonOpen}
+          onToggle={() => setIsMadisonOpen(!isMadisonOpen)}
+          isMobile={true}
+        />
+      </div>
+    );
+  }
+
+  // Desktop Layout
   return (
     <div className="flex flex-col h-screen bg-studio-charcoal text-aged-paper">
       {/* Top Toolbar */}
@@ -936,6 +1172,7 @@ export default function ImageEditor() {
         maxImages={MAX_IMAGES_PER_SESSION}
         isOpen={isMadisonOpen}
         onToggle={() => setIsMadisonOpen(!isMadisonOpen)}
+        isMobile={false}
         onSendMessage={async (message) => {
           console.log("Madison message:", message);
           // TODO: Integrate with Madison AI backend
