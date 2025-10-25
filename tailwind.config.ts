@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontSize: {
+        'xxs': '0.625rem',    // 10px
+        'tiny': '0.6875rem',  // 11px
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

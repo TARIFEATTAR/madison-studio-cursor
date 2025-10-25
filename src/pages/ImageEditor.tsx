@@ -506,21 +506,21 @@ export default function ImageEditor() {
   const flaggedCount = currentSession.images.filter(img => img.approvalStatus === 'flagged').length;
 
   return (
-    <div className="flex flex-col h-screen bg-zinc-950 text-aged-paper">
+    <div className="flex flex-col h-screen bg-studio-charcoal text-aged-paper">
       {/* Top Toolbar */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-20">
+      <header className="flex items-center justify-between px-6 py-3 border-b border-studio-border bg-studio-card/50 backdrop-blur-sm sticky top-0 z-20">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
-            className="text-zinc-400 hover:text-aged-paper"
+            className="text-studio-text-muted hover:text-aged-paper"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
             <h1 className="text-lg font-semibold text-aged-brass">Image Studio</h1>
-            <p className="text-xs text-zinc-500">Powered by Nano Banana</p>
+            <p className="text-xxs text-studio-text-muted">Powered by Nano Banana</p>
           </div>
         </div>
         
@@ -548,33 +548,33 @@ export default function ImageEditor() {
                 console.error('Failed to log shot type:', error);
               }
             }}
-            className="w-[160px] bg-zinc-800 border-zinc-700 text-zinc-100"
+            className="w-[160px] bg-studio-charcoal border-studio-border text-studio-text-primary"
           />
 
           {/* Aspect Ratio */}
           <Select value={aspectRatio} onValueChange={setAspectRatio}>
-            <SelectTrigger className="w-[140px] bg-zinc-800 border-zinc-700 text-zinc-100 hover:bg-zinc-700 transition-colors">
-              <SelectValue placeholder="Aspect Ratio" />
+            <SelectTrigger className="w-[140px] bg-studio-charcoal border-studio-border text-studio-text-primary hover:bg-studio-card transition-colors">
+              <SelectValue placeholder="Aspect ratio" />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-100">
-              <SelectItem value="1:1" className="text-zinc-100">1:1 Square</SelectItem>
-              <SelectItem value="16:9" className="text-zinc-100">16:9 Landscape</SelectItem>
-              <SelectItem value="9:16" className="text-zinc-100">9:16 Portrait</SelectItem>
-              <SelectItem value="4:3" className="text-zinc-100">4:3 Classic</SelectItem>
-              <SelectItem value="4:5" className="text-zinc-100">4:5 Portrait</SelectItem>
-              <SelectItem value="5:4" className="text-zinc-100">5:4 Etsy</SelectItem>
+            <SelectContent className="bg-studio-charcoal border-studio-border text-studio-text-primary z-50 backdrop-blur-sm">
+              <SelectItem value="1:1" className="hover:bg-studio-card">1:1 Square</SelectItem>
+              <SelectItem value="16:9" className="hover:bg-studio-card">16:9 Landscape</SelectItem>
+              <SelectItem value="9:16" className="hover:bg-studio-card">9:16 Portrait</SelectItem>
+              <SelectItem value="4:3" className="hover:bg-studio-card">4:3 Classic</SelectItem>
+              <SelectItem value="4:5" className="hover:bg-studio-card">4:5 Portrait</SelectItem>
+              <SelectItem value="5:4" className="hover:bg-studio-card">5:4 Etsy</SelectItem>
             </SelectContent>
           </Select>
 
           {/* Output Format */}
           <Select value={outputFormat} onValueChange={(v: any) => setOutputFormat(v)}>
-            <SelectTrigger className="w-[120px] bg-zinc-800 border-zinc-700 text-zinc-100 hover:bg-zinc-700 transition-colors">
+            <SelectTrigger className="w-[120px] bg-studio-charcoal border-studio-border text-studio-text-primary hover:bg-studio-card transition-colors">
               <SelectValue placeholder="Output" />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-100">
-              <SelectItem value="png" className="text-zinc-100">PNG</SelectItem>
-              <SelectItem value="jpeg" className="text-zinc-100">JPG</SelectItem>
-              <SelectItem value="webp" className="text-zinc-100">WEBP</SelectItem>
+            <SelectContent className="bg-studio-charcoal border-studio-border text-studio-text-primary z-50 backdrop-blur-sm">
+              <SelectItem value="png" className="hover:bg-studio-card">PNG</SelectItem>
+              <SelectItem value="jpeg" className="hover:bg-studio-card">JPG</SelectItem>
+              <SelectItem value="webp" className="hover:bg-studio-card">WEBP</SelectItem>
             </SelectContent>
           </Select>
 
@@ -584,13 +584,13 @@ export default function ImageEditor() {
             onClick={() => setShowProMode(!showProMode)}
             className={showProMode 
               ? 'bg-aged-brass/10 border-aged-brass text-aged-brass hover:bg-aged-brass/20' 
-              : 'bg-zinc-800 border-zinc-700 text-zinc-100 hover:bg-zinc-700'
+              : 'bg-studio-charcoal border-studio-border text-studio-text-primary hover:bg-studio-card'
             }
           >
             <Settings className="w-4 h-4 mr-2" />
-            Pro Mode
+            Pro mode
             {Object.keys(proModeControls).length > 0 && (
-              <Badge variant="secondary" className="ml-2 text-xs bg-aged-brass/20 text-aged-brass border-aged-brass/30">
+              <Badge variant="secondary" className="ml-2 text-xxs bg-aged-brass/20 text-aged-brass border-aged-brass/30">
                 {Object.keys(proModeControls).length}
               </Badge>
             )}
@@ -622,7 +622,7 @@ export default function ImageEditor() {
                 <Wand2 className="w-4 h-4 mr-2" />
                 Generate
                 {Object.keys(proModeControls).length > 0 && (
-                  <span className="ml-1 text-[10px] opacity-70">Pro</span>
+                  <span className="ml-1 text-xxs opacity-70">Pro</span>
                 )}
               </>
             )}
@@ -632,7 +632,7 @@ export default function ImageEditor() {
           <Button
             onClick={() => setIsMadisonOpen(!isMadisonOpen)}
             variant="outline"
-            className="border-aged-brass text-aged-brass hover:bg-aged-brass hover:text-zinc-950 font-medium px-4"
+            className="border-aged-brass text-aged-brass hover:bg-aged-brass hover:text-studio-charcoal font-medium px-4"
           >
             <Sparkles className="w-4 h-4 mr-2" />
             Ask Madison
@@ -645,20 +645,20 @@ export default function ImageEditor() {
         {/* Center Viewport (Fixed) */}
         <section className="flex-1 flex flex-col relative">
           {/* Image Viewport */}
-          <div className="flex-1 bg-zinc-900/30 flex items-center justify-center relative overflow-hidden">
+          <div className="flex-1 bg-studio-card/30 flex items-center justify-center relative overflow-hidden">
             {heroImage ? (
               <div className="relative w-full h-full flex items-center justify-center p-8">
                 <img 
                   src={heroImage.imageUrl} 
                   alt="Generated" 
-                  className="max-w-full max-h-full object-contain rounded-lg border-2 border-zinc-800"
+                  className="max-w-full max-h-full object-contain rounded-lg border-2 border-studio-border"
                 />
                 <div className="absolute top-8 right-8 flex gap-2">
                   <Button
                     size="sm"
                     variant={heroImage.approvalStatus === 'flagged' ? 'default' : 'secondary'}
                     onClick={() => handleToggleApproval(heroImage.id)}
-                    className="bg-zinc-900/90 backdrop-blur-sm"
+                    className="bg-studio-card/90 backdrop-blur-sm"
                   >
                     <Heart className={cn("w-4 h-4", heroImage.approvalStatus === 'flagged' && "fill-current")} />
                   </Button>
@@ -697,7 +697,7 @@ export default function ImageEditor() {
                         toast.error("Failed to download image");
                       }
                     }}
-                    className="bg-zinc-900/90 backdrop-blur-sm"
+                    className="bg-studio-card/90 backdrop-blur-sm"
                   >
                     <Download className="w-4 h-4" />
                   </Button>
@@ -708,9 +708,9 @@ export default function ImageEditor() {
                 <Sparkles className="w-20 h-20 text-aged-brass opacity-40" />
                 <div>
                   <h3 className="text-2xl font-semibold text-aged-paper mb-2">
-                    Your Canvas Awaits
+                    Your canvas awaits
                   </h3>
-                  <p className="text-zinc-400 text-lg">
+                  <p className="text-studio-text-muted text-lg">
                     Describe your vision below and watch Madison bring it to life
                   </p>
                 </div>
@@ -722,7 +722,7 @@ export default function ImageEditor() {
               <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-20">
                 <Loader2 className="w-12 h-12 text-aged-brass animate-spin mb-4" />
                 <p className="text-aged-paper text-lg font-medium">Generating magic...</p>
-                <p className="text-zinc-400 text-sm mt-2">This may take a moment</p>
+                <p className="text-studio-text-muted text-sm mt-2">This may take a moment</p>
               </div>
             )}
           </div>
@@ -772,15 +772,15 @@ export default function ImageEditor() {
           )}
 
           {/* Prompt Bar (Fixed Bottom) */}
-          <footer className="border-t border-zinc-800 bg-zinc-900 backdrop-blur-sm sticky bottom-0 z-[15]">
+          <footer className="border-t border-studio-border bg-studio-card backdrop-blur-sm sticky bottom-0 z-[15]">
             {/* Pro Mode Status Indicator */}
             {Object.keys(proModeControls).length > 0 && (
-              <div className="px-6 py-2 border-b border-zinc-800/50 bg-aged-brass/5">
-                <div className="flex items-center gap-2 text-xs">
+              <div className="px-6 py-2 border-b border-studio-border/50 bg-aged-brass/5">
+                <div className="flex items-center gap-2 text-xxs">
                   <Settings className="w-3 h-3 text-aged-brass" />
-                  <span className="text-aged-brass font-medium">Pro Mode Active</span>
-                  <span className="text-zinc-400">—</span>
-                  <span className="text-zinc-400">
+                  <span className="text-aged-brass font-medium">Pro mode active</span>
+                  <span className="text-studio-text-muted">—</span>
+                  <span className="text-studio-text-muted">
                     Advanced settings applied ({Object.keys(proModeControls).length} parameter{Object.keys(proModeControls).length > 1 ? 's' : ''})
                   </span>
                 </div>
@@ -850,16 +850,16 @@ export default function ImageEditor() {
             />
             
             {/* Drawer */}
-            <aside className="fixed right-0 top-[69px] bottom-0 w-96 border-l border-zinc-800 bg-zinc-900 shadow-2xl z-50 overflow-y-auto animate-in slide-in-from-right duration-300">
+            <aside className="fixed right-0 top-[69px] bottom-0 w-96 border-l border-studio-border bg-studio-card shadow-2xl z-50 overflow-y-auto animate-in slide-in-from-right duration-300">
               <ScrollArea className="h-full">
                 <div className="p-6 space-y-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-aged-brass">Pro Mode Settings</h2>
+                    <h2 className="text-lg font-semibold text-aged-brass">Pro mode settings</h2>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setShowProMode(false)}
-                      className="text-zinc-400 hover:text-aged-paper"
+                      className="text-studio-text-muted hover:text-aged-paper"
                     >
                       <X className="w-4 h-4" />
                     </Button>
@@ -867,8 +867,8 @@ export default function ImageEditor() {
 
                   {/* Reference Images */}
                   <div>
-                    <h3 className="text-[#F5F1E8] text-sm font-medium flex items-center gap-2 mb-3">
-                      <span className="text-[#B8956A]">📸</span> Add a reference image to guide Madison's creation
+                    <h3 className="text-studio-text-primary text-sm font-medium flex items-center gap-2 mb-3">
+                      <span className="text-aged-brass">📸</span> Add a reference image to guide Madison's creation
                     </h3>
                     <ReferenceUpload
                       images={referenceImages}
@@ -881,10 +881,10 @@ export default function ImageEditor() {
                   {/* Pro Mode Controls */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-medium text-aged-paper">Advanced Controls</h3>
+                      <h3 className="text-sm font-medium text-aged-paper">Advanced controls</h3>
                       {Object.keys(proModeControls).length > 0 && (
-                        <Badge className="bg-aged-brass/20 text-aged-brass border-aged-brass/30 text-xs">
-                          {Object.keys(proModeControls).length} Active
+                        <Badge className="bg-aged-brass/20 text-aged-brass border-aged-brass/30 text-xxs">
+                          {Object.keys(proModeControls).length} active
                         </Badge>
                       )}
                     </div>
@@ -896,7 +896,7 @@ export default function ImageEditor() {
 
                   {/* Brand Context Info */}
                   {brandContext && (
-                    <Card className="p-3 bg-zinc-800/50 border-zinc-700">
+                    <Card className="p-3 bg-studio-charcoal/50 border-studio-border">
                       <div className="flex items-start gap-2">
                         <Info className="w-4 h-4 mt-0.5 text-zinc-400 flex-shrink-0" />
                         <div className="text-xs text-zinc-400">

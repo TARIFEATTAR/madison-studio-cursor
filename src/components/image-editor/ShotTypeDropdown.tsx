@@ -45,16 +45,16 @@ export default function ShotTypeDropdown({ onSelect, className }: ShotTypeDropdo
       value={selected}
       onChange={handleChange}
       className={cn(
-        "bg-zinc-800 text-zinc-100 border border-zinc-700",
+        "bg-studio-charcoal text-studio-text-primary border border-studio-border",
         "rounded-md px-3 py-2 text-sm",
         "focus:border-aged-brass focus:outline-none focus:ring-1 focus:ring-aged-brass/50",
-        "hover:bg-zinc-700 hover:border-zinc-600 transition-colors",
+        "hover:bg-studio-card hover:border-studio-border transition-colors",
         "cursor-pointer appearance-none",
         "h-10",
         className
       )}
       style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23e4e4e7' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23D4CFC8' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
         backgroundRepeat: "no-repeat",
         backgroundPosition: "right 0.75rem center",
         backgroundSize: "12px",
@@ -62,7 +62,7 @@ export default function ShotTypeDropdown({ onSelect, className }: ShotTypeDropdo
       }}
     >
       {SHOT_TYPES.map(st => (
-        <option key={st.label} value={st.label} className="bg-zinc-900 text-zinc-100">
+        <option key={st.label} value={st.label} className="bg-studio-charcoal text-studio-text-primary">
           {st.label}
         </option>
       ))}
