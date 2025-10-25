@@ -2,23 +2,17 @@ import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { YourNextMove } from "@/components/dashboard/YourNextMove";
-import { QuickActions } from "@/components/dashboard/QuickActions";
+import { DashboardTopBar } from "@/components/dashboard/DashboardTopBar";
+import { CompactYourNextMove } from "@/components/dashboard/CompactYourNextMove";
+import { CompactContentPipeline } from "@/components/dashboard/CompactContentPipeline";
 import { ThisWeekContent } from "@/components/dashboard/ThisWeekContent";
-import { ContentPipeline } from "@/components/dashboard/ContentPipeline";
-import { BrandHealthCard } from "@/components/dashboard/BrandHealthCard";
-import { ContentQuality } from "@/components/dashboard/ContentQuality";
-import { ThisWeekMomentum } from "@/components/dashboard/ThisWeekMomentum";
-import { DashboardEditorialTimeline } from "@/components/dashboard/DashboardEditorialTimeline";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
-import { useBrandHealth } from "@/hooks/useBrandHealth";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function DashboardNew() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
-  const { brandHealth } = useBrandHealth();
   const [longLoad, setLongLoad] = useState(false);
 
   // Safety timeout for long loads
@@ -58,41 +52,18 @@ export default function DashboardNew() {
 
   return (
     <div className="min-h-screen bg-vellum-cream">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
-        {/* Hero Row: Your Next Move + Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-6">
-          <YourNextMove />
-          <QuickActions />
+      {/* Tier 1: Top Status Bar (sticky) */}
+      <DashboardTopBar />
+
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 space-y-4">
+        {/* Tier 2: Primary Focus (60/40 split) */}
+        <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-4">
+          <CompactYourNextMove />
+          <CompactContentPipeline />
         </div>
 
-        {/* This Week's Content */}
+        {/* Tier 3: This Week Content */}
         <ThisWeekContent />
-
-        {/* Content Pipeline + Brand Health/Quality */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ContentPipeline />
-          {brandHealth?.completeness_score === 100 ? (
-            <ContentQuality />
-          ) : (
-            <BrandHealthCard />
-          )}
-        </div>
-
-        {/* This Week's Momentum (Collapsible) */}
-        <ThisWeekMomentum />
-
-        {/* Recent Activity */}
-        <div className="bg-parchment-white border border-charcoal/10 p-6">
-          <div className="mb-6 pb-4 border-b border-charcoal/10">
-            <h3 className="font-serif text-xl font-light text-ink-black mb-1">
-              Recent Activity
-            </h3>
-            <p className="text-xs text-charcoal/60 italic">
-              Your editorial timeline
-            </p>
-          </div>
-          <DashboardEditorialTimeline />
-        </div>
       </div>
     </div>
   );
