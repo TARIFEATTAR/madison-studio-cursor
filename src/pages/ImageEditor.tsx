@@ -47,6 +47,7 @@ import { ReferenceUpload } from "@/components/image-editor/ReferenceUpload";
 import { ImageChainBreadcrumb } from "@/components/image-editor/ImageChainBreadcrumb";
 import { RefinementPanel } from "@/components/image-editor/RefinementPanel";
 import { ProModePanel, ProModeControls } from "@/components/image-editor/ProModePanel";
+import { GeneratingLoader } from "@/components/forge/GeneratingLoader";
 
 // Prompt Formula Utilities
 import { CAMERA_LENS, LIGHTING, ENVIRONMENTS } from "@/utils/promptFormula";
@@ -492,7 +493,7 @@ export default function ImageEditor() {
       <div className="flex-1 overflow-hidden">
         <div className="h-full grid grid-cols-[280px_1fr] gap-4 p-6 max-w-[1500px] mx-auto">
           {/* Left Sidebar: Controls */}
-          <div className="space-y-3 overflow-y-auto pr-2 pb-32">
+          <div className="relative z-10 space-y-3 overflow-y-auto pr-2 pb-32">
             {/* Reference Images */}
             <Card className="p-4 bg-zinc-900/50 border-zinc-800 hover:border-aged-brass/30 transition-colors">
               <div className="flex items-center gap-2 mb-3">
@@ -583,11 +584,11 @@ export default function ImageEditor() {
           </div>
 
           {/* Right: Canvas Display */}
-          <div className="space-y-3 overflow-y-auto">
+          <div className="relative z-0 space-y-3 overflow-y-auto">
             {/* Hero Image Display */}
             {heroImage ? (
               <Card className="overflow-hidden border-2 border-zinc-800 bg-zinc-900/50 max-w-[800px]">
-                <div className="relative w-full" style={{ maxHeight: '68vh' }}>
+                <div className="relative w-full" style={{ maxHeight: '75vh' }}>
                   <img 
                     src={heroImage.imageUrl} 
                     alt="Generated" 
@@ -787,6 +788,9 @@ export default function ImageEditor() {
           />
         </div>
       )}
+
+      {/* Global Generating Overlay */}
+      {isGenerating && <GeneratingLoader />}
     </div>
   );
 }

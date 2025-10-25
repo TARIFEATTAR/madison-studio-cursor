@@ -61,13 +61,13 @@ export function ReferenceUpload({ images, onUpload, onRemove, isUploading = fals
   };
 
   return (
-    <Card className="bg-[#2F2A26] border-[#3D3935] p-4">
+    <Card className="bg-zinc-900/50 border-zinc-800 p-4">
       <Collapsible defaultOpen={true} open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger className="w-full">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <ImageIcon className="w-4 h-4 text-brass" />
-              <h3 className="font-serif text-sm text-[#FFFCF5]">Reference Images ({images.length}/{maxImages})</h3>
+              <ImageIcon className="w-4 h-4 text-aged-brass" />
+              <h3 className="font-serif text-sm text-zinc-100">Reference Images ({images.length}/{maxImages})</h3>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
