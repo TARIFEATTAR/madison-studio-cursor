@@ -483,9 +483,9 @@ export default function ImageEditor() {
 
       {/* Main Content - Improved Layout */}
       <div className="flex-1 overflow-hidden">
-        <div className="h-full grid grid-cols-[280px_1fr] gap-6 p-6 max-w-[1600px] mx-auto">
+        <div className="h-full grid grid-cols-[280px_1fr] gap-4 p-6 max-w-[1500px] mx-auto">
           {/* Left Sidebar: Controls */}
-          <div className="space-y-3 overflow-y-auto pr-2">
+          <div className="space-y-3 overflow-y-auto pr-2 pb-32">
             {/* Reference Images */}
             <Card className="p-4 bg-zinc-900/50 border-zinc-800">
               <div className="flex items-center gap-2 mb-3">
@@ -576,11 +576,11 @@ export default function ImageEditor() {
           </div>
 
           {/* Right: Canvas Display */}
-          <div className="space-y-3 pb-32 overflow-y-auto">
+          <div className="space-y-3 overflow-y-auto -ml-20">
             {/* Hero Image Display */}
             {heroImage ? (
-              <Card className="overflow-hidden border-2 border-zinc-800 bg-zinc-900/50 max-w-[900px] mx-auto">
-                <div className="relative w-full" style={{ maxHeight: '70vh' }}>
+              <Card className="overflow-hidden border-2 border-zinc-800 bg-zinc-900/50 max-w-[800px]">
+                <div className="relative w-full" style={{ maxHeight: '68vh' }}>
                   <img 
                     src={heroImage.imageUrl} 
                     alt="Generated" 
@@ -633,7 +633,7 @@ export default function ImageEditor() {
                 </div>
               </Card>
             ) : (
-              <Card className="aspect-video max-w-[900px] mx-auto flex items-center justify-center border-2 border-dashed border-zinc-700 bg-zinc-900/50">
+              <Card className="aspect-video max-w-[800px] flex items-center justify-center border-2 border-dashed border-zinc-700 bg-zinc-900/50">
                 <div className="text-center p-8">
                   <ImageIcon className="w-16 h-16 mx-auto mb-4 text-zinc-600" />
                   <h3 className="text-lg font-medium mb-2 text-zinc-100">No images yet</h3>
@@ -644,7 +644,7 @@ export default function ImageEditor() {
 
             {/* Thumbnail Gallery */}
             {currentSession.images.length > 1 && (
-              <div className="grid grid-cols-4 md:grid-cols-6 gap-2 max-w-[900px] mx-auto">
+              <div className="grid grid-cols-4 md:grid-cols-6 gap-2 max-w-[800px]">
                 {currentSession.images.map((img) => (
                   <button
                     key={img.id}
@@ -667,6 +667,65 @@ export default function ImageEditor() {
                 ))}
               </div>
             )}
+
+            {/* Bottom Action Bar - Part of Right Column */}
+            <div className="mt-6 w-full max-w-[800px]">
+              <div className="bg-zinc-900/95 backdrop-blur-md border border-zinc-800 rounded-lg p-4">
+                {/* Main Prompt Input */}
+                <div className="mb-3">
+                  <Textarea
+                    placeholder="Describe the image you want to create... (Cmd+Enter to generate)"
+                    value={mainPrompt}
+                    onChange={(e) => setMainPrompt(e.target.value)}
+                    className="min-h-[70px] max-h-[100px] bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-500 resize-none"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                        handleGenerate();
+                      }
+                    }}
+                  />
+                </div>
+
+                {/* Control Strip */}
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => setShowProMode(!showProMode)}
+                    className={cn(
+                      "h-11 px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 transition-colors",
+                      showProMode && "bg-zinc-700 border-amber-500/50"
+                    )}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Pro Mode
+                    {Object.keys(proModeControls).length > 0 && (
+                      <Badge variant="secondary" className="ml-2 text-xs">
+                        {Object.keys(proModeControls).length}
+                      </Badge>
+                    )}
+                  </Button>
+
+                  <Button
+                    onClick={handleGenerate}
+                    disabled={isGenerating || !mainPrompt.trim() || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
+                    className="flex-1 h-11 px-6 bg-amber-500 hover:bg-amber-600 text-zinc-900 font-semibold"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : currentSession.images.length >= MAX_IMAGES_PER_SESSION ? (
+                      `Session Full (${MAX_IMAGES_PER_SESSION}/${MAX_IMAGES_PER_SESSION})`
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Generate
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -686,70 +745,6 @@ export default function ImageEditor() {
           </Card>
         </div>
       )}
-
-      {/* Bottom Bar: Generation Interface - Constrained Within Canvas Area */}
-      <div className="fixed bottom-0 left-[280px] right-0 bg-zinc-900/95 backdrop-blur-lg border-t border-zinc-800 z-20">
-        <div className="px-6 py-4">
-          <div className="flex items-end gap-3 max-w-[900px] mx-auto">
-            {/* Main Prompt Textarea */}
-            <div className="flex-1">
-              <Textarea
-                value={mainPrompt}
-                onChange={(e) => setMainPrompt(e.target.value)}
-                placeholder="Describe the image you want to create... (Cmd+Enter to generate)"
-                className="min-h-[70px] max-h-[100px] bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-500 resize-none"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                    handleGenerate();
-                  }
-                }}
-              />
-            </div>
-
-            {/* Control Strip */}
-            <div className="flex flex-col gap-2">
-              {/* Pro Mode Toggle + Generate Button */}
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowProMode(!showProMode)}
-                  className={cn("h-10 px-3 text-zinc-100 border-zinc-700 hover:bg-zinc-800", showProMode && "bg-zinc-700")}
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Pro
-                  {Object.keys(proModeControls).length > 0 && (
-                    <Badge variant="secondary" className="ml-2 text-xs">
-                      {Object.keys(proModeControls).length}
-                    </Badge>
-                  )}
-                </Button>
-
-                <Button
-                  onClick={handleGenerate}
-                  disabled={isGenerating || !mainPrompt.trim() || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
-                  className="h-10 px-6 bg-amber-500 hover:bg-amber-600 text-zinc-900 font-semibold"
-                  size="lg"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Generating...
-                    </>
-                  ) : currentSession.images.length >= MAX_IMAGES_PER_SESSION ? (
-                    `Session Full (${MAX_IMAGES_PER_SESSION}/${MAX_IMAGES_PER_SESSION})`
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Generate
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Madison Panel */}
       <MadisonVerticalTab 
