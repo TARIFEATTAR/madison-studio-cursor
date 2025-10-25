@@ -59,6 +59,7 @@ import MobileShotTypeSelector from "@/components/image-editor/MobileShotTypeSele
 import MobileAspectRatioSelector from "@/components/image-editor/MobileAspectRatioSelector";
 import MobileReferenceUpload from "@/components/image-editor/MobileReferenceUpload";
 import MobileGeneratedImageView from "@/components/image-editor/MobileGeneratedImageView";
+import MobileCreateForm from "@/components/image-editor/MobileCreateForm";
 
 
 // Prompt Formula Utilities
@@ -601,96 +602,42 @@ export default function ImageEditor() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Create Tab - Tighter Spacing */}
-          <TabsContent value="create" className="flex-1 px-4 py-2 space-y-2 overflow-y-auto mt-0">
-            {/* Large Prompt Textarea */}
-            <div className="space-y-1.5">
-              <Label className="text-studio-text-primary text-sm">Describe your image</Label>
-              <Textarea
-                value={mainPrompt}
-                onChange={(e) => setMainPrompt(e.target.value)}
-                placeholder="Describe your image idea..."
-                rows={2}
-                className="w-full bg-studio-card border-studio-border text-studio-text-primary placeholder:text-studio-text-muted focus-visible:ring-aged-brass/50"
-                disabled={isGenerating}
-              />
-            </div>
-
-            {/* Reference Image Upload */}
-            <div className="space-y-1.5">
-              <Label className="text-studio-text-primary text-sm">Reference Image (optional)</Label>
-              <MobileReferenceUpload
-                image={productImage}
-                onUpload={(file, url) => setProductImage({ file, url })}
-                onRemove={() => setProductImage(null)}
-              />
-            </div>
-
-            {/* Shot Type Selector */}
-            <div className="space-y-1.5">
-              <Label className="text-studio-text-primary text-sm">Shot Type</Label>
-              <MobileShotTypeSelector
-                onSelect={async (shotType) => {
-                  setMainPrompt(shotType.prompt);
-                  toast.success(`${shotType.label} style applied`);
-                  
-                  try {
-                    const { data: { session } } = await supabase.auth.getSession();
-                    if (session?.access_token && user?.id && orgId) {
-                      await supabase.functions.invoke('log-shot-type', {
-                        body: {
-                          organization_id: orgId,
-                          session_id: currentSession?.id || null,
-                          label: shotType.label,
-                          prompt: shotType.prompt
-                        }
-                      });
-                    }
-                  } catch (error) {
-                    console.error('Failed to log shot type:', error);
+          {/* Create Tab - Freepik Style */}
+          <TabsContent value="create" className="flex-1 flex flex-col mt-0 overflow-hidden">
+            <MobileCreateForm
+              prompt={mainPrompt}
+              onPromptChange={setMainPrompt}
+              aspectRatio={aspectRatio}
+              onAspectRatioChange={setAspectRatio}
+              onShotTypeSelect={async (shotType) => {
+                setMainPrompt(shotType.prompt);
+                toast.success(`${shotType.label} style applied`);
+                
+                try {
+                  const { data: { session } } = await supabase.auth.getSession();
+                  if (session?.access_token && user?.id && orgId) {
+                    await supabase.functions.invoke('log-shot-type', {
+                      body: {
+                        organization_id: orgId,
+                        session_id: currentSession?.id || null,
+                        label: shotType.label,
+                        prompt: shotType.prompt
+                      }
+                    });
                   }
-                }}
-              />
-            </div>
-
-            {/* Aspect Ratio Selector */}
-            <div className="space-y-1.5">
-              <Label className="text-studio-text-primary text-sm">Size</Label>
-              <MobileAspectRatioSelector
-                value={aspectRatio}
-                onChange={setAspectRatio}
-                marketplace={marketplace}
-              />
-            </div>
-
-            {/* Generate Button */}
-            <Button
-              onClick={handleGenerate}
-              disabled={!mainPrompt.trim() || isGenerating || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
-              size="lg"
-              variant="brass"
-              className="w-full h-11 mt-1"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Generate Image
-                </>
-              )}
-            </Button>
-
-            {/* Empty State Hint */}
-            {currentSession.images.length === 0 && (
-              <div className="text-center py-8 text-studio-text-muted text-sm">
-                <p>Fill in the details above and tap Generate Image</p>
-                <p className="mt-2">Your creations will appear in the Gallery tab</p>
-              </div>
-            )}
+                } catch (error) {
+                  console.error('Failed to log shot type:', error);
+                }
+              }}
+              referenceImage={productImage}
+              onReferenceUpload={(file, url) => setProductImage({ file, url })}
+              onReferenceRemove={() => setProductImage(null)}
+              onGenerate={handleGenerate}
+              isGenerating={isGenerating}
+              marketplace={marketplace}
+              imagesCount={currentSession.images.length}
+              maxImages={MAX_IMAGES_PER_SESSION}
+            />
           </TabsContent>
 
           {/* Gallery Tab */}
