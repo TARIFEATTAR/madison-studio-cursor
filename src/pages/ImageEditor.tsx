@@ -562,22 +562,22 @@ export default function ImageEditor() {
           </TabsList>
 
           {/* Create Tab - Tighter Spacing */}
-          <TabsContent value="create" className="flex-1 px-4 py-3 space-y-3 overflow-y-auto mt-0">
+          <TabsContent value="create" className="flex-1 px-4 py-2 space-y-2 overflow-y-auto mt-0">
             {/* Large Prompt Textarea */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label className="text-studio-text-primary text-sm">Describe your image</Label>
               <Textarea
                 value={mainPrompt}
                 onChange={(e) => setMainPrompt(e.target.value)}
                 placeholder="Describe your image idea..."
-                rows={3}
+                rows={2}
                 className="w-full bg-studio-card border-studio-border text-studio-text-primary placeholder:text-studio-text-muted focus-visible:ring-aged-brass/50"
                 disabled={isGenerating}
               />
             </div>
 
             {/* Reference Image Upload */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label className="text-studio-text-primary text-sm">Reference Image (optional)</Label>
               <MobileReferenceUpload
                 image={productImage}
@@ -587,7 +587,7 @@ export default function ImageEditor() {
             </div>
 
             {/* Shot Type Selector */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label className="text-studio-text-primary text-sm">Shot Type</Label>
               <MobileShotTypeSelector
                 onSelect={async (shotType) => {
@@ -614,7 +614,7 @@ export default function ImageEditor() {
             </div>
 
             {/* Aspect Ratio Selector */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label className="text-studio-text-primary text-sm">Size</Label>
               <MobileAspectRatioSelector
                 value={aspectRatio}
@@ -629,7 +629,7 @@ export default function ImageEditor() {
               disabled={!mainPrompt.trim() || isGenerating || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
               size="lg"
               variant="brass"
-              className="w-full h-12"
+              className="w-full h-11 mt-1"
             >
               {isGenerating ? (
                 <>

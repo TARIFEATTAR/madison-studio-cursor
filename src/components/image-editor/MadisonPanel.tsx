@@ -176,7 +176,7 @@ export default function MadisonPanel({
                   >
                     {msg.role === "madison" ? (
                       <div className="relative max-w-[85%] group">
-                        <div className="bg-zinc-900 text-aged-paper border border-zinc-800 font-serif rounded-lg px-3 py-2 text-sm">
+                        <div className="bg-zinc-900 text-studio-text-primary border border-zinc-800 font-serif rounded-lg px-3 py-2 text-sm">
                           {msg.content}
                         </div>
                         <Button
@@ -193,7 +193,7 @@ export default function MadisonPanel({
                         </Button>
                       </div>
                     ) : (
-                      <div className="max-w-[85%] bg-aged-brass/10 text-aged-paper border border-aged-brass/30 rounded-lg px-3 py-2 text-sm">
+                      <div className="max-w-[85%] bg-aged-brass/10 text-studio-text-primary border border-aged-brass/30 rounded-lg px-3 py-2 text-sm">
                         {msg.content}
                       </div>
                     )}
@@ -285,7 +285,7 @@ export default function MadisonPanel({
               >
                 {msg.role === "madison" ? (
                   <div className="relative max-w-[85%] group">
-                    <div className="bg-zinc-900 text-aged-paper border border-zinc-800 font-serif rounded-lg px-3 py-2 text-sm">
+                    <div className="bg-zinc-900 text-studio-text-primary border border-zinc-800 font-serif rounded-lg px-3 py-2 text-sm">
                       {msg.content}
                     </div>
                     <Button
@@ -302,7 +302,7 @@ export default function MadisonPanel({
                     </Button>
                   </div>
                 ) : (
-                  <div className="max-w-[85%] bg-aged-brass/10 text-aged-paper border border-aged-brass/30 rounded-lg px-3 py-2 text-sm">
+                  <div className="max-w-[85%] bg-aged-brass/10 text-studio-text-primary border border-aged-brass/30 rounded-lg px-3 py-2 text-sm">
                     {msg.content}
                   </div>
                 )}
