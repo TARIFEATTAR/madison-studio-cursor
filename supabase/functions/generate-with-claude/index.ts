@@ -1322,10 +1322,33 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
             const isCreditOrRateLimit = response.status === 429 || response.status === 402 || lower.includes('credit') || lower.includes('rate');
             if (isCreditOrRateLimit && hasLovableAI) {
               console.log('Falling back to Lovable AI (Gemini) due to Anthropic limitation');
+              
+              // Build Gemini-compatible multimodal content
+              let geminiContent: any;
+              if (images && images.length > 0) {
+                // Multimodal message for Gemini
+                const contentParts: any[] = [{ type: 'text', text: prompt }];
+                
+                images.forEach((imageData: string) => {
+                  const matches = imageData.match(/^data:([^;]+);base64,(.+)$/);
+                  if (matches) {
+                    contentParts.push({
+                      type: 'image_url',
+                      image_url: { url: imageData }
+                    });
+                  }
+                });
+                
+                geminiContent = contentParts;
+              } else {
+                geminiContent = prompt;
+              }
+              
               const messages: any[] = [
                 { role: 'system', content: systemPrompt },
-                { role: 'user', content: typeof messageContent === 'string' ? messageContent : prompt }
+                { role: 'user', content: geminiContent }
               ];
+              
               const lovableResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
                 method: 'POST',
                 headers: {
@@ -1370,9 +1393,31 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
           generatedContent = data.content[0].text;
         } else {
           // Use Lovable AI (Gemini) as fallback
+          
+          // Build Gemini-compatible multimodal content
+          let geminiContent: any;
+          if (images && images.length > 0) {
+            // Multimodal message for Gemini
+            const contentParts: any[] = [{ type: 'text', text: prompt }];
+            
+            images.forEach((imageData: string) => {
+              const matches = imageData.match(/^data:([^;]+);base64,(.+)$/);
+              if (matches) {
+                contentParts.push({
+                  type: 'image_url',
+                  image_url: { url: imageData }
+                });
+              }
+            });
+            
+            geminiContent = contentParts;
+          } else {
+            geminiContent = prompt;
+          }
+          
           const messages: any[] = [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: typeof messageContent === 'string' ? messageContent : prompt }
+            { role: 'user', content: geminiContent }
           ];
           
           response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
