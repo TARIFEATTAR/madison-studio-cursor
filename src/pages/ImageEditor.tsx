@@ -242,6 +242,7 @@ export default function ImageEditor() {
         {
           body: {
             prompt: enhancedPrompt,
+            userId: user.id, // FIX: Pass userId to prevent null constraint violation
             aspectRatio,
             outputFormat,
             referenceImages: referenceImages.map(r => ({ url: r.url, description: r.description })),
@@ -424,6 +425,7 @@ export default function ImageEditor() {
         {
           body: {
             prompt: selectedForRefinement.prompt,
+            userId: user.id, // FIX: Pass userId to prevent null constraint violation
             parentPrompt: selectedForRefinement.prompt,
             aspectRatio,
             outputFormat,
@@ -529,12 +531,11 @@ export default function ImageEditor() {
         </div>
       </header>
 
-      {/* Main Content - Three Column Layout */}
-      <div className="container mx-auto px-4 py-4 max-w-[1800px]">
-        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4">
-          
+      {/* Main Content - Improved Layout */}
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full grid grid-cols-[280px_1fr] gap-6 p-6 max-w-[1600px] mx-auto">
           {/* Left Sidebar: Controls */}
-          <div className="space-y-3">
+          <div className="space-y-3 overflow-y-auto pr-2">
             {/* Reference Images */}
             <Card className="p-4 bg-zinc-900/50 border-zinc-800">
               <div className="flex items-center gap-2 mb-3">
@@ -578,18 +579,18 @@ export default function ImageEditor() {
                 <div className="space-y-2">
                   <Label className="text-xs text-zinc-400">Aspect Ratio</Label>
                   <Select value={aspectRatio} onValueChange={setAspectRatio}>
-                    <SelectTrigger className="bg-zinc-900/80 border-zinc-700">
+                    <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-100">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-zinc-900 border-zinc-700 z-50">
-                      <SelectItem value="1:1">Square (1:1)</SelectItem>
-                      <SelectItem value="4:5">Portrait (4:5)</SelectItem>
-                      <SelectItem value="5:4">Etsy (5:4)</SelectItem>
-                      <SelectItem value="2:3">Pinterest (2:3)</SelectItem>
-                      <SelectItem value="3:2">Email/Web (3:2)</SelectItem>
-                      <SelectItem value="16:9">Landscape (16:9)</SelectItem>
-                      <SelectItem value="9:16">Vertical (9:16)</SelectItem>
-                      <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
+                    <SelectContent className="bg-zinc-800 border-zinc-700 z-50">
+                      <SelectItem value="1:1" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">Square (1:1)</SelectItem>
+                      <SelectItem value="4:5" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">Portrait (4:5)</SelectItem>
+                      <SelectItem value="5:4" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">Etsy (5:4)</SelectItem>
+                      <SelectItem value="2:3" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">Pinterest (2:3)</SelectItem>
+                      <SelectItem value="3:2" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">Email/Web (3:2)</SelectItem>
+                      <SelectItem value="16:9" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">Landscape (16:9)</SelectItem>
+                      <SelectItem value="9:16" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">Vertical (9:16)</SelectItem>
+                      <SelectItem value="21:9" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">Ultra-wide (21:9)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -597,13 +598,13 @@ export default function ImageEditor() {
                 <div className="space-y-2">
                   <Label className="text-xs text-zinc-400">Output Format</Label>
                   <Select value={outputFormat} onValueChange={(v: any) => setOutputFormat(v)}>
-                    <SelectTrigger className="bg-zinc-900/80 border-zinc-700">
+                    <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-100">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-zinc-900 border-zinc-700 z-50">
-                      <SelectItem value="png">PNG</SelectItem>
-                      <SelectItem value="jpeg">JPEG</SelectItem>
-                      <SelectItem value="webp">WebP</SelectItem>
+                    <SelectContent className="bg-zinc-800 border-zinc-700 z-50">
+                      <SelectItem value="png" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">PNG</SelectItem>
+                      <SelectItem value="jpeg" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">JPEG</SelectItem>
+                      <SelectItem value="webp" className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100">WebP</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -624,12 +625,12 @@ export default function ImageEditor() {
             )}
           </div>
 
-          {/* Center: Canvas Display */}
-          <div className="space-y-3 pb-32">
+          {/* Right: Canvas Display */}
+          <div className="space-y-3 pb-32 overflow-y-auto">
             {/* Hero Image Display */}
             {heroImage ? (
-              <Card className="overflow-hidden border-2 border-zinc-800 bg-zinc-900/50">
-                <div className="relative aspect-square bg-zinc-950">
+              <Card className="overflow-hidden border-2 border-zinc-800 bg-zinc-900/50 max-w-[900px] mx-auto">
+                <div className="relative w-full" style={{ maxHeight: '70vh' }}>
                   <img 
                     src={heroImage.imageUrl} 
                     alt="Generated" 
@@ -652,7 +653,7 @@ export default function ImageEditor() {
                     </Button>
                   </div>
                 </div>
-                <div className="p-3 space-y-2">
+                <div className="p-4 space-y-2">
                   {heroImage.chainDepth > 0 && (
                     <ImageChainBreadcrumb
                       currentImage={heroImage}
@@ -682,7 +683,7 @@ export default function ImageEditor() {
                 </div>
               </Card>
             ) : (
-              <Card className="aspect-square flex items-center justify-center border-2 border-dashed border-zinc-700 bg-zinc-900/50">
+              <Card className="aspect-video max-w-[900px] mx-auto flex items-center justify-center border-2 border-dashed border-zinc-700 bg-zinc-900/50">
                 <div className="text-center p-8">
                   <ImageIcon className="w-16 h-16 mx-auto mb-4 text-zinc-600" />
                   <h3 className="text-lg font-medium mb-2 text-zinc-100">No images yet</h3>
@@ -691,16 +692,16 @@ export default function ImageEditor() {
               </Card>
             )}
 
-            {/* Thumbnail Gallery (will be removed in Phase 2) */}
+            {/* Thumbnail Gallery */}
             {currentSession.images.length > 1 && (
-              <div className="grid grid-cols-6 md:grid-cols-8 gap-2">
+              <div className="grid grid-cols-4 md:grid-cols-6 gap-2 max-w-[900px] mx-auto">
                 {currentSession.images.map((img) => (
                   <button
                     key={img.id}
                     onClick={() => handleSetHero(img.id)}
                     className={cn(
                       "relative aspect-square rounded-lg overflow-hidden border-2 transition-all hover:scale-105",
-                      img.isHero ? "border-primary ring-2 ring-primary" : "border-transparent"
+                      img.isHero ? "border-primary ring-2 ring-primary" : "border-zinc-700"
                     )}
                   >
                     <img src={img.imageUrl} alt="" className="w-full h-full object-cover" />
@@ -736,17 +737,17 @@ export default function ImageEditor() {
         </div>
       )}
 
-      {/* Bottom Bar: Generation Interface */}
-      <div className="fixed bottom-0 left-0 right-0 bg-zinc-900/95 backdrop-blur-lg border-t border-zinc-800 z-20">
-        <div className="container mx-auto px-4 py-4 max-w-[1800px]">
-          <div className="flex items-end gap-3">
+      {/* Bottom Bar: Generation Interface - Constrained Width */}
+      <div className="fixed bottom-0 left-[280px] right-0 bg-zinc-900/95 backdrop-blur-lg border-t border-zinc-800 z-20">
+        <div className="px-6 py-4 max-w-[1320px]">
+          <div className="flex items-end gap-3 max-w-[900px]">
             {/* Main Prompt Textarea */}
             <div className="flex-1">
               <Textarea
                 value={mainPrompt}
                 onChange={(e) => setMainPrompt(e.target.value)}
                 placeholder="Describe the image you want to create... (Cmd+Enter to generate)"
-                className="min-h-[80px] max-h-[120px] bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-500 resize-none"
+                className="min-h-[70px] max-h-[100px] bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-500 resize-none"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                     handleGenerate();
@@ -764,7 +765,7 @@ export default function ImageEditor() {
                   size="sm"
                   onClick={() => setStylePreset(prev => prev === 'photorealistic' ? null : 'photorealistic')}
                   className={cn(
-                    "h-8 px-3 text-xs",
+                    "h-8 px-3 text-xs whitespace-nowrap",
                     stylePreset === 'photorealistic' && "bg-blue-600 hover:bg-blue-700"
                   )}
                 >
@@ -775,8 +776,8 @@ export default function ImageEditor() {
                   size="sm"
                   onClick={() => setStylePreset(prev => prev === 'artistic' ? null : 'artistic')}
                   className={cn(
-                    "h-8 px-3 text-xs",
-                    stylePreset === 'artistic' && "bg-purple-600 hover:bg-purple-700"
+                    "h-8 px-3 text-xs whitespace-nowrap",
+                    stylePreset === 'artistic' && "bg-amber-600 hover:bg-amber-700"
                   )}
                 >
                   🎨 Artistic
@@ -786,7 +787,7 @@ export default function ImageEditor() {
                   size="sm"
                   onClick={() => setStylePreset(prev => prev === 'minimalist' ? null : 'minimalist')}
                   className={cn(
-                    "h-8 px-3 text-xs",
+                    "h-8 px-3 text-xs whitespace-nowrap",
                     stylePreset === 'minimalist' && "bg-slate-600 hover:bg-slate-700"
                   )}
                 >
@@ -844,7 +845,7 @@ export default function ImageEditor() {
       />
       
       {madisonOpen && (
-        <div className="fixed right-0 top-0 bottom-0 w-[400px] md:w-[500px] z-50 bg-zinc-900 border-l border-zinc-800 shadow-2xl">
+        <div className="fixed right-0 top-0 bottom-0 w-[360px] z-50 bg-zinc-900 border-l border-zinc-800 shadow-2xl">
           <EditorialAssistantPanel 
             onClose={() => setMadisonOpen(false)}
             initialContent=""

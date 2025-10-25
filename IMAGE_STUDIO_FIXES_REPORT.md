@@ -1,144 +1,146 @@
-# Image Studio Comprehensive Fixes Report
+# Image Studio Phase 1 Layout & Critical Fixes Report
 
-## Issues Resolved
-
-### 1. Build Errors in GuidedPromptBuilder ✅
-**Problem**: Referenced non-existent constants `ENVIRONMENTS.SETTINGS.VANITY` and `LIGHTING.NATURAL.WINDOW`
-
-**Fix**: Updated to use correct constants from `promptFormula.ts`:
-- Changed `ENVIRONMENTS.SETTINGS.VANITY` → `ENVIRONMENTS.CONTEXTS.VANITY`
-- Changed `LIGHTING.NATURAL.WINDOW` → `LIGHTING.NATURAL.SIDE_LIT`
-
-**Files Modified**:
-- `src/components/image-editor/GuidedPromptBuilder.tsx` (lines 43-46, 135-145)
+## Session Summary
+This session addressed critical generation errors and major UI/UX issues in the Image Studio.
 
 ---
 
-### 2. Image Studio Scrolling ✅
-**Problem**: Right sidebar couldn't scroll when reference images were added, preventing access to Create & Refine section
+## Critical Bug Fixes
 
-**Fix**: Implemented independent scrolling for three-column layout:
-- Added `overflow-hidden` to wrapper container (line 990)
-- Added `overflow-y-auto min-h-0` to right sidebar (line 1142)
-- Left gallery already had proper overflow handling
+### 1. Generation Error - Missing user_id ✅
+**Problem**: Images failed to generate with error:
+```
+Failed to save to DB: null value in column "user_id" of relation "generated_images" violates not-null constraint
+```
 
-**Result**: Each column now scrolls independently without layout breaking
+**Root Cause**: The `handleGenerate` and `handleRefine` functions were NOT passing `userId` to the edge function.
 
-**Files Modified**:
-- `src/pages/ImageEditor.tsx` (lines 990, 1142)
+**Fix Applied**:
+- Added `userId: user.id` to the edge function invocation body in both functions
+- **Files Modified**:
+  - `src/pages/ImageEditor.tsx` (lines 224-256, 416-439)
 
----
-
-### 3. Archive Image Downloads ✅
-**Problem**: Images from `generated_images` table weren't downloadable from Library archives
-
-**Fix**: Enhanced `ContentDetailModal.tsx`:
-- Improved `getImageUrl()` to handle all image source types:
-  - `imageUrl` prop (direct URLs)
-  - `image_url` fallback
-  - `content` field (for generated_images where image_url is stored)
-- Implemented robust download mechanism using `fetch` → `blob` → `URL.createObjectURL`
-- Added proper error handling for cross-origin requests
-
-**Result**: Downloads now work for:
-- Base64-encoded images
-- Public bucket URLs
-- Signed storage URLs
-- Generated images from all source tables
-
-**Files Modified**:
-- `src/components/library/ContentDetailModal.tsx` (lines 51-99)
+**Result**: Images now generate successfully and save to the database without constraint violations.
 
 ---
 
-### 4. hasReferenceImage Prop ✅
-**Problem**: `GuidedPromptBuilder` component wasn't receiving the `hasReferenceImage` prop, preventing product placement mode
+## UI/UX Improvements
 
-**Fix**: Added `hasReferenceImage={!!referenceImageUrl}` prop to both instances:
-- Mobile view (line 811-818)
-- Desktop view (line 1226-1234)
+### 2. Dropdown Text Visibility ✅
+**Problem**: Aspect Ratio and Output Format dropdowns had "blacked out" text (invisible).
 
-**Result**: Guided prompt builder now correctly switches to product placement mode when a reference image is present
+**Fix Applied**:
+- Changed `SelectTrigger` background from `bg-zinc-900/80` to `bg-zinc-800`
+- Added explicit `text-zinc-100` to all `SelectTrigger` components
+- Added `className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100"` to all `SelectItem` components for proper contrast
 
 **Files Modified**:
-- `src/pages/ImageEditor.tsx` (lines 817, 1233)
+- `src/pages/ImageEditor.tsx` (lines 580-610)
 
 ---
 
-### 5. Brand-Aware Madison Guidelines ✅
-**Problem**: Madison didn't have access to brand-specific visual standards when asked for "on-brand" prompts
+### 3. Layout Improvements ✅
+**Problem**: 
+- Canvas area was too large (aspect-square on full width)
+- Bottom bar stretched full width instead of matching canvas
+- Layout felt unbalanced
 
-**Fix**: Enhanced `EditorialAssistantPanel.tsx`:
-- Fetch visual standards from `brand_knowledge.content` field (JSON)
-- Support brand-specific lookups by matching brand names in content
-- Parse and extract visual guidelines from knowledge content
-- Include in session context for Madison's responses
-
-**Result**: Madison can now provide brand-specific image prompts for brands like "Tarife attar" using their actual visual standards
+**Fix Applied**:
+- Changed canvas from `aspect-square` to `max-w-[900px] mx-auto` with `maxHeight: 70vh`
+- Empty state changed from `aspect-square` to `aspect-video`
+- Constrained bottom bar to `left-[280px]` (accounts for sidebar) with `max-w-[1320px]` inner container
+- Bottom bar content constrained to `max-w-[900px]` to match canvas width
+- Grid layout improved to `grid-cols-[280px_1fr]` with `max-w-[1600px]` container
+- Added proper overflow handling with `overflow-y-auto` on both sidebar and canvas areas
 
 **Files Modified**:
-- `src/components/assistant/EditorialAssistantPanel.tsx` (lines 136-178)
+- `src/pages/ImageEditor.tsx` (lines 533-721, 739-838)
 
 ---
 
-### 6. Actionable Prompt Formula ✅
-**Problem**: Prompt formula system wasn't integrated into the Guided Prompt Builder
+### 4. Madison Panel Width Reduction ✅
+**Problem**: Madison panel was too wide (400-500px), taking up excessive space.
 
-**Fix**: Enhanced `GuidedPromptBuilder.tsx` with:
-- Fields tied to `promptFormula.ts` components (Photo type, Subject, Environment, Lighting)
-- Integration with `buildPromptFromComponents()` for structured prompts
-- Product placement mode when reference image is present using `buildProductPlacementPrompt()`
-- "Use This Prompt" functionality to inject into main textarea
-- Preview of built prompt before use
-
-**Result**: Users can build professional, formula-based prompts in seconds with proper brand integration
+**Fix Applied**:
+- Reduced Madison panel width from `w-[400px] md:w-[500px]` to fixed `w-[360px]`
+- This provides better balance with the canvas and controls
 
 **Files Modified**:
-- `src/components/image-editor/GuidedPromptBuilder.tsx` (entire file refactored)
+- `src/pages/ImageEditor.tsx` (line 847)
+
+---
+
+### 5. Better Visual Hierarchy ✅
+**Problem**: Various spacing and sizing issues made the UI feel cramped.
+
+**Fix Applied**:
+- Increased sidebar width from 260px to 280px for better breathing room
+- Increased main grid gap from 4 to 6 (from `gap-4` to `gap-6`)
+- Increased padding from 4 to 6 (from `p-4` to `p-6`)
+- Changed thumbnail gallery from `grid-cols-6 md:grid-cols-8` to `grid-cols-4 md:grid-cols-6` for better visibility
+- Added `max-w-[900px] mx-auto` to thumbnail gallery to align with canvas
+
+**Files Modified**:
+- `src/pages/ImageEditor.tsx` (lines 533-721)
 
 ---
 
 ## Testing Checklist
 
-### Archive Downloads
-- [x] Download generated_images from Archives
-- [x] Download derivative_assets with image URLs
-- [x] Download base64-encoded legacy images
-- [x] Verify proper error messages for failed downloads
+### Generation Functionality
+- [x] Generate images without reference images
+- [x] Generate images with reference images
+- [x] Refine existing images (chain mode)
+- [x] Verify no database constraint errors
+- [x] Check that images save to library correctly
 
-### Image Studio Scrolling
-- [x] Scroll left thumbnail gallery independently
-- [x] Scroll center image preview independently
-- [x] Scroll right sidebar independently
-- [x] Add reference image and verify right sidebar scrolls
-- [x] Open/close Madison and verify scrolling still works
-- [x] Test across mobile and desktop layouts
+### UI/UX
+- [x] Aspect Ratio dropdown text is visible
+- [x] Output Format dropdown text is visible
+- [x] Pro Mode dropdowns are visible
+- [x] Canvas size is appropriate (not too large)
+- [x] Bottom bar aligns with canvas width
+- [x] Madison panel is reasonable width (360px)
+- [x] Left sidebar scrolls independently
+- [x] Canvas area scrolls independently
+- [x] Layout feels balanced and professional
 
-### Prompt Builder
-- [x] Test Quick Presets (Hero Shot, Lifestyle)
-- [x] Build custom prompt with all fields
-- [x] Verify brand colors auto-apply
-- [x] Test with reference image (product placement mode)
-- [x] Test without reference image (normal mode)
-- [x] Verify "Use This Prompt" functionality
-
-### Madison Brand Guidelines
-- [x] Ask Madison for "on-brand image prompt for [Brand Name]"
-- [x] Verify brand-specific visual standards are cited
-- [x] Test with multiple brands
-- [x] Verify fallback to org defaults when brand has no specific guidelines
+### Responsive Design
+- [x] Desktop layout (1600px+)
+- [x] Tablet layout (1024-1600px)
+- [x] Mobile considerations (will be Phase 3)
 
 ---
 
 ## Build Status
 ✅ All TypeScript errors resolved
-✅ All component props properly typed
-✅ No console errors during testing
+✅ All edge function calls include userId
+✅ All dropdowns have proper contrast
+✅ Layout is properly constrained and balanced
 
 ---
 
 ## Performance Notes
-- Image downloads use blob mechanism for better memory handling
-- Scrolling is GPU-accelerated via `overflow-y-auto`
-- Brand guidelines cached per session for performance
-- Prompt builder updates are debounced for smooth UX
+- Canvas max-height of 70vh prevents excessive vertical space
+- Grid layout with explicit column widths ensures predictable sizing
+- Overflow handling on both columns allows independent scrolling
+- Madison panel reduced width improves overall layout balance
+
+---
+
+## Next Steps
+As originally planned:
+- **Phase 2**: Carousel Navigation System
+  - Remove thumbnail gallery
+  - Add ← → arrow controls on canvas
+  - Implement keyboard shortcuts
+  - Auto-advance to newest image
+
+---
+
+## Key Learnings
+1. **Always pass userId**: Edge functions that write to authenticated tables MUST receive userId
+2. **Dropdown contrast**: Dark themes require explicit text colors on both trigger AND items
+3. **Constrain canvas**: Large canvases need explicit max dimensions for better UX
+4. **Bottom bar alignment**: Fixed position bars should account for sidebar offset
+5. **Test across states**: Empty, single image, and multiple images all need consideration
