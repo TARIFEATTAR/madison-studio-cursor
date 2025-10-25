@@ -583,7 +583,7 @@ export default function ImageEditor() {
           </div>
 
           {/* Right: Canvas Display */}
-          <div className="space-y-3 overflow-y-auto -ml-20">
+          <div className="space-y-3 overflow-y-auto">
             {/* Hero Image Display */}
             {heroImage ? (
               <Card className="overflow-hidden border-2 border-zinc-800 bg-zinc-900/50 max-w-[800px]">
@@ -700,8 +700,8 @@ export default function ImageEditor() {
                     size="lg"
                     onClick={() => setShowProMode(!showProMode)}
                     className={cn(
-                      "h-11 border-zinc-700 text-zinc-100",
-                      showProMode && "border-aged-brass bg-aged-brass/10 text-aged-brass"
+                      "h-11 border-zinc-700 bg-zinc-800 text-zinc-100 hover:bg-zinc-700",
+                      showProMode && "border-aged-brass bg-aged-brass/10 text-aged-brass hover:bg-aged-brass/20"
                     )}
                   >
                     <Settings className="w-4 h-4" />
@@ -714,7 +714,7 @@ export default function ImageEditor() {
                   </Button>
 
                   <Button
-                    variant="brassGradient"
+                    variant="brass"
                     size="lg"
                     onClick={handleGenerate}
                     disabled={isGenerating || !mainPrompt.trim() || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
