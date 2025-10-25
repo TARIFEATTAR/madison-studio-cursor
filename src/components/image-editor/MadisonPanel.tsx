@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Sparkles, Send } from "lucide-react";
+import { X, Sparkles, Send, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 interface Message {
   id: string;
@@ -35,6 +36,7 @@ export default function MadisonPanel({
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputValue, setInputValue] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -108,20 +110,48 @@ export default function MadisonPanel({
     }
   };
 
+  const handleCopyMessage = async (content: string, messageId: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedMessageId(messageId);
+      toast({
+        title: "Copied!",
+        description: "Prompt copied to clipboard",
+      });
+      setTimeout(() => setCopiedMessageId(null), 2000);
+    } catch (err) {
+      toast({
+        title: "Copy failed",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Mobile: Bottom Sheet
   if (isMobile) {
     return (
       <Sheet open={isOpen} onOpenChange={onToggle}>
         <SheetContent side="bottom" className="h-[95vh] bg-zinc-950 border-zinc-800">
-          <SheetHeader className="border-b border-zinc-800 pb-3 mb-4">
-            <div className="flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-aged-brass" />
-              <SheetTitle className="text-aged-brass">Madison</SheetTitle>
-              <span className="text-xs text-zinc-500 font-medium">
-                Session {sessionCount}/{maxImages}
-              </span>
-            </div>
-          </SheetHeader>
+            <SheetHeader className="border-b border-zinc-800 pb-3 mb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Sparkles className="w-5 h-5 text-aged-brass" />
+                  <SheetTitle className="text-aged-brass">Madison</SheetTitle>
+                  <span className="text-xs text-zinc-500 font-medium">
+                    Session {sessionCount}/{maxImages}
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onToggle}
+                  className="text-zinc-400 hover:text-aged-paper h-8 w-8"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </SheetHeader>
 
           <ScrollArea className="h-[calc(95vh-140px)] px-1">
             <div className="space-y-4 pb-4">
@@ -144,16 +174,29 @@ export default function MadisonPanel({
                       msg.role === "user" ? "justify-end" : "justify-start"
                     )}
                   >
-                    <div
-                      className={cn(
-                        "max-w-[85%] rounded-lg px-3 py-2 text-sm",
-                        msg.role === "madison"
-                          ? "bg-zinc-900 text-aged-paper border border-zinc-800 font-serif"
-                          : "bg-aged-brass/10 text-aged-paper border border-aged-brass/30"
-                      )}
-                    >
-                      {msg.content}
-                    </div>
+                    {msg.role === "madison" ? (
+                      <div className="relative max-w-[85%] group">
+                        <div className="bg-zinc-900 text-aged-paper border border-zinc-800 font-serif rounded-lg px-3 py-2 text-sm">
+                          {msg.content}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleCopyMessage(msg.content, msg.id)}
+                          className="absolute -top-2 -right-2 h-6 w-6 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded-full opacity-100 transition-opacity"
+                        >
+                          {copiedMessageId === msg.id ? (
+                            <Check className="w-3 h-3 text-green-400" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
+                          )}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="max-w-[85%] bg-aged-brass/10 text-aged-paper border border-aged-brass/30 rounded-lg px-3 py-2 text-sm">
+                        {msg.content}
+                      </div>
+                    )}
                   </div>
                 ))
               )}
@@ -240,16 +283,29 @@ export default function MadisonPanel({
                   msg.role === "user" ? "justify-end" : "justify-start"
                 )}
               >
-                <div
-                  className={cn(
-                    "max-w-[85%] rounded-lg px-3 py-2 text-sm",
-                    msg.role === "madison"
-                      ? "bg-zinc-900 text-aged-paper border border-zinc-800 font-serif"
-                      : "bg-aged-brass/10 text-aged-paper border border-aged-brass/30"
-                  )}
-                >
-                  {msg.content}
-                </div>
+                {msg.role === "madison" ? (
+                  <div className="relative max-w-[85%] group">
+                    <div className="bg-zinc-900 text-aged-paper border border-zinc-800 font-serif rounded-lg px-3 py-2 text-sm">
+                      {msg.content}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleCopyMessage(msg.content, msg.id)}
+                      className="absolute -top-2 -right-2 h-6 w-6 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded-full md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity"
+                    >
+                      {copiedMessageId === msg.id ? (
+                        <Check className="w-3 h-3 text-green-400" />
+                      ) : (
+                        <Copy className="w-3 h-3" />
+                      )}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="max-w-[85%] bg-aged-brass/10 text-aged-paper border border-aged-brass/30 rounded-lg px-3 py-2 text-sm">
+                    {msg.content}
+                  </div>
+                )}
               </div>
             ))
           )}

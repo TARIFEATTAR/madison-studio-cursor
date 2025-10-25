@@ -526,17 +526,7 @@ export default function ImageEditor() {
       <div className="flex flex-col min-h-screen bg-studio-charcoal text-aged-paper pb-16">
         {/* Mobile Header - Compact */}
         <header className="flex items-center justify-between px-4 py-2 border-b border-studio-border bg-studio-card/50 backdrop-blur-sm sticky top-0 z-20 h-10">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(-1)}
-              className="text-studio-text-muted hover:text-aged-paper h-6 w-6 p-0"
-            >
-              <Menu className="w-4 h-4" />
-            </Button>
-            <h1 className="text-sm font-semibold text-aged-brass">Image Studio</h1>
-          </div>
+          <h1 className="text-sm font-semibold text-aged-brass pl-2">Image Studio</h1>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
