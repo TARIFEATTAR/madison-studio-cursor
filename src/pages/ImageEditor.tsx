@@ -746,7 +746,9 @@ export default function ImageEditor() {
 
                   {/* Reference Images */}
                   <div>
-                    <h3 className="text-sm font-medium text-aged-paper mb-3">Reference Images</h3>
+                    <h3 className="text-[#F5F1E8] text-sm font-medium flex items-center gap-2 mb-3">
+                      <span className="text-[#B8956A]">📸</span> Add a reference image to guide Madison's creation
+                    </h3>
                     <ReferenceUpload
                       images={referenceImages}
                       onUpload={handleReferenceUpload}

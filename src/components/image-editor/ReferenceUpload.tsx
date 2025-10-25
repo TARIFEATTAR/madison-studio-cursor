@@ -146,14 +146,20 @@ export function ReferenceUpload({ images, onUpload, onRemove, isUploading = fals
                   onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                   onDragLeave={() => setIsDragging(false)}
                   onDrop={(e) => { e.preventDefault(); setIsDragging(false); const file = e.dataTransfer.files?.[0]; if (file) processFile(file); }}
-                  className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded cursor-pointer transition-all duration-300 group ${isDragging ? 'border-brass/60 bg-[#252220]/40' : 'border-[#3D3935] hover:border-brass/40'}`}
+                  aria-label="Upload a reference image to guide Madison"
+                  className={`flex flex-col items-center justify-center p-5 border border-dashed rounded-lg cursor-pointer transition-all duration-300 group ${
+                    isDragging 
+                      ? 'border-[#B8956A] bg-[#B8956A]/8' 
+                      : 'border-[#B8956A] bg-[#B8956A]/5 hover:bg-[#B8956A]/8'
+                  }`}
+                  style={{ borderRadius: '8px' }}
                 >
-                  <Upload className="w-6 h-6 text-brass mb-2 group-hover:scale-110 transition-transform" />
-                  <span className="text-xs text-[#D4CFC8] text-center">
-                    Drag & drop or click to upload (Max 20MB)
+                  <Upload className="w-6 h-6 text-[#B8956A] mb-2 group-hover:scale-110 transition-transform" />
+                  <span className="text-[#F5F1E8] text-sm font-medium text-center">
+                    Click or drag an image to start (Max 20MB)
                   </span>
-                  <span className="text-[10px] text-[#A8A39E] italic mt-1 text-center max-w-[220px]">
-                    Add {images.length === 0 ? "first" : "another"} reference ({maxImages - images.length} remaining)
+                  <span className="text-[#B8956A] text-sm italic mt-1 text-center">
+                    {images.length === 0 ? "Your first reference image helps guide Madison." : `${maxImages - images.length} more reference${maxImages - images.length !== 1 ? 's' : ''} available`}
                   </span>
                 </Label>
                 <Input
