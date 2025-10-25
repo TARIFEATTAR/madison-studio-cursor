@@ -588,7 +588,7 @@ export default function ImageEditor() {
             {/* Hero Image Display */}
             {heroImage ? (
               <Card className="overflow-hidden border-2 border-zinc-800 bg-zinc-900/50 max-w-[800px]">
-                <div className="relative w-full" style={{ maxHeight: '75vh' }}>
+                <div className="relative w-full" style={{ maxHeight: '50vh' }}>
                   <img 
                     src={heroImage.imageUrl} 
                     alt="Generated" 
