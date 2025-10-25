@@ -270,7 +270,14 @@ export default function ImageEditor() {
       
     } catch (error: any) {
       console.error('Generation error:', error);
-      toast.error(error.message || "Failed to generate image");
+      console.error('User ID:', user?.id);
+      console.error('Organization ID:', orgId);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        functionError: error.context
+      });
+      toast.error(error.message || "Failed to generate image. Check console for details.");
     } finally {
       setIsGenerating(false);
     }
@@ -487,9 +494,9 @@ export default function ImageEditor() {
           {/* Left Sidebar: Controls */}
           <div className="space-y-3 overflow-y-auto pr-2 pb-32">
             {/* Reference Images */}
-            <Card className="p-4 bg-zinc-900/50 border-zinc-800">
+            <Card className="p-4 bg-zinc-900/50 border-zinc-800 hover:border-aged-brass/30 transition-colors">
               <div className="flex items-center gap-2 mb-3">
-                <ImageIcon className="w-4 h-4 text-zinc-400" />
+                <ImageIcon className="w-4 h-4 text-aged-brass" />
                 <h3 className="font-medium text-sm text-zinc-100">Reference Images</h3>
               </div>
               <ReferenceUpload
@@ -689,13 +696,15 @@ export default function ImageEditor() {
                 {/* Control Strip */}
                 <div className="flex gap-2">
                   <Button
+                    variant="outline"
+                    size="lg"
                     onClick={() => setShowProMode(!showProMode)}
                     className={cn(
-                      "h-11 px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 transition-colors",
-                      showProMode && "bg-zinc-700 border-amber-500/50"
+                      "h-11 border-zinc-700 text-zinc-100",
+                      showProMode && "border-aged-brass bg-aged-brass/10 text-aged-brass"
                     )}
                   >
-                    <Settings className="w-4 h-4 mr-2" />
+                    <Settings className="w-4 h-4" />
                     Pro Mode
                     {Object.keys(proModeControls).length > 0 && (
                       <Badge variant="secondary" className="ml-2 text-xs">
@@ -705,20 +714,22 @@ export default function ImageEditor() {
                   </Button>
 
                   <Button
+                    variant="brassGradient"
+                    size="lg"
                     onClick={handleGenerate}
                     disabled={isGenerating || !mainPrompt.trim() || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
-                    className="flex-1 h-11 px-6 bg-amber-500 hover:bg-amber-600 text-zinc-900 font-semibold"
+                    className="flex-1 h-11"
                   >
                     {isGenerating ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        <Loader2 className="w-4 h-4 animate-spin" />
                         Generating...
                       </>
                     ) : currentSession.images.length >= MAX_IMAGES_PER_SESSION ? (
                       `Session Full (${MAX_IMAGES_PER_SESSION}/${MAX_IMAGES_PER_SESSION})`
                     ) : (
                       <>
-                        <Sparkles className="w-4 h-4 mr-2" />
+                        <Sparkles className="w-4 h-4" />
                         Generate
                       </>
                     )}
