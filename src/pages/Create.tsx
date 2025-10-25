@@ -207,7 +207,26 @@ export default function Create() {
       additionalContext && `\nAdditional Direction: ${additionalContext}`
     ].filter(Boolean).join('\n');
 
-      const fullPrompt = `${promptParts}\n\n[EXECUTE THIS BRIEF IMMEDIATELY. OUTPUT ONLY THE FINAL COPY. NO QUESTIONS OR ANALYSIS.]`;
+      // Add blog-specific requirements if blog format is selected
+      let blogRequirements = '';
+      if (format === 'blog_article') {
+        blogRequirements = `
+
+BLOG POST REQUIREMENTS:
+- Target Length: 1200-1500 words minimum (this is critical - do not write shorter articles)
+- Structure: Use three-act structure throughout:
+  * ACT I (15%): Opening hook that establishes emotional context and makes the reader lean in
+  * ACT II (70%): Core exploration with 2-3 H2 subheadings, concrete examples, evidence, and narrative flow
+  * ACT III (15%): Synthesis with key takeaway and clear call to reflection
+- Include substantive, researched content with depth and insight
+- Maintain narrative flow and brand voice throughout
+- Use proper H2 headers (##) for main sections
+- Provide concrete examples and avoid surface-level commentary
+
+CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not summarize or abbreviate.`;
+      }
+
+      const fullPrompt = `${promptParts}${blogRequirements}\n\n[EXECUTE THIS BRIEF IMMEDIATELY. OUTPUT ONLY THE FINAL COPY. NO QUESTIONS OR ANALYSIS.]`;
 
       // ENHANCED AUTO-SAVE: Capture rich metadata for intelligent reuse
       try {
