@@ -529,12 +529,103 @@ export default function ImageEditor() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-4 max-w-[1600px]">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-4">
+      {/* Main Content - Three Column Layout */}
+      <div className="container mx-auto px-4 py-4 max-w-[1800px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4">
           
-          {/* Left: Image Display & Chain */}
+          {/* Left Sidebar: Controls */}
           <div className="space-y-3">
+            {/* Reference Images */}
+            <Card className="p-4 bg-zinc-900/50 border-zinc-800">
+              <div className="flex items-center gap-2 mb-3">
+                <ImageIcon className="w-4 h-4 text-zinc-400" />
+                <h3 className="font-medium text-sm text-zinc-100">Reference Images</h3>
+              </div>
+              <ReferenceUpload
+                images={referenceImages}
+                onUpload={handleReferenceUpload}
+                onRemove={handleReferenceRemove}
+                maxImages={3}
+              />
+            </Card>
+
+            {/* Pro Mode Collapsible */}
+            <Collapsible open={showProMode} onOpenChange={setShowProMode}>
+              <CollapsibleContent>
+                <Card className="p-4 bg-zinc-900/50 border-zinc-800">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-medium text-sm text-zinc-100">Pro Mode</h3>
+                      {(Object.keys(proModeControls).length > 0) && (
+                        <Badge variant="secondary" className="text-xs">
+                          {Object.keys(proModeControls).length} active
+                        </Badge>
+                      )}
+                    </div>
+                    <ProModePanel
+                      onControlsChange={setProModeControls}
+                      initialValues={proModeControls}
+                    />
+                  </div>
+                </Card>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Output Settings */}
+            <Card className="p-4 bg-zinc-900/50 border-zinc-800">
+              <h3 className="font-medium text-sm text-zinc-100 mb-3">Output Settings</h3>
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label className="text-xs text-zinc-400">Aspect Ratio</Label>
+                  <Select value={aspectRatio} onValueChange={setAspectRatio}>
+                    <SelectTrigger className="bg-zinc-900/80 border-zinc-700">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-zinc-900 border-zinc-700 z-50">
+                      <SelectItem value="1:1">Square (1:1)</SelectItem>
+                      <SelectItem value="4:5">Portrait (4:5)</SelectItem>
+                      <SelectItem value="5:4">Etsy (5:4)</SelectItem>
+                      <SelectItem value="2:3">Pinterest (2:3)</SelectItem>
+                      <SelectItem value="3:2">Email/Web (3:2)</SelectItem>
+                      <SelectItem value="16:9">Landscape (16:9)</SelectItem>
+                      <SelectItem value="9:16">Vertical (9:16)</SelectItem>
+                      <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs text-zinc-400">Output Format</Label>
+                  <Select value={outputFormat} onValueChange={(v: any) => setOutputFormat(v)}>
+                    <SelectTrigger className="bg-zinc-900/80 border-zinc-700">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-zinc-900 border-zinc-700 z-50">
+                      <SelectItem value="png">PNG</SelectItem>
+                      <SelectItem value="jpeg">JPEG</SelectItem>
+                      <SelectItem value="webp">WebP</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </Card>
+
+            {/* Brand Context Info */}
+            {brandContext && (
+              <Card className="p-3 bg-zinc-900/30 border-zinc-800">
+                <div className="flex items-start gap-2">
+                  <Info className="w-4 h-4 mt-0.5 text-zinc-400 flex-shrink-0" />
+                  <div className="text-xs text-zinc-400">
+                    <p className="font-medium mb-1 text-zinc-300">Brand Context Active</p>
+                    <p>Images will align with your brand guidelines</p>
+                  </div>
+                </div>
+              </Card>
+            )}
+          </div>
+
+          {/* Center: Canvas Display */}
+          <div className="space-y-3 pb-32">
             {/* Hero Image Display */}
             {heroImage ? (
               <Card className="overflow-hidden border-2 border-zinc-800 bg-zinc-900/50">
@@ -600,8 +691,8 @@ export default function ImageEditor() {
               </Card>
             )}
 
-            {/* Thumbnail Gallery */}
-            {currentSession.images.length > 0 && (
+            {/* Thumbnail Gallery (will be removed in Phase 2) */}
+            {currentSession.images.length > 1 && (
               <div className="grid grid-cols-6 md:grid-cols-8 gap-2">
                 {currentSession.images.map((img) => (
                   <button
@@ -626,167 +717,104 @@ export default function ImageEditor() {
               </div>
             )}
           </div>
+        </div>
+      </div>
 
-          {/* Right: Controls */}
-          <div className="space-y-3">
-            {/* Reference Upload */}
-            <Card className="p-3 bg-zinc-900/50 border-zinc-800">
-              <div className="flex items-center gap-2 mb-2">
-                <Upload className="w-4 h-4 text-zinc-400" />
-                <h3 className="font-medium text-sm text-zinc-100">Reference Images</h3>
-              </div>
-              <ReferenceUpload
-                images={referenceImages}
-                onUpload={handleReferenceUpload}
-                onRemove={handleReferenceRemove}
-                maxImages={3}
-              />
-            </Card>
+      {/* Refinement Modal Overlay */}
+      {refinementMode && selectedForRefinement && (
+        <div className="fixed inset-0 bg-zinc-950/90 backdrop-blur-sm z-30 flex items-center justify-center p-4">
+          <Card className="w-full max-w-2xl bg-zinc-900 border-zinc-800">
+            <RefinementPanel
+              baseImage={selectedForRefinement}
+              onRefine={handleRefine}
+              onCancel={() => {
+                setRefinementMode(false);
+                setSelectedForRefinement(null);
+              }}
+            />
+          </Card>
+        </div>
+      )}
 
-            {/* Refinement or Generation */}
-            {refinementMode && selectedForRefinement ? (
-              <RefinementPanel
-                baseImage={selectedForRefinement}
-                onRefine={handleRefine}
-                onCancel={() => {
-                  setRefinementMode(false);
-                  setSelectedForRefinement(null);
+      {/* Bottom Bar: Generation Interface */}
+      <div className="fixed bottom-0 left-0 right-0 bg-zinc-900/95 backdrop-blur-lg border-t border-zinc-800 z-20">
+        <div className="container mx-auto px-4 py-4 max-w-[1800px]">
+          <div className="flex items-end gap-3">
+            {/* Main Prompt Textarea */}
+            <div className="flex-1">
+              <Textarea
+                value={mainPrompt}
+                onChange={(e) => setMainPrompt(e.target.value)}
+                placeholder="Describe the image you want to create... (Cmd+Enter to generate)"
+                className="min-h-[80px] max-h-[120px] bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-500 resize-none"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                    handleGenerate();
+                  }
                 }}
               />
-            ) : (
-              <Card className="p-3 space-y-3 bg-zinc-900/50 border-zinc-800">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-medium text-zinc-100">Create Image</h3>
-                    {/* Active Pro Mode Indicator */}
-                    {(Object.keys(proModeControls).length > 0 || stylePreset) && (
-                      <Badge variant="secondary" className="text-xs">
-                        <Settings className="w-3 h-3 mr-1" />
-                        {Object.keys(proModeControls).length + (stylePreset ? 1 : 0)} active
-                      </Badge>
-                    )}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowProMode(!showProMode)}
-                    className={cn(showProMode && "bg-zinc-800")}
-                  >
-                    <Settings className="w-4 h-4 mr-2" />
-                    {showProMode ? 'Simple' : 'Pro'}
-                  </Button>
-                </div>
+            </div>
 
-                <Textarea
-                  value={mainPrompt}
-                  onChange={(e) => setMainPrompt(e.target.value)}
-                  placeholder="Describe the image you want to create..."
-                  className="min-h-[80px] resize-none bg-zinc-900/80 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
-                />
+            {/* Control Strip */}
+            <div className="flex flex-col gap-2">
+              {/* Top Row: Style Presets */}
+              <div className="flex gap-2">
+                <Button
+                  variant={stylePreset === 'photorealistic' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setStylePreset(prev => prev === 'photorealistic' ? null : 'photorealistic')}
+                  className={cn(
+                    "h-8 px-3 text-xs",
+                    stylePreset === 'photorealistic' && "bg-blue-600 hover:bg-blue-700"
+                  )}
+                >
+                  📸 Photorealistic
+                </Button>
+                <Button
+                  variant={stylePreset === 'artistic' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setStylePreset(prev => prev === 'artistic' ? null : 'artistic')}
+                  className={cn(
+                    "h-8 px-3 text-xs",
+                    stylePreset === 'artistic' && "bg-purple-600 hover:bg-purple-700"
+                  )}
+                >
+                  🎨 Artistic
+                </Button>
+                <Button
+                  variant={stylePreset === 'minimalist' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setStylePreset(prev => prev === 'minimalist' ? null : 'minimalist')}
+                  className={cn(
+                    "h-8 px-3 text-xs",
+                    stylePreset === 'minimalist' && "bg-slate-600 hover:bg-slate-700"
+                  )}
+                >
+                  ✨ Minimalist
+                </Button>
+              </div>
 
-                <Collapsible open={showProMode}>
-                  <CollapsibleContent className="space-y-4 pt-4 border-t border-zinc-700">
-                    {/* Pro Mode Controls */}
-                    <ProModePanel
-                      onControlsChange={setProModeControls}
-                      initialValues={proModeControls}
-                    />
-                    
-                    {/* Aspect Ratio & Format */}
-                    <div className="space-y-3 pt-3 border-t border-zinc-700">
-                      <div className="space-y-2">
-                        <Label className="text-xs text-zinc-400">Aspect Ratio</Label>
-                        <Select value={aspectRatio} onValueChange={setAspectRatio}>
-                          <SelectTrigger className="bg-zinc-900/80 border-zinc-700">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1:1">Square (1:1)</SelectItem>
-                            <SelectItem value="4:5">Portrait (4:5)</SelectItem>
-                            <SelectItem value="5:4">Etsy (5:4)</SelectItem>
-                            <SelectItem value="2:3">Pinterest (2:3)</SelectItem>
-                            <SelectItem value="3:2">Email/Web (3:2)</SelectItem>
-                            <SelectItem value="16:9">Landscape (16:9)</SelectItem>
-                            <SelectItem value="9:16">Vertical (9:16)</SelectItem>
-                            <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-xs text-zinc-400">Output Format</Label>
-                        <Select value={outputFormat} onValueChange={(v: any) => setOutputFormat(v)}>
-                          <SelectTrigger className="bg-zinc-900/80 border-zinc-700">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="png">PNG</SelectItem>
-                            <SelectItem value="jpeg">JPEG</SelectItem>
-                            <SelectItem value="webp">WebP</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-
-                {/* Clear All Settings Button */}
-                {(stylePreset || Object.keys(proModeControls).length > 0) && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setStylePreset(null);
-                      setProModeControls({});
-                      toast.success("Settings cleared");
-                    }}
-                    className="w-full text-xs h-7 text-zinc-400 hover:text-zinc-100"
-                  >
-                    Clear all settings
-                  </Button>
-                )}
-
-                {/* Style Presets */}
-                <div className="flex gap-2 flex-wrap">
-                  <Button
-                    variant={stylePreset === 'photorealistic' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setStylePreset(prev => prev === 'photorealistic' ? null : 'photorealistic')}
-                    className={cn(
-                      "h-8 text-xs",
-                      stylePreset === 'photorealistic' && "bg-blue-600 hover:bg-blue-700"
-                    )}
-                  >
-                    📸 Photorealistic
-                  </Button>
-                  <Button
-                    variant={stylePreset === 'artistic' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setStylePreset(prev => prev === 'artistic' ? null : 'artistic')}
-                    className={cn(
-                      "h-8 text-xs",
-                      stylePreset === 'artistic' && "bg-purple-600 hover:bg-purple-700"
-                    )}
-                  >
-                    🎨 Artistic
-                  </Button>
-                  <Button
-                    variant={stylePreset === 'minimalist' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setStylePreset(prev => prev === 'minimalist' ? null : 'minimalist')}
-                    className={cn(
-                      "h-8 text-xs",
-                      stylePreset === 'minimalist' && "bg-slate-600 hover:bg-slate-700"
-                    )}
-                  >
-                    ✨ Minimalist
-                  </Button>
-                </div>
+              {/* Bottom Row: Pro Mode Toggle + Generate */}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowProMode(!showProMode)}
+                  className={cn("h-10 px-3", showProMode && "bg-zinc-700")}
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Pro
+                  {(Object.keys(proModeControls).length > 0 || stylePreset) && (
+                    <Badge variant="secondary" className="ml-2 text-xs">
+                      {Object.keys(proModeControls).length + (stylePreset ? 1 : 0)}
+                    </Badge>
+                  )}
+                </Button>
 
                 <Button
                   onClick={handleGenerate}
-                  disabled={isGenerating || !mainPrompt.trim()}
-                  className="w-full"
+                  disabled={isGenerating || !mainPrompt.trim() || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
+                  className="h-10 px-6 bg-blue-600 hover:bg-blue-700"
                   size="lg"
                 >
                   {isGenerating ? (
@@ -794,28 +822,17 @@ export default function ImageEditor() {
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Generating...
                     </>
+                  ) : currentSession.images.length >= MAX_IMAGES_PER_SESSION ? (
+                    `Session Full (${MAX_IMAGES_PER_SESSION}/${MAX_IMAGES_PER_SESSION})`
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4 mr-2" />
-                      Generate Image
+                      Generate
                     </>
                   )}
                 </Button>
-              </Card>
-            )}
-
-            {/* Brand Context Info */}
-            {brandContext && (
-              <Card className="p-3 bg-zinc-900/30 border-zinc-800">
-                <div className="flex items-start gap-2">
-                  <Info className="w-4 h-4 mt-0.5 text-zinc-400 flex-shrink-0" />
-                  <div className="text-xs text-zinc-400">
-                    <p className="font-medium mb-1 text-zinc-300">Brand Context Active</p>
-                    <p>Images will align with your brand guidelines</p>
-                  </div>
-                </div>
-              </Card>
-            )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
