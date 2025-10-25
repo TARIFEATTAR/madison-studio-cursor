@@ -58,6 +58,7 @@ import { ProductImageUpload } from "@/components/image-editor/ProductImageUpload
 import MobileShotTypeSelector from "@/components/image-editor/MobileShotTypeSelector";
 import MobileAspectRatioSelector from "@/components/image-editor/MobileAspectRatioSelector";
 import MobileReferenceUpload from "@/components/image-editor/MobileReferenceUpload";
+import MobileGeneratedImageView from "@/components/image-editor/MobileGeneratedImageView";
 
 
 // Prompt Formula Utilities
@@ -130,6 +131,8 @@ export default function ImageEditor() {
   const [isMadisonOpen, setIsMadisonOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"create" | "gallery">("create");
   const [productImage, setProductImage] = useState<{ url: string; file: File } | null>(null);
+  const [showGeneratedView, setShowGeneratedView] = useState(false);
+  const [latestGeneratedImage, setLatestGeneratedImage] = useState<string | null>(null);
   
   // Load prompt from navigation state if present
   useEffect(() => {
@@ -326,8 +329,12 @@ export default function ImageEditor() {
       setAllPrompts(prev => [...prev, { role: 'user', content: mainPrompt }]);
       toast.success("Image generated successfully!");
       
-      // Auto-switch to gallery tab on mobile after generation
+      // On mobile, transition to full-screen generated view
       if (isMobile) {
+        setLatestGeneratedImage(newImage.imageUrl);
+        setShowGeneratedView(true);
+      } else {
+        // Auto-switch to gallery tab on desktop
         setActiveTab("gallery");
       }
       
@@ -522,6 +529,39 @@ export default function ImageEditor() {
 
   // Mobile Layout
   if (isMobile) {
+    // Show full-screen generated image view after generation
+    if (showGeneratedView && latestGeneratedImage) {
+      return (
+        <MobileGeneratedImageView
+          imageUrl={latestGeneratedImage}
+          prompt={mainPrompt}
+          aspectRatio={aspectRatio}
+          onSave={() => {
+            // Mark the latest image as flagged
+            const latestImage = currentSession.images[currentSession.images.length - 1];
+            if (latestImage) {
+              handleToggleApproval(latestImage.id);
+            }
+            toast.success("Image saved to library!");
+            setShowGeneratedView(false);
+            setActiveTab("gallery");
+          }}
+          onClose={() => {
+            setShowGeneratedView(false);
+            setActiveTab("gallery");
+          }}
+          onRegenerate={handleGenerate}
+          onPromptChange={setMainPrompt}
+          onAspectRatioChange={setAspectRatio}
+          onShotTypeSelect={async (shotType) => {
+            setMainPrompt(shotType.prompt);
+            toast.success(`${shotType.label} style applied`);
+          }}
+          isGenerating={isGenerating}
+        />
+      );
+    }
+
     return (
       <div className="flex flex-col min-h-screen bg-studio-charcoal text-aged-paper pb-16">
         {/* Mobile Header - Compact */}
