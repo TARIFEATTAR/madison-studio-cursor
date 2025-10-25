@@ -204,9 +204,9 @@ const Calendar = () => {
           onDragStart={() => setIsDragging(true)}
           onDragEnd={handleDragEnd}
         >
-          <div className={`mt-6 ${isMobile ? '' : 'grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-6'}`}>
+          <div className="mt-6">
             {/* Calendar Section */}
-            <div>
+            <div className="w-full">
               {loading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="text-base text-muted-foreground">Loading calendar...</div>
@@ -238,13 +238,6 @@ const Calendar = () => {
                 </div>
               )}
             </div>
-
-            {/* Sidebar Section - Hidden on Mobile */}
-            {!isMobile && (
-              <div className="lg:sticky lg:top-24 h-fit max-h-[calc(100vh-7rem)] overflow-hidden">
-                <CalendarSidebar />
-              </div>
-            )}
           </div>
         </DragDropContext>
 
