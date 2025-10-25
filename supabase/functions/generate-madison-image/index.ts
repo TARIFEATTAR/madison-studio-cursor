@@ -182,21 +182,47 @@ PHOTOGRAPHIC QUALITY:
         }
       ];
       
+      // Create Supabase client for downloading images from storage
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+      
       // Fetch and add all reference images
       for (const refImage of referenceImages) {
         let imageData = refImage.url;
         
-        // If it's a Supabase storage URL, fetch and convert to base64
+        // If it's a Supabase storage URL, download using Storage client
         if (refImage.url.includes('/storage/v1/object/public/')) {
           try {
-            console.log(`📥 Fetching reference image: ${refImage.label}`);
-            const imageResponse = await fetch(refImage.url);
+            console.log(`📥 Downloading reference image: ${refImage.label}`);
+            console.log(`📍 URL: ${refImage.url}`);
             
-            if (!imageResponse.ok) {
-              throw new Error(`HTTP ${imageResponse.status}: ${imageResponse.statusText}`);
+            // Extract file path from public URL
+            // Format: https://.../storage/v1/object/public/reference-images/{filepath}
+            const urlParts = refImage.url.split('/reference-images/');
+            if (urlParts.length < 2) {
+              throw new Error('Invalid storage URL format');
+            }
+            const filePath = urlParts[1];
+            console.log(`📂 File path: ${filePath}`);
+            
+            // Download using Supabase Storage client (handles auth automatically)
+            const { data: imageBlob, error } = await supabaseClient
+              .storage
+              .from('reference-images')
+              .download(filePath);
+            
+            if (error) {
+              throw new Error(`Storage download failed: ${error.message}`);
             }
             
-            const imageBuffer = await imageResponse.arrayBuffer();
+            if (!imageBlob) {
+              throw new Error('No data returned from storage');
+            }
+            
+            // Convert blob to ArrayBuffer
+            const imageBuffer = await imageBlob.arrayBuffer();
             const uint8Array = new Uint8Array(imageBuffer);
             
             // Convert to base64 in chunks to avoid stack overflow
@@ -208,14 +234,14 @@ PHOTOGRAPHIC QUALITY:
             }
             const base64 = btoa(binary);
             
-            // Determine content type from response headers
-            const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
+            // Determine content type from blob type
+            const contentType = imageBlob.type || 'image/jpeg';
             imageData = `data:${contentType};base64,${base64}`;
             
             console.log(`✅ Converted reference image ${refImage.label} (${(uint8Array.length / 1024).toFixed(1)}KB)`);
           } catch (error) {
             const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-            console.error(`❌ Failed to fetch reference image ${refImage.label}:`, errorMsg);
+            console.error(`❌ Failed to download reference image ${refImage.label}:`, errorMsg);
             throw new Error(`Failed to load reference image "${refImage.label}": ${errorMsg}`);
           }
         }
