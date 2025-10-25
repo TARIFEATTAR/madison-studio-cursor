@@ -50,6 +50,7 @@ import { ImageChainBreadcrumb } from "@/components/image-editor/ImageChainBreadc
 import { RefinementPanel } from "@/components/image-editor/RefinementPanel";
 import { ProModePanel, ProModeControls } from "@/components/image-editor/ProModePanel";
 import { GeneratingLoader } from "@/components/forge/GeneratingLoader";
+import ThumbnailRibbon from "@/components/image-editor/ThumbnailRibbon";
 
 // Prompt Formula Utilities
 import { CAMERA_LENS, LIGHTING, ENVIRONMENTS } from "@/utils/promptFormula";
@@ -611,30 +612,48 @@ export default function ImageEditor() {
             )}
           </div>
 
-          {/* Thumbnail Carousel */}
+          {/* Thumbnail Carousel - 10 Slot */}
           {currentSession.images.length > 0 && (
-            <div className="flex gap-2 p-3 overflow-x-auto border-t border-zinc-800 bg-zinc-900/50 scrollbar-thin scrollbar-thumb-zinc-700">
-              {currentSession.images.map((img, idx) => (
-                <button
-                  key={img.id}
-                  onClick={() => handleSetHero(img.id)}
-                  className={`w-24 h-24 rounded-md overflow-hidden shrink-0 border-2 transition-all ${
-                    heroImage?.imageUrl === img.imageUrl
-                      ? 'border-aged-brass shadow-lg scale-105'
-                      : 'border-zinc-700 hover:border-zinc-600 opacity-70 hover:opacity-100'
-                  }`}
-                >
-                  <img 
-                    src={img.imageUrl} 
-                    alt={`Generation ${idx + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                  {img.approvalStatus === 'flagged' && (
-                    <Heart className="absolute top-1 right-1 w-3 h-3 fill-aged-brass text-aged-brass" />
-                  )}
-                </button>
-              ))}
-            </div>
+            <ThumbnailRibbon
+              images={currentSession.images.map(img => ({
+                id: img.id,
+                url: img.imageUrl,
+                prompt: img.prompt,
+                aspectRatio: aspectRatio,
+                orderIndex: currentSession.images.indexOf(img)
+              }))}
+              activeIndex={currentSession.images.findIndex(img => img.isHero)}
+              onSelect={(index) => {
+                const selectedImage = currentSession.images[index];
+                if (selectedImage) {
+                  handleSetHero(selectedImage.id);
+                }
+              }}
+              onSave={async (img) => {
+                try {
+                  const { error } = await supabase
+                    .from('generated_images')
+                    .update({ saved_to_library: true })
+                    .eq('id', img.id);
+                  
+                  if (error) throw error;
+                  toast.success("Image saved to library!");
+                } catch (error) {
+                  console.error('Error saving image:', error);
+                  toast.error("Failed to save image");
+                }
+              }}
+              onDelete={async (img) => {
+                await handleDeleteImage(img.id);
+              }}
+              onRefine={(img) => {
+                const imageToRefine = currentSession.images.find(i => i.id === img.id);
+                if (imageToRefine) {
+                  handleStartRefinement(imageToRefine);
+                }
+              }}
+              onSaveSession={handleSaveSession}
+            />
           )}
 
           {/* Prompt Bar (Fixed Bottom) */}
