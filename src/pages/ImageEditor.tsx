@@ -462,7 +462,7 @@ export default function ImageEditor() {
   return (
     <div className="flex flex-col h-screen bg-zinc-950 text-aged-paper">
       {/* Top Toolbar */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-30">
+      <header className="flex items-center justify-between px-6 py-3 border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-20">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -666,12 +666,13 @@ export default function ImageEditor() {
           )}
 
           {/* Prompt Bar (Fixed Bottom) */}
-          <footer className="flex items-center gap-3 px-6 py-4 border-t border-zinc-800 bg-zinc-900/80 backdrop-blur-sm sticky bottom-0">
+          <footer className="flex items-center gap-3 px-6 py-4 border-t border-zinc-800 bg-zinc-900 backdrop-blur-sm sticky bottom-0 z-[15]">
             <Textarea
               value={mainPrompt}
               onChange={(e) => setMainPrompt(e.target.value)}
               placeholder="Describe the image you want to create..."
-              className="flex-1 min-h-[60px] max-h-[120px] resize-none bg-zinc-800 border-zinc-700 text-aged-paper placeholder:text-zinc-500"
+              className="flex-1 min-h-[60px] max-h-[120px] resize-none bg-[#111111] border-zinc-700 text-[#F5F1E8] placeholder:text-zinc-500 focus-visible:ring-aged-brass/50 relative z-[15]"
+              style={{ color: '#F5F1E8' }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();

@@ -108,7 +108,7 @@ export default function MadisonPanel({
   return (
     <div
       className={cn(
-        "fixed top-0 right-0 h-full z-50",
+        "fixed top-0 right-0 h-full z-[30]",
         "bg-zinc-950/95 backdrop-blur-sm border-l border-zinc-800",
         "shadow-[-4px_0_24px_rgba(0,0,0,0.4)]",
         "transition-all duration-300 ease-out",
