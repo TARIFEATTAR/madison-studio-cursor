@@ -164,7 +164,7 @@ export default function MobileCreateForm({
 
       {/* Full Screen Creation Modal */}
       <Dialog open={!!selectedOption} onOpenChange={() => handleModalClose()}>
-        <DialogContent className="fixed inset-0 z-50 bg-studio-charcoal border-none rounded-none p-0 max-w-none h-screen flex flex-col">
+        <DialogContent className="fixed inset-0 z-50 bg-studio-charcoal border-none rounded-none p-0 max-w-none w-screen h-[100dvh] flex flex-col transform-none m-0">
           {/* Modal Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-studio-border bg-studio-card/50">
             <div className="flex items-center gap-2">
@@ -266,7 +266,7 @@ export default function MobileCreateForm({
           </div>
 
           {/* Modal Footer - Generate Button */}
-          <div className="border-t border-studio-border bg-studio-card/50 p-4">
+          <div className="border-t border-studio-border bg-studio-card/50 p-4 pb-safe">
             <Button
               onClick={handleGenerateFromModal}
               disabled={!modalPrompt.trim() || isGenerating || imagesCount >= maxImages}
