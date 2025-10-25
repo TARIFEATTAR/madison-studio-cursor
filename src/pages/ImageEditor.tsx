@@ -642,16 +642,30 @@ export default function ImageEditor() {
                     variant="secondary"
                     onClick={async () => {
                       try {
-                        const response = await fetch(heroImage.imageUrl);
-                        const blob = await response.blob();
-                        const url = URL.createObjectURL(blob);
+                        let downloadUrl = heroImage.imageUrl;
+                        
+                        // If it's a base64 data URL, use it directly
+                        if (heroImage.imageUrl.startsWith('data:')) {
+                          downloadUrl = heroImage.imageUrl;
+                        } else {
+                          // For regular URLs, fetch and convert to blob URL
+                          const response = await fetch(heroImage.imageUrl, { mode: 'cors' });
+                          const blob = await response.blob();
+                          downloadUrl = URL.createObjectURL(blob);
+                        }
+                        
                         const link = document.createElement('a');
-                        link.href = url;
-                        link.download = `madison-${Date.now()}.${outputFormat}`;
+                        link.href = downloadUrl;
+                        link.download = `madison-image-${Date.now()}.${outputFormat}`;
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);
-                        URL.revokeObjectURL(url);
+                        
+                        // Clean up blob URL if we created one
+                        if (!heroImage.imageUrl.startsWith('data:')) {
+                          URL.revokeObjectURL(downloadUrl);
+                        }
+                        
                         toast.success("Image downloaded!");
                       } catch (error) {
                         console.error('Download failed:', error);
