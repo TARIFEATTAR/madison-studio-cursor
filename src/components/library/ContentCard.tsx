@@ -137,10 +137,40 @@ export function ContentCard({
           </h3>
           
           <div className="flex flex-wrap gap-2">
-            {deliverableFormat && (
+            {/* Master Content Badge - Primary Indicator */}
+            {content.sourceTable === "master_content" && (
+              <Badge 
+                variant="default"
+                className="text-xs font-semibold bg-brass/90 hover:bg-brass text-white border-0"
+              >
+                Master Content
+              </Badge>
+            )}
+            
+            {/* Derivative Asset Badge */}
+            {content.sourceTable === "derivative_assets" && (
               <Badge 
                 variant="secondary"
-                className="text-xs"
+                className="text-xs font-medium"
+              >
+                Derivative Asset
+              </Badge>
+            )}
+
+            {/* Generated Image Badge */}
+            {content.sourceTable === "generated_images" && (
+              <Badge 
+                variant="secondary"
+                className="text-xs font-medium"
+              >
+                Generated Image
+              </Badge>
+            )}
+
+            {deliverableFormat && (
+              <Badge 
+                variant="outline"
+                className="text-xs border-border/40"
               >
                 <deliverableFormat.icon className="w-3 h-3 mr-1" />
                 {deliverableFormat.label}

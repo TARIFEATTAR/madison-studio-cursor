@@ -99,10 +99,17 @@ export function MasterContentCard({
       className="hover:shadow-md transition-shadow cursor-pointer group relative"
       onClick={handleCardClick}
     >
-      {/* Two-Tier Badge System - Top Left */}
+      {/* Badge System - Top Left */}
       <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
+        {/* Master Content Badge - Primary Indicator */}
+        <Badge 
+          variant="default"
+          className="font-semibold bg-brass/90 hover:bg-brass text-white border-0"
+        >
+          Master Content
+        </Badge>
         {/* Category Badge */}
-        <Badge variant="outline" className="bg-stone-100/80 dark:bg-stone-800/80 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600">
+        <Badge variant="outline" className="bg-stone-100/80 dark:bg-stone-800/80 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600 text-xs">
           {getContentCategoryLabel(content.content_type) || 'Content'}
         </Badge>
         {/* Subtype Tag */}
@@ -111,10 +118,6 @@ export function MasterContentCard({
             {getContentSubtypeLabel(content.content_type)}
           </Badge>
         )}
-        {/* Item Type Badge */}
-        <Badge variant="outline" className="bg-muted/60 text-muted-foreground border-border/40 text-xs">
-          Master
-        </Badge>
       </div>
       
       <CardHeader className="pb-3 pt-12">
