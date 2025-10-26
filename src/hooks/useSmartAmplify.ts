@@ -73,7 +73,7 @@ const getRuleBasedRecommendations = (
     });
   }
 
-  return recommendations.sort((a, b) => a.priority - b.priority).slice(0, 6);
+  return recommendations.sort((a, b) => a.priority - b.priority).slice(0, 3);
 };
 
 export function useSmartAmplify(masterContent: MasterContent | null) {

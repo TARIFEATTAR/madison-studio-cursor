@@ -41,7 +41,7 @@ Available derivative types:
 - tiktok: TikTok video scripts
 - twitter: Twitter/X threads
 
-Analyze the provided content and recommend 4-6 derivative types that would work best for amplifying this specific content.
+Analyze the provided content and recommend 2-3 derivative types that would work best for amplifying this specific content.
 
 For each recommendation, provide:
 1. derivativeType: The type ID
@@ -62,7 +62,7 @@ Title: ${masterContent.title}
 Content Type: ${masterContent.contentType || 'general'}
 Content Preview: ${masterContent.content}
 
-Return 4-6 recommendations prioritized by fit and potential impact.`;
+Return 2-3 recommendations prioritized by fit and potential impact.`;
 
     // Call Lovable AI Gateway with tool calling for structured output
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -82,7 +82,7 @@ Return 4-6 recommendations prioritized by fit and potential impact.`;
             type: "function",
             function: {
               name: "recommend_derivatives",
-              description: "Return 4-6 derivative type recommendations for the master content",
+              description: "Return 2-3 derivative type recommendations for the master content",
               parameters: {
                 type: "object",
                 properties: {
@@ -105,8 +105,8 @@ Return 4-6 recommendations prioritized by fit and potential impact.`;
                       required: ["derivativeType", "confidence", "reason", "priority"],
                       additionalProperties: false
                     },
-                    minItems: 4,
-                    maxItems: 6
+                    minItems: 2,
+                    maxItems: 3
                   }
                 },
                 required: ["recommendations"],
