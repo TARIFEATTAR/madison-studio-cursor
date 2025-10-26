@@ -15,6 +15,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/hooks/use-toast";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useAuth } from "@/hooks/useAuth";
+import { cn } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
@@ -171,8 +172,11 @@ const Calendar = () => {
   };
 
   return (
-    <div className="min-h-screen pb-12 px-4 md:px-12 pt-4 md:pt-8">
-      <div className="max-w-[1920px] mx-auto">
+    <div className="min-h-screen pb-12 pt-4 md:pt-8">
+      <div className={cn(
+        "max-w-[1920px] mx-auto",
+        isMobile ? "px-3" : "px-4 md:px-12"
+      )}>
         <CalendarHeader
           currentDate={currentDate}
           viewMode={viewMode}
@@ -204,7 +208,7 @@ const Calendar = () => {
           onDragStart={() => setIsDragging(true)}
           onDragEnd={handleDragEnd}
         >
-          <div className="mt-6">
+          <div className={cn("mt-6", isMobile && "mt-4")}>
             {/* Calendar Section */}
             <div className="w-full">
               {loading ? (
@@ -246,7 +250,7 @@ const Calendar = () => {
           <Button
             onClick={handleNewSchedule}
             size="lg"
-            className="fixed bottom-20 right-6 h-14 w-14 rounded-full shadow-lg z-50"
+            className="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg z-50 animate-scale-in"
           >
             <Plus className="w-6 h-6" />
           </Button>

@@ -1,6 +1,9 @@
 import { useState, useMemo, useEffect } from "react";
-import { Plus, Trash2, X, Archive } from "lucide-react";
+import { Plus, Trash2, X, Archive, Filter, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { LibraryFilters } from "@/components/library/LibraryFilters";
 import { ContentCard } from "@/components/library/ContentCard";
 import { ContentDetailModal } from "@/components/library/ContentDetailModal";
@@ -15,10 +18,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ScheduleModal } from "@/components/calendar/ScheduleModal";
 import { MadisonSplitEditor } from "@/components/library/MadisonSplitEditor";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Library() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
   const [groupBySessions, setGroupBySessions] = useState(false);
   const { data: libraryContent = [], isLoading, refetch } = useLibraryContent(groupBySessions);
@@ -31,6 +36,7 @@ export default function Library() {
   const [selectedContent, setSelectedContent] = useState<LibraryContentItem | null>(null);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   
   // Session modal state
   const [selectedSession, setSelectedSession] = useState<{
@@ -366,69 +372,191 @@ export default function Library() {
     }
   };
 
-  const hasFilters = !!searchQuery || selectedContentType !== "all" || selectedCollection !== "all";
+  const hasFilters = !!searchQuery || selectedContentType !== "all" || selectedCollection !== "all" || showArchived;
+  const activeFilterCount = [
+    selectedContentType !== "all",
+    selectedCollection !== "all", 
+    showArchived
+  ].filter(Boolean).length;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header Section */}
-      <div 
-        className="border-b border-border/20 bg-card/30 backdrop-blur-sm sticky top-0 z-10"
-        style={{
-          backgroundImage: `
-            repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.02) 2px, rgba(0,0,0,.02) 4px),
-            repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,.02) 2px, rgba(0,0,0,.02) 4px)
-          `
-        }}
-      >
-        <div className="container mx-auto px-6 py-8 space-y-6">
-          {/* Title Row */}
-          <div className="flex items-start justify-between">
+      {/* Mobile Header */}
+      {isMobile ? (
+        <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b border-border/20">
+          <div className="px-4 py-3 space-y-3">
+            {/* Title */}
             <div>
-              <h1 className="font-serif text-4xl text-foreground mb-2">The Archives</h1>
-              <p className="text-muted-foreground">Your editorial repository</p>
+              <h1 className="font-serif text-2xl text-foreground">The Archives</h1>
+              <p className="text-xs text-muted-foreground">Your editorial repository</p>
             </div>
-            <Button
-              onClick={() => navigate("/create")}
-              variant="brassGradient"
-              size="lg"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create New Content
-            </Button>
-          </div>
-
-          {/* Filters */}
-          <div className="flex items-center justify-between gap-4">
-            <LibraryFilters
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              selectedContentType={selectedContentType}
-              onContentTypeChange={setSelectedContentType}
-              selectedCollection={selectedCollection}
-              onCollectionChange={setSelectedCollection}
-              sortBy={sortBy}
-              onSortChange={setSortBy}
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-              showArchived={showArchived}
-              onShowArchivedChange={setShowArchived}
-            />
             
-            {/* Group by Sessions Toggle */}
-            <Button
-              variant={groupBySessions ? "brass" : "outline"}
-              size="sm"
-              onClick={() => setGroupBySessions(!groupBySessions)}
-              className="flex-shrink-0"
-            >
-              {groupBySessions ? "Showing Sessions" : "Group by Session"}
-            </Button>
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search content..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-10"
+              />
+            </div>
+
+            {/* Filter Button Row */}
+            <div className="flex items-center gap-2">
+              <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2 flex-1">
+                    <Filter className="w-4 h-4" />
+                    Filters
+                    {activeFilterCount > 0 && (
+                      <Badge variant="default" className="ml-1 h-5 min-w-5 px-1">
+                        {activeFilterCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[80vh]">
+                  <SheetHeader>
+                    <SheetTitle>Filters</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6 space-y-4">
+                    <LibraryFilters
+                      searchQuery={searchQuery}
+                      onSearchChange={setSearchQuery}
+                      selectedContentType={selectedContentType}
+                      onContentTypeChange={setSelectedContentType}
+                      selectedCollection={selectedCollection}
+                      onCollectionChange={setSelectedCollection}
+                      sortBy={sortBy}
+                      onSortChange={setSortBy}
+                      viewMode={viewMode}
+                      onViewModeChange={setViewMode}
+                      showArchived={showArchived}
+                      onShowArchivedChange={setShowArchived}
+                    />
+                    {hasFilters && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClearFilters}
+                        className="w-full"
+                      >
+                        Clear All Filters
+                      </Button>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+
+              <Button
+                variant={groupBySessions ? "default" : "outline"}
+                size="sm"
+                onClick={() => setGroupBySessions(!groupBySessions)}
+                className="flex-shrink-0"
+              >
+                {groupBySessions ? "Sessions" : "Group"}
+              </Button>
+            </div>
+
+            {/* Active filters display */}
+            {activeFilterCount > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {selectedContentType !== "all" && (
+                  <Badge variant="secondary" className="text-xs">
+                    {selectedContentType}
+                    <X 
+                      className="w-3 h-3 ml-1 cursor-pointer" 
+                      onClick={() => setSelectedContentType("all")}
+                    />
+                  </Badge>
+                )}
+                {selectedCollection !== "all" && (
+                  <Badge variant="secondary" className="text-xs">
+                    {selectedCollection}
+                    <X 
+                      className="w-3 h-3 ml-1 cursor-pointer" 
+                      onClick={() => setSelectedCollection("all")}
+                    />
+                  </Badge>
+                )}
+                {showArchived && (
+                  <Badge variant="secondary" className="text-xs">
+                    Archived
+                    <X 
+                      className="w-3 h-3 ml-1 cursor-pointer" 
+                      onClick={() => setShowArchived(false)}
+                    />
+                  </Badge>
+                )}
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      ) : (
+        /* Desktop Header */
+        <div 
+          className="border-b border-border/20 bg-card/30 backdrop-blur-sm sticky top-0 z-10"
+          style={{
+            backgroundImage: `
+              repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.02) 2px, rgba(0,0,0,.02) 4px),
+              repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,.02) 2px, rgba(0,0,0,.02) 4px)
+            `
+          }}
+        >
+          <div className="container mx-auto px-6 py-8 space-y-6">
+            {/* Title Row */}
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="font-serif text-4xl text-foreground mb-2">The Archives</h1>
+                <p className="text-muted-foreground">Your editorial repository</p>
+              </div>
+              <Button
+                onClick={() => navigate("/create")}
+                variant="brassGradient"
+                size="lg"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create New Content
+              </Button>
+            </div>
+
+            {/* Filters */}
+            <div className="flex items-center justify-between gap-4">
+              <LibraryFilters
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                selectedContentType={selectedContentType}
+                onContentTypeChange={setSelectedContentType}
+                selectedCollection={selectedCollection}
+                onCollectionChange={setSelectedCollection}
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                showArchived={showArchived}
+                onShowArchivedChange={setShowArchived}
+              />
+              
+              {/* Group by Sessions Toggle */}
+              <Button
+                variant={groupBySessions ? "brass" : "outline"}
+                size="sm"
+                onClick={() => setGroupBySessions(!groupBySessions)}
+                className="flex-shrink-0"
+              >
+                {groupBySessions ? "Showing Sessions" : "Group by Session"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Content Grid */}
-      <div className="container mx-auto px-6 py-8">
+      <div className={cn(
+        "container mx-auto py-8",
+        isMobile ? "px-4" : "px-6"
+      )}>
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-muted-foreground">Loading your content...</div>

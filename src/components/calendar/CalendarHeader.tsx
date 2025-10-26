@@ -30,12 +30,12 @@ export const CalendarHeader = ({
   // Mobile view
   if (isMobile) {
     return (
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-semibold">
+          <h1 className="text-xl font-semibold text-foreground">
             {format(currentDate, "MMMM yyyy")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             {viewMode === "agenda" ? "List View" : viewMode === "month" ? "Month View" : "Week View"}
           </p>
         </div>
