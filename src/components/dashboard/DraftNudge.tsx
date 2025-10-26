@@ -19,7 +19,7 @@ export function DraftNudge({ draftCount }: DraftNudgeProps) {
   const messages = {
     moderate: {
       title: "Time to tidy up?",
-      description: `You have ${draftCount} drafts waiting. Consider reviewing and publishing your best work, or archiving what's no longer needed.`,
+      description: `You have ${draftCount} unpublished drafts. These are pieces you've created but haven't published yet. Review them, publish your best work, or archive what's no longer needed.`,
       icon: FileCheck,
       gradient: "from-amber-500/10 to-orange-500/10",
       borderColor: "border-amber-500/30",
@@ -28,7 +28,7 @@ export function DraftNudge({ draftCount }: DraftNudgeProps) {
     },
     critical: {
       title: "Your drafts need attention",
-      description: `${draftCount} drafts are piling up! Time to finish what you started. Pick your favorites, publish them, and archive the rest.`,
+      description: `${draftCount} unpublished drafts are piling up! These are content pieces waiting to be finalized. Pick your favorites, publish them, and archive the rest to keep your workspace tidy.`,
       icon: AlertCircle,
       gradient: "from-red-500/10 to-orange-600/10",
       borderColor: "border-red-500/30",
