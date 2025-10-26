@@ -9,11 +9,7 @@ import { useStreakCalculation } from "@/hooks/useStreakCalculation";
 import { useBrandHealth } from "@/hooks/useBrandHealth";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface BrandPulseBarProps {
-  onOpenMadison: () => void;
-}
-
-export function BrandPulseBar({ onOpenMadison }: BrandPulseBarProps) {
+export function BrandPulseBar() {
   const navigate = useNavigate();
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: streakData, isLoading: streakLoading } = useStreakCalculation();
@@ -47,74 +43,75 @@ export function BrandPulseBar({ onOpenMadison }: BrandPulseBarProps) {
 
   if (statsLoading || streakLoading || healthLoading) {
     return (
-      <div className="h-full flex gap-4">
-        <Skeleton className="flex-1 h-full rounded-lg" />
-        <Skeleton className="flex-1 h-full rounded-lg" />
-        <Skeleton className="w-[280px] h-full rounded-lg" />
-      </div>
+      <>
+        <Skeleton className="col-span-3 h-[140px] rounded-xl" />
+        <Skeleton className="col-span-5 h-[140px] rounded-xl" />
+        <Skeleton className="col-span-4 h-[140px] rounded-xl" />
+      </>
     );
   }
 
   return (
-    <div className="h-full flex gap-4">
-      {/* Brand Health Card - Narrower */}
+    <>
+      {/* Brand Health Card */}
       <Card 
-        className="w-[320px] p-4 bg-white border border-[#E7E1D4] cursor-pointer hover:shadow-lg transition-shadow"
+        className="col-span-3 p-6 bg-white border border-[#E0E0E0] cursor-pointer hover:shadow-lg transition-all hover:-translate-y-0.5 rounded-xl"
         onClick={() => navigate("/brand-health")}
       >
-        <div className="flex items-center gap-4 h-full">
-          <div className="relative w-24 h-24">
-            <svg className="w-24 h-24 transform -rotate-90">
-              <circle
-                cx="48"
-                cy="48"
-                r="40"
-                stroke="#E7E1D4"
-                strokeWidth="8"
-                fill="none"
-              />
-              <circle
-                cx="48"
-                cy="48"
-                r="40"
-                stroke="#B8956A"
-                strokeWidth="8"
-                fill="none"
-                strokeDasharray={`${(brandScore / 100) * 251.2} 251.2`}
-                className="transition-all duration-500"
-                style={{ filter: "drop-shadow(0 0 8px rgba(184, 149, 106, 0.4))" }}
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-2xl font-serif font-semibold text-[#1C150D]">{brandScore}</span>
+        <div className="flex flex-col h-full">
+          <h3 className="text-sm font-medium text-[#1C150D]/60 mb-4">Brand Health</h3>
+          <div className="flex items-center gap-6">
+            <div className="relative w-20 h-20">
+              <svg className="w-20 h-20 transform -rotate-90">
+                <circle
+                  cx="40"
+                  cy="40"
+                  r="36"
+                  stroke="#F0F0F0"
+                  strokeWidth="6"
+                  fill="none"
+                />
+                <circle
+                  cx="40"
+                  cy="40"
+                  r="36"
+                  stroke="#B8956A"
+                  strokeWidth="6"
+                  fill="none"
+                  strokeDasharray={`${(brandScore / 100) * 226.2} 226.2`}
+                  className="transition-all duration-500"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-2xl font-semibold text-[#1C150D]">{brandScore}</span>
+              </div>
             </div>
-          </div>
-          <div className="flex-1">
-            <h3 className="text-sm font-semibold text-[#1C150D] mb-1">Brand Health</h3>
-            <p className={`text-xs ${getBrandHealthColor(brandScore)} mb-2`}>
-              {brandScore >= 90 ? "Excellent" : brandScore >= 70 ? "Good" : "Needs Attention"}
-            </p>
-            <div className="flex gap-3 text-xs text-[#1C150D]/60">
-              <span>Voice +4%</span>
-              <span>·</span>
-              <span>Cadence Stable</span>
+            <div>
+              <p className={`text-lg font-semibold mb-1 ${getBrandHealthColor(brandScore)}`}>
+                {brandScore >= 90 ? "Excellent" : brandScore >= 70 ? "Good" : "Needs Attention"}
+              </p>
+              <div className="flex gap-3 text-xs text-[#1C150D]/60">
+                <span>Voice +4%</span>
+                <span>·</span>
+                <span>Cadence Stable</span>
+              </div>
             </div>
           </div>
         </div>
       </Card>
 
-      {/* Your Next Move Card - Narrower */}
-      <Card className="w-[400px] p-4 bg-white border border-[#E7E1D4]">
+      {/* Your Next Move Card */}
+      <Card className="col-span-5 p-6 bg-white border border-[#E0E0E0] rounded-xl">
         <div className="flex flex-col h-full justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-[#1C150D] mb-2">Your Next Move</h3>
-            <p className="text-sm text-[#1C150D]/80 leading-relaxed">
+            <h3 className="text-sm font-medium text-[#1C150D]/60 mb-3">Your Next Move</h3>
+            <p className="text-base text-[#1C150D] leading-relaxed">
               {nextMoveMessages[nextMoveIndex]}
             </p>
           </div>
           <Button
-            size="sm"
-            className="bg-[#B8956A] hover:bg-[#A3865A] text-white mt-3"
+            size="default"
+            className="bg-[#B8956A] hover:bg-[#A3865A] text-white mt-4 w-fit"
             onClick={() => navigate("/create")}
           >
             Take Action
@@ -122,76 +119,65 @@ export function BrandPulseBar({ onOpenMadison }: BrandPulseBarProps) {
         </div>
       </Card>
 
-      {/* Quick Actions + Streak - Expands to fill space */}
-      <Card className="flex-1 p-4 bg-white border border-[#E7E1D4]">
-        <div className="flex flex-col h-full justify-between">
-          <div className="flex gap-2 mb-3">
+      {/* Quick Actions + Streak */}
+      <Card className="col-span-4 p-6 bg-white border border-[#E0E0E0] rounded-xl">
+        <div className="flex flex-col h-full">
+          <h3 className="text-sm font-medium text-[#1C150D]/60 mb-4">Quick Actions</h3>
+          
+          <div className="flex flex-col gap-2 mb-4">
             <Button
               size="sm"
               variant="outline"
-              className="flex-1 border-[#B8956A] text-[#B8956A] hover:bg-[#B8956A]/10"
+              className="justify-start border-[#E0E0E0] text-[#1C150D] hover:bg-[#FAFAFA]"
               onClick={() => navigate("/create")}
             >
-              <PenLine className="w-4 h-4 mr-1" />
-              Create
+              <PenLine className="w-4 h-4 mr-2" />
+              Create Content
             </Button>
             <Button
               size="sm"
               variant="outline"
-              className="flex-1 border-[#B8956A] text-[#B8956A] hover:bg-[#B8956A]/10"
+              className="justify-start border-[#E0E0E0] text-[#1C150D] hover:bg-[#FAFAFA]"
               onClick={() => navigate("/calendar")}
             >
-              <Calendar className="w-4 h-4 mr-1" />
-              Schedule
+              <Calendar className="w-4 h-4 mr-2" />
+              Schedule Post
             </Button>
             <Button
               size="sm"
               variant="outline"
-              className="flex-1 border-[#B8956A] text-[#B8956A] hover:bg-[#B8956A]/10"
+              className="justify-start border-[#E0E0E0] text-[#1C150D] hover:bg-[#FAFAFA]"
               onClick={() => navigate("/library")}
             >
-              <Library className="w-4 h-4 mr-1" />
-              Library
+              <Library className="w-4 h-4 mr-2" />
+              View Library
             </Button>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          <div className="mt-auto space-y-3">
+            <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <Flame className="w-4 h-4 text-[#E67E73]" />
-                <span className="text-xs font-medium text-[#1C150D]">{currentStreak} Day Streak</span>
+                <span className="font-medium text-[#1C150D]">{currentStreak} Day Streak</span>
               </div>
               <div className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-[#A3C98D]" />
-                <span className="text-xs font-medium text-[#1C150D]">{onBrandScore}%</span>
+                <span className="font-medium text-[#1C150D]">{onBrandScore}%</span>
               </div>
             </div>
-            <div className="flex gap-1">
+            <div className="flex gap-1.5">
               {[0, 1, 2, 3, 4, 5, 6].map((day) => (
                 <div
                   key={day}
-                  className={`w-6 h-6 rounded-full border-2 ${
-                    day < currentStreak
-                      ? "bg-[#B8956A] border-[#B8956A]"
-                      : "bg-transparent border-[#E7E1D4]"
+                  className={`flex-1 h-1.5 rounded-full ${
+                    day < currentStreak ? "bg-[#B8956A]" : "bg-[#E0E0E0]"
                   }`}
                 />
               ))}
             </div>
-            <p className="text-xs text-[#1C150D]/60 text-center">Day 3 – Consistency Bonus</p>
           </div>
         </div>
       </Card>
-
-      {/* Ask Madison Button */}
-      <Button
-        size="sm"
-        onClick={onOpenMadison}
-        className="h-full px-6 bg-[#B8956A] hover:bg-[#A3865A] text-white flex items-center gap-2"
-      >
-        <Sparkles className="w-4 h-4" />
-        Ask Madison
-      </Button>
-    </div>
+    </>
   );
 }

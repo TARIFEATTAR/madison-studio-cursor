@@ -57,42 +57,43 @@ export function ContentFlowZone() {
 
   if (isLoading) {
     return (
-      <div className="h-full flex gap-4">
-        <Skeleton className="flex-[2] h-full rounded-lg" />
-        <Skeleton className="flex-1 h-full rounded-lg" />
-      </div>
+      <>
+        <Skeleton className="col-span-8 h-[240px] rounded-xl" />
+        <Skeleton className="col-span-4 h-[240px] rounded-xl" />
+      </>
     );
   }
 
   return (
-    <div className="h-full flex gap-4">
-      {/* Content Pipeline - 8 cols equivalent */}
-      <Card className="flex-[2] p-4 bg-white border border-[#E7E1D4] overflow-hidden">
-        <h3 className="text-sm font-semibold text-[#1C150D] mb-4">Content Pipeline</h3>
-        <div className="grid grid-cols-4 gap-3 h-[calc(100%-2rem)]">
+    <>
+      {/* Content Pipeline */}
+      <Card className="col-span-8 p-6 bg-white border border-[#E0E0E0] overflow-hidden rounded-xl">
+        <h3 className="text-sm font-medium text-[#1C150D]/60 mb-5">Content Pipeline</h3>
+        <div className="grid grid-cols-4 gap-4 h-[calc(100%-2.5rem)]">
           {pipelineStages.map((stage) => (
             <div
               key={stage.id}
               onClick={() => navigate('/library')}
-              className="flex flex-col p-3 rounded-lg border transition-all duration-200 hover:shadow-md hover:-translate-y-1 cursor-pointer"
+              className="flex flex-col p-4 rounded-lg border-2 transition-all duration-200 hover:shadow-lg hover:-translate-y-1 cursor-pointer bg-white"
               style={{
-                backgroundColor: `${stage.color}20`,
                 borderColor: stage.color,
               }}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <stage.icon className="w-4 h-4" style={{ color: stage.color }} />
-                <span className="text-xs font-medium text-[#1C150D]">{stage.label}</span>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-1.5 rounded" style={{ backgroundColor: `${stage.color}20` }}>
+                  <stage.icon className="w-4 h-4" style={{ color: stage.color }} />
+                </div>
+                <span className="text-xs font-medium text-[#1C150D]/60">{stage.label}</span>
               </div>
-              <div className="flex items-baseline gap-1 mb-2">
-                <span className="text-2xl font-serif font-semibold text-[#1C150D]">{stage.count}</span>
-                <span className="text-xs text-[#1C150D]/60">/ {stage.total}</span>
+              <div className="flex items-baseline gap-1 mb-3">
+                <span className="text-3xl font-semibold text-[#1C150D]">{stage.count}</span>
+                <span className="text-sm text-[#1C150D]/40">/ {stage.total}</span>
               </div>
               <Progress
                 value={(stage.count / stage.total) * 100}
-                className="h-1.5"
+                className="h-2 mb-3"
                 style={{
-                  backgroundColor: `${stage.color}30`,
+                  backgroundColor: `${stage.color}15`,
                 }}
               />
               <button 
@@ -100,7 +101,7 @@ export function ContentFlowZone() {
                   e.stopPropagation();
                   navigate('/library');
                 }}
-                className="text-xs text-[#1C150D]/60 hover:text-[#1C150D] mt-auto pt-2"
+                className="text-xs text-[#1C150D]/60 hover:text-[#1C150D] mt-auto"
               >
                 View Items →
               </button>
@@ -109,18 +110,18 @@ export function ContentFlowZone() {
         </div>
       </Card>
 
-      {/* This Week Calendar - 4 cols equivalent */}
-      <Card className="flex-1 p-4 bg-white border border-[#E7E1D4] overflow-hidden">
-        <h3 className="text-sm font-semibold text-[#1C150D] mb-4">This Week</h3>
-        <div className="grid grid-cols-7 gap-2">
+      {/* This Week Calendar */}
+      <Card className="col-span-4 p-6 bg-white border border-[#E0E0E0] overflow-hidden rounded-xl">
+        <h3 className="text-sm font-medium text-[#1C150D]/60 mb-5">This Week</h3>
+        <div className="grid grid-cols-7 gap-3">
           {weekDays.map((day, index) => (
             <div
               key={index}
-              className="flex flex-col items-center p-2 rounded-lg hover:bg-[#FFFCF5] transition-colors cursor-pointer group"
+              className="flex flex-col items-center p-3 rounded-lg hover:bg-[#FAFAFA] transition-colors cursor-pointer group border border-transparent hover:border-[#E0E0E0]"
             >
-              <span className="text-xs font-medium text-[#1C150D]/60 mb-1">{day.day}</span>
-              <span className="text-lg font-serif font-semibold text-[#1C150D] mb-2">{day.date}</span>
-              <div className="flex gap-1 flex-wrap justify-center min-h-[24px]">
+              <span className="text-xs font-medium text-[#1C150D]/40 mb-1">{day.day}</span>
+              <span className="text-xl font-semibold text-[#1C150D] mb-3">{day.date}</span>
+              <div className="flex gap-1 flex-wrap justify-center min-h-[16px]">
                 {day.dots.map((dot, dotIndex) => (
                   <div
                     key={dotIndex}
@@ -133,6 +134,6 @@ export function ContentFlowZone() {
           ))}
         </div>
       </Card>
-    </div>
+    </>
   );
 }

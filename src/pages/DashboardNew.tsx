@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
@@ -52,20 +52,38 @@ export default function DashboardNew() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-[#FFFCF5] flex flex-col">
-      {/* ZONE 1: Brand Pulse Bar - 180px */}
-      <div className="h-[180px] border-b border-[#E7E1D4] px-6 py-4">
-        <BrandPulseBar onOpenMadison={() => setMadisonPanelOpen(true)} />
+    <div className="h-screen overflow-hidden bg-[#FAFAFA] flex flex-col">
+      {/* Top Bar with Madison Button */}
+      <div className="h-16 border-b border-[#E0E0E0] px-8 flex items-center justify-between bg-white">
+        <h1 className="text-xl font-semibold text-[#1C150D]">Dashboard</h1>
+        <Button
+          size="sm"
+          onClick={() => setMadisonPanelOpen(true)}
+          className="bg-[#B8956A] hover:bg-[#A3865A] text-white flex items-center gap-2 shadow-sm"
+        >
+          <Sparkles className="w-4 h-4" />
+          Ask Madison
+        </Button>
       </div>
 
-      {/* ZONE 2: Content Flow - 380px */}
-      <div className="h-[380px] border-b border-[#E7E1D4] px-6 py-4 overflow-hidden">
-        <ContentFlowZone />
-      </div>
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-auto px-8 py-6">
+        <div className="max-w-[1600px] mx-auto space-y-6 animate-fade-in">
+          {/* Row 1: Key Metrics */}
+          <div className="grid grid-cols-12 gap-6">
+            <BrandPulseBar />
+          </div>
 
-      {/* ZONE 3: Performance & Momentum - 300px */}
-      <div className="flex-1 px-6 py-4 overflow-hidden">
-        <PerformanceMomentumZone />
+          {/* Row 2: Content Flow */}
+          <div className="grid grid-cols-12 gap-6">
+            <ContentFlowZone />
+          </div>
+
+          {/* Row 3: Performance Metrics */}
+          <div className="grid grid-cols-12 gap-6">
+            <PerformanceMomentumZone />
+          </div>
+        </div>
       </div>
 
       {/* Madison AI Assistant Panel */}

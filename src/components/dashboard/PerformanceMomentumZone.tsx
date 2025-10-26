@@ -36,112 +36,106 @@ export function PerformanceMomentumZone() {
 
   if (isLoading || brandHealthLoading) {
     return (
-      <div className="h-full grid grid-cols-4 gap-4">
-        <Skeleton className="col-span-1 h-full rounded-lg" />
-        <Skeleton className="col-span-1 h-full rounded-lg" />
-        <Skeleton className="col-span-1 h-full rounded-lg" />
-        <Skeleton className="col-span-1 h-full rounded-lg" />
-      </div>
+      <>
+        <Skeleton className="col-span-3 h-[180px] rounded-xl" />
+        <Skeleton className="col-span-3 h-[180px] rounded-xl" />
+        <Skeleton className="col-span-3 h-[180px] rounded-xl" />
+        <Skeleton className="col-span-3 h-[180px] rounded-xl" />
+      </>
     );
   }
 
   return (
-    <div className="h-full grid grid-cols-4 gap-4">
+    <>
       {/* Weekly Stats */}
-      <Card className="p-4 bg-white border border-[#E7E1D4]">
-        <div className="flex items-center gap-2 mb-3">
-          <TrendingUp className="w-4 h-4 text-[#B8956A]" />
-          <h3 className="text-sm font-semibold text-[#1C150D]">Weekly Stats</h3>
-        </div>
-        <div className="space-y-3">
+      <Card className="col-span-3 p-6 bg-white border border-[#E0E0E0] rounded-xl">
+        <h3 className="text-sm font-medium text-[#1C150D]/60 mb-4">Weekly Stats</h3>
+        <div className="space-y-4">
           {weeklyData.map((item) => (
             <div key={item.label}>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-[#1C150D]/60">{item.label}</span>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-[#1C150D]">{item.label}</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-[#1C150D]">{item.value}</span>
-                  <span className="text-xs text-[#A3C98D]">{item.change}</span>
+                  <span className="text-base font-semibold text-[#1C150D]">{item.value}</span>
+                  <span className="text-xs text-[#A3C98D] font-medium">{item.change}</span>
                 </div>
               </div>
-              <Progress value={(item.value / item.max) * 100} className="h-1.5" />
+              <Progress value={(item.value / item.max) * 100} className="h-2" />
             </div>
           ))}
         </div>
       </Card>
 
       {/* Content Quality */}
-      <Card className="p-4 bg-white border border-[#E7E1D4]">
-        <h3 className="text-sm font-semibold text-[#1C150D] mb-3">Content Quality</h3>
-        <div className="flex items-baseline gap-2 mb-3">
-          <span className="text-3xl font-serif font-semibold text-[#1C150D]">{onBrandScore}</span>
-          <span className="text-xs text-[#1C150D]/60">Average Score</span>
+      <Card className="col-span-3 p-6 bg-white border border-[#E0E0E0] rounded-xl">
+        <h3 className="text-sm font-medium text-[#1C150D]/60 mb-4">Content Quality</h3>
+        <div className="flex items-baseline gap-2 mb-4">
+          <span className="text-4xl font-semibold text-[#1C150D]">{onBrandScore}</span>
+          <span className="text-sm text-[#1C150D]/40">Average Score</span>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-3">
           {qualityMetrics.map((metric) => (
             <div key={metric.label} className="flex items-center justify-between">
-              <span className="text-xs text-[#1C150D]/60">{metric.label}</span>
-              <div className="flex-1 mx-2">
-                <Progress value={metric.value} className="h-1" />
+              <span className="text-sm text-[#1C150D]">{metric.label}</span>
+              <div className="flex-1 mx-3">
+                <Progress value={metric.value} className="h-2" />
               </div>
-              <span className="text-xs font-medium text-[#1C150D]">{metric.value}</span>
+              <span className="text-sm font-medium text-[#1C150D]">{metric.value}</span>
             </div>
           ))}
         </div>
       </Card>
 
       {/* Momentum / Achievements */}
-      <Card className="p-4 bg-white border border-[#E7E1D4]">
-        <div className="flex items-center gap-2 mb-3">
-          <Award className="w-4 h-4 text-[#B8956A]" />
-          <h3 className="text-sm font-semibold text-[#1C150D]">Momentum</h3>
-        </div>
-        <div className="space-y-3">
+      <Card className="col-span-3 p-6 bg-white border border-[#E0E0E0] rounded-xl">
+        <h3 className="text-sm font-medium text-[#1C150D]/60 mb-4">Momentum</h3>
+        <div className="space-y-4">
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-[#1C150D]/60">Level 8 → 9</span>
-              <span className="text-xs font-medium text-[#1C150D]">1,240 / 1,500 XP</span>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-[#1C150D]">Level 8 → 9</span>
+              <span className="text-sm font-medium text-[#1C150D]">1,240 / 1,500 XP</span>
             </div>
             <Progress value={(1240 / 1500) * 100} className="h-2" />
           </div>
-          <div className="flex gap-2 mt-3">
-            <div className="w-10 h-10 rounded-full bg-[#B8956A]/20 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-[#B8956A]" />
+          <div className="flex gap-3 mt-4">
+            <div className="w-12 h-12 rounded-xl bg-[#B8956A]/10 flex items-center justify-center">
+              <Zap className="w-6 h-6 text-[#B8956A]" />
             </div>
-            <div className="w-10 h-10 rounded-full bg-[#A3C98D]/20 flex items-center justify-center">
-              <Award className="w-5 h-5 text-[#A3C98D]" />
+            <div className="w-12 h-12 rounded-xl bg-[#A3C98D]/10 flex items-center justify-center">
+              <Award className="w-6 h-6 text-[#A3C98D]" />
             </div>
-            <div className="w-10 h-10 rounded-full bg-[#F5C16C]/20 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-[#F5C16C]" />
+            <div className="w-12 h-12 rounded-xl bg-[#F5C16C]/10 flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-[#F5C16C]" />
             </div>
           </div>
         </div>
       </Card>
 
       {/* Integrations Dock */}
-      <Card className="p-4 bg-white border border-[#E7E1D4]">
-        <h3 className="text-sm font-semibold text-[#1C150D] mb-3">Integrations</h3>
+      <Card className="col-span-3 p-6 bg-white border border-[#E0E0E0] rounded-xl">
+        <h3 className="text-sm font-medium text-[#1C150D]/60 mb-4">Integrations</h3>
         <div className="space-y-2">
           {integrations.map((integration) => (
             <div
               key={integration.name}
-              className="flex items-center justify-between p-2 rounded hover:bg-[#FFFCF5] transition-colors cursor-pointer"
+              className="flex items-center justify-between p-3 rounded-lg hover:bg-[#FAFAFA] transition-colors cursor-pointer border border-transparent hover:border-[#E0E0E0]"
             >
-              <span className="text-xs font-medium text-[#1C150D]">{integration.name}</span>
+              <span className="text-sm font-medium text-[#1C150D]">{integration.name}</span>
               <div className="flex items-center gap-2">
                 <div
-                  className="w-2 h-2 rounded-full"
+                  className="w-2.5 h-2.5 rounded-full"
                   style={{ backgroundColor: integration.color }}
                 />
                 <span className="text-xs text-[#1C150D]/60 capitalize">
-                  {integration.status === "connected" && "✓"}
-                  {integration.status === "syncing" && "⚙"}
-                  {integration.status === "action" && "⚠"}
+                  {integration.status === "connected" && "✓ Connected"}
+                  {integration.status === "syncing" && "⚙ Syncing"}
+                  {integration.status === "action" && "⚠ Action needed"}
                 </span>
               </div>
             </div>
           ))}
         </div>
       </Card>
-    </div>
+    </>
   );
 }
