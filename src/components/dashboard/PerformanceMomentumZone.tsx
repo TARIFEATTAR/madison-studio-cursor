@@ -9,10 +9,37 @@ export function PerformanceMomentumZone() {
   const { data: stats, isLoading } = useDashboardStats();
   const { brandHealth, isLoading: brandHealthLoading } = useBrandHealth();
 
+  const formatChange = (change: number) => {
+    if (change === 0) return "0%";
+    const sign = change > 0 ? "+" : "";
+    return `${sign}${change}%`;
+  };
+
+  const getChangeColor = (change: number) => {
+    if (change > 0) return "text-[#A3C98D]";
+    if (change < 0) return "text-[#E67E73]";
+    return "text-[#1C150D]/40";
+  };
+
   const weeklyData = [
-    { label: "Created", value: stats?.piecesCreatedThisWeek || 0, max: 10, change: "+15%" },
-    { label: "Published", value: stats?.piecesPublished || 0, max: 8, change: "+8%" },
-    { label: "Scheduled", value: stats?.piecesScheduled || 0, max: 12, change: "+22%" },
+    { 
+      label: "Created", 
+      value: stats?.piecesCreatedThisWeek || 0, 
+      max: 10, 
+      change: stats?.createdWeekChange || 0 
+    },
+    { 
+      label: "Published", 
+      value: stats?.piecesPublished || 0, 
+      max: 8, 
+      change: stats?.publishedWeekChange || 0 
+    },
+    { 
+      label: "Scheduled", 
+      value: stats?.piecesScheduled || 0, 
+      max: 12, 
+      change: stats?.scheduledWeekChange || 0 
+    },
   ];
 
   // Pull from brand health API
@@ -56,7 +83,9 @@ export function PerformanceMomentumZone() {
                 <span className="text-sm text-[#1C150D]">{item.label}</span>
                 <div className="flex items-center gap-2">
                   <span className="text-base font-semibold text-[#1C150D]">{item.value}</span>
-                  <span className="text-xs text-[#A3C98D] font-medium">{item.change}</span>
+                  <span className={`text-xs font-medium ${getChangeColor(item.change)}`}>
+                    {formatChange(item.change)}
+                  </span>
                 </div>
               </div>
               <Progress value={(item.value / item.max) * 100} className="h-2" />
