@@ -992,15 +992,6 @@ export default function Multiply() {
                     <VideoHelpTrigger videoId="understanding-derivatives" variant="icon" />
                   </div>
 
-                  {/* Empty State or Derivative Selector */}
-                  {Object.keys(derivativesByType).length === 0 && (
-                    <div className="text-center py-8">
-                      <img src={fannedPagesImage} alt="No derivatives" className="w-20 h-20 mx-auto mb-4 opacity-50" />
-                      <h3 className="font-medium text-lg mb-2">No Derivatives Yet</h3>
-                      <p className="text-sm text-muted-foreground">Generate channel-specific versions of your master content</p>
-                    </div>
-                  )}
-
                   {/* Smart Amplify Panel */}
                   {selectedMaster && filteredRecommendations.length > 0 && (
                     <SmartAmplifyPanel
@@ -1013,113 +1004,7 @@ export default function Multiply() {
                     />
                   )}
 
-                  {/* Derivative Type Selector - Feature Flag Toggle */}
-                  {useOldSelector ? (
-                    /* OLD CODE - Keep for safety */
-                    <div className="space-y-4">
-                      <h3 className="font-medium">Select derivative types to generate:</h3>
-                      
-                      {/* Most Popular */}
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground mb-3">MOST POPULAR</p>
-                        <div className="grid grid-cols-3 gap-3">
-                          {TOP_DERIVATIVE_TYPES.map((type) => (
-                            <Card 
-                              key={type.id} 
-                              onClick={() => toggleTypeSelection(type.id)} 
-                              className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedTypes.has(type.id) ? "ring-2 ring-brass bg-brass/5" : ""}`}
-                            >
-                              <div className="space-y-2">
-                                <div className="flex items-start justify-between">
-                                  <Checkbox checked={selectedTypes.has(type.id)} className="mt-1" />
-                                  {type.iconImage ? (
-                                    <img src={type.iconImage} alt={type.name} className="w-8 h-8" />
-                                  ) : type.icon && (
-                                    <type.icon className="w-8 h-8" style={{ color: type.iconColor }} />
-                                  )}
-                                </div>
-                                <div>
-                                  <h4 className="font-medium text-sm">{type.name}</h4>
-                                  <p className="text-xs text-muted-foreground line-clamp-2">{type.description}</p>
-                                  {type.charLimit && (
-                                    <p className="text-xs text-muted-foreground mt-1">Max: {type.charLimit} chars</p>
-                                  )}
-                                </div>
-                              </div>
-                            </Card>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* More Options - Collapsible */}
-                      <Collapsible open={showMoreOptions} onOpenChange={setShowMoreOptions}>
-                        <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                          {showMoreOptions ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                          MORE OPTIONS
-                        </CollapsibleTrigger>
-                        <CollapsibleContent className="mt-3">
-                          <div className="grid grid-cols-3 gap-3">
-                            {ADDITIONAL_DERIVATIVE_TYPES.map((type) => (
-                              <Card 
-                                key={type.id} 
-                                onClick={() => toggleTypeSelection(type.id)} 
-                                className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedTypes.has(type.id) ? "ring-2 ring-brass bg-brass/5" : ""}`}
-                              >
-                                <div className="space-y-2">
-                                  <div className="flex items-start justify-between">
-                                    <Checkbox checked={selectedTypes.has(type.id)} className="mt-1" />
-                                    {type.iconImage ? (
-                                      <img src={type.iconImage} alt={type.name} className="w-8 h-8" />
-                                    ) : type.icon && (
-                                      <type.icon className="w-8 h-8" style={{ color: type.iconColor }} />
-                                    )}
-                                  </div>
-                                  <div>
-                                    <h4 className="font-medium text-sm">{type.name}</h4>
-                                    <p className="text-xs text-muted-foreground line-clamp-2">{type.description}</p>
-                                    {type.charLimit && (
-                                      <p className="text-xs text-muted-foreground mt-1">Max: {type.charLimit} chars</p>
-                                    )}
-                                  </div>
-                                </div>
-                              </Card>
-                            ))}
-                          </div>
-                        </CollapsibleContent>
-                      </Collapsible>
-
-                      {/* Action Buttons */}
-                      <div className="flex items-center justify-between pt-4">
-                        <Button variant="outline" size="sm" onClick={selectAll}>
-                          Select All
-                        </Button>
-                        <Button 
-                          onClick={generateDerivatives} 
-                          disabled={isGenerating || selectedTypes.size === 0} 
-                          size="lg" 
-                          className="gap-2"
-                        >
-                          {isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
-                          {isGenerating ? "Generating..." : `Generate ${selectedTypes.size} Derivative${selectedTypes.size !== 1 ? "s" : ""}`}
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    /* NEW COMPONENT - Testing */
-                    <DerivativeTypeSelector
-                      topTypes={TOP_DERIVATIVE_TYPES}
-                      additionalTypes={ADDITIONAL_DERIVATIVE_TYPES}
-                      selectedTypes={selectedTypes}
-                      onToggleType={toggleTypeSelection}
-                      onSelectAll={selectAll}
-                      onGenerate={generateDerivatives}
-                      isGenerating={isGenerating}
-                      showMoreOptions={showMoreOptions}
-                      onToggleMoreOptions={setShowMoreOptions}
-                    />
-                  )}
-
-                  {/* Generated Results */}
+                  {/* Generated Derivatives - Show Above Selector */}
                   {Object.keys(derivativesByType).length > 0 && (
                     <div className="space-y-4 pt-6 border-t">
                       <h3 className="font-serif text-xl">Generated Derivatives</h3>
@@ -1239,6 +1124,132 @@ export default function Multiply() {
                       </div>
                     </div>
                   )}
+
+                  {/* Derivative Type Selector - Below Generated Results */}
+                  <div className="space-y-4">
+                    <Separator />
+                    
+                    <div className="flex items-center gap-3">
+                      <h3 className="font-serif text-xl">
+                        {Object.keys(derivativesByType).length > 0 ? "Generate More Derivatives" : "Select Derivative Types"}
+                      </h3>
+                      <VideoHelpTrigger videoId="understanding-derivatives" variant="icon" />
+                    </div>
+
+                    {Object.keys(derivativesByType).length === 0 && (
+                      <div className="text-center py-8">
+                        <img src={fannedPagesImage} alt="No derivatives" className="w-20 h-20 mx-auto mb-4 opacity-50" />
+                        <h3 className="font-medium text-lg mb-2">No Derivatives Yet</h3>
+                        <p className="text-sm text-muted-foreground">Generate channel-specific versions of your master content</p>
+                      </div>
+                    )}
+
+                    {/* Derivative Type Selector - Feature Flag Toggle */}
+                    {useOldSelector ? (
+                      /* OLD CODE - Keep for safety */
+                      <div className="space-y-4">
+                        <h3 className="font-medium">Select derivative types to generate:</h3>
+                        
+                        {/* Most Popular */}
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-3">MOST POPULAR</p>
+                          <div className="grid grid-cols-3 gap-3">
+                            {TOP_DERIVATIVE_TYPES.map((type) => (
+                              <Card 
+                                key={type.id} 
+                                onClick={() => toggleTypeSelection(type.id)} 
+                                className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedTypes.has(type.id) ? "ring-2 ring-brass bg-brass/5" : ""}`}
+                              >
+                                <div className="space-y-2">
+                                  <div className="flex items-start justify-between">
+                                    <Checkbox checked={selectedTypes.has(type.id)} className="mt-1" />
+                                    {type.iconImage ? (
+                                      <img src={type.iconImage} alt={type.name} className="w-8 h-8" />
+                                    ) : type.icon && (
+                                      <type.icon className="w-8 h-8" style={{ color: type.iconColor }} />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <h4 className="font-medium text-sm">{type.name}</h4>
+                                    <p className="text-xs text-muted-foreground line-clamp-2">{type.description}</p>
+                                    {type.charLimit && (
+                                      <p className="text-xs text-muted-foreground mt-1">Max: {type.charLimit} chars</p>
+                                    )}
+                                  </div>
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* More Options - Collapsible */}
+                        <Collapsible open={showMoreOptions} onOpenChange={setShowMoreOptions}>
+                          <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                            {showMoreOptions ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                            MORE OPTIONS
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="mt-3">
+                            <div className="grid grid-cols-3 gap-3">
+                              {ADDITIONAL_DERIVATIVE_TYPES.map((type) => (
+                                <Card 
+                                  key={type.id} 
+                                  onClick={() => toggleTypeSelection(type.id)} 
+                                  className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedTypes.has(type.id) ? "ring-2 ring-brass bg-brass/5" : ""}`}
+                                >
+                                  <div className="space-y-2">
+                                    <div className="flex items-start justify-between">
+                                      <Checkbox checked={selectedTypes.has(type.id)} className="mt-1" />
+                                      {type.iconImage ? (
+                                        <img src={type.iconImage} alt={type.name} className="w-8 h-8" />
+                                      ) : type.icon && (
+                                        <type.icon className="w-8 h-8" style={{ color: type.iconColor }} />
+                                      )}
+                                    </div>
+                                    <div>
+                                      <h4 className="font-medium text-sm">{type.name}</h4>
+                                      <p className="text-xs text-muted-foreground line-clamp-2">{type.description}</p>
+                                      {type.charLimit && (
+                                        <p className="text-xs text-muted-foreground mt-1">Max: {type.charLimit} chars</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </Card>
+                              ))}
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center justify-between pt-4">
+                          <Button variant="outline" size="sm" onClick={selectAll}>
+                            Select All
+                          </Button>
+                          <Button 
+                            onClick={generateDerivatives} 
+                            disabled={isGenerating || selectedTypes.size === 0} 
+                            size="lg" 
+                            className="gap-2"
+                          >
+                            {isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                            {isGenerating ? "Generating..." : `Generate ${selectedTypes.size} Derivative${selectedTypes.size !== 1 ? "s" : ""}`}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* NEW COMPONENT - Testing */
+                      <DerivativeTypeSelector
+                        topTypes={TOP_DERIVATIVE_TYPES}
+                        additionalTypes={ADDITIONAL_DERIVATIVE_TYPES}
+                        selectedTypes={selectedTypes}
+                        onToggleType={toggleTypeSelection}
+                        onSelectAll={selectAll}
+                        onGenerate={generateDerivatives}
+                        isGenerating={isGenerating}
+                        showMoreOptions={showMoreOptions}
+                        onToggleMoreOptions={setShowMoreOptions}
+                      />
+                    )}
+                  </div>
                 </div>
               </ScrollArea>
             </ResizablePanel>

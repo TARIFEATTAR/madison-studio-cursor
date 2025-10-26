@@ -196,7 +196,7 @@ export function EditorialDirectorSplitScreen({
       <div className="flex flex-1 min-h-0">
         {/* Left Panel - Derivatives Editor (60% width) */}
         <div 
-          className={`${isExpanded ? 'flex-1' : 'w-[60%]'} min-w-[400px] overflow-y-auto border-r p-4 sm:p-6`} 
+          className={`${isExpanded ? 'flex-1' : 'flex-1'} overflow-y-auto border-r p-4 sm:p-6`} 
           style={{ borderColor: "#D4CFC8" }}
         >
           <div className="max-w-4xl mx-auto">
@@ -441,10 +441,10 @@ export function EditorialDirectorSplitScreen({
           </div>
         </div>
 
-        {/* Right Panel - Editorial Director (40% width, fixed) */}
+        {/* Right Panel - Editorial Director (fills remaining space) */}
         {!isExpanded && (
           <div 
-            className="w-[40%] min-w-[400px] max-w-[600px] overflow-hidden flex flex-col"
+            className="w-[400px] overflow-hidden flex flex-col"
             style={{ backgroundColor: "#FFFCF5" }}
           >
             {/* Panel Header */}
