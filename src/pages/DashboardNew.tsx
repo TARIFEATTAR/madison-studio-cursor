@@ -2,18 +2,20 @@ import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { DashboardTopBar } from "@/components/dashboard/DashboardTopBar";
-import { CompactYourNextMove } from "@/components/dashboard/CompactYourNextMove";
-import { CompactContentPipeline } from "@/components/dashboard/CompactContentPipeline";
-import { ThisWeekContent } from "@/components/dashboard/ThisWeekContent";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useAuth } from "@/hooks/useAuth";
+import { BrandPulseBar } from "@/components/dashboard/BrandPulseBar";
+import { ContentFlowZone } from "@/components/dashboard/ContentFlowZone";
+import { PerformanceMomentumZone } from "@/components/dashboard/PerformanceMomentumZone";
+import MadisonFloatingButton from "@/components/image-editor/MadisonFloatingButton";
+import MadisonPanel from "@/components/image-editor/MadisonPanel";
 
 export default function DashboardNew() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const [longLoad, setLongLoad] = useState(false);
+  const [madisonPanelOpen, setMadisonPanelOpen] = useState(false);
 
   // Safety timeout for long loads
   useEffect(() => {
@@ -51,20 +53,30 @@ export default function DashboardNew() {
   }
 
   return (
-    <div className="min-h-screen bg-vellum-cream">
-      {/* Tier 1: Top Status Bar (sticky) */}
-      <DashboardTopBar />
-
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 space-y-4">
-        {/* Tier 2: Primary Focus (60/40 split) */}
-        <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-4">
-          <CompactYourNextMove />
-          <CompactContentPipeline />
-        </div>
-
-        {/* Tier 3: This Week Content */}
-        <ThisWeekContent />
+    <div className="h-screen overflow-hidden bg-[#FFFCF5] flex flex-col">
+      {/* ZONE 1: Brand Pulse Bar - 180px */}
+      <div className="h-[180px] border-b border-[#E7E1D4] px-6 py-4">
+        <BrandPulseBar />
       </div>
+
+      {/* ZONE 2: Content Flow - 380px */}
+      <div className="h-[380px] border-b border-[#E7E1D4] px-6 py-4 overflow-hidden">
+        <ContentFlowZone />
+      </div>
+
+      {/* ZONE 3: Performance & Momentum - 300px */}
+      <div className="flex-1 px-6 py-4 overflow-hidden">
+        <PerformanceMomentumZone />
+      </div>
+
+      {/* Madison AI Assistant - Floating */}
+      <MadisonFloatingButton onClick={() => setMadisonPanelOpen(true)} />
+      <MadisonPanel 
+        isOpen={madisonPanelOpen} 
+        onToggle={() => setMadisonPanelOpen(!madisonPanelOpen)}
+        sessionCount={0}
+        maxImages={10}
+      />
     </div>
   );
 }
