@@ -164,7 +164,10 @@ export default function MadisonPanel({
   if (isMobile) {
     return (
       <Sheet open={isOpen} onOpenChange={onToggle}>
-        <SheetContent side="bottom" className="h-[100dvh] max-h-[100dvh] bg-zinc-950 border-zinc-800 p-0">
+        <SheetContent 
+          side="bottom" 
+          className="h-[100dvh] max-h-[100dvh] bg-zinc-950 border-zinc-800 p-0 z-[1001]"
+        >
           <div className="flex flex-col h-full">
             <SheetHeader className="border-b border-zinc-800 px-4 py-3 shrink-0">
               <div className="flex items-center justify-between">
@@ -186,7 +189,7 @@ export default function MadisonPanel({
               </div>
             </SheetHeader>
 
-          <ScrollArea className="flex-1 px-4 py-3">
+          <ScrollArea className="flex-1 px-4 py-3 pb-20">
             <div className="space-y-4 pb-4">
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-8">
@@ -237,7 +240,7 @@ export default function MadisonPanel({
             </div>
           </ScrollArea>
 
-          <div className="shrink-0 flex items-end gap-2 border-t border-zinc-800 px-4 py-3 pb-safe bg-zinc-950">
+          <div className="shrink-0 flex items-end gap-2 border-t border-zinc-800 px-4 py-3 pb-20 bg-zinc-950">
             <Textarea
               ref={textareaRef}
               value={inputValue}
@@ -267,7 +270,7 @@ export default function MadisonPanel({
   return (
     <div
       className={cn(
-        "fixed top-0 right-0 h-full z-[30]",
+        "fixed top-0 right-0 h-full z-[1001]",
         "bg-[#FFFCF5]/95 backdrop-blur-sm border-l border-[#E7E1D4]",
         "shadow-[-4px_0_24px_rgba(0,0,0,0.1)]",
         "transition-all duration-300 ease-out",
