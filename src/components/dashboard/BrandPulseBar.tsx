@@ -124,34 +124,36 @@ export function BrandPulseBar() {
         <div className="flex flex-col h-full">
           <h3 className="text-sm font-medium text-[#1C150D]/60 mb-4">Quick Actions</h3>
           
-          <div className="flex flex-col gap-2 mb-4">
-            <Button
-              size="sm"
-              variant="outline"
-              className="justify-start border-[#E0E0E0] text-[#1C150D] hover:bg-[#FAFAFA]"
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <button
               onClick={() => navigate("/create")}
+              className="flex flex-col items-center justify-center p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/50 hover:from-blue-100 hover:to-blue-200/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-md group"
             >
-              <PenLine className="w-4 h-4 mr-2" />
-              Create Content
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="justify-start border-[#E0E0E0] text-[#1C150D] hover:bg-[#FAFAFA]"
+              <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+                <PenLine className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xs font-medium text-[#1C150D] text-center">Create</span>
+            </button>
+
+            <button
               onClick={() => navigate("/calendar")}
+              className="flex flex-col items-center justify-center p-4 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100/50 hover:from-purple-100 hover:to-purple-200/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-md group"
             >
-              <Calendar className="w-4 h-4 mr-2" />
-              Schedule Post
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="justify-start border-[#E0E0E0] text-[#1C150D] hover:bg-[#FAFAFA]"
+              <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+                <Calendar className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xs font-medium text-[#1C150D] text-center">Schedule</span>
+            </button>
+
+            <button
               onClick={() => navigate("/library")}
+              className="flex flex-col items-center justify-center p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 hover:from-emerald-100 hover:to-emerald-200/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-md group"
             >
-              <Library className="w-4 h-4 mr-2" />
-              View Library
-            </Button>
+              <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+                <Library className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xs font-medium text-[#1C150D] text-center">Library</span>
+            </button>
           </div>
 
           <div className="mt-auto space-y-3">

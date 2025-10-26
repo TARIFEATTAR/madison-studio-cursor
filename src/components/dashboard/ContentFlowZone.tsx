@@ -71,41 +71,27 @@ export function ContentFlowZone() {
         <h3 className="text-sm font-medium text-[#1C150D]/60 mb-5">Content Pipeline</h3>
         <div className="grid grid-cols-4 gap-4 h-[calc(100%-2.5rem)]">
           {pipelineStages.map((stage) => (
-            <div
+            <button
               key={stage.id}
               onClick={() => navigate('/library')}
-              className="flex flex-col p-4 rounded-lg border-2 transition-all duration-200 hover:shadow-lg hover:-translate-y-1 cursor-pointer bg-white"
+              className="group flex flex-col items-center justify-center p-5 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
               style={{
-                borderColor: stage.color,
+                background: `linear-gradient(to bottom right, ${stage.color}20, ${stage.color}10)`,
               }}
             >
-              <div className="flex items-center gap-2 mb-3">
-                <div className="p-1.5 rounded" style={{ backgroundColor: `${stage.color}20` }}>
-                  <stage.icon className="w-4 h-4" style={{ color: stage.color }} />
-                </div>
-                <span className="text-xs font-medium text-[#1C150D]/60">{stage.label}</span>
-              </div>
-              <div className="flex items-baseline gap-1 mb-3">
-                <span className="text-3xl font-semibold text-[#1C150D]">{stage.count}</span>
-                <span className="text-sm text-[#1C150D]/40">/ {stage.total}</span>
-              </div>
-              <Progress
-                value={(stage.count / stage.total) * 100}
-                className="h-2 mb-3"
-                style={{
-                  backgroundColor: `${stage.color}15`,
-                }}
-              />
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate('/library');
-                }}
-                className="text-xs text-[#1C150D]/60 hover:text-[#1C150D] mt-auto"
+              <div 
+                className="w-14 h-14 rounded-full flex items-center justify-center mb-3 transition-transform group-hover:scale-110"
+                style={{ backgroundColor: stage.color }}
               >
-                View Items →
-              </button>
-            </div>
+                <stage.icon className="w-7 h-7 text-white" />
+              </div>
+              <div className="text-3xl font-bold text-[#1C150D] mb-1">
+                {stage.count}
+              </div>
+              <div className="text-xs font-medium text-[#1C150D]/70 text-center">
+                {stage.label}
+              </div>
+            </button>
           ))}
         </div>
       </Card>
