@@ -1187,7 +1187,7 @@ export default function ImageEditor() {
                   value={mainPrompt}
                   onChange={(e) => setMainPrompt(e.target.value)}
                   placeholder="Describe the image you want to create..."
-                  className="flex-1 h-12 resize-none bg-[#111111] border border-zinc-700 text-[#F5F1E8] placeholder:text-zinc-500 focus-visible:ring-aged-brass/50 overflow-y-auto"
+                  className="flex-1 h-12 !min-h-0 resize-none bg-[#111111] border border-zinc-700 text-[#F5F1E8] placeholder:text-zinc-500 focus-visible:ring-aged-brass/50 overflow-y-auto"
                   style={{ color: '#F5F1E8' }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {

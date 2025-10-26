@@ -98,7 +98,7 @@ export const ProductImageUpload = ({
           const file = e.dataTransfer.files?.[0];
           if (file && !disabled) processFile(file);
         }}
-        className={`flex flex-col items-center justify-center h-full px-3 py-2 border-dashed rounded-md cursor-pointer transition-all duration-200 ${
+        className={`flex flex-col items-center justify-center h-full px-3 py-2 border border-dashed rounded-md cursor-pointer transition-all duration-200 ${
           isDragging 
             ? 'border-[#B8956A] bg-[#B8956A]/10 shadow-[0_0_8px_rgba(184,149,106,0.5)]' 
             : 'border-white/8 bg-[#111111] hover:border-white/12 hover:bg-[#1A1A1A]'
