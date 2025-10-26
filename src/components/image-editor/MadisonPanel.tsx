@@ -164,8 +164,9 @@ export default function MadisonPanel({
   if (isMobile) {
     return (
       <Sheet open={isOpen} onOpenChange={onToggle}>
-        <SheetContent side="bottom" className="h-[95vh] bg-zinc-950 border-zinc-800">
-            <SheetHeader className="border-b border-zinc-800 pb-3 mb-4">
+        <SheetContent side="bottom" className="h-[100dvh] max-h-[100dvh] bg-zinc-950 border-zinc-800 p-0">
+          <div className="flex flex-col h-full">
+            <SheetHeader className="border-b border-zinc-800 px-4 py-3 shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Sparkles className="w-5 h-5 text-aged-brass" />
@@ -185,7 +186,7 @@ export default function MadisonPanel({
               </div>
             </SheetHeader>
 
-          <ScrollArea className="h-[calc(95vh-140px)] px-1">
+          <ScrollArea className="flex-1 px-4 py-3">
             <div className="space-y-4 pb-4">
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-8">
@@ -236,7 +237,7 @@ export default function MadisonPanel({
             </div>
           </ScrollArea>
 
-          <div className="absolute bottom-4 left-4 right-4 flex items-end gap-2 border-t border-zinc-800 pt-3 bg-zinc-950">
+          <div className="shrink-0 flex items-end gap-2 border-t border-zinc-800 px-4 py-3 pb-safe bg-zinc-950">
             <Textarea
               ref={textareaRef}
               value={inputValue}
@@ -255,6 +256,7 @@ export default function MadisonPanel({
             >
               <Send className="w-4 h-4" />
             </Button>
+          </div>
           </div>
         </SheetContent>
       </Sheet>
