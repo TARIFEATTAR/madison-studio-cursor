@@ -444,7 +444,7 @@ export function EditorialDirectorSplitScreen({
         {/* Right Panel - Editorial Director (fills remaining space) */}
         {!isExpanded && (
           <div 
-            className="w-[500px] overflow-hidden flex flex-col"
+            className="w-[550px] overflow-hidden flex flex-col"
             style={{ backgroundColor: "#FFFCF5" }}
           >
             {/* Panel Header */}
