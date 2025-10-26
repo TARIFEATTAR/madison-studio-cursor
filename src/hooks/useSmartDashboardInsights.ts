@@ -30,18 +30,18 @@ export function useSmartDashboardInsights(): DashboardInsight {
     const dayOfWeek = new Date().getDay(); // 0 = Sunday, 3 = Wednesday
 
     // Priority 1: Many drafts ready
-    if (drafts >= 10) {
+    if (drafts >= 3) {
       return {
-        message: `You have ${drafts} drafts ready. Schedule this week's content?`,
+        message: `You have ${drafts} draft${drafts > 1 ? 's' : ''} ready. Review and schedule them?`,
         primaryAction: {
-          label: "Schedule with Madison",
-          handler: () => navigate("/schedule"),
+          label: "Review Drafts",
+          handler: () => navigate("/library?status=draft"),
         },
         secondaryAction: {
-          label: "Review Drafts",
-          handler: () => navigate("/library?filter=draft"),
+          label: "View Calendar",
+          handler: () => navigate("/calendar"),
         },
-        priorityRoute: "schedule",
+        priorityRoute: "library",
       };
     }
 
@@ -50,14 +50,14 @@ export function useSmartDashboardInsights(): DashboardInsight {
       return {
         message: "Nothing scheduled yet. Let's plan your week.",
         primaryAction: {
-          label: "Plan This Week",
-          handler: () => navigate("/schedule"),
-        },
-        secondaryAction: {
           label: "View Calendar",
           handler: () => navigate("/calendar"),
         },
-        priorityRoute: "schedule",
+        secondaryAction: {
+          label: "Create Content",
+          handler: () => navigate("/create"),
+        },
+        priorityRoute: "calendar",
       };
     }
 
@@ -82,14 +82,14 @@ export function useSmartDashboardInsights(): DashboardInsight {
       return {
         message: "No content published yet this week. Need help?",
         primaryAction: {
-          label: "Schedule Content",
-          handler: () => navigate("/schedule"),
+          label: "View Calendar",
+          handler: () => navigate("/calendar"),
         },
         secondaryAction: {
           label: "Create New",
           handler: () => navigate("/create"),
         },
-        priorityRoute: "schedule",
+        priorityRoute: "calendar",
       };
     }
 
