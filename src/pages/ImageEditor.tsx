@@ -530,6 +530,97 @@ export default function ImageEditor() {
     handleSetHero(imageId);
   };
 
+  const saveLatestImageToLibrary = async () => {
+    const latestImage = currentSession.images[currentSession.images.length - 1];
+    if (!latestImage) return;
+    
+    try {
+      const { error } = await supabase
+        .from('generated_images')
+        .update({ saved_to_library: true })
+        .eq('id', latestImage.id);
+      
+      if (error) throw error;
+      
+      // Update local state to mark as flagged
+      setCurrentSession(prev => ({
+        ...prev,
+        images: prev.images.map(img => 
+          img.id === latestImage.id 
+            ? { ...img, approvalStatus: 'flagged' as ApprovalStatus }
+            : img
+        )
+      }));
+      
+      toast.success("Image saved to library!");
+      setShowGeneratedView(false);
+      setActiveTab("gallery");
+    } catch (error) {
+      console.error('Save error:', error);
+      toast.error("Failed to save image");
+    }
+  };
+
+  const handleMobileRefine = async (instruction: string) => {
+    const latestImage = currentSession.images[currentSession.images.length - 1];
+    if (!latestImage || !user) return;
+    
+    setIsGenerating(true);
+    
+    try {
+      const { data: functionData, error: functionError } = await supabase.functions.invoke(
+        'generate-madison-image',
+        {
+          body: {
+            prompt: latestImage.prompt,
+            userId: user.id,
+            organizationId: orgId,
+            goalType: 'product_photography',
+            parentPrompt: latestImage.prompt,
+            aspectRatio,
+            outputFormat,
+            referenceImages: referenceImages.map(r => ({ url: r.url, description: r.description, label: r.label })),
+            brandContext: brandContext || undefined,
+            isRefinement: true,
+            refinementInstruction: instruction,
+            parentImageId: latestImage.id
+          }
+        }
+      );
+
+      if (functionError) throw functionError;
+      if (!functionData?.imageUrl) throw new Error("No image returned");
+
+      const newImage: GeneratedImage = {
+        id: functionData.savedImageId || crypto.randomUUID(),
+        imageUrl: functionData.imageUrl,
+        prompt: latestImage.prompt,
+        timestamp: Date.now(),
+        isHero: false,
+        approvalStatus: "pending",
+        parentImageId: latestImage.id,
+        chainDepth: latestImage.chainDepth + 1,
+        isChainOrigin: false,
+        refinementInstruction: instruction
+      };
+
+      setCurrentSession(prev => ({
+        ...prev,
+        images: [...prev.images, newImage]
+      }));
+
+      setLatestGeneratedImage(newImage.imageUrl);
+      setMainPrompt(instruction);
+      toast.success("Image refined!");
+      
+    } catch (error: any) {
+      console.error('Refinement error:', error);
+      toast.error(error.message || "Failed to refine image");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const heroImage = currentSession.images.find(img => img.isHero);
   const flaggedCount = currentSession.images.filter(img => img.approvalStatus === 'flagged').length;
 
@@ -542,21 +633,12 @@ export default function ImageEditor() {
           imageUrl={latestGeneratedImage}
           prompt={mainPrompt}
           aspectRatio={aspectRatio}
-          onSave={() => {
-            // Mark the latest image as flagged
-            const latestImage = currentSession.images[currentSession.images.length - 1];
-            if (latestImage) {
-              handleToggleApproval(latestImage.id);
-            }
-            toast.success("Image saved to library!");
-            setShowGeneratedView(false);
-            setActiveTab("gallery");
-          }}
+          onSave={saveLatestImageToLibrary}
           onClose={() => {
             setShowGeneratedView(false);
             setActiveTab("gallery");
           }}
-          onRegenerate={handleGenerate}
+          onRegenerate={handleMobileRefine}
           onPromptChange={setMainPrompt}
           onAspectRatioChange={setAspectRatio}
           onShotTypeSelect={async (shotType) => {

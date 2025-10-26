@@ -11,7 +11,7 @@ interface MobileGeneratedImageViewProps {
   aspectRatio: string;
   onSave: () => void;
   onClose: () => void;
-  onRegenerate: () => void;
+  onRegenerate: (prompt: string) => void;
   onPromptChange: (prompt: string) => void;
   onAspectRatioChange: (ratio: string) => void;
   onShotTypeSelect: (shotType: { label: string; prompt: string }) => void;
@@ -58,24 +58,26 @@ export default function MobileGeneratedImageView({
   return (
     <div className="fixed inset-0 z-50 bg-studio-charcoal flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-studio-border">
-        <Button variant="ghost" size="icon" onClick={onClose}>
+      <div className="flex items-center justify-between px-4 py-3 pt-safe border-b border-studio-border">
+        <Button variant="ghost" size="icon" onClick={onClose} type="button" disabled={isGenerating}>
           <X className="w-5 h-5" />
         </Button>
         
         <Button
           onClick={onSave}
           size="lg"
+          type="button"
+          disabled={isGenerating}
           className="bg-aged-brass hover:bg-aged-brass/90 text-aged-paper px-6 font-semibold"
         >
           Save Image
         </Button>
 
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon" onClick={handleShare}>
+          <Button variant="ghost" size="icon" onClick={handleShare} type="button" disabled={isGenerating}>
             <Share2 className="w-5 h-5" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={handleDownload}>
+          <Button variant="ghost" size="icon" onClick={handleDownload} type="button" disabled={isGenerating}>
             <Download className="w-5 h-5" />
           </Button>
         </div>
@@ -91,7 +93,7 @@ export default function MobileGeneratedImageView({
       </div>
 
       {/* Bottom Controls */}
-      <div className="border-t border-studio-border bg-studio-charcoal">
+      <div className="border-t border-studio-border bg-studio-charcoal pb-safe">
         {/* Thumbnail */}
         <div className="px-4 py-3">
           <div className="relative inline-block">
@@ -138,8 +140,9 @@ export default function MobileGeneratedImageView({
           />
           
           <Button
-            onClick={onRegenerate}
+            onClick={() => onRegenerate(prompt)}
             disabled={!prompt.trim() || isGenerating}
+            type="button"
             className="w-full bg-aged-brass hover:bg-aged-brass/90 text-aged-paper font-semibold"
             size="lg"
           >
