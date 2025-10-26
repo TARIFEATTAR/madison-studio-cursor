@@ -51,7 +51,7 @@ export const BottomNavigation = () => {
   const fabActions = [
     { icon: Edit3, label: 'Create', route: '/create' },
     { icon: Repeat, label: 'Multiply', route: '/multiply' },
-    { icon: ImageIcon, label: 'Image Studio', route: '/image-studio' },
+    { icon: ImageIcon, label: 'Image Studio', route: '/image-editor' },
   ];
 
   const isActive = (route: string) => location.pathname === route;
