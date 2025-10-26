@@ -1,5 +1,5 @@
 // React & Router
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 // External Libraries
@@ -95,6 +95,8 @@ export default function ImageEditor() {
   const { user } = useAuth();
   const { orgId } = useCurrentOrganizationId();
   const isMobile = useIsMobile();
+  
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   const [marketplace, setMarketplace] = useState<string>("etsy");
   const [aspectRatio, setAspectRatio] = useState<string>("5:4");
@@ -621,6 +623,25 @@ export default function ImageEditor() {
       setIsGenerating(false);
     }
   };
+
+  const resizeTextarea = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    
+    // Reset height to auto to get accurate scrollHeight
+    textarea.style.height = 'auto';
+    
+    // Calculate new height (min 48px, max 250px)
+    const newHeight = Math.min(Math.max(textarea.scrollHeight, 48), 250);
+    textarea.style.height = `${newHeight}px`;
+    
+    // Toggle overflow based on whether content exceeds max height
+    textarea.style.overflowY = textarea.scrollHeight > 250 ? 'auto' : 'hidden';
+  }, []);
+
+  useEffect(() => {
+    resizeTextarea();
+  }, [mainPrompt, resizeTextarea]);
 
   const heroImage = currentSession.images.find(img => img.isHero);
   const flaggedCount = currentSession.images.filter(img => img.approvalStatus === 'flagged').length;
@@ -1184,21 +1205,23 @@ export default function ImageEditor() {
 
                 {/* Prompt Field */}
                 <Textarea
+                  ref={textareaRef}
                   value={mainPrompt}
                   onChange={(e) => setMainPrompt(e.target.value)}
                   placeholder="Describe the image you want to create..."
-                  className="flex-1 resize-none bg-[#111111] border border-zinc-700 text-[#F5F1E8] placeholder:text-zinc-500 focus-visible:ring-aged-brass/50 overflow-y-auto"
+                  className="flex-1 resize-none bg-[#111111] border border-zinc-700 text-[#F5F1E8] placeholder:text-zinc-500 focus-visible:ring-aged-brass/50"
                   style={{ 
                     color: '#F5F1E8',
                     minHeight: '3rem',
                     maxHeight: '250px',
-                    height: mainPrompt ? 'auto' : '3rem',
-                    transition: 'height 0.3s ease-in-out'
+                    height: '3rem',
+                    transition: 'height 0.2s ease',
+                    overflowY: 'hidden'
                   }}
-                  onInput={(e) => {
-                    const target = e.target as HTMLTextAreaElement;
-                    target.style.height = 'auto';
-                    target.style.height = `${Math.min(target.scrollHeight, 250)}px`;
+                  onInput={resizeTextarea}
+                  onPaste={() => {
+                    // Use setTimeout to allow paste content to render before measuring
+                    setTimeout(resizeTextarea, 0);
                   }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
