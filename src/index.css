@@ -478,3 +478,44 @@
     display: none;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE NAVIGATION SYSTEM
+   Bottom nav with FAB - Safe area support and smooth animations
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Mobile Safe Area Support */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Ensure main content doesn't hide behind bottom nav on mobile */
+@media (max-width: 767px) {
+  .main-content {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Smooth FAB animations */
+@keyframes slide-in-from-bottom-2 {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-in-from-bottom-2 {
+  animation: slide-in-from-bottom-2 0.2s ease-out;
+}
+
+/* Bottom nav haptic feedback simulation */
+.nav-item:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease;
+}

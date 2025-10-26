@@ -9,7 +9,6 @@ import { ContentFlowZone } from "@/components/dashboard/ContentFlowZone";
 import { PerformanceMomentumZone } from "@/components/dashboard/PerformanceMomentumZone";
 import MadisonPanel from "@/components/image-editor/MadisonPanel";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
-import { FABMenu } from "@/components/layout/FABMenu";
 
 export default function DashboardNew() {
   const navigate = useNavigate();
@@ -55,8 +54,8 @@ export default function DashboardNew() {
 
   return (
     <div className="h-screen overflow-hidden bg-[#FAFAFA] flex flex-col">
-      {/* Top Bar with Madison Button */}
-      <div className="h-16 border-b border-[#E0E0E0] px-8 flex items-center justify-between bg-white">
+      {/* Top Bar with Madison Button - Desktop Only */}
+      <div className="hidden md:flex h-16 border-b border-[#E0E0E0] px-8 items-center justify-between bg-white">
         <h1 className="text-xl font-semibold text-[#1C150D]">Dashboard</h1>
         <Button
           size="sm"
@@ -68,21 +67,33 @@ export default function DashboardNew() {
         </Button>
       </div>
 
+      {/* Mobile Header - Simplified */}
+      <div className="md:hidden h-14 border-b border-[#E0E0E0] px-4 flex items-center justify-between bg-white">
+        <h1 className="text-lg font-semibold text-[#1C150D]">Dashboard</h1>
+        <Button
+          size="sm"
+          onClick={() => setMadisonPanelOpen(true)}
+          className="bg-[#B8956A] hover:bg-[#A3865A] text-white px-3 py-2"
+        >
+          <Sparkles className="w-4 h-4" />
+        </Button>
+      </div>
+
       {/* Main Content Area */}
-      <div className="flex-1 overflow-auto px-8 py-6">
-        <div className="max-w-[1600px] mx-auto space-y-6 animate-fade-in">
+      <div className="flex-1 overflow-auto px-4 md:px-8 py-4 md:py-6 pb-24 md:pb-6 main-content">
+        <div className="max-w-[1600px] mx-auto space-y-4 md:space-y-6 animate-fade-in">
           {/* Row 1: Key Metrics */}
-          <div className="grid grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
             <BrandPulseBar />
           </div>
 
           {/* Row 2: Content Flow */}
-          <div className="grid grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
             <ContentFlowZone />
           </div>
 
           {/* Row 3: Performance Metrics */}
-          <div className="grid grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
             <PerformanceMomentumZone />
           </div>
         </div>
@@ -98,7 +109,6 @@ export default function DashboardNew() {
 
       {/* Mobile Navigation */}
       <BottomNavigation />
-      <FABMenu />
     </div>
   );
 }

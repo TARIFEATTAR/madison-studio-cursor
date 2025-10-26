@@ -44,9 +44,9 @@ export function BrandPulseBar() {
   if (statsLoading || streakLoading || healthLoading) {
     return (
       <>
-        <Skeleton className="col-span-3 h-[140px] rounded-xl" />
-        <Skeleton className="col-span-5 h-[140px] rounded-xl" />
-        <Skeleton className="col-span-4 h-[140px] rounded-xl" />
+        <Skeleton className="col-span-1 md:col-span-3 h-[140px] rounded-xl" />
+        <Skeleton className="col-span-1 md:col-span-5 h-[140px] rounded-xl" />
+        <Skeleton className="col-span-1 md:col-span-4 h-[140px] rounded-xl" />
       </>
     );
   }
@@ -55,26 +55,26 @@ export function BrandPulseBar() {
     <>
       {/* Brand Health Card */}
       <Card 
-        className="col-span-3 p-6 bg-white border border-[#E0E0E0] cursor-pointer hover:shadow-lg transition-all hover:-translate-y-0.5 rounded-xl"
+        className="col-span-1 md:col-span-3 p-4 md:p-6 bg-white border border-[#E0E0E0] cursor-pointer hover:shadow-lg transition-all hover:-translate-y-0.5 rounded-xl min-h-[180px] md:min-h-[200px]"
         onClick={() => navigate("/brand-health")}
       >
         <div className="flex flex-col h-full">
           <h3 className="text-sm font-medium text-[#1C150D]/60 mb-4">Brand Health</h3>
-          <div className="flex items-center gap-6">
-            <div className="relative w-20 h-20">
-              <svg className="w-20 h-20 transform -rotate-90">
+          <div className="flex items-center gap-4 md:gap-6">
+            <div className="relative w-16 h-16 md:w-20 md:h-20">
+              <svg className="w-full h-full transform -rotate-90">
                 <circle
-                  cx="40"
-                  cy="40"
-                  r="36"
+                  cx="50%"
+                  cy="50%"
+                  r="45%"
                   stroke="#F0F0F0"
                   strokeWidth="6"
                   fill="none"
                 />
                 <circle
-                  cx="40"
-                  cy="40"
-                  r="36"
+                  cx="50%"
+                  cy="50%"
+                  r="45%"
                   stroke="#B8956A"
                   strokeWidth="6"
                   fill="none"
@@ -83,14 +83,14 @@ export function BrandPulseBar() {
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-2xl font-semibold text-[#1C150D]">{brandScore}</span>
+                <span className="text-xl md:text-2xl font-semibold text-[#1C150D]">{brandScore}</span>
               </div>
             </div>
             <div>
-              <p className={`text-lg font-semibold mb-1 ${getBrandHealthColor(brandScore)}`}>
+              <p className={`text-base md:text-lg font-semibold mb-1 ${getBrandHealthColor(brandScore)}`}>
                 {brandScore >= 90 ? "Excellent" : brandScore >= 70 ? "Good" : "Needs Attention"}
               </p>
-              <div className="flex gap-3 text-xs text-[#1C150D]/60">
+              <div className="hidden md:flex gap-3 text-xs text-[#1C150D]/60">
                 <span>Voice +4%</span>
                 <span>·</span>
                 <span>Cadence Stable</span>
@@ -101,17 +101,17 @@ export function BrandPulseBar() {
       </Card>
 
       {/* Your Next Move Card */}
-      <Card className="col-span-5 p-6 bg-white border border-[#E0E0E0] rounded-xl">
+      <Card className="col-span-1 md:col-span-5 p-4 md:p-6 bg-white border border-[#E0E0E0] rounded-xl min-h-[180px] md:min-h-[200px]">
         <div className="flex flex-col h-full justify-between">
           <div>
             <h3 className="text-sm font-medium text-[#1C150D]/60 mb-3">Your Next Move</h3>
-            <p className="text-base text-[#1C150D] leading-relaxed">
+            <p className="text-sm md:text-base text-[#1C150D] leading-relaxed">
               {nextMoveMessages[nextMoveIndex]}
             </p>
           </div>
           <Button
             size="default"
-            className="bg-[#B8956A] hover:bg-[#A3865A] text-white mt-4 w-fit"
+            className="bg-[#B8956A] hover:bg-[#A3865A] text-white mt-4 w-full md:w-fit min-h-[44px]"
             onClick={() => navigate("/create")}
           >
             Take Action
@@ -119,16 +119,16 @@ export function BrandPulseBar() {
         </div>
       </Card>
 
-      {/* Streak Tracker - Now Full Width */}
-      <Card className="col-span-4 p-6 bg-white border border-[#E0E0E0] rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+      {/* Streak Tracker - Mobile Optimized */}
+      <Card className="col-span-1 md:col-span-4 p-4 md:p-6 bg-white border border-[#E0E0E0] rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 min-h-[180px] md:min-h-[200px]">
         <div className="flex flex-col h-full">
           <h3 className="text-sm font-medium text-[#1C150D]/60 mb-4">Your Progress</h3>
           
           <div className="flex items-center justify-around mb-6">
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <Flame className="w-6 h-6 text-[#E67E73]" />
-                <span className="text-3xl font-semibold text-[#1C150D]">{currentStreak}</span>
+                <Flame className="w-5 h-5 md:w-6 md:h-6 text-[#E67E73]" />
+                <span className="text-2xl md:text-3xl font-semibold text-[#1C150D]">{currentStreak}</span>
               </div>
               <span className="text-xs font-medium text-[#1C150D]/60">Day Streak</span>
             </div>
@@ -137,8 +137,8 @@ export function BrandPulseBar() {
             
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <Shield className="w-6 h-6 text-[#A3C98D]" />
-                <span className="text-3xl font-semibold text-[#1C150D]">{onBrandScore}%</span>
+                <Shield className="w-5 h-5 md:w-6 md:h-6 text-[#A3C98D]" />
+                <span className="text-2xl md:text-3xl font-semibold text-[#1C150D]">{onBrandScore}%</span>
               </div>
               <span className="text-xs font-medium text-[#1C150D]/60">On Brand</span>
             </div>

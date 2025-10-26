@@ -1,64 +1,149 @@
-import { Home, Library, Calendar, Settings } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { Home, FolderOpen, Calendar, Settings, Plus, Edit3, Repeat, Image as ImageIcon } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
-interface NavItemProps {
-  icon: React.ReactNode;
+interface NavItem {
+  icon: React.ElementType;
   label: string;
   route: string;
-  isActive: boolean;
 }
 
-function NavItem({ icon, label, route, isActive }: NavItemProps) {
+interface FABActionProps {
+  icon: React.ElementType;
+  label: string;
+  route: string;
+  onClick: () => void;
+}
+
+const FABAction = ({ icon: Icon, label, route, onClick }: FABActionProps) => {
   const navigate = useNavigate();
 
   return (
     <button
-      onClick={() => navigate(route)}
-      className={cn(
-        "flex flex-col items-center justify-center gap-1 flex-1 py-2 transition-all duration-200",
-        "active:scale-95 min-w-[48px] min-h-[48px]",
-        isActive ? "text-[#D4AF37]" : "text-[#666666] hover:text-[#333333]"
-      )}
+      onClick={() => {
+        navigate(route);
+        onClick();
+      }}
+      className="flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2"
     >
-      <div className="w-6 h-6 flex items-center justify-center">
-        {icon}
+      <div className="flex items-center gap-2 bg-white rounded-full shadow-lg pl-3 pr-4 py-2 min-w-[120px] hover:shadow-xl transition-shadow">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#B8956A] flex items-center justify-center">
+          <Icon className="w-4 h-4 text-white" />
+        </div>
+        <span className="text-sm font-medium text-[#1A1816]">{label}</span>
       </div>
-      <span className="text-[10px] font-medium">{label}</span>
     </button>
   );
-}
+};
 
-export function BottomNavigation() {
-  const navigate = useNavigate();
+export const BottomNavigation = () => {
   const location = useLocation();
+  const [fabOpen, setFabOpen] = useState(false);
 
-  const navItems = [
-    { icon: <Home className="w-5 h-5" />, label: "Home", route: "/" },
-    { icon: <Library className="w-5 h-5" />, label: "Library", route: "/library" },
-    { icon: null, label: "", route: "" }, // Spacer for FAB
-    { icon: <Calendar className="w-5 h-5" />, label: "Schedule", route: "/schedule" },
-    { icon: <Settings className="w-5 h-5" />, label: "Settings", route: "/settings" },
+  const navItems: NavItem[] = [
+    { icon: Home, label: 'Home', route: '/' },
+    { icon: FolderOpen, label: 'Library', route: '/library' },
+    { icon: Calendar, label: 'Schedule', route: '/schedule' },
+    { icon: Settings, label: 'Settings', route: '/settings' },
   ];
 
+  const fabActions = [
+    { icon: Edit3, label: 'Create', route: '/create' },
+    { icon: Repeat, label: 'Multiply', route: '/multiply' },
+    { icon: ImageIcon, label: 'Image Studio', route: '/image-studio' },
+  ];
+
+  const isActive = (route: string) => location.pathname === route;
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-[900] bg-white border-t border-[#E0E0E0] safe-area-inset-bottom md:hidden">
-      <div className="flex items-center justify-around px-2" style={{ height: "60px" }}>
-        {navItems.map((item, index) => {
-          if (item.icon === null) {
-            return <div key={index} className="flex-1" />; // Spacer for FAB
-          }
-          return (
-            <NavItem
+    <>
+      {/* Backdrop overlay when FAB is open */}
+      {fabOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-[998] md:hidden animate-fade-in"
+          onClick={() => setFabOpen(false)}
+        />
+      )}
+
+      {/* Bottom Navigation Bar - Mobile Only */}
+      <nav 
+        className="fixed bottom-0 left-0 right-0 bg-[#1A1816] border-t border-stone-800 z-[999] md:hidden safe-area-bottom"
+        aria-label="Primary Navigation"
+      >
+        <div className="flex items-center justify-around h-16 px-2">
+          
+          {/* First two nav items */}
+          {navItems.slice(0, 2).map((item) => (
+            <Link
               key={item.route}
-              icon={item.icon}
-              label={item.label}
-              route={item.route}
-              isActive={location.pathname === item.route}
-            />
-          );
-        })}
-      </div>
-    </nav>
+              to={item.route}
+              className={cn(
+                'flex flex-col items-center justify-center min-w-[64px] min-h-[56px] rounded-lg transition-all nav-item',
+                isActive(item.route)
+                  ? 'text-[#D4AF37] bg-[#D4AF37]/10'
+                  : 'text-stone-400 hover:text-stone-200'
+              )}
+            >
+              <item.icon className="w-6 h-6 mb-1" />
+              <span className="text-xs font-lato">{item.label}</span>
+            </Link>
+          ))}
+
+          {/* Floating Action Button (Center) */}
+          <div className="relative -mt-8">
+            <button
+              onClick={() => setFabOpen(!fabOpen)}
+              className={cn(
+                'w-14 h-14 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#B8956A]',
+                'shadow-lg shadow-[#D4AF37]/40 flex items-center justify-center',
+                'transition-transform active:scale-95',
+                fabOpen && 'rotate-45'
+              )}
+              aria-label="Quick Actions Menu"
+              aria-expanded={fabOpen}
+            >
+              <Plus className="w-7 h-7 text-white" />
+            </button>
+
+            {/* FAB Action Menu */}
+            {fabOpen && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 flex flex-col gap-3 pb-2">
+                {fabActions.map((action, index) => (
+                  <div 
+                    key={action.route}
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <FABAction
+                      icon={action.icon}
+                      label={action.label}
+                      route={action.route}
+                      onClick={() => setFabOpen(false)}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Last two nav items */}
+          {navItems.slice(2, 4).map((item) => (
+            <Link
+              key={item.route}
+              to={item.route}
+              className={cn(
+                'flex flex-col items-center justify-center min-w-[64px] min-h-[56px] rounded-lg transition-all nav-item',
+                isActive(item.route)
+                  ? 'text-[#D4AF37] bg-[#D4AF37]/10'
+                  : 'text-stone-400 hover:text-stone-200'
+              )}
+            >
+              <item.icon className="w-6 h-6 mb-1" />
+              <span className="text-xs font-lato">{item.label}</span>
+            </Link>
+          ))}
+        </div>
+      </nav>
+    </>
   );
-}
+};
