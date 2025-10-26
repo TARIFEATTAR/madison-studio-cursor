@@ -47,7 +47,11 @@ export function ContentFlowZone() {
   ];
 
   const handleStageClick = (status: string) => {
-    navigate(`/library?status=${status}`);
+    if (status === "scheduled") {
+      navigate("/calendar");
+    } else {
+      navigate(`/library?status=${status}`);
+    }
   };
 
   if (isLoading) {

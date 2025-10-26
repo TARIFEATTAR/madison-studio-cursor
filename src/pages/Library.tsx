@@ -64,10 +64,14 @@ export default function Library() {
   // Read status filter from URL params on mount
   useEffect(() => {
     const status = searchParams.get('status');
-    if (status && ['draft', 'scheduled', 'published'].includes(status)) {
+    if (status === 'scheduled') {
+      navigate('/calendar');
+      return;
+    }
+    if (status && ['draft', 'published'].includes(status)) {
       setSelectedStatus(status);
     }
-  }, [searchParams]);
+  }, [searchParams, navigate]);
 
   // Filtering and sorting logic
   const filteredContent = useMemo(() => {
