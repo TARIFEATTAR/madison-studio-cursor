@@ -6,11 +6,13 @@ import { Separator } from "@/components/ui/separator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X, Sparkles, Mail, Instagram, Twitter, Tag, MessageSquare, FileText, Save, CheckCircle2, XCircle, Maximize2, Minimize2 } from "lucide-react";
+import { X, Sparkles, Mail, Instagram, Twitter, Tag, MessageSquare, FileText, Save, CheckCircle2, XCircle, Maximize2, Minimize2, Copy } from "lucide-react";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
 import { AutosaveIndicator } from "@/components/ui/autosave-indicator";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { AUTOSAVE_CONFIG } from "@/config/autosaveConfig";
+import { ScheduleButton } from "@/components/forge/ScheduleButton";
+import { useToast } from "@/hooks/use-toast";
 
 interface DerivativeContent {
   id: string;
@@ -85,6 +87,7 @@ export function EditorialDirectorSplitScreen({
     derivative.sequenceEmails || []
   );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { toast } = useToast();
   
   // Auto-save with standard delay
   const { saveStatus, lastSavedAt } = useAutoSave({
@@ -125,6 +128,14 @@ export function EditorialDirectorSplitScreen({
     onUpdateDerivative({
       ...selectedDerivative,
       status: "rejected",
+    });
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(editedContent);
+    toast({
+      title: "Content copied",
+      description: "Derivative content has been copied to clipboard",
     });
   };
 
@@ -294,7 +305,7 @@ export function EditorialDirectorSplitScreen({
                   </Accordion>
 
                   {/* Action Buttons */}
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex gap-2 pt-2 flex-wrap">
                     <Button
                       onClick={handleSave}
                       variant="outline"
@@ -326,6 +337,21 @@ export function EditorialDirectorSplitScreen({
                         </Button>
                       </>
                     )}
+                    <Button
+                      onClick={handleCopy}
+                      variant="outline"
+                      size="sm"
+                      style={{ borderColor: "#D4CFC8", color: "#6B6560" }}
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy
+                    </Button>
+                    <ScheduleButton
+                      contentTitle={label}
+                      contentType={selectedDerivative.typeId}
+                      variant="outline"
+                      size="sm"
+                    />
                   </div>
                 </div>
               ) : (
@@ -354,7 +380,7 @@ export function EditorialDirectorSplitScreen({
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <Button
                       onClick={handleSave}
                       variant="outline"
@@ -386,6 +412,21 @@ export function EditorialDirectorSplitScreen({
                         </Button>
                       </>
                     )}
+                    <Button
+                      onClick={handleCopy}
+                      variant="outline"
+                      size="sm"
+                      style={{ borderColor: "#D4CFC8", color: "#6B6560" }}
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy
+                    </Button>
+                    <ScheduleButton
+                      contentTitle={label}
+                      contentType={selectedDerivative.typeId}
+                      variant="outline"
+                      size="sm"
+                    />
                   </div>
                 </div>
               )}
