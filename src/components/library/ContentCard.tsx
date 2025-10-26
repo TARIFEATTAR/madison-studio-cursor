@@ -168,15 +168,36 @@ export function ContentCard({
               </Badge>
             )}
 
-            {deliverableFormat && (
-              <Badge 
-                variant="outline"
-                className="text-xs border-border/40"
-              >
-                <deliverableFormat.icon className="w-3 h-3 mr-1" />
-                {deliverableFormat.label}
-              </Badge>
-            )}
+            {/* Two-tier badge system: Category + Subtype */}
+            {(() => {
+              const category = getContentCategoryLabel(content.contentType);
+              const subtype = getContentSubtypeLabel(content.contentType);
+              
+              return (
+                <>
+                  {/* Category Badge (Email, Social, Blog, etc.) */}
+                  {category && (
+                    <Badge 
+                      variant="outline"
+                      className="text-xs border-border/40 font-medium"
+                    >
+                      {category}
+                    </Badge>
+                  )}
+                  
+                  {/* Subtype Badge (Newsletter, Instagram, etc.) */}
+                  {subtype && (
+                    <Badge 
+                      variant="outline"
+                      className="text-xs border-border/40"
+                    >
+                      {deliverableFormat && <deliverableFormat.icon className="w-3 h-3 mr-1" />}
+                      {subtype}
+                    </Badge>
+                  )}
+                </>
+              );
+            })()}
             
             {collectionInfo && (
               <Badge variant="outline" className="text-xs border-border/40">
