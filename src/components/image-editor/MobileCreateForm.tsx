@@ -61,7 +61,7 @@ interface MobileCreateFormProps {
   referenceImage: { file: File; url: string } | null;
   onReferenceUpload: (file: File, url: string) => void;
   onReferenceRemove: () => void;
-  onGenerate: () => void;
+  onGenerate: (overridePrompt?: string) => void;
   isGenerating: boolean;
   marketplace?: string;
   imagesCount: number;
@@ -102,7 +102,7 @@ export default function MobileCreateForm({
   const handleGenerateFromModal = () => {
     onPromptChange(modalPrompt);
     setIsGeneratingFromModal(true);
-    onGenerate();
+    onGenerate(modalPrompt);
   };
 
   // Close modal automatically when generation completes
@@ -279,6 +279,7 @@ export default function MobileCreateForm({
             <Button
               onClick={handleGenerateFromModal}
               disabled={!modalPrompt.trim() || isGenerating || imagesCount >= maxImages}
+              type="button"
               size="lg"
               className="w-full h-12 bg-aged-brass hover:bg-aged-brass/90 text-aged-paper font-semibold"
             >

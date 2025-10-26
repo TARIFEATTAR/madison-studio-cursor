@@ -230,8 +230,9 @@ export default function ImageEditor() {
     return enhanced;
   };
 
-  const handleGenerate = async () => {
-    if (!mainPrompt.trim() || !user) {
+  const handleGenerate = async (promptOverride?: string) => {
+    const effectivePrompt = (promptOverride ?? mainPrompt).trim();
+    if (!effectivePrompt || !user) {
       toast.error("Please enter a prompt");
       return;
     }
@@ -241,11 +242,15 @@ export default function ImageEditor() {
       return;
     }
 
+    if (promptOverride) {
+      setMainPrompt(promptOverride);
+    }
+
     setIsGenerating(true);
     
     try {
       // Call the edge function with enhanced prompt - backend handles ALL persistence
-      const enhancedPrompt = enhancePromptWithControls(mainPrompt);
+      const enhancedPrompt = enhancePromptWithControls(effectivePrompt);
       
       // Prepare reference images array based on mode
       let generationReferenceImages = [];
@@ -313,7 +318,7 @@ export default function ImageEditor() {
       const newImage: GeneratedImage = {
         id: functionData.savedImageId || crypto.randomUUID(),
         imageUrl: functionData.imageUrl,
-        prompt: mainPrompt,
+        prompt: effectivePrompt,
         timestamp: Date.now(),
         isHero: currentSession.images.length === 0,
         approvalStatus: "pending",
@@ -323,11 +328,11 @@ export default function ImageEditor() {
 
       setCurrentSession(prev => ({
         ...prev,
-        name: prev.images.length === 0 ? generateSessionName(mainPrompt) : prev.name,
+        name: prev.images.length === 0 ? generateSessionName(effectivePrompt) : prev.name,
         images: [...prev.images, newImage]
       }));
 
-      setAllPrompts(prev => [...prev, { role: 'user', content: mainPrompt }]);
+      setAllPrompts(prev => [...prev, { role: 'user', content: effectivePrompt }]);
       toast.success("Image generated successfully!");
       
       // On mobile, transition to full-screen generated view
@@ -901,7 +906,7 @@ export default function ImageEditor() {
 
           {/* Generate Button */}
           <Button
-            onClick={handleGenerate}
+            onClick={() => handleGenerate()}
             disabled={!mainPrompt.trim() || isGenerating || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
             size="lg"
             variant="brass"
@@ -1112,7 +1117,7 @@ export default function ImageEditor() {
 
                 {/* Generate Button - 15-20% width */}
                 <Button
-                  onClick={handleGenerate}
+                  onClick={() => handleGenerate()}
                   disabled={!mainPrompt.trim() || isGenerating || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
                   size="lg"
                   variant="brass"
