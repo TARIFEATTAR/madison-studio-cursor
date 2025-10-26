@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DraftNudge } from "./DraftNudge";
 
 export function ContentFlowZone() {
   const navigate = useNavigate();
@@ -63,8 +64,13 @@ export function ContentFlowZone() {
     );
   }
 
+  const draftCount = stats?.totalDrafts || 0;
+
   return (
     <>
+      {/* Draft Nudge - Full Width */}
+      <DraftNudge draftCount={draftCount} />
+
       {/* Content Pipeline */}
       <Card className="col-span-1 md:col-span-8 p-4 md:p-6 bg-white border border-[#E0E0E0] overflow-hidden rounded-xl min-h-[240px]">
         <h3 className="text-sm font-medium text-[#1C150D]/60 mb-4 md:mb-5">Content Pipeline</h3>
