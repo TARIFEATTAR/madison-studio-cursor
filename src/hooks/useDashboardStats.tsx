@@ -118,8 +118,10 @@ export function useDashboardStats() {
 
         const piecesScheduled = scheduled?.length || 0;
 
-        // Calculate total drafts (unpublished content)
-        const totalDrafts = totalContent - piecesPublished;
+        // Calculate total drafts (only master content in draft status)
+        const totalDrafts = (masterContent || []).filter(
+          item => item.status === "draft"
+        ).length;
 
         // Use brand health score (from brand guidelines completeness analysis)
         const onBrandScore = brandHealth?.completeness_score ?? defaultStats.onBrandScore;

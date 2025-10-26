@@ -34,21 +34,21 @@ export function CompactContentPipeline() {
       count: drafts,
       percentage: draftsPercentage,
       color: "bg-brass",
-      route: "/library?filter=draft",
+      route: "/library?status=draft",
     },
     {
       label: "Scheduled",
       count: scheduled,
       percentage: scheduledPercentage,
       color: "bg-blue-600",
-      route: "/schedule",
+      route: "/calendar",
     },
     {
       label: "Published",
       count: published,
       percentage: publishedPercentage,
       color: "bg-emerald-600",
-      route: "/library?filter=published",
+      route: "/library?status=published",
     },
   ];
 

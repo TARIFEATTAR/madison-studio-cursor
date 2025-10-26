@@ -30,7 +30,7 @@ export function ContentPipeline() {
       color: "text-charcoal",
       bgColor: "bg-charcoal/10",
       action: "Review & Refine",
-      route: "/library",
+      route: "/library?status=draft",
       description: draftCount === 0 ? "All caught up!" : "Ready for review"
     },
     {
@@ -40,7 +40,7 @@ export function ContentPipeline() {
       color: "text-aged-brass",
       bgColor: "bg-aged-brass/10",
       action: "View Calendar",
-      route: "/schedule",
+      route: "/calendar",
       description: scheduledCount === 0 ? "Plan ahead" : "Queued to publish"
     },
     {
