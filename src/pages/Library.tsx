@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Plus, Trash2, X, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LibraryFilters } from "@/components/library/LibraryFilters";
@@ -9,7 +9,7 @@ import { ImageSessionModal } from "@/components/library/ImageSessionModal";
 import { EmptyState } from "@/components/library/EmptyState";
 import { SortOption } from "@/components/library/SortDropdown";
 import { useLibraryContent, LibraryContentItem } from "@/hooks/useLibraryContent";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +19,7 @@ import { MadisonSplitEditor } from "@/components/library/MadisonSplitEditor";
 export default function Library() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [groupBySessions, setGroupBySessions] = useState(false);
   const { data: libraryContent = [], isLoading, refetch } = useLibraryContent(groupBySessions);
   const [searchQuery, setSearchQuery] = useState("");
@@ -52,6 +53,14 @@ export default function Library() {
     initialText: string;
     title?: string;
   } | null>(null);
+
+  // Read status filter from URL params on mount
+  useEffect(() => {
+    const status = searchParams.get('status');
+    if (status && ['draft', 'review', 'scheduled', 'published'].includes(status)) {
+      setSelectedContentType(status);
+    }
+  }, [searchParams]);
 
   // Filtering and sorting logic
   const filteredContent = useMemo(() => {

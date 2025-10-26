@@ -44,86 +44,89 @@ export default function Settings() {
   }, [user]);
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen bg-[#FAFAFA]">
       <div className="max-w-6xl mx-auto">
-        {/* Page Header with paper texture */}
-        <div className="px-8 py-6 border-b border-cream-dark bg-paper-light">
-          <h1 className="text-4xl font-serif text-charcoal">
+        {/* Page Header - Mobile Optimized */}
+        <div className="px-4 md:px-8 py-4 md:py-6 border-b border-[#E0E0E0] bg-white">
+          <h1 className="text-2xl md:text-4xl font-serif text-[#1C150D]">
             Settings{organizationName && ` • ${organizationName}`}
           </h1>
-          <p className="text-neutral-600 mt-2">
+          <p className="text-sm md:text-base text-[#1C150D]/60 mt-1 md:mt-2">
             Configure your brand, products, and preferences
           </p>
         </div>
 
-        {/* Tabs Section */}
-        <div className="px-8 py-6">
-          <Tabs defaultValue={defaultTab} className="space-y-6">
-            <TabsList className="bg-paper-light border border-cream-dark p-1 w-full justify-start overflow-x-auto flex-nowrap">
-              <TabsTrigger 
-                value="brand" 
-                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal px-2 sm:px-3 py-1.5 gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0"
-              >
-                <Building2 className="w-4 h-4" />
-                <span className="hidden xs:inline">Brand Guidelines</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="madison"
-                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal px-2 sm:px-3 py-1.5 gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0"
-              >
-                <Sparkles className="w-4 h-4" />
-                <span className="hidden xs:inline">Madison's Training</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="goals"
-                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal px-2 sm:px-3 py-1.5 gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0"
-              >
-                <Target className="w-4 h-4" />
-                <span className="hidden xs:inline">Goals & Accolades</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="collections"
-                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal px-2 sm:px-3 py-1.5 gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0"
-              >
-                <FolderKanban className="w-4 h-4" />
-                <span className="hidden xs:inline">Collections</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="products"
-                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal px-2 sm:px-3 py-1.5 gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0"
-              >
-                <Package className="w-4 h-4" />
-                <span className="hidden xs:inline">Products</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="team"
-                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal px-2 sm:px-3 py-1.5 gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0"
-              >
-                <Users className="w-4 h-4" />
-                <span className="hidden xs:inline">Team</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="notifications"
-                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal px-2 sm:px-3 py-1.5 gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0"
-              >
-                <Bell className="w-4 h-4" />
-                <span className="hidden xs:inline">Notifications</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="billing"
-                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal px-2 sm:px-3 py-1.5 gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0"
-              >
-                <CreditCard className="w-4 h-4" />
-                <span className="hidden xs:inline">Billing</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="integrations"
-                className="data-[state=active]:bg-brass data-[state=active]:text-charcoal px-2 sm:px-3 py-1.5 gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0"
-              >
-                <Plug className="w-4 h-4" />
-                <span className="hidden xs:inline">Integrations</span>
-              </TabsTrigger>
-            </TabsList>
+        {/* Tabs Section - Mobile Optimized */}
+        <div className="px-4 md:px-8 py-4 md:py-6">
+          <Tabs defaultValue={defaultTab} className="space-y-4 md:space-y-6">
+            {/* Mobile: Scrollable horizontal tabs */}
+            <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
+              <TabsList className="bg-white border border-[#E0E0E0] p-1 flex md:flex-wrap gap-1 min-w-max md:w-full rounded-lg">
+                <TabsTrigger 
+                  value="brand" 
+                  className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
+                >
+                  <Building2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Brand</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="madison"
+                  className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span className="hidden sm:inline">Madison</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="goals"
+                  className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
+                >
+                  <Target className="w-4 h-4" />
+                  <span className="hidden sm:inline">Goals</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="collections"
+                  className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
+                >
+                  <FolderKanban className="w-4 h-4" />
+                  <span className="hidden sm:inline">Collections</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="products"
+                  className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
+                >
+                  <Package className="w-4 h-4" />
+                  <span className="hidden sm:inline">Products</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="team"
+                  className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
+                >
+                  <Users className="w-4 h-4" />
+                  <span className="hidden sm:inline">Team</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="notifications"
+                  className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
+                >
+                  <Bell className="w-4 h-4" />
+                  <span className="hidden sm:inline">Alerts</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="billing"
+                  className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span className="hidden sm:inline">Billing</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="integrations"
+                  className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
+                >
+                  <Plug className="w-4 h-4" />
+                  <span className="hidden sm:inline">Apps</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="brand">
               <BrandGuidelinesTab />

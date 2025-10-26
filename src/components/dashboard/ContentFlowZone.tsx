@@ -18,6 +18,7 @@ export function ContentFlowZone() {
       count: stats?.totalDrafts || 0,
       total: 10,
       color: "#D9D2C2",
+      status: "draft",
     },
     {
       id: "review",
@@ -26,6 +27,7 @@ export function ContentFlowZone() {
       count: 3,
       total: 10,
       color: "#B4A078",
+      status: "review",
     },
     {
       id: "scheduled",
@@ -34,6 +36,7 @@ export function ContentFlowZone() {
       count: stats?.piecesScheduled || 0,
       total: 10,
       color: "#F5C16C",
+      status: "scheduled",
     },
     {
       id: "published",
@@ -42,6 +45,7 @@ export function ContentFlowZone() {
       count: stats?.piecesPublished || 0,
       total: 20,
       color: "#A3C98D",
+      status: "published",
     },
   ];
 
@@ -54,6 +58,10 @@ export function ContentFlowZone() {
     { day: "Sat", date: "23", dots: [] },
     { day: "Sun", date: "24", dots: [] },
   ];
+
+  const handleStageClick = (status: string) => {
+    navigate(`/library?status=${status}`);
+  };
 
   if (isLoading) {
     return (
@@ -73,7 +81,7 @@ export function ContentFlowZone() {
           {pipelineStages.map((stage) => (
             <button
               key={stage.id}
-              onClick={() => navigate('/library')}
+              onClick={() => handleStageClick(stage.status)}
               className="group flex flex-col items-center justify-center p-4 md:p-5 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
               style={{
                 background: `linear-gradient(to bottom right, ${stage.color}20, ${stage.color}10)`,
@@ -96,22 +104,48 @@ export function ContentFlowZone() {
         </div>
       </Card>
 
-      {/* This Week Calendar */}
+      {/* This Week Calendar - Improved Mobile */}
       <Card className="col-span-1 md:col-span-4 p-4 md:p-6 bg-white border border-[#E0E0E0] overflow-hidden rounded-xl min-h-[240px]">
         <h3 className="text-sm font-medium text-[#1C150D]/60 mb-4 md:mb-5">This Week</h3>
-        <div className="grid grid-cols-7 gap-2 md:gap-3">
+        
+        {/* Mobile: Horizontal Scroll */}
+        <div className="md:hidden overflow-x-auto -mx-4 px-4 scrollbar-hide">
+          <div className="flex gap-3 min-w-max pb-2">
+            {weekDays.map((day, index) => (
+              <div
+                key={index}
+                className="flex flex-col items-center p-3 rounded-lg hover:bg-[#FAFAFA] transition-colors cursor-pointer border border-transparent hover:border-[#E0E0E0] min-w-[70px]"
+              >
+                <span className="text-xs font-medium text-[#1C150D]/40 mb-1">{day.day}</span>
+                <span className="text-2xl font-semibold text-[#1C150D] mb-3">{day.date}</span>
+                <div className="flex gap-1.5 flex-wrap justify-center min-h-[16px]">
+                  {day.dots.map((dot, dotIndex) => (
+                    <div
+                      key={dotIndex}
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: dot.color }}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop: Grid */}
+        <div className="hidden md:grid grid-cols-7 gap-3">
           {weekDays.map((day, index) => (
             <div
               key={index}
-              className="flex flex-col items-center p-2 md:p-3 rounded-lg hover:bg-[#FAFAFA] transition-colors cursor-pointer border border-transparent hover:border-[#E0E0E0]"
+              className="flex flex-col items-center p-3 rounded-lg hover:bg-[#FAFAFA] transition-colors cursor-pointer border border-transparent hover:border-[#E0E0E0]"
             >
-              <span className="text-[10px] md:text-xs font-medium text-[#1C150D]/40 mb-1">{day.day}</span>
-              <span className="text-lg md:text-xl font-semibold text-[#1C150D] mb-2 md:mb-3">{day.date}</span>
-              <div className="flex gap-1 flex-wrap justify-center min-h-[12px] md:min-h-[16px]">
+              <span className="text-xs font-medium text-[#1C150D]/40 mb-1">{day.day}</span>
+              <span className="text-xl font-semibold text-[#1C150D] mb-3">{day.date}</span>
+              <div className="flex gap-1 flex-wrap justify-center min-h-[16px]">
                 {day.dots.map((dot, dotIndex) => (
                   <div
                     key={dotIndex}
-                    className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-transform group-hover:scale-125"
+                    className="w-2 h-2 rounded-full transition-transform group-hover:scale-125"
                     style={{ backgroundColor: dot.color }}
                   />
                 ))}
