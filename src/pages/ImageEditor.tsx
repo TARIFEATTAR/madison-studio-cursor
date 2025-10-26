@@ -1015,7 +1015,7 @@ export default function ImageEditor() {
           <Button
             onClick={() => setIsMadisonOpen(!isMadisonOpen)}
             variant="outline"
-            className="border-aged-brass text-aged-brass hover:bg-aged-brass hover:text-studio-charcoal font-medium px-4"
+            className="border-[#B8956A] bg-[#2A241C] text-[#E9E3D5] hover:bg-[#3A3228] hover:text-[#FFFCF5] font-medium px-4 transition-all duration-200 ease-in-out hover:shadow-[0_0_12px_rgba(184,149,106,0.2)]"
           >
             <Sparkles className="w-4 h-4 mr-2" />
             Ask Madison
