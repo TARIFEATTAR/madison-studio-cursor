@@ -111,7 +111,7 @@ export default function MobileGeneratedImageView({
             <Button
               variant="outline"
               size="sm"
-              className="flex items-center gap-1.5 text-studio-text-secondary border-studio-border"
+              className="flex items-center gap-1.5 bg-aged-brass/10 text-aged-brass border-aged-brass/30 font-medium"
             >
               <span className="w-5 h-5 flex items-center justify-center text-lg">G</span>
               <span>Imagen Nano Banana</span>
@@ -120,7 +120,7 @@ export default function MobileGeneratedImageView({
             <Button
               variant="outline"
               size="sm"
-              className="flex items-center gap-1.5 text-studio-text-secondary border-studio-border"
+              className="flex items-center gap-1.5 bg-aged-brass/10 text-aged-brass border-aged-brass/30 font-medium"
             >
               <span className="w-5 h-5 flex items-center justify-center">⌗</span>
               <span>{aspectRatio}</span>
