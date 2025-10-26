@@ -25,12 +25,10 @@ import {
 import { EditorialDirectorSplitScreen } from "@/components/multiply/EditorialDirectorSplitScreen";
 import { SavePromptDialog } from "@/components/prompt-library/SavePromptDialog";
 import { ScheduleButton } from "@/components/forge/ScheduleButton";
-import { SmartAmplifyPanel } from "@/components/multiply/SmartAmplifyPanel";
 import { DerivativeFullModal } from "@/components/amplify/DerivativeFullModal";
 import { DerivativeTypeSelector } from "@/components/multiply/DerivativeTypeSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
-import { useSmartAmplify } from "@/hooks/useSmartAmplify";
 import fannedPagesImage from "@/assets/fanned-pages-new.png";
 import ticketIcon from "@/assets/ticket-icon.png";
 import envelopeIcon from "@/assets/envelope-icon.png";
@@ -226,23 +224,6 @@ export default function Multiply() {
   // Track if we selected master via navigation
   const selectedViaNavigationRef = useRef(false);
 
-  // Smart Amplify integration
-  const smartAmplifyMasterContent = selectedMaster ? {
-    id: selectedMaster.id,
-    title: selectedMaster.title,
-    content_type: selectedMaster.contentType,
-    full_content: selectedMaster.content,
-  } : null;
-  const { recommendations, isLoading: isAnalyzing } = useSmartAmplify(smartAmplifyMasterContent);
-  
-  // Track filtered recommendations (user can remove recommendations)
-  const [filteredRecommendations, setFilteredRecommendations] = useState<typeof recommendations>([]);
-  
-  // Reset filtered recommendations when source recommendations change
-  useEffect(() => {
-    setFilteredRecommendations(recommendations);
-  }, [recommendations]);
-
   useEffect(() => {
     const loadMasterContent = async () => {
       if (!currentOrganizationId) return;
@@ -370,35 +351,6 @@ export default function Multiply() {
     setSelectedTypes(newSet);
   };
 
-  const selectAllRecommendations = () => {
-    const allRecommendationsSelected = filteredRecommendations.every(r => 
-      selectedTypes.has(r.derivativeType)
-    );
-    
-    if (allRecommendationsSelected) {
-      // Deselect all recommendations
-      const newSet = new Set(selectedTypes);
-      filteredRecommendations.forEach(r => newSet.delete(r.derivativeType));
-      setSelectedTypes(newSet);
-    } else {
-      // Select all recommendations
-      const newSet = new Set(selectedTypes);
-      filteredRecommendations.forEach(r => newSet.add(r.derivativeType));
-      setSelectedTypes(newSet);
-    }
-  };
-
-  const handleRemoveRecommendation = (typeId: string) => {
-    setFilteredRecommendations(prev => 
-      prev.filter(rec => rec.derivativeType !== typeId)
-    );
-    // Also deselect if it was selected
-    if (selectedTypes.has(typeId)) {
-      const newSet = new Set(selectedTypes);
-      newSet.delete(typeId);
-      setSelectedTypes(newSet);
-    }
-  };
 
   const selectAll = () => {
     setSelectedTypes(new Set(DERIVATIVE_TYPES.map(t => t.id)));
@@ -991,18 +943,6 @@ export default function Multiply() {
                     <h2 className="font-serif text-2xl">Derivative Editions</h2>
                     <VideoHelpTrigger videoId="understanding-derivatives" variant="icon" />
                   </div>
-
-                  {/* Smart Amplify Panel */}
-                  {selectedMaster && filteredRecommendations.length > 0 && (
-                    <SmartAmplifyPanel
-                      recommendations={filteredRecommendations}
-                      selectedTypes={Array.from(selectedTypes)}
-                      onSelectAll={selectAllRecommendations}
-                      onToggleType={toggleTypeSelection}
-                      onRemoveRecommendation={handleRemoveRecommendation}
-                      isLoading={isAnalyzing}
-                    />
-                  )}
 
                   {/* Generated Derivatives - Show Above Selector */}
                   {Object.keys(derivativesByType).length > 0 && (
