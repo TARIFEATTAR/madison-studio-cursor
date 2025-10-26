@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X, Sparkles, Mail, Instagram, Twitter, Tag, MessageSquare, FileText, Save, CheckCircle2, XCircle, Maximize2, Minimize2, GripVertical } from "lucide-react";
+import { X, Sparkles, Mail, Instagram, Twitter, Tag, MessageSquare, FileText, Save, CheckCircle2, XCircle, Maximize2, Minimize2 } from "lucide-react";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
 import { AutosaveIndicator } from "@/components/ui/autosave-indicator";
 import { useAutoSave } from "@/hooks/useAutoSave";
@@ -93,22 +93,6 @@ export function EditorialDirectorSplitScreen({
     contentName: `Derivative ${selectedDerivativeId}`,
     delay: AUTOSAVE_CONFIG.STANDARD_DELAY
   });
-  
-  // Draggable window state - safe initial position
-  const [windowPosition, setWindowPosition] = useState(() => {
-    const initialWidth = 900;
-    const initialX = Math.max(20, window.innerWidth - initialWidth - 40);
-    return { x: initialX, y: 100 };
-  });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const dragHandleRef = useRef<HTMLDivElement>(null);
-  
-  // Resizable window state - 3x larger default size
-  const [windowSize, setWindowSize] = useState({ width: 900, height: 800 });
-  const [isResizing, setIsResizing] = useState(false);
-  const [resizeDirection, setResizeDirection] = useState<string | null>(null);
-  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
   const selectedDerivative = derivatives.find(d => d.id === selectedDerivativeId) || derivative;
   const Icon = DERIVATIVE_ICONS[selectedDerivative.typeId as keyof typeof DERIVATIVE_ICONS] || FileText;
@@ -173,173 +157,11 @@ export function EditorialDirectorSplitScreen({
     }
   }, [selectedDerivativeId]);
 
-  // Draggable window handlers - FIXED VERSION
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!isResizing && dragHandleRef.current?.contains(e.target as Node)) {
-      setIsDragging(true);
-      // Store actual mouse position, not offset
-      setDragStart({
-        x: e.clientX,
-        y: e.clientY,
-      });
-    }
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging && !isResizing) {
-      requestAnimationFrame(() => {
-        // Calculate how much the mouse has moved since drag started
-        const deltaX = e.clientX - dragStart.x;
-        const deltaY = e.clientY - dragStart.y;
-        
-        // Apply delta to the current window position
-        const proposedX = windowPosition.x + deltaX;
-        const proposedY = windowPosition.y + deltaY;
-        
-        // Calculate constraints based on current window size
-        const maxX = window.innerWidth - windowSize.width - 20;
-        const maxY = window.innerHeight - windowSize.height - 16;
-        
-        // Apply constraints
-        const newX = Math.max(0, Math.min(proposedX, maxX));
-        const newY = Math.max(56, Math.min(proposedY, maxY));
-        
-        // Update position
-        setWindowPosition({ x: newX, y: newY });
-        
-        // Update drag start for next frame (this is the key fix)
-        setDragStart({
-          x: e.clientX,
-          y: e.clientY,
-        });
-      });
-    }
-  };
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  // Resize handlers
-  const handleResizeStart = (e: React.MouseEvent, direction: string) => {
-    e.stopPropagation();
-    setIsResizing(true);
-    setResizeDirection(direction);
-    setResizeStart({
-      x: e.clientX,
-      y: e.clientY,
-      width: windowSize.width,
-      height: windowSize.height,
-    });
-  };
-
-  const handleResizeMove = (e: MouseEvent) => {
-    if (!isResizing || !resizeDirection) return;
-
-    const deltaX = e.clientX - resizeStart.x;
-    const deltaY = e.clientY - resizeStart.y;
-
-    let newWidth = resizeStart.width;
-    let newHeight = resizeStart.height;
-    let newX = windowPosition.x;
-    let newY = windowPosition.y;
-
-    // Allow much larger expansion
-    const minWidth = 450;
-    const maxWidth = 1400;
-    const minHeight = 500;
-    const maxHeight = window.innerHeight - windowPosition.y - 4;
-
-    // Handle horizontal resizing
-    if (resizeDirection.includes('right')) {
-      newWidth = Math.max(minWidth, Math.min(maxWidth, resizeStart.width + deltaX));
-      // Constrain to screen bounds
-      newWidth = Math.min(newWidth, window.innerWidth - windowPosition.x - 20);
-    } else if (resizeDirection.includes('left')) {
-      const proposedWidth = resizeStart.width - deltaX;
-      newWidth = Math.max(minWidth, Math.min(maxWidth, proposedWidth));
-      const widthDiff = resizeStart.width - newWidth;
-      newX = Math.max(0, windowPosition.x - widthDiff);
-      // Adjust width if position is constrained
-      if (windowPosition.x - widthDiff < 0) {
-        newWidth = resizeStart.width + windowPosition.x;
-        newX = 0;
-      }
-    }
-
-    // Handle vertical resizing
-    if (resizeDirection.includes('bottom')) {
-      newHeight = Math.max(minHeight, Math.min(maxHeight, resizeStart.height + deltaY));
-      // Constrain to screen bounds
-      newHeight = Math.min(newHeight, window.innerHeight - windowPosition.y - 20);
-    } else if (resizeDirection.includes('top')) {
-      const proposedHeight = resizeStart.height - deltaY;
-      newHeight = Math.max(minHeight, Math.min(maxHeight, proposedHeight));
-      const heightDiff = resizeStart.height - newHeight;
-      newY = Math.max(56, windowPosition.y - heightDiff); // 56 = header height
-      // Adjust height if position is constrained
-      if (windowPosition.y - heightDiff < 56) {
-        newHeight = resizeStart.height + (windowPosition.y - 56);
-        newY = 56;
-      }
-    }
-
-    setWindowSize({ width: newWidth, height: newHeight });
-    if (newX !== windowPosition.x || newY !== windowPosition.y) {
-      setWindowPosition({ x: newX, y: newY });
-    }
-  };
-
-  const handleResizeEnd = () => {
-    setIsResizing(false);
-    setResizeDirection(null);
-  };
-
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging, dragStart, windowPosition, windowSize, isResizing]);
-
-  useEffect(() => {
-    if (isResizing) {
-      document.addEventListener('mousemove', handleResizeMove);
-      document.addEventListener('mouseup', handleResizeEnd);
-      return () => {
-        document.removeEventListener('mousemove', handleResizeMove);
-        document.removeEventListener('mouseup', handleResizeEnd);
-      };
-    }
-  }, [isResizing, resizeDirection, resizeStart, windowPosition]);
-
-  // Clamp position on window resize and when size changes - allow more flexibility
-  useEffect(() => {
-    const onResize = () => {
-      setWindowPosition(prev => {
-        const maxX = Math.max(0, window.innerWidth - windowSize.width - 20);
-        // Keep minimum 100px visible at top for draggability
-        const maxY = Math.max(56, window.innerHeight - windowSize.height - 16);
-        return {
-          x: Math.max(0, Math.min(prev.x, maxX)),
-          y: Math.max(56, Math.min(prev.y, maxY)),
-        };
-      });
-    };
-
-    window.addEventListener('resize', onResize);
-    onResize();
-    return () => window.removeEventListener('resize', onResize);
-  }, [windowSize]);
-
   return (
-    <div className="fixed inset-0 z-50 flex" style={{ backgroundColor: "#F5F1E8" }}>
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: "#F5F1E8" }}>
       {/* Header Bar */}
-      <div className="absolute top-0 left-0 right-0 h-14 border-b flex items-center justify-between px-6 z-10" style={{ backgroundColor: "#FFFCF5", borderColor: "#D4CFC8" }}>
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b" style={{ backgroundColor: "#FFFCF5", borderColor: "#D4CFC8" }}>
+        <div className="flex items-center gap-3 min-w-0">
           <Button
             variant="ghost"
             size="sm"
@@ -370,11 +192,14 @@ export function EditorialDirectorSplitScreen({
         </Button>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex w-full pt-14">
-        {/* Left Panel - Derivatives Editor */}
-        <div className={`${isExpanded ? 'flex-1' : 'flex-1'} overflow-y-auto border-r`} style={{ borderColor: "#D4CFC8" }}>
-          <div className={`p-6 ${isExpanded ? 'max-w-none' : 'max-w-3xl'}`}>
+      {/* Main Content Area - Fixed 60/40 Split */}
+      <div className="flex flex-1 min-h-0">
+        {/* Left Panel - Derivatives Editor (60% width) */}
+        <div 
+          className={`${isExpanded ? 'flex-1' : 'w-[60%]'} min-w-[400px] overflow-y-auto border-r p-4 sm:p-6`} 
+          style={{ borderColor: "#D4CFC8" }}
+        >
+          <div className="max-w-4xl mx-auto">
             <p className="text-sm mb-6" style={{ color: "#6B6560" }}>
               Review and refine your channel-specific content with the Editorial Director
             </p>
@@ -616,108 +441,42 @@ export function EditorialDirectorSplitScreen({
           </div>
         </div>
 
-        {/* Right Panel - Editorial Director (Draggable & Resizable Window) */}
+        {/* Right Panel - Editorial Director (40% width, fixed) */}
         {!isExpanded && (
           <div 
-            className="fixed rounded-lg shadow-2xl overflow-hidden border-2 transition-opacity"
-            style={{ 
-              backgroundColor: "#FFFCF5",
-              borderColor: "#B8956A",
-              left: `${windowPosition.x}px`,
-              top: `${windowPosition.y}px`,
-              width: `${windowSize.width}px`,
-              height: `${windowSize.height}px`,
-              zIndex: 60,
-              cursor: isDragging ? 'grabbing' : 'default',
-              opacity: isDragging ? 0.95 : 1
-            }}
-            onMouseDown={handleMouseDown}
+            className="w-[40%] min-w-[400px] max-w-[600px] overflow-hidden flex flex-col"
+            style={{ backgroundColor: "#FFFCF5" }}
           >
-            {/* Resize handles - thicker for better UX */}
-            {/* Top edge */}
+            {/* Panel Header */}
             <div 
-              className="absolute top-0 left-2 right-2 h-2 hover:bg-primary/10 cursor-ns-resize z-10"
-              onMouseDown={(e) => handleResizeStart(e, 'top')}
-            />
-            {/* Right edge */}
-            <div 
-              className="absolute top-2 right-0 bottom-2 w-2 hover:bg-primary/10 cursor-ew-resize z-10"
-              onMouseDown={(e) => handleResizeStart(e, 'right')}
-            />
-            {/* Bottom edge */}
-            <div 
-              className="absolute bottom-0 left-2 right-2 h-2 hover:bg-primary/10 cursor-ns-resize z-10"
-              onMouseDown={(e) => handleResizeStart(e, 'bottom')}
-            />
-            {/* Left edge */}
-            <div 
-              className="absolute top-2 left-0 bottom-2 w-2 hover:bg-primary/10 cursor-ew-resize z-10"
-              onMouseDown={(e) => handleResizeStart(e, 'left')}
-            />
-            {/* Top-left corner */}
-            <div 
-              className="absolute top-0 left-0 w-4 h-4 hover:bg-primary/10 cursor-nwse-resize z-20"
-              onMouseDown={(e) => handleResizeStart(e, 'top-left')}
-            />
-            {/* Top-right corner */}
-            <div 
-              className="absolute top-0 right-0 w-4 h-4 hover:bg-primary/10 cursor-nesw-resize z-20"
-              onMouseDown={(e) => handleResizeStart(e, 'top-right')}
-            />
-            {/* Bottom-right corner */}
-            <div 
-              className="absolute bottom-0 right-0 w-4 h-4 hover:bg-primary/10 cursor-nwse-resize z-20"
-              onMouseDown={(e) => handleResizeStart(e, 'bottom-right')}
-            />
-            {/* Bottom-left corner */}
-            <div 
-              className="absolute bottom-0 left-0 w-4 h-4 hover:bg-primary/10 cursor-nesw-resize z-20"
-              onMouseDown={(e) => handleResizeStart(e, 'bottom-left')}
-            />
-
-            <div className="h-full flex flex-col">
-              <div 
-                ref={dragHandleRef}
-                className="p-4 border-b cursor-grab active:cursor-grabbing select-none" 
-                style={{ borderColor: "#D4CFC8", backgroundColor: "rgba(184, 149, 106, 0.05)" }}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <GripVertical className="w-4 h-4 flex-shrink-0" style={{ color: "#B8956A" }} />
-                  <div 
-                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: "rgba(184, 149, 106, 0.1)" }}
-                  >
-                    <Sparkles className="w-4 h-4" style={{ color: "#B8956A" }} />
-                  </div>
-                  <div className="flex-1">
-                    <h2 className="font-serif font-semibold" style={{ color: "#1A1816" }}>
-                      Editorial Director
-                    </h2>
-                    <p className="text-xs" style={{ color: "#6B6560" }}>Drag to move • Resize from edges</p>
-                  </div>
+              className="px-4 py-3 border-b" 
+              style={{ borderColor: "#D4CFC8", backgroundColor: "rgba(184, 149, 106, 0.05)" }}
+            >
+              <div className="flex items-center gap-2">
+                <div 
+                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: "rgba(184, 149, 106, 0.1)" }}
+                >
+                  <Sparkles className="w-4 h-4" style={{ color: "#B8956A" }} />
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant="secondary"
-                    className="gap-1.5"
-                    style={{ backgroundColor: `${color}15`, color }}
-                  >
-                    <Icon className="w-3 h-3" />
-                    {label}
-                  </Badge>
-                  <span className="text-xs" style={{ color: "#A8A39E" }}>
-                    {charCount}{charLimit && `/${charLimit}`} chars
-                  </span>
+                <div className="flex-1 min-w-0">
+                  <h2 className="font-serif font-semibold text-sm sm:text-base" style={{ color: "#1A1816" }}>
+                    Editorial Director
+                  </h2>
+                  <p className="text-xs" style={{ color: "#A8A39E" }}>
+                    <Icon className="w-3 h-3 inline mr-1" style={{ color }} />
+                    {label} • {charCount} chars
+                  </p>
                 </div>
               </div>
+            </div>
 
-              <div className="flex-1 overflow-hidden">
-                <EditorialAssistantPanel
-                  onClose={onClose}
-                  initialContent={editedContent}
-                />
-              </div>
+            {/* Assistant Panel */}
+            <div className="flex-1 overflow-hidden">
+              <EditorialAssistantPanel
+                onClose={onClose}
+                initialContent={editedContent}
+              />
             </div>
           </div>
         )}
