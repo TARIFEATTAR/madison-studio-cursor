@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PenLine, Calendar, Library, Flame, Shield, Sparkles } from "lucide-react";
+import { Flame, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -119,59 +119,41 @@ export function BrandPulseBar() {
         </div>
       </Card>
 
-      {/* Quick Actions + Streak */}
-      <Card className="col-span-4 p-6 bg-white border border-[#E0E0E0] rounded-xl">
+      {/* Streak Tracker - Now Full Width */}
+      <Card className="col-span-4 p-6 bg-white border border-[#E0E0E0] rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
         <div className="flex flex-col h-full">
-          <h3 className="text-sm font-medium text-[#1C150D]/60 mb-4">Quick Actions</h3>
+          <h3 className="text-sm font-medium text-[#1C150D]/60 mb-4">Your Progress</h3>
           
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <button
-              onClick={() => navigate("/create")}
-              className="flex flex-col items-center justify-center p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/50 hover:from-blue-100 hover:to-blue-200/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-md group"
-            >
-              <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                <PenLine className="w-5 h-5 text-white" />
+          <div className="flex items-center justify-around mb-6">
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Flame className="w-6 h-6 text-[#E67E73]" />
+                <span className="text-3xl font-semibold text-[#1C150D]">{currentStreak}</span>
               </div>
-              <span className="text-xs font-medium text-[#1C150D] text-center">Create</span>
-            </button>
-
-            <button
-              onClick={() => navigate("/calendar")}
-              className="flex flex-col items-center justify-center p-4 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100/50 hover:from-purple-100 hover:to-purple-200/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-md group"
-            >
-              <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                <Calendar className="w-5 h-5 text-white" />
+              <span className="text-xs font-medium text-[#1C150D]/60">Day Streak</span>
+            </div>
+            
+            <div className="w-px h-12 bg-[#E0E0E0]" />
+            
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Shield className="w-6 h-6 text-[#A3C98D]" />
+                <span className="text-3xl font-semibold text-[#1C150D]">{onBrandScore}%</span>
               </div>
-              <span className="text-xs font-medium text-[#1C150D] text-center">Schedule</span>
-            </button>
-
-            <button
-              onClick={() => navigate("/library")}
-              className="flex flex-col items-center justify-center p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 hover:from-emerald-100 hover:to-emerald-200/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-md group"
-            >
-              <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                <Library className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xs font-medium text-[#1C150D] text-center">Library</span>
-            </button>
+              <span className="text-xs font-medium text-[#1C150D]/60">On Brand</span>
+            </div>
           </div>
 
-          <div className="mt-auto space-y-3">
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <Flame className="w-4 h-4 text-[#E67E73]" />
-                <span className="font-medium text-[#1C150D]">{currentStreak} Day Streak</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-[#A3C98D]" />
-                <span className="font-medium text-[#1C150D]">{onBrandScore}%</span>
-              </div>
+          <div className="mt-auto space-y-2">
+            <div className="flex justify-between text-xs text-[#1C150D]/60">
+              <span>This Week</span>
+              <span>{currentStreak}/7 days</span>
             </div>
             <div className="flex gap-1.5">
               {[0, 1, 2, 3, 4, 5, 6].map((day) => (
                 <div
                   key={day}
-                  className={`flex-1 h-1.5 rounded-full ${
+                  className={`flex-1 h-2 rounded-full transition-all duration-300 ${
                     day < currentStreak ? "bg-[#B8956A]" : "bg-[#E0E0E0]"
                   }`}
                 />

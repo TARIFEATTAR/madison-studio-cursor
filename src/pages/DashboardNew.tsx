@@ -8,6 +8,8 @@ import { BrandPulseBar } from "@/components/dashboard/BrandPulseBar";
 import { ContentFlowZone } from "@/components/dashboard/ContentFlowZone";
 import { PerformanceMomentumZone } from "@/components/dashboard/PerformanceMomentumZone";
 import MadisonPanel from "@/components/image-editor/MadisonPanel";
+import { BottomNavigation } from "@/components/layout/BottomNavigation";
+import { FABMenu } from "@/components/layout/FABMenu";
 
 export default function DashboardNew() {
   const navigate = useNavigate();
@@ -93,6 +95,10 @@ export default function DashboardNew() {
         sessionCount={0}
         maxImages={10}
       />
+
+      {/* Mobile Navigation */}
+      <BottomNavigation />
+      <FABMenu />
     </div>
   );
 }
