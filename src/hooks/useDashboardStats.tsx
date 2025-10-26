@@ -65,15 +65,19 @@ export function useDashboardStats() {
 
         const organizationId = orgMember.organization_id;
 
-        // Get start of current week (Sunday)
+        // Get start of current week (Sunday) in UTC to match database timestamps
         const now = new Date();
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - now.getDay());
-        startOfWeek.setHours(0, 0, 0, 0);
+        const currentDayOfWeek = now.getUTCDay(); // 0 = Sunday, 6 = Saturday
+        const startOfWeek = new Date(Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate() - currentDayOfWeek,
+          0, 0, 0, 0
+        ));
 
-        // Get start of previous week
+        // Get start of previous week in UTC
         const startOfLastWeek = new Date(startOfWeek);
-        startOfLastWeek.setDate(startOfWeek.getDate() - 7);
+        startOfLastWeek.setUTCDate(startOfWeek.getUTCDate() - 7);
 
         // Fetch brand health score
         const { data: brandHealth } = await supabase
