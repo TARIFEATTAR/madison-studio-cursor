@@ -249,8 +249,8 @@ export default function ImageEditor() {
     setIsGenerating(true);
     
     try {
-      // Call the edge function with enhanced prompt - backend handles ALL persistence
-      const enhancedPrompt = enhancePromptWithControls(effectivePrompt);
+      // Don't enhance on frontend - let backend handle Pro Mode
+      const finalPrompt = effectivePrompt;
       
       // Prepare reference images array based on mode
       let generationReferenceImages = [];
@@ -277,11 +277,12 @@ export default function ImageEditor() {
       
       // Log generation payload for debugging
       console.log('🎨 Image Generation Payload:', {
-        prompt: enhancedPrompt,
+        prompt: finalPrompt,
         aspectRatio,
         outputFormat,
         proModeEnabled: showProMode,
         proModeControls: proModePayload,
+        proModeActive: hasProModeControls,
         hasReferenceImages: generationReferenceImages.length > 0,
         hasBrandContext: !!brandContext
       });
@@ -297,7 +298,7 @@ export default function ImageEditor() {
         'generate-madison-image',
         {
           body: {
-            prompt: enhancedPrompt,
+            prompt: finalPrompt,
             userId: user.id,
             organizationId: orgId,
             goalType: 'product_photography', // Pass goalType for backend insert

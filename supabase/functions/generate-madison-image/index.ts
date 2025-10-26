@@ -85,6 +85,42 @@ function buildChainPrompt(
   return `${originalPrompt}. Refinement: ${refinement}`;
 }
 
+/**
+ * Apply Pro Mode controls with structured formatting
+ */
+function applyProModeControls(
+  basePrompt: string,
+  proModeControls?: { camera?: string; lighting?: string; environment?: string }
+): string {
+  if (!proModeControls || Object.keys(proModeControls).length === 0) {
+    return basePrompt;
+  }
+  
+  let enhanced = basePrompt;
+  
+  // Camera/Lens specifications (structured format)
+  if (proModeControls.camera) {
+    enhanced += `\n\nCAMERA & LENS SPECIFICATIONS:\n${proModeControls.camera}`;
+  }
+  
+  // Lighting setup (structured format)
+  if (proModeControls.lighting) {
+    enhanced += `\n\nLIGHTING SETUP:\n${proModeControls.lighting}`;
+  }
+  
+  // Environment & Surface (structured format)
+  if (proModeControls.environment) {
+    enhanced += `\n\nENVIRONMENT & SURFACE:\n${proModeControls.environment}`;
+  }
+  
+  // Add professional quality mandate
+  if (Object.keys(proModeControls).length > 0) {
+    enhanced += `\n\nPHOTOGRAPHY DIRECTIVE: Apply these professional specifications precisely. Match the technical characteristics of the specified equipment, lighting, and environment exactly.`;
+  }
+  
+  return enhanced;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -111,7 +147,9 @@ serve(async (req) => {
       parentImageId,
       isRefinement,
       refinementInstruction,
-      parentPrompt
+      parentPrompt,
+      // Pro Mode controls
+      proModeControls
     } = await req.json();
 
     console.log('🎨 Generating Madison image:', {
@@ -123,7 +161,9 @@ serve(async (req) => {
       referenceImageCount: referenceImages?.length || 0,
       hasConstraints: !!imageConstraints,
       isChainRefinement: !!isRefinement,
-      parentImageId: parentImageId || null
+      parentImageId: parentImageId || null,
+      proModeControlsReceived: !!proModeControls,
+      proModeDetails: proModeControls || null
     });
 
     // Create Supabase client for chain mode and general operations
@@ -168,10 +208,16 @@ serve(async (req) => {
       }
     }
 
-    // Enhance prompt with brand context (works for any business vertical)
+    // Build the enhanced prompt
     let enhancedPrompt = isRefinement && refinementInstruction 
       ? buildChainPrompt(parentPrompt || prompt, refinementInstruction, parentChainDepth)
       : prompt;
+    
+    // Apply Pro Mode controls FIRST (before other enhancements)
+    if (proModeControls && Object.keys(proModeControls).length > 0) {
+      console.log('🎛️ Applying Pro Mode controls:', proModeControls);
+      enhancedPrompt = applyProModeControls(enhancedPrompt, proModeControls);
+    }
     
     // Apply image constraints if provided
     if (imageConstraints) {
