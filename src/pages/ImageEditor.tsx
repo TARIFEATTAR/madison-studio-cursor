@@ -1171,7 +1171,7 @@ export default function ImageEditor() {
             )}
             <div className="px-6 py-4">
               {/* Horizontal Layout: Drop Zone + Prompt + Generate Button */}
-              <div className="flex items-stretch gap-3">
+              <div className="flex items-center gap-3">
                 {/* Drop Zone - 20-25% width */}
                 <div className="w-1/4 min-w-[180px] max-w-[240px]">
                   <ProductImageUpload
@@ -1187,7 +1187,7 @@ export default function ImageEditor() {
                   value={mainPrompt}
                   onChange={(e) => setMainPrompt(e.target.value)}
                   placeholder="Describe the image you want to create..."
-                  className="flex-1 min-h-[48px] max-h-[120px] resize-none bg-[#111111] border-zinc-700 text-[#F5F1E8] placeholder:text-zinc-500 focus-visible:ring-aged-brass/50"
+                  className="flex-1 h-12 resize-none bg-[#111111] border-zinc-700 text-[#F5F1E8] placeholder:text-zinc-500 focus-visible:ring-aged-brass/50 overflow-y-auto"
                   style={{ color: '#F5F1E8' }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
@@ -1204,7 +1204,7 @@ export default function ImageEditor() {
                   disabled={!mainPrompt.trim() || isGenerating || currentSession.images.length >= MAX_IMAGES_PER_SESSION}
                   size="lg"
                   variant="brass"
-                  className="h-12 px-6 min-w-[140px] max-w-[180px] self-stretch"
+                  className="h-12 px-6 min-w-[140px] max-w-[180px]"
                 >
                   {isGenerating ? (
                     <>
