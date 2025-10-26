@@ -30,6 +30,7 @@ export default function Library() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedContentType, setSelectedContentType] = useState("all");
   const [selectedCollection, setSelectedCollection] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortOption>("recent");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showArchived, setShowArchived] = useState(false);
@@ -63,8 +64,8 @@ export default function Library() {
   // Read status filter from URL params on mount
   useEffect(() => {
     const status = searchParams.get('status');
-    if (status && ['draft', 'review', 'scheduled', 'published'].includes(status)) {
-      setSelectedContentType(status);
+    if (status && ['draft', 'scheduled', 'published'].includes(status)) {
+      setSelectedStatus(status);
     }
   }, [searchParams]);
 
@@ -87,6 +88,11 @@ export default function Library() {
     // Filter by content type
     if (selectedContentType !== "all") {
       filtered = filtered.filter(c => c.contentType === selectedContentType);
+    }
+
+    // Filter by status (draft, scheduled, published)
+    if (selectedStatus !== "all") {
+      filtered = filtered.filter(c => c.status === selectedStatus);
     }
 
     // Filter by collection
@@ -115,6 +121,7 @@ export default function Library() {
     setSearchQuery("");
     setSelectedContentType("all");
     setSelectedCollection("all");
+    setSelectedStatus("all");
     setShowArchived(false);
   };
 
@@ -372,10 +379,11 @@ export default function Library() {
     }
   };
 
-  const hasFilters = !!searchQuery || selectedContentType !== "all" || selectedCollection !== "all" || showArchived;
+  const hasFilters = !!searchQuery || selectedContentType !== "all" || selectedCollection !== "all" || selectedStatus !== "all" || showArchived;
   const activeFilterCount = [
     selectedContentType !== "all",
-    selectedCollection !== "all", 
+    selectedCollection !== "all",
+    selectedStatus !== "all",
     showArchived
   ].filter(Boolean).length;
 
@@ -477,6 +485,15 @@ export default function Library() {
                     <X 
                       className="w-3 h-3 ml-1 cursor-pointer" 
                       onClick={() => setSelectedCollection("all")}
+                    />
+                  </Badge>
+                )}
+                {selectedStatus !== "all" && (
+                  <Badge variant="secondary" className="text-xs capitalize">
+                    {selectedStatus}
+                    <X 
+                      className="w-3 h-3 ml-1 cursor-pointer" 
+                      onClick={() => setSelectedStatus("all")}
                     />
                   </Badge>
                 )}
