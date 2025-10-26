@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -85,6 +85,7 @@ export default function MobileCreateForm({
 }: MobileCreateFormProps) {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [modalPrompt, setModalPrompt] = useState("");
+  const [isGeneratingFromModal, setIsGeneratingFromModal] = useState(false);
 
   const handleCardClick = (option: typeof CREATION_OPTIONS[0]) => {
     setSelectedOption(option.id);
@@ -95,13 +96,21 @@ export default function MobileCreateForm({
 
   const handleModalClose = () => {
     setSelectedOption(null);
+    setIsGeneratingFromModal(false);
   };
 
   const handleGenerateFromModal = () => {
     onPromptChange(modalPrompt);
+    setIsGeneratingFromModal(true);
     onGenerate();
-    handleModalClose();
   };
+
+  // Close modal automatically when generation completes
+  useEffect(() => {
+    if (isGeneratingFromModal && !isGenerating) {
+      handleModalClose();
+    }
+  }, [isGenerating, isGeneratingFromModal]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
