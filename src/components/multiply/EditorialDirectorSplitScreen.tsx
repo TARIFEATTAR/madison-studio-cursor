@@ -8,9 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X, Sparkles, Mail, Instagram, Twitter, Tag, MessageSquare, FileText, Save, CheckCircle2, XCircle, Maximize2, Minimize2, Copy } from "lucide-react";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
-import { AutosaveIndicator } from "@/components/ui/autosave-indicator";
-import { useAutoSave } from "@/hooks/useAutoSave";
-import { AUTOSAVE_CONFIG } from "@/config/autosaveConfig";
 import { ScheduleButton } from "@/components/forge/ScheduleButton";
 import { useToast } from "@/hooks/use-toast";
 
@@ -88,14 +85,6 @@ export function EditorialDirectorSplitScreen({
   );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
-  
-  // Auto-save with standard delay
-  const { saveStatus, lastSavedAt } = useAutoSave({
-    content: editedContent,
-    contentId: selectedDerivativeId,
-    contentName: `Derivative ${selectedDerivativeId}`,
-    delay: AUTOSAVE_CONFIG.STANDARD_DELAY
-  });
 
   const selectedDerivative = derivatives.find(d => d.id === selectedDerivativeId) || derivative;
   const Icon = DERIVATIVE_ICONS[selectedDerivative.typeId as keyof typeof DERIVATIVE_ICONS] || FileText;
@@ -111,6 +100,10 @@ export function EditorialDirectorSplitScreen({
       content: editedContent,
       charCount: editedContent.length,
       sequenceEmails: isSequence ? editedSequenceEmails : undefined,
+    });
+    toast({
+      title: "Changes saved",
+      description: "Your derivative content has been updated",
     });
   };
 
@@ -182,10 +175,6 @@ export function EditorialDirectorSplitScreen({
             <X className="w-4 h-4 mr-2" />
             Exit Editor
           </Button>
-          <AutosaveIndicator 
-            saveStatus={saveStatus} 
-            lastSavedAt={lastSavedAt}
-          />
         </div>
         
         <h1 className="text-lg font-serif font-semibold" style={{ color: "#1A1816" }}>
