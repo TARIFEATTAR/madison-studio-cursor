@@ -10,6 +10,7 @@ import { PublishingStatus } from "./PublishingStatus";
 import { PublishingDrawer } from "./PublishingDrawer";
 import { BrandAlignmentButton } from "./BrandAlignmentButton";
 import { useState } from "react";
+import { getContentSubtypeLabel, getContentCategoryLabel } from "@/utils/contentSubtypeLabels";
 
 interface ContentCardProps {
   content: {

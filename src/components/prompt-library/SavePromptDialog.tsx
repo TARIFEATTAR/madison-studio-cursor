@@ -34,6 +34,8 @@ interface SavePromptDialogProps {
   promptText: string;
   suggestedTitle?: string;
   onSaved?: () => void;
+  // When provided, we tag the prompt for a specific deliverable collection
+  deliverableFormat?: string;
 }
 
 export function SavePromptDialog({
@@ -42,6 +44,7 @@ export function SavePromptDialog({
   promptText,
   suggestedTitle = "",
   onSaved,
+  deliverableFormat,
 }: SavePromptDialogProps) {
   const { currentOrganizationId } = useOnboarding();
   const { toast } = useToast();
@@ -107,12 +110,20 @@ export function SavePromptDialog({
     }
   };
 
-  // Set suggested title when dialog opens
-  useEffect(() => {
-    if (open && suggestedTitle) {
-      setTitle(suggestedTitle);
-    }
-  }, [open, suggestedTitle]);
+// Set suggested title when dialog opens
+useEffect(() => {
+  if (open && suggestedTitle) {
+    setTitle(suggestedTitle);
+  }
+}, [open, suggestedTitle]);
+
+// Pre-fill for image prompts
+useEffect(() => {
+  if (open && deliverableFormat === 'image_prompt') {
+    if (!selectedCategory) setSelectedCategory('visual');
+    if (!selectedContentType) setSelectedContentType('image');
+  }
+}, [open, deliverableFormat]);
 
   // Reset form when dialog closes
   useEffect(() => {
@@ -200,24 +211,25 @@ export function SavePromptDialog({
       return;
     }
 
-    setIsSaving(true);
+setIsSaving(true);
 
-    try {
-      const { error } = await supabase.from("prompts").insert({
-        title: title.trim(),
-        description: description.trim() || null,
-        prompt_text: editedPromptText,
-        content_type: selectedContentType as any,
-        collection: selectedCollection as any,
-        tags: tags.length > 0 ? tags : null,
-        is_template: isTemplate,
-        meta_instructions: {
-          category: selectedCategory,
-          field_mappings: enableFieldMapping ? fieldMappings : undefined,
-        },
-        organization_id: currentOrganizationId,
-        created_by: (await supabase.auth.getUser()).data.user?.id,
-      });
+try {
+  const { error } = await supabase.from("prompts").insert({
+    title: title.trim(),
+    description: description.trim() || null,
+    prompt_text: editedPromptText,
+    content_type: selectedContentType as any,
+    collection: selectedCollection as any,
+    tags: tags.length > 0 ? tags : null,
+    is_template: isTemplate,
+    meta_instructions: {
+      category: selectedCategory,
+      field_mappings: enableFieldMapping ? fieldMappings : undefined,
+    },
+    organization_id: currentOrganizationId,
+    created_by: (await supabase.auth.getUser()).data.user?.id,
+    deliverable_format: deliverableFormat ?? null,
+  });
 
       if (error) throw error;
 
