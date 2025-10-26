@@ -32,7 +32,7 @@ export function useSmartDashboardInsights(): DashboardInsight {
     // Priority 1: Many drafts ready
     if (drafts >= 3) {
       return {
-        message: `You have ${drafts} unpublished draft${drafts > 1 ? 's' : ''} (content pieces not yet published). Review and schedule them?`,
+        message: `You have ${drafts} unpublished master content piece${drafts > 1 ? 's' : ''} (your primary blog posts, social posts, etc.). Review and schedule them?`,
         primaryAction: {
           label: "Review Drafts",
           handler: () => navigate("/library?status=draft"),

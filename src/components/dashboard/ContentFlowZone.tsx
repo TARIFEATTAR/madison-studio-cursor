@@ -73,7 +73,10 @@ export function ContentFlowZone() {
 
       {/* Content Pipeline */}
       <Card className="col-span-1 md:col-span-8 p-4 md:p-6 bg-white border border-[#E0E0E0] overflow-hidden rounded-xl min-h-[240px]">
-        <h3 className="text-sm font-medium text-[#1C150D]/60 mb-4 md:mb-5">Content Pipeline</h3>
+        <div className="mb-4 md:mb-5">
+          <h3 className="text-sm font-medium text-[#1C150D]/60">Content Pipeline</h3>
+          <p className="text-xs text-[#1C150D]/40 mt-0.5">Master content pieces (blog posts, social posts, etc.)</p>
+        </div>
         <div className="grid grid-cols-3 gap-3">
           {pipelineStages.map((stage) => (
             <button
