@@ -7,7 +7,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { BrandPulseBar } from "@/components/dashboard/BrandPulseBar";
 import { ContentFlowZone } from "@/components/dashboard/ContentFlowZone";
 import { PerformanceMomentumZone } from "@/components/dashboard/PerformanceMomentumZone";
-import MadisonFloatingButton from "@/components/image-editor/MadisonFloatingButton";
 import MadisonPanel from "@/components/image-editor/MadisonPanel";
 
 export default function DashboardNew() {
@@ -56,7 +55,7 @@ export default function DashboardNew() {
     <div className="h-screen overflow-hidden bg-[#FFFCF5] flex flex-col">
       {/* ZONE 1: Brand Pulse Bar - 180px */}
       <div className="h-[180px] border-b border-[#E7E1D4] px-6 py-4">
-        <BrandPulseBar />
+        <BrandPulseBar onOpenMadison={() => setMadisonPanelOpen(true)} />
       </div>
 
       {/* ZONE 2: Content Flow - 380px */}
@@ -69,8 +68,7 @@ export default function DashboardNew() {
         <PerformanceMomentumZone />
       </div>
 
-      {/* Madison AI Assistant - Floating */}
-      <MadisonFloatingButton onClick={() => setMadisonPanelOpen(true)} />
+      {/* Madison AI Assistant Panel */}
       <MadisonPanel 
         isOpen={madisonPanelOpen} 
         onToggle={() => setMadisonPanelOpen(!madisonPanelOpen)}

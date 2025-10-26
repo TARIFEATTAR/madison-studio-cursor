@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FileText, Eye, Calendar as CalendarIcon, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -6,6 +7,7 @@ import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function ContentFlowZone() {
+  const navigate = useNavigate();
   const { data: stats, isLoading } = useDashboardStats();
 
   const pipelineStages = [
@@ -71,6 +73,7 @@ export function ContentFlowZone() {
           {pipelineStages.map((stage) => (
             <div
               key={stage.id}
+              onClick={() => navigate('/library')}
               className="flex flex-col p-3 rounded-lg border transition-all duration-200 hover:shadow-md hover:-translate-y-1 cursor-pointer"
               style={{
                 backgroundColor: `${stage.color}20`,
@@ -92,7 +95,13 @@ export function ContentFlowZone() {
                   backgroundColor: `${stage.color}30`,
                 }}
               />
-              <button className="text-xs text-[#1C150D]/60 hover:text-[#1C150D] mt-auto pt-2">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate('/library');
+                }}
+                className="text-xs text-[#1C150D]/60 hover:text-[#1C150D] mt-auto pt-2"
+              >
                 View Items →
               </button>
             </div>

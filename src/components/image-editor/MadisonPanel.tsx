@@ -263,24 +263,24 @@ export default function MadisonPanel({
     );
   }
 
-  // Desktop: Side Panel
+  // Desktop: Side Panel (Light Mode)
   return (
     <div
       className={cn(
         "fixed top-0 right-0 h-full z-[30]",
-        "bg-zinc-950/95 backdrop-blur-sm border-l border-zinc-800",
-        "shadow-[-4px_0_24px_rgba(0,0,0,0.4)]",
+        "bg-[#FFFCF5]/95 backdrop-blur-sm border-l border-[#E7E1D4]",
+        "shadow-[-4px_0_24px_rgba(0,0,0,0.1)]",
         "transition-all duration-300 ease-out",
         "w-full md:w-[360px] lg:w-[300px] xl:w-[360px]",
         isOpen ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between h-12 px-4 border-b border-zinc-800 bg-zinc-950">
+      <div className="flex items-center justify-between h-12 px-4 border-b border-[#E7E1D4] bg-white">
         <div className="flex items-center gap-3">
-          <Sparkles className="w-4 h-4 text-aged-brass" />
-          <span className="font-semibold text-aged-brass text-sm">Madison</span>
-          <span className="text-xs text-zinc-500 font-medium">
+          <Sparkles className="w-4 h-4 text-[#B8956A]" />
+          <span className="font-semibold text-[#B8956A] text-sm">Madison</span>
+          <span className="text-xs text-[#1C150D]/60 font-medium">
             Session {sessionCount}/{maxImages}
           </span>
         </div>
@@ -289,7 +289,7 @@ export default function MadisonPanel({
           variant="ghost"
           size="icon"
           onClick={onToggle}
-          className="h-8 w-8 text-zinc-400 hover:text-aged-paper hover:bg-zinc-800/50"
+          className="h-8 w-8 text-[#1C150D]/60 hover:text-[#1C150D] hover:bg-[#E7E1D4]/50"
         >
           <X className="w-4 h-4" />
         </Button>
@@ -300,12 +300,12 @@ export default function MadisonPanel({
         <div className="space-y-4 pb-4">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center py-12">
-              <Sparkles className="w-12 h-12 text-aged-brass/40 mb-4" />
-              <p className="text-zinc-400 text-sm">
-                Madison is ready to assist with your image generation.
+              <Sparkles className="w-12 h-12 text-[#B8956A]/40 mb-4" />
+              <p className="text-[#1C150D]/80 text-sm">
+                Madison is ready to assist with your dashboard insights.
               </p>
-              <p className="text-zinc-500 text-xs mt-2">
-                Ask for feedback, refinements, or creative suggestions.
+              <p className="text-[#1C150D]/60 text-xs mt-2">
+                Ask for feedback, guidance, or strategic suggestions.
               </p>
             </div>
           ) : (
@@ -319,24 +319,24 @@ export default function MadisonPanel({
               >
                 {msg.role === "madison" ? (
                   <div className="relative max-w-[85%] group">
-                    <div className="bg-zinc-900 text-studio-text-primary border border-zinc-800 font-serif rounded-lg px-3 py-2 text-sm">
+                    <div className="bg-white text-[#1C150D] border border-[#E7E1D4] font-serif rounded-lg px-3 py-2 text-sm">
                       {msg.content}
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleCopyMessage(msg.content, msg.id)}
-                      className="absolute -top-2 -right-2 h-6 w-6 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded-full md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity"
+                      className="absolute -top-2 -right-2 h-6 w-6 bg-[#E7E1D4] hover:bg-[#D9D2C2] text-[#1C150D] rounded-full md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity"
                     >
                       {copiedMessageId === msg.id ? (
-                        <Check className="w-3 h-3 text-green-400" />
+                        <Check className="w-3 h-3 text-[#A3C98D]" />
                       ) : (
                         <Copy className="w-3 h-3" />
                       )}
                     </Button>
                   </div>
                 ) : (
-                  <div className="max-w-[85%] bg-aged-brass/10 text-studio-text-primary border border-aged-brass/30 rounded-lg px-3 py-2 text-sm">
+                  <div className="max-w-[85%] bg-[#B8956A]/10 text-[#1C150D] border border-[#B8956A]/30 rounded-lg px-3 py-2 text-sm">
                     {msg.content}
                   </div>
                 )}
@@ -348,22 +348,21 @@ export default function MadisonPanel({
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="absolute bottom-0 left-0 right-0 flex items-end gap-2 px-4 py-3 border-t border-zinc-800 bg-zinc-950">
+      <div className="absolute bottom-0 left-0 right-0 flex items-end gap-2 px-4 py-3 border-t border-[#E7E1D4] bg-white">
         <Textarea
           ref={textareaRef}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask Madison for feedback…"
-          className="flex-1 min-h-[44px] max-h-[120px] resize-none bg-zinc-900 border-zinc-700 text-studio-text-primary placeholder:text-studio-text-muted focus-visible:ring-aged-brass/50"
+          className="flex-1 min-h-[44px] max-h-[120px] resize-none bg-[#FFFCF5] border-[#E7E1D4] text-[#1C150D] placeholder:text-[#1C150D]/60 focus-visible:ring-[#B8956A]/50"
           disabled={isSending}
         />
         <Button
           onClick={handleSend}
           disabled={!inputValue.trim() || isSending}
           size="icon"
-          variant="brass"
-          className="h-[44px] w-[44px] shrink-0"
+          className="h-[44px] w-[44px] shrink-0 bg-[#B8956A] hover:bg-[#A3865A] text-white"
         >
           <Send className="w-4 h-4" />
         </Button>

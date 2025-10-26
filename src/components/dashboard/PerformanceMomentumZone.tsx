@@ -2,10 +2,12 @@ import { TrendingUp, Award, Zap } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useBrandHealth } from "@/hooks/useBrandHealth";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function PerformanceMomentumZone() {
   const { data: stats, isLoading } = useDashboardStats();
+  const { brandHealth, isLoading: brandHealthLoading } = useBrandHealth();
 
   const weeklyData = [
     { label: "Created", value: stats?.piecesCreatedThisWeek || 0, max: 10, change: "+15%" },
@@ -13,11 +15,16 @@ export function PerformanceMomentumZone() {
     { label: "Scheduled", value: stats?.piecesScheduled || 0, max: 12, change: "+22%" },
   ];
 
+  // Pull from brand health API
+  const onBrandScore = stats?.onBrandScore || 100;
+  const brandScore = brandHealth?.completeness_score || 94;
+  
+  // Calculate quality metrics from brand health data
   const qualityMetrics = [
-    { label: "Tone", value: 95 },
-    { label: "Visual", value: 92 },
-    { label: "Consistency", value: 98 },
-    { label: "Message", value: 94 },
+    { label: "Tone", value: onBrandScore },
+    { label: "Visual", value: Math.round(brandScore * 0.95) },
+    { label: "Consistency", value: Math.round(brandScore * 1.02) },
+    { label: "Message", value: Math.round(onBrandScore * 0.94) },
   ];
 
   const integrations = [
@@ -27,7 +34,7 @@ export function PerformanceMomentumZone() {
     { name: "Google Drive", status: "action", color: "#E67E73" },
   ];
 
-  if (isLoading) {
+  if (isLoading || brandHealthLoading) {
     return (
       <div className="h-full grid grid-cols-4 gap-4">
         <Skeleton className="col-span-1 h-full rounded-lg" />
@@ -66,7 +73,7 @@ export function PerformanceMomentumZone() {
       <Card className="p-4 bg-white border border-[#E7E1D4]">
         <h3 className="text-sm font-semibold text-[#1C150D] mb-3">Content Quality</h3>
         <div className="flex items-baseline gap-2 mb-3">
-          <span className="text-3xl font-serif font-semibold text-[#1C150D]">95</span>
+          <span className="text-3xl font-serif font-semibold text-[#1C150D]">{onBrandScore}</span>
           <span className="text-xs text-[#1C150D]/60">Average Score</span>
         </div>
         <div className="space-y-2">

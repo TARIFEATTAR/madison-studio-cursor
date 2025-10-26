@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PenLine, Calendar, Library, Flame, Shield } from "lucide-react";
+import { PenLine, Calendar, Library, Flame, Shield, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -9,7 +9,11 @@ import { useStreakCalculation } from "@/hooks/useStreakCalculation";
 import { useBrandHealth } from "@/hooks/useBrandHealth";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function BrandPulseBar() {
+interface BrandPulseBarProps {
+  onOpenMadison: () => void;
+}
+
+export function BrandPulseBar({ onOpenMadison }: BrandPulseBarProps) {
   const navigate = useNavigate();
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: streakData, isLoading: streakLoading } = useStreakCalculation();
@@ -53,9 +57,9 @@ export function BrandPulseBar() {
 
   return (
     <div className="h-full flex gap-4">
-      {/* Brand Health Card */}
+      {/* Brand Health Card - Narrower */}
       <Card 
-        className="flex-1 p-4 bg-white border border-[#E7E1D4] cursor-pointer hover:shadow-lg transition-shadow"
+        className="w-[320px] p-4 bg-white border border-[#E7E1D4] cursor-pointer hover:shadow-lg transition-shadow"
         onClick={() => navigate("/brand-health")}
       >
         <div className="flex items-center gap-4 h-full">
@@ -99,8 +103,8 @@ export function BrandPulseBar() {
         </div>
       </Card>
 
-      {/* Your Next Move Card */}
-      <Card className="flex-1 p-4 bg-white border border-[#E7E1D4]">
+      {/* Your Next Move Card - Narrower */}
+      <Card className="w-[400px] p-4 bg-white border border-[#E7E1D4]">
         <div className="flex flex-col h-full justify-between">
           <div>
             <h3 className="text-sm font-semibold text-[#1C150D] mb-2">Your Next Move</h3>
@@ -118,8 +122,8 @@ export function BrandPulseBar() {
         </div>
       </Card>
 
-      {/* Quick Actions + Streak */}
-      <Card className="w-[280px] p-4 bg-white border border-[#E7E1D4]">
+      {/* Quick Actions + Streak - Expands to fill space */}
+      <Card className="flex-1 p-4 bg-white border border-[#E7E1D4]">
         <div className="flex flex-col h-full justify-between">
           <div className="flex gap-2 mb-3">
             <Button
@@ -178,6 +182,16 @@ export function BrandPulseBar() {
           </div>
         </div>
       </Card>
+
+      {/* Ask Madison Button */}
+      <Button
+        size="sm"
+        onClick={onOpenMadison}
+        className="h-full px-6 bg-[#B8956A] hover:bg-[#A3865A] text-white flex items-center gap-2"
+      >
+        <Sparkles className="w-4 h-4" />
+        Ask Madison
+      </Button>
     </div>
   );
 }
