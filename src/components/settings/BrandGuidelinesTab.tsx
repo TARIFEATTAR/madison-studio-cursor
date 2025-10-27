@@ -11,6 +11,8 @@ import { IndustrySelector } from "./IndustrySelector";
 import { BrandKnowledgeCenter } from "@/components/onboarding/BrandKnowledgeCenter";
 import { BrandDocumentStatus } from "./BrandDocumentStatus";
 import { BrandKnowledgeManager } from "./BrandKnowledgeManager";
+import { BrandKnowledgeStatus } from "./BrandKnowledgeStatus";
+import { BrandKnowledgeDebugPanel } from "./BrandKnowledgeDebugPanel";
 import { FileText } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -132,6 +134,11 @@ export function BrandGuidelinesTab() {
     <div className="space-y-8">
       <IndustrySelector />
 
+      {/* Brand Knowledge Status - Real-time visibility */}
+      {currentOrganizationId && (
+        <BrandKnowledgeStatus organizationId={currentOrganizationId} />
+      )}
+
       {/* Brand Knowledge Manager - New Section */}
       {currentOrganizationId && (
         <>
@@ -143,6 +150,14 @@ export function BrandGuidelinesTab() {
       {/* Brand Knowledge Center - AI-Powered Document Processing */}
       {currentOrganizationId && (
         <BrandKnowledgeCenter organizationId={currentOrganizationId} />
+      )}
+
+      {/* Brand Knowledge Debug Panel - Developer Tools */}
+      {currentOrganizationId && (
+        <>
+          <Separator className="my-8" />
+          <BrandKnowledgeDebugPanel organizationId={currentOrganizationId} />
+        </>
       )}
     </div>
   );

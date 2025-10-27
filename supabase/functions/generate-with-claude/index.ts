@@ -298,6 +298,22 @@ async function buildBrandContext(organizationId: string) {
       console.error('Error fetching brand knowledge:', knowledgeError);
     }
     
+    // ✨ BRAND KNOWLEDGE TRANSPARENCY LOGGING
+    console.log('[BRAND KNOWLEDGE CHECK]', {
+      organizationId,
+      knowledgeCount: knowledgeData?.length || 0,
+      knowledgeTypes: knowledgeData?.map(k => k.knowledge_type) || [],
+      activeDocuments: knowledgeData?.map(k => ({
+        type: k.knowledge_type,
+        contentSize: k.content ? JSON.stringify(k.content).length : 0,
+        hasRawDocument: !!(k.content as any)?.raw_document,
+        rawDocLength: (k.content as any)?.raw_document?.length || 0
+      })) || [],
+      totalContentSize: knowledgeData?.reduce((sum, k) => 
+        sum + (k.content ? JSON.stringify(k.content).length : 0), 0
+      ) || 0
+    });
+    
     // Extract visual standards separately
     const visualStandardsEntry = knowledgeData?.find(k => k.knowledge_type === 'visual_standards');
     const visualStandards = visualStandardsEntry?.content as any;

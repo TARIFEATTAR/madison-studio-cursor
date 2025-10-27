@@ -65,6 +65,21 @@ async function buildBrandContext(supabaseClient: any, organizationId: string) {
       console.error('Error fetching brand knowledge:', knowledgeError);
     }
     
+    // ✨ BRAND KNOWLEDGE TRANSPARENCY LOGGING
+    console.log('[BRAND KNOWLEDGE CHECK]', {
+      organizationId,
+      knowledgeCount: knowledgeData?.length || 0,
+      knowledgeTypes: knowledgeData?.map(k => k.knowledge_type) || [],
+      totalBytes: knowledgeData?.reduce((sum, k) => 
+        sum + JSON.stringify(k.content).length, 0
+      ) || 0,
+      priorityTypes: {
+        hasBrandVoice: knowledgeData?.some(k => k.knowledge_type === 'brand_voice'),
+        hasVocabulary: knowledgeData?.some(k => k.knowledge_type === 'vocabulary'),
+        hasVisualStandards: knowledgeData?.some(k => k.knowledge_type === 'visual_standards')
+      }
+    });
+    
     // Fetch organization brand config
     const { data: orgData, error: orgError } = await supabaseClient
       .from('organizations')
