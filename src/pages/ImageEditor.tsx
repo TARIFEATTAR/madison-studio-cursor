@@ -612,7 +612,13 @@ export default function ImageEditor() {
   const handleMobileRefine = async (instruction: string) => {
     const latestImage = currentSession.images[currentSession.images.length - 1];
     if (!latestImage || !user) {
-      toast.error("No image to refine");
+      // Fallback: if we don't have a latest saved image yet, run a fresh generation
+      try {
+        await handleGenerate(instruction || mainPrompt);
+      } catch (e) {
+        console.error('Fallback generate failed:', e);
+        toast.error("Unable to generate image. Please try again.");
+      }
       return;
     }
     
