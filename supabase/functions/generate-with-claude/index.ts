@@ -123,6 +123,156 @@ async function getMadisonSystemConfig() {
   }
 }
 
+// Helper function to fetch copywriting style options
+async function fetchCopywritingOptions(industryType: string, contentFormat: string) {
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  
+  try {
+    console.log(`Fetching copywriting options for industry: ${industryType}, format: ${contentFormat}`);
+    
+    // Query copywriting_style_mappings for compatible options
+    const { data: mappings, error: mappingsError } = await supabase
+      .from('copywriting_style_mappings')
+      .select('*')
+      .eq('industry_type', industryType)
+      .eq('content_format', contentFormat);
+    
+    if (mappingsError) {
+      console.error('Error fetching copywriting mappings:', mappingsError);
+      return null;
+    }
+    
+    if (!mappings || mappings.length === 0) {
+      console.log('No copywriting mappings found for this combination');
+      return null;
+    }
+    
+    // Get unique copywriter names from mappings
+    const copywriterNames = new Set<string>();
+    mappings.forEach(m => {
+      copywriterNames.add(m.primary_copywriter);
+      if (m.secondary_copywriter) copywriterNames.add(m.secondary_copywriter);
+    });
+    
+    // Fetch copywriter techniques
+    const { data: techniques, error: techniquesError } = await supabase
+      .from('copywriter_techniques')
+      .select('*')
+      .in('copywriter_name', Array.from(copywriterNames));
+    
+    if (techniquesError) {
+      console.error('Error fetching copywriter techniques:', techniquesError);
+    }
+    
+    // Get unique framework codes from mappings
+    const frameworkCodes = new Set<string>();
+    mappings.forEach(m => frameworkCodes.add(m.persuasion_framework));
+    
+    // Fetch marketing frameworks
+    const { data: frameworks, error: frameworksError } = await supabase
+      .from('marketing_frameworks')
+      .select('*')
+      .in('framework_code', Array.from(frameworkCodes));
+    
+    if (frameworksError) {
+      console.error('Error fetching marketing frameworks:', frameworksError);
+    }
+    
+    return {
+      mappings,
+      techniques: techniques || [],
+      frameworks: frameworks || []
+    };
+  } catch (error) {
+    console.error('Error in fetchCopywritingOptions:', error);
+    return null;
+  }
+}
+
+// Helper function to build copywriting style context for Claude selection
+function buildStyleSelectionPrompt(options: any, brandContext: string, productData: any, contentType: string) {
+  const parts = [];
+  
+  parts.push('╔══════════════════════════════════════════════════════════════════╗');
+  parts.push('║          COPYWRITING STYLE SELECTION PHASE                       ║');
+  parts.push('║     (Intelligently select the best approach for this content)   ║');
+  parts.push('╚══════════════════════════════════════════════════════════════════╝');
+  parts.push('');
+  
+  parts.push('🎯 YOUR TASK:');
+  parts.push('Analyze the brand context, product details, and available copywriting styles below.');
+  parts.push('Select ONE style combination that will best serve this specific content piece.');
+  parts.push('');
+  
+  // Available mappings
+  parts.push('━━━ AVAILABLE STYLE COMBINATIONS ━━━');
+  parts.push('');
+  options.mappings.forEach((mapping: any, index: number) => {
+    parts.push(`OPTION ${index + 1}:`);
+    parts.push(`  • Primary Copywriter: ${mapping.primary_copywriter}`);
+    if (mapping.secondary_copywriter) {
+      parts.push(`  • Secondary Copywriter: ${mapping.secondary_copywriter} (blend)`);
+    }
+    parts.push(`  • Framework: ${mapping.persuasion_framework}`);
+    parts.push(`  • Voice Spectrum: ${mapping.voice_spectrum}`);
+    parts.push(`  • Urgency Level: ${mapping.urgency_level}`);
+    if (mapping.key_hooks && mapping.key_hooks.length > 0) {
+      parts.push(`  • Key Hooks: ${mapping.key_hooks.join(', ')}`);
+    }
+    if (mapping.example_snippet) {
+      parts.push(`  • Example: "${mapping.example_snippet}"`);
+    }
+    parts.push('');
+  });
+  
+  // Copywriter techniques detail
+  parts.push('━━━ COPYWRITER TECHNIQUES LIBRARY ━━━');
+  parts.push('');
+  options.techniques.forEach((technique: any) => {
+    parts.push(`${technique.copywriter_name.toUpperCase()} (${technique.copywriter_era}):`);
+    parts.push(`  Philosophy: ${technique.core_philosophy}`);
+    if (technique.writing_style_traits && technique.writing_style_traits.length > 0) {
+      parts.push(`  Style Traits: ${technique.writing_style_traits.join(', ')}`);
+    }
+    if (technique.best_use_cases && technique.best_use_cases.length > 0) {
+      parts.push(`  Best For: ${technique.best_use_cases.join(', ')}`);
+    }
+    parts.push('');
+  });
+  
+  // Framework details
+  parts.push('━━━ MARKETING FRAMEWORKS LIBRARY ━━━');
+  parts.push('');
+  options.frameworks.forEach((framework: any) => {
+    parts.push(`${framework.framework_code} - ${framework.framework_name}:`);
+    parts.push(`  Category: ${framework.framework_category}`);
+    parts.push(`  Description: ${framework.description}`);
+    parts.push(`  When to Use: ${framework.when_to_use}`);
+    parts.push('');
+  });
+  
+  parts.push('━━━ SELECTION CRITERIA ━━━');
+  parts.push('');
+  parts.push('Consider:');
+  parts.push('1. Brand voice and tone from the brand guidelines');
+  parts.push('2. Product collection theme and positioning');
+  parts.push('3. Content format requirements');
+  parts.push('4. What style will resonate best with this specific product/message');
+  parts.push('5. Diversity - avoid repeating the same style if this is part of a series');
+  parts.push('');
+  parts.push('⚠️ OUTPUT FORMAT:');
+  parts.push('First, output EXACTLY ONE line in this format:');
+  parts.push('SELECTED_STYLE: [primary_copywriter]|[secondary_copywriter or NONE]|[framework_code]');
+  parts.push('');
+  parts.push('Example: SELECTED_STYLE: J. Peterman|David Ogilvy|AIDA');
+  parts.push('Example: SELECTED_STYLE: David Ogilvy|NONE|FAB');
+  parts.push('');
+  parts.push('Then, generate the content using that selected style.');
+  parts.push('');
+  
+  return parts.join('\n');
+}
+
 // Helper function to build brand context from database
 async function buildBrandContext(organizationId: string) {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -572,6 +722,46 @@ serve(async (req) => {
       }
     }
 
+    // ========== PHASE 3: DYNAMIC COPYWRITING STYLE SELECTION ==========
+    let copywritingStyleContext = '';
+    let usePhase3 = false;
+    
+    // Fetch organization's industry type for Phase 3
+    if (organizationId && mode === "generate") {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const { data: orgData } = await supabase
+        .from('organizations')
+        .select('industry_type')
+        .eq('id', organizationId)
+        .maybeSingle();
+      
+      if (orgData?.industry_type && contentType) {
+        console.log('[PHASE 3] Attempting dynamic style selection');
+        console.log(`[PHASE 3] Industry: ${orgData.industry_type}, Content Type: ${contentType}`);
+        
+        // Fetch copywriting options
+        const copywritingOptions = await fetchCopywritingOptions(orgData.industry_type, contentType);
+        
+        if (copywritingOptions && copywritingOptions.mappings.length > 0) {
+          console.log(`[PHASE 3] Found ${copywritingOptions.mappings.length} style options`);
+          usePhase3 = true;
+          
+          // Build brand context for selection
+          const brandContext = await buildBrandContext(organizationId);
+          
+          // Build style selection prompt
+          copywritingStyleContext = buildStyleSelectionPrompt(
+            copywritingOptions,
+            brandContext,
+            enrichedProductData,
+            contentType
+          );
+        } else {
+          console.log('[PHASE 3] No copywriting options found, falling back to legacy style overlays');
+        }
+      }
+    }
+    
     // Build brand-aware system prompt based on mode
     let systemPrompt = '';
     
@@ -861,6 +1051,12 @@ DO NOT invent or reference specific products, SKUs, or product details.
       if (brandContext) {
         if (mode === "generate") {
           // GENERATE MODE: Ghostwriter role with Codex v2
+          
+          // Use Phase 3 dynamic style selection if available, otherwise use legacy style overlays
+          const styleSection = usePhase3 
+            ? copywritingStyleContext 
+            : selectedStyleOverlay;
+          
           systemPrompt = `${madisonSystemConfig}
 
 ${brandContext}
@@ -869,7 +1065,7 @@ ${mandatoryProductSpecs}
 
 ${productContext}
 
-${selectedStyleOverlay}
+${styleSection}
 
 ${productGuidance}
 
