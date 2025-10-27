@@ -506,6 +506,96 @@ export type Database = {
           },
         ]
       }
+      copywriter_techniques: {
+        Row: {
+          best_use_cases: string[] | null
+          blending_notes: string | null
+          copywriter_era: string
+          copywriter_name: string
+          core_philosophy: string
+          created_at: string | null
+          example_body_copy: string | null
+          example_headlines: string[] | null
+          id: string
+          signature_techniques: Json
+          updated_at: string | null
+          writing_style_traits: string[] | null
+        }
+        Insert: {
+          best_use_cases?: string[] | null
+          blending_notes?: string | null
+          copywriter_era: string
+          copywriter_name: string
+          core_philosophy: string
+          created_at?: string | null
+          example_body_copy?: string | null
+          example_headlines?: string[] | null
+          id?: string
+          signature_techniques: Json
+          updated_at?: string | null
+          writing_style_traits?: string[] | null
+        }
+        Update: {
+          best_use_cases?: string[] | null
+          blending_notes?: string | null
+          copywriter_era?: string
+          copywriter_name?: string
+          core_philosophy?: string
+          created_at?: string | null
+          example_body_copy?: string | null
+          example_headlines?: string[] | null
+          id?: string
+          signature_techniques?: Json
+          updated_at?: string | null
+          writing_style_traits?: string[] | null
+        }
+        Relationships: []
+      }
+      copywriting_style_mappings: {
+        Row: {
+          content_format: string
+          created_at: string | null
+          example_snippet: string | null
+          id: string
+          industry_type: string
+          key_hooks: string[] | null
+          persuasion_framework: string
+          primary_copywriter: string
+          secondary_copywriter: string | null
+          updated_at: string | null
+          urgency_level: string
+          voice_spectrum: string
+        }
+        Insert: {
+          content_format: string
+          created_at?: string | null
+          example_snippet?: string | null
+          id?: string
+          industry_type: string
+          key_hooks?: string[] | null
+          persuasion_framework: string
+          primary_copywriter: string
+          secondary_copywriter?: string | null
+          updated_at?: string | null
+          urgency_level: string
+          voice_spectrum: string
+        }
+        Update: {
+          content_format?: string
+          created_at?: string | null
+          example_snippet?: string | null
+          id?: string
+          industry_type?: string
+          key_hooks?: string[] | null
+          persuasion_framework?: string
+          primary_copywriter?: string
+          secondary_copywriter?: string | null
+          updated_at?: string | null
+          urgency_level?: string
+          voice_spectrum?: string
+        }
+        Relationships: []
+      }
       derivative_assets: {
         Row: {
           approval_status: string | null
@@ -875,6 +965,51 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_frameworks: {
+        Row: {
+          created_at: string | null
+          description: string
+          examples: Json
+          framework_category: string
+          framework_code: string
+          framework_name: string
+          id: string
+          strengths: string[] | null
+          structure_template: Json
+          updated_at: string | null
+          weaknesses: string[] | null
+          when_to_use: string
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          examples: Json
+          framework_category: string
+          framework_code: string
+          framework_name: string
+          id?: string
+          strengths?: string[] | null
+          structure_template: Json
+          updated_at?: string | null
+          weaknesses?: string[] | null
+          when_to_use: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          examples?: Json
+          framework_category?: string
+          framework_code?: string
+          framework_name?: string
+          id?: string
+          strengths?: string[] | null
+          structure_template?: Json
+          updated_at?: string | null
+          weaknesses?: string[] | null
+          when_to_use?: string
+        }
+        Relationships: []
+      }
       marketplace_listings: {
         Row: {
           archived_at: string | null
@@ -1071,38 +1206,47 @@ export type Database = {
       organizations: {
         Row: {
           brand_config: Json | null
+          business_model: string | null
           created_at: string | null
           created_by: string | null
           deleted_at: string | null
           id: string
+          industry_type: string | null
           is_deleted: boolean
           name: string
           settings: Json | null
           slug: string | null
+          target_audience_type: string | null
           updated_at: string | null
         }
         Insert: {
           brand_config?: Json | null
+          business_model?: string | null
           created_at?: string | null
           created_by?: string | null
           deleted_at?: string | null
           id?: string
+          industry_type?: string | null
           is_deleted?: boolean
           name: string
           settings?: Json | null
           slug?: string | null
+          target_audience_type?: string | null
           updated_at?: string | null
         }
         Update: {
           brand_config?: Json | null
+          business_model?: string | null
           created_at?: string | null
           created_by?: string | null
           deleted_at?: string | null
           id?: string
+          industry_type?: string | null
           is_deleted?: boolean
           name?: string
           settings?: Json | null
           slug?: string | null
+          target_audience_type?: string | null
           updated_at?: string | null
         }
         Relationships: []
