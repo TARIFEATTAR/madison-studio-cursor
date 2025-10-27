@@ -535,15 +535,24 @@ export default function ImageEditor() {
 
   const saveLatestImageToLibrary = async () => {
     const latestImage = currentSession.images[currentSession.images.length - 1];
-    if (!latestImage) return;
+    if (!latestImage) {
+      toast.error("No image to save");
+      return;
+    }
     
+    setIsSaving(true);
     try {
+      console.log('💾 Saving image to library:', latestImage.id);
+      
       const { error } = await supabase
         .from('generated_images')
         .update({ saved_to_library: true })
         .eq('id', latestImage.id);
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Database error:', error);
+        throw error;
+      }
       
       // Update local state to mark as flagged
       setCurrentSession(prev => ({
@@ -559,14 +568,31 @@ export default function ImageEditor() {
       setShowGeneratedView(false);
       setActiveTab("gallery");
     } catch (error) {
-      console.error('Save error:', error);
-      toast.error("Failed to save image");
+      console.error('❌ Save error:', error);
+      toast.error("Failed to save image. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleMobileRefine = async (instruction: string) => {
     const latestImage = currentSession.images[currentSession.images.length - 1];
-    if (!latestImage || !user) return;
+    if (!latestImage || !user) {
+      toast.error("No image to refine");
+      return;
+    }
+    
+    // Check chain depth limit before attempting refinement
+    if (latestImage.chainDepth >= 5) {
+      toast.error("Maximum refinement depth reached (5 iterations). Please start a new generation.");
+      return;
+    }
+    
+    console.log('🔄 Starting refinement:', {
+      parentImageId: latestImage.id,
+      currentChainDepth: latestImage.chainDepth,
+      instruction: instruction.substring(0, 50) + '...'
+    });
     
     setIsGenerating(true);
     
@@ -591,8 +617,19 @@ export default function ImageEditor() {
         }
       );
 
-      if (functionError) throw functionError;
-      if (!functionData?.imageUrl) throw new Error("No image returned");
+      if (functionError) {
+        console.error('❌ Function error:', functionError);
+        throw functionError;
+      }
+      if (!functionData?.imageUrl) {
+        console.error('❌ No image URL in response:', functionData);
+        throw new Error("No image returned from generation");
+      }
+
+      console.log('✅ Refinement successful:', {
+        newImageId: functionData.savedImageId,
+        newChainDepth: latestImage.chainDepth + 1
+      });
 
       const newImage: GeneratedImage = {
         id: functionData.savedImageId || crypto.randomUUID(),
@@ -613,12 +650,11 @@ export default function ImageEditor() {
       }));
 
       setLatestGeneratedImage(newImage.imageUrl);
-      setMainPrompt(instruction);
-      toast.success("Image refined!");
+      toast.success(`Refinement ${latestImage.chainDepth + 1} complete!`);
       
     } catch (error: any) {
-      console.error('Refinement error:', error);
-      toast.error(error.message || "Failed to refine image");
+      console.error('❌ Refinement error:', error);
+      toast.error(error.message || "Failed to refine image. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -668,6 +704,7 @@ export default function ImageEditor() {
             toast.success(`${shotType.label} style applied`);
           }}
           isGenerating={isGenerating}
+          isSaving={isSaving}
         />
       );
     }

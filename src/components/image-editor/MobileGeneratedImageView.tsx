@@ -16,6 +16,7 @@ interface MobileGeneratedImageViewProps {
   onAspectRatioChange: (ratio: string) => void;
   onShotTypeSelect: (shotType: { label: string; prompt: string }) => void;
   isGenerating: boolean;
+  isSaving?: boolean;
 }
 
 export default function MobileGeneratedImageView({
@@ -29,6 +30,7 @@ export default function MobileGeneratedImageView({
   onAspectRatioChange,
   onShotTypeSelect,
   isGenerating,
+  isSaving = false,
 }: MobileGeneratedImageViewProps) {
   const handleShare = async () => {
     if (navigator.share) {
@@ -59,7 +61,7 @@ export default function MobileGeneratedImageView({
     <div className="fixed inset-0 z-50 bg-studio-charcoal flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 pt-safe border-b border-studio-border">
-        <Button variant="ghost" size="icon" onClick={onClose} type="button" disabled={isGenerating}>
+        <Button variant="ghost" size="icon" onClick={onClose} type="button" disabled={isGenerating || isSaving}>
           <X className="w-5 h-5" />
         </Button>
         
@@ -67,17 +69,24 @@ export default function MobileGeneratedImageView({
           onClick={onSave}
           size="lg"
           type="button"
-          disabled={isGenerating}
-          className="bg-aged-brass hover:bg-aged-brass/90 text-aged-paper px-6 font-semibold"
+          disabled={isGenerating || isSaving}
+          className="bg-aged-brass hover:bg-aged-brass/90 text-aged-paper px-6 font-semibold disabled:opacity-50"
         >
-          Save Image
+          {isSaving ? (
+            <>
+              <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            "Save Image"
+          )}
         </Button>
 
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon" onClick={handleShare} type="button" disabled={isGenerating}>
+          <Button variant="ghost" size="icon" onClick={handleShare} type="button" disabled={isGenerating || isSaving}>
             <Share2 className="w-5 h-5" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={handleDownload} type="button" disabled={isGenerating}>
+          <Button variant="ghost" size="icon" onClick={handleDownload} type="button" disabled={isGenerating || isSaving}>
             <Download className="w-5 h-5" />
           </Button>
         </div>
