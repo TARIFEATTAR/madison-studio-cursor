@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import MobileAspectRatioSelector from "./MobileAspectRatioSelector";
 import MobileShotTypeSelector from "./MobileShotTypeSelector";
+import { useState } from "react";
 
 interface MobileGeneratedImageViewProps {
   imageUrl: string;
