@@ -235,10 +235,10 @@ export function BrandDocumentationWizard() {
         }
       }
 
-      toast.success("Brand documentation saved successfully!");
+      toast.success("Documents saved successfully!");
     } catch (error) {
       console.error("Error saving brand documentation:", error);
-      toast.error("Failed to save brand documentation");
+      toast.error("Failed to save documents");
     } finally {
       setIsSaving(false);
     }
@@ -716,7 +716,7 @@ export function BrandDocumentationWizard() {
   return (
     <Card className="p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-2">Brand Documentation Center</h2>
+        <h2 className="text-2xl font-bold mb-2">Brand Documents</h2>
         <p className="text-muted-foreground">
           Comprehensive brand governance to ensure consistent, on-brand content generation
         </p>
