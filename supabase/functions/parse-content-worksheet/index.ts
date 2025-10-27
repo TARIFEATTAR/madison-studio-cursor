@@ -77,7 +77,7 @@ Extract the following information from the uploaded worksheet:
 2. Deliverable Format (one of: Email Campaign, Blog Post, Social Media Post, Product Description, Newsletter, Website Copy)
 3. Target Audience (text description)
 4. Content Goal (text description)
-5. Style Overlay (one of: Tarife Native, Madison Editorial, Balanced)
+5. Style Overlay (one of: Brand Voice, J. Peterman Style, Ogilvy Style, Hybrid Narrative, Minimal & Modern)
 6. Additional Editorial Direction (text description)
 
 Return the extracted data as JSON in this exact format:
@@ -86,14 +86,16 @@ Return the extracted data as JSON in this exact format:
   "format": "extracted format or null",
   "audience": "extracted audience description or null",
   "goal": "extracted goal description or null",
-  "style": "extracted style choice (tarife-native, madison-editorial, or balanced) or null",
+  "style": "extracted style choice (brand-voice, poetic, direct, story, or minimal) or null",
   "additionalContext": "extracted additional direction or null"
 }
 
 For style, convert the values to lowercase with hyphens:
-- "Tarife Native" → "tarife-native"
-- "Madison Editorial" → "madison-editorial"
-- "Balanced" → "balanced"
+- "Brand Voice" or "Your Brand Voice" → "brand-voice"
+- "J. Peterman Style" or "Poetic" → "poetic"
+- "Ogilvy Style" or "Direct" → "direct"
+- "Hybrid Narrative" or "Story" → "story"
+- "Minimal & Modern" or "Minimal" → "minimal"
 
 For format, use the exact options:
 - Email Campaign, Blog Post, Social Media Post, Product Description, Newsletter, Website Copy

@@ -15,9 +15,9 @@ export function generateSmartName(brief: {
     return `${format} - ${brief.product_name}`;
   }
 
-  // Priority 2: Format + Style (if not default)
+  // Priority 2: Format + Style (if not default brand voice)
   if (brief.style_overlay && 
-      brief.style_overlay !== 'tarife-native' && 
+      brief.style_overlay !== 'brand-voice' && 
       brief.style_overlay !== 'default') {
     // Clean up style name (remove hyphens, capitalize)
     const styleName = brief.style_overlay

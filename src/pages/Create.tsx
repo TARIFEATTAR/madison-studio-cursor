@@ -65,7 +65,7 @@ export default function Create() {
   const [format, setFormat] = useState("");
   const [audience, setAudience] = useState("");
   const [goal, setGoal] = useState("");
-  const [style, setStyle] = useState("tarife-native");
+  const [style, setStyle] = useState("brand-voice");
   const [additionalContext, setAdditionalContext] = useState("");
 
   // Load prompt from navigation state if present
@@ -1109,12 +1109,12 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
-                      <SelectItem value="tarife-native">
+                      <SelectItem value="brand-voice">
                         <div className="flex flex-col">
                           <span className="font-medium">
-                            {brandName ? `${brandName} Voice` : "Your Brand Voice (Default)"}
+                            {brandName ? `${brandName} Voice` : "Your Brand Voice"}
                           </span>
-                          <span className="text-xs text-warm-gray">Rich storytelling, sensory depth</span>
+                          <span className="text-xs text-warm-gray">Your brand's authentic voice</span>
                         </div>
                       </SelectItem>
                       <SelectItem value="poetic">

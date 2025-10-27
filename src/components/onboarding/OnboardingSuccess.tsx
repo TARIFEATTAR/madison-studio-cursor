@@ -52,7 +52,7 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
             prompt: enhancedPrompt,
             organizationId: brandData.organizationId,
             mode: "generate",
-            styleOverlay: "TARIFE_NATIVE"
+            styleOverlay: "brand-voice"
           }
         });
         if (data?.generatedContent) setSampleContent(data.generatedContent);

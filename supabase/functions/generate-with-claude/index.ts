@@ -652,7 +652,7 @@ serve(async (req) => {
       console.log(`Using ${hasAnthropicAPI ? 'Anthropic Claude' : 'Lovable AI (Gemini)'} for generation`);
     }
 
-    const { prompt, organizationId, mode = "generate", styleOverlay = "TARIFE_NATIVE", productData, contentType, userName, images, product_id } = await req.json();
+    const { prompt, organizationId, mode = "generate", styleOverlay = "brand-voice", productData, contentType, userName, images, product_id } = await req.json();
     
     // Validate images if provided (limit count and size)
     if (images && Array.isArray(images)) {
@@ -965,15 +965,17 @@ beauty through reduction, meaning through precision.`
     
     // Map UI values to system values
     const styleMapping: Record<string, string> = {
-      'tarife-native': 'TARIFE_NATIVE',
+      'brand-voice': 'BRAND_VOICE', // Generic, uses brand knowledge only
       'poetic': 'JAY_PETERMAN',
       'direct': 'OGILVY',
       'story': 'HYBRID_JP_OGILVY',
       'minimal': 'MINIMAL_MODERN',
     };
 
-    const mappedStyle = styleMapping[styleOverlay] || 'TARIFE_NATIVE';
-    const selectedStyleOverlay = styleOverlayInstructions[mappedStyle as keyof typeof styleOverlayInstructions] || styleOverlayInstructions.TARIFE_NATIVE;
+    const mappedStyle = styleMapping[styleOverlay] || 'BRAND_VOICE';
+    const selectedStyleOverlay = mappedStyle === 'BRAND_VOICE' 
+      ? '' // No style overlay, just use brand knowledge
+      : styleOverlayInstructions[mappedStyle as keyof typeof styleOverlayInstructions] || '';
     
     // Fetch Madison's system-wide training first
     const madisonSystemConfig = await getMadisonSystemConfig();
