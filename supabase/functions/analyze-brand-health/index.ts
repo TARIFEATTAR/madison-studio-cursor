@@ -63,14 +63,31 @@ serve(async (req) => {
     const derivativeCount = derivatives.data?.length || 0;
 
     // Core Identity: At least 2 of mission/vision/values/personality present
+    // ALSO check visual_standards raw documents for core identity content
     const coreIdentityDoc = knowledge.find(k => k.knowledge_type === 'core_identity');
-    const coreIdentityPresent = coreIdentityDoc ? 
+    let coreIdentityPresent = coreIdentityDoc ? 
       Object.entries(coreIdentityDoc.content || {}).filter(([k, v]) => 
         ['mission', 'vision', 'values', 'personality'].includes(k) && 
         typeof v === 'string' && v.trim().length > 0
       ).length >= 2 : false;
+    
+    // If not found in core_identity, check visual_standards documents
+    if (!coreIdentityPresent) {
+      coreIdentityPresent = knowledge.some(k => {
+        if (k.knowledge_type === 'visual_standards' && k.content?.raw_document) {
+          const docText = k.content.raw_document.toLowerCase();
+          const hasMission = docText.includes('mission');
+          const hasVision = docText.includes('vision');
+          const hasValues = docText.includes('values');
+          const count = [hasMission, hasVision, hasValues].filter(Boolean).length;
+          return count >= 2 && docText.length > 500; // At least 2 of 3 with substantial content
+        }
+        return false;
+      });
+    }
 
     // Voice & Tone: voice_tone with voice_guidelines OR tone_spectrum, OR brand_voice with voice/tone keys
+    // ALSO check visual_standards for raw_document containing voice/tone content
     const voiceTonePresent = knowledge.some(k => {
       if (k.knowledge_type === 'voice_tone') {
         const content = k.content || {};
@@ -84,16 +101,32 @@ serve(async (req) => {
         );
         return hasVoiceData;
       }
+      // CHECK VISUAL_STANDARDS RAW DOCUMENTS FOR VOICE CONTENT
+      if (k.knowledge_type === 'visual_standards' && k.content?.raw_document) {
+        const docText = k.content.raw_document.toLowerCase();
+        // Look for voice/tone sections with substantial content (at least 200 chars)
+        const hasVoiceSection = docText.includes('voice') && docText.includes('tone') && docText.length > 200;
+        return hasVoiceSection;
+      }
       return false;
     });
 
     // Target Audience: target_audience with descriptive content
-    const targetAudiencePresent = knowledge.some(k => 
-      k.knowledge_type === 'target_audience' && 
-      Object.values(k.content || {}).some((v: any) => 
-        typeof v === 'string' && v.trim().length > 0
-      )
-    );
+    // ALSO check visual_standards raw documents for audience content
+    const targetAudiencePresent = knowledge.some(k => {
+      if (k.knowledge_type === 'target_audience') {
+        return Object.values(k.content || {}).some((v: any) => 
+          typeof v === 'string' && v.trim().length > 0
+        );
+      }
+      // CHECK VISUAL_STANDARDS FOR AUDIENCE CONTENT
+      if (k.knowledge_type === 'visual_standards' && k.content?.raw_document) {
+        const docText = k.content.raw_document.toLowerCase();
+        return (docText.includes('audience') || docText.includes('customer') || docText.includes('demographic')) 
+          && docText.length > 300;
+      }
+      return false;
+    });
 
     // Collections Transparency: comprehensive doc OR per-collection coverage
     const hasComprehensiveTransparencyDoc = knowledge.some(k => {

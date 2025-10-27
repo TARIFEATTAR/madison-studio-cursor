@@ -69,14 +69,14 @@ async function buildBrandContext(supabaseClient: any, organizationId: string) {
     console.log('[BRAND KNOWLEDGE CHECK]', {
       organizationId,
       knowledgeCount: knowledgeData?.length || 0,
-      knowledgeTypes: knowledgeData?.map(k => k.knowledge_type) || [],
-      totalBytes: knowledgeData?.reduce((sum, k) => 
+      knowledgeTypes: knowledgeData?.map((k: any) => k.knowledge_type) || [],
+      totalBytes: knowledgeData?.reduce((sum: number, k: any) => 
         sum + JSON.stringify(k.content).length, 0
       ) || 0,
       priorityTypes: {
-        hasBrandVoice: knowledgeData?.some(k => k.knowledge_type === 'brand_voice'),
-        hasVocabulary: knowledgeData?.some(k => k.knowledge_type === 'vocabulary'),
-        hasVisualStandards: knowledgeData?.some(k => k.knowledge_type === 'visual_standards')
+        hasBrandVoice: knowledgeData?.some((k: any) => k.knowledge_type === 'brand_voice'),
+        hasVocabulary: knowledgeData?.some((k: any) => k.knowledge_type === 'vocabulary'),
+        hasVisualStandards: knowledgeData?.some((k: any) => k.knowledge_type === 'visual_standards')
       }
     });
     
