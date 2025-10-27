@@ -5,9 +5,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { BLOG_REPURPOSE_TARGETS } from "@/config/blogPostGuidelines";
 import { useCollections } from "@/hooks/useCollections";
+import { useOnboarding } from "@/hooks/useOnboarding";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
 import { Link } from "react-router-dom";
+import { BrandKnowledgeIndicator } from "./BrandKnowledgeIndicator";
 
 interface MasterContentFormProps {
   title: string;
@@ -43,6 +45,7 @@ export function MasterContentForm({
   onDerivativesChange,
 }: MasterContentFormProps) {
   const { collections } = useCollections();
+  const { currentOrganizationId } = useOnboarding();
   
   const toggleDerivative = (type: string) => {
     if (selectedDerivatives.includes(type)) {
@@ -54,6 +57,9 @@ export function MasterContentForm({
 
   return (
     <div className="space-y-6">
+      {/* Brand Knowledge Status Indicator */}
+      <BrandKnowledgeIndicator organizationId={currentOrganizationId} />
+      
       <div className="space-y-2">
         <Label htmlFor="masterTitle">Title *</Label>
         <Input

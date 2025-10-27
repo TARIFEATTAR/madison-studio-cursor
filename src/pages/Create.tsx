@@ -5,6 +5,7 @@ import penNibIcon from "@/assets/pen-nib-icon-new.png";
 import { createRoot } from "react-dom/client";
 import ScriptoraLoadingAnimation from "@/components/forge/ScriptoraLoadingAnimation";
 import { TransitionLoader } from "@/components/forge/TransitionLoader";
+import { BrandKnowledgeIndicator } from "@/components/forge/BrandKnowledgeIndicator";
 import { stripMarkdown } from "@/utils/forgeHelpers";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
@@ -879,6 +880,9 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
 
           {/* Form Container */}
           <div className="p-8 rounded-xl border border-warm-gray/20 space-y-8 bg-parchment-white">
+            {/* Brand Knowledge Status Indicator */}
+            <BrandKnowledgeIndicator organizationId={currentOrganizationId} />
+            
             {/* Product - Optional */}
             <div>
               <Label htmlFor="product" className="text-base mb-2 text-ink-black">
