@@ -87,6 +87,7 @@ function buildChainPrompt(
 
 /**
  * Apply Pro Mode controls with structured formatting
+ * APPENDS professional specs to the base prompt instead of replacing
  */
 function applyProModeControls(
   basePrompt: string,
@@ -97,24 +98,24 @@ function applyProModeControls(
   }
   
   let enhanced = basePrompt;
+  const specs: string[] = [];
   
-  // Camera/Lens specifications (structured format)
+  // Extract technical specs from controls
   if (proModeControls.camera) {
-    enhanced += `\n\nCAMERA & LENS SPECIFICATIONS:\n${proModeControls.camera}`;
+    specs.push(`📷 Camera: ${proModeControls.camera}`);
   }
   
-  // Lighting setup (structured format)
   if (proModeControls.lighting) {
-    enhanced += `\n\nLIGHTING SETUP:\n${proModeControls.lighting}`;
+    specs.push(`💡 Lighting: ${proModeControls.lighting}`);
   }
   
-  // Environment & Surface (structured format)
   if (proModeControls.environment) {
-    enhanced += `\n\nENVIRONMENT & SURFACE:\n${proModeControls.environment}`;
+    specs.push(`🌍 Environment: ${proModeControls.environment}`);
   }
   
-  // Add professional quality mandate
-  if (Object.keys(proModeControls).length > 0) {
+  // APPEND Pro Mode specs at the end, don't replace
+  if (specs.length > 0) {
+    enhanced += `\n\n━━━ PRO MODE SPECIFICATIONS ━━━\n${specs.join('\n')}`;
     enhanced += `\n\nPHOTOGRAPHY DIRECTIVE: Apply these professional specifications precisely. Match the technical characteristics of the specified equipment, lighting, and environment exactly.`;
   }
   
@@ -262,11 +263,7 @@ serve(async (req) => {
       ? buildChainPrompt(parentPrompt || prompt, refinementInstruction, parentChainDepth)
       : prompt;
     
-    // Apply Pro Mode controls FIRST (before other enhancements)
-    if (proModeControls && Object.keys(proModeControls).length > 0) {
-      console.log('🎛️ Applying Pro Mode controls:', proModeControls);
-      enhancedPrompt = applyProModeControls(enhancedPrompt, proModeControls);
-    }
+    // DON'T apply Pro Mode yet - wait until after reference image logic to preserve specs
     
     // Apply image constraints if provided
     if (imageConstraints) {
@@ -316,9 +313,17 @@ serve(async (req) => {
 
     // Apply advanced prompt formula if reference images are provided
     if (actualReferenceImages && actualReferenceImages.length > 0) {
+      const hasProMode = proModeControls && Object.keys(proModeControls).length > 0;
+      
       if (actualReferenceImages.length === 1) {
         // Single reference - use existing product placement prompt
         enhancedPrompt = buildProductPlacementPrompt(enhancedPrompt, brandContext);
+        
+        // Add Pro Mode compatibility note
+        if (hasProMode) {
+          enhancedPrompt += `\n\n⚠️ CRITICAL: Use the provided reference image for the product's exact appearance, but apply the Pro Mode camera, lighting, and environment specifications that follow.`;
+        }
+        
         if (actualReferenceImages[0].description) {
           enhancedPrompt += `\n\nReference Notes: ${actualReferenceImages[0].description}`;
         }
@@ -345,7 +350,17 @@ PHOTOGRAPHIC QUALITY:
 - Camera/Lens: DSLR quality with appropriate depth of field
 - Lighting: Unified lighting that makes all elements feel part of the same scene
 - The composition should feel natural, not like separate elements pasted together`;
+
+        if (hasProMode) {
+          enhancedPrompt += `\n\n⚠️ Apply the Pro Mode specifications (camera, lighting, environment) that will be provided after this composition guide.`;
+        }
       }
+    }
+    
+    // NOW apply Pro Mode controls AFTER all other enhancements (including reference images)
+    if (proModeControls && Object.keys(proModeControls).length > 0) {
+      console.log('🎛️ Applying Pro Mode controls (after reference image setup):', proModeControls);
+      enhancedPrompt = applyProModeControls(enhancedPrompt, proModeControls);
     }
 
     // Build message content with optional reference images (supports multiple)

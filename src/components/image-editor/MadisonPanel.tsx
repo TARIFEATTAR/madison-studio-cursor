@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Sparkles, Send, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -24,6 +25,12 @@ interface MadisonPanelProps {
   onSendMessage?: (message: string) => Promise<void>;
   initialMessages?: Message[];
   isMobile?: boolean;
+  productContext?: {
+    name: string;
+    collection: string;
+    scent_family: string;
+    category?: string;
+  } | null;
 }
 
 export default function MadisonPanel({
@@ -33,7 +40,8 @@ export default function MadisonPanel({
   onToggle,
   onSendMessage,
   initialMessages = [],
-  isMobile = false
+  isMobile = false,
+  productContext = null
 }: MadisonPanelProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputValue, setInputValue] = useState("");
@@ -104,6 +112,8 @@ export default function MadisonPanel({
           prompt,
           organizationId: currentOrganizationId,
           mode: "consult",
+          styleOverlay: "brand-voice",
+          productContext: productContext || undefined,
         },
       });
 
@@ -174,6 +184,11 @@ export default function MadisonPanel({
                 <div className="flex items-center gap-3">
                   <Sparkles className="w-5 h-5 text-aged-brass" />
                   <SheetTitle className="text-aged-brass">Madison</SheetTitle>
+                  {productContext && (
+                    <Badge variant="secondary" className="text-xs">
+                      {productContext.name}
+                    </Badge>
+                  )}
                   <span className="text-xs text-zinc-500 font-medium">
                     Session {sessionCount}/{maxImages}
                   </span>
@@ -283,6 +298,11 @@ export default function MadisonPanel({
         <div className="flex items-center gap-3">
           <Sparkles className="w-4 h-4 text-[#B8956A]" />
           <span className="font-semibold text-[#B8956A] text-sm">Madison</span>
+          {productContext && (
+            <Badge variant="secondary" className="text-xs">
+              {productContext.name}
+            </Badge>
+          )}
           <span className="text-xs text-[#1C150D]/60 font-medium">
             Session {sessionCount}/{maxImages}
           </span>

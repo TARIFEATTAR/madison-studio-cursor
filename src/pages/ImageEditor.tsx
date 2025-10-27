@@ -60,6 +60,8 @@ import MobileAspectRatioSelector from "@/components/image-editor/MobileAspectRat
 import MobileReferenceUpload from "@/components/image-editor/MobileReferenceUpload";
 import MobileGeneratedImageView from "@/components/image-editor/MobileGeneratedImageView";
 import MobileCreateForm from "@/components/image-editor/MobileCreateForm";
+import { ProductSelector } from "@/components/forge/ProductSelector";
+import { Product } from "@/hooks/useProducts";
 
 
 // Prompt Formula Utilities
@@ -109,6 +111,9 @@ export default function ImageEditor() {
   
   // Pro Mode Controls State
   const [proModeControls, setProModeControls] = useState<ProModeControls>({});
+  
+  // Product Context State
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   
   // Chain prompting state
   const [selectedForRefinement, setSelectedForRefinement] = useState<GeneratedImage | null>(null);
@@ -310,7 +315,13 @@ export default function ImageEditor() {
             referenceImages: generationReferenceImages,
             brandContext: brandContext || undefined,
             isRefinement: false,
-            proModeControls: proModePayload
+            proModeControls: proModePayload,
+            productContext: selectedProduct ? {
+              name: selectedProduct.name,
+              collection: selectedProduct.collection || 'Unknown',
+              scent_family: selectedProduct.scentFamily || 'Unspecified',
+              category: selectedProduct.category
+            } : undefined
           }
         }
       );
@@ -974,6 +985,12 @@ export default function ImageEditor() {
           isOpen={isMadisonOpen}
           onToggle={() => setIsMadisonOpen(!isMadisonOpen)}
           isMobile={true}
+          productContext={selectedProduct ? {
+            name: selectedProduct.name,
+            collection: selectedProduct.collection || 'Unknown',
+            scent_family: selectedProduct.scentFamily || 'Unspecified',
+            category: selectedProduct.category
+          } : null}
         />
       </div>
     );
@@ -1000,6 +1017,15 @@ export default function ImageEditor() {
         </div>
         
         <div className="flex items-center gap-3">
+          {/* Product Selector */}
+          <div className="w-[180px]">
+            <ProductSelector
+              value={selectedProduct?.name || ""}
+              onSelect={setSelectedProduct}
+              onProductDataChange={setSelectedProduct}
+            />
+          </div>
+          
           {/* Shot Type */}
           <ShotTypeDropdown 
             onSelect={async (shotType) => {
@@ -1425,6 +1451,12 @@ export default function ImageEditor() {
         isOpen={isMadisonOpen}
         onToggle={() => setIsMadisonOpen(!isMadisonOpen)}
         isMobile={false}
+        productContext={selectedProduct ? {
+          name: selectedProduct.name,
+          collection: selectedProduct.collection || 'Unknown',
+          scent_family: selectedProduct.scentFamily || 'Unspecified',
+          category: selectedProduct.category
+        } : null}
         onSendMessage={async (message) => {
           console.log("Madison message:", message);
           // TODO: Integrate with Madison AI backend
