@@ -10,6 +10,7 @@ import { CollectionsTab } from "@/components/settings/CollectionsTab";
 import { MadisonTrainingTab } from "@/components/settings/MadisonTrainingTab";
 import { GoalsTab } from "@/components/settings/GoalsTab";
 import { IntegrationsTab } from "@/components/settings/IntegrationsTab";
+import { BrandDocumentationWizard } from "@/components/settings/BrandDocumentationWizard";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -128,7 +129,8 @@ export default function Settings() {
               </TabsList>
             </div>
 
-            <TabsContent value="brand">
+            <TabsContent value="brand" className="space-y-6">
+              <BrandDocumentationWizard />
               <BrandGuidelinesTab />
             </TabsContent>
 
