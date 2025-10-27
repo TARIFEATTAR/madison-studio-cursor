@@ -553,40 +553,28 @@ export default function ImageEditor() {
     setIsSaving(true);
     try {
       console.log('💾 Saving image to library:', latestImage.id);
-      
-      // Try client-side update first
-      const { error: clientError } = await supabase
-        .from('generated_images')
-        .update({ saved_to_library: true })
-        .eq('id', latestImage.id);
-      
-      if (clientError) {
-        console.warn('⚠️ Client-side save failed, trying server-side:', clientError);
-        
-        // Fallback to server-side function with elevated privileges
-        const { data: serverData, error: serverError } = await supabase.functions.invoke(
-          'mark-generated-image-saved',
-          {
-            body: {
-              imageId: latestImage.id,
-              userId: user.id
-            }
+
+      // Use server-side function with elevated privileges for reliability
+      const { data: serverData, error: serverError } = await supabase.functions.invoke(
+        'mark-generated-image-saved',
+        {
+          body: {
+            imageId: latestImage.id,
+            userId: user.id
           }
-        );
-        
-        if (serverError) {
-          console.error('❌ Server-side save also failed:', serverError);
-          throw serverError;
         }
-        
-        if (!serverData?.success) {
-          throw new Error('Server-side save returned unsuccessful result');
-        }
-        
-        console.log('✅ Server-side save succeeded');
-      } else {
-        console.log('✅ Client-side save succeeded');
+      );
+
+      if (serverError) {
+        console.error('❌ Server-side save failed:', serverError);
+        throw serverError;
       }
+
+      if (!serverData?.success) {
+        throw new Error('Save failed: server returned unsuccessful result');
+      }
+
+      console.log('✅ Image saved via server function');
       
       // Update local state to mark as flagged
       setCurrentSession(prev => ({
@@ -691,7 +679,7 @@ export default function ImageEditor() {
 
       setCurrentSession(prev => ({
         ...prev,
-        images: [...prev.images, newImage]
+        images: prev.images.map(img => ({ ...img, isHero: false })).concat({ ...newImage, isHero: true })
       }));
 
       // Update the view to show the new refined image
