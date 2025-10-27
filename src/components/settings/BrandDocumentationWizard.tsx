@@ -272,7 +272,7 @@ export function BrandDocumentationWizard() {
                 id="brandName"
                 value={docs.brandName || ""}
                 onChange={(e) => setDocs({ ...docs, brandName: e.target.value })}
-                placeholder="e.g., Tarif Atar"
+                placeholder="e.g., Tarife Attar"
               />
             </div>
 
