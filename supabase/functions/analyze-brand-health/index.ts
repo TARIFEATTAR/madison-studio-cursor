@@ -275,8 +275,8 @@ Be specific and prioritize recommendations by impact.`;
       missing_components: filteredMissing,
     };
 
-    // === MONOTONIC SCORE: Never decrease ===
-    const finalScore = Math.max(previousScore, deterministicScore);
+    // Use actual calculated score (allows score to decrease when knowledge is removed)
+    const finalScore = deterministicScore;
 
     const healthAnalysis = {
       completeness_score: finalScore,
