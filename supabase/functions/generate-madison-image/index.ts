@@ -149,7 +149,9 @@ serve(async (req) => {
       refinementInstruction,
       parentPrompt,
       // Pro Mode controls
-      proModeControls
+      proModeControls,
+      // Session tracking
+      sessionId
     } = await req.json();
 
     console.log('🎨 Generating Madison image:', {
@@ -163,7 +165,8 @@ serve(async (req) => {
       isChainRefinement: !!isRefinement,
       parentImageId: parentImageId || null,
       proModeControlsReceived: !!proModeControls,
-      proModeDetails: proModeControls || null
+      proModeDetails: proModeControls || null,
+      sessionId: sessionId || 'none'
     });
 
     // Create Supabase client for chain mode and general operations
@@ -171,6 +174,52 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+    
+    // Resolve organization_id if missing
+    let resolvedOrganizationId = organizationId;
+    
+    if (!resolvedOrganizationId) {
+      console.log('⚠️ No organizationId provided, attempting fallback resolution');
+      
+      // Try to get from parent image if this is a refinement
+      if (isRefinement && parentImageId) {
+        console.log('📎 Attempting to get organization_id from parent image');
+        const { data: parentImage, error: parentOrgError } = await supabaseClient
+          .from('generated_images')
+          .select('organization_id')
+          .eq('id', parentImageId)
+          .single();
+        
+        if (!parentOrgError && parentImage?.organization_id) {
+          resolvedOrganizationId = parentImage.organization_id;
+          console.log('✅ Resolved organization_id from parent image:', resolvedOrganizationId);
+        }
+      }
+      
+      // If still no org, get user's first organization
+      if (!resolvedOrganizationId && userId) {
+        console.log('📎 Attempting to get organization_id from user membership');
+        const { data: membership, error: membershipError } = await supabaseClient
+          .from('organization_members')
+          .select('organization_id')
+          .eq('user_id', userId)
+          .limit(1)
+          .single();
+        
+        if (!membershipError && membership?.organization_id) {
+          resolvedOrganizationId = membership.organization_id;
+          console.log('✅ Resolved organization_id from user membership:', resolvedOrganizationId);
+        }
+      }
+      
+      if (!resolvedOrganizationId) {
+        console.error('❌ Failed to resolve organization_id');
+        return new Response(
+          JSON.stringify({ error: 'Could not determine organization. Please ensure you are a member of an organization.' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
     
     // Handle chain refinement mode
     let parentChainDepth = 0;
@@ -475,8 +524,9 @@ PHOTOGRAPHIC QUALITY:
     const { data: savedImage, error: dbError } = await supabaseClient
       .from('generated_images')
       .insert({
-        organization_id: organizationId,
+        organization_id: resolvedOrganizationId,
         user_id: userId,
+        session_id: sessionId,
         goal_type: goalType,
         aspect_ratio: aspectRatio,
         output_format: outputFormat,
@@ -497,17 +547,31 @@ PHOTOGRAPHIC QUALITY:
       .single();
 
     if (dbError) {
-      console.error('⚠️ Failed to save to DB:', dbError);
-      // Don't fail the request - image was generated successfully
+      console.error('❌ CRITICAL: Failed to save to DB:', dbError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to save generated image to database',
+          details: dbError.message
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    console.log('✅ Image generated and saved:', savedImage?.id);
+    if (!savedImage?.id) {
+      console.error('❌ CRITICAL: No savedImage.id returned from database');
+      return new Response(
+        JSON.stringify({ error: 'Database save succeeded but no image ID returned' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('✅ Image generated and saved:', savedImage.id);
 
     return new Response(
       JSON.stringify({ 
         imageUrl, 
         description,
-        savedImageId: savedImage?.id
+        savedImageId: savedImage.id
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

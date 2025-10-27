@@ -303,7 +303,8 @@ export default function ImageEditor() {
             prompt: finalPrompt,
             userId: user.id,
             organizationId: orgId,
-            goalType: 'product_photography', // Pass goalType for backend insert
+            sessionId: sessionId,
+            goalType: 'product_photography',
             aspectRatio,
             outputFormat,
             referenceImages: generationReferenceImages,
@@ -316,10 +317,14 @@ export default function ImageEditor() {
 
       if (functionError) throw functionError;
       if (!functionData?.imageUrl) throw new Error("No image URL returned");
+      if (!functionData?.savedImageId) {
+        console.error('❌ No savedImageId returned from backend');
+        throw new Error("Image generation failed: Database save unsuccessful");
+      }
 
-      // Backend already saved the image - just update UI with returned data
+      // Backend already saved the image with valid ID
       const newImage: GeneratedImage = {
-        id: functionData.savedImageId || crypto.randomUUID(),
+        id: functionData.savedImageId,
         imageUrl: functionData.imageUrl,
         prompt: effectivePrompt,
         timestamp: Date.now(),
@@ -483,7 +488,8 @@ export default function ImageEditor() {
             prompt: selectedForRefinement.prompt,
             userId: user.id,
             organizationId: orgId,
-            goalType: 'product_photography', // Pass goalType for backend insert
+            sessionId: sessionId,
+            goalType: 'product_photography',
             parentPrompt: selectedForRefinement.prompt,
             aspectRatio,
             outputFormat,
@@ -498,10 +504,14 @@ export default function ImageEditor() {
 
       if (functionError) throw functionError;
       if (!functionData?.imageUrl) throw new Error("No image returned");
+      if (!functionData?.savedImageId) {
+        console.error('❌ No savedImageId returned from refinement');
+        throw new Error("Refinement failed: Database save unsuccessful");
+      }
 
-      // Backend already saved the image - just update UI with returned data
+      // Backend already saved the image with valid ID
       const newImage: GeneratedImage = {
-        id: functionData.savedImageId || crypto.randomUUID(),
+        id: functionData.savedImageId,
         imageUrl: functionData.imageUrl,
         prompt: selectedForRefinement.prompt,
         timestamp: Date.now(),
@@ -535,7 +545,7 @@ export default function ImageEditor() {
 
   const saveLatestImageToLibrary = async () => {
     const latestImage = currentSession.images[currentSession.images.length - 1];
-    if (!latestImage) {
+    if (!latestImage || !user) {
       toast.error("No image to save");
       return;
     }
@@ -544,14 +554,38 @@ export default function ImageEditor() {
     try {
       console.log('💾 Saving image to library:', latestImage.id);
       
-      const { error } = await supabase
+      // Try client-side update first
+      const { error: clientError } = await supabase
         .from('generated_images')
         .update({ saved_to_library: true })
         .eq('id', latestImage.id);
       
-      if (error) {
-        console.error('❌ Database error:', error);
-        throw error;
+      if (clientError) {
+        console.warn('⚠️ Client-side save failed, trying server-side:', clientError);
+        
+        // Fallback to server-side function with elevated privileges
+        const { data: serverData, error: serverError } = await supabase.functions.invoke(
+          'mark-generated-image-saved',
+          {
+            body: {
+              imageId: latestImage.id,
+              userId: user.id
+            }
+          }
+        );
+        
+        if (serverError) {
+          console.error('❌ Server-side save also failed:', serverError);
+          throw serverError;
+        }
+        
+        if (!serverData?.success) {
+          throw new Error('Server-side save returned unsuccessful result');
+        }
+        
+        console.log('✅ Server-side save succeeded');
+      } else {
+        console.log('✅ Client-side save succeeded');
       }
       
       // Update local state to mark as flagged
@@ -604,6 +638,7 @@ export default function ImageEditor() {
             prompt: latestImage.prompt,
             userId: user.id,
             organizationId: orgId,
+            sessionId: sessionId,
             goalType: 'product_photography',
             parentPrompt: latestImage.prompt,
             aspectRatio,
@@ -625,6 +660,10 @@ export default function ImageEditor() {
         console.error('❌ No image URL in response:', functionData);
         throw new Error("No image returned from generation");
       }
+      if (!functionData?.savedImageId) {
+        console.error('❌ No savedImageId in response:', functionData);
+        throw new Error("Refinement failed: Database save unsuccessful");
+      }
 
       console.log('✅ Refinement successful:', {
         newImageId: functionData.savedImageId,
@@ -632,7 +671,7 @@ export default function ImageEditor() {
       });
 
       const newImage: GeneratedImage = {
-        id: functionData.savedImageId || crypto.randomUUID(),
+        id: functionData.savedImageId,
         imageUrl: functionData.imageUrl,
         prompt: latestImage.prompt,
         timestamp: Date.now(),
@@ -649,6 +688,7 @@ export default function ImageEditor() {
         images: [...prev.images, newImage]
       }));
 
+      // Update the view to show the new refined image
       setLatestGeneratedImage(newImage.imageUrl);
       toast.success(`Refinement ${latestImage.chainDepth + 1} complete!`);
       

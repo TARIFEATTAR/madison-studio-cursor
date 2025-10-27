@@ -62,3 +62,6 @@ verify_jwt = true
 
 [functions.log-shot-type]
 verify_jwt = true
+
+[functions.mark-generated-image-saved]
+verify_jwt = true
