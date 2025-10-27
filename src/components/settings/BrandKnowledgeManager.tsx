@@ -749,6 +749,104 @@ export function BrandKnowledgeManager() {
         )}
       </CardContent>
 
+      {/* All Versions Dialog */}
+      <Dialog open={showAllVersions} onOpenChange={setShowAllVersions}>
+        <DialogContent className="max-w-6xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="w-5 h-5" />
+              Complete Version History
+            </DialogTitle>
+            <DialogDescription>
+              All versions of brand knowledge across all types. Green = Active, Gray = Inactive.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[70vh]">
+            <div className="space-y-6 pr-4">
+              {Object.entries(allVersions).length === 0 ? (
+                <div className="text-center py-8 text-warm-gray">
+                  <p>No brand knowledge found</p>
+                </div>
+              ) : (
+                Object.entries(allVersions).map(([knowledgeType, versions]) => (
+                  <Card key={knowledgeType} className="bg-parchment-white border-cream-dark">
+                    <CardHeader>
+                      <CardTitle className="text-lg text-charcoal">
+                        {formatKnowledgeType(knowledgeType)}
+                      </CardTitle>
+                      <CardDescription>
+                        {versions.length} version{versions.length > 1 ? 's' : ''} total
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {versions.map((version) => (
+                        <div
+                          key={version.id}
+                          className={`p-4 rounded-lg border ${
+                            version.is_active
+                              ? 'bg-green-50 border-green-200'
+                              : 'bg-warm-gray/5 border-warm-gray/20'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                className={
+                                  version.is_active
+                                    ? 'bg-green-100 text-green-800 border-green-200'
+                                    : 'bg-warm-gray/20 text-warm-gray'
+                                }
+                              >
+                                {version.is_active ? 'Active' : 'Inactive'}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs">
+                                v{version.version}
+                              </Badge>
+                              <span className="text-xs text-warm-gray">
+                                {format(new Date(version.created_at), 'MMM d, yyyy h:mm a')}
+                              </span>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleToggleActive(version)}
+                              className={
+                                version.is_active
+                                  ? 'border-red-300 text-red-600 hover:bg-red-50'
+                                  : 'border-green-300 text-green-600 hover:bg-green-50'
+                              }
+                            >
+                              {version.is_active ? (
+                                <>
+                                  <PowerOff className="w-3 h-3 mr-1" />
+                                  Deactivate
+                                </>
+                              ) : (
+                                <>
+                                  <Power className="w-3 h-3 mr-1" />
+                                  Activate
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                          <div className="bg-white p-3 rounded border border-cream-dark max-h-48 overflow-y-auto">
+                            <pre className="text-xs text-warm-gray whitespace-pre-wrap">
+                              {typeof version.content === 'string'
+                                ? version.content
+                                : JSON.stringify(version.content, null, 2)}
+                            </pre>
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
       {/* Duplicate Comparison Dialog */}
       <Dialog open={!!viewingDuplicates} onOpenChange={(open) => !open && setViewingDuplicates(null)}>
         <DialogContent className="max-w-6xl max-h-[90vh]">
