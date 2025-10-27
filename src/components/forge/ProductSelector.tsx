@@ -10,9 +10,19 @@ interface ProductSelectorProps {
   value: string;
   onSelect: (product: Product) => void;
   onProductDataChange?: (productData: Product | null) => void;
+  showLabel?: boolean;
+  className?: string;
+  buttonClassName?: string;
 }
 
-export function ProductSelector({ value, onSelect, onProductDataChange }: ProductSelectorProps) {
+export function ProductSelector({ 
+  value, 
+  onSelect, 
+  onProductDataChange,
+  showLabel = true,
+  className = "",
+  buttonClassName = "w-full justify-between bg-background/50"
+}: ProductSelectorProps) {
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const { products, loading } = useProducts();
@@ -25,8 +35,8 @@ export function ProductSelector({ value, onSelect, onProductDataChange }: Produc
   }, [searchValue, products]);
 
   return (
-    <div className="space-y-2">
-      <Label htmlFor="productName">Product Name *</Label>
+    <div className={showLabel ? "space-y-2" : ""}>
+      {showLabel && <Label htmlFor="productName">Product Name *</Label>}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -34,21 +44,22 @@ export function ProductSelector({ value, onSelect, onProductDataChange }: Produc
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="w-full justify-between bg-background/50"
+            className={buttonClassName}
           >
             {value || "Select product..."}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0" align="start">
-          <Command>
+        <PopoverContent className={`p-0 bg-studio-charcoal border-studio-border z-50 backdrop-blur-sm ${className || "w-[200px]"}`} align="start">
+          <Command className="bg-studio-charcoal">
             <CommandInput 
               placeholder="Search products..." 
               value={searchValue}
               onValueChange={setSearchValue}
+              className="bg-studio-charcoal text-studio-text-primary"
             />
-            <CommandList>
-              <CommandEmpty>
+            <CommandList className="bg-studio-charcoal">
+              <CommandEmpty className="text-studio-text-muted">
                 {loading ? "Loading products..." : "No products found. Products can be added through your brand settings."}
               </CommandEmpty>
               <CommandGroup>
@@ -62,9 +73,10 @@ export function ProductSelector({ value, onSelect, onProductDataChange }: Produc
                       setOpen(false);
                       setSearchValue("");
                     }}
+                    className="hover:bg-studio-card text-studio-text-primary cursor-pointer"
                   >
                     {product.name}
-                    <span className="ml-auto text-xs text-muted-foreground">
+                    <span className="ml-auto text-xs text-studio-text-muted">
                       {product.collection || 'No collection'}
                     </span>
                   </CommandItem>

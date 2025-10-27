@@ -1018,16 +1018,17 @@ export default function ImageEditor() {
         
         <div className="flex items-center gap-3">
           {/* Product Selector */}
-          <div className="w-[180px]">
-            <ProductSelector
-              value={selectedProduct?.name || ""}
-              onSelect={setSelectedProduct}
-              onProductDataChange={setSelectedProduct}
-            />
-          </div>
+          <ProductSelector
+            value={selectedProduct?.name || ""}
+            onSelect={setSelectedProduct}
+            onProductDataChange={setSelectedProduct}
+            showLabel={false}
+            className="w-[200px]"
+            buttonClassName="w-[200px] bg-studio-charcoal border-studio-border text-studio-text-primary hover:bg-studio-card transition-colors justify-between"
+          />
           
           {/* Shot Type */}
-          <ShotTypeDropdown 
+          <ShotTypeDropdown
             onSelect={async (shotType) => {
               setMainPrompt(shotType.prompt);
               toast.success(`${shotType.label} style applied`);
