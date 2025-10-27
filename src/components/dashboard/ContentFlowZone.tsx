@@ -82,7 +82,7 @@ export function ContentFlowZone() {
             <button
               key={stage.id}
               onClick={() => handleStageClick(stage.status)}
-              className="group flex flex-col items-center justify-center p-3 md:p-4 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+              className="group flex flex-col items-center justify-center p-3 md:p-4 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-md touch-manipulation"
               style={{
                 background: `linear-gradient(to bottom right, ${stage.color}20, ${stage.color}10)`,
               }}

@@ -54,8 +54,8 @@ export function BrandPulseBar() {
   return (
     <>
       {/* Brand Health Card */}
-      <Card 
-        className="col-span-1 md:col-span-3 p-4 md:p-6 bg-white border border-[#E0E0E0] cursor-pointer hover:shadow-lg transition-all hover:-translate-y-0.5 rounded-xl min-h-[180px] md:min-h-[200px]"
+      <button 
+        className="col-span-1 md:col-span-3 p-4 md:p-6 bg-white border border-[#E0E0E0] cursor-pointer hover:shadow-lg transition-all hover:-translate-y-0.5 rounded-xl min-h-[180px] md:min-h-[200px] text-left w-full touch-manipulation"
         onClick={() => navigate("/brand-health")}
       >
         <div className="flex flex-col h-full">
@@ -98,7 +98,7 @@ export function BrandPulseBar() {
             </div>
           </div>
         </div>
-      </Card>
+      </button>
 
       {/* Your Next Move Card */}
       <Card className="col-span-1 md:col-span-5 p-4 md:p-6 bg-white border border-[#E0E0E0] rounded-xl min-h-[180px] md:min-h-[200px]">
@@ -111,7 +111,7 @@ export function BrandPulseBar() {
           </div>
           <Button
             size="default"
-            className="bg-[#B8956A] hover:bg-[#A3865A] text-white mt-4 w-full md:w-fit min-h-[44px]"
+            className="bg-[#B8956A] hover:bg-[#A3865A] text-white mt-4 w-full md:w-fit min-h-[44px] touch-manipulation"
             onClick={() => navigate("/create")}
           >
             Take Action
