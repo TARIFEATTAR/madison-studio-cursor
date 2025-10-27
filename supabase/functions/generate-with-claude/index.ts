@@ -606,6 +606,157 @@ async function buildBrandContext(organizationId: string) {
   }
 }
 
+// Helper function to fetch copywriting sequence for Phase 3.5
+async function fetchCopywritingSequence(industryType: string, contentFormat: string) {
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  
+  try {
+    console.log(`[PHASE 3.5] Fetching sequence for industry: ${industryType}, format: ${contentFormat}`);
+    
+    // Query sequences ordered by sequence_order
+    const { data: sequences, error: sequencesError } = await supabase
+      .from('copywriting_sequences')
+      .select('*')
+      .eq('industry_type', industryType)
+      .eq('content_format', contentFormat)
+      .eq('is_forbidden', false)
+      .order('sequence_order', { ascending: true });
+    
+    if (sequencesError) {
+      console.error('[PHASE 3.5] Error fetching sequences:', sequencesError);
+      return null;
+    }
+    
+    if (!sequences || sequences.length === 0) {
+      console.log('[PHASE 3.5] No sequence found, will fall back to Phase 3');
+      return null;
+    }
+    
+    // Fetch forbidden copywriters for this format
+    const { data: forbidden } = await supabase
+      .from('copywriting_sequences')
+      .select('copywriter_name')
+      .eq('industry_type', industryType)
+      .eq('content_format', contentFormat)
+      .eq('is_forbidden', true);
+    
+    // Get unique copywriter names from sequence
+    const copywriterNames = [...new Set(sequences.map(s => s.copywriter_name))];
+    
+    // Fetch copywriter techniques
+    const { data: techniques } = await supabase
+      .from('copywriter_techniques')
+      .select('*')
+      .in('copywriter_name', copywriterNames);
+    
+    // Build techniques lookup
+    const techniquesMap: Record<string, any> = {};
+    techniques?.forEach(t => {
+      techniquesMap[t.copywriter_name] = t;
+    });
+    
+    console.log(`[PHASE 3.5] Found ${sequences.length}-step sequence: ${sequences.map(s => s.copywriter_name).join(' → ')}`);
+    
+    return {
+      sequences,
+      techniques: techniquesMap,
+      forbiddenCopywriters: forbidden?.map(f => f.copywriter_name) || []
+    };
+  } catch (error) {
+    console.error('[PHASE 3.5] Error in fetchCopywritingSequence:', error);
+    return null;
+  }
+}
+
+// Build sequencing prompt for Phase 3.5 (single-pass approach)
+function buildSequencingPrompt(sequenceData: any, contentType: string) {
+  const parts = [];
+  
+  parts.push('╔══════════════════════════════════════════════════════════════════╗');
+  parts.push('║          PHASE 3.5: COPYWRITING SEQUENCE EXECUTION              ║');
+  parts.push('║        (Apply Multi-Step Copywriter Technique Layering)         ║');
+  parts.push('╚══════════════════════════════════════════════════════════════════╝');
+  parts.push('');
+  
+  parts.push('🎯 YOUR TASK:');
+  parts.push(`Generate ${contentType} content by flowing through the prescribed copywriting sequence below.`);
+  parts.push('Each step should blend naturally into the next, creating ONE cohesive piece.');
+  parts.push('Do NOT create separate sections - weave the techniques together fluidly.');
+  parts.push('');
+  
+  // Show the sequence flow
+  parts.push('━━━ COPYWRITING SEQUENCE FLOW ━━━');
+  parts.push('');
+  const sequenceFlow = sequenceData.sequences.map((s: any) => 
+    `${s.copywriter_name} (${s.copywriter_role})`
+  ).join(' → ');
+  parts.push(`${sequenceFlow}`);
+  parts.push('');
+  
+  // Detail each step
+  parts.push('━━━ STEP-BY-STEP TECHNIQUE APPLICATION ━━━');
+  parts.push('');
+  
+  sequenceData.sequences.forEach((step: any, index: number) => {
+    const technique = sequenceData.techniques[step.copywriter_name];
+    
+    parts.push(`STEP ${index + 1}: ${step.copywriter_name.toUpperCase()} — ${step.copywriter_role}`);
+    parts.push('');
+    
+    if (technique) {
+      parts.push(`  Core Philosophy: ${technique.core_philosophy}`);
+      parts.push('');
+      
+      if (technique.signature_techniques) {
+        parts.push('  Signature Techniques to Apply:');
+        technique.signature_techniques.forEach((t: any) => {
+          parts.push(`    • ${t.name}: ${t.description}`);
+        });
+        parts.push('');
+      }
+      
+      if (technique.writing_style_traits) {
+        parts.push(`  Style Traits: ${technique.writing_style_traits.join(', ')}`);
+        parts.push('');
+      }
+    }
+    
+    parts.push(`  → What This Step Accomplishes: ${step.copywriter_role}`);
+    parts.push('');
+    parts.push('  ─────────────────────────────────────────');
+    parts.push('');
+  });
+  
+  // Forbidden copywriters enforcement
+  if (sequenceData.forbiddenCopywriters.length > 0) {
+    parts.push('━━━ FORBIDDEN COPYWRITERS FOR THIS FORMAT ━━━');
+    parts.push('');
+    parts.push('⚠️ DO NOT apply techniques from these copywriters:');
+    sequenceData.forbiddenCopywriters.forEach((name: string) => {
+      parts.push(`  ✗ ${name}`);
+    });
+    parts.push('');
+    parts.push('These styles are incompatible with this content format.');
+    parts.push('');
+  }
+  
+  // Integration instructions
+  parts.push('━━━ INTEGRATION INSTRUCTIONS ━━━');
+  parts.push('');
+  parts.push('1. Start with Step 1\'s technique, establishing the foundation');
+  parts.push('2. Transition smoothly to Step 2, building upon Step 1');
+  parts.push('3. Continue layering each subsequent step naturally');
+  parts.push('4. The final output should read as ONE unified voice, not separate sections');
+  parts.push('5. Each technique should enhance the previous, creating sophisticated depth');
+  parts.push('');
+  
+  parts.push('⚠️ CRITICAL: Brand lexical mandates (vocabulary, forbidden phrases) MUST be honored');
+  parts.push('throughout the entire sequence, regardless of copywriter techniques applied.');
+  parts.push('');
+  
+  return parts.join('\n');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -722,11 +873,12 @@ serve(async (req) => {
       }
     }
 
-    // ========== PHASE 3: DYNAMIC COPYWRITING STYLE SELECTION ==========
+    // ========== PHASE 3.5 & PHASE 3: DYNAMIC COPYWRITING STYLE SYSTEM ==========
     let copywritingStyleContext = '';
     let usePhase3 = false;
+    let usePhase35 = false;
     
-    // Fetch organization's industry type for Phase 3
+    // Fetch organization's industry type for Phase 3.5/3
     if (organizationId && mode === "generate") {
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       const { data: orgData } = await supabase
@@ -736,28 +888,38 @@ serve(async (req) => {
         .maybeSingle();
       
       if (orgData?.industry_type && contentType) {
-        console.log('[PHASE 3] Attempting dynamic style selection');
-        console.log(`[PHASE 3] Industry: ${orgData.industry_type}, Content Type: ${contentType}`);
+        // Try Phase 3.5 sequencing first
+        const sequenceData = await fetchCopywritingSequence(orgData.industry_type, contentType);
         
-        // Fetch copywriting options
-        const copywritingOptions = await fetchCopywritingOptions(orgData.industry_type, contentType);
-        
-        if (copywritingOptions && copywritingOptions.mappings.length > 0) {
-          console.log(`[PHASE 3] Found ${copywritingOptions.mappings.length} style options`);
-          usePhase3 = true;
-          
-          // Build brand context for selection
-          const brandContext = await buildBrandContext(organizationId);
-          
-          // Build style selection prompt
-          copywritingStyleContext = buildStyleSelectionPrompt(
-            copywritingOptions,
-            brandContext,
-            enrichedProductData,
-            contentType
-          );
+        if (sequenceData) {
+          // Phase 3.5: Use multi-step sequencing
+          console.log('[PHASE 3.5] Activating multi-step copywriter sequencing');
+          usePhase35 = true;
+          copywritingStyleContext = buildSequencingPrompt(sequenceData, contentType);
         } else {
-          console.log('[PHASE 3] No copywriting options found, falling back to legacy style overlays');
+          // Phase 3: Fall back to single-selection
+          console.log('[PHASE 3] Attempting dynamic style selection (Phase 3.5 sequence not found)');
+          console.log(`[PHASE 3] Industry: ${orgData.industry_type}, Content Type: ${contentType}`);
+          
+          const copywritingOptions = await fetchCopywritingOptions(orgData.industry_type, contentType);
+          
+          if (copywritingOptions && copywritingOptions.mappings.length > 0) {
+            console.log(`[PHASE 3] Found ${copywritingOptions.mappings.length} style options`);
+            usePhase3 = true;
+            
+            // Build brand context for selection
+            const brandContext = await buildBrandContext(organizationId);
+            
+            // Build style selection prompt
+            copywritingStyleContext = buildStyleSelectionPrompt(
+              copywritingOptions,
+              brandContext,
+              enrichedProductData,
+              contentType
+            );
+          } else {
+            console.log('[PHASE 3] No copywriting options found, falling back to legacy style overlays');
+          }
         }
       }
     }

@@ -551,6 +551,45 @@ export type Database = {
         }
         Relationships: []
       }
+      copywriting_sequences: {
+        Row: {
+          content_format: string
+          copywriter_name: string
+          copywriter_role: string
+          created_at: string | null
+          framework_code: string | null
+          id: string
+          industry_type: string
+          is_forbidden: boolean | null
+          sequence_order: number
+          updated_at: string | null
+        }
+        Insert: {
+          content_format: string
+          copywriter_name: string
+          copywriter_role: string
+          created_at?: string | null
+          framework_code?: string | null
+          id?: string
+          industry_type: string
+          is_forbidden?: boolean | null
+          sequence_order: number
+          updated_at?: string | null
+        }
+        Update: {
+          content_format?: string
+          copywriter_name?: string
+          copywriter_role?: string
+          created_at?: string | null
+          framework_code?: string | null
+          id?: string
+          industry_type?: string
+          is_forbidden?: boolean | null
+          sequence_order?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       copywriting_style_mappings: {
         Row: {
           content_format: string
