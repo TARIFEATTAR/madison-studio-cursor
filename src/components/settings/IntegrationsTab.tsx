@@ -1,8 +1,55 @@
+import { useState, useEffect } from "react";
 import { ShopifyConnection } from "./ShopifyConnection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package } from "lucide-react";
+import { Package, Bot, Plus, Trash2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useCompetitiveIntelligence } from "@/hooks/useCompetitiveIntelligence";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function IntegrationsTab() {
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [newCompetitorName, setNewCompetitorName] = useState("");
+  const [newCompetitorUrl, setNewCompetitorUrl] = useState("");
+
+  useEffect(() => {
+    loadOrganization();
+  }, []);
+
+  const loadOrganization = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: membership } = await supabase
+      .from('organization_members')
+      .select('organization_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (membership) {
+      setOrganizationId(membership.organization_id);
+    }
+  };
+
+  const {
+    preferences,
+    competitors,
+    loading,
+    toggleCompetitiveIntelligence,
+    addCompetitor,
+    removeCompetitor
+  } = useCompetitiveIntelligence(organizationId);
+
+  const handleAddCompetitor = () => {
+    if (newCompetitorName && newCompetitorUrl) {
+      addCompetitor(newCompetitorName, newCompetitorUrl);
+      setNewCompetitorName("");
+      setNewCompetitorUrl("");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -33,7 +80,90 @@ export function IntegrationsTab() {
         </CardContent>
       </Card>
 
-      {/* Future integrations can be added here */}
+      {/* Competitive Intelligence Agent */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
+              <Bot className="w-5 h-5 text-violet-500" />
+            </div>
+            <div className="flex-1">
+              <CardTitle>Competitive Intelligence Agent</CardTitle>
+              <CardDescription>
+                AI agent that monitors competitors and identifies trends
+              </CardDescription>
+            </div>
+            {loading ? (
+              <Skeleton className="h-6 w-12" />
+            ) : (
+              <Switch
+                checked={preferences?.competitive_intelligence_enabled || false}
+                onCheckedChange={toggleCompetitiveIntelligence}
+              />
+            )}
+          </div>
+        </CardHeader>
+        
+        {preferences?.competitive_intelligence_enabled && (
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="competitor-name">Competitor Name</Label>
+                <Input
+                  id="competitor-name"
+                  placeholder="Competitor Brand Name"
+                  value={newCompetitorName}
+                  onChange={(e) => setNewCompetitorName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="competitor-url">Competitor Website</Label>
+                <Input
+                  id="competitor-url"
+                  type="url"
+                  placeholder="https://competitor.com"
+                  value={newCompetitorUrl}
+                  onChange={(e) => setNewCompetitorUrl(e.target.value)}
+                />
+              </div>
+              <Button onClick={handleAddCompetitor} className="w-full">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Competitor to Watchlist
+              </Button>
+            </div>
+
+            {competitors.length > 0 && (
+              <div className="space-y-2">
+                <Label>Monitoring ({competitors.length})</Label>
+                <div className="space-y-2">
+                  {competitors.map((competitor) => (
+                    <div
+                      key={competitor.id}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium">{competitor.competitor_name}</p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {competitor.competitor_url}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeCompetitor(competitor.id!)}
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Future integrations */}
       <Card className="opacity-60">
         <CardHeader>
           <CardTitle className="text-muted-foreground">More Integrations Coming Soon</CardTitle>

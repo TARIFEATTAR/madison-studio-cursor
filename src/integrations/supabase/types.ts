@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_preferences: {
+        Row: {
+          competitive_intelligence_enabled: boolean | null
+          created_at: string | null
+          id: string
+          last_scan_at: string | null
+          organization_id: string
+          scan_frequency: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          competitive_intelligence_enabled?: boolean | null
+          created_at?: string | null
+          id?: string
+          last_scan_at?: string | null
+          organization_id: string
+          scan_frequency?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          competitive_intelligence_enabled?: boolean | null
+          created_at?: string | null
+          id?: string
+          last_scan_at?: string | null
+          organization_id?: string
+          scan_frequency?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_preferences_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_collections: {
         Row: {
           color_theme: string | null
@@ -634,6 +672,88 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "calendar_tasks_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitive_insights: {
+        Row: {
+          competitor_name: string
+          created_at: string | null
+          discovered_at: string | null
+          finding: string
+          id: string
+          insight_type: string
+          is_read: boolean | null
+          organization_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          competitor_name: string
+          created_at?: string | null
+          discovered_at?: string | null
+          finding: string
+          id?: string
+          insight_type: string
+          is_read?: boolean | null
+          organization_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          competitor_name?: string
+          created_at?: string | null
+          discovered_at?: string | null
+          finding?: string
+          id?: string
+          insight_type?: string
+          is_read?: boolean | null
+          organization_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitive_insights_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitor_watchlist: {
+        Row: {
+          competitor_name: string
+          competitor_url: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          organization_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          competitor_name: string
+          competitor_url: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          organization_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          competitor_name?: string
+          competitor_url?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          organization_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_watchlist_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
