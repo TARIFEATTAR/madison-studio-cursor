@@ -222,6 +222,32 @@ serve(async (req) => {
       }
     }
     
+    // Fetch organization's active brand knowledge
+    console.log('📚 Fetching active brand knowledge for organization:', resolvedOrganizationId);
+    const { data: brandKnowledgeData, error: bkError } = await supabaseClient
+      .from('brand_knowledge')
+      .select('knowledge_type, content')
+      .eq('organization_id', resolvedOrganizationId)
+      .eq('is_active', true);
+
+    if (bkError) {
+      console.error('⚠️ Failed to fetch brand knowledge:', bkError);
+    }
+
+    // Parse brand knowledge into structured object
+    const brandKnowledge = {
+      visualStandards: brandKnowledgeData?.find(k => k.knowledge_type === 'visual_standards')?.content || null,
+      vocabulary: brandKnowledgeData?.find(k => k.knowledge_type === 'vocabulary')?.content || null,
+      brandVoice: brandKnowledgeData?.find(k => k.knowledge_type === 'brand_voice')?.content || null
+    };
+
+    console.log('✅ Brand knowledge loaded:', {
+      hasVisualStandards: !!brandKnowledge.visualStandards,
+      visualStandardsSize: brandKnowledge.visualStandards ? JSON.stringify(brandKnowledge.visualStandards).length : 0,
+      propCount: brandKnowledge.visualStandards?.approved_props?.length || 0,
+      materialCount: brandKnowledge.visualStandards?.platform_specs?.materials?.length || 0
+    });
+    
     // Handle chain refinement mode
     let parentChainDepth = 0;
     let actualReferenceImages = referenceImages || [];
@@ -287,23 +313,49 @@ serve(async (req) => {
     // Aspect ratio is now handled via image_config API parameter (see line 209)
     // This provides precise control over image dimensions
     
-    if (brandContext) {
-      // Only add brand context if it exists - system works for ANY business
-      if (brandContext.colors && brandContext.colors.length > 0) {
-        enhancedPrompt += `\n\nBrand Colors: ${brandContext.colors.join(', ')}`;
+    // Enrich prompt with brand knowledge from database
+    if (brandKnowledge.visualStandards) {
+      const vs = brandKnowledge.visualStandards;
+      
+      console.log('🎨 Enriching prompt with brand knowledge');
+      
+      // Add color palette
+      if (vs.color_palette && vs.color_palette.length > 0) {
+        const topColors = vs.color_palette
+          .slice(0, 5)
+          .map((c: any) => `${c.name} (${c.hex})`)
+          .join(', ');
+        enhancedPrompt += `\n\n🎨 BRAND COLOR PALETTE: ${topColors}`;
+        console.log(`✅ Added ${vs.color_palette.length} brand colors`);
       }
       
-      if (brandContext.styleKeywords && brandContext.styleKeywords.length > 0) {
-        enhancedPrompt += `\nBrand Aesthetic: ${brandContext.styleKeywords.join(', ')}`;
+      // Add approved props (critical for freestyle mode)
+      if (vs.approved_props && vs.approved_props.length > 0) {
+        enhancedPrompt += `\n\n📦 APPROVED PROPS (use these when contextually appropriate):\n${vs.approved_props.slice(0, 20).join(', ')}`;
+        console.log(`✅ Added ${vs.approved_props.length} approved props`);
       }
       
-      if (brandContext.voiceTone) {
-        enhancedPrompt += `\nBrand Voice: ${brandContext.voiceTone}`;
+      // Add platform materials
+      if (vs.platform_specs && vs.platform_specs.materials) {
+        enhancedPrompt += `\n\n🏛️ APPROVED MATERIALS:\n${vs.platform_specs.materials.join(', ')}`;
+        console.log(`✅ Added ${vs.platform_specs.materials.length} materials`);
       }
       
-      if (brandContext.productName) {
-        enhancedPrompt += `\nProduct: ${brandContext.productName}`;
+      // Add lighting mandates
+      if (vs.lighting_mandates) {
+        enhancedPrompt += `\n\n💡 LIGHTING DIRECTIVE: ${vs.lighting_mandates}`;
       }
+      
+      // Add forbidden elements (prevent off-brand imagery)
+      if (vs.forbidden_elements && vs.forbidden_elements.length > 0) {
+        enhancedPrompt += `\n\n🚫 FORBIDDEN ELEMENTS (NEVER include): ${vs.forbidden_elements.join(', ')}`;
+        console.log(`✅ Added ${vs.forbidden_elements.length} forbidden elements`);
+      }
+    }
+
+    // Still apply basic brandContext if provided (for backward compatibility)
+    if (brandContext?.productName) {
+      enhancedPrompt += `\n\n📍 Product Focus: ${brandContext.productName}`;
     }
     
     // Append hard constraints at the end
@@ -551,7 +603,16 @@ PHOTOGRAPHIC QUALITY:
         image_url: imageUrl,
         description: description,
         reference_images: actualReferenceImages,
-        brand_context_used: brandContext,
+        brand_context_used: {
+          ...brandContext,
+          knowledgeUsed: {
+            visualStandards: !!brandKnowledge.visualStandards,
+            vocabulary: !!brandKnowledge.vocabulary,
+            brandVoice: !!brandKnowledge.brandVoice,
+            propCount: brandKnowledge.visualStandards?.approved_props?.length || 0,
+            materialCount: brandKnowledge.visualStandards?.platform_specs?.materials?.length || 0
+          }
+        },
         // Chain tracking fields
         parent_image_id: isRefinement ? parentImageId : null,
         chain_depth: isRefinement ? parentChainDepth + 1 : 0,
