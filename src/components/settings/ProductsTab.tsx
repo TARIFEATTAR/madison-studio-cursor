@@ -476,62 +476,87 @@ export function ProductsTab() {
         return;
       }
 
-      // Fetch existing products by NAME with rich field data to check if update is needed
+      // Fetch existing products by NAME to preserve Shopify connections
       const names = products.map(p => p.name).filter(Boolean);
       const { data: existingProducts } = await supabase
         .from('brand_products')
-        .select('id, name, visual_world, top_notes, archetype_hero_enabled, shopify_product_id')
+        .select('id, name, shopify_product_id, shopify_variant_id, handle, last_shopify_sync')
         .eq('organization_id', currentOrganizationId)
         .in('name', names);
 
-      const existingMap = new Map(existingProducts?.map(p => [p.name, p]) || []);
+      const existingMap = new Map(existingProducts?.map(p => [p.name.toLowerCase(), p]) || []);
       
       let updatedCount = 0;
       let insertedCount = 0;
+      let failedCount = 0;
 
-      // Process each product - intelligently update or insert
+      // Process each product - always update with CSV data while preserving Shopify connections
       for (const product of products) {
-        if (product.name && existingMap.has(product.name)) {
-          const existing = existingMap.get(product.name)!;
-          // Only update if existing product is missing rich data
-          const hasSomeRichData = existing.visual_world || existing.top_notes || existing.archetype_hero_enabled;
-          
-          if (!hasSomeRichData) {
-            // Update to restore CSV data, preserving Shopify ID if it exists
+        const existing = existingMap.get(product.name.toLowerCase());
+        
+        if (existing) {
+          try {
+            // Update existing product with CSV data, preserving Shopify connection
             const updateData = {
               ...product,
-              shopify_product_id: existing.shopify_product_id || product.shopify_product_id
+              // Preserve Shopify connection fields if they exist
+              shopify_product_id: existing.shopify_product_id || product.shopify_product_id || null,
+              shopify_variant_id: existing.shopify_variant_id || product.shopify_variant_id || null,
+              handle: existing.handle || product.handle || null,
+              last_shopify_sync: existing.last_shopify_sync || null,
             };
             
             const { error } = await supabase
               .from('brand_products')
               .update(updateData)
               .eq('id', existing.id);
-            
-            if (error) throw error;
-            updatedCount++;
+
+            if (error) {
+              console.error(`Failed to update product "${product.name}":`, error);
+              failedCount++;
+            } else {
+              console.log(`Updated product "${product.name}" with CSV data`);
+              updatedCount++;
+            }
+          } catch (err) {
+            console.error(`Error updating product "${product.name}":`, err);
+            failedCount++;
           }
-          // Skip if product already has rich data
         } else {
-          // Insert new product
-          const { error } = await supabase
-            .from('brand_products')
-            .insert([product]);
-          
-          if (error) throw error;
-          insertedCount++;
+          try {
+            // Insert new product
+            const { error } = await supabase
+              .from('brand_products')
+              .insert([product]);
+            
+            if (error) {
+              console.error(`Failed to insert product "${product.name}":`, error);
+              failedCount++;
+            } else {
+              insertedCount++;
+            }
+          } catch (err) {
+            console.error(`Error inserting product "${product.name}":`, err);
+            failedCount++;
+          }
         }
       }
 
-      if (updatedCount === 0 && insertedCount === 0) {
+      if (updatedCount === 0 && insertedCount === 0 && failedCount === 0) {
         toast({
-          title: "No changes needed",
-          description: "All products already exist with complete data.",
+          title: "No changes made",
+          description: "No products were processed.",
         });
       } else {
+        const parts = [];
+        if (updatedCount > 0) parts.push(`${updatedCount} updated`);
+        if (insertedCount > 0) parts.push(`${insertedCount} added`);
+        if (failedCount > 0) parts.push(`${failedCount} failed`);
+        
         toast({
-          title: "Products imported",
-          description: `Updated ${updatedCount} product${updatedCount === 1 ? '' : 's'} with missing data, added ${insertedCount} new product${insertedCount === 1 ? '' : 's'}.`,
+          title: "CSV import complete",
+          description: parts.join(', '),
+          variant: failedCount > 0 ? "destructive" : "default",
         });
       }
 

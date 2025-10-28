@@ -159,6 +159,7 @@ serve(async (req) => {
           shopify_variant_id: product.shopify_variant_id,
           shopify_sync_status: product.shopify_sync_status,
           last_shopify_sync: product.last_shopify_sync,
+          handle: product.handle, // Always update handle from Shopify
         };
         
         // Only update these fields if they're currently empty
