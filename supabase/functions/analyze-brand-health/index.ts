@@ -64,11 +64,11 @@ serve(async (req) => {
 
     console.log('🔍 BRAND HEALTH DEBUG - Starting Analysis');
     console.log('📊 Knowledge docs found:', knowledge.length);
-    console.log('📋 Knowledge types:', knowledge.map(k => k.type || k.knowledge_type).join(', '));
+    console.log('📋 Knowledge types:', knowledge.map(k => k.knowledge_type).join(', '));
 
     // Core Identity: At least 2 of mission/vision/values/personality present
     // Check core_identity type, brand_voice content, and visual_standards raw documents
-    const coreIdentityDoc = knowledge.find(k => k.type === 'core_identity' || k.knowledge_type === 'core_identity');
+    const coreIdentityDoc = knowledge.find(k => k.knowledge_type === 'core_identity');
     console.log('🔍 Core Identity Doc:', coreIdentityDoc ? 'FOUND' : 'NOT FOUND');
     if (coreIdentityDoc) {
       console.log('📄 Core Identity Content Keys:', Object.keys(coreIdentityDoc.content || {}));
@@ -92,7 +92,7 @@ serve(async (req) => {
     // If not found in core_identity, check brand_voice content
     if (!coreIdentityPresent) {
       coreIdentityPresent = knowledge.some(k => {
-        if ((k.type === 'brand_voice' || k.knowledge_type === 'brand_voice') && k.content) {
+        if (k.knowledge_type === 'brand_voice' && k.content) {
           // Check for explicit mission/vision/values fields
           const content = k.content || {};
           const identityFields = Object.entries(content).filter(([key, value]) => 
@@ -120,7 +120,7 @@ serve(async (req) => {
     // If still not found, check visual_standards documents
     if (!coreIdentityPresent) {
       coreIdentityPresent = knowledge.some(k => {
-        if ((k.type === 'visual_standards' || k.knowledge_type === 'visual_standards') && k.content?.raw_document) {
+        if (k.knowledge_type === 'visual_standards' && k.content?.raw_document) {
           const docText = k.content.raw_document.toLowerCase();
           const hasMission = docText.includes('mission');
           const hasVision = docText.includes('vision');
@@ -137,12 +137,12 @@ serve(async (req) => {
     // Voice & Tone: voice_tone with voice_guidelines OR tone_spectrum, OR brand_voice with voice/tone keys
     // ALSO check visual_standards for raw_document containing voice/tone content
     const voiceTonePresent = knowledge.some(k => {
-      if (k.type === 'voice_tone' || k.knowledge_type === 'voice_tone') {
+      if (k.knowledge_type === 'voice_tone') {
         const content = k.content || {};
         return (content.voice_guidelines && typeof content.voice_guidelines === 'string' && content.voice_guidelines.trim().length > 0) ||
                (content.tone_spectrum && typeof content.tone_spectrum === 'string' && content.tone_spectrum.trim().length > 0);
       }
-      if (k.type === 'brand_voice' || k.knowledge_type === 'brand_voice') {
+      if (k.knowledge_type === 'brand_voice') {
         const content = k.content || {};
         const hasVoiceData = Object.keys(content).some(key => 
           key.toLowerCase().includes('voice') || key.toLowerCase().includes('tone')
@@ -150,7 +150,7 @@ serve(async (req) => {
         return hasVoiceData;
       }
       // CHECK VISUAL_STANDARDS RAW DOCUMENTS FOR VOICE CONTENT
-      if ((k.type === 'visual_standards' || k.knowledge_type === 'visual_standards') && k.content?.raw_document) {
+      if (k.knowledge_type === 'visual_standards' && k.content?.raw_document) {
         const docText = k.content.raw_document.toLowerCase();
         // Look for voice/tone sections with substantial content (at least 200 chars)
         const hasVoiceSection = docText.includes('voice') && docText.includes('tone') && docText.length > 200;
@@ -164,7 +164,7 @@ serve(async (req) => {
     // Target Audience: target_audience with descriptive content
     // Check target_audience type, brand_voice content, and visual_standards raw documents
     const targetAudiencePresent = knowledge.some(k => {
-      if (k.type === 'target_audience' || k.knowledge_type === 'target_audience') {
+      if (k.knowledge_type === 'target_audience') {
         console.log('🎯 Found target_audience doc, checking content...');
         const hasContent = Object.values(k.content || {}).some((v: any) => 
           typeof v === 'string' && v.trim().length > 0
@@ -174,7 +174,7 @@ serve(async (req) => {
         return hasContent;
       }
       // CHECK BRAND_VOICE FOR AUDIENCE CONTENT
-      if ((k.type === 'brand_voice' || k.knowledge_type === 'brand_voice') && k.content) {
+      if (k.knowledge_type === 'brand_voice' && k.content) {
         const content = k.content || {};
         // Check for explicit audience fields
         const audienceFields = Object.entries(content).filter(([key, value]) => 
@@ -191,7 +191,7 @@ serve(async (req) => {
         }
       }
       // CHECK VISUAL_STANDARDS FOR AUDIENCE CONTENT
-      if ((k.type === 'visual_standards' || k.knowledge_type === 'visual_standards') && k.content?.raw_document) {
+      if (k.knowledge_type === 'visual_standards' && k.content?.raw_document) {
         const docText = k.content.raw_document.toLowerCase();
         return (docText.includes('audience') || docText.includes('customer') || docText.includes('demographic')) 
           && docText.length > 300;
