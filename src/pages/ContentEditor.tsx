@@ -1226,7 +1226,10 @@ export default function ContentEditorPage() {
           )}
           
           <Drawer open={assistantOpen} onOpenChange={setAssistantOpen}>
-            <DrawerContent className="max-h-[85vh] flex flex-col overflow-hidden" style={{ backgroundColor: "#FFFCF5" }}>
+            <DrawerContent 
+              className="h-screen max-h-[100dvh] mt-0 rounded-t-none flex flex-col overflow-hidden"
+              style={{ backgroundColor: "#FFFCF5", paddingBottom: "env(safe-area-inset-bottom)" }}
+            >
               <div className="flex-1 overflow-hidden">
                 <EditorialAssistantPanel
                   onClose={handleToggleAssistant}
