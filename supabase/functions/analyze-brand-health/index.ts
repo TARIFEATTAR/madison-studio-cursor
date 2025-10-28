@@ -63,7 +63,7 @@ serve(async (req) => {
     const derivativeCount = derivatives.data?.length || 0;
 
     // Core Identity: At least 2 of mission/vision/values/personality present
-    // ALSO check visual_standards raw documents for core identity content
+    // Check core_identity type, brand_voice content, and visual_standards raw documents
     const coreIdentityDoc = knowledge.find(k => k.knowledge_type === 'core_identity');
     let coreIdentityPresent = coreIdentityDoc ? 
       Object.entries(coreIdentityDoc.content || {}).filter(([k, v]) => 
@@ -71,7 +71,33 @@ serve(async (req) => {
         typeof v === 'string' && v.trim().length > 0
       ).length >= 2 : false;
     
-    // If not found in core_identity, check visual_standards documents
+    // If not found in core_identity, check brand_voice content
+    if (!coreIdentityPresent) {
+      coreIdentityPresent = knowledge.some(k => {
+        if (k.knowledge_type === 'brand_voice' && k.content) {
+          // Check for explicit mission/vision/values fields
+          const content = k.content || {};
+          const identityFields = Object.entries(content).filter(([key, value]) => 
+            ['mission', 'vision', 'values', 'personality', 'brand_positioning', 'brand_story'].includes(key.toLowerCase()) &&
+            typeof value === 'string' && value.trim().length > 50
+          );
+          if (identityFields.length >= 2) return true;
+          
+          // Also check raw_document content
+          if (content.raw_document) {
+            const docText = content.raw_document.toLowerCase();
+            const hasMission = docText.includes('mission') && docText.indexOf('mission') < docText.length - 100;
+            const hasVision = docText.includes('vision') && docText.indexOf('vision') < docText.length - 100;
+            const hasValues = docText.includes('values') && docText.indexOf('values') < docText.length - 100;
+            const count = [hasMission, hasVision, hasValues].filter(Boolean).length;
+            return count >= 2 && docText.length > 500;
+          }
+        }
+        return false;
+      });
+    }
+    
+    // If still not found, check visual_standards documents
     if (!coreIdentityPresent) {
       coreIdentityPresent = knowledge.some(k => {
         if (k.knowledge_type === 'visual_standards' && k.content?.raw_document) {
@@ -80,7 +106,7 @@ serve(async (req) => {
           const hasVision = docText.includes('vision');
           const hasValues = docText.includes('values');
           const count = [hasMission, hasVision, hasValues].filter(Boolean).length;
-          return count >= 2 && docText.length > 500; // At least 2 of 3 with substantial content
+          return count >= 2 && docText.length > 500;
         }
         return false;
       });
@@ -112,12 +138,29 @@ serve(async (req) => {
     });
 
     // Target Audience: target_audience with descriptive content
-    // ALSO check visual_standards raw documents for audience content
+    // Check target_audience type, brand_voice content, and visual_standards raw documents
     const targetAudiencePresent = knowledge.some(k => {
       if (k.knowledge_type === 'target_audience') {
         return Object.values(k.content || {}).some((v: any) => 
           typeof v === 'string' && v.trim().length > 0
         );
+      }
+      // CHECK BRAND_VOICE FOR AUDIENCE CONTENT
+      if (k.knowledge_type === 'brand_voice' && k.content) {
+        const content = k.content || {};
+        // Check for explicit audience fields
+        const audienceFields = Object.entries(content).filter(([key, value]) => 
+          ['target_audience', 'audience', 'customer', 'demographic', 'customer_profile'].includes(key.toLowerCase()) &&
+          typeof value === 'string' && value.trim().length > 50
+        );
+        if (audienceFields.length > 0) return true;
+        
+        // Also check raw_document
+        if (content.raw_document) {
+          const docText = content.raw_document.toLowerCase();
+          return (docText.includes('audience') || docText.includes('customer') || docText.includes('demographic')) 
+            && docText.length > 300;
+        }
       }
       // CHECK VISUAL_STANDARDS FOR AUDIENCE CONTENT
       if (k.knowledge_type === 'visual_standards' && k.content?.raw_document) {
