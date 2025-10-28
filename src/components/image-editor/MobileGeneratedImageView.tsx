@@ -139,7 +139,10 @@ export default function MobileGeneratedImageView({
         </div>
 
         {/* Regenerate Section */}
-        <div className="px-4 pb-4 space-y-2">
+        <div className="px-4 pb-4 space-y-3">
+          <Label className="text-xs text-studio-text-secondary">
+            Edit prompt to generate new variation
+          </Label>
           <Textarea
             value={prompt}
             onChange={(e) => onPromptChange(e.target.value)}
@@ -149,25 +152,27 @@ export default function MobileGeneratedImageView({
             disabled={isGenerating}
           />
           
-          <Button
-            onClick={() => onRegenerate(prompt)}
-            disabled={!prompt.trim() || isGenerating}
-            type="button"
-            className="w-full bg-aged-brass hover:bg-aged-brass/90 text-aged-paper font-semibold"
-            size="lg"
-          >
-            {isGenerating ? (
-              <>
-                <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4 mr-2" />
-                Generate
-              </>
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => onRegenerate(prompt)}
+              disabled={isGenerating}
+              type="button"
+              className="flex-1 bg-aged-brass hover:bg-aged-brass/90 text-aged-paper font-semibold"
+              size="lg"
+            >
+              {isGenerating ? (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Generate
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

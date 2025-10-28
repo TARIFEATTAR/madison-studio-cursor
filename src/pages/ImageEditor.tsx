@@ -565,27 +565,45 @@ export default function ImageEditor() {
     try {
       console.log('💾 Saving image to library:', latestImage.id);
 
-      // Use server-side function with elevated privileges for reliability
-      const { data: serverData, error: serverError } = await supabase.functions.invoke(
-        'mark-generated-image-saved',
-        {
-          body: {
-            imageId: latestImage.id,
-            userId: user.id
+      // Direct database update with retry logic for reliability
+      let retryCount = 0;
+      const maxRetries = 3;
+      let updateSuccess = false;
+
+      while (retryCount < maxRetries && !updateSuccess) {
+        try {
+          const { error: directError } = await supabase
+            .from('generated_images')
+            .update({ saved_to_library: true })
+            .eq('id', latestImage.id);
+
+          if (directError) {
+            console.error(`❌ Direct update attempt ${retryCount + 1} failed:`, directError);
+            
+            // If RLS is blocking, try the edge function as fallback
+            if (directError.code === 'PGRST301' || directError.message?.includes('policy')) {
+              console.log('⚠️ RLS blocking direct update, trying edge function...');
+              const { data: serverData, error: serverError } = await supabase.functions.invoke(
+                'mark-generated-image-saved',
+                { body: { imageId: latestImage.id, userId: user.id } }
+              );
+
+              if (serverError) throw serverError;
+              if (!serverData?.success) throw new Error('Edge function save failed');
+            } else {
+              throw directError;
+            }
           }
+
+          updateSuccess = true;
+          console.log('✅ Image saved successfully');
+        } catch (attemptError) {
+          retryCount++;
+          if (retryCount >= maxRetries) throw attemptError;
+          console.log(`⏳ Retry ${retryCount}/${maxRetries}...`);
+          await new Promise(resolve => setTimeout(resolve, 500 * retryCount));
         }
-      );
-
-      if (serverError) {
-        console.error('❌ Server-side save failed:', serverError);
-        throw serverError;
       }
-
-      if (!serverData?.success) {
-        throw new Error('Save failed: server returned unsuccessful result');
-      }
-
-      console.log('✅ Image saved via server function');
       
       // Update local state to mark as flagged
       setCurrentSession(prev => ({
@@ -600,108 +618,116 @@ export default function ImageEditor() {
       toast.success("Image saved to library!");
       setShowGeneratedView(false);
       setActiveTab("gallery");
-    } catch (error) {
-      console.error('❌ Save error:', error);
-      toast.error("Failed to save image. Please try again.");
+    } catch (error: any) {
+      console.error('❌ Save error after all retries:', error);
+      toast.error(error.message || "Failed to save image. Please try again.");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleMobileRefine = async (instruction: string) => {
+  const handleMobileRefine = async (newPrompt: string) => {
+    if (!user) {
+      toast.error("Please log in to continue");
+      return;
+    }
+
     const latestImage = currentSession.images[currentSession.images.length - 1];
-    if (!latestImage || !user) {
-      // Fallback: if we don't have a latest saved image yet, run a fresh generation
+    
+    // If no images exist, do a fresh generation
+    if (!latestImage) {
+      console.log('📸 No existing image, doing fresh generation');
       try {
-        await handleGenerate(instruction || mainPrompt);
+        await handleGenerate(newPrompt);
       } catch (e) {
-        console.error('Fallback generate failed:', e);
+        console.error('Fresh generation failed:', e);
         toast.error("Unable to generate image. Please try again.");
       }
       return;
     }
     
-    // Check chain depth limit before attempting refinement
-    if (latestImage.chainDepth >= 5) {
-      toast.error("Maximum refinement depth reached (5 iterations). Please start a new generation.");
-      return;
-    }
+    // Determine if this is a refinement or new generation
+    const originalPrompt = latestImage.prompt.trim();
+    const trimmedNewPrompt = newPrompt.trim();
     
-    console.log('🔄 Starting refinement:', {
-      parentImageId: latestImage.id,
-      currentChainDepth: latestImage.chainDepth,
-      instruction: instruction.substring(0, 50) + '...'
-    });
+    // If prompts are identical or new prompt is empty, treat as refinement with default instruction
+    const isRefinement = originalPrompt === trimmedNewPrompt || !trimmedNewPrompt;
     
-    setIsGenerating(true);
-    
-    try {
-      const { data: functionData, error: functionError } = await supabase.functions.invoke(
-        'generate-madison-image',
-        {
-          body: {
-            prompt: latestImage.prompt,
-            userId: user.id,
-            organizationId: orgId,
-            sessionId: sessionId,
-            goalType: 'product_photography',
-            parentPrompt: latestImage.prompt,
-            aspectRatio,
-            outputFormat,
-            referenceImages: referenceImages.map(r => ({ url: r.url, description: r.description, label: r.label })),
-            brandContext: brandContext || undefined,
-            isRefinement: true,
-            refinementInstruction: instruction,
-            parentImageId: latestImage.id
-          }
-        }
-      );
-
-      if (functionError) {
-        console.error('❌ Function error:', functionError);
-        throw functionError;
+    if (isRefinement) {
+      // Chain depth limit check
+      if (latestImage.chainDepth >= 5) {
+        toast.error("Maximum refinement depth reached (5 iterations). Please start a new generation.");
+        return;
       }
-      if (!functionData?.imageUrl) {
-        console.error('❌ No image URL in response:', functionData);
-        throw new Error("No image returned from generation");
-      }
-      if (!functionData?.savedImageId) {
-        console.error('❌ No savedImageId in response:', functionData);
-        throw new Error("Refinement failed: Database save unsuccessful");
-      }
-
-      console.log('✅ Refinement successful:', {
-        newImageId: functionData.savedImageId,
-        newChainDepth: latestImage.chainDepth + 1
-      });
-
-      const newImage: GeneratedImage = {
-        id: functionData.savedImageId,
-        imageUrl: functionData.imageUrl,
-        prompt: latestImage.prompt,
-        timestamp: Date.now(),
-        isHero: false,
-        approvalStatus: "pending",
-        parentImageId: latestImage.id,
-        chainDepth: latestImage.chainDepth + 1,
-        isChainOrigin: false,
-        refinementInstruction: instruction
-      };
-
-      setCurrentSession(prev => ({
-        ...prev,
-        images: prev.images.map(img => ({ ...img, isHero: false })).concat({ ...newImage, isHero: true })
-      }));
-
-      // Update the view to show the new refined image
-      setLatestGeneratedImage(newImage.imageUrl);
-      toast.success(`Refinement ${latestImage.chainDepth + 1} complete!`);
       
-    } catch (error: any) {
-      console.error('❌ Refinement error:', error);
-      toast.error(error.message || "Failed to refine image. Please try again.");
-    } finally {
-      setIsGenerating(false);
+      // Use a default refinement instruction
+      const defaultInstruction = "Enhance this image with better lighting and composition";
+      console.log('🔄 Refining with default instruction');
+      
+      setIsGenerating(true);
+      
+      try {
+        const { data: functionData, error: functionError } = await supabase.functions.invoke(
+          'generate-madison-image',
+          {
+            body: {
+              prompt: latestImage.prompt,
+              userId: user.id,
+              organizationId: orgId,
+              sessionId: sessionId,
+              goalType: 'product_photography',
+              parentPrompt: latestImage.prompt,
+              aspectRatio,
+              outputFormat,
+              referenceImages: referenceImages.map(r => ({ url: r.url, description: r.description, label: r.label })),
+              brandContext: brandContext || undefined,
+              isRefinement: true,
+              refinementInstruction: defaultInstruction,
+              parentImageId: latestImage.id
+            }
+          }
+        );
+
+        if (functionError) throw functionError;
+        if (!functionData?.imageUrl) throw new Error("No image returned");
+        if (!functionData?.savedImageId) throw new Error("Database save failed");
+
+        const newImage: GeneratedImage = {
+          id: functionData.savedImageId,
+          imageUrl: functionData.imageUrl,
+          prompt: latestImage.prompt,
+          timestamp: Date.now(),
+          isHero: false,
+          approvalStatus: "pending",
+          parentImageId: latestImage.id,
+          chainDepth: latestImage.chainDepth + 1,
+          isChainOrigin: false,
+          refinementInstruction: defaultInstruction
+        };
+
+        setCurrentSession(prev => ({
+          ...prev,
+          images: [...prev.images.map(img => ({ ...img, isHero: false })), { ...newImage, isHero: true }]
+        }));
+
+        setLatestGeneratedImage(newImage.imageUrl);
+        toast.success(`Refinement ${latestImage.chainDepth + 1} complete!`);
+        
+      } catch (error: any) {
+        console.error('❌ Refinement error:', error);
+        toast.error(error.message || "Refinement failed. Please try again.");
+      } finally {
+        setIsGenerating(false);
+      }
+    } else {
+      // New generation with modified prompt
+      console.log('📸 New prompt detected, doing fresh generation');
+      try {
+        await handleGenerate(newPrompt);
+      } catch (e) {
+        console.error('New generation failed:', e);
+        toast.error("Unable to generate image. Please try again.");
+      }
     }
   };
 

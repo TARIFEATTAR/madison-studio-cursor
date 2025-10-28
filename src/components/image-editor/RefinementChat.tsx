@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Send, Sparkles } from 'lucide-react';
 
 const QUICK_REFINEMENTS = [
-  'Brighter',
-  'More shadows',
-  'Cleaner',
+  'Make brighter',
+  'Add more shadows',
+  'Cleaner composition',
   'Add lifestyle context',
   'Desert backdrop'
 ];
@@ -21,9 +21,14 @@ export function RefinementChat({ onRefine, isGenerating }: RefinementChatProps) 
   const [input, setInput] = useState('');
 
   const handleSubmit = () => {
-    if (!input.trim()) return;
-    onRefine(input);
+    if (!input.trim() || isGenerating) return;
+    onRefine(input.trim());
     setInput('');
+  };
+
+  const handleQuickRefine = (refinement: string) => {
+    if (isGenerating) return;
+    onRefine(refinement);
   };
 
   return (
@@ -39,9 +44,9 @@ export function RefinementChat({ onRefine, isGenerating }: RefinementChatProps) 
             key={ref}
             size="sm"
             variant="outline"
-            onClick={() => onRefine(ref)}
+            onClick={() => handleQuickRefine(ref)}
             disabled={isGenerating}
-            className="border-charcoal/20 hover:border-brass/40 hover:bg-brass/5 transition-all"
+            className="border-charcoal/20 hover:border-brass/40 hover:bg-brass/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {ref}
           </Button>
@@ -52,12 +57,21 @@ export function RefinementChat({ onRefine, isGenerating }: RefinementChatProps) 
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSubmit();
+            }
+          }}
           placeholder="e.g., 'Make it brighter' or 'Add desert backdrop'"
           disabled={isGenerating}
-          className="bg-vellum-cream border-charcoal/20 focus:border-brass focus:ring-brass"
+          className="bg-vellum-cream border-charcoal/20 focus:border-brass focus:ring-brass disabled:opacity-50"
         />
-        <Button onClick={handleSubmit} disabled={isGenerating || !input.trim()}>
+        <Button 
+          onClick={handleSubmit} 
+          disabled={isGenerating || !input.trim()}
+          className="disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <Send className="w-4 h-4" />
         </Button>
       </div>
