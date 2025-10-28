@@ -30,12 +30,18 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.type === "application/pdf") {
+    if (file && (
+      file.type === "application/pdf" || 
+      file.type === "text/plain" || 
+      file.type === "text/markdown" ||
+      file.name.endsWith('.md') ||
+      file.name.endsWith('.txt')
+    )) {
       setUploadedFile(file);
     } else {
       toast({
         title: "Invalid file",
-        description: "Please upload a PDF file",
+        description: "Please upload a PDF, TXT, or Markdown file",
         variant: "destructive"
       });
     }
@@ -288,13 +294,13 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
                 ) : (
                   <div>
                     <p className="text-foreground font-medium">Click to upload or drag and drop</p>
-                    <p className="text-sm text-muted-foreground mt-1">PDF files only</p>
+                    <p className="text-sm text-muted-foreground mt-1">PDF, TXT, or Markdown files</p>
                   </div>
                 )}
                 <input
                   id="file-upload"
                   type="file"
-                  accept=".pdf"
+                  accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown"
                   onChange={handleFileUpload}
                   className="hidden"
                 />

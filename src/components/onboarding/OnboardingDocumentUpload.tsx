@@ -29,18 +29,24 @@ export function OnboardingDocumentUpload({
 
   const handleFilesAdded = (files: FileList | File[]) => {
     const fileArray = Array.from(files);
-    const pdfFile = fileArray.find(file => file.type === 'application/pdf');
+    const validFile = fileArray.find(file => 
+      file.type === 'application/pdf' || 
+      file.type === 'text/plain' || 
+      file.type === 'text/markdown' ||
+      file.name.endsWith('.md') ||
+      file.name.endsWith('.txt')
+    );
 
-    if (!pdfFile) {
+    if (!validFile) {
       toast({
         title: "Invalid File Type",
-        description: "Please upload a PDF file.",
+        description: "Please upload a PDF, TXT, or Markdown file.",
         variant: "destructive",
       });
       return;
     }
 
-    setSelectedFile(pdfFile);
+    setSelectedFile(validFile);
   };
 
   const handleUpload = async () => {
@@ -191,7 +197,7 @@ export function OnboardingDocumentUpload({
               <input
                 id="onboarding-file-input"
                 type="file"
-                accept="application/pdf"
+                accept="application/pdf,.txt,.md,text/plain,text/markdown"
                 onChange={handleFileInputChange}
                 className="hidden"
               />
@@ -232,7 +238,7 @@ export function OnboardingDocumentUpload({
                     Drop your document here
                   </h3>
                   <p className="text-sm text-charcoal/70 mb-4">
-                    or click to browse for a PDF file
+                    or click to browse (PDF, TXT, or Markdown)
                   </p>
                   <div className="text-xs text-charcoal/60 space-y-1">
                     <p>✦ Brand guidelines</p>
