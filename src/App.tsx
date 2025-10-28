@@ -32,6 +32,7 @@ import CreateEtsyListing from "./pages/marketplace/CreateEtsyListing";
 import CreateTikTokShopListing from "./pages/marketplace/CreateTikTokShopListing";
 import CreateShopifyListing from "./pages/marketplace/CreateShopifyListing";
 import BrandHealth from "./pages/BrandHealth";
+import BrandBuilder from "./pages/BrandBuilder";
 import ImageEditor from "./pages/ImageEditor";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
@@ -167,6 +168,7 @@ const AppContent = () => {
                   <Route path="/meet-madison" element={<ProtectedRoute><RouteErrorBoundary routeName="Meet Madison"><MeetMadison /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/help-center" element={<ProtectedRoute><RouteErrorBoundary routeName="Help Center"><HelpCenter /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>
@@ -196,6 +198,7 @@ const AppContent = () => {
             <Route path="/meet-madison" element={<ProtectedRoute><RouteErrorBoundary routeName="Meet Madison"><MeetMadison /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/help-center" element={<ProtectedRoute><RouteErrorBoundary routeName="Help Center"><HelpCenter /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </>

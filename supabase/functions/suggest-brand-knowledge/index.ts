@@ -32,20 +32,22 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { knowledge_type, recommendation } = await req.json();
+    const { knowledge_type, recommendation, organizationId: passedOrgId } = await req.json();
 
     // Get organization ID
-    const { data: orgMember } = await supabase
-      .from('organization_members')
-      .select('organization_id')
-      .eq('user_id', user.id)
-      .single();
+    let organizationId = passedOrgId;
+    if (!organizationId) {
+      const { data: orgMember } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', user.id)
+        .single();
 
-    if (!orgMember) {
-      throw new Error('Organization not found');
+      if (!orgMember) {
+        throw new Error('Organization not found');
+      }
+      organizationId = orgMember.organization_id;
     }
-
-    const organizationId = orgMember.organization_id;
 
     // Fetch existing brand knowledge
     const { data: existingKnowledge } = await supabase
@@ -97,84 +99,206 @@ serve(async (req) => {
     const context = contextParts.join('\n');
 
     // Build tool definition based on knowledge_type
-    const systemPrompt = `You are Madison, an expert editorial director helping a brand define their identity. 
-Your role is to analyze existing brand content and create intelligent, context-aware suggestions that feel authentic to their voice.
+    let systemPrompt, tools, toolChoice, userPrompt;
 
-CONTEXT ABOUT THIS BRAND:
+    switch (knowledge_type) {
+      case 'target_audience':
+        systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, create a clear, specific target audience description.
+
+CONTEXT:
 ${context}
 
-${recommendation ? `\nRECOMMENDATION CONTEXT: ${recommendation.title} - ${recommendation.description}` : ''}
+GUIDELINES:
+- Be specific about demographics, psychographics, and needs
+- Include pain points and motivations
+- Keep it 2-3 sentences, actionable and clear
+- Reference patterns you observe in their content/products`;
+
+        tools = [{
+          type: "function",
+          function: {
+            name: "suggest_target_audience",
+            description: "Generate target audience suggestion",
+            parameters: {
+              type: "object",
+              properties: {
+                target_audience: { 
+                  type: "string", 
+                  description: "Clear, specific description of ideal customers (2-3 sentences)" 
+                }
+              },
+              required: ["target_audience"],
+              additionalProperties: false
+            }
+          }
+        }];
+        toolChoice = { type: "function", function: { name: "suggest_target_audience" } };
+        userPrompt = "Generate a target audience suggestion based on the context.";
+        break;
+
+      case 'brand_voice':
+        systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, define their brand voice and tone.
+
+CONTEXT:
+${context}
 
 GUIDELINES:
-- Base suggestions on actual content patterns you observe
-- Be specific and actionable
-- Maintain consistency with existing brand voice
-- Reference what you're seeing (e.g., "Based on your 5 blog posts about sustainability...")
-- Keep each suggestion concise but comprehensive (2-4 sentences)`;
+- Describe personality traits and communication style
+- Be specific about tone (warm, professional, playful, etc.)
+- Include do's and don'ts if patterns are clear
+- Keep it 3-4 sentences, actionable`;
 
-    let tools, toolChoice, userPrompt;
+        tools = [{
+          type: "function",
+          function: {
+            name: "suggest_voice",
+            description: "Generate brand voice guidelines",
+            parameters: {
+              type: "object",
+              properties: {
+                voice_guidelines: { 
+                  type: "string", 
+                  description: "Brand voice description with personality and tone (3-4 sentences)" 
+                }
+              },
+              required: ["voice_guidelines"],
+              additionalProperties: false
+            }
+          }
+        }];
+        toolChoice = { type: "function", function: { name: "suggest_voice" } };
+        userPrompt = "Generate brand voice guidelines based on the context.";
+        break;
 
-    if (knowledge_type === 'core_identity') {
-      tools = [{
-        type: "function",
-        function: {
-          name: "suggest_core_identity",
-          description: "Generate brand core identity suggestions",
-          parameters: {
-            type: "object",
-            properties: {
-              mission: { type: "string", description: "Clear mission statement" },
-              vision: { type: "string", description: "Aspirational vision statement" },
-              values: { type: "string", description: "3-5 core values" },
-              personality: { type: "string", description: "Brand personality traits" },
-              sources: { type: "array", items: { type: "string" }, description: "What you based suggestions on" }
-            },
-            required: ["mission", "vision", "values", "personality", "sources"],
-            additionalProperties: false
+      case 'mission':
+        systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, craft a clear mission statement.
+
+CONTEXT:
+${context}
+
+GUIDELINES:
+- Answer "Why does this brand exist?"
+- Focus on the value they create or problem they solve
+- Keep it inspiring but grounded
+- 2-3 sentences maximum`;
+
+        tools = [{
+          type: "function",
+          function: {
+            name: "suggest_mission",
+            description: "Generate mission statement",
+            parameters: {
+              type: "object",
+              properties: {
+                mission: { 
+                  type: "string", 
+                  description: "Clear, inspiring mission statement (2-3 sentences)" 
+                }
+              },
+              required: ["mission"],
+              additionalProperties: false
+            }
           }
-        }
-      }];
-      toolChoice = { type: "function", function: { name: "suggest_core_identity" } };
-      userPrompt = "Generate brand identity suggestions based on the context above.";
-    } else if (knowledge_type === 'voice_tone') {
-      tools = [{
-        type: "function",
-        function: {
-          name: "suggest_voice_tone",
-          description: "Generate voice and tone guidelines",
-          parameters: {
-            type: "object",
-            properties: {
-              voice_guidelines: { type: "string", description: "Consistent voice characteristics" },
-              tone_spectrum: { type: "string", description: "How tone varies by context" },
-              sources: { type: "array", items: { type: "string" }, description: "What patterns you observed" }
-            },
-            required: ["voice_guidelines", "tone_spectrum", "sources"],
-            additionalProperties: false
+        }];
+        toolChoice = { type: "function", function: { name: "suggest_mission" } };
+        userPrompt = "Generate a mission statement based on the context.";
+        break;
+
+      case 'usp':
+        systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, identify what makes this brand unique.
+
+CONTEXT:
+${context}
+
+GUIDELINES:
+- Focus on what they do differently or better
+- Be specific and credible
+- Highlight competitive advantages
+- 2-3 sentences`;
+
+        tools = [{
+          type: "function",
+          function: {
+            name: "suggest_usp",
+            description: "Generate unique selling proposition",
+            parameters: {
+              type: "object",
+              properties: {
+                differentiator: { 
+                  type: "string", 
+                  description: "Clear USP highlighting what makes them unique (2-3 sentences)" 
+                }
+              },
+              required: ["differentiator"],
+              additionalProperties: false
+            }
           }
-        }
-      }];
-      toolChoice = { type: "function", function: { name: "suggest_voice_tone" } };
-      userPrompt = "Generate voice and tone guidelines based on the context above.";
-    } else {
-      tools = [{
-        type: "function",
-        function: {
-          name: "suggest_brand_guideline",
-          description: "Generate brand guideline suggestions",
-          parameters: {
-            type: "object",
-            properties: {
-              content: { type: "string", description: "Brand guideline content" },
-              sources: { type: "array", items: { type: "string" }, description: "What you based this on" }
-            },
-            required: ["content", "sources"],
-            additionalProperties: false
+        }];
+        toolChoice = { type: "function", function: { name: "suggest_usp" } };
+        userPrompt = "Generate a USP based on the context.";
+        break;
+
+      case 'key_messages':
+        systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, identify 3-5 core messages.
+
+CONTEXT:
+${context}
+
+GUIDELINES:
+- Short, memorable phrases (not full sentences)
+- Cover different aspects: quality, values, benefits, etc.
+- Easy to remember and repeat
+- Return exactly 3-5 messages`;
+
+        tools = [{
+          type: "function",
+          function: {
+            name: "suggest_messages",
+            description: "Generate key brand messages",
+            parameters: {
+              type: "object",
+              properties: {
+                messages: { 
+                  type: "array",
+                  items: { type: "string" },
+                  description: "3-5 short, memorable brand messages" 
+                }
+              },
+              required: ["messages"],
+              additionalProperties: false
+            }
           }
-        }
-      }];
-      toolChoice = { type: "function", function: { name: "suggest_brand_guideline" } };
-      userPrompt = `Generate brand guideline suggestions for: ${knowledge_type}`;
+        }];
+        toolChoice = { type: "function", function: { name: "suggest_messages" } };
+        userPrompt = "Generate 3-5 key brand messages based on the context.";
+        break;
+
+      default:
+        // Fallback for old knowledge types
+        systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, create suggestions.
+
+CONTEXT:
+${context}
+
+${recommendation ? `\nRECOMMENDATION CONTEXT: ${recommendation.title} - ${recommendation.description}` : ''}`;
+
+        tools = [{
+          type: "function",
+          function: {
+            name: "suggest_brand_guideline",
+            description: "Generate brand guideline suggestions",
+            parameters: {
+              type: "object",
+              properties: {
+                content: { type: "string", description: "Brand guideline content" }
+              },
+              required: ["content"],
+              additionalProperties: false
+            }
+          }
+        }];
+        toolChoice = { type: "function", function: { name: "suggest_brand_guideline" } };
+        userPrompt = `Generate brand guideline suggestions for: ${knowledge_type}`;
     }
 
     // Call Lovable AI Gateway with tool-calling
