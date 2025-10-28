@@ -245,7 +245,8 @@ serve(async (req) => {
       hasVisualStandards: !!brandKnowledge.visualStandards,
       visualStandardsSize: brandKnowledge.visualStandards ? JSON.stringify(brandKnowledge.visualStandards).length : 0,
       propCount: brandKnowledge.visualStandards?.approved_props?.length || 0,
-      materialCount: brandKnowledge.visualStandards?.platform_specs?.materials?.length || 0
+      colorCount: brandKnowledge.visualStandards?.color_palette?.length || 0,
+      templateCount: brandKnowledge.visualStandards?.templates?.length || 0
     });
     
     // Handle chain refinement mode
@@ -331,14 +332,8 @@ serve(async (req) => {
       
       // Add approved props (critical for freestyle mode)
       if (vs.approved_props && vs.approved_props.length > 0) {
-        enhancedPrompt += `\n\n📦 APPROVED PROPS (use these when contextually appropriate):\n${vs.approved_props.slice(0, 20).join(', ')}`;
+        enhancedPrompt += `\n\n📦 APPROVED PROPS & MATERIALS (use these when contextually appropriate):\n${vs.approved_props.slice(0, 25).join(', ')}`;
         console.log(`✅ Added ${vs.approved_props.length} approved props`);
-      }
-      
-      // Add platform materials
-      if (vs.platform_specs && vs.platform_specs.materials) {
-        enhancedPrompt += `\n\n🏛️ APPROVED MATERIALS:\n${vs.platform_specs.materials.join(', ')}`;
-        console.log(`✅ Added ${vs.platform_specs.materials.length} materials`);
       }
       
       // Add lighting mandates
@@ -605,12 +600,12 @@ PHOTOGRAPHIC QUALITY:
         reference_images: actualReferenceImages,
         brand_context_used: {
           ...brandContext,
-          knowledgeUsed: {
+        knowledgeUsed: {
             visualStandards: !!brandKnowledge.visualStandards,
             vocabulary: !!brandKnowledge.vocabulary,
             brandVoice: !!brandKnowledge.brandVoice,
             propCount: brandKnowledge.visualStandards?.approved_props?.length || 0,
-            materialCount: brandKnowledge.visualStandards?.platform_specs?.materials?.length || 0
+            colorCount: brandKnowledge.visualStandards?.color_palette?.length || 0
           }
         },
         // Chain tracking fields
