@@ -64,6 +64,7 @@ export function ProductsTab() {
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
   const [searchFilter, setSearchFilter] = useState("");
   const [isImporting, setIsImporting] = useState(false);
+  const [isResolvingDuplicates, setIsResolvingDuplicates] = useState(false);
   
   // Bulk selection state
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
@@ -700,6 +701,34 @@ export function ProductsTab() {
     }
   };
 
+  const handleResolveDuplicates = async () => {
+    if (!currentOrganizationId) return;
+    
+    setIsResolvingDuplicates(true);
+    try {
+      // Call the database function to merge duplicates
+      const { error } = await supabase.rpc('merge_duplicate_products');
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Duplicates resolved",
+        description: "All duplicate products have been merged successfully.",
+      });
+      
+      refetch();
+    } catch (error) {
+      console.error("Error resolving duplicates:", error);
+      toast({
+        title: "Error",
+        description: "Failed to resolve duplicates. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResolvingDuplicates(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -719,6 +748,16 @@ export function ProductsTab() {
                 onChange={handleCSVUpload}
                 className="hidden"
               />
+              <Button 
+                onClick={handleResolveDuplicates}
+                variant="outline"
+                disabled={isResolvingDuplicates}
+                className="gap-2"
+                title="Merge duplicate products by handle"
+              >
+                <AlertCircle className="w-4 h-4" />
+                {isResolvingDuplicates ? "Resolving..." : "Resolve Duplicates"}
+              </Button>
               <Button 
                 onClick={() => fileInputRef.current?.click()} 
                 variant="outline"

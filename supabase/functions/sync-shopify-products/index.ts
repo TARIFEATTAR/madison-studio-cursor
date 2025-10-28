@@ -72,6 +72,12 @@ serve(async (req) => {
     const mappedProducts = products.map((product: any) => {
       const variant = product.variants?.[0] || {};
       
+      // Generate handle from product title if not provided
+      const handle = product.handle || product.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      
       // Parse Shopify tags for Madison-specific metadata
       const tags = product.tags ? product.tags.split(',').map((t: string) => t.trim()) : [];
 
@@ -107,6 +113,7 @@ serve(async (req) => {
       return {
         organization_id,
         name: product.title,
+        handle: handle,
         collection: collection,
         scent_family: scent_family,
         category: 'personal_fragrance',
@@ -121,23 +128,63 @@ serve(async (req) => {
       };
     });
 
-    console.log(`Upserting ${mappedProducts.length} products to database`);
+    console.log(`Processing ${mappedProducts.length} products for sync`);
 
-    // Upsert products into brand_products table
-    const { data: upsertedProducts, error: upsertError } = await supabase
+    // Fetch existing products by handle to merge instead of duplicating
+    const handles = mappedProducts
+      .map((p: any) => p.handle)
+      .filter((h: any): h is string => !!h);
+    
+    const { data: existingProducts } = await supabase
       .from('brand_products')
-      .upsert(mappedProducts, {
-        onConflict: 'shopify_product_id',
-        ignoreDuplicates: false,
-      })
-      .select();
+      .select('id, handle, shopify_product_id, description')
+      .eq('organization_id', organization_id)
+      .in('handle', handles);
 
-    if (upsertError) {
-      console.error('Error upserting products:', upsertError);
-      throw upsertError;
+    const existingByHandle = new Map(existingProducts?.map(p => [p.handle, p]) || []);
+    const existingByShopifyId = new Map(existingProducts?.map(p => [p.shopify_product_id, p]) || []);
+    
+    let updatedCount = 0;
+    let insertedCount = 0;
+
+    // Process each product - update if exists by handle or shopify_product_id, insert if new
+    for (const product of mappedProducts) {
+      const existingByHandleMatch = product.handle ? existingByHandle.get(product.handle) : null;
+      const existingByShopifyMatch = existingByShopifyId.get(product.shopify_product_id);
+      const existing = existingByHandleMatch || existingByShopifyMatch;
+      
+      if (existing) {
+        // Update existing product - preserve 49-field visual specs from CSV
+        const { error } = await supabase
+          .from('brand_products')
+          .update({
+            shopify_product_id: product.shopify_product_id,
+            shopify_variant_id: product.shopify_variant_id,
+            shopify_sync_status: product.shopify_sync_status,
+            last_shopify_sync: product.last_shopify_sync,
+            // Only update description if it's empty
+            description: existing.description || product.description,
+            // Update collection and scent info from Shopify tags
+            collection: product.collection,
+            scent_family: product.scent_family,
+            tone: product.tone,
+          })
+          .eq('id', existing.id);
+        
+        if (error) throw error;
+        updatedCount++;
+      } else {
+        // Insert new product from Shopify
+        const { error } = await supabase
+          .from('brand_products')
+          .insert([product]);
+        
+        if (error) throw error;
+        insertedCount++;
+      }
     }
 
-    console.log(`Successfully synced ${upsertedProducts?.length || 0} products`);
+    console.log(`Successfully synced: ${updatedCount} updated, ${insertedCount} new products`);
 
     // Update connection sync timestamp
     await supabase
@@ -151,8 +198,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        count: upsertedProducts?.length || 0,
-        products: upsertedProducts,
+        updated: updatedCount,
+        inserted: insertedCount,
+        total: updatedCount + insertedCount,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
