@@ -564,45 +564,27 @@ export default function ImageEditor() {
     
     setIsSaving(true);
     try {
-      console.log('💾 Saving image to library:', latestImage.id);
+      console.log('💾 Saving image to library via edge function:', latestImage.id);
 
-      // Direct database update with retry logic for reliability
-      let retryCount = 0;
+      // Always use server-side function to avoid RLS intermittency
       const maxRetries = 3;
-      let updateSuccess = false;
-
-      while (retryCount < maxRetries && !updateSuccess) {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-          const { error: directError } = await supabase
-            .from('generated_images')
-            .update({ saved_to_library: true })
-            .eq('id', latestImage.id);
+          const { data: serverData, error: serverError } = await supabase.functions.invoke(
+            'mark-generated-image-saved',
+            { body: { imageId: latestImage.id, userId: user.id } }
+          );
 
-          if (directError) {
-            console.error(`❌ Direct update attempt ${retryCount + 1} failed:`, directError);
-            
-            // If RLS is blocking, try the edge function as fallback
-            if (directError.code === 'PGRST301' || directError.message?.includes('policy')) {
-              console.log('⚠️ RLS blocking direct update, trying edge function...');
-              const { data: serverData, error: serverError } = await supabase.functions.invoke(
-                'mark-generated-image-saved',
-                { body: { imageId: latestImage.id, userId: user.id } }
-              );
+          if (serverError) throw serverError;
+          if (!serverData?.success) throw new Error('Save failed on server');
 
-              if (serverError) throw serverError;
-              if (!serverData?.success) throw new Error('Edge function save failed');
-            } else {
-              throw directError;
-            }
-          }
-
-          updateSuccess = true;
-          console.log('✅ Image saved successfully');
+          console.log('✅ Image saved successfully (server)');
+          break; // success
         } catch (attemptError) {
-          retryCount++;
-          if (retryCount >= maxRetries) throw attemptError;
-          console.log(`⏳ Retry ${retryCount}/${maxRetries}...`);
-          await new Promise(resolve => setTimeout(resolve, 500 * retryCount));
+          console.error(`❌ Save attempt ${attempt} failed:`, attemptError);
+          if (attempt === maxRetries) throw attemptError;
+          // Exponential backoff
+          await new Promise((r) => setTimeout(r, 400 * attempt));
         }
       }
       
@@ -1275,12 +1257,12 @@ export default function ImageEditor() {
               }}
               onSave={async (img) => {
                 try {
-                  const { error } = await supabase
-                    .from('generated_images')
-                    .update({ saved_to_library: true })
-                    .eq('id', img.id);
-                  
-                  if (error) throw error;
+                  const { data: serverData, error: serverError } = await supabase.functions.invoke(
+                    'mark-generated-image-saved',
+                    { body: { imageId: img.id, userId: user?.id } }
+                  );
+                  if (serverError) throw serverError;
+                  if (!serverData?.success) throw new Error('Save failed');
                   toast.success("Image saved to library!");
                 } catch (error) {
                   console.error('Error saving image:', error);
