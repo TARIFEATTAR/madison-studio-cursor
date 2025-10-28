@@ -96,77 +96,87 @@ export function BrandKnowledgeStatus({ organizationId }: BrandKnowledgeStatusPro
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Madison's Knowledge Status</CardTitle>
+            <CardTitle>Your Brand Knowledge</CardTitle>
             <CardDescription className="mt-1">
-              Active brand knowledge that Madison references when generating content
+              Madison uses only <strong>your organization's</strong> active knowledge when creating content
             </CardDescription>
           </div>
-          <Badge variant={activeCount > 0 ? "default" : "secondary"} className="text-base px-3 py-1">
-            {activeCount} Active {activeCount === 1 ? 'Document' : 'Documents'}
+          <Badge variant={activeCount > 0 ? "default" : "secondary"} className="text-base px-3 py-1 bg-brass text-charcoal">
+            {activeCount} Active
           </Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Overall Status */}
-        <div className="flex items-center justify-between p-3 bg-accent/5 rounded-lg border">
+        <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
           <div className="flex items-center gap-2">
             {activeCount > 0 ? (
-              <Check className="h-5 w-5 text-green-500" />
+              <Check className="h-5 w-5 text-green-600" />
             ) : (
               <AlertCircle className="h-5 w-5 text-yellow-500" />
             )}
             <div>
-              <div className="font-medium text-sm">Brand Context Loaded</div>
-              <div className="text-xs text-muted-foreground">
-                {formatBytes(totalSize)} of brand guidelines active
+              <div className="font-medium text-sm text-green-900">Your Brand Context Loaded</div>
+              <div className="text-xs text-green-700">
+                {formatBytes(totalSize)} • Private to your organization
               </div>
             </div>
           </div>
         </div>
 
-        {/* Individual Documents */}
-        <div className="space-y-2">
+        {/* Group by document */}
+        <div className="space-y-3">
           {knowledgeEntries.length === 0 ? (
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                No brand knowledge documents found. Upload brand documents to enable Madison's contextual understanding.
+                No brand knowledge found. Upload brand documents in Settings → Brand Guidelines.
               </AlertDescription>
             </Alert>
           ) : (
-            knowledgeEntries.map((entry) => (
-              <div
-                key={entry.id}
-                className="flex items-center justify-between p-3 border rounded-md hover:bg-accent/5 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  {entry.is_active ? (
-                    <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                  ) : (
-                    <X className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  )}
-                  <div className="min-w-0">
-                    <div className="font-medium text-sm truncate">
-                      {entry.file_name || 'Unknown Document'}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {formatKnowledgeType(entry.knowledge_type)} • {formatBytes(entry.content_size)}
+            (() => {
+              // Group active entries by document
+              const docGroups: Record<string, KnowledgeEntry[]> = {};
+              knowledgeEntries.filter(e => e.is_active).forEach(entry => {
+                const docKey = entry.file_name || 'Manual';
+                if (!docGroups[docKey]) docGroups[docKey] = [];
+                docGroups[docKey].push(entry);
+              });
+
+              return Object.entries(docGroups).map(([docName, entries]) => (
+                <div
+                  key={docName}
+                  className="p-3 border border-brass/20 rounded-lg bg-paper-light"
+                >
+                  <div className="flex items-start gap-3">
+                    <Check className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm text-charcoal truncate">
+                        📄 {docName}
+                      </div>
+                      <div className="text-xs text-warm-gray mt-1 flex flex-wrap gap-1">
+                        {entries.map(entry => (
+                          <Badge key={entry.id} variant="outline" className="bg-brass/5 text-charcoal border-brass/20 text-xs">
+                            {formatKnowledgeType(entry.knowledge_type)}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
-                <Badge variant={entry.is_active ? "default" : "outline"} className="ml-2 flex-shrink-0">
-                  {entry.is_active ? 'Active' : 'Inactive'}
-                </Badge>
-              </div>
-            ))
+              ));
+            })()
           )}
         </div>
 
         {/* Help Text */}
-        <p className="text-xs text-muted-foreground pt-2 border-t">
-          💡 Madison can only reference documents marked as "Active" when generating content. 
-          Inactive documents are stored but not used in AI prompts.
-        </p>
+        <Alert className="bg-blue-50 border-blue-200">
+          <AlertCircle className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-xs text-blue-900">
+            🔒 <strong>Privacy:</strong> Your brand knowledge is private to your organization. 
+            Madison only references active knowledge types when generating your content.
+          </AlertDescription>
+        </Alert>
       </CardContent>
     </Card>
   );

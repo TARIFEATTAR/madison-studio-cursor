@@ -442,15 +442,6 @@ export function BrandKnowledgeManager() {
     );
   };
 
-  // Group items by knowledge_type
-  const groupedItems = knowledgeItems.reduce((acc, item) => {
-    if (!acc[item.knowledge_type]) {
-      acc[item.knowledge_type] = [];
-    }
-    acc[item.knowledge_type].push(item);
-    return acc;
-  }, {} as Record<string, BrandKnowledge[]>);
-
   if (isLoading) {
     return (
       <Card className="bg-paper-light border-cream-dark">
@@ -466,320 +457,137 @@ export function BrandKnowledgeManager() {
       <CardHeader>
         <CardTitle className="text-charcoal flex items-center gap-2">
           <History className="w-5 h-5" />
-          Brand Knowledge Management
+          Your Brand Knowledge Base
         </CardTitle>
         <CardDescription>
-          Your single source of truth for brand knowledge. All brand information should be managed here.
+          Madison uses only <strong>your brand's active knowledge</strong> when creating content. Other organizations cannot see or access this information.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Duplicate Scanner Panel - Always Visible */}
-        <Card className="bg-slate-50 border-slate-200">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-slate-700 flex items-center gap-2">
-              <RefreshCw className="w-4 h-4" />
-              Duplicate Scanner
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="text-sm text-slate-600">
-                  {lastScanAt ? (
-                    <>Last scan: {format(lastScanAt, 'MMM d, yyyy h:mm a')} - Found {duplicates.length} duplicate type(s)</>
-                  ) : (
-                    <>Scan for duplicate knowledge types</>
-                  )}
-                </div>
-                {lastConsolidation && (
-                  <div className={`flex items-center gap-2 mt-2 text-sm ${
-                    lastConsolidation.status === 'success' ? 'text-green-700' : 'text-red-700'
-                  }`}>
-                    {lastConsolidation.status === 'success' ? (
-                      <CheckCircle className="w-4 h-4" />
-                    ) : (
-                      <XCircle className="w-4 h-4" />
-                    )}
-                    {lastConsolidation.message}
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  onClick={loadAllVersions}
-                  variant="outline"
-                  size="sm"
-                  className="border-blue-300 text-blue-600 hover:bg-blue-50"
-                >
-                  <History className="w-3 h-3 mr-1" />
-                  View All Versions
-                </Button>
-                <Button
-                  onClick={rescanForDuplicates}
-                  variant="outline"
-                  size="sm"
-                  className="border-slate-300 text-slate-600 hover:bg-slate-100"
-                >
-                  <RefreshCw className="w-3 h-3 mr-1" />
-                  Rescan
-                </Button>
-                {duplicates.length > 0 && (
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-orange-300 text-orange-600 hover:bg-orange-50"
-                      >
-                        <Eye className="w-3 h-3 mr-1" />
-                        View Duplicates
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-4xl max-h-[80vh]">
-                      <DialogHeader>
-                        <DialogTitle>Duplicate Knowledge Types</DialogTitle>
-                        <DialogDescription>
-                          Select a knowledge type below to view and manage its duplicate entries
-                        </DialogDescription>
-                      </DialogHeader>
-                      <ScrollArea className="max-h-[60vh]">
-                        <div className="space-y-3 pr-4">
-                          {duplicates.map((knowledgeType) => {
-                            const dupeCount = knowledgeItems.filter(
-                              k => k.knowledge_type === knowledgeType && k.is_active
-                            ).length;
-                            
-                            return (
-                              <Card key={knowledgeType} className="bg-amber-50 border-amber-200">
-                                <CardHeader className="pb-3">
-                                  <div className="flex items-center justify-between">
-                                    <div>
-                                      <CardTitle className="text-sm text-amber-900">
-                                        {formatKnowledgeType(knowledgeType)}
-                                      </CardTitle>
-                                      <p className="text-xs text-amber-700 mt-1">
-                                        {dupeCount} active entries found
-                                      </p>
-                                    </div>
-                                    <Button
-                                      onClick={() => handleViewDuplicates(knowledgeType)}
-                                      variant="outline"
-                                      size="sm"
-                                      className="border-amber-300 text-amber-700 hover:bg-amber-100"
-                                    >
-                                      <Eye className="w-3 h-3 mr-1" />
-                                      Compare Entries
-                                    </Button>
-                                  </div>
-                                </CardHeader>
-                              </Card>
-                            );
-                          })}
-                        </div>
-                      </ScrollArea>
-                    </DialogContent>
-                  </Dialog>
-                )}
-                <Button
-                  onClick={handleConsolidateDuplicates}
-                  disabled={consolidating || duplicates.length === 0}
-                  variant="outline"
-                  size="sm"
-                  className="border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50"
-                >
-                  {consolidating ? (
-                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                  ) : (
-                    <AlertTriangle className="w-3 h-3 mr-1" />
-                  )}
-                  Auto-Fix ({duplicates.length})
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Group knowledge by document source */}
+        {(() => {
+          const documentGroups: Record<string, { items: typeof knowledgeItems, fileName: string }> = {};
+          
+          knowledgeItems.forEach(item => {
+            if (!item.is_active) return; // Only show active knowledge
+            const docKey = item.document?.file_name || 'manual';
+            if (!documentGroups[docKey]) {
+              documentGroups[docKey] = {
+                items: [],
+                fileName: item.document?.file_name || 'Manually Created'
+              };
+            }
+            documentGroups[docKey].items.push(item);
+          });
 
-        {/* Legacy Alert - Only show if duplicates exist */}
+          return Object.entries(documentGroups).map(([docKey, group]) => (
+            <Card key={docKey} className="bg-white border-brass/20">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base text-charcoal flex items-center gap-2">
+                      📄 {group.fileName}
+                    </CardTitle>
+                    <p className="text-xs text-warm-gray mt-1">
+                      {group.items.length} active knowledge {group.items.length === 1 ? 'type' : 'types'}
+                    </p>
+                  </div>
+                  <Badge className="bg-green-100 text-green-800 border-green-200">
+                    Active
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {group.items.map(item => (
+                    <Badge 
+                      key={item.id} 
+                      variant="outline" 
+                      className="bg-brass/5 text-charcoal border-brass/20"
+                    >
+                      {formatKnowledgeType(item.knowledge_type)}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ));
+        })()}
+
+        {/* Maintenance Tools - Collapsed by default */}
         {duplicates.length > 0 && (
           <Alert className="bg-amber-50 border-amber-200">
             <AlertTriangle className="h-4 w-4 text-amber-600" />
             <AlertDescription className="flex items-center justify-between">
               <span className="text-amber-900 flex-1">
-                Found {duplicates.length} knowledge type(s) with duplicates: <strong>{duplicates.join(", ")}</strong>
+                ⚠️ Found {duplicates.length} knowledge type(s) with duplicates
               </span>
               <Button
                 onClick={handleConsolidateDuplicates}
                 disabled={consolidating}
-                variant="outline"
                 size="sm"
-                className="ml-4 border-amber-300 hover:bg-amber-100 shrink-0"
+                className="ml-4 bg-amber-600 hover:bg-amber-700 text-white shrink-0"
               >
-                {consolidating ? "Fixing..." : "Auto-Fix Duplicates"}
+                {consolidating ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
+                Auto-Fix Now
               </Button>
             </AlertDescription>
           </Alert>
         )}
+
+        {/* Advanced Tools - Collapsed */}
+        <Collapsible>
+          <Card className="bg-slate-50 border-slate-200">
+            <CollapsibleTrigger className="w-full">
+              <CardHeader className="cursor-pointer hover:bg-slate-100/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <RefreshCw className="w-4 h-4 text-slate-600" />
+                    <CardTitle className="text-sm text-slate-700">
+                      Advanced Knowledge Tools
+                    </CardTitle>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={loadAllVersions}
+                    variant="outline"
+                    size="sm"
+                    className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                  >
+                    <History className="w-3 h-3 mr-1" />
+                    View All Versions
+                  </Button>
+                  <Button
+                    onClick={rescanForDuplicates}
+                    variant="outline"
+                    size="sm"
+                    className="border-slate-300 text-slate-600 hover:bg-slate-100"
+                  >
+                    <RefreshCw className="w-3 h-3 mr-1" />
+                    Scan for Issues
+                  </Button>
+                </div>
+                {lastScanAt && (
+                  <p className="text-xs text-slate-500">
+                    Last scan: {format(lastScanAt, 'MMM d, h:mm a')}
+                  </p>
+                )}
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
         
-        {Object.keys(groupedItems).length === 0 ? (
+        {knowledgeItems.length === 0 && (
           <div className="text-center py-12 text-warm-gray">
             <p className="mb-2">No brand knowledge saved yet</p>
-            <p className="text-sm">Use "Ask Madison" in Brand Health to generate suggestions</p>
+            <p className="text-sm">Upload brand documents in Settings → Brand Guidelines</p>
           </div>
-        ) : (
-          Object.entries(groupedItems).map(([knowledgeType, items]) => {
-            const activeItem = items.find(item => item.is_active);
-            const olderVersions = items.filter(item => !item.is_active);
-            const isExpanded = expandedSections.has(knowledgeType);
-
-            return (
-              <Collapsible
-                key={knowledgeType}
-                open={isExpanded}
-                onOpenChange={() => toggleSection(knowledgeType)}
-              >
-                <Card className="bg-parchment-white border-cream-dark">
-                  <CollapsibleTrigger className="w-full">
-                    <CardHeader className="cursor-pointer hover:bg-aged-brass/5 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {isExpanded ? (
-                            <ChevronDown className="w-4 h-4 text-brass" />
-                          ) : (
-                            <ChevronRight className="w-4 h-4 text-brass" />
-                          )}
-                          <CardTitle className="text-lg text-charcoal">
-                            {formatKnowledgeType(knowledgeType)}
-                          </CardTitle>
-                          {activeItem && (
-                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                              v{activeItem.version}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {olderVersions.length > 0 && (
-                            <Badge variant="secondary" className="text-xs">
-                              {olderVersions.length} older version{olderVersions.length > 1 ? 's' : ''}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </CardHeader>
-                  </CollapsibleTrigger>
-
-                  <CollapsibleContent>
-                    <CardContent className="space-y-6">
-                      {/* Active Version */}
-                      {activeItem && (
-                        <div className="p-4 bg-paper rounded-lg border border-cream-dark">
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2">
-                              <Badge className="bg-green-100 text-green-800 border-green-200">
-                                Active
-                              </Badge>
-                              {activeItem.document && (
-                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 max-w-[300px] truncate">
-                                  📄 {activeItem.document.file_name}
-                                </Badge>
-                              )}
-                              <span className="text-xs text-warm-gray">
-                                Updated {format(new Date(activeItem.updated_at), 'MMM d, yyyy')}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {editingId === activeItem.id ? (
-                                <>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={handleCancelEdit}
-                                    disabled={isSaving}
-                                  >
-                                    Cancel
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleSaveEdit(activeItem)}
-                                    disabled={isSaving}
-                                    className="bg-brass hover:bg-brass-light text-charcoal"
-                                  >
-                                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save as New Version'}
-                                  </Button>
-                                </>
-                              ) : (
-                                <>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleEdit(activeItem)}
-                                    className="border-brass/40 text-brass hover:bg-brass/10"
-                                  >
-                                    <Edit2 className="w-3 h-3 mr-1" />
-                                    Edit
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleToggleActive(activeItem)}
-                                    className="border-red-300 text-red-600 hover:bg-red-50"
-                                  >
-                                    <PowerOff className="w-3 h-3 mr-1" />
-                                    Deactivate
-                                  </Button>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          {renderContentFields(activeItem, editingId === activeItem.id)}
-                        </div>
-                      )}
-
-                      {/* Older Versions */}
-                      {olderVersions.length > 0 && (
-                        <div className="space-y-3">
-                          <h4 className="text-sm font-medium text-charcoal">Version History</h4>
-                          {olderVersions.map((item) => (
-                            <div
-                              key={item.id}
-                              className="p-3 bg-warm-gray/5 rounded border border-warm-gray/20"
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <Badge variant="secondary" className="text-xs">
-                                    v{item.version}
-                                  </Badge>
-                                  {item.document && (
-                                    <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200 max-w-[200px] truncate text-xs">
-                                      📄 {item.document.file_name}
-                                    </Badge>
-                                  )}
-                                  <span className="text-xs text-warm-gray">
-                                    {format(new Date(item.created_at), 'MMM d, yyyy')}
-                                  </span>
-                                </div>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleToggleActive(item)}
-                                  className="text-xs border-green-300 text-green-600 hover:bg-green-50"
-                                >
-                                  <Power className="w-3 h-3 mr-1" />
-                                  Reactivate
-                                </Button>
-                              </div>
-                              <div className="text-xs text-warm-gray/70">
-                                {renderContentFields(item, false)}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </CollapsibleContent>
-                </Card>
-              </Collapsible>
-            );
-          })
         )}
       </CardContent>
 
