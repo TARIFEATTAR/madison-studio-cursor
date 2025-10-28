@@ -1,5 +1,8 @@
 project_id = "iflwjiwkbxuvmiviqdxv"
 
+[functions.competitive-intelligence]
+verify_jwt = false
+
 [functions.generate-with-claude]
 verify_jwt = true
 
