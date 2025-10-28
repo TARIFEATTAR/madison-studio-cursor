@@ -135,7 +135,7 @@ serve(async (req) => {
     
     const { data: existingProducts } = await supabase
       .from('brand_products')
-      .select('id, name, handle, shopify_product_id, description')
+      .select('id, name, handle, shopify_product_id, description, collection, scent_family, tone')
       .eq('organization_id', organization_id)
       .in('name', names);
 
@@ -152,21 +152,32 @@ serve(async (req) => {
       const existing = existingByNameMatch || existingByShopifyMatch;
       
       if (existing) {
-        // Update existing product - preserve 49-field visual specs from CSV
+        // Update existing product - ONLY update Shopify-specific fields
+        // DO NOT overwrite rich 49-field CSV data (visual DNA, archetypes, etc.)
+        const updateData: any = {
+          shopify_product_id: product.shopify_product_id,
+          shopify_variant_id: product.shopify_variant_id,
+          shopify_sync_status: product.shopify_sync_status,
+          last_shopify_sync: product.last_shopify_sync,
+        };
+        
+        // Only update these fields if they're currently empty
+        if (!existing.description || existing.description.length < 50) {
+          updateData.description = product.description;
+        }
+        if (!existing.collection) {
+          updateData.collection = product.collection;
+        }
+        if (!existing.scent_family) {
+          updateData.scent_family = product.scent_family;
+        }
+        if (!existing.tone) {
+          updateData.tone = product.tone;
+        }
+        
         const { error } = await supabase
           .from('brand_products')
-          .update({
-            shopify_product_id: product.shopify_product_id,
-            shopify_variant_id: product.shopify_variant_id,
-            shopify_sync_status: product.shopify_sync_status,
-            last_shopify_sync: product.last_shopify_sync,
-            // Only update description if it's empty
-            description: existing.description || product.description,
-            // Update collection and scent info from Shopify tags
-            collection: product.collection,
-            scent_family: product.scent_family,
-            tone: product.tone,
-          })
+          .update(updateData)
           .eq('id', existing.id);
         
         if (error) throw error;

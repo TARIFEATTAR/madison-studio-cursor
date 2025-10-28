@@ -476,31 +476,42 @@ export function ProductsTab() {
         return;
       }
 
-      // Fetch existing products by NAME to check for duplicates (not handle, since CSV may lack handles)
+      // Fetch existing products by NAME with rich field data to check if update is needed
       const names = products.map(p => p.name).filter(Boolean);
       const { data: existingProducts } = await supabase
         .from('brand_products')
-        .select('id, name')
+        .select('id, name, visual_world, top_notes, archetype_hero_enabled, shopify_product_id')
         .eq('organization_id', currentOrganizationId)
         .in('name', names);
 
-      const existingNames = new Map(existingProducts?.map(p => [p.name, p.id]) || []);
+      const existingMap = new Map(existingProducts?.map(p => [p.name, p]) || []);
       
       let updatedCount = 0;
       let insertedCount = 0;
 
-      // Process each product - update if exists by name, insert if new
+      // Process each product - intelligently update or insert
       for (const product of products) {
-        if (product.name && existingNames.has(product.name)) {
-          // Update existing product
-          const existingId = existingNames.get(product.name);
-          const { error } = await supabase
-            .from('brand_products')
-            .update(product)
-            .eq('id', existingId);
+        if (product.name && existingMap.has(product.name)) {
+          const existing = existingMap.get(product.name)!;
+          // Only update if existing product is missing rich data
+          const hasSomeRichData = existing.visual_world || existing.top_notes || existing.archetype_hero_enabled;
           
-          if (error) throw error;
-          updatedCount++;
+          if (!hasSomeRichData) {
+            // Update to restore CSV data, preserving Shopify ID if it exists
+            const updateData = {
+              ...product,
+              shopify_product_id: existing.shopify_product_id || product.shopify_product_id
+            };
+            
+            const { error } = await supabase
+              .from('brand_products')
+              .update(updateData)
+              .eq('id', existing.id);
+            
+            if (error) throw error;
+            updatedCount++;
+          }
+          // Skip if product already has rich data
         } else {
           // Insert new product
           const { error } = await supabase
@@ -512,10 +523,17 @@ export function ProductsTab() {
         }
       }
 
-      toast({
-        title: "Products imported",
-        description: `Updated ${updatedCount} existing product${updatedCount === 1 ? '' : 's'}, added ${insertedCount} new product${insertedCount === 1 ? '' : 's'}.`,
-      });
+      if (updatedCount === 0 && insertedCount === 0) {
+        toast({
+          title: "No changes needed",
+          description: "All products already exist with complete data.",
+        });
+      } else {
+        toast({
+          title: "Products imported",
+          description: `Updated ${updatedCount} product${updatedCount === 1 ? '' : 's'} with missing data, added ${insertedCount} new product${insertedCount === 1 ? '' : 's'}.`,
+        });
+      }
 
       refetch();
     } catch (error) {
