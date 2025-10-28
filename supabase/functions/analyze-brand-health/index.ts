@@ -62,19 +62,37 @@ serve(async (req) => {
     const masterCount = masterContent.data?.length || 0;
     const derivativeCount = derivatives.data?.length || 0;
 
+    console.log('🔍 BRAND HEALTH DEBUG - Starting Analysis');
+    console.log('📊 Knowledge docs found:', knowledge.length);
+    console.log('📋 Knowledge types:', knowledge.map(k => k.type || k.knowledge_type).join(', '));
+
     // Core Identity: At least 2 of mission/vision/values/personality present
     // Check core_identity type, brand_voice content, and visual_standards raw documents
-    const coreIdentityDoc = knowledge.find(k => k.knowledge_type === 'core_identity');
+    const coreIdentityDoc = knowledge.find(k => k.type === 'core_identity' || k.knowledge_type === 'core_identity');
+    console.log('🔍 Core Identity Doc:', coreIdentityDoc ? 'FOUND' : 'NOT FOUND');
+    if (coreIdentityDoc) {
+      console.log('📄 Core Identity Content Keys:', Object.keys(coreIdentityDoc.content || {}));
+      console.log('📄 Core Identity Content:', JSON.stringify(coreIdentityDoc.content, null, 2).substring(0, 500));
+    }
     let coreIdentityPresent = coreIdentityDoc ? 
       Object.entries(coreIdentityDoc.content || {}).filter(([k, v]) => 
         ['mission', 'vision', 'values', 'personality'].includes(k) && 
         typeof v === 'string' && v.trim().length > 0
       ).length >= 2 : false;
     
+    console.log('✅ Core Identity Check #1 (direct fields):', coreIdentityPresent);
+    if (coreIdentityDoc) {
+      const validFields = Object.entries(coreIdentityDoc.content || {}).filter(([k, v]) => 
+        ['mission', 'vision', 'values', 'personality'].includes(k) && 
+        typeof v === 'string' && v.trim().length > 0
+      );
+      console.log('   Valid identity fields found:', validFields.length, validFields.map(([k]) => k).join(', '));
+    }
+    
     // If not found in core_identity, check brand_voice content
     if (!coreIdentityPresent) {
       coreIdentityPresent = knowledge.some(k => {
-        if (k.knowledge_type === 'brand_voice' && k.content) {
+        if ((k.type === 'brand_voice' || k.knowledge_type === 'brand_voice') && k.content) {
           // Check for explicit mission/vision/values fields
           const content = k.content || {};
           const identityFields = Object.entries(content).filter(([key, value]) => 
@@ -97,10 +115,12 @@ serve(async (req) => {
       });
     }
     
+    console.log('✅ Core Identity Check #2 (brand_voice fallback):', coreIdentityPresent);
+    
     // If still not found, check visual_standards documents
     if (!coreIdentityPresent) {
       coreIdentityPresent = knowledge.some(k => {
-        if (k.knowledge_type === 'visual_standards' && k.content?.raw_document) {
+        if ((k.type === 'visual_standards' || k.knowledge_type === 'visual_standards') && k.content?.raw_document) {
           const docText = k.content.raw_document.toLowerCase();
           const hasMission = docText.includes('mission');
           const hasVision = docText.includes('vision');
@@ -111,16 +131,18 @@ serve(async (req) => {
         return false;
       });
     }
+    
+    console.log('✅ FINAL Core Identity Present:', coreIdentityPresent);
 
     // Voice & Tone: voice_tone with voice_guidelines OR tone_spectrum, OR brand_voice with voice/tone keys
     // ALSO check visual_standards for raw_document containing voice/tone content
     const voiceTonePresent = knowledge.some(k => {
-      if (k.knowledge_type === 'voice_tone') {
+      if (k.type === 'voice_tone' || k.knowledge_type === 'voice_tone') {
         const content = k.content || {};
         return (content.voice_guidelines && typeof content.voice_guidelines === 'string' && content.voice_guidelines.trim().length > 0) ||
                (content.tone_spectrum && typeof content.tone_spectrum === 'string' && content.tone_spectrum.trim().length > 0);
       }
-      if (k.knowledge_type === 'brand_voice') {
+      if (k.type === 'brand_voice' || k.knowledge_type === 'brand_voice') {
         const content = k.content || {};
         const hasVoiceData = Object.keys(content).some(key => 
           key.toLowerCase().includes('voice') || key.toLowerCase().includes('tone')
@@ -128,7 +150,7 @@ serve(async (req) => {
         return hasVoiceData;
       }
       // CHECK VISUAL_STANDARDS RAW DOCUMENTS FOR VOICE CONTENT
-      if (k.knowledge_type === 'visual_standards' && k.content?.raw_document) {
+      if ((k.type === 'visual_standards' || k.knowledge_type === 'visual_standards') && k.content?.raw_document) {
         const docText = k.content.raw_document.toLowerCase();
         // Look for voice/tone sections with substantial content (at least 200 chars)
         const hasVoiceSection = docText.includes('voice') && docText.includes('tone') && docText.length > 200;
@@ -136,17 +158,23 @@ serve(async (req) => {
       }
       return false;
     });
+    
+    console.log('✅ Voice/Tone Present:', voiceTonePresent);
 
     // Target Audience: target_audience with descriptive content
     // Check target_audience type, brand_voice content, and visual_standards raw documents
     const targetAudiencePresent = knowledge.some(k => {
-      if (k.knowledge_type === 'target_audience') {
-        return Object.values(k.content || {}).some((v: any) => 
+      if (k.type === 'target_audience' || k.knowledge_type === 'target_audience') {
+        console.log('🎯 Found target_audience doc, checking content...');
+        const hasContent = Object.values(k.content || {}).some((v: any) => 
           typeof v === 'string' && v.trim().length > 0
         );
+        console.log('   Has valid string content:', hasContent);
+        if (hasContent) console.log('   Content keys:', Object.keys(k.content || {}));
+        return hasContent;
       }
       // CHECK BRAND_VOICE FOR AUDIENCE CONTENT
-      if (k.knowledge_type === 'brand_voice' && k.content) {
+      if ((k.type === 'brand_voice' || k.knowledge_type === 'brand_voice') && k.content) {
         const content = k.content || {};
         // Check for explicit audience fields
         const audienceFields = Object.entries(content).filter(([key, value]) => 
@@ -163,13 +191,15 @@ serve(async (req) => {
         }
       }
       // CHECK VISUAL_STANDARDS FOR AUDIENCE CONTENT
-      if (k.knowledge_type === 'visual_standards' && k.content?.raw_document) {
+      if ((k.type === 'visual_standards' || k.knowledge_type === 'visual_standards') && k.content?.raw_document) {
         const docText = k.content.raw_document.toLowerCase();
         return (docText.includes('audience') || docText.includes('customer') || docText.includes('demographic')) 
           && docText.length > 300;
       }
       return false;
     });
+    
+    console.log('✅ Target Audience Present:', targetAudiencePresent);
 
     // Collections Transparency: comprehensive doc OR per-collection coverage
     const hasComprehensiveTransparencyDoc = knowledge.some(k => {
@@ -194,6 +224,16 @@ serve(async (req) => {
     if (transparencyCoverage >= 0.5 || hasComprehensiveTransparencyDoc) deterministicScore += 5;
     if (contentCreated) deterministicScore += 10;
     deterministicScore = Math.min(100, deterministicScore);
+    
+    console.log('🎯 SCORE BREAKDOWN:');
+    console.log('   Core Identity (+30):', coreIdentityPresent ? '✅' : '❌');
+    console.log('   Voice/Tone (+20):', voiceTonePresent ? '✅' : '❌');
+    console.log('   Target Audience (+15):', targetAudiencePresent ? '✅' : '❌');
+    console.log('   Products (+15):', productsCount > 0 ? '✅' : '❌', `(${productsCount})`);
+    console.log('   Collections (+10):', collectionsCount > 0 ? '✅' : '❌', `(${collectionsCount})`);
+    console.log('   Transparency (+5):', (transparencyCoverage >= 0.5 || hasComprehensiveTransparencyDoc) ? '✅' : '❌');
+    console.log('   Content Created (+10):', contentCreated ? '✅' : '❌');
+    console.log('   TOTAL SCORE:', deterministicScore);
 
     // Prepare context for AI analysis
     const context = {
