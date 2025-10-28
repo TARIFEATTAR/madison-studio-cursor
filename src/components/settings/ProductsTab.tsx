@@ -475,15 +475,45 @@ export function ProductsTab() {
         return;
       }
 
-      const { error } = await supabase
+      // Fetch existing products by handle to check for duplicates
+      const handles = products.map(p => p.handle).filter(Boolean);
+      const { data: existingProducts } = await supabase
         .from('brand_products')
-        .insert(products);
+        .select('id, handle')
+        .eq('organization_id', currentOrganizationId)
+        .in('handle', handles);
 
-      if (error) throw error;
+      const existingHandles = new Map(existingProducts?.map(p => [p.handle, p.id]) || []);
+      
+      let updatedCount = 0;
+      let insertedCount = 0;
+
+      // Process each product - update if exists, insert if new
+      for (const product of products) {
+        if (product.handle && existingHandles.has(product.handle)) {
+          // Update existing product
+          const existingId = existingHandles.get(product.handle);
+          const { error } = await supabase
+            .from('brand_products')
+            .update(product)
+            .eq('id', existingId);
+          
+          if (error) throw error;
+          updatedCount++;
+        } else {
+          // Insert new product
+          const { error } = await supabase
+            .from('brand_products')
+            .insert([product]);
+          
+          if (error) throw error;
+          insertedCount++;
+        }
+      }
 
       toast({
         title: "Products imported",
-        description: `Successfully imported ${products.length} product${products.length === 1 ? '' : 's'} with visual specifications.`,
+        description: `Updated ${updatedCount} existing product${updatedCount === 1 ? '' : 's'}, added ${insertedCount} new product${insertedCount === 1 ? '' : 's'}.`,
       });
 
       refetch();
