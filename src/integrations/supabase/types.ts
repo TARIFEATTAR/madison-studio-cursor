@@ -2091,6 +2091,7 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      merge_duplicate_products: { Args: never; Returns: undefined }
     }
     Enums: {
       content_type: "product" | "email" | "social" | "visual" | "blog"
