@@ -476,24 +476,24 @@ export function ProductsTab() {
         return;
       }
 
-      // Fetch existing products by handle to check for duplicates
-      const handles = products.map(p => p.handle).filter(Boolean);
+      // Fetch existing products by NAME to check for duplicates (not handle, since CSV may lack handles)
+      const names = products.map(p => p.name).filter(Boolean);
       const { data: existingProducts } = await supabase
         .from('brand_products')
-        .select('id, handle')
+        .select('id, name')
         .eq('organization_id', currentOrganizationId)
-        .in('handle', handles);
+        .in('name', names);
 
-      const existingHandles = new Map(existingProducts?.map(p => [p.handle, p.id]) || []);
+      const existingNames = new Map(existingProducts?.map(p => [p.name, p.id]) || []);
       
       let updatedCount = 0;
       let insertedCount = 0;
 
-      // Process each product - update if exists, insert if new
+      // Process each product - update if exists by name, insert if new
       for (const product of products) {
-        if (product.handle && existingHandles.has(product.handle)) {
+        if (product.name && existingNames.has(product.name)) {
           // Update existing product
-          const existingId = existingHandles.get(product.handle);
+          const existingId = existingNames.get(product.name);
           const { error } = await supabase
             .from('brand_products')
             .update(product)
@@ -706,14 +706,14 @@ export function ProductsTab() {
     
     setIsResolvingDuplicates(true);
     try {
-      // Call the database function to merge duplicates
-      const { error } = await supabase.rpc('merge_duplicate_products');
+      // Call the database function to merge duplicates by name
+      const { error } = await supabase.rpc('merge_duplicate_products_by_name_safe');
       
       if (error) throw error;
       
       toast({
         title: "Duplicates resolved",
-        description: "All duplicate products have been merged successfully.",
+        description: "All duplicate products have been merged by name successfully.",
       });
       
       refetch();

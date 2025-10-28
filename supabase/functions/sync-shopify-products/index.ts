@@ -130,28 +130,26 @@ serve(async (req) => {
 
     console.log(`Processing ${mappedProducts.length} products for sync`);
 
-    // Fetch existing products by handle to merge instead of duplicating
-    const handles = mappedProducts
-      .map((p: any) => p.handle)
-      .filter((h: any): h is string => !!h);
+    // Fetch existing products by NAME (since CSV products don't have handles)
+    const names = mappedProducts.map((p: any) => p.name);
     
     const { data: existingProducts } = await supabase
       .from('brand_products')
-      .select('id, handle, shopify_product_id, description')
+      .select('id, name, handle, shopify_product_id, description')
       .eq('organization_id', organization_id)
-      .in('handle', handles);
+      .in('name', names);
 
-    const existingByHandle = new Map(existingProducts?.map(p => [p.handle, p]) || []);
+    const existingByName = new Map(existingProducts?.map(p => [p.name, p]) || []);
     const existingByShopifyId = new Map(existingProducts?.map(p => [p.shopify_product_id, p]) || []);
     
     let updatedCount = 0;
     let insertedCount = 0;
 
-    // Process each product - update if exists by handle or shopify_product_id, insert if new
+    // Process each product - match by NAME first (for CSV products), fallback to shopify_product_id
     for (const product of mappedProducts) {
-      const existingByHandleMatch = product.handle ? existingByHandle.get(product.handle) : null;
+      const existingByNameMatch = existingByName.get(product.name);
       const existingByShopifyMatch = existingByShopifyId.get(product.shopify_product_id);
-      const existing = existingByHandleMatch || existingByShopifyMatch;
+      const existing = existingByNameMatch || existingByShopifyMatch;
       
       if (existing) {
         // Update existing product - preserve 49-field visual specs from CSV
