@@ -246,88 +246,223 @@ export type Database = {
       }
       brand_products: {
         Row: {
+          approved_descriptors: string | null
+          archetype_environmental_enabled: boolean | null
+          archetype_flatlay_enabled: boolean | null
+          archetype_hero_enabled: boolean | null
+          archetype_lived_enabled: boolean | null
+          archetype_ritual_enabled: boolean | null
+          archetype_travel_enabled: boolean | null
+          aspect_ratio_primary: string | null
+          avatar_motivation: string | null
           base_notes: string | null
           benefits: string | null
           burn_time: string | null
           category: string | null
           collection: string | null
+          collection_tier: string | null
+          color_palette_hex_codes: string | null
+          composition_style: string | null
+          craftsmanship_term: string | null
           created_at: string
+          depth_of_field: string | null
           description: string | null
+          dip_layer_moral: string | null
+          environmental_location: string | null
+          flatlay_ingredients: string | null
           format: string | null
           formulation_type: string | null
+          handle: string | null
+          hero_artifact_placement: string | null
+          hero_primary_artifacts: string | null
           id: string
+          image_type_primary: string | null
+          ingredient_disclosure: string | null
           key_ingredients: string | null
           last_shopify_sync: string | null
+          lighting_direction: string | null
+          lighting_spec: string | null
+          lived_life_context: string | null
+          longevity_hours: string | null
           middle_notes: string | null
+          moral_philosophy: string | null
           name: string
+          occasion_tags: string | null
           organization_id: string
+          philosophy_keywords: string | null
+          platform_material: string | null
+          platform_type: string | null
+          primary_avatar: string | null
           product_type: string | null
+          prompt_template_id: string | null
+          ritual_skin_tone: string | null
           scent_family: string | null
+          scent_family_detailed: string | null
           scent_profile: string | null
+          semantic_categories: string | null
+          shadow_treatment: string | null
           shopify_product_id: string | null
           shopify_sync_status: string | null
           shopify_variant_id: string | null
+          sillage_description: string | null
+          textile_backdrop: string | null
           tone: string | null
           top_notes: string | null
+          transparency_statement: string | null
+          travel_context: string | null
           updated_at: string
           usage: string | null
+          use_case_primary: string | null
+          use_case_templates: string | null
           usp: string | null
+          visual_world: string | null
+          visual_world_week: number | null
         }
         Insert: {
+          approved_descriptors?: string | null
+          archetype_environmental_enabled?: boolean | null
+          archetype_flatlay_enabled?: boolean | null
+          archetype_hero_enabled?: boolean | null
+          archetype_lived_enabled?: boolean | null
+          archetype_ritual_enabled?: boolean | null
+          archetype_travel_enabled?: boolean | null
+          aspect_ratio_primary?: string | null
+          avatar_motivation?: string | null
           base_notes?: string | null
           benefits?: string | null
           burn_time?: string | null
           category?: string | null
           collection?: string | null
+          collection_tier?: string | null
+          color_palette_hex_codes?: string | null
+          composition_style?: string | null
+          craftsmanship_term?: string | null
           created_at?: string
+          depth_of_field?: string | null
           description?: string | null
+          dip_layer_moral?: string | null
+          environmental_location?: string | null
+          flatlay_ingredients?: string | null
           format?: string | null
           formulation_type?: string | null
+          handle?: string | null
+          hero_artifact_placement?: string | null
+          hero_primary_artifacts?: string | null
           id?: string
+          image_type_primary?: string | null
+          ingredient_disclosure?: string | null
           key_ingredients?: string | null
           last_shopify_sync?: string | null
+          lighting_direction?: string | null
+          lighting_spec?: string | null
+          lived_life_context?: string | null
+          longevity_hours?: string | null
           middle_notes?: string | null
+          moral_philosophy?: string | null
           name: string
+          occasion_tags?: string | null
           organization_id: string
+          philosophy_keywords?: string | null
+          platform_material?: string | null
+          platform_type?: string | null
+          primary_avatar?: string | null
           product_type?: string | null
+          prompt_template_id?: string | null
+          ritual_skin_tone?: string | null
           scent_family?: string | null
+          scent_family_detailed?: string | null
           scent_profile?: string | null
+          semantic_categories?: string | null
+          shadow_treatment?: string | null
           shopify_product_id?: string | null
           shopify_sync_status?: string | null
           shopify_variant_id?: string | null
+          sillage_description?: string | null
+          textile_backdrop?: string | null
           tone?: string | null
           top_notes?: string | null
+          transparency_statement?: string | null
+          travel_context?: string | null
           updated_at?: string
           usage?: string | null
+          use_case_primary?: string | null
+          use_case_templates?: string | null
           usp?: string | null
+          visual_world?: string | null
+          visual_world_week?: number | null
         }
         Update: {
+          approved_descriptors?: string | null
+          archetype_environmental_enabled?: boolean | null
+          archetype_flatlay_enabled?: boolean | null
+          archetype_hero_enabled?: boolean | null
+          archetype_lived_enabled?: boolean | null
+          archetype_ritual_enabled?: boolean | null
+          archetype_travel_enabled?: boolean | null
+          aspect_ratio_primary?: string | null
+          avatar_motivation?: string | null
           base_notes?: string | null
           benefits?: string | null
           burn_time?: string | null
           category?: string | null
           collection?: string | null
+          collection_tier?: string | null
+          color_palette_hex_codes?: string | null
+          composition_style?: string | null
+          craftsmanship_term?: string | null
           created_at?: string
+          depth_of_field?: string | null
           description?: string | null
+          dip_layer_moral?: string | null
+          environmental_location?: string | null
+          flatlay_ingredients?: string | null
           format?: string | null
           formulation_type?: string | null
+          handle?: string | null
+          hero_artifact_placement?: string | null
+          hero_primary_artifacts?: string | null
           id?: string
+          image_type_primary?: string | null
+          ingredient_disclosure?: string | null
           key_ingredients?: string | null
           last_shopify_sync?: string | null
+          lighting_direction?: string | null
+          lighting_spec?: string | null
+          lived_life_context?: string | null
+          longevity_hours?: string | null
           middle_notes?: string | null
+          moral_philosophy?: string | null
           name?: string
+          occasion_tags?: string | null
           organization_id?: string
+          philosophy_keywords?: string | null
+          platform_material?: string | null
+          platform_type?: string | null
+          primary_avatar?: string | null
           product_type?: string | null
+          prompt_template_id?: string | null
+          ritual_skin_tone?: string | null
           scent_family?: string | null
+          scent_family_detailed?: string | null
           scent_profile?: string | null
+          semantic_categories?: string | null
+          shadow_treatment?: string | null
           shopify_product_id?: string | null
           shopify_sync_status?: string | null
           shopify_variant_id?: string | null
+          sillage_description?: string | null
+          textile_backdrop?: string | null
           tone?: string | null
           top_notes?: string | null
+          transparency_statement?: string | null
+          travel_context?: string | null
           updated_at?: string
           usage?: string | null
+          use_case_primary?: string | null
+          use_case_templates?: string | null
           usp?: string | null
+          visual_world?: string | null
+          visual_world_week?: number | null
         }
         Relationships: [
           {
