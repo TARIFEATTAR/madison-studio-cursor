@@ -22,6 +22,11 @@ interface BrandKnowledge {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  document_id?: string;
+  document?: {
+    file_name: string;
+    created_at: string;
+  };
 }
 
 export function BrandKnowledgeManager() {
@@ -183,15 +188,24 @@ export function BrandKnowledgeManager() {
     try {
       const { data, error } = await supabase
         .from('brand_knowledge')
-        .select('*')
+        .select(`
+          *,
+          document:brand_documents(file_name, created_at)
+        `)
         .eq('organization_id', currentOrganizationId)
         .order('knowledge_type', { ascending: true })
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
+      // Transform the data to handle the document relationship
+      const transformedData = (data || []).map(item => ({
+        ...item,
+        document: Array.isArray(item.document) ? item.document[0] : item.document
+      }));
+
       // Group by knowledge type
-      const grouped = (data || []).reduce((acc, item) => {
+      const grouped = transformedData.reduce((acc, item) => {
         if (!acc[item.knowledge_type]) {
           acc[item.knowledge_type] = [];
         }
@@ -214,13 +228,23 @@ export function BrandKnowledgeManager() {
     try {
       const { data, error } = await supabase
         .from('brand_knowledge')
-        .select('*')
+        .select(`
+          *,
+          document:brand_documents(file_name, created_at)
+        `)
         .eq('organization_id', currentOrganizationId)
         .order('knowledge_type', { ascending: true })
         .order('version', { ascending: false });
 
       if (error) throw error;
-      setKnowledgeItems(data || []);
+      
+      // Transform the data to handle the document relationship
+      const transformedData = (data || []).map(item => ({
+        ...item,
+        document: Array.isArray(item.document) ? item.document[0] : item.document
+      }));
+      
+      setKnowledgeItems(transformedData);
 
       // Check for duplicates
       const typeCounts: Record<string, number> = {};
@@ -653,6 +677,11 @@ export function BrandKnowledgeManager() {
                               <Badge className="bg-green-100 text-green-800 border-green-200">
                                 Active
                               </Badge>
+                              {activeItem.document && (
+                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 max-w-[300px] truncate">
+                                  📄 {activeItem.document.file_name}
+                                </Badge>
+                              )}
                               <span className="text-xs text-warm-gray">
                                 Updated {format(new Date(activeItem.updated_at), 'MMM d, yyyy')}
                               </span>
@@ -715,10 +744,15 @@ export function BrandKnowledgeManager() {
                               className="p-3 bg-warm-gray/5 rounded border border-warm-gray/20"
                             >
                               <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
                                   <Badge variant="secondary" className="text-xs">
                                     v{item.version}
                                   </Badge>
+                                  {item.document && (
+                                    <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200 max-w-[200px] truncate text-xs">
+                                      📄 {item.document.file_name}
+                                    </Badge>
+                                  )}
                                   <span className="text-xs text-warm-gray">
                                     {format(new Date(item.created_at), 'MMM d, yyyy')}
                                   </span>
