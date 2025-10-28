@@ -26,51 +26,111 @@ serve(async (req) => {
 
     console.log(`Extracting brand knowledge from ${documentName || 'document'} for org: ${organizationId}`);
     
-    // Detect if this is a visual standards document
-    const isVisualStandards = detectVisualStandards || 
-      /visual|photo|image|lighting|color palette|aspect ratio|template|composition|forbidden element/i.test(extractedText.slice(0, 2000));
+    // Check if document contains visual standards sections
+    const hasVisualStandards = detectVisualStandards || 
+      /visual standards|image generation|photography guidelines|product photography|lighting guidelines|composition rules|color palette guidelines/i.test(extractedText);
 
-    // Different extraction prompts based on document type
+    // ALWAYS extract brand voice/vocabulary, AND extract visual standards if present
     let extractionPrompt: string;
     
-    if (isVisualStandards) {
-      extractionPrompt = `You are analyzing VISUAL STANDARDS for AI-generated product photography.
-
-Extract structured visual guidelines from this document:
+    if (hasVisualStandards) {
+      // Extract BOTH brand voice AND visual standards
+      extractionPrompt = `You are a brand strategist analyzing comprehensive brand guidelines.
 
 DOCUMENT TO ANALYZE:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ${extractedText.slice(0, 50000)} 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+This document contains BOTH brand voice guidelines AND visual standards. Extract BOTH.
+
 Return your analysis as a JSON object with this exact structure:
 
 {
+  "voice": {
+    "toneAttributes": ["sophisticated", "warm"],
+    "personalityTraits": ["confident", "authentic"],
+    "writingStyle": "description of overall writing approach",
+    "keyCharacteristics": ["concise sentences", "sensory language"]
+  },
+  "vocabulary": {
+    "approvedTerms": ["fragrance", "composition", "notes"],
+    "forbiddenPhrases": ["game-changing", "must-have", "indulge", "treat yourself", "whisper rather than declaration", "embark on a journey"],
+    "industryTerminology": ["olfactory", "sillage"],
+    "preferredPhrasing": {"composition": "formula"},
+    "avoidHistoricalReferences": true
+  },
+  "examples": {
+    "goodExamples": [
+      {
+        "text": "Example of on-brand copy",
+        "analysis": "Why this works"
+      }
+    ],
+    "badExamples": [
+      {
+        "text": "Example to avoid",
+        "analysis": "Why to avoid"
+      }
+    ]
+  },
+  "structure": {
+    "sentenceStructure": "Mix of short and flowing",
+    "paragraphLength": "Short to medium",
+    "punctuationStyle": "Strategic use of em-dashes",
+    "rhythmPatterns": "Varied cadence"
+  },
   "visual_standards": {
-    "golden_rule": "The overarching visual philosophy (e.g., 'If it looks like an ad, it fails')",
+    "golden_rule": "The overarching visual philosophy",
     "color_palette": [
       {
         "name": "Stone Beige",
         "hex": "#D8C8A9",
-        "usage": "Primary background color for product shots"
+        "usage": "Primary background"
       }
     ],
-    "lighting_mandates": "Lighting requirements (e.g., 'Always golden hour, never harsh studio lighting')",
+    "lighting_mandates": "Lighting requirements",
     "templates": [
       {
         "name": "Hero Product Shot",
         "aspectRatio": "4:5",
-        "prompt": "Example prompt template for this style"
+        "prompt": "Example prompt template"
       }
     ],
-    "forbidden_elements": ["chrome", "glossy surfaces", "white backgrounds"],
-    "approved_props": ["aged brass", "matte ceramic", "natural linen"],
-    "raw_document": "FULL EXTRACTED TEXT HERE - include everything"
+    "forbidden_elements": ["chrome", "glossy surfaces"],
+    "approved_props": ["aged brass", "matte ceramic"],
+    "raw_document": "FULL EXTRACTED TEXT - include everything from visual standards section"
+  },
+  "categories": {
+    "personal_fragrance": {
+      "detected": true,
+      "vocabulary": ["wearable", "skin chemistry"],
+      "product_types": ["oil", "spray"],
+      "copy_style_notes": "How to write for personal fragrances"
+    },
+    "home_fragrance": {
+      "detected": false,
+      "vocabulary": [],
+      "product_types": [],
+      "copy_style_notes": ""
+    },
+    "skincare": {
+      "detected": false,
+      "vocabulary": [],
+      "product_types": [],
+      "copy_style_notes": ""
+    }
   }
 }
 
-CRITICAL: Extract ALL visual standards mentioned. Include the FULL raw document text.`;
+CRITICAL INSTRUCTIONS:
+- Extract BOTH voice/vocabulary AND visual standards if present
+- Pay special attention to forbidden phrases and what NOT to write
+- Include historical/religious references in forbiddenPhrases if mentioned
+- For categories, set "detected": true ONLY if explicitly mentioned
+- Return ONLY valid JSON, no additional commentary`;
     } else {
+      // Extract brand voice/vocabulary only (no visual standards detected)
       extractionPrompt = `You are a brand strategist analyzing brand guidelines for a luxury beauty brand to extract structured knowledge.
 
 Analyze the following brand document and detect if it contains category-specific information for:
@@ -208,13 +268,18 @@ CRITICAL INSTRUCTIONS:
     console.log(`Successfully extracted brand knowledge from ${documentName}`);
     
     // Return different structure based on document type
-    if (isVisualStandards && parsedKnowledge.visual_standards) {
+    if (hasVisualStandards && parsedKnowledge.visual_standards) {
       console.log('Visual standards detected:', parsedKnowledge.visual_standards.golden_rule);
       return new Response(
         JSON.stringify({
           success: true,
           isVisualStandards: true,
-          visualStandards: parsedKnowledge.visual_standards
+          visualStandards: parsedKnowledge.visual_standards,
+          voice: parsedKnowledge.voice,
+          vocabulary: parsedKnowledge.vocabulary,
+          examples: parsedKnowledge.examples,
+          structure: parsedKnowledge.structure,
+          categories: parsedKnowledge.categories || {}
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
