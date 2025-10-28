@@ -7,8 +7,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { BrandPulseBar } from "@/components/dashboard/BrandPulseBar";
 import { ContentFlowZone } from "@/components/dashboard/ContentFlowZone";
 import { PerformanceMomentumZone } from "@/components/dashboard/PerformanceMomentumZone";
+import { CompetitiveInsightsWidget } from "@/components/dashboard/CompetitiveInsightsWidget";
 import MadisonPanel from "@/components/image-editor/MadisonPanel";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function DashboardNew() {
   const navigate = useNavigate();
@@ -16,6 +18,25 @@ export default function DashboardNew() {
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const [longLoad, setLongLoad] = useState(false);
   const [madisonPanelOpen, setMadisonPanelOpen] = useState(false);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadOrganization = async () => {
+      if (!user) return;
+      
+      const { data: membership } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (membership) {
+        setOrganizationId(membership.organization_id);
+      }
+    };
+    
+    loadOrganization();
+  }, [user]);
 
   // Safety timeout for long loads
   useEffect(() => {
@@ -92,7 +113,14 @@ export default function DashboardNew() {
             <ContentFlowZone />
           </div>
 
-          {/* Row 3: Performance Metrics */}
+          {/* Row 3: Competitive Intelligence */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
+            <div className="col-span-1 md:col-span-12">
+              <CompetitiveInsightsWidget organizationId={organizationId} />
+            </div>
+          </div>
+
+          {/* Row 4: Performance Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
             <PerformanceMomentumZone />
           </div>
