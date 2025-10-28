@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Eye, FileText, AlertCircle, CheckCircle } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Eye, FileText, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface BrandKnowledgeDebugPanelProps {
   organizationId: string;
@@ -21,6 +23,16 @@ interface KnowledgeEntry {
   created_at: string;
   updated_at: string;
   file_name?: string;
+  document_id?: string;
+}
+
+interface GroupedEntries {
+  [documentName: string]: {
+    entries: KnowledgeEntry[];
+    allActive: boolean;
+    someActive: boolean;
+    documentId: string;
+  };
 }
 
 export function BrandKnowledgeDebugPanel({ organizationId }: BrandKnowledgeDebugPanelProps) {
@@ -30,6 +42,8 @@ export function BrandKnowledgeDebugPanel({ organizationId }: BrandKnowledgeDebug
   const [previewOpen, setPreviewOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<KnowledgeEntry | null>(null);
   const [aiContext, setAiContext] = useState<string>("");
+  const [filterView, setFilterView] = useState<"all" | "active" | "inactive">("all");
+  const [expandedDocs, setExpandedDocs] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadKnowledgeEntries();
@@ -47,6 +61,7 @@ export function BrandKnowledgeDebugPanel({ organizationId }: BrandKnowledgeDebug
           content,
           created_at,
           updated_at,
+          document_id,
           brand_documents!inner(file_name)
         `)
         .eq('organization_id', organizationId)
@@ -56,10 +71,19 @@ export function BrandKnowledgeDebugPanel({ organizationId }: BrandKnowledgeDebug
 
       const mapped = data?.map(entry => ({
         ...entry,
-        file_name: (entry as any).brand_documents?.file_name
+        file_name: (entry as any).brand_documents?.file_name,
+        document_id: entry.document_id
       })) || [];
 
       setEntries(mapped);
+      
+      // Auto-expand active documents
+      const activeDocs = new Set(
+        mapped
+          .filter(e => e.is_active)
+          .map(e => e.file_name || 'Unknown')
+      );
+      setExpandedDocs(activeDocs);
     } catch (error) {
       console.error('Error loading knowledge entries:', error);
       toast({
@@ -153,6 +177,70 @@ export function BrandKnowledgeDebugPanel({ organizationId }: BrandKnowledgeDebug
       .join(' ');
   };
 
+  const toggleDocumentExpanded = (docName: string) => {
+    setExpandedDocs(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(docName)) {
+        newSet.delete(docName);
+      } else {
+        newSet.add(docName);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleAllEntriesInDocument = async (documentId: string, activate: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('brand_knowledge')
+        .update({ 
+          is_active: activate,
+          updated_at: new Date().toISOString()
+        })
+        .eq('document_id', documentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Status updated",
+        description: `All entries ${activate ? 'activated' : 'deactivated'} successfully`,
+      });
+
+      loadKnowledgeEntries();
+    } catch (error) {
+      console.error('Error toggling document entries:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update document status",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Group entries by document
+  const groupedEntries: GroupedEntries = entries.reduce((acc, entry) => {
+    const docName = entry.file_name || 'Unknown Document';
+    if (!acc[docName]) {
+      acc[docName] = {
+        entries: [],
+        allActive: true,
+        someActive: false,
+        documentId: entry.document_id || ''
+      };
+    }
+    acc[docName].entries.push(entry);
+    if (!entry.is_active) acc[docName].allActive = false;
+    if (entry.is_active) acc[docName].someActive = true;
+    return acc;
+  }, {} as GroupedEntries);
+
+  // Filter entries based on view
+  const filteredGroupedEntries = Object.entries(groupedEntries).filter(([_, group]) => {
+    if (filterView === "active") return group.someActive;
+    if (filterView === "inactive") return !group.allActive;
+    return true;
+  });
+
   if (loading) {
     return (
       <Card>
@@ -172,67 +260,170 @@ export function BrandKnowledgeDebugPanel({ organizationId }: BrandKnowledgeDebug
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Brand Knowledge Debug Panel
+            Advanced Knowledge Inspector
           </CardTitle>
           <CardDescription>
-            View and manage individual brand knowledge entries. Preview exactly what Madison sees.
+            Deep dive into individual knowledge entries by document source. Preview exactly what Madison sees.
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Filter Tabs */}
+          <Tabs value={filterView} onValueChange={(v) => setFilterView(v as any)} className="mb-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="all">
+                All ({entries.length})
+              </TabsTrigger>
+              <TabsTrigger value="active">
+                Active ({entries.filter(e => e.is_active).length})
+              </TabsTrigger>
+              <TabsTrigger value="inactive">
+                Inactive ({entries.filter(e => !e.is_active).length})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
           <div className="space-y-3">
             {entries.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <AlertCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p>No brand knowledge entries found</p>
               </div>
+            ) : filteredGroupedEntries.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Filter className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>No {filterView} entries found</p>
+              </div>
             ) : (
-              entries.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/5 transition-colors"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      {entry.is_active ? (
-                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
-                      ) : (
-                        <AlertCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      )}
-                      <span className="font-medium text-sm truncate">
-                        {entry.file_name || 'Unknown Document'}
-                      </span>
+              filteredGroupedEntries.map(([docName, group]) => {
+                const isExpanded = expandedDocs.has(docName);
+                const activeCount = group.entries.filter(e => e.is_active).length;
+                
+                return (
+                  <Collapsible
+                    key={docName}
+                    open={isExpanded}
+                    onOpenChange={() => toggleDocumentExpanded(docName)}
+                  >
+                    <div className="border rounded-lg">
+                      {/* Document Header */}
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex items-center justify-between p-4 hover:bg-accent/5 transition-colors">
+                          <div className="flex items-center gap-3">
+                            {isExpanded ? (
+                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            )}
+                            <div className="text-left">
+                              <div className="flex items-center gap-2">
+                                <FileText className="h-4 w-4" />
+                                <span className="font-medium text-sm">{docName}</span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge 
+                                  variant={group.allActive ? "default" : group.someActive ? "secondary" : "outline"}
+                                  className="text-xs"
+                                >
+                                  {activeCount} / {group.entries.length} Active
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  {group.entries.length} knowledge {group.entries.length === 1 ? 'type' : 'types'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {!isExpanded && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleDocumentExpanded(docName);
+                              }}
+                            >
+                              View Details
+                            </Button>
+                          )}
+                        </div>
+                      </CollapsibleTrigger>
+
+                      {/* Document Entries */}
+                      <CollapsibleContent>
+                        <div className="border-t">
+                          <div className="p-3 bg-muted/30 flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">
+                              Knowledge entries from this document:
+                            </span>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => toggleAllEntriesInDocument(group.documentId, true)}
+                                disabled={group.allActive}
+                              >
+                                Activate All
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => toggleAllEntriesInDocument(group.documentId, false)}
+                                disabled={!group.someActive}
+                              >
+                                Deactivate All
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="p-3 space-y-2">
+                            {group.entries.map((entry) => (
+                              <div
+                                key={entry.id}
+                                className="flex items-center justify-between p-3 border rounded hover:bg-accent/5 transition-colors"
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    {entry.is_active ? (
+                                      <CheckCircle className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
+                                    ) : (
+                                      <AlertCircle className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                                    )}
+                                    <span className="text-sm font-medium">
+                                      {formatKnowledgeType(entry.knowledge_type)}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground ml-5">
+                                    <span>v{entry.version}</span>
+                                    <span>•</span>
+                                    <span>{formatBytes(JSON.stringify(entry.content).length)}</span>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handlePreviewContext(entry)}
+                                  >
+                                    <Eye className="h-3.5 w-3.5 mr-1" />
+                                    Preview
+                                  </Button>
+                                  <Button
+                                    variant={entry.is_active ? "outline" : "default"}
+                                    size="sm"
+                                    onClick={() => toggleActive(entry.id, entry.is_active)}
+                                  >
+                                    {entry.is_active ? 'Deactivate' : 'Activate'}
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </CollapsibleContent>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      <Badge variant="outline" className="text-xs">
-                        {formatKnowledgeType(entry.knowledge_type)}
-                      </Badge>
-                      <span>v{entry.version}</span>
-                      <span>•</span>
-                      <span>{formatBytes(JSON.stringify(entry.content).length)}</span>
-                      <span>•</span>
-                      <span>Updated {new Date(entry.updated_at).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 ml-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePreviewContext(entry)}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      Preview
-                    </Button>
-                    <Button
-                      variant={entry.is_active ? "outline" : "default"}
-                      size="sm"
-                      onClick={() => toggleActive(entry.id, entry.is_active)}
-                    >
-                      {entry.is_active ? 'Deactivate' : 'Activate'}
-                    </Button>
-                  </div>
-                </div>
-              ))
+                  </Collapsible>
+                );
+              })
             )}
           </div>
         </CardContent>
