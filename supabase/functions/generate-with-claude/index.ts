@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
+import { getSemanticFields, formatSemanticContext } from '../_shared/productFieldFilters.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -886,6 +887,11 @@ serve(async (req) => {
         console.log('Product data fetched from database:', dbProductData.name);
         // Merge database data with any passed productData (database takes priority)
         enrichedProductData = { ...productData, ...dbProductData };
+        
+        // 🎯 FILTER TO SEMANTIC FIELDS ONLY FOR COPYWRITING
+        // This prevents visual/technical fields from cluttering the copywriting prompt
+        enrichedProductData = getSemanticFields(enrichedProductData);
+        console.log('✅ Filtered to semantic fields for copywriting (25 fields max)');
       }
     }
 

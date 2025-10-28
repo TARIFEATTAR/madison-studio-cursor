@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { formatVisualContext } from '../_shared/productFieldFilters.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const corsHeaders = {
@@ -152,7 +153,9 @@ serve(async (req) => {
       // Pro Mode controls
       proModeControls,
       // Session tracking
-      sessionId
+      sessionId,
+      // Product context
+      product_id
     } = await req.json();
 
     console.log('🎨 Generating Madison image:', {
@@ -232,6 +235,30 @@ serve(async (req) => {
 
     if (bkError) {
       console.error('⚠️ Failed to fetch brand knowledge:', bkError);
+    }
+    
+    // 🎨 FETCH PRODUCT DATA (ALL 49 FIELDS) FOR IMAGE GENERATION
+    let productData: any = null;
+    if (product_id && resolvedOrganizationId) {
+      console.log('🛍️ Fetching complete product data (all 49 fields) for ID:', product_id);
+      const { data: dbProductData, error: productError } = await supabaseClient
+        .from('brand_products')
+        .select('*')
+        .eq('id', product_id)
+        .eq('organization_id', resolvedOrganizationId)
+        .maybeSingle();
+      
+      if (productError) {
+        console.error('⚠️ Error fetching product data:', productError);
+      } else if (dbProductData) {
+        productData = dbProductData;
+        console.log('✅ Product data loaded:', {
+          name: productData.name,
+          category: productData.category,
+          hasVisualDNA: !!(productData.visual_world || productData.shot_type || productData.lighting_mood),
+          fieldCount: Object.keys(productData).filter(k => productData[k] !== null && productData[k] !== '').length
+        });
+      }
     }
 
     // Parse brand knowledge into structured object
@@ -346,6 +373,13 @@ serve(async (req) => {
         enhancedPrompt += `\n\n🚫 FORBIDDEN ELEMENTS (NEVER include): ${vs.forbidden_elements.join(', ')}`;
         console.log(`✅ Added ${vs.forbidden_elements.length} forbidden elements`);
       }
+    }
+    
+    // 🎯 INJECT ALL 49 PRODUCT FIELDS FOR IMAGE GENERATION
+    if (productData) {
+      const productVisualContext = formatVisualContext(productData);
+      enhancedPrompt += productVisualContext;
+      console.log('✅ Added complete product visual DNA (all 49 fields)');
     }
 
     // Still apply basic brandContext if provided (for backward compatibility)

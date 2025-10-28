@@ -316,6 +316,7 @@ export default function ImageEditor() {
             brandContext: brandContext || undefined,
             isRefinement: false,
             proModeControls: proModePayload,
+            product_id: selectedProduct?.id || undefined,
             productContext: selectedProduct ? {
               name: selectedProduct.name,
               collection: selectedProduct.collection || 'Unknown',
