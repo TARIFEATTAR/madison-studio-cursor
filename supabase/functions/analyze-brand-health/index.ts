@@ -37,11 +37,12 @@ serve(async (req) => {
     // Fetch organization details including industry
     const { data: orgData } = await supabase
       .from('organizations')
-      .select('brand_config')
+      .select('brand_config, settings')
       .eq('id', organizationId)
       .single();
 
     const brandIndustry = orgData?.brand_config?.industry || 'general';
+    const brandSettingsGuidelines = orgData?.settings?.brand_guidelines || null;
 
     // Fetch all brand data
     const [brandKnowledge, products, collections, masterContent, derivatives, previousHealth] = await Promise.all([
@@ -65,6 +66,25 @@ serve(async (req) => {
     console.log('🔍 BRAND HEALTH DEBUG - Starting Analysis');
     console.log('📊 Knowledge docs found:', knowledge.length);
     console.log('📋 Knowledge types:', knowledge.map(k => k.knowledge_type).join(', '));
+
+    // Flatten all string content from knowledge for generic scanning
+    const flattenStrings = (obj: any): string[] => {
+      const out: string[] = [];
+      if (obj == null) return out;
+      if (typeof obj === 'string') return [obj];
+      if (Array.isArray(obj)) {
+        for (const item of obj) out.push(...flattenStrings(item));
+        return out;
+      }
+      if (typeof obj === 'object') {
+        for (const key in obj) out.push(...flattenStrings((obj as any)[key]));
+      }
+      return out;
+    };
+
+    const allContentStrings = knowledge.flatMap(k => flattenStrings(k.content || {}));
+    const aggregatedText = allContentStrings.join(' ').toLowerCase();
+    console.log('🧪 Aggregated content length:', aggregatedText.length);
 
     // Core Identity: At least 2 of mission/vision/values/personality present
     // Check core_identity type, brand_voice content, and visual_standards raw documents
@@ -131,6 +151,36 @@ serve(async (req) => {
         return false;
       });
     }
+
+    // SETTINGS FALLBACK: Check organizations.settings.brand_guidelines for core identity fields
+    if (!coreIdentityPresent && brandSettingsGuidelines) {
+      const g: any = brandSettingsGuidelines;
+      const identityValues = [
+        String(g.mission || ''),
+        String(g.vision || ''),
+        String(g.values || ''),
+        String(g.personality || g.personalityTraits || g.brand_personality || ''),
+        String(g.brand_story || ''),
+      ];
+      const filled = identityValues.filter(v => typeof v === 'string' && v.trim().length > 50);
+      if (filled.length >= 2) {
+        coreIdentityPresent = true;
+        console.log('✅ Core Identity Check #3 (settings fallback):', true);
+      }
+    }
+
+    // GENERIC SCAN across all knowledge content
+    if (!coreIdentityPresent) {
+      const hasMission = aggregatedText.includes('mission');
+      const hasVision = aggregatedText.includes('vision');
+      const hasValues = aggregatedText.includes('values');
+      const hasPersonality = aggregatedText.includes('personality');
+      const count = [hasMission, hasVision, hasValues, hasPersonality].filter(Boolean).length;
+      if (count >= 2 && aggregatedText.length > 500) {
+        coreIdentityPresent = true;
+        console.log('✅ Core Identity Check #4 (generic scan):', true);
+      }
+    }
     
     console.log('✅ FINAL Core Identity Present:', coreIdentityPresent);
 
@@ -163,7 +213,7 @@ serve(async (req) => {
 
     // Target Audience: target_audience with descriptive content
     // Check target_audience type, brand_voice content, and visual_standards raw documents
-    const targetAudiencePresent = knowledge.some(k => {
+    let targetAudiencePresent = knowledge.some(k => {
       if (k.knowledge_type === 'target_audience') {
         console.log('🎯 Found target_audience doc, checking content...');
         const hasContent = Object.values(k.content || {}).some((v: any) => 
@@ -198,6 +248,31 @@ serve(async (req) => {
       }
       return false;
     });
+
+    // SETTINGS FALLBACK: Check organizations.settings.brand_guidelines.target_audience
+    if (!targetAudiencePresent && brandSettingsGuidelines?.target_audience) {
+      const ta = String(brandSettingsGuidelines.target_audience || '').trim();
+      if (ta.length > 50) {
+        targetAudiencePresent = true;
+        console.log('✅ Target Audience Check #2 (settings fallback):', true);
+      }
+    }
+
+    // GENERIC SCAN across all knowledge content
+    if (!targetAudiencePresent) {
+      const hasAudience = (
+        aggregatedText.includes('target audience') ||
+        aggregatedText.includes('audience') ||
+        aggregatedText.includes('customer') ||
+        aggregatedText.includes('demographic') ||
+        aggregatedText.includes('persona') ||
+        aggregatedText.includes('icp')
+      ) && aggregatedText.length > 300;
+      if (hasAudience) {
+        targetAudiencePresent = true;
+        console.log('✅ Target Audience Check #3 (generic scan):', true);
+      }
+    }
     
     console.log('✅ Target Audience Present:', targetAudiencePresent);
 
