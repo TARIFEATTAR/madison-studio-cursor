@@ -1226,11 +1226,13 @@ export default function ContentEditorPage() {
           )}
           
           <Drawer open={assistantOpen} onOpenChange={setAssistantOpen}>
-            <DrawerContent className="h-[85vh] max-w-full" style={{ backgroundColor: "#FFFCF5" }}>
-              <EditorialAssistantPanel
-                onClose={handleToggleAssistant}
-                initialContent={getContentForSave()}
-              />
+            <DrawerContent className="max-h-[85vh] flex flex-col overflow-hidden" style={{ backgroundColor: "#FFFCF5" }}>
+              <div className="flex-1 overflow-hidden">
+                <EditorialAssistantPanel
+                  onClose={handleToggleAssistant}
+                  initialContent={getContentForSave()}
+                />
+              </div>
             </DrawerContent>
           </Drawer>
         </>

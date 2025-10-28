@@ -483,7 +483,7 @@ Be conversational, encouraging, and editorial in your tone.
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-6" ref={scrollRef}>
+      <div className="flex-1 overflow-y-auto px-6 py-6 min-h-0" ref={scrollRef}>
         <div className="space-y-4">
           {messages.map((message, index) => (
             <div key={index} className="space-y-2">
