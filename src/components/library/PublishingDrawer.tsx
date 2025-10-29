@@ -197,7 +197,7 @@ export function PublishingDrawer({
       
       <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
-        className="w-full sm:w-[540px] sm:max-w-[540px] overflow-y-auto"
+        className="z-[50] w-full sm:w-[540px] sm:max-w-[540px] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
         onPointerDown={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}

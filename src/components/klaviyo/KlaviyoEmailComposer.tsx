@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -191,12 +191,15 @@ export function KlaviyoEmailComposer({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="z-[70] max-w-4xl max-h-[90vh] overflow-hidden flex flex-col" aria-describedby="klaviyo-composer-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5" />
             Compose Klaviyo Email Campaign
           </DialogTitle>
+          <DialogDescription>
+            Create a draft campaign in Klaviyo. Choose your audience, preview the email, then create the draft to review/send in Klaviyo.
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="compose" className="flex-1 overflow-hidden flex flex-col">
@@ -232,10 +235,10 @@ export function KlaviyoEmailComposer({
                 </div>
               ) : (
                 <Select value={selectedList} onValueChange={setSelectedList}>
-                  <SelectTrigger>
+                  <SelectTrigger className="z-[75]">
                     <SelectValue placeholder={`Select a Klaviyo ${audienceType}`} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[80] bg-popover text-popover-foreground border shadow-md">
                     {audienceType === "list" ? (
                       lists.map((list) => (
                         <SelectItem key={list.id} value={list.id}>
@@ -320,7 +323,7 @@ export function KlaviyoEmailComposer({
             <div className="border rounded-lg h-full overflow-auto bg-muted/20">
               <iframe
                 srcDoc={emailHtml}
-                className="w-full h-full min-h-[500px]"
+                className="w-full h-full min-h-[500px] bg-background"
                 title="Email Preview"
               />
             </div>
@@ -335,7 +338,7 @@ export function KlaviyoEmailComposer({
           >
             Cancel
           </Button>
-          <Button onClick={handleSend} disabled={loading}>
+          <Button onClick={handleSend} disabled={loading} aria-label="Create Draft in Klaviyo">
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Create Draft in Klaviyo
           </Button>
