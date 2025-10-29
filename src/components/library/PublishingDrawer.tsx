@@ -27,7 +27,7 @@ const PLATFORMS = [
   { id: "pinterest", label: "Pinterest", icon: "📌" },
   { id: "tiktok", label: "TikTok", icon: "🎵" },
   { id: "blog", label: "Blog/Website", icon: "📝" },
-  { id: "email", label: "Email Newsletter", icon: "📧" },
+  { id: "klaviyo", label: "Klaviyo (Email)", icon: "📧" },
   { id: "youtube", label: "YouTube", icon: "📹" },
   { id: "other", label: "Other", icon: "🌐" },
 ];

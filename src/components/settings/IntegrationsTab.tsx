@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ShopifyConnection } from "./ShopifyConnection";
+import { KlaviyoConnection } from "./KlaviyoConnection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, Bot, Plus, Trash2, Sparkles } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
@@ -110,6 +111,26 @@ export function IntegrationsTab() {
         </CardHeader>
         <CardContent>
           <ShopifyConnection />
+        </CardContent>
+      </Card>
+
+      {/* Email Marketing - Klaviyo */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+              <Package className="w-5 h-5 text-blue-500" />
+            </div>
+            <div>
+              <CardTitle>Klaviyo</CardTitle>
+              <CardDescription>
+                Connect your email marketing platform to publish campaigns
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <KlaviyoConnection />
         </CardContent>
       </Card>
 
