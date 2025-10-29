@@ -33,6 +33,10 @@ export function useEmailComposer(initialContent?: Partial<EmailContent>) {
   const [contactUrl, setContactUrl] = useState(initialContent?.contactUrl || "");
   const [privacyUrl, setPrivacyUrl] = useState(initialContent?.privacyUrl || "");
   
+  // CTA Button alignment
+  const [ctaAlignment, setCtaAlignment] = useState<'left' | 'center' | 'right'>(initialContent?.ctaAlignment || 'center');
+  const [expandButtonOnMobile, setExpandButtonOnMobile] = useState(initialContent?.expandButtonOnMobile || false);
+  
   const [generatedHtml, setGeneratedHtml] = useState("");
 
   // Generate HTML whenever any content changes
@@ -44,6 +48,8 @@ export function useEmailComposer(initialContent?: Partial<EmailContent>) {
       content,
       ctaText,
       ctaUrl,
+      ctaAlignment,
+      expandButtonOnMobile,
       headerImage,
       brandColor,
       secondaryColor,
@@ -74,6 +80,8 @@ export function useEmailComposer(initialContent?: Partial<EmailContent>) {
     content,
     ctaText,
     ctaUrl,
+    ctaAlignment,
+    expandButtonOnMobile,
     headerImage,
     brandColor,
     secondaryColor,
@@ -146,6 +154,10 @@ export function useEmailComposer(initialContent?: Partial<EmailContent>) {
     setContactUrl,
     privacyUrl,
     setPrivacyUrl,
+    ctaAlignment,
+    setCtaAlignment,
+    expandButtonOnMobile,
+    setExpandButtonOnMobile,
     generatedHtml,
   };
 }

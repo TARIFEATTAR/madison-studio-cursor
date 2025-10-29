@@ -27,6 +27,8 @@ export default function EmailComposer() {
   const { brandColor: defaultBrandColor } = useBrandColor();
   const [sendLoading, setSendLoading] = useState(false);
   const [showFooterOptions, setShowFooterOptions] = useState(false);
+  const [showCtaOptions, setShowCtaOptions] = useState(false);
+  const [showStyleOptions, setShowStyleOptions] = useState(false);
 
   const composer = useEmailComposer({
     brandColor: defaultBrandColor,
@@ -182,7 +184,7 @@ export default function EmailComposer() {
           <GoldButton
             onClick={handleSendToKlaviyo}
             disabled={sendLoading}
-            className="gap-2 whitespace-nowrap flex items-center"
+            className="gap-2"
           >
             <Send className="w-4 h-4" />
             {sendLoading ? "Preparing..." : "Send to Klaviyo"}
@@ -246,52 +248,81 @@ export default function EmailComposer() {
             </div>
 
             {/* CTA Section */}
-            <div className="space-y-4 p-4 border border-border rounded-lg bg-card">
-              <h3 className="font-semibold text-sm text-foreground">Call-to-Action (Optional)</h3>
-              <div className="space-y-2">
-                <Label htmlFor="cta-text" className="text-sm">Button Text</Label>
-                <Input
-                  id="cta-text"
-                  value={composer.ctaText}
-                  onChange={(e) => composer.setCtaText(e.target.value)}
-                  placeholder="Shop Now"
-                  className="bg-background"
-                />
+            <div className="space-y-3 p-4 border border-border rounded-lg bg-card">
+              <div 
+                className="flex items-center gap-2 cursor-pointer" 
+                onClick={() => setShowCtaOptions(!showCtaOptions)}
+              >
+                <ChevronRight className={`w-4 h-4 transition-transform ${showCtaOptions ? 'rotate-90' : ''}`} />
+                <Label className="text-sm font-semibold cursor-pointer">Call-to-Action (Optional)</Label>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="cta-url" className="text-sm">Button URL</Label>
-                <Input
-                  id="cta-url"
-                  type="url"
-                  value={composer.ctaUrl}
-                  onChange={(e) => composer.setCtaUrl(e.target.value)}
-                  placeholder="https://example.com"
-                  className="bg-background"
-                />
-              </div>
+              
+              {showCtaOptions && (
+                <div className="space-y-3 pl-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="cta-text" className="text-sm">Button Text</Label>
+                    <Input
+                      id="cta-text"
+                      value={composer.ctaText}
+                      onChange={(e) => composer.setCtaText(e.target.value)}
+                      placeholder="Shop Now"
+                      className="bg-background"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cta-url" className="text-sm">Button URL</Label>
+                    <Input
+                      id="cta-url"
+                      type="url"
+                      value={composer.ctaUrl}
+                      onChange={(e) => composer.setCtaUrl(e.target.value)}
+                      placeholder="https://example.com"
+                      className="bg-background"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Style Customization */}
-            <StyleCustomizer
-              brandColor={composer.brandColor}
-              secondaryColor={composer.secondaryColor}
-              fontFamily={composer.fontFamily}
-              buttonColor={composer.buttonColor}
-              buttonTextColor={composer.buttonTextColor}
-              textColor={composer.textColor}
-              footerBackgroundColor={composer.footerBackgroundColor}
-              footerTextColor={composer.footerTextColor}
-              footerLinkColor={composer.footerLinkColor}
-              onBrandColorChange={composer.setBrandColor}
-              onSecondaryColorChange={composer.setSecondaryColor}
-              onFontChange={composer.setFontFamily}
-              onButtonColorChange={composer.setButtonColor}
-              onButtonTextColorChange={composer.setButtonTextColor}
-              onTextColorChange={composer.setTextColor}
-              onFooterBackgroundColorChange={composer.setFooterBackgroundColor}
-              onFooterTextColorChange={composer.setFooterTextColor}
-              onFooterLinkColorChange={composer.setFooterLinkColor}
-            />
+            <div className="space-y-3 p-4 border border-border rounded-lg bg-card">
+              <div 
+                className="flex items-center gap-2 cursor-pointer" 
+                onClick={() => setShowStyleOptions(!showStyleOptions)}
+              >
+                <ChevronRight className={`w-4 h-4 transition-transform ${showStyleOptions ? 'rotate-90' : ''}`} />
+                <Label className="text-sm font-semibold cursor-pointer">Style Customization</Label>
+              </div>
+              
+              {showStyleOptions && (
+                <div className="pl-6">
+                  <StyleCustomizer
+                    brandColor={composer.brandColor}
+                    secondaryColor={composer.secondaryColor}
+                    fontFamily={composer.fontFamily}
+                    buttonColor={composer.buttonColor}
+                    buttonTextColor={composer.buttonTextColor}
+                    textColor={composer.textColor}
+                    footerBackgroundColor={composer.footerBackgroundColor}
+                    footerTextColor={composer.footerTextColor}
+                    footerLinkColor={composer.footerLinkColor}
+                    ctaAlignment={composer.ctaAlignment}
+                    expandButtonOnMobile={composer.expandButtonOnMobile}
+                    onBrandColorChange={composer.setBrandColor}
+                    onSecondaryColorChange={composer.setSecondaryColor}
+                    onFontChange={composer.setFontFamily}
+                    onButtonColorChange={composer.setButtonColor}
+                    onButtonTextColorChange={composer.setButtonTextColor}
+                    onTextColorChange={composer.setTextColor}
+                    onFooterBackgroundColorChange={composer.setFooterBackgroundColor}
+                    onFooterTextColorChange={composer.setFooterTextColor}
+                    onFooterLinkColorChange={composer.setFooterLinkColor}
+                    onCtaAlignmentChange={composer.setCtaAlignment}
+                    onExpandButtonOnMobileChange={composer.setExpandButtonOnMobile}
+                  />
+                </div>
+              )}
+            </div>
 
             {/* Footer Content Section */}
             <div className="space-y-3 p-4 border border-border rounded-lg bg-card">

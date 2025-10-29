@@ -1,8 +1,9 @@
 import { EMAIL_FONTS } from "@/utils/emailTemplates";
-import { FOOTER_PRESETS, type FooterPreset } from "@/config/emailFooterPresets";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Palette, Type, Layout } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Palette, AlignLeft, AlignCenter, AlignRight, Type, Layout } from "lucide-react";
+import { FOOTER_PRESETS, type FooterPreset } from "@/config/emailFooterPresets";
 
 interface StyleCustomizerProps {
   brandColor: string;
@@ -14,6 +15,8 @@ interface StyleCustomizerProps {
   footerBackgroundColor?: string;
   footerTextColor?: string;
   footerLinkColor?: string;
+  ctaAlignment?: 'left' | 'center' | 'right';
+  expandButtonOnMobile?: boolean;
   onBrandColorChange: (color: string) => void;
   onSecondaryColorChange: (color: string) => void;
   onFontChange: (font: string) => void;
@@ -23,6 +26,8 @@ interface StyleCustomizerProps {
   onFooterBackgroundColorChange?: (color: string) => void;
   onFooterTextColorChange?: (color: string) => void;
   onFooterLinkColorChange?: (color: string) => void;
+  onCtaAlignmentChange?: (alignment: 'left' | 'center' | 'right') => void;
+  onExpandButtonOnMobileChange?: (expand: boolean) => void;
 }
 
 export function StyleCustomizer({
@@ -35,6 +40,8 @@ export function StyleCustomizer({
   footerBackgroundColor,
   footerTextColor,
   footerLinkColor,
+  ctaAlignment = 'center',
+  expandButtonOnMobile = false,
   onBrandColorChange,
   onSecondaryColorChange,
   onFontChange,
@@ -44,6 +51,8 @@ export function StyleCustomizer({
   onFooterBackgroundColorChange,
   onFooterTextColorChange,
   onFooterLinkColorChange,
+  onCtaAlignmentChange,
+  onExpandButtonOnMobileChange,
 }: StyleCustomizerProps) {
   
   const applyFooterPreset = (preset: FooterPreset) => {
@@ -53,11 +62,51 @@ export function StyleCustomizer({
   };
 
   return (
-    <div className="space-y-4 p-4 border border-border rounded-lg bg-card">
-      <div className="flex items-center gap-2 mb-3">
-        <Palette className="w-4 h-4 text-primary" />
-        <h3 className="font-semibold text-sm text-foreground">Style Customization</h3>
-      </div>
+    <div className="space-y-4">{/* CTA Button Settings */}
+      {onCtaAlignmentChange && (
+        <div className="space-y-3 pb-4 border-b border-border">
+          <Label className="text-xs font-semibold text-muted-foreground">Button Options</Label>
+          
+          <div className="space-y-2">
+            <Label className="text-sm">Button Alignment</Label>
+            <Select value={ctaAlignment} onValueChange={onCtaAlignmentChange}>
+              <SelectTrigger className="bg-background">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="left">
+                  <div className="flex items-center gap-2">
+                    <AlignLeft className="w-4 h-4" />
+                    Left
+                  </div>
+                </SelectItem>
+                <SelectItem value="center">
+                  <div className="flex items-center gap-2">
+                    <AlignCenter className="w-4 h-4" />
+                    Center
+                  </div>
+                </SelectItem>
+                <SelectItem value="right">
+                  <div className="flex items-center gap-2">
+                    <AlignRight className="w-4 h-4" />
+                    Right
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {onExpandButtonOnMobileChange && (
+            <div className="flex items-center justify-between">
+              <Label className="text-sm">Expand button on mobile</Label>
+              <Switch 
+                checked={expandButtonOnMobile} 
+                onCheckedChange={onExpandButtonOnMobileChange}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="space-y-2">
         <div className="flex items-center gap-2">

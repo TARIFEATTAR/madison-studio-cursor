@@ -16,6 +16,8 @@ export interface EmailContent {
   content: string;
   ctaText?: string;
   ctaUrl?: string;
+  ctaAlignment?: 'left' | 'center' | 'right';
+  expandButtonOnMobile?: boolean;
   headerImage?: string;
   brandColor: string;
   fontFamily: string;
@@ -719,7 +721,7 @@ export function generatePromoTemplate(content: EmailContent): string {
           <tr>
             <td style="background-color: ${secondaryColor}; padding: 15px; text-align: center;">
               <p style="color: #ffffff; font-size: 14px; font-weight: 700; margin: 0; letter-spacing: 1px;">
-                ${content.subtitle || '🔥 LIMITED TIME OFFER 🔥'}
+                ${content.subtitle || 'LIMITED TIME OFFER'}
               </p>
             </td>
           </tr>
