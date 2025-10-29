@@ -17,11 +17,11 @@ import { ArrowLeft, Send, Download, Save } from "lucide-react";
 import { toast } from "sonner";
 
 export default function EmailComposer() {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { brandColor: defaultBrandColor } = useBrandColor();
-  const [loading, setLoading] = useState(false);
+  const [sendLoading, setSendLoading] = useState(false);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
 
   const composer = useEmailComposer({
@@ -127,7 +127,7 @@ export default function EmailComposer() {
       return;
     }
 
-    setLoading(true);
+    setSendLoading(true);
     try {
       // This would integrate with the existing Klaviyo publishing flow
       // For now, just show success message
@@ -141,7 +141,7 @@ export default function EmailComposer() {
       console.error("Error sending to Klaviyo:", error);
       toast.error("Failed to prepare email");
     } finally {
-      setLoading(false);
+      setSendLoading(false);
     }
   };
 
@@ -208,11 +208,11 @@ export default function EmailComposer() {
           <Button
             size="sm"
             onClick={handleSendToKlaviyo}
-            disabled={loading}
+            disabled={sendLoading}
             className="gap-2"
           >
             <Send className="w-4 h-4" />
-            {loading ? "Preparing..." : "Send to Klaviyo"}
+            {sendLoading ? "Preparing..." : "Send to Klaviyo"}
           </Button>
         </div>
       </div>
