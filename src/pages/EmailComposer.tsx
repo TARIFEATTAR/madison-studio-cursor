@@ -17,7 +17,7 @@ import { ArrowLeft, Send, Download, Save } from "lucide-react";
 import { toast } from "sonner";
 
 export default function EmailComposer() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { brandColor: defaultBrandColor } = useBrandColor();

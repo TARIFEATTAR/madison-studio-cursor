@@ -3,7 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import React from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -69,20 +69,43 @@ const RouteErrorBoundary = ({ children, routeName }: { children: React.ReactNode
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [verifying, setVerifying] = useState(false);
+  const [allowed, setAllowed] = useState(false);
 
-  if (loading) {
+  useEffect(() => {
+    console.log("[RouteGuard] ProtectedRoute check", { path: location.pathname, loading, hasUser: !!user });
+
+    if (loading) return; // wait for initial auth hook
+
+    if (user) {
+      setAllowed(true);
+      return;
+    }
+
+    // Extra safety: double-check session before redirecting to /auth
+    setVerifying(true);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("[RouteGuard] getSession (guard)", { path: location.pathname, hasUser: !!session?.user });
+      if (session?.user) {
+        setAllowed(true);
+      } else {
+        console.warn("[RouteGuard] Redirect → /auth (reason: no authenticated user)", { path: location.pathname });
+        navigate("/auth", { replace: true });
+      }
+    }).finally(() => setVerifying(false));
+  }, [loading, user, navigate, location.pathname]);
+
+  if (loading || verifying) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-muted-foreground text-lg font-serif">Loading The Codex...</div>
+        <div className="text-muted-foreground text-lg font-serif">Loading…</div>
       </div>
     );
   }
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  return <>{children}</>;
+  return allowed ? <>{children}</> : null;
 };
 
 const RootRoute = () => {
@@ -93,24 +116,34 @@ const RootRoute = () => {
     if (!user) return;
     
     const checkOnboardingStatus = async () => {
+      console.log("[RootRoute] Checking onboarding status…");
       // Check database for organization with brand_config
-      const { data: orgMember } = await supabase
+      const { data: orgMember, error: memberErr } = await supabase
         .from("organization_members")
         .select("organization_id")
         .eq("user_id", user.id)
         .limit(1)
         .maybeSingle();
 
+      if (memberErr) {
+        console.warn("[RootRoute] organization_members lookup error", memberErr);
+      }
+
       if (!orgMember?.organization_id) {
+        console.warn("[RootRoute] Redirect → /onboarding (reason: no organization membership)");
         navigate('/onboarding', { replace: true });
         return;
       }
 
-      const { data: org } = await supabase
+      const { data: org, error: orgErr } = await supabase
         .from("organizations")
         .select("brand_config")
         .eq("id", orgMember.organization_id)
         .single();
+
+      if (orgErr) {
+        console.warn("[RootRoute] organizations lookup error", orgErr);
+      }
 
       // If organization has brand info, consider onboarding complete
       const hasBrandInfo = org?.brand_config && 
@@ -118,8 +151,10 @@ const RootRoute = () => {
         'industry' in org.brand_config;
 
       if (!hasBrandInfo) {
+        console.warn("[RootRoute] Redirect → /onboarding (reason: missing brand_config.industry)");
         navigate('/onboarding', { replace: true });
       } else {
+        console.log("[RootRoute] Onboarding OK (has brand info). Staying on dashboard.");
         // Sync localStorage with database state
         localStorage.setItem(`onboarding_completed_${user.id}`, "true");
       }
