@@ -200,8 +200,7 @@ export default function EmailComposer() {
             collection: composer.selectedTemplate,
             content_type: 'Email',
             organization_id: organizationId,
-            created_by: user.id,
-            status: 'draft'
+            created_by: user.id
           })
           .select()
           .single();
@@ -302,8 +301,7 @@ export default function EmailComposer() {
             collection: composer.selectedTemplate,
             content_type: 'Email',
             organization_id: organizationId,
-            created_by: user.id,
-            status: 'draft'
+            created_by: user.id
           })
           .select()
           .single();
