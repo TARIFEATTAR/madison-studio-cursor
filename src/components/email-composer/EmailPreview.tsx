@@ -10,24 +10,14 @@ interface EmailPreviewProps {
 export function EmailPreview({ html }: EmailPreviewProps) {
   const [viewMode, setViewMode] = useState<"desktop" | "mobile">("desktop");
 
-  // Sanitize HTML to remove scripts and unsafe content (emails shouldn't have scripts anyway)
+  // Sanitize HTML more permissively for email templates (keeping design intact)
   const sanitizedHtml = useMemo(() => {
     return DOMPurify.sanitize(html, {
-      ALLOWED_TAGS: [
-        'html', 'head', 'body', 'meta', 'title', 'style',
-        'div', 'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-        'a', 'img', 'table', 'thead', 'tbody', 'tr', 'td', 'th',
-        'ul', 'ol', 'li', 'br', 'hr', 'strong', 'em', 'u', 'i', 'b',
-        'center', 'font', 'link'
-      ],
-      ALLOWED_ATTR: [
-        'style', 'class', 'id', 'href', 'src', 'alt', 'width', 'height',
-        'align', 'valign', 'border', 'cellpadding', 'cellspacing',
-        'bgcolor', 'color', 'face', 'size', 'target', 'rel', 'type'
-      ],
-      ALLOW_DATA_ATTR: false,
-      FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input'],
-      FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover']
+      ADD_TAGS: ['style', 'link'],
+      ADD_ATTR: ['role', 'cellspacing', 'cellpadding', 'border', 'bgcolor', 'http-equiv'],
+      ALLOW_UNKNOWN_PROTOCOLS: false,
+      FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input', 'button'],
+      FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onmouseout', 'onfocus', 'onblur']
     });
   }, [html]);
 
@@ -76,7 +66,7 @@ export function EmailPreview({ html }: EmailPreviewProps) {
               height: viewMode === "desktop" ? "800px" : "667px",
               minHeight: "400px",
             }}
-            sandbox="allow-same-origin"
+            sandbox="allow-same-origin allow-popups"
           />
         </div>
       </div>

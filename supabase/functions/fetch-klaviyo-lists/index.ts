@@ -67,8 +67,8 @@ serve(async (req) => {
 
     const apiKey = decryptApiKey(connection.api_key_encrypted, encryptionKey);
 
-    // Fetch lists from Klaviyo
-    const response = await fetch("https://a.klaviyo.com/api/lists/?page[size]=50", {
+    // Fetch lists from Klaviyo with correct pagination parameter
+    const response = await fetch("https://a.klaviyo.com/api/lists/", {
       headers: {
         "Authorization": `Klaviyo-API-Key ${apiKey}`,
         "revision": "2024-10-15",

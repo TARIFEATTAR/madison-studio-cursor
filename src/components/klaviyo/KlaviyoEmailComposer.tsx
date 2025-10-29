@@ -61,24 +61,14 @@ export function KlaviyoEmailComposer({
   const [selectedList, setSelectedList] = useState("");
   const [emailHtml, setEmailHtml] = useState(initialHtml || "");
 
-  // Sanitize HTML for safe preview
+  // Sanitize HTML more permissively for email templates (keeping design intact)
   const sanitizedHtml = useMemo(() => {
     return DOMPurify.sanitize(emailHtml, {
-      ALLOWED_TAGS: [
-        'html', 'head', 'body', 'meta', 'title', 'style',
-        'div', 'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-        'a', 'img', 'table', 'thead', 'tbody', 'tr', 'td', 'th',
-        'ul', 'ol', 'li', 'br', 'hr', 'strong', 'em', 'u', 'i', 'b',
-        'center', 'font', 'link'
-      ],
-      ALLOWED_ATTR: [
-        'style', 'class', 'id', 'href', 'src', 'alt', 'width', 'height',
-        'align', 'valign', 'border', 'cellpadding', 'cellspacing',
-        'bgcolor', 'color', 'face', 'size', 'target', 'rel', 'type'
-      ],
-      ALLOW_DATA_ATTR: false,
-      FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input'],
-      FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover']
+      ADD_TAGS: ['style', 'link'],
+      ADD_ATTR: ['role', 'cellspacing', 'cellpadding', 'border', 'bgcolor', 'http-equiv'],
+      ALLOW_UNKNOWN_PROTOCOLS: false,
+      FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input', 'button'],
+      FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onmouseout', 'onfocus', 'onblur']
     });
   }, [emailHtml]);
 
@@ -377,7 +367,7 @@ export function KlaviyoEmailComposer({
                 srcDoc={sanitizedHtml}
                 className="w-full h-full min-h-[500px] bg-background"
                 title="Email Preview"
-                sandbox="allow-same-origin"
+                sandbox="allow-same-origin allow-popups"
               />
             </div>
           </TabsContent>
