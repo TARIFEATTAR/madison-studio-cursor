@@ -19,7 +19,7 @@ export function TemplateSelector({ selectedTemplate, onSelect }: TemplateSelecto
   return (
     <div className="space-y-3">
       <label className="text-sm font-medium text-foreground">Email Template</label>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {EMAIL_TEMPLATES.map((template) => {
           const Icon = templateIcons[template.id] || <FileText className="w-5 h-5" />;
           

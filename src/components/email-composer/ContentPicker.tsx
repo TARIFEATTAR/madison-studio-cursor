@@ -101,13 +101,14 @@ export function ContentPicker({ onSelect, organizationId }: ContentPickerProps) 
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <FileText className="w-4 h-4" />
-          Load from Library
-        </Button>
-      </DialogTrigger>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2 text-xs md:text-sm">
+            <FileText className="w-4 h-4" />
+            <span className="hidden sm:inline">Load from Library</span>
+            <span className="sm:hidden">Load</span>
+          </Button>
+        </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Select Content from Library</DialogTitle>
