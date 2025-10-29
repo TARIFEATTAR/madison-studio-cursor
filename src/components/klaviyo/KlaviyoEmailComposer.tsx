@@ -33,6 +33,7 @@ interface KlaviyoEmailComposerProps {
   contentId?: string;
   initialContent?: string;
   initialTitle?: string;
+  initialHtml?: string;
 }
 
 export function KlaviyoEmailComposer({
@@ -41,6 +42,7 @@ export function KlaviyoEmailComposer({
   contentId,
   initialContent = "",
   initialTitle = "",
+  initialHtml,
 }: KlaviyoEmailComposerProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -50,24 +52,21 @@ export function KlaviyoEmailComposer({
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [audienceType, setAudienceType] = useState<AudienceType>("list");
 
+  const [campaignName, setCampaignName] = useState(initialTitle);
   const [subject, setSubject] = useState(initialTitle);
   const [previewText, setPreviewText] = useState("");
-  const [emailTitle, setEmailTitle] = useState(initialTitle);
-  const [content, setContent] = useState(initialContent);
-  const [imageUrl, setImageUrl] = useState("");
   const [selectedList, setSelectedList] = useState("");
-  const [emailHtml, setEmailHtml] = useState("");
+  const [emailHtml, setEmailHtml] = useState(initialHtml || "");
 
   useEffect(() => {
     if (open) {
       loadOrganizationAndLists();
-      updatePreview();
+      // If initialHtml is provided, use it directly
+      if (initialHtml) {
+        setEmailHtml(initialHtml);
+      }
     }
-  }, [open]);
-
-  useEffect(() => {
-    updatePreview();
-  }, [content, emailTitle, imageUrl]);
+  }, [open, initialHtml]);
 
   const loadOrganizationAndLists = async () => {
     if (!user) return;
@@ -129,18 +128,10 @@ export function KlaviyoEmailComposer({
     }
   };
 
-  const updatePreview = () => {
-    const html = convertToEmailHtml({
-      content,
-      title: emailTitle,
-      imageUrl: imageUrl || undefined,
-    });
-    setEmailHtml(html);
-  };
 
   const handleSend = async () => {
     if (!selectedList) {
-      toast.error("Please select a Klaviyo list");
+      toast.error("Please select a Klaviyo list or segment");
       return;
     }
 
@@ -149,8 +140,8 @@ export function KlaviyoEmailComposer({
       return;
     }
 
-    if (!content.trim()) {
-      toast.error("Please enter email content");
+    if (!emailHtml || emailHtml.trim() === "") {
+      toast.error("Email content is missing");
       return;
     }
 
@@ -165,12 +156,14 @@ export function KlaviyoEmailComposer({
       const { data, error } = await supabase.functions.invoke("publish-to-klaviyo", {
         body: {
           organization_id: organizationId,
-          list_id: selectedList,
+          audience_type: audienceType,
+          audience_id: selectedList,
+          campaign_name: campaignName.trim() || subject.trim(),
           subject: subject.trim(),
           preview_text: previewText.trim() || subject.trim(),
           content_html: emailHtml,
           content_id: contentId,
-          content_title: emailTitle || subject,
+          content_title: subject,
         },
       });
 
@@ -212,6 +205,17 @@ export function KlaviyoEmailComposer({
           </TabsList>
 
           <TabsContent value="compose" className="flex-1 overflow-y-auto space-y-4 mt-4">
+            {/* Campaign Name */}
+            <div className="space-y-2">
+              <Label htmlFor="campaign">Campaign Name</Label>
+              <Input
+                id="campaign"
+                placeholder="Internal campaign name"
+                value={campaignName}
+                onChange={(e) => setCampaignName(e.target.value)}
+              />
+            </div>
+
             {/* Audience Type Selection */}
             <div className="space-y-2">
               <Label>Audience Type</Label>
@@ -270,51 +274,15 @@ export function KlaviyoEmailComposer({
 
             {/* Preview Text */}
             <div className="space-y-2">
-              <Label htmlFor="preview">Preview Text</Label>
+              <Label htmlFor="preview">Preview Text (Optional)</Label>
               <Input
                 id="preview"
-                placeholder="Text shown in inbox preview (optional)"
+                placeholder="Text shown in inbox preview"
                 value={previewText}
                 onChange={(e) => setPreviewText(e.target.value)}
               />
-            </div>
-
-            {/* Email Title */}
-            <div className="space-y-2">
-              <Label htmlFor="title">Email Title (optional)</Label>
-              <Input
-                id="title"
-                placeholder="Heading in email"
-                value={emailTitle}
-                onChange={(e) => setEmailTitle(e.target.value)}
-              />
-            </div>
-
-            {/* Header Image */}
-            <div className="space-y-2">
-              <Label htmlFor="image">Header Image URL (optional)</Label>
-              <Input
-                id="image"
-                type="url"
-                placeholder="https://example.com/image.jpg"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-              />
-            </div>
-
-            {/* Content */}
-            <div className="space-y-2">
-              <Label htmlFor="content">Email Content *</Label>
-              <Textarea
-                id="content"
-                placeholder="Write your email content here. Use double line breaks for paragraphs."
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                rows={12}
-                className="font-mono text-sm"
-              />
               <p className="text-xs text-muted-foreground">
-                Tip: Use double line breaks to create paragraphs. Simple formatting works best for email compatibility.
+                Defaults to subject if left empty
               </p>
             </div>
           </TabsContent>

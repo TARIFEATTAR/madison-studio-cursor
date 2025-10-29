@@ -16,6 +16,7 @@ import { StyleCustomizer } from "@/components/email-composer/StyleCustomizer";
 import { ImagePicker } from "@/components/email-composer/ImagePicker";
 import { EmailPreview } from "@/components/email-composer/EmailPreview";
 import { ContentPicker } from "@/components/email-composer/ContentPicker";
+import { KlaviyoEmailComposer } from "@/components/klaviyo/KlaviyoEmailComposer";
 import { ArrowLeft, Send, Download, Save, ChevronRight, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -27,7 +28,7 @@ export default function EmailComposer() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { brandColor: defaultBrandColor } = useBrandColor();
-  const [sendLoading, setSendLoading] = useState(false);
+  const [showKlaviyoModal, setShowKlaviyoModal] = useState(false);
   const [showFooterOptions, setShowFooterOptions] = useState(false);
   const [showCtaOptions, setShowCtaOptions] = useState(false);
   const [showStyleOptions, setShowStyleOptions] = useState(false);
@@ -82,7 +83,7 @@ export default function EmailComposer() {
     }
   };
 
-  const handleSendToKlaviyo = async () => {
+  const handleSendToKlaviyo = () => {
     if (!organizationId) {
       toast.error("No organization found");
       return;
@@ -93,22 +94,13 @@ export default function EmailComposer() {
       return;
     }
 
-    setSendLoading(true);
-    try {
-      // This would integrate with the existing Klaviyo publishing flow
-      // For now, just show success message
-      toast.success("Ready to send to Klaviyo!", {
-        description: "This will integrate with your existing Klaviyo connection",
-      });
-      
-      // Navigate to publish page with pre-filled data
-      navigate(`/publish/email?title=${encodeURIComponent(composer.title)}&html=${encodeURIComponent(composer.generatedHtml)}`);
-    } catch (error) {
-      console.error("Error sending to Klaviyo:", error);
-      toast.error("Failed to prepare email");
-    } finally {
-      setSendLoading(false);
+    if (!composer.content.trim()) {
+      toast.error("Please add email content");
+      return;
     }
+
+    // Open the Klaviyo modal with pre-filled data
+    setShowKlaviyoModal(true);
   };
 
   const handleDownloadHtml = () => {
@@ -185,11 +177,10 @@ export default function EmailComposer() {
           </Button>
           <GoldButton
             onClick={handleSendToKlaviyo}
-            disabled={sendLoading}
             className="gap-2"
           >
             <Send className="w-4 h-4" />
-            {sendLoading ? "Preparing..." : "Send to Klaviyo"}
+            Send to Klaviyo
           </GoldButton>
         </div>
       </div>
@@ -498,10 +489,18 @@ export default function EmailComposer() {
         </ScrollArea>
 
         {/* Right Panel - Preview */}
-        <div className="w-1/2">
+        <div className="w-1/2 border-l border-border bg-muted/20">
           <EmailPreview html={composer.generatedHtml} />
         </div>
       </div>
+
+      {/* Klaviyo Email Composer Modal */}
+      <KlaviyoEmailComposer
+        open={showKlaviyoModal}
+        onOpenChange={setShowKlaviyoModal}
+        initialHtml={composer.generatedHtml}
+        initialTitle={composer.title}
+      />
     </div>
   );
 }
