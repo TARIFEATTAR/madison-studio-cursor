@@ -76,6 +76,18 @@ export function generateLuxuryTemplate(content: EmailContent): string {
       background-color: ${buttonColor};
       color: ${buttonTextColor};
     }
+    /* Optional full-width CTA on mobile */
+    .luxury-button--full-mobile {
+      /* becomes full-width on mobile */
+    }
+    @media only screen and (max-width: 600px) {
+      .luxury-button--full-mobile {
+        width: 100% !important;
+        display: block !important;
+        box-sizing: border-box;
+        text-align: center !important;
+      }
+    }
     .luxury-footer {
       padding: 50px 60px 40px 60px;
       text-align: center;
@@ -167,8 +179,8 @@ export function generateLuxuryTemplate(content: EmailContent): string {
           <!-- CTA Section -->
           ${content.ctaText && content.ctaUrl ? `
           <tr>
-            <td class="luxury-cta">
-              <a href="${content.ctaUrl}" class="luxury-button">${content.ctaText}</a>
+            <td class="luxury-cta" style="text-align: ${content.ctaAlignment || 'center'};">
+              <a href="${content.ctaUrl}" class="luxury-button ${content.expandButtonOnMobile ? 'luxury-button--full-mobile' : ''}">${content.ctaText}</a>
             </td>
           </tr>
           ` : ''}

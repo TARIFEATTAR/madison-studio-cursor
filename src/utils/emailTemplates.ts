@@ -762,7 +762,7 @@ export function generatePromoTemplate(content: EmailContent): string {
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 40px auto;">
                 <tr>
                   <td style="text-align: ${content.ctaAlignment || 'center'};">
-                    <a href="${content.ctaUrl}" class="cta-button ${content.expandButtonOnMobile ? 'cta-button--full-mobile' : ''}" style="font-size: 20px; padding: 20px 50px; background-color: ${secondaryColor};">${content.ctaText}</a>
+                    <a href="${content.ctaUrl}" class="cta-button ${content.expandButtonOnMobile ? 'cta-button--full-mobile' : ''}" style="font-size: 20px; padding: 20px 50px;">${content.ctaText}</a>
                   </td>
                 </tr>
               </table>
