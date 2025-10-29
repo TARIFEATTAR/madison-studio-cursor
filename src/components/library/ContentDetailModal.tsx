@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Edit2, Send, Copy, Check, FileDown, Calendar, MessageSquare, Download, Trash2, X, Mail } from "lucide-react";
 import {
@@ -32,6 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { deserializeEmailState } from "@/utils/emailStateSerializer";
 
 type ContentCategory = "prompt" | "output" | "master" | "derivative";
 
@@ -85,6 +86,23 @@ export function ContentDetailModal({
   const isVisualAsset = content.sourceTable === "generated_images" || 
                         content.content_type === "visual-asset" ||
                         content.asset_type === "visual-asset";
+
+  // Check if this is an Email Composer email
+  const emailComposerData = useMemo(() => {
+    if (category === "master" && contentType === "Email" && content.full_content) {
+      try {
+        const emailState = deserializeEmailState(content.full_content);
+        if (emailState.generatedHtml) {
+          return emailState;
+        }
+      } catch (e) {
+        // Not a serialized email, treat as regular content
+      }
+    }
+    return null;
+  }, [content, category, contentType]);
+
+  const isEmailComposer = !!emailComposerData;
 
   const getContentText = () => {
     if (category === "prompt") return content.prompt_text;
@@ -541,7 +559,18 @@ export function ContentDetailModal({
           {/* Action Buttons */}
           {!isEditing && (
             <div className="flex items-center gap-2 pt-4 border-t border-border/40">
-              {!isVisualAsset && (
+              {/* Special Edit button for Email Composer emails */}
+              {isEmailComposer ? (
+                <Button 
+                  onClick={() => navigate(`/email-composer?contentId=${content.id}&sourceTable=master_content`)} 
+                  variant="default" 
+                  size="sm"
+                  className="bg-brass hover:bg-brass/90"
+                >
+                  <Mail className="w-4 h-4 mr-2" />
+                  Edit in Email Composer
+                </Button>
+              ) : !isVisualAsset && (
                 <Button onClick={handleEdit} variant="outline" size="sm">
                   <Edit2 className="w-4 h-4 mr-2" />
                   Edit

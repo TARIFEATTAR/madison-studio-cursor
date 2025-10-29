@@ -2,15 +2,16 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
-import { Star, Archive, ArchiveRestore, Send } from "lucide-react";
+import { Star, Archive, ArchiveRestore, Send, Mail } from "lucide-react";
 import { collections } from "@/data/mockLibraryContent";
 import { getDeliverableByValue } from "@/config/deliverableFormats";
 import { cn } from "@/lib/utils";
 import { PublishingStatus } from "./PublishingStatus";
 import { PublishingDrawer } from "./PublishingDrawer";
 import { BrandAlignmentButton } from "./BrandAlignmentButton";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { getContentSubtypeLabel, getContentCategoryLabel } from "@/utils/contentSubtypeLabels";
+import { deserializeEmailState } from "@/utils/emailStateSerializer";
 
 interface ContentCardProps {
   content: {
@@ -59,7 +60,26 @@ export function ContentCard({
   const deliverableFormat = getDeliverableByValue(content.contentType);
   const collectionInfo = collections.find(c => c.id === content.collection);
   
-  const previewText = content.content.substring(0, 150) + (content.content.length > 150 ? "..." : "");
+  // Check if this is an Email Composer email (has serialized state with HTML)
+  const emailComposerData = useMemo(() => {
+    if (content.sourceTable === 'master_content' && content.contentType === 'Email') {
+      try {
+        const emailState = deserializeEmailState(content.content);
+        if (emailState.generatedHtml) {
+          return emailState;
+        }
+      } catch (e) {
+        // Not a serialized email, treat as regular content
+      }
+    }
+    return null;
+  }, [content]);
+
+  const isEmailComposer = !!emailComposerData;
+  
+  const previewText = isEmailComposer 
+    ? (emailComposerData.content || emailComposerData.title || "").substring(0, 150) + "..."
+    : content.content.substring(0, 150) + (content.content.length > 150 ? "..." : "");
   const timeAgo = formatDistanceToNow(content.createdAt, { addSuffix: true });
 
   return (
@@ -138,8 +158,19 @@ export function ContentCard({
           </h3>
           
           <div className="flex flex-wrap gap-2">
+            {/* Email Composer Badge - Special indicator for emails created in Email Composer */}
+            {isEmailComposer && (
+              <Badge 
+                variant="default"
+                className="text-xs font-semibold bg-gradient-to-r from-brass to-[#9B8A6F] text-white border-0 flex items-center gap-1"
+              >
+                <Mail className="w-3 h-3" />
+                Email Composer
+              </Badge>
+            )}
+            
             {/* Master Content Badge - Primary Indicator */}
-            {content.sourceTable === "master_content" && (
+            {content.sourceTable === "master_content" && !isEmailComposer && (
               <Badge 
                 variant="default"
                 className="text-xs font-semibold bg-brass/90 hover:bg-brass text-white border-0"
@@ -213,8 +244,48 @@ export function ContentCard({
           </div>
         </div>
 
-        {/* Content Preview - Special handling for generated images */}
-        {content.sourceTable === "generated_images" && content.imageUrl ? (
+        {/* Content Preview - Special handling for Email Composer emails */}
+        {isEmailComposer && emailComposerData ? (
+          <div className="space-y-3">
+            {/* Header Image Preview */}
+            {emailComposerData.headerImage && (
+              <div className="relative w-full h-48 rounded-lg overflow-hidden bg-muted border border-border">
+                <img
+                  src={emailComposerData.headerImage}
+                  alt="Email header"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            
+            {/* Email Content Preview */}
+            <div className="space-y-2">
+              {emailComposerData.subtitle && (
+                <p className="text-sm font-medium text-foreground/80">
+                  {emailComposerData.subtitle}
+                </p>
+              )}
+              <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed">
+                {previewText}
+              </p>
+              
+              {/* Template Info */}
+              {emailComposerData.template && (
+                <div className="flex items-center gap-2 pt-2">
+                  <Badge variant="outline" className="text-xs capitalize">
+                    {emailComposerData.template.replace(/-/g, ' ')}
+                  </Badge>
+                  {emailComposerData.ctaText && (
+                    <Badge variant="secondary" className="text-xs">
+                      CTA: {emailComposerData.ctaText}
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : content.sourceTable === "generated_images" && content.imageUrl ? (
+          /* Generated Images Preview */
           <div className="space-y-2">
             <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden bg-[#252220] border border-[#3D3935]">
               <img
@@ -230,6 +301,7 @@ export function ContentCard({
             )}
           </div>
         ) : (
+          /* Regular Content Preview */
           <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed">
             {previewText}
           </p>
