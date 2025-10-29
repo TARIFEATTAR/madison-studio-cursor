@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Edit2, Send, Copy, Check, FileDown, Calendar, MessageSquare, Download, Trash2, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Edit2, Send, Copy, Check, FileDown, Calendar, MessageSquare, Download, Trash2, X, Mail } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -56,6 +57,7 @@ export function ContentDetailModal({
   onEditWithMadison,
 }: ContentDetailModalProps) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
   const [isCopied, setIsCopied] = useState(false);
@@ -573,6 +575,27 @@ export function ContentDetailModal({
                 >
                   <Calendar className="w-4 h-4 mr-2" />
                   Schedule
+                </Button>
+              )}
+
+              {/* Publish to Klaviyo for Email Campaigns */}
+              {contentType && (contentType.toLowerCase().includes('email') || contentType === 'email_campaign') && (
+                <Button
+                  onClick={() => {
+                    const sourceTable = 
+                      category === "master" ? "master_content" :
+                      category === "derivative" ? "derivative_assets" :
+                      category === "output" ? "outputs" : "master_content";
+                    
+                    navigate(`/publish/email?contentId=${content.id}&sourceTable=${sourceTable}&title=${encodeURIComponent(content.title || 'Untitled')}`);
+                    onOpenChange(false);
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="bg-[#E1B16A]/10 hover:bg-[#E1B16A]/20 border-[#E1B16A]/30"
+                >
+                  <Mail className="w-4 h-4 mr-2" />
+                  Publish
                 </Button>
               )}
 
