@@ -201,7 +201,7 @@ export default function EmailComposer() {
             content_type: 'Email',
             organization_id: organizationId,
             created_by: user.id,
-            status: 'ready'
+            status: 'draft'
           })
           .select()
           .single();
@@ -792,13 +792,13 @@ export default function EmailComposer() {
         contentId={contentId || undefined}
         onSendSuccess={async () => {
           console.log("[EmailComposer] Klaviyo send success callback");
-          // Mark as sent in database
+          // Mark as published in database
           if (contentId) {
             try {
               await supabase
                 .from('master_content')
                 .update({
-                  status: 'sent',
+                  status: 'published',
                   published_at: new Date().toISOString(),
                 })
                 .eq('id', contentId);

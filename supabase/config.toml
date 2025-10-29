@@ -71,3 +71,6 @@ verify_jwt = true
 
 [functions.mark-generated-image-saved]
 verify_jwt = true
+
+[functions.publish-to-klaviyo]
+verify_jwt = true

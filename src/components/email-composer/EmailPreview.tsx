@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Monitor, Smartphone } from "lucide-react";
+import DOMPurify from "dompurify";
 
 interface EmailPreviewProps {
   html: string;
@@ -8,6 +9,27 @@ interface EmailPreviewProps {
 
 export function EmailPreview({ html }: EmailPreviewProps) {
   const [viewMode, setViewMode] = useState<"desktop" | "mobile">("desktop");
+
+  // Sanitize HTML to remove scripts and unsafe content (emails shouldn't have scripts anyway)
+  const sanitizedHtml = useMemo(() => {
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: [
+        'html', 'head', 'body', 'meta', 'title', 'style',
+        'div', 'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'a', 'img', 'table', 'thead', 'tbody', 'tr', 'td', 'th',
+        'ul', 'ol', 'li', 'br', 'hr', 'strong', 'em', 'u', 'i', 'b',
+        'center', 'font', 'link'
+      ],
+      ALLOWED_ATTR: [
+        'style', 'class', 'id', 'href', 'src', 'alt', 'width', 'height',
+        'align', 'valign', 'border', 'cellpadding', 'cellspacing',
+        'bgcolor', 'color', 'face', 'size', 'target', 'rel', 'type'
+      ],
+      ALLOW_DATA_ATTR: false,
+      FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input'],
+      FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover']
+    });
+  }, [html]);
 
   return (
     <div className="h-full flex flex-col bg-card border-l border-border">
@@ -47,7 +69,7 @@ export function EmailPreview({ html }: EmailPreviewProps) {
           }}
         >
           <iframe
-            srcDoc={html}
+            srcDoc={sanitizedHtml}
             title="Email Preview"
             className="w-full border-0"
             style={{

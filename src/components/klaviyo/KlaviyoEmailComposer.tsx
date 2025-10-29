@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Loader2, Mail, Eye } from "lucide-react";
 import { convertToEmailHtml } from "@/utils/emailHtmlConverter";
+import DOMPurify from "dompurify";
 
 interface KlaviyoList {
   id: string;
@@ -59,6 +60,27 @@ export function KlaviyoEmailComposer({
   const [previewText, setPreviewText] = useState("");
   const [selectedList, setSelectedList] = useState("");
   const [emailHtml, setEmailHtml] = useState(initialHtml || "");
+
+  // Sanitize HTML for safe preview
+  const sanitizedHtml = useMemo(() => {
+    return DOMPurify.sanitize(emailHtml, {
+      ALLOWED_TAGS: [
+        'html', 'head', 'body', 'meta', 'title', 'style',
+        'div', 'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'a', 'img', 'table', 'thead', 'tbody', 'tr', 'td', 'th',
+        'ul', 'ol', 'li', 'br', 'hr', 'strong', 'em', 'u', 'i', 'b',
+        'center', 'font', 'link'
+      ],
+      ALLOWED_ATTR: [
+        'style', 'class', 'id', 'href', 'src', 'alt', 'width', 'height',
+        'align', 'valign', 'border', 'cellpadding', 'cellspacing',
+        'bgcolor', 'color', 'face', 'size', 'target', 'rel', 'type'
+      ],
+      ALLOW_DATA_ATTR: false,
+      FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input'],
+      FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover']
+    });
+  }, [emailHtml]);
 
   useEffect(() => {
     console.log("[KlaviyoEmailComposer] useEffect triggered", { open, hasInitialHtml: !!initialHtml });
@@ -215,7 +237,10 @@ export function KlaviyoEmailComposer({
 
       if (error) {
         console.error("[KlaviyoEmailComposer] Klaviyo publish error:", error);
-        throw error;
+        // Surface the actual error message from the function
+        const errorMessage = error.message || 'Unknown error occurred';
+        toast.error(`Failed to create Klaviyo campaign: ${errorMessage}`);
+        return;
       }
 
       // Call success callback to update database
@@ -231,7 +256,8 @@ export function KlaviyoEmailComposer({
       onOpenChange(false);
     } catch (error: any) {
       console.error("[KlaviyoEmailComposer] Error in handleSend:", error);
-      toast.error(error.message || "Failed to send email to Klaviyo");
+      const errorMessage = error?.message || 'Unknown error';
+      toast.error(`Klaviyo error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -348,9 +374,10 @@ export function KlaviyoEmailComposer({
           <TabsContent value="preview" className="flex-1 overflow-hidden mt-4">
             <div className="border rounded-lg h-full overflow-auto bg-muted/20">
               <iframe
-                srcDoc={emailHtml}
+                srcDoc={sanitizedHtml}
                 className="w-full h-full min-h-[500px] bg-background"
                 title="Email Preview"
+                sandbox="allow-same-origin"
               />
             </div>
           </TabsContent>
