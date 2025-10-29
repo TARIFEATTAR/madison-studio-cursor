@@ -57,11 +57,50 @@ export function PublishingDrawer({
   const [publishDate, setPublishDate] = useState<Date>(new Date());
   const [notes, setNotes] = useState("");
   const [showKlaviyoComposer, setShowKlaviyoComposer] = useState(false);
+  const [contentText, setContentText] = useState("");
+  const [loadingContent, setLoadingContent] = useState(false);
+
+  const fetchContentForEmail = async () => {
+    setLoadingContent(true);
+    try {
+      const { data, error } = await supabase
+        .from(sourceTable)
+        .select("*")
+        .eq("id", contentId)
+        .single();
+
+      if (error) throw error;
+
+      // Extract text content based on the source table
+      let text = "";
+      if (sourceTable === "master_content") {
+        text = (data as any).content || "";
+      } else if (sourceTable === "derivative_assets") {
+        text = (data as any).content || "";
+      } else if (sourceTable === "outputs") {
+        text = (data as any).output_text || "";
+      } else if (sourceTable === "generated_images") {
+        text = (data as any).prompt || "";
+      }
+
+      setContentText(text);
+      setShowKlaviyoComposer(true);
+    } catch (error) {
+      console.error("Error fetching content:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load content for email. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingContent(false);
+    }
+  };
 
   const handlePlatformToggle = (platformId: string) => {
-    // If Klaviyo is selected, open the composer
+    // If Klaviyo is selected, fetch content and open the composer
     if (platformId === "klaviyo") {
-      setShowKlaviyoComposer(true);
+      fetchContentForEmail();
       return;
     }
 
@@ -153,6 +192,7 @@ export function PublishingDrawer({
         }}
         contentId={contentId}
         initialTitle={contentTitle}
+        initialContent={contentText}
       />
       
       <Sheet open={open} onOpenChange={onOpenChange}>
@@ -223,6 +263,7 @@ export function PublishingDrawer({
                     checked={selectedPlatforms.includes(platform.id)}
                     onCheckedChange={() => {}}
                     className="shrink-0"
+                    disabled={platform.id === "klaviyo" && loadingContent}
                   />
                   <label
                     htmlFor={platform.id}
@@ -230,6 +271,9 @@ export function PublishingDrawer({
                   >
                     <span className="mr-1">{platform.icon}</span>
                     <span className="truncate">{platform.label}</span>
+                    {platform.id === "klaviyo" && loadingContent && (
+                      <Loader2 className="ml-2 h-3 w-3 animate-spin inline" />
+                    )}
                   </label>
                 </div>
               ))}
