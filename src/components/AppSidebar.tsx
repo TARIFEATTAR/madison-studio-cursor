@@ -1,4 +1,4 @@
-import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu, ShoppingBag, Store, Image } from "lucide-react";
+import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu, ShoppingBag, Store, Image, Mail } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,6 +57,11 @@ export function AppSidebar() {
       title: "Image Studio", 
       url: "/image-editor", 
       icon: Image 
+    },
+    { 
+      title: "Email Composer", 
+      url: "/email-composer", 
+      icon: Mail 
     },
     ...(isEcommerce ? [
       { 

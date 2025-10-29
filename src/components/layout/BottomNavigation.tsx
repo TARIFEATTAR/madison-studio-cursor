@@ -1,4 +1,4 @@
-import { Home, FolderOpen, Calendar, Settings, Plus, Edit3, Repeat, Image as ImageIcon } from 'lucide-react';
+import { Home, FolderOpen, Calendar, Settings, Plus, Edit3, Repeat, Image as ImageIcon, Mail } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -52,6 +52,7 @@ export const BottomNavigation = () => {
     { icon: Edit3, label: 'Create', route: '/create' },
     { icon: Repeat, label: 'Multiply', route: '/multiply' },
     { icon: ImageIcon, label: 'Image Studio', route: '/image-editor' },
+    { icon: Mail, label: 'Email', route: '/email-composer' },
   ];
 
   const isActive = (route: string) => location.pathname === route;
