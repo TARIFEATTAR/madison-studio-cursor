@@ -36,7 +36,9 @@ serve(async (req) => {
 
     const { 
       organization_id, 
-      list_id, 
+      audience_type = "list",
+      audience_id,
+      campaign_name,
       subject, 
       preview_text, 
       content_html,
@@ -44,8 +46,8 @@ serve(async (req) => {
       content_title 
     } = await req.json();
 
-    if (!organization_id || !list_id || !subject || !content_html) {
-      throw new Error("Missing required fields");
+    if (!organization_id || !audience_id || !subject || !content_html) {
+      throw new Error("Missing required fields: organization_id, audience_id, subject, content_html");
     }
 
     // Get the encrypted API key
@@ -72,9 +74,9 @@ serve(async (req) => {
       data: {
         type: "campaign",
         attributes: {
-          name: content_title || subject,
+          name: campaign_name || content_title || subject,
           audiences: {
-            included: [list_id]
+            included: [audience_id]
           },
           // Omit send_strategy to create a draft campaign
           campaign_messages: {
@@ -110,7 +112,14 @@ serve(async (req) => {
     if (!campaignResponse.ok) {
       const errorText = await campaignResponse.text();
       console.error("Klaviyo campaign creation error:", errorText);
-      throw new Error("Failed to create Klaviyo campaign");
+      let errorDetail = "Failed to create Klaviyo campaign";
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetail = errorJson.errors?.[0]?.detail || errorDetail;
+      } catch (e) {
+        errorDetail = errorText || errorDetail;
+      }
+      throw new Error(errorDetail);
     }
 
     const campaignData = await campaignResponse.json();
@@ -150,7 +159,14 @@ serve(async (req) => {
     if (!updateResponse.ok) {
       const errorText = await updateResponse.text();
       console.error("Klaviyo message update error:", errorText);
-      throw new Error("Failed to update campaign content");
+      let errorDetail = "Failed to update campaign content";
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetail = errorJson.errors?.[0]?.detail || errorDetail;
+      } catch (e) {
+        errorDetail = errorText || errorDetail;
+      }
+      throw new Error(errorDetail);
     }
 
     // Log to publishing history
@@ -167,7 +183,8 @@ serve(async (req) => {
           organization_id,
           status: "draft",
           metadata: {
-            list_id,
+            audience_type,
+            audience_id,
             message_id: messageId,
             subject,
             preview_text

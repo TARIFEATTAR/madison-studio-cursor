@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -15,10 +16,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Loader2, Mail } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { KlaviyoEmailComposer } from "@/components/klaviyo/KlaviyoEmailComposer";
 
 const PLATFORMS = [
   { id: "facebook", label: "Facebook", icon: "📘" },
@@ -51,56 +51,23 @@ export function PublishingDrawer({
   onSuccess,
 }: PublishingDrawerProps) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [platformUrls, setPlatformUrls] = useState<Record<string, string>>({});
   const [publishDate, setPublishDate] = useState<Date>(new Date());
   const [notes, setNotes] = useState("");
-  const [showKlaviyoComposer, setShowKlaviyoComposer] = useState(false);
-  const [contentText, setContentText] = useState("");
-  const [loadingContent, setLoadingContent] = useState(false);
-
-  const fetchContentForEmail = async () => {
-    setLoadingContent(true);
-    try {
-      const { data, error } = await supabase
-        .from(sourceTable)
-        .select("*")
-        .eq("id", contentId)
-        .single();
-
-      if (error) throw error;
-
-      // Extract text content based on the source table
-      let text = "";
-      if (sourceTable === "master_content") {
-        text = (data as any).content || "";
-      } else if (sourceTable === "derivative_assets") {
-        text = (data as any).content || "";
-      } else if (sourceTable === "outputs") {
-        text = (data as any).output_text || "";
-      } else if (sourceTable === "generated_images") {
-        text = (data as any).prompt || "";
-      }
-
-      setContentText(text);
-    } catch (error) {
-      console.error("Error fetching content:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load content for email. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingContent(false);
-    }
-  };
 
   const handlePlatformToggle = (platformId: string) => {
-    // If Klaviyo is selected, close the drawer and open the composer on top
+    // If Klaviyo is selected, navigate to dedicated email publishing page
     if (platformId === "klaviyo") {
-      setShowKlaviyoComposer(true);
-      fetchContentForEmail();
+      const params = new URLSearchParams({
+        contentId,
+        sourceTable,
+        title: contentTitle,
+      });
+      navigate(`/publish/email?${params.toString()}`);
+      onOpenChange(false);
       return;
     }
 
@@ -110,8 +77,6 @@ export function PublishingDrawer({
         : [...prev, platformId]
     );
   };
-
-  
 
   const handleUrlChange = (platformId: string, url: string) => {
     setPlatformUrls((prev) => ({
@@ -182,22 +147,7 @@ export function PublishingDrawer({
   };
 
   return (
-    <>
-      <KlaviyoEmailComposer
-        open={showKlaviyoComposer}
-        onOpenChange={(open) => {
-          setShowKlaviyoComposer(open);
-          if (!open) {
-            // When composer closes after success, also close the drawer
-            onOpenChange(false);
-          }
-        }}
-        contentId={contentId}
-        initialTitle={contentTitle}
-        initialContent={contentText}
-      />
-      
-      <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
         className="z-[50] w-full sm:w-[540px] sm:max-w-[540px] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
@@ -267,7 +217,6 @@ export function PublishingDrawer({
                     checked={selectedPlatforms.includes(platform.id)}
                     onCheckedChange={() => {}}
                     className="shrink-0"
-                    disabled={platform.id === "klaviyo" && loadingContent}
                     onClick={(e) => e.stopPropagation()}
                   />
                   <label
@@ -277,9 +226,6 @@ export function PublishingDrawer({
                   >
                     <span className="mr-1">{platform.icon}</span>
                     <span className="truncate">{platform.label}</span>
-                    {platform.id === "klaviyo" && loadingContent && (
-                      <Loader2 className="ml-2 h-3 w-3 animate-spin inline" />
-                    )}
                   </label>
                 </div>
               ))}
@@ -354,6 +300,5 @@ export function PublishingDrawer({
         </div>
       </SheetContent>
     </Sheet>
-    </>
   );
 }
