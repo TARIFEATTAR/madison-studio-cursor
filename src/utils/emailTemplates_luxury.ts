@@ -173,15 +173,29 @@ export function generateLuxuryTemplate(content: EmailContent): string {
           <tr>
             <td class="luxury-content">
               ${content.bodyHeader ? `<h2 style=\"text-align: ${content.contentAlignment || 'left'};\">${content.bodyHeader}</h2>` : ''}
-              <div style="white-space: pre-wrap; text-align: ${content.contentAlignment || 'center'};">${content.content}</div>
+
+              <!-- Body copy with robust alignment (supports Outlook) -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="${content.contentAlignment || 'left'}" style="text-align: ${content.contentAlignment || 'left'};">
+                    <div style="white-space: pre-wrap; text-align: ${content.contentAlignment || 'left'};">${content.content}</div>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           
           <!-- CTA Section -->
           ${content.ctaText && content.ctaUrl ? `
           <tr>
-            <td class="luxury-cta" style="text-align: ${content.ctaAlignment || 'center'};">
-              <a href="${content.ctaUrl}" class="luxury-button ${content.expandButtonOnMobile ? 'luxury-button--full-mobile' : ''}">${content.ctaText}</a>
+            <td class="luxury-cta" align="${content.ctaAlignment || 'center'}" style="text-align: ${content.ctaAlignment || 'center'};">
+              <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" align=\"${content.ctaAlignment || 'center'}\" style=\"margin: 0 ${content.ctaAlignment === 'center' ? 'auto' : '0'};\">
+                <tr>
+                  <td>
+                    <a href=\"${content.ctaUrl}\" class=\"luxury-button ${content.expandButtonOnMobile ? 'luxury-button--full-mobile' : ''}\">${content.ctaText}</a>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           ` : ''}

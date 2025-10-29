@@ -275,13 +275,28 @@ export function generateNewsletterTemplate(content: EmailContent): string {
           <tr>
             <td class="content">
               ${content.bodyHeader ? `<h2>${content.bodyHeader}</h2>` : ''}
-              <div style="white-space: pre-wrap; text-align: ${content.contentAlignment || 'left'};">${content.content}</div>
+
+              <!-- Body copy with robust alignment (supports Outlook) -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="${content.contentAlignment || 'left'}" style="text-align: ${content.contentAlignment || 'left'};">
+                    <div style="white-space: pre-wrap; text-align: ${content.contentAlignment || 'left'};">${content.content}</div>
+                  </td>
+                </tr>
+              </table>
               
               ${content.ctaText && content.ctaUrl ? `
+              <!-- CTA with bulletproof centering/align -->
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 30px 0; width: 100%;">
                 <tr>
-                  <td style="text-align: ${content.ctaAlignment || 'center'};">
-                    <a href="${content.ctaUrl}" class="cta-button ${content.expandButtonOnMobile ? 'cta-button--full-mobile' : ''}">${content.ctaText}</a>
+                  <td align="${content.ctaAlignment || 'center'}" style="text-align: ${content.ctaAlignment || 'center'};">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="${content.ctaAlignment || 'center'}" style="margin: 0 ${content.ctaAlignment === 'center' ? 'auto' : '0'};">
+                      <tr>
+                        <td>
+                          <a href="${content.ctaUrl}" class="cta-button ${content.expandButtonOnMobile ? 'cta-button--full-mobile' : ''}">${content.ctaText}</a>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
@@ -392,15 +407,30 @@ export function generateProductLaunchTemplate(content: EmailContent): string {
           
           <!-- Content -->
           <tr>
-            <td class="content" style="text-align: ${content.contentAlignment || 'left'};">
-              ${content.bodyHeader ? `<h2 style=\"margin-top:0;\">${content.bodyHeader}</h2>` : ''}
-              <div style="white-space: pre-wrap; text-align: ${content.contentAlignment || 'left'};">${content.content}</div>
+            <td class="content">
+              ${content.bodyHeader ? `<h2 style=\"margin-top:0; text-align: ${content.contentAlignment || 'left'};\">${content.bodyHeader}</h2>` : ''}
+
+              <!-- Body copy with robust alignment (supports Outlook) -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="${content.contentAlignment || 'left'}" style="text-align: ${content.contentAlignment || 'left'};">
+                    <div style="white-space: pre-wrap; text-align: ${content.contentAlignment || 'left'};">${content.content}</div>
+                  </td>
+                </tr>
+              </table>
               
               ${content.ctaText && content.ctaUrl ? `
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 40px auto; width: 100%;">
+              <!-- CTA with bulletproof centering/align -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 40px 0; width: 100%;">
                 <tr>
-                  <td style="text-align: ${content.ctaAlignment || 'center'};">
-                    <a href="${content.ctaUrl}" class="cta-button ${content.expandButtonOnMobile ? 'cta-button--full-mobile' : ''}" style="font-size: 18px; padding: 18px 40px;">${content.ctaText}</a>
+                  <td align="${content.ctaAlignment || 'center'}" style="text-align: ${content.ctaAlignment || 'center'};">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="${content.ctaAlignment || 'center'}" style="margin: 0 ${content.ctaAlignment === 'center' ? 'auto' : '0'};">
+                      <tr>
+                        <td>
+                          <a href="${content.ctaUrl}" class="cta-button ${content.expandButtonOnMobile ? 'cta-button--full-mobile' : ''}" style="font-size: 18px; padding: 18px 40px;">${content.ctaText}</a>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
@@ -511,14 +541,28 @@ export function generateAnnouncementTemplate(content: EmailContent): string {
           
           <!-- Content -->
           <tr>
-            <td class="content" style="text-align: center;">
-              <div style="white-space: pre-wrap; text-align: center; font-size: 17px; line-height: 1.7;">${content.content}</div>
+            <td class="content">
+              <!-- Body copy with robust alignment (supports Outlook) -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="${content.contentAlignment || 'center'}" style="text-align: ${content.contentAlignment || 'center'};">
+                    <div style="white-space: pre-wrap; text-align: ${content.contentAlignment || 'center'}; font-size: 17px; line-height: 1.7;">${content.content}</div>
+                  </td>
+                </tr>
+              </table>
               
               ${content.ctaText && content.ctaUrl ? `
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 35px auto;">
+              <!-- CTA with bulletproof centering/align -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 35px 0; width: 100%;">
                 <tr>
-                  <td style="text-align: ${content.ctaAlignment || 'center'};">
-                    <a href="${content.ctaUrl}" class="cta-button ${content.expandButtonOnMobile ? 'cta-button--full-mobile' : ''}">${content.ctaText}</a>
+                  <td align="${content.ctaAlignment || 'center'}" style="text-align: ${content.ctaAlignment || 'center'};">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="${content.ctaAlignment || 'center'}" style="margin: 0 ${content.ctaAlignment === 'center' ? 'auto' : '0'};">
+                      <tr>
+                        <td>
+                          <a href="${content.ctaUrl}" class="cta-button ${content.expandButtonOnMobile ? 'cta-button--full-mobile' : ''}">${content.ctaText}</a>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
@@ -632,13 +676,27 @@ export function generateWelcomeTemplate(content: EmailContent): string {
           <!-- Content -->
           <tr>
             <td class="content">
-              <div style="white-space: pre-wrap; font-size: 17px; line-height: 1.7;">${content.content}</div>
+              <!-- Body copy with robust alignment (supports Outlook) -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="${content.contentAlignment || 'left'}" style="text-align: ${content.contentAlignment || 'left'};">
+                    <div style="white-space: pre-wrap; font-size: 17px; line-height: 1.7; text-align: ${content.contentAlignment || 'left'};">${content.content}</div>
+                  </td>
+                </tr>
+              </table>
               
               ${content.ctaText && content.ctaUrl ? `
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 35px 0;">
+              <!-- CTA with bulletproof centering/align -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 35px 0; width: 100%;">
                 <tr>
-                  <td style="text-align: ${content.ctaAlignment || 'center'};">
-                    <a href="${content.ctaUrl}" class="cta-button ${content.expandButtonOnMobile ? 'cta-button--full-mobile' : ''}" style="font-size: 16px;">${content.ctaText}</a>
+                  <td align="${content.ctaAlignment || 'center'}" style="text-align: ${content.ctaAlignment || 'center'};">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="${content.ctaAlignment || 'center'}" style="margin: 0 ${content.ctaAlignment === 'center' ? 'auto' : '0'};">
+                      <tr>
+                        <td>
+                          <a href="${content.ctaUrl}" class="cta-button ${content.expandButtonOnMobile ? 'cta-button--full-mobile' : ''}" style="font-size: 16px;">${content.ctaText}</a>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
@@ -759,14 +817,28 @@ export function generatePromoTemplate(content: EmailContent): string {
           
           <!-- Content -->
           <tr>
-            <td class="content" style="text-align: center;">
-              <div style="white-space: pre-wrap; text-align: center; font-size: 18px; line-height: 1.6;">${content.content}</div>
+            <td class="content">
+              <!-- Body copy with robust alignment (supports Outlook) -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="${content.contentAlignment || 'center'}" style="text-align: ${content.contentAlignment || 'center'};">
+                    <div style="white-space: pre-wrap; text-align: ${content.contentAlignment || 'center'}; font-size: 18px; line-height: 1.6;">${content.content}</div>
+                  </td>
+                </tr>
+              </table>
               
               ${content.ctaText && content.ctaUrl ? `
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 40px auto;">
+              <!-- CTA with bulletproof centering/align -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 40px 0; width: 100%;">
                 <tr>
-                  <td style="text-align: ${content.ctaAlignment || 'center'};">
-                    <a href="${content.ctaUrl}" class="cta-button ${content.expandButtonOnMobile ? 'cta-button--full-mobile' : ''}" style="font-size: 20px; padding: 20px 50px;">${content.ctaText}</a>
+                  <td align="${content.ctaAlignment || 'center'}" style="text-align: ${content.ctaAlignment || 'center'};">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="${content.ctaAlignment || 'center'}" style="margin: 0 ${content.ctaAlignment === 'center' ? 'auto' : '0'};">
+                      <tr>
+                        <td>
+                          <a href="${content.ctaUrl}" class="cta-button ${content.expandButtonOnMobile ? 'cta-button--full-mobile' : ''}" style="font-size: 20px; padding: 20px 50px;">${content.ctaText}</a>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
