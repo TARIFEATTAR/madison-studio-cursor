@@ -689,6 +689,7 @@ export type Database = {
           insight_type: string
           is_read: boolean | null
           organization_id: string
+          source_url: string | null
           updated_at: string | null
         }
         Insert: {
@@ -700,6 +701,7 @@ export type Database = {
           insight_type: string
           is_read?: boolean | null
           organization_id: string
+          source_url?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -711,6 +713,7 @@ export type Database = {
           insight_type?: string
           is_read?: boolean | null
           organization_id?: string
+          source_url?: string | null
           updated_at?: string | null
         }
         Relationships: [
