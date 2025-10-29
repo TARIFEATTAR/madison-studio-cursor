@@ -398,72 +398,81 @@ serve(async (req) => {
       const hasProMode = proModeControls && Object.keys(proModeControls).length > 0;
       
       if (actualReferenceImages.length === 1) {
-        // CRITICAL FIX: In Pro Mode, preserve user's original scene description
-        if (hasProMode) {
-          console.log('🎛️ Pro Mode active with single reference - preserving user scene description');
-          // Don't overwrite the prompt - just add reference image guidance
-          const originalScene = enhancedPrompt;
-          enhancedPrompt = `REFERENCE IMAGE USAGE:
-The reference image shows the product. Use its EXACT appearance (colors, shape, design, materials) but place it into the scene described below.
+        // FIXED: Proper integration of Pro Mode with reference images
+        console.log(`🎛️ Building prompt for single reference image (Pro Mode: ${hasProMode})`);
+        const originalScene = enhancedPrompt;
+        
+        enhancedPrompt = `REFERENCE-GUIDED IMAGE GENERATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-USER'S SCENE DESCRIPTION:
+📸 REFERENCE IMAGE PROVIDED:
+This reference shows the product/subject. Use its EXACT appearance - every detail of color, shape, texture, materials, and design must match the reference precisely.
+
+🎬 SCENE TO CREATE:
 ${originalScene}
 
-PRODUCT TREATMENT:
-- Maintain the product's exact visual characteristics from the reference image
-- Integrate it naturally into the scene above
-- Apply the Pro Mode specifications (camera, lighting, environment) that will follow
-- The product should be the focal point while respecting the described scene
+🎯 COMPOSITION REQUIREMENTS:
+• Take the product EXACTLY as shown in the reference image
+• Place it into the scene described above
+• Maintain all product details: colors, textures, materials, shape
+• The product must remain recognizable and true to the reference
+• Integrate it naturally so it belongs in the scene
+• Product should be the primary focal point
 
-PHOTOGRAPHIC QUALITY:
-- Professional product photography composition
-- Natural integration of product with the described environment`;
+📷 PHOTOGRAPHIC STANDARDS:
+• Professional product photography quality
+• Natural, realistic lighting integration
+• Proper depth of field for product emphasis
+• The scene should complement and elevate the product`;
 
-          if (actualReferenceImages[0].description) {
-            enhancedPrompt += `\n\nProduct Reference Notes: ${actualReferenceImages[0].description}`;
-          }
-        } else {
-          // Standard mode - use existing product placement prompt
-          enhancedPrompt = buildProductPlacementPrompt(enhancedPrompt, brandContext);
-          
-          if (actualReferenceImages[0].description) {
-            enhancedPrompt += `\n\nReference Notes: ${actualReferenceImages[0].description}`;
-          }
+        if (actualReferenceImages[0].description) {
+          enhancedPrompt += `\n\n📝 REFERENCE NOTES: ${actualReferenceImages[0].description}`;
         }
       } else {
         // Multiple references - build multi-image composite prompt
-        enhancedPrompt = `MULTI-REFERENCE IMAGE COMPOSITION:
-You have ${actualReferenceImages.length} reference images. Combine them according to the scene description below.
+        console.log(`🎛️ Building prompt for ${actualReferenceImages.length} reference images (Pro Mode: ${hasProMode})`);
+        const originalScene = enhancedPrompt;
+        
+        enhancedPrompt = `MULTI-REFERENCE IMAGE COMPOSITION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-REFERENCE IMAGES:
-${actualReferenceImages.map((img: any, idx: number) => `${idx + 1}. ${img.label}: ${img.description || 'Use as-is from image'}`).join('\n')}
+📸 REFERENCE IMAGES PROVIDED (${actualReferenceImages.length}):
+${actualReferenceImages.map((img: any, idx: number) => 
+  `${idx + 1}. ${img.label}: ${img.description || 'Use exactly as shown in reference'}`
+).join('\n')}
 
-SCENE TO CREATE:
-${enhancePromptWithFormula(enhancedPrompt, brandContext)}
+🎬 SCENE TO CREATE:
+${enhancePromptWithFormula(originalScene, brandContext)}
 
-COMPOSITION REQUIREMENTS:
-- Maintain exact appearance of products/subjects from their reference images
-- Use background reference for environment and setting
-- Apply style/lighting references to the overall composition
-- Create a cohesive, professionally composed image that integrates all references naturally
-- Ensure proper lighting consistency across all elements
+🎯 COMPOSITION REQUIREMENTS:
+• Preserve exact appearance of all products/subjects from references
+• Use background reference for environment and setting
+• Apply style/lighting references to overall mood and atmosphere
+• Create a cohesive, unified composition
+• All elements must feel like they belong in the same scene
+• Maintain consistent lighting across all elements
+• Natural integration - not separate elements pasted together
 
-PHOTOGRAPHIC QUALITY:
-- Shot Type: Professional product photography with multi-element composition
-- Camera/Lens: DSLR quality with appropriate depth of field
-- Lighting: Unified lighting that makes all elements feel part of the same scene
-- The composition should feel natural, not like separate elements pasted together`;
-
-        if (hasProMode) {
-          enhancedPrompt += `\n\n⚠️ Apply the Pro Mode specifications (camera, lighting, environment) that will be provided after this composition guide.`;
-        }
+📷 PHOTOGRAPHIC STANDARDS:
+• Professional product photography composition
+• Appropriate depth of field for emphasis
+• Unified, realistic lighting
+• Natural shadows and highlights
+• All references should complement each other`;
       }
     }
     
     // NOW apply Pro Mode controls AFTER all other enhancements (including reference images)
     if (proModeControls && Object.keys(proModeControls).length > 0) {
-      console.log('🎛️ Applying Pro Mode controls (after reference image setup):', proModeControls);
+      console.log('🎛️ Applying Pro Mode controls:', {
+        camera: proModeControls.camera || 'none',
+        lighting: proModeControls.lighting || 'none', 
+        environment: proModeControls.environment || 'none'
+      });
       enhancedPrompt = applyProModeControls(enhancedPrompt, proModeControls);
+      console.log('✅ Pro Mode controls applied to prompt');
+    } else {
+      console.log('ℹ️ No Pro Mode controls active');
     }
 
     // Build message content with optional reference images (supports multiple)
@@ -478,7 +487,7 @@ PHOTOGRAPHIC QUALITY:
         }
       ];
       
-      // Fetch and add all reference images
+      // Fetch and add all reference images with improved error handling
       for (const refImage of actualReferenceImages) {
         let imageData = refImage.url;
         
@@ -488,8 +497,17 @@ PHOTOGRAPHIC QUALITY:
             console.log(`📥 Downloading reference image: ${refImage.label}`);
             console.log(`📍 URL: ${refImage.url}`);
             
-            // Fetch the image directly from the public URL
-            const imageResponse = await fetch(refImage.url);
+            // Add timeout to fetch
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+            
+            const imageResponse = await fetch(refImage.url, {
+              signal: controller.signal,
+              headers: {
+                'Accept': 'image/*'
+              }
+            });
+            clearTimeout(timeoutId);
             
             if (!imageResponse.ok) {
               throw new Error(`HTTP ${imageResponse.status}: ${imageResponse.statusText}`);
@@ -497,6 +515,15 @@ PHOTOGRAPHIC QUALITY:
             
             // Get the image as array buffer
             const imageBuffer = await imageResponse.arrayBuffer();
+            
+            if (imageBuffer.byteLength === 0) {
+              throw new Error('Downloaded image is empty (0 bytes)');
+            }
+            
+            if (imageBuffer.byteLength > 20 * 1024 * 1024) {
+              throw new Error(`Image too large: ${(imageBuffer.byteLength / 1024 / 1024).toFixed(1)}MB (max 20MB)`);
+            }
+            
             const uint8Array = new Uint8Array(imageBuffer);
             
             // Convert to base64 in chunks to avoid stack overflow
@@ -510,14 +537,24 @@ PHOTOGRAPHIC QUALITY:
             
             // Determine content type from response headers
             const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
+            
+            // Validate content type
+            if (!contentType.startsWith('image/')) {
+              throw new Error(`Invalid content type: ${contentType} (expected image/*)`);
+            }
+            
             imageData = `data:${contentType};base64,${base64}`;
             
-            console.log(`✅ Converted reference image ${refImage.label} (${(uint8Array.length / 1024).toFixed(1)}KB)`);
+            console.log(`✅ Converted reference image ${refImage.label} (${(uint8Array.length / 1024).toFixed(1)}KB, ${contentType})`);
           } catch (error) {
             const errorMsg = error instanceof Error ? error.message : 'Unknown error';
             console.error(`❌ Failed to download reference image ${refImage.label}:`, errorMsg);
-            throw new Error(`Failed to load reference image "${refImage.label}": ${errorMsg}`);
+            console.error(`📍 Full error:`, error);
+            throw new Error(`Failed to load reference image "${refImage.label}": ${errorMsg}. Please ensure the image is accessible and under 20MB.`);
           }
+        } else if (!refImage.url.startsWith('data:image/')) {
+          // If it's not a data URL and not a Supabase URL, it might be invalid
+          console.warn(`⚠️ Unexpected URL format for reference ${refImage.label}: ${refImage.url.substring(0, 100)}...`);
         }
         
         contentParts.push({

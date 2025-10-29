@@ -1000,6 +1000,9 @@ export default function ImageEditor() {
             scent_family: selectedProduct.scentFamily || 'Unspecified',
             category: selectedProduct.category
           } : null}
+          referenceImageCount={referenceImages.length}
+          proModeActive={showProMode && Object.keys(proModeControls).length > 0}
+          proModeSettings={showProMode ? proModeControls : undefined}
         />
       </div>
     );
@@ -1467,6 +1470,9 @@ export default function ImageEditor() {
           scent_family: selectedProduct.scentFamily || 'Unspecified',
           category: selectedProduct.category
         } : null}
+        referenceImageCount={referenceImages.length}
+        proModeActive={showProMode && Object.keys(proModeControls).length > 0}
+        proModeSettings={showProMode ? proModeControls : undefined}
         onSendMessage={async (message) => {
           console.log("Madison message:", message);
           // TODO: Integrate with Madison AI backend

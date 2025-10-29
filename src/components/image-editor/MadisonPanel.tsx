@@ -31,6 +31,13 @@ interface MadisonPanelProps {
     scent_family: string;
     category?: string;
   } | null;
+  referenceImageCount?: number;
+  proModeActive?: boolean;
+  proModeSettings?: {
+    camera?: string;
+    lighting?: string;
+    environment?: string;
+  };
 }
 
 export default function MadisonPanel({
@@ -41,7 +48,10 @@ export default function MadisonPanel({
   onSendMessage,
   initialMessages = [],
   isMobile = false,
-  productContext = null
+  productContext = null,
+  referenceImageCount = 0,
+  proModeActive = false,
+  proModeSettings
 }: MadisonPanelProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputValue, setInputValue] = useState("");
@@ -105,7 +115,25 @@ export default function MadisonPanel({
         .map(m => `${m.role === 'user' ? 'User' : 'Madison'}: ${m.content}`)
         .join("\n\n");
 
-      const prompt = `${conversation}\n\nUser: ${messageToSend}\n\nMadison:`;
+      // Build context-aware prompt
+      let contextInfo = '';
+      if (referenceImageCount > 0) {
+        contextInfo += `\n[Context: User has ${referenceImageCount} reference image${referenceImageCount > 1 ? 's' : ''} uploaded]`;
+      }
+      if (proModeActive && proModeSettings) {
+        const activeSettings = [];
+        if (proModeSettings.camera) activeSettings.push(`Camera: ${proModeSettings.camera}`);
+        if (proModeSettings.lighting) activeSettings.push(`Lighting: ${proModeSettings.lighting}`);
+        if (proModeSettings.environment) activeSettings.push(`Environment: ${proModeSettings.environment}`);
+        if (activeSettings.length > 0) {
+          contextInfo += `\n[Pro Mode Active: ${activeSettings.join(', ')}]`;
+        }
+      }
+      if (productContext) {
+        contextInfo += `\n[Product: ${productContext.name}]`;
+      }
+      
+      const prompt = `${conversation}${contextInfo}\n\nUser: ${messageToSend}\n\nMadison:`;
 
       const { data, error } = await supabase.functions.invoke("generate-with-claude", {
         body: {
@@ -114,6 +142,11 @@ export default function MadisonPanel({
           mode: "consult",
           styleOverlay: "brand-voice",
           productContext: productContext || undefined,
+          imageStudioContext: {
+            referenceImageCount,
+            proModeActive,
+            proModeSettings: proModeActive ? proModeSettings : undefined
+          }
         },
       });
 
