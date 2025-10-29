@@ -16,7 +16,7 @@ import { StyleCustomizer } from "@/components/email-composer/StyleCustomizer";
 import { ImagePicker } from "@/components/email-composer/ImagePicker";
 import { EmailPreview } from "@/components/email-composer/EmailPreview";
 import { ContentPicker } from "@/components/email-composer/ContentPicker";
-import { ArrowLeft, Send, Download, Save } from "lucide-react";
+import { ArrowLeft, Send, Download, Save, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 export default function EmailComposer() {
@@ -26,6 +26,7 @@ export default function EmailComposer() {
   const [searchParams] = useSearchParams();
   const { brandColor: defaultBrandColor } = useBrandColor();
   const [sendLoading, setSendLoading] = useState(false);
+  const [showFooterOptions, setShowFooterOptions] = useState(false);
 
   const composer = useEmailComposer({
     brandColor: defaultBrandColor,
@@ -181,7 +182,7 @@ export default function EmailComposer() {
           <GoldButton
             onClick={handleSendToKlaviyo}
             disabled={sendLoading}
-            className="gap-2 text-sm px-6 py-2 h-9"
+            className="gap-2 whitespace-nowrap flex items-center"
           >
             <Send className="w-4 h-4" />
             {sendLoading ? "Preparing..." : "Send to Klaviyo"}
@@ -278,13 +279,106 @@ export default function EmailComposer() {
               buttonColor={composer.buttonColor}
               buttonTextColor={composer.buttonTextColor}
               textColor={composer.textColor}
+              footerBackgroundColor={composer.footerBackgroundColor}
+              footerTextColor={composer.footerTextColor}
+              footerLinkColor={composer.footerLinkColor}
               onBrandColorChange={composer.setBrandColor}
               onSecondaryColorChange={composer.setSecondaryColor}
               onFontChange={composer.setFontFamily}
               onButtonColorChange={composer.setButtonColor}
               onButtonTextColorChange={composer.setButtonTextColor}
               onTextColorChange={composer.setTextColor}
+              onFooterBackgroundColorChange={composer.setFooterBackgroundColor}
+              onFooterTextColorChange={composer.setFooterTextColor}
+              onFooterLinkColorChange={composer.setFooterLinkColor}
             />
+
+            {/* Footer Content Section */}
+            <div className="space-y-3 p-4 border border-border rounded-lg bg-card">
+              <div 
+                className="flex items-center gap-2 cursor-pointer" 
+                onClick={() => setShowFooterOptions(!showFooterOptions)}
+              >
+                <ChevronRight className={`w-4 h-4 transition-transform ${showFooterOptions ? 'rotate-90' : ''}`} />
+                <Label className="text-sm font-semibold cursor-pointer">Footer Content</Label>
+              </div>
+              
+              {showFooterOptions && (
+                <div className="space-y-3 pl-6">
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Brand Tagline (Optional)</Label>
+                    <Input 
+                      value={composer.footerTagline} 
+                      onChange={(e) => composer.setFooterTagline(e.target.value)}
+                      placeholder="Crafting beauty since 2024"
+                      className="bg-background"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Company Address (Optional)</Label>
+                    <Textarea 
+                      value={composer.companyAddress} 
+                      onChange={(e) => composer.setCompanyAddress(e.target.value)}
+                      placeholder="123 Madison Ave, New York, NY 10016"
+                      rows={2}
+                      className="bg-background"
+                    />
+                  </div>
+                  
+                  {/* Social Media Links */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Social Media Links</Label>
+                    <Input 
+                      placeholder="Instagram URL" 
+                      value={composer.instagramUrl} 
+                      onChange={(e) => composer.setInstagramUrl(e.target.value)}
+                      className="bg-background"
+                    />
+                    <Input 
+                      placeholder="Facebook URL" 
+                      value={composer.facebookUrl} 
+                      onChange={(e) => composer.setFacebookUrl(e.target.value)}
+                      className="bg-background"
+                    />
+                  </div>
+                  
+                  {/* Quick Links */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Quick Links</Label>
+                    <Input 
+                      placeholder="Shop URL" 
+                      value={composer.shopUrl} 
+                      onChange={(e) => composer.setShopUrl(e.target.value)}
+                      className="bg-background"
+                    />
+                    <Input 
+                      placeholder="About URL" 
+                      value={composer.aboutUrl} 
+                      onChange={(e) => composer.setAboutUrl(e.target.value)}
+                      className="bg-background"
+                    />
+                    <Input 
+                      placeholder="Contact URL" 
+                      value={composer.contactUrl} 
+                      onChange={(e) => composer.setContactUrl(e.target.value)}
+                      className="bg-background"
+                    />
+                  </div>
+
+                  {/* Privacy Policy URL */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Privacy Policy URL (Optional)</Label>
+                    <Input 
+                      placeholder="Privacy Policy URL" 
+                      value={composer.privacyUrl} 
+                      onChange={(e) => composer.setPrivacyUrl(e.target.value)}
+                      className="bg-background"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Footer Text */}
             <div className="space-y-2">

@@ -13,9 +13,10 @@ const GoldButton = forwardRef<HTMLButtonElement, GoldButtonProps>(
         className={cn(
           "group relative overflow-hidden",
           "bg-[hsl(var(--aged-brass))] text-[hsl(var(--ink-black))]",
-          "px-7 py-3 rounded-md",
+          "px-7 py-3 rounded-md min-h-[44px]",
           "font-serif font-semibold tracking-wide text-base",
           "border-none cursor-pointer",
+          "flex items-center justify-center",
           "transition-all duration-300 ease-out",
           "hover:-translate-y-0.5",
           "hover:shadow-[0_4px_14px_rgba(184,149,106,0.4)]",

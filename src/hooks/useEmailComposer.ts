@@ -17,6 +17,22 @@ export function useEmailComposer(initialContent?: Partial<EmailContent>) {
   const [buttonColor, setButtonColor] = useState(initialContent?.buttonColor || "");
   const [buttonTextColor, setButtonTextColor] = useState(initialContent?.buttonTextColor || "#ffffff");
   const [textColor, setTextColor] = useState(initialContent?.textColor || "#555555");
+  
+  // Footer customization
+  const [footerBackgroundColor, setFooterBackgroundColor] = useState(initialContent?.footerBackgroundColor || "#F8F8F8");
+  const [footerTextColor, setFooterTextColor] = useState(initialContent?.footerTextColor || "#666666");
+  const [footerLinkColor, setFooterLinkColor] = useState(initialContent?.footerLinkColor || "#B8956A");
+  
+  // Footer content
+  const [footerTagline, setFooterTagline] = useState(initialContent?.footerTagline || "");
+  const [companyAddress, setCompanyAddress] = useState(initialContent?.companyAddress || "");
+  const [instagramUrl, setInstagramUrl] = useState(initialContent?.instagramUrl || "");
+  const [facebookUrl, setFacebookUrl] = useState(initialContent?.facebookUrl || "");
+  const [shopUrl, setShopUrl] = useState(initialContent?.shopUrl || "");
+  const [aboutUrl, setAboutUrl] = useState(initialContent?.aboutUrl || "");
+  const [contactUrl, setContactUrl] = useState(initialContent?.contactUrl || "");
+  const [privacyUrl, setPrivacyUrl] = useState(initialContent?.privacyUrl || "");
+  
   const [generatedHtml, setGeneratedHtml] = useState("");
 
   // Generate HTML whenever any content changes
@@ -36,6 +52,17 @@ export function useEmailComposer(initialContent?: Partial<EmailContent>) {
       buttonColor,
       buttonTextColor,
       textColor,
+      footerBackgroundColor,
+      footerTextColor,
+      footerLinkColor,
+      footerTagline,
+      companyAddress,
+      instagramUrl,
+      facebookUrl,
+      shopUrl,
+      aboutUrl,
+      contactUrl,
+      privacyUrl,
     };
 
     const html = generateEmailFromTemplate(selectedTemplate, emailContent);
@@ -55,6 +82,17 @@ export function useEmailComposer(initialContent?: Partial<EmailContent>) {
     buttonColor,
     buttonTextColor,
     textColor,
+    footerBackgroundColor,
+    footerTextColor,
+    footerLinkColor,
+    footerTagline,
+    companyAddress,
+    instagramUrl,
+    facebookUrl,
+    shopUrl,
+    aboutUrl,
+    contactUrl,
+    privacyUrl,
   ]);
 
   return {
@@ -86,6 +124,28 @@ export function useEmailComposer(initialContent?: Partial<EmailContent>) {
     setButtonTextColor,
     textColor,
     setTextColor,
+    footerBackgroundColor,
+    setFooterBackgroundColor,
+    footerTextColor,
+    setFooterTextColor,
+    footerLinkColor,
+    setFooterLinkColor,
+    footerTagline,
+    setFooterTagline,
+    companyAddress,
+    setCompanyAddress,
+    instagramUrl,
+    setInstagramUrl,
+    facebookUrl,
+    setFacebookUrl,
+    shopUrl,
+    setShopUrl,
+    aboutUrl,
+    setAboutUrl,
+    contactUrl,
+    setContactUrl,
+    privacyUrl,
+    setPrivacyUrl,
     generatedHtml,
   };
 }

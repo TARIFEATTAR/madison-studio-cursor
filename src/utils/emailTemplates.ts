@@ -24,6 +24,19 @@ export interface EmailContent {
   buttonColor?: string;
   buttonTextColor?: string;
   textColor?: string;
+  // Footer customization
+  footerBackgroundColor?: string;
+  footerTextColor?: string;
+  footerLinkColor?: string;
+  // Footer content
+  footerTagline?: string;
+  companyAddress?: string;
+  instagramUrl?: string;
+  facebookUrl?: string;
+  shopUrl?: string;
+  aboutUrl?: string;
+  contactUrl?: string;
+  privacyUrl?: string;
 }
 
 export const EMAIL_TEMPLATES: EmailTemplate[] = [
@@ -76,7 +89,16 @@ export const EMAIL_FONTS = [
 ];
 
 // Base email styles that work across all email clients
-const getBaseStyles = (fontFamily: string, brandColor: string, buttonColor?: string, buttonTextColor?: string, textColor?: string) => `
+const getBaseStyles = (
+  fontFamily: string, 
+  brandColor: string, 
+  buttonColor?: string, 
+  buttonTextColor?: string, 
+  textColor?: string,
+  footerBackgroundColor?: string,
+  footerTextColor?: string,
+  footerLinkColor?: string
+) => `
   body, table, td, a { 
     -webkit-text-size-adjust: 100%; 
     -ms-text-size-adjust: 100%; 
@@ -143,11 +165,28 @@ const getBaseStyles = (fontFamily: string, brandColor: string, buttonColor?: str
     transition: all 0.3s ease;
   }
   .footer { 
-    background-color: #333333; 
-    color: #ffffff; 
-    padding: 30px; 
+    background-color: ${footerBackgroundColor || '#F8F8F8'}; 
+    color: ${footerTextColor || '#666666'}; 
+    padding: 50px 30px 40px 30px; 
     text-align: center; 
-    font-size: 12px; 
+  }
+  .footer a {
+    color: ${footerLinkColor || brandColor};
+    text-decoration: none;
+  }
+  .footer a:hover {
+    text-decoration: underline;
+  }
+  .footer-legal {
+    color: ${footerTextColor ? `${footerTextColor}99` : '#999999'};
+    font-size: 11px;
+    line-height: 1.6;
+    margin: 0 0 15px 0;
+  }
+  .footer-divider {
+    border-top: 1px solid ${footerTextColor ? `${footerTextColor}33` : '#DDDDDD'};
+    margin: 30px auto;
+    width: 60px;
   }
   h1 { 
     color: #ffffff; 
@@ -192,7 +231,7 @@ export function generateNewsletterTemplate(content: EmailContent): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>${content.title}</title>
-  <style>${getBaseStyles(content.fontFamily, content.brandColor, content.buttonColor, content.buttonTextColor, content.textColor)}</style>
+  <style>${getBaseStyles(content.fontFamily, content.brandColor, content.buttonColor, content.buttonTextColor, content.textColor, content.footerBackgroundColor, content.footerTextColor, content.footerLinkColor)}</style>
 </head>
 <body>
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -237,12 +276,58 @@ export function generateNewsletterTemplate(content: EmailContent): string {
           <!-- Footer -->
           <tr>
             <td class="footer">
-              <p style="color: #cccccc; margin: 0 0 10px 0;">
+              ${content.footerTagline ? `
+              <p style="color: ${content.footerTextColor || '#666666'}; font-size: 14px; margin: 0 0 25px 0; letter-spacing: 0.5px;">
+                ${content.footerTagline}
+              </p>
+              ` : ''}
+              
+              ${content.instagramUrl || content.facebookUrl ? `
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto 30px;">
+                <tr>
+                  ${content.instagramUrl ? `<td style="padding: 0 10px;"><a href="${content.instagramUrl}" style="color: ${content.footerTextColor || '#666666'}; font-size: 12px; letter-spacing: 0.5px;">INSTAGRAM</a></td>` : ''}
+                  ${content.facebookUrl ? `<td style="padding: 0 10px;"><a href="${content.facebookUrl}" style="color: ${content.footerTextColor || '#666666'}; font-size: 12px; letter-spacing: 0.5px;">FACEBOOK</a></td>` : ''}
+                </tr>
+              </table>
+              ` : ''}
+              
+              ${content.shopUrl || content.aboutUrl || content.contactUrl ? `
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto 30px;">
+                <tr>
+                  ${content.shopUrl ? `<td style="padding: 0 15px; ${content.aboutUrl || content.contactUrl ? `border-right: 1px solid ${content.footerTextColor || '#CCCCCC'};` : ''}"><a href="${content.shopUrl}" style="color: ${content.footerLinkColor || content.brandColor}; font-size: 12px; letter-spacing: 0.5px;">SHOP</a></td>` : ''}
+                  ${content.aboutUrl ? `<td style="padding: 0 15px; ${content.contactUrl ? `border-right: 1px solid ${content.footerTextColor || '#CCCCCC'};` : ''}"><a href="${content.aboutUrl}" style="color: ${content.footerLinkColor || content.brandColor}; font-size: 12px; letter-spacing: 0.5px;">ABOUT</a></td>` : ''}
+                  ${content.contactUrl ? `<td style="padding: 0 15px;"><a href="${content.contactUrl}" style="color: ${content.footerLinkColor || content.brandColor}; font-size: 12px; letter-spacing: 0.5px;">CONTACT</a></td>` : ''}
+                </tr>
+              </table>
+              ` : ''}
+              
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 30px auto; width: 60px;">
+                <tr><td class="footer-divider"></td></tr>
+              </table>
+              
+              <p class="footer-legal">
                 ${content.footerText || 'You received this email because you subscribed to our newsletter.'}
               </p>
-              <p style="color: #999999; margin: 0;">
-                <a href="#" style="color: #999999; text-decoration: underline;">Unsubscribe</a>
+              
+              ${content.companyAddress ? `
+              <p class="footer-legal" style="font-size: 10px;">
+                ${content.companyAddress}
               </p>
+              ` : ''}
+              
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center">
+                <tr>
+                  <td style="padding: 0 10px;">
+                    <a href="#" style="color: ${content.footerTextColor ? `${content.footerTextColor}99` : '#999999'}; font-size: 10px; letter-spacing: 0.5px;">UNSUBSCRIBE</a>
+                  </td>
+                  ${content.privacyUrl ? `
+                  <td style="padding: 0 10px; color: ${content.footerTextColor ? `${content.footerTextColor}99` : '#CCCCCC'};">|</td>
+                  <td style="padding: 0 10px;">
+                    <a href="${content.privacyUrl}" style="color: ${content.footerTextColor ? `${content.footerTextColor}99` : '#999999'}; font-size: 10px; letter-spacing: 0.5px;">PRIVACY POLICY</a>
+                  </td>
+                  ` : ''}
+                </tr>
+              </table>
             </td>
           </tr>
           
@@ -264,7 +349,7 @@ export function generateProductLaunchTemplate(content: EmailContent): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>${content.title}</title>
-  <style>${getBaseStyles(content.fontFamily, content.brandColor, content.buttonColor, content.buttonTextColor, content.textColor)}</style>
+  <style>${getBaseStyles(content.fontFamily, content.brandColor, content.buttonColor, content.buttonTextColor, content.textColor, content.footerBackgroundColor, content.footerTextColor, content.footerLinkColor)}</style>
 </head>
 <body>
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -309,12 +394,58 @@ export function generateProductLaunchTemplate(content: EmailContent): string {
           <!-- Footer -->
           <tr>
             <td class="footer">
-              <p style="color: #cccccc; margin: 0 0 10px 0;">
+              ${content.footerTagline ? `
+              <p style="color: ${content.footerTextColor || '#666666'}; font-size: 14px; margin: 0 0 25px 0; letter-spacing: 0.5px;">
+                ${content.footerTagline}
+              </p>
+              ` : ''}
+              
+              ${content.instagramUrl || content.facebookUrl ? `
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto 30px;">
+                <tr>
+                  ${content.instagramUrl ? `<td style="padding: 0 10px;"><a href="${content.instagramUrl}" style="color: ${content.footerTextColor || '#666666'}; font-size: 12px; letter-spacing: 0.5px;">INSTAGRAM</a></td>` : ''}
+                  ${content.facebookUrl ? `<td style="padding: 0 10px;"><a href="${content.facebookUrl}" style="color: ${content.footerTextColor || '#666666'}; font-size: 12px; letter-spacing: 0.5px;">FACEBOOK</a></td>` : ''}
+                </tr>
+              </table>
+              ` : ''}
+              
+              ${content.shopUrl || content.aboutUrl || content.contactUrl ? `
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto 30px;">
+                <tr>
+                  ${content.shopUrl ? `<td style="padding: 0 15px; ${content.aboutUrl || content.contactUrl ? `border-right: 1px solid ${content.footerTextColor || '#CCCCCC'};` : ''}"><a href="${content.shopUrl}" style="color: ${content.footerLinkColor || content.brandColor}; font-size: 12px; letter-spacing: 0.5px;">SHOP</a></td>` : ''}
+                  ${content.aboutUrl ? `<td style="padding: 0 15px; ${content.contactUrl ? `border-right: 1px solid ${content.footerTextColor || '#CCCCCC'};` : ''}"><a href="${content.aboutUrl}" style="color: ${content.footerLinkColor || content.brandColor}; font-size: 12px; letter-spacing: 0.5px;">ABOUT</a></td>` : ''}
+                  ${content.contactUrl ? `<td style="padding: 0 15px;"><a href="${content.contactUrl}" style="color: ${content.footerLinkColor || content.brandColor}; font-size: 12px; letter-spacing: 0.5px;">CONTACT</a></td>` : ''}
+                </tr>
+              </table>
+              ` : ''}
+              
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 30px auto; width: 60px;">
+                <tr><td class="footer-divider"></td></tr>
+              </table>
+              
+              <p class="footer-legal">
                 ${content.footerText || 'You received this email because you subscribed to our newsletter.'}
               </p>
-              <p style="color: #999999; margin: 0;">
-                <a href="#" style="color: #999999; text-decoration: underline;">Unsubscribe</a>
+              
+              ${content.companyAddress ? `
+              <p class="footer-legal" style="font-size: 10px;">
+                ${content.companyAddress}
               </p>
+              ` : ''}
+              
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center">
+                <tr>
+                  <td style="padding: 0 10px;">
+                    <a href="#" style="color: ${content.footerTextColor ? `${content.footerTextColor}99` : '#999999'}; font-size: 10px; letter-spacing: 0.5px;">UNSUBSCRIBE</a>
+                  </td>
+                  ${content.privacyUrl ? `
+                  <td style="padding: 0 10px; color: ${content.footerTextColor ? `${content.footerTextColor}99` : '#CCCCCC'};">|</td>
+                  <td style="padding: 0 10px;">
+                    <a href="${content.privacyUrl}" style="color: ${content.footerTextColor ? `${content.footerTextColor}99` : '#999999'}; font-size: 10px; letter-spacing: 0.5px;">PRIVACY POLICY</a>
+                  </td>
+                  ` : ''}
+                </tr>
+              </table>
             </td>
           </tr>
           
@@ -336,7 +467,7 @@ export function generateAnnouncementTemplate(content: EmailContent): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>${content.title}</title>
-  <style>${getBaseStyles(content.fontFamily, content.brandColor, content.buttonColor, content.buttonTextColor, content.textColor)}</style>
+  <style>${getBaseStyles(content.fontFamily, content.brandColor, content.buttonColor, content.buttonTextColor, content.textColor, content.footerBackgroundColor, content.footerTextColor, content.footerLinkColor)}</style>
 </head>
 <body>
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -381,12 +512,58 @@ export function generateAnnouncementTemplate(content: EmailContent): string {
           <!-- Footer -->
           <tr>
             <td class="footer">
-              <p style="color: #cccccc; margin: 0 0 10px 0;">
+              ${content.footerTagline ? `
+              <p style="color: ${content.footerTextColor || '#666666'}; font-size: 14px; margin: 0 0 25px 0; letter-spacing: 0.5px;">
+                ${content.footerTagline}
+              </p>
+              ` : ''}
+              
+              ${content.instagramUrl || content.facebookUrl ? `
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto 30px;">
+                <tr>
+                  ${content.instagramUrl ? `<td style="padding: 0 10px;"><a href="${content.instagramUrl}" style="color: ${content.footerTextColor || '#666666'}; font-size: 12px; letter-spacing: 0.5px;">INSTAGRAM</a></td>` : ''}
+                  ${content.facebookUrl ? `<td style="padding: 0 10px;"><a href="${content.facebookUrl}" style="color: ${content.footerTextColor || '#666666'}; font-size: 12px; letter-spacing: 0.5px;">FACEBOOK</a></td>` : ''}
+                </tr>
+              </table>
+              ` : ''}
+              
+              ${content.shopUrl || content.aboutUrl || content.contactUrl ? `
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto 30px;">
+                <tr>
+                  ${content.shopUrl ? `<td style="padding: 0 15px; ${content.aboutUrl || content.contactUrl ? `border-right: 1px solid ${content.footerTextColor || '#CCCCCC'};` : ''}"><a href="${content.shopUrl}" style="color: ${content.footerLinkColor || content.brandColor}; font-size: 12px; letter-spacing: 0.5px;">SHOP</a></td>` : ''}
+                  ${content.aboutUrl ? `<td style="padding: 0 15px; ${content.contactUrl ? `border-right: 1px solid ${content.footerTextColor || '#CCCCCC'};` : ''}"><a href="${content.aboutUrl}" style="color: ${content.footerLinkColor || content.brandColor}; font-size: 12px; letter-spacing: 0.5px;">ABOUT</a></td>` : ''}
+                  ${content.contactUrl ? `<td style="padding: 0 15px;"><a href="${content.contactUrl}" style="color: ${content.footerLinkColor || content.brandColor}; font-size: 12px; letter-spacing: 0.5px;">CONTACT</a></td>` : ''}
+                </tr>
+              </table>
+              ` : ''}
+              
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 30px auto; width: 60px;">
+                <tr><td class="footer-divider"></td></tr>
+              </table>
+              
+              <p class="footer-legal">
                 ${content.footerText || 'You received this email because you subscribed to our newsletter.'}
               </p>
-              <p style="color: #999999; margin: 0;">
-                <a href="#" style="color: #999999; text-decoration: underline;">Unsubscribe</a>
+              
+              ${content.companyAddress ? `
+              <p class="footer-legal" style="font-size: 10px;">
+                ${content.companyAddress}
               </p>
+              ` : ''}
+              
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center">
+                <tr>
+                  <td style="padding: 0 10px;">
+                    <a href="#" style="color: ${content.footerTextColor ? `${content.footerTextColor}99` : '#999999'}; font-size: 10px; letter-spacing: 0.5px;">UNSUBSCRIBE</a>
+                  </td>
+                  ${content.privacyUrl ? `
+                  <td style="padding: 0 10px; color: ${content.footerTextColor ? `${content.footerTextColor}99` : '#CCCCCC'};">|</td>
+                  <td style="padding: 0 10px;">
+                    <a href="${content.privacyUrl}" style="color: ${content.footerTextColor ? `${content.footerTextColor}99` : '#999999'}; font-size: 10px; letter-spacing: 0.5px;">PRIVACY POLICY</a>
+                  </td>
+                  ` : ''}
+                </tr>
+              </table>
             </td>
           </tr>
           
@@ -410,7 +587,7 @@ export function generateWelcomeTemplate(content: EmailContent): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>${content.title}</title>
-  <style>${getBaseStyles(content.fontFamily, content.brandColor, content.buttonColor, content.buttonTextColor, content.textColor)}</style>
+  <style>${getBaseStyles(content.fontFamily, content.brandColor, content.buttonColor, content.buttonTextColor, content.textColor, content.footerBackgroundColor, content.footerTextColor, content.footerLinkColor)}</style>
 </head>
 <body>
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -455,12 +632,58 @@ export function generateWelcomeTemplate(content: EmailContent): string {
           <!-- Footer -->
           <tr>
             <td class="footer">
-              <p style="color: #cccccc; margin: 0 0 10px 0;">
+              ${content.footerTagline ? `
+              <p style="color: ${content.footerTextColor || '#666666'}; font-size: 14px; margin: 0 0 25px 0; letter-spacing: 0.5px;">
+                ${content.footerTagline}
+              </p>
+              ` : ''}
+              
+              ${content.instagramUrl || content.facebookUrl ? `
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto 30px;">
+                <tr>
+                  ${content.instagramUrl ? `<td style="padding: 0 10px;"><a href="${content.instagramUrl}" style="color: ${content.footerTextColor || '#666666'}; font-size: 12px; letter-spacing: 0.5px;">INSTAGRAM</a></td>` : ''}
+                  ${content.facebookUrl ? `<td style="padding: 0 10px;"><a href="${content.facebookUrl}" style="color: ${content.footerTextColor || '#666666'}; font-size: 12px; letter-spacing: 0.5px;">FACEBOOK</a></td>` : ''}
+                </tr>
+              </table>
+              ` : ''}
+              
+              ${content.shopUrl || content.aboutUrl || content.contactUrl ? `
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto 30px;">
+                <tr>
+                  ${content.shopUrl ? `<td style="padding: 0 15px; ${content.aboutUrl || content.contactUrl ? `border-right: 1px solid ${content.footerTextColor || '#CCCCCC'};` : ''}"><a href="${content.shopUrl}" style="color: ${content.footerLinkColor || content.brandColor}; font-size: 12px; letter-spacing: 0.5px;">SHOP</a></td>` : ''}
+                  ${content.aboutUrl ? `<td style="padding: 0 15px; ${content.contactUrl ? `border-right: 1px solid ${content.footerTextColor || '#CCCCCC'};` : ''}"><a href="${content.aboutUrl}" style="color: ${content.footerLinkColor || content.brandColor}; font-size: 12px; letter-spacing: 0.5px;">ABOUT</a></td>` : ''}
+                  ${content.contactUrl ? `<td style="padding: 0 15px;"><a href="${content.contactUrl}" style="color: ${content.footerLinkColor || content.brandColor}; font-size: 12px; letter-spacing: 0.5px;">CONTACT</a></td>` : ''}
+                </tr>
+              </table>
+              ` : ''}
+              
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 30px auto; width: 60px;">
+                <tr><td class="footer-divider"></td></tr>
+              </table>
+              
+              <p class="footer-legal">
                 ${content.footerText || 'Welcome to our community! We\'re excited to have you here.'}
               </p>
-              <p style="color: #999999; margin: 0;">
-                <a href="#" style="color: #999999; text-decoration: underline;">Update preferences</a>
+              
+              ${content.companyAddress ? `
+              <p class="footer-legal" style="font-size: 10px;">
+                ${content.companyAddress}
               </p>
+              ` : ''}
+              
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center">
+                <tr>
+                  <td style="padding: 0 10px;">
+                    <a href="#" style="color: ${content.footerTextColor ? `${content.footerTextColor}99` : '#999999'}; font-size: 10px; letter-spacing: 0.5px;">UNSUBSCRIBE</a>
+                  </td>
+                  ${content.privacyUrl ? `
+                  <td style="padding: 0 10px; color: ${content.footerTextColor ? `${content.footerTextColor}99` : '#CCCCCC'};">|</td>
+                  <td style="padding: 0 10px;">
+                    <a href="${content.privacyUrl}" style="color: ${content.footerTextColor ? `${content.footerTextColor}99` : '#999999'}; font-size: 10px; letter-spacing: 0.5px;">PRIVACY POLICY</a>
+                  </td>
+                  ` : ''}
+                </tr>
+              </table>
             </td>
           </tr>
           
@@ -484,7 +707,7 @@ export function generatePromoTemplate(content: EmailContent): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>${content.title}</title>
-  <style>${getBaseStyles(content.fontFamily, content.brandColor, content.buttonColor, content.buttonTextColor, content.textColor)}</style>
+  <style>${getBaseStyles(content.fontFamily, content.brandColor, content.buttonColor, content.buttonTextColor, content.textColor, content.footerBackgroundColor, content.footerTextColor, content.footerLinkColor)}</style>
 </head>
 <body>
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -541,12 +764,58 @@ export function generatePromoTemplate(content: EmailContent): string {
           <!-- Footer -->
           <tr>
             <td class="footer">
-              <p style="color: #cccccc; margin: 0 0 10px 0;">
+              ${content.footerTagline ? `
+              <p style="color: ${content.footerTextColor || '#666666'}; font-size: 14px; margin: 0 0 25px 0; letter-spacing: 0.5px;">
+                ${content.footerTagline}
+              </p>
+              ` : ''}
+              
+              ${content.instagramUrl || content.facebookUrl ? `
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto 30px;">
+                <tr>
+                  ${content.instagramUrl ? `<td style="padding: 0 10px;"><a href="${content.instagramUrl}" style="color: ${content.footerTextColor || '#666666'}; font-size: 12px; letter-spacing: 0.5px;">INSTAGRAM</a></td>` : ''}
+                  ${content.facebookUrl ? `<td style="padding: 0 10px;"><a href="${content.facebookUrl}" style="color: ${content.footerTextColor || '#666666'}; font-size: 12px; letter-spacing: 0.5px;">FACEBOOK</a></td>` : ''}
+                </tr>
+              </table>
+              ` : ''}
+              
+              ${content.shopUrl || content.aboutUrl || content.contactUrl ? `
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto 30px;">
+                <tr>
+                  ${content.shopUrl ? `<td style="padding: 0 15px; ${content.aboutUrl || content.contactUrl ? `border-right: 1px solid ${content.footerTextColor || '#CCCCCC'};` : ''}"><a href="${content.shopUrl}" style="color: ${content.footerLinkColor || content.brandColor}; font-size: 12px; letter-spacing: 0.5px;">SHOP</a></td>` : ''}
+                  ${content.aboutUrl ? `<td style="padding: 0 15px; ${content.contactUrl ? `border-right: 1px solid ${content.footerTextColor || '#CCCCCC'};` : ''}"><a href="${content.aboutUrl}" style="color: ${content.footerLinkColor || content.brandColor}; font-size: 12px; letter-spacing: 0.5px;">ABOUT</a></td>` : ''}
+                  ${content.contactUrl ? `<td style="padding: 0 15px;"><a href="${content.contactUrl}" style="color: ${content.footerLinkColor || content.brandColor}; font-size: 12px; letter-spacing: 0.5px;">CONTACT</a></td>` : ''}
+                </tr>
+              </table>
+              ` : ''}
+              
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 30px auto; width: 60px;">
+                <tr><td class="footer-divider"></td></tr>
+              </table>
+              
+              <p class="footer-legal">
                 ${content.footerText || 'Don\'t miss out on this exclusive offer!'}
               </p>
-              <p style="color: #999999; margin: 0;">
-                <a href="#" style="color: #999999; text-decoration: underline;">Unsubscribe</a>
+              
+              ${content.companyAddress ? `
+              <p class="footer-legal" style="font-size: 10px;">
+                ${content.companyAddress}
               </p>
+              ` : ''}
+              
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center">
+                <tr>
+                  <td style="padding: 0 10px;">
+                    <a href="#" style="color: ${content.footerTextColor ? `${content.footerTextColor}99` : '#999999'}; font-size: 10px; letter-spacing: 0.5px;">UNSUBSCRIBE</a>
+                  </td>
+                  ${content.privacyUrl ? `
+                  <td style="padding: 0 10px; color: ${content.footerTextColor ? `${content.footerTextColor}99` : '#CCCCCC'};">|</td>
+                  <td style="padding: 0 10px;">
+                    <a href="${content.privacyUrl}" style="color: ${content.footerTextColor ? `${content.footerTextColor}99` : '#999999'}; font-size: 10px; letter-spacing: 0.5px;">PRIVACY POLICY</a>
+                  </td>
+                  ` : ''}
+                </tr>
+              </table>
             </td>
           </tr>
           
