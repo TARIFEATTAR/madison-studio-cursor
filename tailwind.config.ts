@@ -85,6 +85,12 @@ export default {
             glow: 'rgba(184, 149, 106, 0.15)',
           }
         },
+        'studio-charcoal': '#252220',
+        'studio-card': '#2F2A26',
+        'studio-border': '#3D3935',
+        'studio-text-primary': '#FFFCF5',
+        'studio-text-secondary': '#D4CFC8',
+        'studio-text-muted': '#A8A39E',
         'aged-paper': '#F5F1E8',
       },
       fontFamily: {
