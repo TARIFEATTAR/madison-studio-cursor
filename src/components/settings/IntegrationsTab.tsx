@@ -83,24 +83,28 @@ export function IntegrationsTab() {
       {/* Competitive Intelligence Agent */}
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
-              <Bot className="w-5 h-5 text-violet-500" />
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                <Bot className="w-5 h-5 text-violet-500" />
+              </div>
+              <div>
+                <CardTitle>Competitive Intelligence Agent</CardTitle>
+                <CardDescription>
+                  AI agent that monitors competitors and identifies trends
+                </CardDescription>
+              </div>
             </div>
-            <div className="flex-1">
-              <CardTitle>Competitive Intelligence Agent</CardTitle>
-              <CardDescription>
-                AI agent that monitors competitors and identifies trends
-              </CardDescription>
+            <div className="flex items-center gap-2">
+              {loading ? (
+                <Skeleton className="h-6 w-12" />
+              ) : (
+                <Switch
+                  checked={preferences?.competitive_intelligence_enabled || false}
+                  onCheckedChange={toggleCompetitiveIntelligence}
+                />
+              )}
             </div>
-            {loading ? (
-              <Skeleton className="h-6 w-12" />
-            ) : (
-              <Switch
-                checked={preferences?.competitive_intelligence_enabled || false}
-                onCheckedChange={toggleCompetitiveIntelligence}
-              />
-            )}
           </div>
         </CardHeader>
         
