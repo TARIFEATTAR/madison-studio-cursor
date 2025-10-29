@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useIsEcommerceOrg } from "@/hooks/useIndustryConfig";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -33,11 +33,43 @@ export function AppSidebar() {
   const { toast } = useToast();
   const { isEcommerce, loading: isEcommerceLoading } = useIsEcommerceOrg();
 
-  // Collapsible state for each group (closed by default)
+  // Helper to check if a group contains the active route
+  const isGroupActive = (items: { url: string }[]) => {
+    return items.some(item => isActive(item.url));
+  };
+
+  // Collapsible state for each group (auto-expand if contains active route)
   const [studioOpen, setStudioOpen] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [marketplaceOpen, setMarketplaceOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+
+  // Auto-expand group if it contains the active route
+  useEffect(() => {
+    const studioItems = [
+      { url: "/create" },
+      { url: "/multiply" },
+      { url: "/image-editor" },
+      { url: "/email-composer" },
+    ];
+    const libraryItems = [
+      { url: "/library" },
+      { url: "/templates" },
+    ];
+    const marketplaceItems = [
+      { url: "/marketplace" },
+      { url: "/marketplace-library" },
+    ];
+    const helpItems = [
+      { url: "/meet-madison" },
+      { url: "/help-center" },
+    ];
+
+    if (isGroupActive(studioItems)) setStudioOpen(true);
+    if (isGroupActive(libraryItems)) setLibraryOpen(true);
+    if (isGroupActive(marketplaceItems)) setMarketplaceOpen(true);
+    if (isGroupActive(helpItems)) setHelpOpen(true);
+  }, [location.pathname]);
 
   // Top-level nav items (always visible)
   const topLevelItems = [
