@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ShopifyConnection } from "./ShopifyConnection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, Bot, Plus, Trash2 } from "lucide-react";
+import { Package, Bot, Plus, Trash2, Sparkles } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,11 +9,14 @@ import { Label } from "@/components/ui/label";
 import { useCompetitiveIntelligence } from "@/hooks/useCompetitiveIntelligence";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 export function IntegrationsTab() {
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [newCompetitorName, setNewCompetitorName] = useState("");
   const [newCompetitorUrl, setNewCompetitorUrl] = useState("");
+  const [isScanning, setIsScanning] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     loadOrganization();
@@ -40,7 +43,8 @@ export function IntegrationsTab() {
     loading,
     toggleCompetitiveIntelligence,
     addCompetitor,
-    removeCompetitor
+    removeCompetitor,
+    refreshData
   } = useCompetitiveIntelligence(organizationId);
 
   const handleAddCompetitor = () => {
@@ -48,6 +52,35 @@ export function IntegrationsTab() {
       addCompetitor(newCompetitorName, newCompetitorUrl);
       setNewCompetitorName("");
       setNewCompetitorUrl("");
+    }
+  };
+
+  const handleScanNow = async () => {
+    if (!organizationId) return;
+    
+    setIsScanning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('competitive-intelligence', {
+        body: { organizationId }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Scan Complete",
+        description: `Analysis complete. Check the Dashboard for new insights.`,
+      });
+      
+      refreshData();
+    } catch (error: any) {
+      console.error('Error scanning competitors:', error);
+      toast({
+        title: "Scan Failed",
+        description: error.message || "Failed to scan competitors. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsScanning(false);
     }
   };
 
@@ -135,6 +168,20 @@ export function IntegrationsTab() {
                 Add Competitor to Watchlist
               </Button>
             </div>
+
+            {competitors.length > 0 && (
+              <>
+                <Button 
+                  onClick={handleScanNow} 
+                  disabled={isScanning}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  {isScanning ? "Analyzing Competitors..." : "Scan Competitors Now"}
+                </Button>
+              </>
+            )}
 
             {competitors.length > 0 && (
               <div className="space-y-2">
