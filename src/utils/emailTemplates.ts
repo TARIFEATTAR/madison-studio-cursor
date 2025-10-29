@@ -105,12 +105,31 @@ const getBaseStyles = (fontFamily: string, brandColor: string) => `
   .cta-button { 
     background-color: ${brandColor}; 
     color: #ffffff; 
-    padding: 14px 32px; 
+    padding: 16px 40px; 
     text-decoration: none; 
-    border-radius: 4px; 
+    border-radius: 2px; 
     display: inline-block; 
     font-weight: 600;
-    margin: 20px 0;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-size: 14px;
+    margin: 30px 0;
+    transition: all 0.3s ease;
+  }
+  .cta-button-outline {
+    background-color: transparent;
+    color: ${brandColor};
+    border: 2px solid ${brandColor};
+    padding: 14px 38px;
+    text-decoration: none;
+    border-radius: 2px;
+    display: inline-block;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-size: 14px;
+    margin: 30px 0;
+    transition: all 0.3s ease;
   }
   .footer { 
     background-color: #333333; 

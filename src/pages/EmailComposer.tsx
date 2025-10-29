@@ -6,6 +6,7 @@ import { useBrandColor } from "@/hooks/useBrandColor";
 import { useEmailComposer } from "@/hooks/useEmailComposer";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { GoldButton } from "@/components/ui/gold-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -164,15 +165,14 @@ export default function EmailComposer() {
             <Save className="w-4 h-4" />
             Save Draft
           </Button>
-          <Button
-            size="sm"
+          <GoldButton
             onClick={handleSendToKlaviyo}
             disabled={sendLoading}
-            className="gap-2"
+            className="gap-2 text-sm px-6 py-2 h-9"
           >
             <Send className="w-4 h-4" />
             {sendLoading ? "Preparing..." : "Send to Klaviyo"}
-          </Button>
+          </GoldButton>
         </div>
       </div>
 
