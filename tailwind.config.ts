@@ -85,6 +85,7 @@ export default {
             glow: 'rgba(184, 149, 106, 0.15)',
           }
         },
+        'aged-paper': '#F5F1E8',
       },
       fontFamily: {
         serif: ['Cormorant Garamond', 'serif'],
