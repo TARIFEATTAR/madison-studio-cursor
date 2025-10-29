@@ -1184,6 +1184,47 @@ export type Database = {
         }
         Relationships: []
       }
+      klaviyo_connections: {
+        Row: {
+          api_key_encrypted: string
+          created_at: string
+          id: string
+          last_synced_at: string | null
+          list_count: number | null
+          organization_id: string
+          sync_status: string | null
+          updated_at: string
+        }
+        Insert: {
+          api_key_encrypted: string
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          list_count?: number | null
+          organization_id: string
+          sync_status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          api_key_encrypted?: string
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          list_count?: number | null
+          organization_id?: string
+          sync_status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "klaviyo_connections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       madison_system_config: {
         Row: {
           created_at: string | null
