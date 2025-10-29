@@ -15,9 +15,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, Mail } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { KlaviyoEmailComposer } from "@/components/klaviyo/KlaviyoEmailComposer";
 
 const PLATFORMS = [
   { id: "facebook", label: "Facebook", icon: "📘" },
@@ -55,8 +56,15 @@ export function PublishingDrawer({
   const [platformUrls, setPlatformUrls] = useState<Record<string, string>>({});
   const [publishDate, setPublishDate] = useState<Date>(new Date());
   const [notes, setNotes] = useState("");
+  const [showKlaviyoComposer, setShowKlaviyoComposer] = useState(false);
 
   const handlePlatformToggle = (platformId: string) => {
+    // If Klaviyo is selected, open the composer
+    if (platformId === "klaviyo") {
+      setShowKlaviyoComposer(true);
+      return;
+    }
+
     setSelectedPlatforms((prev) =>
       prev.includes(platformId)
         ? prev.filter((p) => p !== platformId)
@@ -133,7 +141,21 @@ export function PublishingDrawer({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <>
+      <KlaviyoEmailComposer
+        open={showKlaviyoComposer}
+        onOpenChange={(open) => {
+          setShowKlaviyoComposer(open);
+          if (!open) {
+            // When composer closes after success, also close the drawer
+            onOpenChange(false);
+          }
+        }}
+        contentId={contentId}
+        initialTitle={contentTitle}
+      />
+      
+      <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
         className="w-full sm:w-[540px] sm:max-w-[540px] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
@@ -282,5 +304,6 @@ export function PublishingDrawer({
         </div>
       </SheetContent>
     </Sheet>
+    </>
   );
 }
