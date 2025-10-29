@@ -48,7 +48,7 @@ serve(async (req) => {
         .from('competitor_watchlist')
         .select('*')
         .eq('organization_id', org.organization_id)
-        .eq('status', 'active');
+        .eq('is_active', true);
 
       if (competitorsError) {
         console.error(`Error fetching competitors for ${org.organization_id}:`, competitorsError);
