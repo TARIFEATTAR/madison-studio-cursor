@@ -113,7 +113,7 @@ export default function EmailComposer() {
       });
       
       // Navigate to publish page with pre-filled data
-      navigate(`/publish-email?title=${encodeURIComponent(composer.title)}&html=${encodeURIComponent(composer.generatedHtml)}`);
+      navigate(`/publish/email?title=${encodeURIComponent(composer.title)}&html=${encodeURIComponent(composer.generatedHtml)}`);
     } catch (error) {
       console.error("Error sending to Klaviyo:", error);
       toast.error("Failed to prepare email");
