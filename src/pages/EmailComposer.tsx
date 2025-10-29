@@ -183,7 +183,7 @@ export default function EmailComposer() {
     }
 
     try {
-      // Save email first before sending
+      // Save email first before sending, but don't block sending if save fails
       if (!contentId) {
         console.log("[EmailComposer] Saving email before sending...");
         const serializedState = serializeEmailState({
@@ -207,20 +207,21 @@ export default function EmailComposer() {
           .single();
 
         if (error) {
-          console.error("[EmailComposer] Save error:", error);
-          throw error;
+          console.warn("[EmailComposer] Save failed, proceeding to Klaviyo anyway:", error);
+        } else if (data?.id) {
+          console.log("[EmailComposer] Email saved:", data.id);
+          setContentId(data.id);
         }
-        
-        console.log("[EmailComposer] Email saved:", data.id);
-        setContentId(data.id);
       }
 
       // Open the Klaviyo modal with pre-filled data
       console.log("[EmailComposer] Opening Klaviyo modal");
       setShowKlaviyoModal(true);
     } catch (error) {
-      console.error("[EmailComposer] Error in handleSendToKlaviyo:", error);
-      toast.error("Failed to prepare email for sending");
+      console.error("[EmailComposer] Unexpected error in handleSendToKlaviyo:", error);
+      // Still open modal to avoid blocking send flow
+      setShowKlaviyoModal(true);
+      toast.error("Saving failed, but you can still create a Klaviyo draft");
     }
   };
 
