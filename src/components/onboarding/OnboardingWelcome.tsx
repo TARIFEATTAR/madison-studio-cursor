@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { X, Sparkles, ArrowRight } from "lucide-react";
+import { X, Sparkles, ArrowRight, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { OnboardingProgressBar } from "./OnboardingProgressBar";
 import { getIndustryOptions } from "@/config/industryTemplates";
@@ -27,7 +28,7 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
   const [industry, setIndustry] = useState(initialData?.industry || "");
   const [primaryColor, setPrimaryColor] = useState(initialData?.primaryColor || "#B8956A");
 
-  const handleContinue = async () => {
+  const handleContinue = async (options?: { useBrandDNAScan?: boolean }) => {
     if (!userName.trim() || !brandName.trim()) return;
 
     // Update organization with brand config AND user profile
@@ -121,7 +122,8 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
       userName: userName.trim(),
       brandName: brandName.trim(),
       industry: industry || null,
-      primaryColor
+      primaryColor,
+      useBrandDNAScan: options?.useBrandDNAScan || false
     });
   };
 
@@ -168,10 +170,10 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
             </div>
             <h1 className="font-serif text-4xl text-foreground mb-3">Welcome to MADISON</h1>
             <p className="text-lg text-muted-foreground">
-              Let's set up your brand identity
+              Let's set up your brand profile to create on-brand content at scale
             </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Takes 2 minutes — Your content will use this info to match your brand perfectly
+            <p className="text-sm text-muted-foreground mt-4">
+              We'll help Madison learn your brand in two ways: <strong>Quick Scan</strong> for visual identity, and <strong>Deep Dive</strong> for brand voice
             </p>
           </div>
 
@@ -248,25 +250,65 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
             </div>
           </div>
 
-          <div className="mt-12 space-y-4">
+          {/* Two-Track Approach Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 mt-12">
+            <div className="p-6 rounded-lg border-2 border-brass/30 bg-gradient-to-br from-brass/5 to-transparent">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[hsl(var(--aged-brass))] to-[hsl(var(--antique-gold))]/80 flex items-center justify-center mb-4">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">Quick Scan</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Enter your website URL and we'll extract your visual identity — colors, fonts, logo, and style
+              </p>
+              <Badge variant="secondary" className="bg-brass/10 text-brass text-xs">
+                Takes 2-3 minutes
+              </Badge>
+            </div>
+
+            <div className="p-6 rounded-lg border border-border/40 bg-card">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[hsl(var(--aged-brass))] to-[hsl(var(--antique-gold))]/80 flex items-center justify-center mb-4">
+                <FileText className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">Deep Dive</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Upload brand documents to teach Madison your unique voice, tone, and messaging
+              </p>
+              <Badge variant="secondary" className="text-xs">
+                Optional but recommended
+              </Badge>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4">
             <Button
-              onClick={handleContinue}
+              onClick={() => handleContinue({ useBrandDNAScan: true })}
               disabled={!isValid}
-              className="w-full h-12 bg-gradient-to-r from-brass to-gold text-white hover:opacity-90 text-base"
-              size="lg"
+              variant="brassGradient"
+              className="flex-1 h-12 text-base"
             >
-              Continue
+              Start with Quick Scan
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
 
-            <div className="text-center">
-              <button
-                onClick={onSkip}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                I'll do this later
-              </button>
-            </div>
+            <Button
+              onClick={() => handleContinue({ useBrandDNAScan: false })}
+              disabled={!isValid}
+              variant="outline"
+              className="flex-1 h-12 text-base"
+            >
+              <FileText className="mr-2 h-5 w-5" />
+              Upload Documents
+            </Button>
+          </div>
+
+          <div className="text-center mt-4">
+            <button
+              onClick={onSkip}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Skip onboarding
+            </button>
           </div>
         </div>
       </div>

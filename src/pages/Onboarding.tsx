@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { OnboardingWelcome } from "@/components/onboarding/OnboardingWelcome";
+import { BrandDNAScan } from "@/components/onboarding/BrandDNAScan";
 import { OnboardingBrandUpload } from "@/components/onboarding/OnboardingBrandUpload";
 import { OnboardingSuccess } from "@/components/onboarding/OnboardingSuccess";
 
@@ -11,6 +12,7 @@ export default function Onboarding() {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState<any>({});
+  const [scanningBrandDNA, setScanningBrandDNA] = useState(false);
 
   // Load saved progress on mount and align storage keys
   useEffect(() => {
@@ -36,7 +38,14 @@ export default function Onboarding() {
     const updatedData = { ...onboardingData, ...stepData };
     setOnboardingData(updatedData);
 
-    if (currentStep < 3) {
+    // Check if user chose Brand DNA scan
+    if (stepData.useBrandDNAScan) {
+      setScanningBrandDNA(true);
+      setCurrentStep(2); // Go to Brand DNA scan
+    } else if (stepData.skipDeepDive) {
+      // User scanned DNA but wants to skip document upload
+      setCurrentStep(4); // Go directly to success
+    } else if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -96,8 +105,8 @@ export default function Onboarding() {
         />
       )}
 
-      {currentStep === 2 && (
-        <OnboardingBrandUpload
+      {currentStep === 2 && scanningBrandDNA && (
+        <BrandDNAScan
           onContinue={handleStepComplete}
           onBack={handleBack}
           onSkip={handleSkip}
@@ -106,6 +115,15 @@ export default function Onboarding() {
       )}
 
       {currentStep === 3 && (
+        <OnboardingBrandUpload
+          onContinue={handleStepComplete}
+          onBack={handleBack}
+          onSkip={handleSkip}
+          brandData={onboardingData}
+        />
+      )}
+
+      {currentStep === 4 && (
         <OnboardingSuccess
           brandData={onboardingData}
           onComplete={handleComplete}

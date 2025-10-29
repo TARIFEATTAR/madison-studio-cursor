@@ -87,12 +87,25 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
 
         {/* What We've Set Up */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          {brandData.brandDNA && (
+            <div className="p-6 rounded-lg border-2 border-brass/30 bg-gradient-to-br from-brass/5 to-transparent">
+              <div className="flex items-center gap-3 mb-3">
+                <Check className="w-4 h-4 text-brass" />
+                <h3 className="font-semibold text-foreground">Brand DNA Extracted</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Logo, colors, fonts, and visual style captured
+              </p>
+            </div>
+          )}
+
           <div className="p-6 rounded-lg border border-border/40 bg-card">
             <div className="flex items-center gap-3 mb-3">
-              <div 
-                className="w-3 h-3 rounded-full" 
-                style={{ backgroundColor: brandData.primaryColor || '#B8956A' }}
-              />
+              {brandData.uploadContent ? (
+                <Check className="w-4 h-4 text-brass" />
+              ) : (
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: brandData.primaryColor || '#B8956A' }} />
+              )}
               <h3 className="font-semibold text-foreground">Brand Identity</h3>
             </div>
             <p className="text-sm text-muted-foreground">
@@ -101,9 +114,12 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
           </div>
 
           <div className="p-6 rounded-lg border border-border/40 bg-card">
-            <h3 className="font-semibold text-foreground mb-3">Brand Guidelines</h3>
+            <div className="flex items-center gap-3 mb-3">
+              {brandData.uploadContent && <Check className="w-4 h-4 text-brass" />}
+              <h3 className="font-semibold text-foreground">Brand Knowledge</h3>
+            </div>
             <p className="text-sm text-muted-foreground">
-              AI trained on your brand voice
+              {brandData.uploadContent ? "AI trained on your brand voice" : "Ready to add documents"}
             </p>
           </div>
 

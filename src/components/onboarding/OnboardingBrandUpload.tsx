@@ -205,10 +205,24 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
           <OnboardingProgressBar currentStep={2} />
 
           <div className="mt-12 text-center mb-12">
-            <h1 className="font-serif text-4xl text-foreground mb-3">Brand Guidelines</h1>
+            <h1 className="font-serif text-4xl text-foreground mb-3">
+              {brandData.brandDNA ? "Now let's go deeper" : "Brand Guidelines"}
+            </h1>
             <p className="text-lg text-muted-foreground">
-              Help our AI understand your brand's unique voice
+              {brandData.brandDNA 
+                ? "Upload documents to teach Madison your unique brand voice and messaging" 
+                : "Help our AI understand your brand's unique voice"}
             </p>
+            {brandData.brandDNA && (
+              <div className="mt-6 p-4 rounded-lg border border-brass/30 bg-brass/5 max-w-2xl mx-auto">
+                <p className="text-sm text-foreground">
+                  ✅ <strong>Visual Brand DNA captured</strong> from your website
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Now add documents to help Madison understand your brand voice, tone, and messaging pillars
+                </p>
+              </div>
+            )}
             <p className="text-sm text-muted-foreground mt-4 max-w-2xl mx-auto leading-relaxed">
               <strong>💡 What to upload:</strong> Brand guidelines, style guides, or product catalogs help Madison learn your brand voice, tone, and visual style. This ensures all generated content sounds authentically like your brand.
             </p>
