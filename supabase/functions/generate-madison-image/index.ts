@@ -170,6 +170,7 @@ serve(async (req) => {
       parentImageId: parentImageId || null,
       proModeControlsReceived: !!proModeControls,
       proModeDetails: proModeControls || null,
+      proModeKeys: proModeControls ? Object.keys(proModeControls) : [],
       sessionId: sessionId || 'none'
     });
 
@@ -397,16 +398,37 @@ serve(async (req) => {
       const hasProMode = proModeControls && Object.keys(proModeControls).length > 0;
       
       if (actualReferenceImages.length === 1) {
-        // Single reference - use existing product placement prompt
-        enhancedPrompt = buildProductPlacementPrompt(enhancedPrompt, brandContext);
-        
-        // Add Pro Mode compatibility note
+        // CRITICAL FIX: In Pro Mode, preserve user's original scene description
         if (hasProMode) {
-          enhancedPrompt += `\n\n⚠️ CRITICAL: Use the provided reference image for the product's exact appearance, but apply the Pro Mode camera, lighting, and environment specifications that follow.`;
-        }
-        
-        if (actualReferenceImages[0].description) {
-          enhancedPrompt += `\n\nReference Notes: ${actualReferenceImages[0].description}`;
+          console.log('🎛️ Pro Mode active with single reference - preserving user scene description');
+          // Don't overwrite the prompt - just add reference image guidance
+          const originalScene = enhancedPrompt;
+          enhancedPrompt = `REFERENCE IMAGE USAGE:
+The reference image shows the product. Use its EXACT appearance (colors, shape, design, materials) but place it into the scene described below.
+
+USER'S SCENE DESCRIPTION:
+${originalScene}
+
+PRODUCT TREATMENT:
+- Maintain the product's exact visual characteristics from the reference image
+- Integrate it naturally into the scene above
+- Apply the Pro Mode specifications (camera, lighting, environment) that will follow
+- The product should be the focal point while respecting the described scene
+
+PHOTOGRAPHIC QUALITY:
+- Professional product photography composition
+- Natural integration of product with the described environment`;
+
+          if (actualReferenceImages[0].description) {
+            enhancedPrompt += `\n\nProduct Reference Notes: ${actualReferenceImages[0].description}`;
+          }
+        } else {
+          // Standard mode - use existing product placement prompt
+          enhancedPrompt = buildProductPlacementPrompt(enhancedPrompt, brandContext);
+          
+          if (actualReferenceImages[0].description) {
+            enhancedPrompt += `\n\nReference Notes: ${actualReferenceImages[0].description}`;
+          }
         }
       } else {
         // Multiple references - build multi-image composite prompt
