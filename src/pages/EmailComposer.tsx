@@ -71,6 +71,11 @@ export default function EmailComposer() {
     }
   }, [user, navigate, searchParams]);
 
+  // Debug logging for modal state
+  useEffect(() => {
+    console.log("[EmailComposer] Modal state changed:", { showKlaviyoModal, contentId });
+  }, [showKlaviyoModal, contentId]);
+
   // Show warning if no organization after loading
   useEffect(() => {
     if (!orgLoading && !organizationId) {
@@ -157,24 +162,30 @@ export default function EmailComposer() {
   };
 
   const handleSendToKlaviyo = async () => {
+    console.log("[EmailComposer] Send to Klaviyo clicked", { organizationId, user: !!user, contentId });
+    
     if (!organizationId || !user) {
+      console.error("[EmailComposer] Missing org or user");
       toast.error("Must be logged in to send");
       return;
     }
 
     if (!composer.title.trim()) {
+      console.error("[EmailComposer] Missing title");
       toast.error("Please add an email title");
       return;
     }
 
     if (!composer.content.trim()) {
+      console.error("[EmailComposer] Missing content");
       toast.error("Please add email content");
       return;
     }
 
-    // Save email first before sending
-    if (!contentId) {
-      try {
+    try {
+      // Save email first before sending
+      if (!contentId) {
+        console.log("[EmailComposer] Saving email before sending...");
         const serializedState = serializeEmailState({
           ...composer,
           template: composer.selectedTemplate,
@@ -195,17 +206,22 @@ export default function EmailComposer() {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error("[EmailComposer] Save error:", error);
+          throw error;
+        }
+        
+        console.log("[EmailComposer] Email saved:", data.id);
         setContentId(data.id);
-      } catch (error) {
-        console.error("Error saving email before send:", error);
-        toast.error("Failed to save email");
-        return;
       }
-    }
 
-    // Open the Klaviyo modal with pre-filled data
-    setShowKlaviyoModal(true);
+      // Open the Klaviyo modal with pre-filled data
+      console.log("[EmailComposer] Opening Klaviyo modal");
+      setShowKlaviyoModal(true);
+    } catch (error) {
+      console.error("[EmailComposer] Error in handleSendToKlaviyo:", error);
+      toast.error("Failed to prepare email for sending");
+    }
   };
 
   const handleDownloadHtml = () => {
@@ -222,12 +238,16 @@ export default function EmailComposer() {
   };
 
   const handleSaveDraft = async () => {
+    console.log("[EmailComposer] Save Draft clicked", { organizationId, user: !!user, contentId, title: composer.title });
+    
     if (!organizationId || !user) {
+      console.error("[EmailComposer] Save: Missing org or user");
       toast.error("Must be logged in to save");
       return;
     }
 
     if (!composer.title.trim()) {
+      console.error("[EmailComposer] Save: Missing title");
       toast.error("Please add an email title before saving");
       return;
     }
@@ -242,6 +262,7 @@ export default function EmailComposer() {
       });
 
       if (contentId) {
+        console.log("[EmailComposer] Updating existing email:", contentId);
         // Update existing email
         const { error } = await supabase
           .from('master_content')
@@ -254,8 +275,12 @@ export default function EmailComposer() {
           })
           .eq('id', contentId);
 
-        if (error) throw error;
+        if (error) {
+          console.error("[EmailComposer] Update error:", error);
+          throw error;
+        }
 
+        console.log("[EmailComposer] Email updated successfully");
         await forceSave(); // Trigger auto-save to sync
         
         toast.success("Email updated", {
@@ -266,6 +291,7 @@ export default function EmailComposer() {
           }
         });
       } else {
+        console.log("[EmailComposer] Creating new email");
         // Create new email
         const { data, error } = await supabase
           .from('master_content')
@@ -281,8 +307,12 @@ export default function EmailComposer() {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error("[EmailComposer] Insert error:", error);
+          throw error;
+        }
 
+        console.log("[EmailComposer] Email created:", data.id);
         setContentId(data.id);
         
         toast.success("Email saved to Library", {
@@ -294,8 +324,8 @@ export default function EmailComposer() {
         });
       }
     } catch (error) {
-      console.error("Error saving email:", error);
-      toast.error("Failed to save email");
+      console.error("[EmailComposer] Error saving email:", error);
+      toast.error(`Failed to save email: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSaving(false);
     }
@@ -355,9 +385,14 @@ export default function EmailComposer() {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleSaveDraft}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log("[EmailComposer] Save button physical click event");
+              handleSaveDraft();
+            }}
             className="gap-2 text-xs md:text-sm"
-            disabled={isSaving}
+            disabled={isSaving || !organizationId || !user}
           >
             <Save className="w-4 h-4" />
             <span className="hidden sm:inline">{isSaving ? 'Saving...' : 'Save'}</span>
@@ -374,8 +409,14 @@ export default function EmailComposer() {
             </Button>
           )}
           <GoldButton
-            onClick={handleSendToKlaviyo}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log("[EmailComposer] Klaviyo button physical click event");
+              handleSendToKlaviyo();
+            }}
             className="gap-2 text-xs md:text-sm px-4 md:px-6"
+            disabled={!organizationId || !user}
           >
             <Send className="w-4 h-4" />
             <span className="hidden sm:inline">Send to Klaviyo</span>
@@ -741,22 +782,30 @@ export default function EmailComposer() {
       {/* Klaviyo Email Composer Modal */}
       <KlaviyoEmailComposer
         open={showKlaviyoModal}
-        onOpenChange={setShowKlaviyoModal}
+        onOpenChange={(open) => {
+          console.log("[EmailComposer] Klaviyo modal onOpenChange:", open);
+          setShowKlaviyoModal(open);
+        }}
         initialHtml={composer.generatedHtml}
         initialTitle={composer.title}
         contentId={contentId || undefined}
         onSendSuccess={async () => {
+          console.log("[EmailComposer] Klaviyo send success callback");
           // Mark as sent in database
           if (contentId) {
-            await supabase
-              .from('master_content')
-              .update({
-                status: 'sent',
-                published_at: new Date().toISOString(),
-              })
-              .eq('id', contentId);
-            
-            toast.success("Email status updated");
+            try {
+              await supabase
+                .from('master_content')
+                .update({
+                  status: 'sent',
+                  published_at: new Date().toISOString(),
+                })
+                .eq('id', contentId);
+              
+              toast.success("Email status updated");
+            } catch (error) {
+              console.error("[EmailComposer] Error updating status:", error);
+            }
           }
         }}
       />

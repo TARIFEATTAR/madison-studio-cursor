@@ -61,27 +61,38 @@ export function KlaviyoEmailComposer({
   const [emailHtml, setEmailHtml] = useState(initialHtml || "");
 
   useEffect(() => {
+    console.log("[KlaviyoEmailComposer] useEffect triggered", { open, hasInitialHtml: !!initialHtml });
     if (open) {
       loadOrganizationAndLists();
       // If initialHtml is provided, use it directly
       if (initialHtml) {
+        console.log("[KlaviyoEmailComposer] Setting email HTML from initialHtml");
         setEmailHtml(initialHtml);
       }
     }
   }, [open, initialHtml]);
 
   const loadOrganizationAndLists = async () => {
-    if (!user) return;
+    console.log("[KlaviyoEmailComposer] loadOrganizationAndLists starting", { user: !!user });
+    if (!user) {
+      console.error("[KlaviyoEmailComposer] No user found");
+      return;
+    }
 
     try {
       // Get organization
-      const { data: membership } = await supabase
+      const { data: membership, error: membershipError } = await supabase
         .from("organization_members")
         .select("organization_id")
         .eq("user_id", user.id)
         .maybeSingle();
 
+      console.log("[KlaviyoEmailComposer] Membership query result:", { membership, membershipError });
+
+      if (membershipError) throw membershipError;
+
       if (!membership) {
+        console.error("[KlaviyoEmailComposer] No organization membership found");
         toast.error("Organization not found");
         return;
       }
@@ -89,13 +100,18 @@ export function KlaviyoEmailComposer({
       setOrganizationId(membership.organization_id);
 
       // Check if Klaviyo is connected
-      const { data: connection } = await supabase
+      const { data: connection, error: connectionError } = await supabase
         .from("klaviyo_connections")
         .select("id")
         .eq("organization_id", membership.organization_id)
         .maybeSingle();
 
+      console.log("[KlaviyoEmailComposer] Klaviyo connection query result:", { connection, connectionError });
+
+      if (connectionError) throw connectionError;
+
       if (!connection) {
+        console.error("[KlaviyoEmailComposer] No Klaviyo connection found");
         toast.error("Please connect Klaviyo in Settings first");
         onOpenChange(false);
         return;
@@ -103,6 +119,8 @@ export function KlaviyoEmailComposer({
 
       // Fetch both lists and segments in parallel
       setLoadingAudiences(true);
+      console.log("[KlaviyoEmailComposer] Fetching lists and segments");
+      
       const [listsResult, segmentsResult] = await Promise.all([
         supabase.functions.invoke("fetch-klaviyo-lists", {
           body: { organization_id: membership.organization_id },
@@ -112,19 +130,31 @@ export function KlaviyoEmailComposer({
         }),
       ]);
 
-      if (listsResult.error) throw listsResult.error;
-      if (segmentsResult.error) throw segmentsResult.error;
+      console.log("[KlaviyoEmailComposer] Lists result:", listsResult);
+      console.log("[KlaviyoEmailComposer] Segments result:", segmentsResult);
+
+      if (listsResult.error) {
+        console.error("[KlaviyoEmailComposer] Lists fetch error:", listsResult.error);
+        throw listsResult.error;
+      }
+      if (segmentsResult.error) {
+        console.error("[KlaviyoEmailComposer] Segments fetch error:", segmentsResult.error);
+        throw segmentsResult.error;
+      }
 
       if (listsResult.data?.lists) {
+        console.log("[KlaviyoEmailComposer] Setting lists:", listsResult.data.lists.length);
         setLists(listsResult.data.lists);
       }
       
       if (segmentsResult.data?.segments) {
-        setSegments(segmentsResult.data.segments.filter((s: KlaviyoSegment) => s.is_active));
+        const activeSegments = segmentsResult.data.segments.filter((s: KlaviyoSegment) => s.is_active);
+        console.log("[KlaviyoEmailComposer] Setting segments:", activeSegments.length);
+        setSegments(activeSegments);
       }
     } catch (error: any) {
-      console.error("Error loading Klaviyo data:", error);
-      toast.error("Failed to load Klaviyo audiences");
+      console.error("[KlaviyoEmailComposer] Error in loadOrganizationAndLists:", error);
+      toast.error(`Failed to load Klaviyo audiences: ${error.message || 'Unknown error'}`);
     } finally {
       setLoadingAudiences(false);
     }
@@ -132,27 +162,39 @@ export function KlaviyoEmailComposer({
 
 
   const handleSend = async () => {
+    console.log("[KlaviyoEmailComposer] handleSend called", {
+      selectedList,
+      subject: subject.trim(),
+      hasEmailHtml: !!emailHtml && emailHtml.trim() !== "",
+      organizationId
+    });
+
     if (!selectedList) {
+      console.error("[KlaviyoEmailComposer] No list/segment selected");
       toast.error("Please select a Klaviyo list or segment");
       return;
     }
 
     if (!subject.trim()) {
+      console.error("[KlaviyoEmailComposer] No subject");
       toast.error("Please enter an email subject");
       return;
     }
 
     if (!emailHtml || emailHtml.trim() === "") {
+      console.error("[KlaviyoEmailComposer] No email HTML");
       toast.error("Email content is missing");
       return;
     }
 
     if (!organizationId) {
+      console.error("[KlaviyoEmailComposer] No organization ID");
       toast.error("Organization not found");
       return;
     }
 
     setLoading(true);
+    console.log("[KlaviyoEmailComposer] Invoking publish-to-klaviyo");
 
     try {
       const { data, error } = await supabase.functions.invoke("publish-to-klaviyo", {
@@ -169,10 +211,16 @@ export function KlaviyoEmailComposer({
         },
       });
 
-      if (error) throw error;
+      console.log("[KlaviyoEmailComposer] publish-to-klaviyo result:", { data, error });
+
+      if (error) {
+        console.error("[KlaviyoEmailComposer] Klaviyo publish error:", error);
+        throw error;
+      }
 
       // Call success callback to update database
       if (onSendSuccess) {
+        console.log("[KlaviyoEmailComposer] Calling onSendSuccess");
         await onSendSuccess();
       }
 
@@ -182,7 +230,7 @@ export function KlaviyoEmailComposer({
 
       onOpenChange(false);
     } catch (error: any) {
-      console.error("Error sending to Klaviyo:", error);
+      console.error("[KlaviyoEmailComposer] Error in handleSend:", error);
       toast.error(error.message || "Failed to send email to Klaviyo");
     } finally {
       setLoading(false);
@@ -190,14 +238,17 @@ export function KlaviyoEmailComposer({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      console.log("[KlaviyoEmailComposer] Dialog onOpenChange:", newOpen);
+      onOpenChange(newOpen);
+    }}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col" aria-describedby="klaviyo-composer-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5" />
             Compose Klaviyo Email Campaign
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="klaviyo-composer-description">
             Create a draft campaign in Klaviyo. Choose your audience, preview the email, then create the draft to review/send in Klaviyo.
           </DialogDescription>
         </DialogHeader>
