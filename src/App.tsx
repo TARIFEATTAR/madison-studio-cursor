@@ -35,6 +35,7 @@ import BrandHealth from "./pages/BrandHealth";
 import BrandBuilder from "./pages/BrandBuilder";
 import ImageEditor from "./pages/ImageEditor";
 import PublishEmail from "./pages/PublishEmail";
+import EmailSequence from "./pages/EmailSequence";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { AlertCircle } from "lucide-react";
@@ -171,6 +172,7 @@ const AppContent = () => {
                   <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/publish/email" element={<ProtectedRoute><RouteErrorBoundary routeName="Publish Email"><PublishEmail /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/email-sequence" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Sequence"><EmailSequence /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>
@@ -203,6 +205,7 @@ const AppContent = () => {
             <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/publish/email" element={<ProtectedRoute><RouteErrorBoundary routeName="Publish Email"><PublishEmail /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/email-sequence" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Sequence"><EmailSequence /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </>

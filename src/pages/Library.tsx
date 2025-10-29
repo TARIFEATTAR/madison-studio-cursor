@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Plus, Trash2, X, Archive, Filter, Search } from "lucide-react";
+import { Plus, Trash2, X, Archive, Filter, Search, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -532,14 +532,25 @@ export default function Library() {
                 <h1 className="font-serif text-4xl text-foreground mb-2">The Archives</h1>
                 <p className="text-muted-foreground">Your editorial repository</p>
               </div>
-              <Button
-                onClick={() => navigate("/create")}
-                variant="brassGradient"
-                size="lg"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create New Content
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => navigate("/email-sequence")}
+                  variant="outline"
+                  size="lg"
+                  className="border-[#E1B16A]/30 hover:bg-[#E1B16A]/10"
+                >
+                  <Mail className="w-4 h-4 mr-2" />
+                  Email Sequence
+                </Button>
+                <Button
+                  onClick={() => navigate("/create")}
+                  variant="brassGradient"
+                  size="lg"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create New Content
+                </Button>
+              </div>
             </div>
 
             {/* Filters */}
