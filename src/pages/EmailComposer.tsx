@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useOrganization } from "@/hooks/useOrganization";
 import { useBrandColor } from "@/hooks/useBrandColor";
 import { useEmailComposer } from "@/hooks/useEmailComposer";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,11 +19,11 @@ import { toast } from "sonner";
 
 export default function EmailComposer() {
   const { user, loading: authLoading } = useAuth();
+  const { organizationId, isLoading: orgLoading } = useOrganization();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { brandColor: defaultBrandColor } = useBrandColor();
   const [sendLoading, setSendLoading] = useState(false);
-  const [organizationId, setOrganizationId] = useState<string | null>(null);
 
   const composer = useEmailComposer({
     brandColor: defaultBrandColor,
@@ -34,63 +35,21 @@ export default function EmailComposer() {
       return;
     }
 
-    loadOrganizationAndContent();
-  }, [user, navigate]);
+    // Load content if contentId is provided
+    const contentId = searchParams.get("contentId");
+    const sourceTable = searchParams.get("sourceTable");
 
-  const loadOrganizationAndContent = async () => {
-    if (!user) return;
-
-    try {
-      // Get organization
-      const { data: memberData } = await supabase
-        .from("organization_members")
-        .select("organization_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      let orgId = (memberData?.organization_id as string) || null;
-
-      if (!orgId) {
-        // Fallback: find organization created by the user and ensure membership
-        const { data: userOrg } = await supabase
-          .from("organizations")
-          .select("id")
-          .eq("created_by", user.id)
-          .limit(1)
-          .maybeSingle();
-
-        if (userOrg?.id) {
-          orgId = userOrg.id;
-          // Ensure membership exists (ignore duplicates)
-          await supabase
-            .from("organization_members")
-            .upsert(
-              { organization_id: orgId, user_id: user.id, role: "owner" },
-              { onConflict: "user_id,organization_id", ignoreDuplicates: true }
-            );
-        }
-      }
-
-      if (!orgId) {
-        toast.error("No workspace found. Please complete onboarding.");
-        setOrganizationId(null);
-        return;
-      }
-
-      setOrganizationId(orgId);
-
-      // Load content if contentId is provided
-      const contentId = searchParams.get("contentId");
-      const sourceTable = searchParams.get("sourceTable");
-
-      if (contentId && sourceTable) {
-        await loadContent(contentId, sourceTable);
-      }
-    } catch (error) {
-      console.error("Error loading data:", error);
-      toast.error("Failed to load data");
+    if (contentId && sourceTable) {
+      loadContent(contentId, sourceTable);
     }
-  };
+  }, [user, navigate, searchParams]);
+
+  // Show warning if no organization after loading
+  useEffect(() => {
+    if (!orgLoading && !organizationId) {
+      toast.error("No workspace found. Please complete onboarding.");
+    }
+  }, [organizationId, orgLoading]);
 
   const loadContent = async (contentId: string, sourceTable: string) => {
     try {

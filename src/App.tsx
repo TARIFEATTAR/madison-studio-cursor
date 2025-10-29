@@ -2,6 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import React from "react";
@@ -111,9 +112,21 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const RootRoute = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [redirectCount, setRedirectCount] = useState(0);
+  const [isChecking, setIsChecking] = useState(false);
   
   useEffect(() => {
-    if (!user) return;
+    // Redirect loop protection
+    if (redirectCount >= 3) {
+      console.error("[RootRoute] Redirect loop detected - stopping after", redirectCount, "attempts");
+      navigate("/dashboard", { replace: true });
+      return;
+    }
+
+    if (!user || isChecking) return;
+    
+    setIsChecking(true);
     
     const checkOnboardingStatus = async () => {
       console.log("[RootRoute] Checking onboarding status…");
@@ -127,11 +140,15 @@ const RootRoute = () => {
 
       if (memberErr) {
         console.warn("[RootRoute] organization_members lookup error", memberErr);
+        setIsChecking(false);
+        return;
       }
 
       if (!orgMember?.organization_id) {
         console.warn("[RootRoute] Redirect → /onboarding (reason: no organization membership)");
+        setRedirectCount(prev => prev + 1);
         navigate('/onboarding', { replace: true });
+        setIsChecking(false);
         return;
       }
 
@@ -143,6 +160,8 @@ const RootRoute = () => {
 
       if (orgErr) {
         console.warn("[RootRoute] organizations lookup error", orgErr);
+        setIsChecking(false);
+        return;
       }
 
       // If organization has brand info, consider onboarding complete
@@ -152,16 +171,41 @@ const RootRoute = () => {
 
       if (!hasBrandInfo) {
         console.warn("[RootRoute] Redirect → /onboarding (reason: missing brand_config.industry)");
+        setRedirectCount(prev => prev + 1);
         navigate('/onboarding', { replace: true });
       } else {
         console.log("[RootRoute] Onboarding OK (has brand info). Staying on dashboard.");
         // Sync localStorage with database state
         localStorage.setItem(`onboarding_completed_${user.id}`, "true");
       }
+      
+      setIsChecking(false);
     };
 
     checkOnboardingStatus();
-  }, [user, navigate]);
+  }, [user, navigate, location, redirectCount, isChecking]);
+
+  if (redirectCount >= 3) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <h2 className="text-2xl font-serif text-foreground mb-4">Navigation Issue Detected</h2>
+          <p className="text-muted-foreground mb-6">
+            We detected a potential redirect loop. Please try refreshing the page or contact support if the issue persists.
+          </p>
+          <button
+            onClick={() => {
+              localStorage.clear();
+              window.location.href = '/';
+            }}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
+          >
+            Reset and Restart
+          </button>
+        </div>
+      </div>
+    );
+  }
   
   return <DashboardNew />;
 };
@@ -259,14 +303,16 @@ const App = () => {
   
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <BrowserRouter>
-          <ErrorBoundary>
-            <AppContent />
-          </ErrorBoundary>
-        </BrowserRouter>
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <BrowserRouter>
+            <ErrorBoundary>
+              <AppContent />
+            </ErrorBoundary>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };

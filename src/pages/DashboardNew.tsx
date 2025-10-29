@@ -4,39 +4,23 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useAuth } from "@/hooks/useAuth";
+import { useOrganization } from "@/hooks/useOrganization";
 import { BrandPulseBar } from "@/components/dashboard/BrandPulseBar";
 import { ContentFlowZone } from "@/components/dashboard/ContentFlowZone";
 import { PerformanceMomentumZone } from "@/components/dashboard/PerformanceMomentumZone";
 
 import MadisonPanel from "@/components/image-editor/MadisonPanel";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
-import { supabase } from "@/integrations/supabase/client";
 
 export default function DashboardNew() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { organizationId } = useOrganization();
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const [longLoad, setLongLoad] = useState(false);
   const [madisonPanelOpen, setMadisonPanelOpen] = useState(false);
-  const [organizationId, setOrganizationId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadOrganization = async () => {
-      if (!user) return;
-      
-      const { data: membership } = await supabase
-        .from('organization_members')
-        .select('organization_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      if (membership) {
-        setOrganizationId(membership.organization_id);
-      }
-    };
-    
-    loadOrganization();
-  }, [user]);
+  // Organization ID now handled by useOrganization hook
 
   // Safety timeout for long loads
   useEffect(() => {
