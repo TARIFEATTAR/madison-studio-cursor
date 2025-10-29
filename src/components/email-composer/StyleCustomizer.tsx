@@ -7,18 +7,30 @@ interface StyleCustomizerProps {
   brandColor: string;
   secondaryColor: string;
   fontFamily: string;
+  buttonColor?: string;
+  buttonTextColor?: string;
+  textColor?: string;
   onBrandColorChange: (color: string) => void;
   onSecondaryColorChange: (color: string) => void;
   onFontChange: (font: string) => void;
+  onButtonColorChange?: (color: string) => void;
+  onButtonTextColorChange?: (color: string) => void;
+  onTextColorChange?: (color: string) => void;
 }
 
 export function StyleCustomizer({
   brandColor,
   secondaryColor,
   fontFamily,
+  buttonColor,
+  buttonTextColor,
+  textColor,
   onBrandColorChange,
   onSecondaryColorChange,
   onFontChange,
+  onButtonColorChange,
+  onButtonTextColorChange,
+  onTextColorChange,
 }: StyleCustomizerProps) {
   return (
     <div className="space-y-4 p-4 border border-border rounded-lg bg-card">
@@ -85,6 +97,75 @@ export function StyleCustomizer({
           />
         </div>
       </div>
+
+      {/* Button Color */}
+      {onButtonColorChange && (
+        <div className="space-y-2">
+          <Label htmlFor="button-color" className="text-sm">CTA Button Color</Label>
+          <div className="flex gap-2">
+            <input
+              id="button-color"
+              type="color"
+              value={buttonColor || brandColor}
+              onChange={(e) => onButtonColorChange(e.target.value)}
+              className="w-12 h-10 rounded border border-border cursor-pointer"
+            />
+            <input
+              type="text"
+              value={buttonColor || brandColor}
+              onChange={(e) => onButtonColorChange(e.target.value)}
+              placeholder={brandColor}
+              className="flex-1 px-3 py-2 bg-background border border-border rounded-md text-sm font-mono"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Button Text Color */}
+      {onButtonTextColorChange && (
+        <div className="space-y-2">
+          <Label htmlFor="button-text-color" className="text-sm">Button Text Color</Label>
+          <div className="flex gap-2">
+            <input
+              id="button-text-color"
+              type="color"
+              value={buttonTextColor || '#ffffff'}
+              onChange={(e) => onButtonTextColorChange(e.target.value)}
+              className="w-12 h-10 rounded border border-border cursor-pointer"
+            />
+            <input
+              type="text"
+              value={buttonTextColor || '#ffffff'}
+              onChange={(e) => onButtonTextColorChange(e.target.value)}
+              placeholder="#ffffff"
+              className="flex-1 px-3 py-2 bg-background border border-border rounded-md text-sm font-mono"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Text Color */}
+      {onTextColorChange && (
+        <div className="space-y-2">
+          <Label htmlFor="text-color" className="text-sm">Body Text Color</Label>
+          <div className="flex gap-2">
+            <input
+              id="text-color"
+              type="color"
+              value={textColor || '#555555'}
+              onChange={(e) => onTextColorChange(e.target.value)}
+              className="w-12 h-10 rounded border border-border cursor-pointer"
+            />
+            <input
+              type="text"
+              value={textColor || '#555555'}
+              onChange={(e) => onTextColorChange(e.target.value)}
+              placeholder="#555555"
+              className="flex-1 px-3 py-2 bg-background border border-border rounded-md text-sm font-mono"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

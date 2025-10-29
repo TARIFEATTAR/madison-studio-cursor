@@ -1,5 +1,7 @@
 // Professional email templates with full customization support
 
+import { generateLuxuryTemplate } from "./emailTemplates_luxury";
+
 export interface EmailTemplate {
   id: string;
   name: string;
@@ -19,6 +21,9 @@ export interface EmailContent {
   fontFamily: string;
   footerText?: string;
   secondaryColor?: string;
+  buttonColor?: string;
+  buttonTextColor?: string;
+  textColor?: string;
 }
 
 export const EMAIL_TEMPLATES: EmailTemplate[] = [
@@ -52,6 +57,12 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
     description: "Eye-catching promo with discount/offer highlight",
     category: "promo",
   },
+  {
+    id: "luxury",
+    name: "Luxury Minimal",
+    description: "Elegant minimal design with maximum white space",
+    category: "announcement",
+  },
 ];
 
 export const EMAIL_FONTS = [
@@ -65,7 +76,7 @@ export const EMAIL_FONTS = [
 ];
 
 // Base email styles that work across all email clients
-const getBaseStyles = (fontFamily: string, brandColor: string) => `
+const getBaseStyles = (fontFamily: string, brandColor: string, buttonColor?: string, buttonTextColor?: string, textColor?: string) => `
   body, table, td, a { 
     -webkit-text-size-adjust: 100%; 
     -ms-text-size-adjust: 100%; 
@@ -103,8 +114,8 @@ const getBaseStyles = (fontFamily: string, brandColor: string) => `
     padding: 40px 30px; 
   }
   .cta-button { 
-    background-color: ${brandColor}; 
-    color: #ffffff; 
+    background-color: ${buttonColor || brandColor}; 
+    color: ${buttonTextColor || '#ffffff'}; 
     padding: 16px 40px; 
     text-decoration: none; 
     border-radius: 2px; 
@@ -118,8 +129,8 @@ const getBaseStyles = (fontFamily: string, brandColor: string) => `
   }
   .cta-button-outline {
     background-color: transparent;
-    color: ${brandColor};
-    border: 2px solid ${brandColor};
+    color: ${buttonColor || brandColor};
+    border: 2px solid ${buttonColor || brandColor};
     padding: 14px 38px;
     text-decoration: none;
     border-radius: 2px;
@@ -151,7 +162,7 @@ const getBaseStyles = (fontFamily: string, brandColor: string) => `
     font-weight: 600; 
   }
   p { 
-    color: #555555; 
+    color: ${textColor || '#555555'}; 
     font-size: 16px; 
     line-height: 1.6; 
     margin: 0 0 16px 0; 
@@ -181,7 +192,7 @@ export function generateNewsletterTemplate(content: EmailContent): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>${content.title}</title>
-  <style>${getBaseStyles(content.fontFamily, content.brandColor)}</style>
+  <style>${getBaseStyles(content.fontFamily, content.brandColor, content.buttonColor, content.buttonTextColor, content.textColor)}</style>
 </head>
 <body>
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -253,7 +264,7 @@ export function generateProductLaunchTemplate(content: EmailContent): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>${content.title}</title>
-  <style>${getBaseStyles(content.fontFamily, content.brandColor)}</style>
+  <style>${getBaseStyles(content.fontFamily, content.brandColor, content.buttonColor, content.buttonTextColor, content.textColor)}</style>
 </head>
 <body>
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -325,7 +336,7 @@ export function generateAnnouncementTemplate(content: EmailContent): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>${content.title}</title>
-  <style>${getBaseStyles(content.fontFamily, content.brandColor)}</style>
+  <style>${getBaseStyles(content.fontFamily, content.brandColor, content.buttonColor, content.buttonTextColor, content.textColor)}</style>
 </head>
 <body>
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -399,7 +410,7 @@ export function generateWelcomeTemplate(content: EmailContent): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>${content.title}</title>
-  <style>${getBaseStyles(content.fontFamily, content.brandColor)}</style>
+  <style>${getBaseStyles(content.fontFamily, content.brandColor, content.buttonColor, content.buttonTextColor, content.textColor)}</style>
 </head>
 <body>
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -410,7 +421,7 @@ export function generateWelcomeTemplate(content: EmailContent): string {
           <!-- Welcome Header with Accent -->
           <tr>
             <td style="background: linear-gradient(135deg, ${content.brandColor} 0%, ${secondaryColor} 100%); padding: 50px 30px; text-align: center;">
-              <h1 style="color: #ffffff; font-size: 36px; margin: 0 0 10px 0; font-weight: 700;">🎉 ${content.title}</h1>
+              <h1 style="color: #ffffff; font-size: 36px; margin: 0 0 10px 0; font-weight: 700;">${content.title}</h1>
               ${content.subtitle ? `<p style="color: rgba(255,255,255,0.95); font-size: 18px; margin: 0;">${content.subtitle}</p>` : ''}
             </td>
           </tr>
@@ -473,7 +484,7 @@ export function generatePromoTemplate(content: EmailContent): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>${content.title}</title>
-  <style>${getBaseStyles(content.fontFamily, content.brandColor)}</style>
+  <style>${getBaseStyles(content.fontFamily, content.brandColor, content.buttonColor, content.buttonTextColor, content.textColor)}</style>
 </head>
 <body>
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -560,6 +571,8 @@ export function generateEmailFromTemplate(templateId: string, content: EmailCont
       return generateWelcomeTemplate(content);
     case "promo":
       return generatePromoTemplate(content);
+    case "luxury":
+      return generateLuxuryTemplate(content);
     default:
       return generateNewsletterTemplate(content);
   }

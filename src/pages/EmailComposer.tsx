@@ -15,6 +15,7 @@ import { TemplateSelector } from "@/components/email-composer/TemplateSelector";
 import { StyleCustomizer } from "@/components/email-composer/StyleCustomizer";
 import { ImagePicker } from "@/components/email-composer/ImagePicker";
 import { EmailPreview } from "@/components/email-composer/EmailPreview";
+import { ContentPicker } from "@/components/email-composer/ContentPicker";
 import { ArrowLeft, Send, Download, Save } from "lucide-react";
 import { toast } from "sonner";
 
@@ -147,6 +148,18 @@ export default function EmailComposer() {
         </div>
 
         <div className="flex items-center gap-2">
+          {organizationId && (
+            <ContentPicker
+              organizationId={organizationId}
+              onSelect={(content) => {
+                composer.setTitle(content.title);
+                composer.setContent(content.content);
+                if (content.imageUrl) {
+                  composer.setHeaderImage(content.imageUrl);
+                }
+              }}
+            />
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -262,9 +275,15 @@ export default function EmailComposer() {
               brandColor={composer.brandColor}
               secondaryColor={composer.secondaryColor}
               fontFamily={composer.fontFamily}
+              buttonColor={composer.buttonColor}
+              buttonTextColor={composer.buttonTextColor}
+              textColor={composer.textColor}
               onBrandColorChange={composer.setBrandColor}
               onSecondaryColorChange={composer.setSecondaryColor}
               onFontChange={composer.setFontFamily}
+              onButtonColorChange={composer.setButtonColor}
+              onButtonTextColorChange={composer.setButtonTextColor}
+              onTextColorChange={composer.setTextColor}
             />
 
             {/* Footer Text */}

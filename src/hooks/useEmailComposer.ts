@@ -14,6 +14,9 @@ export function useEmailComposer(initialContent?: Partial<EmailContent>) {
   const [secondaryColor, setSecondaryColor] = useState(initialContent?.secondaryColor || "#f8f8f8");
   const [fontFamily, setFontFamily] = useState(initialContent?.fontFamily || "Georgia, serif");
   const [footerText, setFooterText] = useState(initialContent?.footerText || "");
+  const [buttonColor, setButtonColor] = useState(initialContent?.buttonColor || "");
+  const [buttonTextColor, setButtonTextColor] = useState(initialContent?.buttonTextColor || "#ffffff");
+  const [textColor, setTextColor] = useState(initialContent?.textColor || "#555555");
   const [generatedHtml, setGeneratedHtml] = useState("");
 
   // Generate HTML whenever any content changes
@@ -30,6 +33,9 @@ export function useEmailComposer(initialContent?: Partial<EmailContent>) {
       secondaryColor,
       fontFamily,
       footerText,
+      buttonColor,
+      buttonTextColor,
+      textColor,
     };
 
     const html = generateEmailFromTemplate(selectedTemplate, emailContent);
@@ -46,6 +52,9 @@ export function useEmailComposer(initialContent?: Partial<EmailContent>) {
     secondaryColor,
     fontFamily,
     footerText,
+    buttonColor,
+    buttonTextColor,
+    textColor,
   ]);
 
   return {
@@ -71,6 +80,12 @@ export function useEmailComposer(initialContent?: Partial<EmailContent>) {
     setFontFamily,
     footerText,
     setFooterText,
+    buttonColor,
+    setButtonColor,
+    buttonTextColor,
+    setButtonTextColor,
+    textColor,
+    setTextColor,
     generatedHtml,
   };
 }
