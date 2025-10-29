@@ -1799,6 +1799,62 @@ export type Database = {
           },
         ]
       }
+      publishing_history: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string
+          error_message: string | null
+          external_id: string | null
+          external_url: string | null
+          id: string
+          metadata: Json | null
+          organization_id: string
+          platform: string
+          published_at: string
+          published_by: string
+          status: string
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string
+          error_message?: string | null
+          external_id?: string | null
+          external_url?: string | null
+          id?: string
+          metadata?: Json | null
+          organization_id: string
+          platform: string
+          published_at?: string
+          published_by: string
+          status?: string
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          error_message?: string | null
+          external_id?: string | null
+          external_url?: string | null
+          id?: string
+          metadata?: Json | null
+          organization_id?: string
+          platform?: string
+          published_at?: string
+          published_by?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publishing_history_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       repurposing_rules: {
         Row: {
           created_at: string | null
