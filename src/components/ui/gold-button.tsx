@@ -6,10 +6,11 @@ export interface GoldButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
 }
 
 const GoldButton = forwardRef<HTMLButtonElement, GoldButtonProps>(
-  ({ className, children, ...props }, ref) => {
+  ({ className, children, type = "button", ...props }, ref) => {
     return (
       <button
         ref={ref}
+        type={type}
         className={cn(
           "group relative flex items-center justify-center gap-2 whitespace-nowrap",
           "bg-[hsl(var(--aged-brass))] text-[hsl(var(--ink-black))]",

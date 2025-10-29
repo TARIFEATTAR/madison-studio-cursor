@@ -13,7 +13,9 @@ export interface EmailContent {
   template: string;
   title: string;
   subtitle?: string;
+  bodyHeader?: string;
   content: string;
+  contentAlignment?: 'left' | 'center' | 'right';
   ctaText?: string;
   ctaUrl?: string;
   ctaAlignment?: 'left' | 'center' | 'right';
@@ -272,10 +274,11 @@ export function generateNewsletterTemplate(content: EmailContent): string {
           <!-- Content -->
           <tr>
             <td class="content">
-              <div style="white-space: pre-wrap;">${content.content}</div>
+              ${content.bodyHeader ? `<h2>${content.bodyHeader}</h2>` : ''}
+              <div style="white-space: pre-wrap; text-align: ${content.contentAlignment || 'left'};">${content.content}</div>
               
               ${content.ctaText && content.ctaUrl ? `
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 30px 0;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 30px 0; width: 100%;">
                 <tr>
                   <td style="text-align: ${content.ctaAlignment || 'center'};">
                     <a href="${content.ctaUrl}" class="cta-button ${content.expandButtonOnMobile ? 'cta-button--full-mobile' : ''}">${content.ctaText}</a>
@@ -389,11 +392,12 @@ export function generateProductLaunchTemplate(content: EmailContent): string {
           
           <!-- Content -->
           <tr>
-            <td class="content" style="text-align: center;">
-              <div style="white-space: pre-wrap; text-align: left;">${content.content}</div>
+            <td class="content" style="text-align: ${content.contentAlignment || 'left'};">
+              ${content.bodyHeader ? `<h2 style=\"margin-top:0;\">${content.bodyHeader}</h2>` : ''}
+              <div style="white-space: pre-wrap; text-align: ${content.contentAlignment || 'left'};">${content.content}</div>
               
               ${content.ctaText && content.ctaUrl ? `
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 40px auto;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 40px auto; width: 100%;">
                 <tr>
                   <td style="text-align: ${content.ctaAlignment || 'center'};">
                     <a href="${content.ctaUrl}" class="cta-button ${content.expandButtonOnMobile ? 'cta-button--full-mobile' : ''}" style="font-size: 18px; padding: 18px 40px;">${content.ctaText}</a>

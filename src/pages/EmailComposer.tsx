@@ -222,6 +222,17 @@ export default function EmailComposer() {
             </div>
 
             {/* Header Image */}
+            <div className="space-y-2">
+              <Label htmlFor="bodyHeader" className="text-sm">Body Header (Optional)</Label>
+              <Input
+                id="bodyHeader"
+                value={composer.bodyHeader}
+                onChange={(e) => composer.setBodyHeader(e.target.value)}
+                placeholder="Section heading above the body copy"
+                className="bg-background"
+              />
+            </div>
+
             <ImagePicker
               value={composer.headerImage}
               onChange={composer.setHeaderImage}
@@ -238,6 +249,36 @@ export default function EmailComposer() {
                 className="min-h-[200px] bg-background"
                 required
               />
+            </div>
+
+            {/* Text Alignment */}
+            <div className="space-y-2">
+              <Label className="text-sm">Text Alignment</Label>
+              <Select value={composer.contentAlignment} onValueChange={(v) => composer.setContentAlignment(v as 'left' | 'center' | 'right')}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="left">
+                    <div className="flex items-center gap-2">
+                      <AlignLeft className="w-4 h-4" />
+                      Left
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="center">
+                    <div className="flex items-center gap-2">
+                      <AlignCenter className="w-4 h-4" />
+                      Center
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="right">
+                    <div className="flex items-center gap-2">
+                      <AlignRight className="w-4 h-4" />
+                      Right
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* CTA Section */}

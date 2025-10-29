@@ -33,6 +33,9 @@ export function useEmailComposer(initialContent?: Partial<EmailContent>) {
   const [contactUrl, setContactUrl] = useState(initialContent?.contactUrl || "");
   const [privacyUrl, setPrivacyUrl] = useState(initialContent?.privacyUrl || "");
   
+  // Content alignment and CTA options
+  const [contentAlignment, setContentAlignment] = useState<'left' | 'center' | 'right'>(initialContent?.contentAlignment || 'left');
+  const [bodyHeader, setBodyHeader] = useState(initialContent?.bodyHeader || "");
   // CTA Button alignment
   const [ctaAlignment, setCtaAlignment] = useState<'left' | 'center' | 'right'>(initialContent?.ctaAlignment || 'center');
   const [expandButtonOnMobile, setExpandButtonOnMobile] = useState(initialContent?.expandButtonOnMobile || false);
@@ -45,7 +48,9 @@ export function useEmailComposer(initialContent?: Partial<EmailContent>) {
       template: selectedTemplate,
       title,
       subtitle,
+      bodyHeader,
       content,
+      contentAlignment,
       ctaText,
       ctaUrl,
       ctaAlignment,
@@ -77,7 +82,9 @@ export function useEmailComposer(initialContent?: Partial<EmailContent>) {
     selectedTemplate,
     title,
     subtitle,
+    bodyHeader,
     content,
+    contentAlignment,
     ctaText,
     ctaUrl,
     ctaAlignment,
@@ -154,6 +161,10 @@ export function useEmailComposer(initialContent?: Partial<EmailContent>) {
     setContactUrl,
     privacyUrl,
     setPrivacyUrl,
+    bodyHeader,
+    setBodyHeader,
+    contentAlignment,
+    setContentAlignment,
     ctaAlignment,
     setCtaAlignment,
     expandButtonOnMobile,

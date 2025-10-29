@@ -172,7 +172,8 @@ export function generateLuxuryTemplate(content: EmailContent): string {
           <!-- Content -->
           <tr>
             <td class="luxury-content">
-              <div style="white-space: pre-wrap; text-align: center;">${content.content}</div>
+              ${content.bodyHeader ? `<h2 style=\"text-align: ${content.contentAlignment || 'left'};\">${content.bodyHeader}</h2>` : ''}
+              <div style="white-space: pre-wrap; text-align: ${content.contentAlignment || 'center'};">${content.content}</div>
             </td>
           </tr>
           
