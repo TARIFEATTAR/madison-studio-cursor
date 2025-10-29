@@ -66,8 +66,16 @@ export function PublishingDrawer({
         sourceTable,
         title: contentTitle,
       });
-      navigate(`/publish/email?${params.toString()}`);
+
+      // Close the drawer first to avoid overlay/focus lock, then navigate
       onOpenChange(false);
+      toast({
+        title: "Opening Email Composer",
+        description: "Configure your Klaviyo draft.",
+      });
+      requestAnimationFrame(() => {
+        navigate(`/publish/email?${params.toString()}`);
+      });
       return;
     }
 
