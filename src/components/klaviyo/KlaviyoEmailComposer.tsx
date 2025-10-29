@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogPortal, DialogOverlay } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -191,10 +191,7 @@ export function KlaviyoEmailComposer({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogPortal>
-        <DialogOverlay className="z-[90]" />
-      </DialogPortal>
-      <DialogContent className="z-[95] max-w-4xl max-h-[90vh] overflow-hidden flex flex-col" aria-describedby="klaviyo-composer-description">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col" aria-describedby="klaviyo-composer-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5" />
@@ -238,10 +235,10 @@ export function KlaviyoEmailComposer({
                 </div>
               ) : (
                 <Select value={selectedList} onValueChange={setSelectedList}>
-                  <SelectTrigger className="z-[75]">
+                  <SelectTrigger className="z-[1201]">
                     <SelectValue placeholder={`Select a Klaviyo ${audienceType}`} />
                   </SelectTrigger>
-                  <SelectContent className="z-[80] bg-popover text-popover-foreground border shadow-md">
+                  <SelectContent className="z-[1200] bg-popover text-popover-foreground border shadow-md">
                     {audienceType === "list" ? (
                       lists.map((list) => (
                         <SelectItem key={list.id} value={list.id}>
