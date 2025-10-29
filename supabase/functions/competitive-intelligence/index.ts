@@ -18,11 +18,21 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get all enabled organizations
-    const { data: enabledOrgs, error: orgsError } = await supabase
+    // Check if a specific organizationId was provided
+    const body = await req.json().catch(() => ({}));
+    const targetOrgId = body?.organizationId;
+
+    // Get enabled organizations (filter by targetOrgId if provided)
+    let query = supabase
       .from('agent_preferences')
       .select('organization_id, last_scan_at')
       .eq('competitive_intelligence_enabled', true);
+    
+    if (targetOrgId) {
+      query = query.eq('organization_id', targetOrgId);
+    }
+
+    const { data: enabledOrgs, error: orgsError } = await query;
 
     if (orgsError) throw orgsError;
 
