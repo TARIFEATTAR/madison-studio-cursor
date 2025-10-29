@@ -84,7 +84,6 @@ export function PublishingDrawer({
       }
 
       setContentText(text);
-      setShowKlaviyoComposer(true);
     } catch (error) {
       console.error("Error fetching content:", error);
       toast({
@@ -98,8 +97,10 @@ export function PublishingDrawer({
   };
 
   const handlePlatformToggle = (platformId: string) => {
-    // If Klaviyo is selected, fetch content and open the composer
+    // If Klaviyo is selected, close the drawer and open the composer on top
     if (platformId === "klaviyo") {
+      setShowKlaviyoComposer(true);
+      onOpenChange(false);
       fetchContentForEmail();
       return;
     }
@@ -110,6 +111,8 @@ export function PublishingDrawer({
         : [...prev, platformId]
     );
   };
+
+  
 
   const handleUrlChange = (platformId: string, url: string) => {
     setPlatformUrls((prev) => ({
