@@ -1,9 +1,10 @@
-import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu, ShoppingBag, Store, Image, Mail } from "lucide-react";
+import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu, ShoppingBag, Store, Image, Mail, ChevronDown, Palette, FolderOpen, BookOpen, HelpCircle } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useIsEcommerceOrg } from "@/hooks/useIndustryConfig";
+import { useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -16,6 +17,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Tooltip,
   TooltipContent,
@@ -31,62 +33,66 @@ export function AppSidebar() {
   const { toast } = useToast();
   const { isEcommerce, loading: isEcommerceLoading } = useIsEcommerceOrg();
 
-  // Build dynamic nav items based on industry
-  const navItems = [
-    { 
-      title: "Dashboard", 
-      url: "/dashboard", 
-      icon: Home 
+  // Collapsible state for each group
+  const [studioOpen, setStudioOpen] = useState(true);
+  const [libraryOpen, setLibraryOpen] = useState(true);
+  const [marketplaceOpen, setMarketplaceOpen] = useState(true);
+  const [resourcesOpen, setResourcesOpen] = useState(true);
+
+  // Grouped navigation structure
+  const navGroups = [
+    {
+      title: "Studio",
+      icon: Palette,
+      open: studioOpen,
+      setOpen: setStudioOpen,
+      items: [
+        { title: "Create", url: "/create", icon: Pencil },
+        { title: "Multiply", url: "/multiply", icon: Share2 },
+        { title: "Image Studio", url: "/image-editor", icon: Image },
+        { title: "Email Composer", url: "/email-composer", icon: Mail },
+      ]
     },
-    { 
-      title: "The Archives", 
-      url: "/library", 
-      icon: Archive 
+    {
+      title: "Library",
+      icon: FolderOpen,
+      open: libraryOpen,
+      setOpen: setLibraryOpen,
+      items: [
+        { title: "Dashboard", url: "/dashboard", icon: Home },
+        { title: "The Archives", url: "/library", icon: Archive },
+        { title: "Schedule", url: "/schedule", icon: Calendar },
+      ]
     },
-    { 
-      title: "Create", 
-      url: "/create", 
-      icon: Pencil 
+    ...(isEcommerce ? [{
+      title: "Marketplace",
+      icon: ShoppingBag,
+      open: marketplaceOpen,
+      setOpen: setMarketplaceOpen,
+      items: [
+        { title: "Marketplace", url: "/marketplace", icon: Store },
+        { title: "Listing Templates", url: "/marketplace-library", icon: FileText },
+        { title: "Image Recipes", url: "/templates", icon: BookOpen },
+      ]
+    }] : [{
+      title: "Resources",
+      icon: BookOpen,
+      open: resourcesOpen,
+      setOpen: setResourcesOpen,
+      items: [
+        { title: "Image Recipes", url: "/templates", icon: FileText },
+      ]
+    }]),
+    {
+      title: "Help",
+      icon: HelpCircle,
+      open: resourcesOpen,
+      setOpen: setResourcesOpen,
+      items: [
+        { title: "Meet Madison", url: "/meet-madison", icon: User },
+        { title: "Video Tutorials", url: "/help-center", icon: Video },
+      ]
     },
-    { 
-      title: "Multiply", 
-      url: "/multiply", 
-      icon: Share2 
-    },
-    { 
-      title: "Image Studio", 
-      url: "/image-editor", 
-      icon: Image 
-    },
-    { 
-      title: "Email Composer", 
-      url: "/email-composer", 
-      icon: Mail 
-    },
-    ...(isEcommerce ? [
-      { 
-        title: "Marketplace", 
-        url: "/marketplace", 
-        icon: ShoppingBag 
-      }
-    ] : []),
-    { 
-      title: "Schedule", 
-      url: "/schedule", 
-      icon: Calendar 
-    },
-    { 
-      title: "Image Recipes", 
-      url: "/templates", 
-      icon: FileText 
-    },
-    ...(isEcommerce ? [
-      { 
-        title: "Listing Templates", 
-        url: "/marketplace-library", 
-        icon: Store 
-      }
-    ] : []),
   ];
 
   const handleSignOut = async () => {
@@ -186,123 +192,93 @@ export function AppSidebar() {
           )}
         </SidebarHeader>
 
-        {/* Main Navigation */}
+        {/* Main Navigation - Grouped & Collapsible */}
         <SidebarContent>
-          <div className="px-2 py-4 space-y-1.5">
-            <SidebarMenu>
-              {navItems.map((item) => {
-                const isActiveRoute = isActive(item.url);
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      className={`
-                        group
-                        ${isActiveRoute 
-                          ? 'border-l-2 border-[hsl(38,33%,56%)] bg-white/8 text-white shadow-[inset_4px_0_8px_rgba(184,149,106,0.1)]' 
-                          : 'text-white/50 hover:text-white/80 hover:bg-white/5 hover:border-l-2 hover:border-[hsl(38,33%,56%)]/40'
-                        }
-                        ${open ? 'py-2.5 px-3' : 'h-12 justify-center'}
-                        transition-all duration-200
-                      `}
-                    >
-                      <NavLink 
-                        to={item.url} 
-                        onClick={(e) => {
-                          console.log(`AppSidebar → ${item.title.toLowerCase()} click`);
-                          if (isMobile) toggleSidebar();
-                        }}
-                      >
-                        <item.icon 
-                          strokeWidth={1}
-                          className={`w-6 h-6 shrink-0 transition-all duration-200 ${
-                            isActiveRoute
-                              ? 'text-[hsl(38,33%,56%)] drop-shadow-[0_0_6px_rgba(184,149,106,0.4)]'
-                              : 'text-white/50 group-hover:text-white/70 group-hover:drop-shadow-[0_0_4px_rgba(184,149,106,0.2)] group-hover:scale-105'
-                          }`} 
-                        />
-                        {open && (
-                          <div className="flex flex-col items-start gap-0.5">
-                            <span className="font-semibold text-sm tracking-wide">{item.title}</span>
-                          </div>
-                        )}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </div>
-
-          <Separator className="mx-4 bg-white/10" />
-
-          {/* Meet Madison & Video Tutorials */}
-          <div className="px-2 py-4 space-y-1.5">
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  className={`
-                    group
-                    ${isActive("/meet-madison") 
-                      ? 'border-l-2 border-[hsl(38,33%,56%)] bg-white/8 text-white shadow-[inset_4px_0_8px_rgba(184,149,106,0.1)]' 
-                      : 'text-white/50 hover:text-white/80 hover:bg-white/5 hover:border-l-2 hover:border-[hsl(38,33%,56%)]/40'
-                    }
-                    ${open ? 'py-2.5 px-3' : 'h-12 justify-center'}
-                    transition-all duration-200
-                  `}
-                >
-                  <NavLink to="/meet-madison" onClick={() => isMobile && toggleSidebar()}>
-                    <User 
-                      strokeWidth={1}
-                      className={`w-6 h-6 shrink-0 transition-all duration-200 ${
-                        isActive("/meet-madison")
-                          ? 'text-[hsl(38,33%,56%)] drop-shadow-[0_0_6px_rgba(184,149,106,0.4)]'
-                          : 'text-white/50 group-hover:text-white/70 group-hover:drop-shadow-[0_0_4px_rgba(184,149,106,0.2)] group-hover:scale-105'
-                      }`} 
-                    />
-                    {open && (
-                      <div className="flex flex-col items-start gap-0.5">
-                        <span className="font-semibold text-sm tracking-wide">Meet Madison</span>
-                        <span className="text-xs text-white/50">Editorial Director</span>
-                      </div>
-                    )}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+          <div className="px-2 py-4 space-y-2">
+            {navGroups.map((group) => {
+              const hasActiveChild = group.items.some(item => isActive(item.url));
               
-              <SidebarMenuItem className="mt-3">
-                <SidebarMenuButton
-                  asChild
-                  className={`
-                    group
-                    ${isActive("/help-center") 
-                      ? 'border-l-2 border-[hsl(38,33%,56%)] bg-white/8 text-white shadow-[inset_4px_0_8px_rgba(184,149,106,0.1)]' 
-                      : 'text-white/50 hover:text-white/80 hover:bg-white/5 hover:border-l-2 hover:border-[hsl(38,33%,56%)]/40'
-                    }
-                    ${open ? 'py-2.5 px-3' : 'h-12 justify-center'}
-                    transition-all duration-200
-                  `}
+              return (
+                <Collapsible
+                  key={group.title}
+                  open={group.open}
+                  onOpenChange={group.setOpen}
+                  className="space-y-1"
                 >
-                  <NavLink to="/help-center" onClick={() => isMobile && toggleSidebar()}>
-                    <Video 
-                      strokeWidth={1}
-                      className={`w-6 h-6 shrink-0 transition-all duration-200 ${
-                        isActive("/help-center")
-                          ? 'text-[hsl(38,33%,56%)] drop-shadow-[0_0_6px_rgba(184,149,106,0.4)]'
-                          : 'text-white/50 group-hover:text-white/70 group-hover:drop-shadow-[0_0_4px_rgba(184,149,106,0.2)] group-hover:scale-105'
-                      }`} 
-                    />
-                    {open && (
-                      <div className="flex flex-col items-start gap-0.5">
-                        <span className="font-semibold text-sm tracking-wide">Video Tutorials</span>
-                        <span className="text-xs text-white/60">Learn & Get Help</span>
-                      </div>
-                    )}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
+                  {/* Group Header */}
+                  <CollapsibleTrigger className="w-full">
+                    <div className={`
+                      flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200
+                      ${hasActiveChild 
+                        ? 'bg-white/5 text-[hsl(38,33%,56%)]' 
+                        : 'text-white/40 hover:text-white/70 hover:bg-white/5'
+                      }
+                      ${open ? '' : 'justify-center'}
+                    `}>
+                      <group.icon 
+                        strokeWidth={1}
+                        className={`w-5 h-5 shrink-0 ${hasActiveChild ? 'text-[hsl(38,33%,56%)]' : ''}`}
+                      />
+                      {open && (
+                        <>
+                          <span className="flex-1 text-left text-xs font-semibold uppercase tracking-wider">
+                            {group.title}
+                          </span>
+                          <ChevronDown 
+                            className={`w-4 h-4 transition-transform ${group.open ? 'rotate-180' : ''}`}
+                          />
+                        </>
+                      )}
+                    </div>
+                  </CollapsibleTrigger>
+
+                  {/* Group Items */}
+                  <CollapsibleContent className="space-y-1">
+                    <SidebarMenu>
+                      {group.items.map((item) => {
+                        const isActiveRoute = isActive(item.url);
+                        return (
+                          <SidebarMenuItem key={item.title}>
+                            <SidebarMenuButton
+                              asChild
+                              className={`
+                                group
+                                ${isActiveRoute 
+                                  ? 'border-l-2 border-[hsl(38,33%,56%)] bg-white/8 text-white shadow-[inset_4px_0_8px_rgba(184,149,106,0.1)]' 
+                                  : 'text-white/50 hover:text-white/80 hover:bg-white/5 hover:border-l-2 hover:border-[hsl(38,33%,56%)]/40'
+                                }
+                                ${open ? 'py-2 px-3 ml-4' : 'h-10 justify-center'}
+                                transition-all duration-200
+                              `}
+                            >
+                              <NavLink 
+                                to={item.url} 
+                                onClick={() => {
+                                  console.log(`AppSidebar → ${item.title.toLowerCase()} click`);
+                                  if (isMobile) toggleSidebar();
+                                }}
+                              >
+                                <item.icon 
+                                  strokeWidth={1}
+                                  className={`w-5 h-5 shrink-0 transition-all duration-200 ${
+                                    isActiveRoute
+                                      ? 'text-[hsl(38,33%,56%)] drop-shadow-[0_0_6px_rgba(184,149,106,0.4)]'
+                                      : 'text-white/50 group-hover:text-white/70 group-hover:drop-shadow-[0_0_4px_rgba(184,149,106,0.2)] group-hover:scale-105'
+                                  }`} 
+                                />
+                                {open && (
+                                  <span className="text-sm">{item.title}</span>
+                                )}
+                              </NavLink>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
+                    </SidebarMenu>
+                  </CollapsibleContent>
+                </Collapsible>
+              );
+            })}
           </div>
         </SidebarContent>
 
