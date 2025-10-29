@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useBrandColor } from "@/hooks/useBrandColor";
 import { useEmailComposer } from "@/hooks/useEmailComposer";
+import { useAutoSave } from "@/hooks/useAutoSave";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { GoldButton } from "@/components/ui/gold-button";
@@ -17,10 +18,12 @@ import { ImagePicker } from "@/components/email-composer/ImagePicker";
 import { EmailPreview } from "@/components/email-composer/EmailPreview";
 import { ContentPicker } from "@/components/email-composer/ContentPicker";
 import { KlaviyoEmailComposer } from "@/components/klaviyo/KlaviyoEmailComposer";
-import { ArrowLeft, Send, Download, Save, ChevronRight, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
+import { AutosaveIndicator } from "@/components/ui/autosave-indicator";
+import { ArrowLeft, Send, Download, Save, ChevronRight, AlignLeft, AlignCenter, AlignRight, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { serializeEmailState, deserializeEmailState } from "@/utils/emailStateSerializer";
 
 export default function EmailComposer() {
   const { user, loading: authLoading } = useAuth();
@@ -32,9 +35,25 @@ export default function EmailComposer() {
   const [showFooterOptions, setShowFooterOptions] = useState(false);
   const [showCtaOptions, setShowCtaOptions] = useState(false);
   const [showStyleOptions, setShowStyleOptions] = useState(false);
+  const [contentId, setContentId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const composer = useEmailComposer({
     brandColor: defaultBrandColor,
+  });
+
+  // Serialize email state for auto-save
+  const serializedContent = serializeEmailState({
+    ...composer,
+    template: composer.selectedTemplate,
+    generatedHtml: composer.generatedHtml
+  });
+
+  // Auto-save integration
+  const { saveStatus, lastSavedAt, forceSave } = useAutoSave({
+    content: serializedContent,
+    contentId: contentId || undefined,
+    contentName: composer.title || "Untitled Email",
   });
 
   useEffect(() => {
@@ -61,20 +80,74 @@ export default function EmailComposer() {
 
   const loadContent = async (contentId: string, sourceTable: string) => {
     try {
-      const { data, error } = await supabase
-        .from(sourceTable as any)
-        .select("title, content, image_url")
-        .eq("id", contentId)
-        .maybeSingle();
+      // For master_content, load the full serialized state
+      if (sourceTable === 'master_content') {
+        const { data, error } = await supabase
+          .from('master_content')
+          .select('id, title, full_content, collection')
+          .eq('id', contentId)
+          .maybeSingle();
 
-      if (error) throw error;
+        if (error) throw error;
 
-      if (data && typeof data === 'object') {
-        const content = data as { title?: string; content?: string; image_url?: string };
-        composer.setTitle(content.title || "");
-        composer.setContent(content.content || "");
-        if (content.image_url) {
-          composer.setHeaderImage(content.image_url);
+        if (data) {
+          setContentId(data.id);
+          
+          // Deserialize the full email state
+          if (data.full_content) {
+            const emailState = deserializeEmailState(data.full_content);
+            
+            // Restore all composer state
+            if (emailState.title) composer.setTitle(emailState.title);
+            if (emailState.subtitle) composer.setSubtitle(emailState.subtitle);
+            if (emailState.bodyHeader) composer.setBodyHeader(emailState.bodyHeader);
+            if (emailState.content) composer.setContent(emailState.content);
+            if (emailState.ctaText) composer.setCtaText(emailState.ctaText);
+            if (emailState.ctaUrl) composer.setCtaUrl(emailState.ctaUrl);
+            if (emailState.ctaAlignment) composer.setCtaAlignment(emailState.ctaAlignment);
+            if (emailState.expandButtonOnMobile !== undefined) composer.setExpandButtonOnMobile(emailState.expandButtonOnMobile);
+            if (emailState.headerImage) composer.setHeaderImage(emailState.headerImage);
+            if (emailState.brandColor) composer.setBrandColor(emailState.brandColor);
+            if (emailState.secondaryColor) composer.setSecondaryColor(emailState.secondaryColor);
+            if (emailState.fontFamily) composer.setFontFamily(emailState.fontFamily);
+            if (emailState.buttonColor) composer.setButtonColor(emailState.buttonColor);
+            if (emailState.buttonTextColor) composer.setButtonTextColor(emailState.buttonTextColor);
+            if (emailState.textColor) composer.setTextColor(emailState.textColor);
+            if (emailState.contentAlignment) composer.setContentAlignment(emailState.contentAlignment);
+            if (emailState.footerText) composer.setFooterText(emailState.footerText);
+            if (emailState.footerBackgroundColor) composer.setFooterBackgroundColor(emailState.footerBackgroundColor);
+            if (emailState.footerTextColor) composer.setFooterTextColor(emailState.footerTextColor);
+            if (emailState.footerLinkColor) composer.setFooterLinkColor(emailState.footerLinkColor);
+            if (emailState.footerTagline) composer.setFooterTagline(emailState.footerTagline);
+            if (emailState.companyAddress) composer.setCompanyAddress(emailState.companyAddress);
+            if (emailState.instagramUrl) composer.setInstagramUrl(emailState.instagramUrl);
+            if (emailState.facebookUrl) composer.setFacebookUrl(emailState.facebookUrl);
+            if (emailState.shopUrl) composer.setShopUrl(emailState.shopUrl);
+            if (emailState.aboutUrl) composer.setAboutUrl(emailState.aboutUrl);
+            if (emailState.contactUrl) composer.setContactUrl(emailState.contactUrl);
+            if (emailState.privacyUrl) composer.setPrivacyUrl(emailState.privacyUrl);
+            if (emailState.template) composer.setSelectedTemplate(emailState.template);
+          }
+          
+          toast.success("Email loaded from Library");
+        }
+      } else {
+        // Legacy support for other tables
+        const { data, error } = await supabase
+          .from(sourceTable as any)
+          .select("title, content, image_url")
+          .eq("id", contentId)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (data && typeof data === 'object') {
+          const content = data as { title?: string; content?: string; image_url?: string };
+          composer.setTitle(content.title || "");
+          composer.setContent(content.content || "");
+          if (content.image_url) {
+            composer.setHeaderImage(content.image_url);
+          }
         }
       }
     } catch (error) {
@@ -83,9 +156,9 @@ export default function EmailComposer() {
     }
   };
 
-  const handleSendToKlaviyo = () => {
-    if (!organizationId) {
-      toast.error("No organization found");
+  const handleSendToKlaviyo = async () => {
+    if (!organizationId || !user) {
+      toast.error("Must be logged in to send");
       return;
     }
 
@@ -97,6 +170,38 @@ export default function EmailComposer() {
     if (!composer.content.trim()) {
       toast.error("Please add email content");
       return;
+    }
+
+    // Save email first before sending
+    if (!contentId) {
+      try {
+        const serializedState = serializeEmailState({
+          ...composer,
+          template: composer.selectedTemplate,
+          generatedHtml: composer.generatedHtml
+        });
+
+        const { data, error } = await supabase
+          .from('master_content')
+          .insert({
+            title: composer.title,
+            full_content: serializedState,
+            collection: composer.selectedTemplate,
+            content_type: 'Email',
+            organization_id: organizationId,
+            created_by: user.id,
+            status: 'ready'
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        setContentId(data.id);
+      } catch (error) {
+        console.error("Error saving email before send:", error);
+        toast.error("Failed to save email");
+        return;
+      }
     }
 
     // Open the Klaviyo modal with pre-filled data
@@ -117,9 +222,83 @@ export default function EmailComposer() {
   };
 
   const handleSaveDraft = async () => {
-    toast.success("Draft saved to Madison", {
-      description: "You can access your saved drafts from the Library",
-    });
+    if (!organizationId || !user) {
+      toast.error("Must be logged in to save");
+      return;
+    }
+
+    if (!composer.title.trim()) {
+      toast.error("Please add an email title before saving");
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const serializedState = serializeEmailState({
+        ...composer,
+        template: composer.selectedTemplate,
+        generatedHtml: composer.generatedHtml
+      });
+
+      if (contentId) {
+        // Update existing email
+        const { error } = await supabase
+          .from('master_content')
+          .update({
+            title: composer.title,
+            full_content: serializedState,
+            collection: composer.selectedTemplate,
+            content_type: 'Email',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', contentId);
+
+        if (error) throw error;
+
+        await forceSave(); // Trigger auto-save to sync
+        
+        toast.success("Email updated", {
+          description: "Changes saved successfully",
+          action: {
+            label: "View in Library",
+            onClick: () => navigate('/library?type=Email')
+          }
+        });
+      } else {
+        // Create new email
+        const { data, error } = await supabase
+          .from('master_content')
+          .insert({
+            title: composer.title,
+            full_content: serializedState,
+            collection: composer.selectedTemplate,
+            content_type: 'Email',
+            organization_id: organizationId,
+            created_by: user.id,
+            status: 'draft'
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        setContentId(data.id);
+        
+        toast.success("Email saved to Library", {
+          description: "You can access it anytime from the Library",
+          action: {
+            label: "View in Library",
+            onClick: () => navigate('/library?type=Email')
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Error saving email:", error);
+      toast.error("Failed to save email");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -137,7 +316,14 @@ export default function EmailComposer() {
             <span className="hidden sm:inline">Back</span>
           </Button>
           <div className="min-w-0">
-            <h1 className="text-lg md:text-xl font-semibold text-foreground truncate">Email Composer</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg md:text-xl font-semibold text-foreground truncate">Email Composer</h1>
+              <AutosaveIndicator 
+                saveStatus={saveStatus} 
+                lastSavedAt={lastSavedAt}
+                className="hidden md:flex"
+              />
+            </div>
             <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">
               Create beautiful, responsive emails with Madison
             </p>
@@ -171,10 +357,22 @@ export default function EmailComposer() {
             size="sm"
             onClick={handleSaveDraft}
             className="gap-2 text-xs md:text-sm"
+            disabled={isSaving}
           >
             <Save className="w-4 h-4" />
-            <span className="hidden sm:inline">Save</span>
+            <span className="hidden sm:inline">{isSaving ? 'Saving...' : 'Save'}</span>
           </Button>
+          {contentId && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(`/library?highlight=${contentId}`)}
+              className="gap-2 text-xs md:text-sm"
+            >
+              <ExternalLink className="w-4 h-4" />
+              <span className="hidden sm:inline">View in Library</span>
+            </Button>
+          )}
           <GoldButton
             onClick={handleSendToKlaviyo}
             className="gap-2 text-xs md:text-sm px-4 md:px-6"
@@ -546,6 +744,21 @@ export default function EmailComposer() {
         onOpenChange={setShowKlaviyoModal}
         initialHtml={composer.generatedHtml}
         initialTitle={composer.title}
+        contentId={contentId || undefined}
+        onSendSuccess={async () => {
+          // Mark as sent in database
+          if (contentId) {
+            await supabase
+              .from('master_content')
+              .update({
+                status: 'sent',
+                published_at: new Date().toISOString(),
+              })
+              .eq('id', contentId);
+            
+            toast.success("Email status updated");
+          }
+        }}
       />
     </div>
   );

@@ -34,6 +34,7 @@ interface KlaviyoEmailComposerProps {
   initialContent?: string;
   initialTitle?: string;
   initialHtml?: string;
+  onSendSuccess?: () => void | Promise<void>;
 }
 
 export function KlaviyoEmailComposer({
@@ -43,6 +44,7 @@ export function KlaviyoEmailComposer({
   initialContent = "",
   initialTitle = "",
   initialHtml,
+  onSendSuccess,
 }: KlaviyoEmailComposerProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -168,6 +170,11 @@ export function KlaviyoEmailComposer({
       });
 
       if (error) throw error;
+
+      // Call success callback to update database
+      if (onSendSuccess) {
+        await onSendSuccess();
+      }
 
       toast.success("Draft campaign created in Klaviyo!", {
         description: "Review and send from your Klaviyo dashboard.",
