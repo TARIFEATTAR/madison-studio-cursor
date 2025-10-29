@@ -100,7 +100,6 @@ export function PublishingDrawer({
     // If Klaviyo is selected, close the drawer and open the composer on top
     if (platformId === "klaviyo") {
       setShowKlaviyoComposer(true);
-      onOpenChange(false);
       fetchContentForEmail();
       return;
     }
@@ -259,7 +258,9 @@ export function PublishingDrawer({
                       ? "bg-primary/5 border-primary"
                       : "hover:bg-muted/50"
                   )}
-                  onClick={() => handlePlatformToggle(platform.id)}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePlatformToggle(platform.id); }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
                 >
                   <Checkbox
                     id={platform.id}
@@ -267,10 +268,12 @@ export function PublishingDrawer({
                     onCheckedChange={() => {}}
                     className="shrink-0"
                     disabled={platform.id === "klaviyo" && loadingContent}
+                    onClick={(e) => e.stopPropagation()}
                   />
                   <label
                     htmlFor={platform.id}
                     className="flex-1 text-sm font-medium cursor-pointer truncate"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <span className="mr-1">{platform.icon}</span>
                     <span className="truncate">{platform.label}</span>
