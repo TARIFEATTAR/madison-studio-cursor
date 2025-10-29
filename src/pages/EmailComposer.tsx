@@ -16,8 +16,10 @@ import { StyleCustomizer } from "@/components/email-composer/StyleCustomizer";
 import { ImagePicker } from "@/components/email-composer/ImagePicker";
 import { EmailPreview } from "@/components/email-composer/EmailPreview";
 import { ContentPicker } from "@/components/email-composer/ContentPicker";
-import { ArrowLeft, Send, Download, Save, ChevronRight } from "lucide-react";
+import { ArrowLeft, Send, Download, Save, ChevronRight, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 export default function EmailComposer() {
   const { user, loading: authLoading } = useAuth();
@@ -258,7 +260,7 @@ export default function EmailComposer() {
               </div>
               
               {showCtaOptions && (
-                <div className="space-y-3 pl-6">
+                <div className="space-y-4 pl-6">
                   <div className="space-y-2">
                     <Label htmlFor="cta-text" className="text-sm">Button Text</Label>
                     <Input
@@ -278,6 +280,84 @@ export default function EmailComposer() {
                       onChange={(e) => composer.setCtaUrl(e.target.value)}
                       placeholder="https://example.com"
                       className="bg-background"
+                    />
+                  </div>
+                  
+                  {/* Button Colors */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Button Background Color</Label>
+                    <div className="flex gap-2">
+                      <input 
+                        type="color" 
+                        value={composer.buttonColor || composer.brandColor} 
+                        onChange={(e) => composer.setButtonColor(e.target.value)} 
+                        className="w-12 h-10 rounded cursor-pointer border border-border" 
+                      />
+                      <Input 
+                        type="text" 
+                        value={composer.buttonColor || composer.brandColor} 
+                        onChange={(e) => composer.setButtonColor(e.target.value)} 
+                        className="bg-background" 
+                        placeholder={composer.brandColor} 
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm">Button Text Color</Label>
+                    <div className="flex gap-2">
+                      <input 
+                        type="color" 
+                        value={composer.buttonTextColor || '#ffffff'} 
+                        onChange={(e) => composer.setButtonTextColor(e.target.value)} 
+                        className="w-12 h-10 rounded cursor-pointer border border-border" 
+                      />
+                      <Input 
+                        type="text" 
+                        value={composer.buttonTextColor || '#ffffff'} 
+                        onChange={(e) => composer.setButtonTextColor(e.target.value)} 
+                        className="bg-background" 
+                        placeholder="#ffffff" 
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Button Alignment */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Button Alignment</Label>
+                    <Select value={composer.ctaAlignment} onValueChange={(value) => composer.setCtaAlignment(value as 'left' | 'center' | 'right')}>
+                      <SelectTrigger className="bg-background">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="left">
+                          <div className="flex items-center gap-2">
+                            <AlignLeft className="w-4 h-4" />
+                            Left
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="center">
+                          <div className="flex items-center gap-2">
+                            <AlignCenter className="w-4 h-4" />
+                            Center
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="right">
+                          <div className="flex items-center gap-2">
+                            <AlignRight className="w-4 h-4" />
+                            Right
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Mobile Expansion */}
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Expand button on mobile</Label>
+                    <Switch 
+                      checked={composer.expandButtonOnMobile} 
+                      onCheckedChange={composer.setExpandButtonOnMobile}
                     />
                   </div>
                 </div>
@@ -300,25 +380,17 @@ export default function EmailComposer() {
                     brandColor={composer.brandColor}
                     secondaryColor={composer.secondaryColor}
                     fontFamily={composer.fontFamily}
-                    buttonColor={composer.buttonColor}
-                    buttonTextColor={composer.buttonTextColor}
                     textColor={composer.textColor}
                     footerBackgroundColor={composer.footerBackgroundColor}
                     footerTextColor={composer.footerTextColor}
                     footerLinkColor={composer.footerLinkColor}
-                    ctaAlignment={composer.ctaAlignment}
-                    expandButtonOnMobile={composer.expandButtonOnMobile}
                     onBrandColorChange={composer.setBrandColor}
                     onSecondaryColorChange={composer.setSecondaryColor}
                     onFontChange={composer.setFontFamily}
-                    onButtonColorChange={composer.setButtonColor}
-                    onButtonTextColorChange={composer.setButtonTextColor}
                     onTextColorChange={composer.setTextColor}
                     onFooterBackgroundColorChange={composer.setFooterBackgroundColor}
                     onFooterTextColorChange={composer.setFooterTextColor}
                     onFooterLinkColorChange={composer.setFooterLinkColor}
-                    onCtaAlignmentChange={composer.setCtaAlignment}
-                    onExpandButtonOnMobileChange={composer.setExpandButtonOnMobile}
                   />
                 </div>
               )}
