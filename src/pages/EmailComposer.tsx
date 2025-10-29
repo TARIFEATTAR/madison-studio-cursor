@@ -48,13 +48,36 @@ export default function EmailComposer() {
         .eq("user_id", user.id)
         .maybeSingle();
 
-      if (!memberData?.organization_id) {
-        toast.error("No organization found");
-        navigate("/library");
+      let orgId = (memberData?.organization_id as string) || null;
+
+      if (!orgId) {
+        // Fallback: find organization created by the user and ensure membership
+        const { data: userOrg } = await supabase
+          .from("organizations")
+          .select("id")
+          .eq("created_by", user.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (userOrg?.id) {
+          orgId = userOrg.id;
+          // Ensure membership exists (ignore duplicates)
+          await supabase
+            .from("organization_members")
+            .upsert(
+              { organization_id: orgId, user_id: user.id, role: "owner" },
+              { onConflict: "user_id,organization_id", ignoreDuplicates: true }
+            );
+        }
+      }
+
+      if (!orgId) {
+        toast.error("No workspace found. Please complete onboarding.");
+        setOrganizationId(null);
         return;
       }
 
-      setOrganizationId(memberData.organization_id);
+      setOrganizationId(orgId);
 
       // Load content if contentId is provided
       const contentId = searchParams.get("contentId");
