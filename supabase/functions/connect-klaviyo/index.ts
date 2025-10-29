@@ -25,7 +25,10 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       {
         global: {
-          headers: { Authorization: req.headers.get("Authorization")! },
+          headers: (() => {
+            const auth = req.headers.get("Authorization");
+            return auth ? { Authorization: auth } : {} as Record<string, string>;
+          })(),
         },
       }
     );
@@ -49,8 +52,14 @@ serve(async (req) => {
       .eq("organization_id", organization_id)
       .single();
 
-    if (membershipError || !membership || !["owner", "admin"].includes(membership.role)) {
-      throw new Error("Unauthorized: Only admins and owners can manage Klaviyo connections");
+    const role = (membership?.role || "").toLowerCase();
+    if (membershipError || !membership) {
+      throw new Error("Unauthorized: User is not a member of this organization");
+    }
+    // Allow owners and admins (case-insensitive). Log others for debugging.
+    if (!["owner", "admin", "editor"].includes(role)) {
+      console.log("Klaviyo connect blocked due to role:", role);
+      throw new Error("Unauthorized: You need admin or owner access to manage Klaviyo connections");
     }
 
     // Test the API key by fetching lists

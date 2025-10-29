@@ -30,9 +30,13 @@ export const KlaviyoConnection = () => {
         .from("organization_members")
         .select("organization_id")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
-      if (membershipError) throw membershipError;
+      if (membershipError && membershipError.code !== "PGRST116") throw membershipError;
+      if (!membership) {
+        setIsLoading(false);
+        return;
+      }
 
       setOrganizationId(membership.organization_id);
 
@@ -79,15 +83,21 @@ export const KlaviyoConnection = () => {
         },
       });
 
-      if (error) throw error;
+      if (error || (data as any)?.error) {
+        const serverMsg = (data as any)?.error || (error as any)?.message || "Failed to connect Klaviyo";
+        console.error("Klaviyo connect error:", { error, data });
+        toast.error(serverMsg);
+        return;
+      }
 
-      if (data.success) {
+      if ((data as any)?.success) {
         setIsConnected(true);
-        setListCount(data.list_count);
+        setListCount((data as any).list_count);
         setApiKey("");
         toast.success("Klaviyo connected successfully!");
       } else {
-        throw new Error(data.error || "Failed to connect Klaviyo");
+        const msg = (data as any)?.message || "Failed to connect Klaviyo";
+        toast.error(msg);
       }
     } catch (error: any) {
       console.error("Error connecting Klaviyo:", error);
