@@ -33,11 +33,17 @@ export function AppSidebar() {
   const { toast } = useToast();
   const { isEcommerce, loading: isEcommerceLoading } = useIsEcommerceOrg();
 
-  // Collapsible state for each group
-  const [studioOpen, setStudioOpen] = useState(true);
-  const [libraryOpen, setLibraryOpen] = useState(true);
-  const [marketplaceOpen, setMarketplaceOpen] = useState(true);
-  const [resourcesOpen, setResourcesOpen] = useState(true);
+  // Collapsible state for each group (closed by default)
+  const [studioOpen, setStudioOpen] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  const [marketplaceOpen, setMarketplaceOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+
+  // Top-level nav items (always visible)
+  const topLevelItems = [
+    { title: "Dashboard", url: "/dashboard", icon: Home },
+    { title: "Schedule", url: "/schedule", icon: Calendar },
+  ];
 
   // Grouped navigation structure
   const navGroups = [
@@ -59,9 +65,8 @@ export function AppSidebar() {
       open: libraryOpen,
       setOpen: setLibraryOpen,
       items: [
-        { title: "Dashboard", url: "/dashboard", icon: Home },
         { title: "The Archives", url: "/library", icon: Archive },
-        { title: "Schedule", url: "/schedule", icon: Calendar },
+        { title: "Image Recipes", url: "/templates", icon: BookOpen },
       ]
     },
     ...(isEcommerce ? [{
@@ -72,22 +77,13 @@ export function AppSidebar() {
       items: [
         { title: "Marketplace", url: "/marketplace", icon: Store },
         { title: "Listing Templates", url: "/marketplace-library", icon: FileText },
-        { title: "Image Recipes", url: "/templates", icon: BookOpen },
       ]
-    }] : [{
-      title: "Resources",
-      icon: BookOpen,
-      open: resourcesOpen,
-      setOpen: setResourcesOpen,
-      items: [
-        { title: "Image Recipes", url: "/templates", icon: FileText },
-      ]
-    }]),
+    }] : []),
     {
       title: "Help",
       icon: HelpCircle,
-      open: resourcesOpen,
-      setOpen: setResourcesOpen,
+      open: helpOpen,
+      setOpen: setHelpOpen,
       items: [
         { title: "Meet Madison", url: "/meet-madison", icon: User },
         { title: "Video Tutorials", url: "/help-center", icon: Video },
@@ -192,8 +188,56 @@ export function AppSidebar() {
           )}
         </SidebarHeader>
 
-        {/* Main Navigation - Grouped & Collapsible */}
+        {/* Main Navigation */}
         <SidebarContent>
+          {/* Top-level items: Dashboard & Schedule */}
+          <div className="px-2 pt-4 pb-2 space-y-1">
+            <SidebarMenu>
+              {topLevelItems.map((item) => {
+                const isActiveRoute = isActive(item.url);
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      className={`
+                        group
+                        ${isActiveRoute 
+                          ? 'border-l-2 border-[hsl(38,33%,56%)] bg-white/8 text-white shadow-[inset_4px_0_8px_rgba(184,149,106,0.1)]' 
+                          : 'text-white/50 hover:text-white/80 hover:bg-white/5 hover:border-l-2 hover:border-[hsl(38,33%,56%)]/40'
+                        }
+                        ${open ? 'py-2.5 px-3' : 'h-12 justify-center'}
+                        transition-all duration-200
+                      `}
+                    >
+                      <NavLink 
+                        to={item.url} 
+                        onClick={() => {
+                          console.log(`AppSidebar → ${item.title.toLowerCase()} click`);
+                          if (isMobile) toggleSidebar();
+                        }}
+                      >
+                        <item.icon 
+                          strokeWidth={1}
+                          className={`w-6 h-6 shrink-0 transition-all duration-200 ${
+                            isActiveRoute
+                              ? 'text-[hsl(38,33%,56%)] drop-shadow-[0_0_6px_rgba(184,149,106,0.4)]'
+                              : 'text-white/50 group-hover:text-white/70 group-hover:drop-shadow-[0_0_4px_rgba(184,149,106,0.2)] group-hover:scale-105'
+                          }`} 
+                        />
+                        {open && (
+                          <span className="font-semibold text-sm tracking-wide">{item.title}</span>
+                        )}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </div>
+
+          <Separator className="mx-4 bg-white/10" />
+
+          {/* Collapsible Groups */}
           <div className="px-2 py-4 space-y-2">
             {navGroups.map((group) => {
               const hasActiveChild = group.items.some(item => isActive(item.url));
