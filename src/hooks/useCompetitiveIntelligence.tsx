@@ -103,7 +103,7 @@ export function useCompetitiveIntelligence(organizationId: string | null) {
         .upsert({
           organization_id: organizationId,
           competitive_intelligence_enabled: enabled,
-        });
+        }, { onConflict: 'organization_id' });
 
       if (error) throw error;
       
