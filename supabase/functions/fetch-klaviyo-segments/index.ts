@@ -59,42 +59,42 @@ serve(async (req) => {
 
     const apiKey = decryptApiKey(connection.api_key_encrypted, encryptionKey);
 
-    // Fetch lists from Klaviyo
-    const response = await fetch("https://a.klaviyo.com/api/lists/?page[size]=50", {
+    // Fetch segments from Klaviyo
+    const response = await fetch("https://a.klaviyo.com/api/segments/", {
+      method: "GET",
       headers: {
         "Authorization": `Klaviyo-API-Key ${apiKey}`,
         "revision": "2024-10-15",
-        "Accept": "application/json",
       },
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Klaviyo API error:", errorText);
-      throw new Error("Failed to fetch Klaviyo lists");
+      console.error("Klaviyo segments fetch error:", errorText);
+      throw new Error("Failed to fetch Klaviyo segments");
     }
 
-    const listsData = await response.json();
+    const data = await response.json();
     
-    // Transform the data to a simpler format
-    const lists = listsData.data.map((list: any) => ({
-      id: list.id,
-      name: list.attributes.name,
-      profile_count: list.attributes.profile_count || 0,
-      created: list.attributes.created,
+    // Simplify the segment data
+    const segments = data.data.map((segment: any) => ({
+      id: segment.id,
+      name: segment.attributes.name,
+      profile_count: segment.attributes.profile_count || 0,
+      is_active: segment.attributes.is_active,
     }));
 
-    console.log(`Fetched ${lists.length} Klaviyo lists for organization ${organization_id}`);
+    console.log(`Fetched ${segments.length} Klaviyo segments`);
 
     return new Response(
-      JSON.stringify({ lists }),
+      JSON.stringify({ segments }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       }
     );
   } catch (error: any) {
-    console.error("Error in fetch-klaviyo-lists function:", error);
+    console.error("Error in fetch-klaviyo-segments function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

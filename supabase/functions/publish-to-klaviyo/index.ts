@@ -67,7 +67,7 @@ serve(async (req) => {
 
     const apiKey = decryptApiKey(connection.api_key_encrypted, encryptionKey);
 
-    // Create a campaign in Klaviyo
+    // Create a DRAFT campaign in Klaviyo (no send_strategy = draft)
     const campaignPayload = {
       data: {
         type: "campaign",
@@ -76,14 +76,7 @@ serve(async (req) => {
           audiences: {
             included: [list_id]
           },
-          send_strategy: {
-            method: "static",
-            options_static: {
-              datetime: new Date(Date.now() + 60000).toISOString(), // 1 minute from now
-              is_local: false,
-              send_past_recipients_immediately: false
-            }
-          },
+          // Omit send_strategy to create a draft campaign
           campaign_messages: {
             data: [{
               type: "campaign-message",
@@ -172,7 +165,7 @@ serve(async (req) => {
           external_url: `https://www.klaviyo.com/campaign/${campaignId}`,
           published_by: user.id,
           organization_id,
-          status: "scheduled",
+          status: "draft",
           metadata: {
             list_id,
             message_id: messageId,
@@ -197,7 +190,7 @@ serve(async (req) => {
         status: 200,
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in publish-to-klaviyo function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),

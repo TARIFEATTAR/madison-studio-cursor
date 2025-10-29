@@ -18,6 +18,15 @@ interface KlaviyoList {
   profile_count: number;
 }
 
+interface KlaviyoSegment {
+  id: string;
+  name: string;
+  profile_count: number;
+  is_active: boolean;
+}
+
+type AudienceType = "list" | "segment";
+
 interface KlaviyoEmailComposerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -36,8 +45,10 @@ export function KlaviyoEmailComposer({
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [lists, setLists] = useState<KlaviyoList[]>([]);
-  const [loadingLists, setLoadingLists] = useState(false);
+  const [segments, setSegments] = useState<KlaviyoSegment[]>([]);
+  const [loadingAudiences, setLoadingAudiences] = useState(false);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [audienceType, setAudienceType] = useState<AudienceType>("list");
 
   const [subject, setSubject] = useState(initialTitle);
   const [previewText, setPreviewText] = useState("");
@@ -67,7 +78,7 @@ export function KlaviyoEmailComposer({
         .from("organization_members")
         .select("organization_id")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (!membership) {
         toast.error("Organization not found");
@@ -89,22 +100,32 @@ export function KlaviyoEmailComposer({
         return;
       }
 
-      // Fetch lists
-      setLoadingLists(true);
-      const { data, error } = await supabase.functions.invoke("fetch-klaviyo-lists", {
-        body: { organization_id: membership.organization_id },
-      });
+      // Fetch both lists and segments in parallel
+      setLoadingAudiences(true);
+      const [listsResult, segmentsResult] = await Promise.all([
+        supabase.functions.invoke("fetch-klaviyo-lists", {
+          body: { organization_id: membership.organization_id },
+        }),
+        supabase.functions.invoke("fetch-klaviyo-segments", {
+          body: { organization_id: membership.organization_id },
+        }),
+      ]);
 
-      if (error) throw error;
+      if (listsResult.error) throw listsResult.error;
+      if (segmentsResult.error) throw segmentsResult.error;
 
-      if (data.lists) {
-        setLists(data.lists);
+      if (listsResult.data?.lists) {
+        setLists(listsResult.data.lists);
+      }
+      
+      if (segmentsResult.data?.segments) {
+        setSegments(segmentsResult.data.segments.filter((s: KlaviyoSegment) => s.is_active));
       }
     } catch (error: any) {
       console.error("Error loading Klaviyo data:", error);
-      toast.error("Failed to load Klaviyo lists");
+      toast.error("Failed to load Klaviyo audiences");
     } finally {
-      setLoadingLists(false);
+      setLoadingAudiences(false);
     }
   };
 
@@ -155,8 +176,8 @@ export function KlaviyoEmailComposer({
 
       if (error) throw error;
 
-      toast.success("Email campaign created in Klaviyo!", {
-        description: "Your email has been scheduled to send in 1 minute.",
+      toast.success("Draft campaign created in Klaviyo!", {
+        description: "Review and send from your Klaviyo dashboard.",
       });
 
       onOpenChange(false);
@@ -188,25 +209,46 @@ export function KlaviyoEmailComposer({
           </TabsList>
 
           <TabsContent value="compose" className="flex-1 overflow-y-auto space-y-4 mt-4">
-            {/* List Selection */}
+            {/* Audience Type Selection */}
             <div className="space-y-2">
-              <Label htmlFor="list">Send to List</Label>
-              {loadingLists ? (
+              <Label>Audience Type</Label>
+              <Tabs value={audienceType} onValueChange={(v) => setAudienceType(v as AudienceType)}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="list">Lists</TabsTrigger>
+                  <TabsTrigger value="segment">Segments</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
+            {/* Audience Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="audience">
+                {audienceType === "list" ? "Select List" : "Select Segment"}
+              </Label>
+              {loadingAudiences ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading lists...
+                  Loading audiences...
                 </div>
               ) : (
                 <Select value={selectedList} onValueChange={setSelectedList}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a Klaviyo list" />
+                    <SelectValue placeholder={`Select a Klaviyo ${audienceType}`} />
                   </SelectTrigger>
                   <SelectContent>
-                    {lists.map((list) => (
-                      <SelectItem key={list.id} value={list.id}>
-                        {list.name} ({list.profile_count.toLocaleString()} subscribers)
-                      </SelectItem>
-                    ))}
+                    {audienceType === "list" ? (
+                      lists.map((list) => (
+                        <SelectItem key={list.id} value={list.id}>
+                          {list.name} ({list.profile_count.toLocaleString()} subscribers)
+                        </SelectItem>
+                      ))
+                    ) : (
+                      segments.map((segment) => (
+                        <SelectItem key={segment.id} value={segment.id}>
+                          {segment.name} ({segment.profile_count.toLocaleString()} profiles)
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               )}
@@ -295,7 +337,7 @@ export function KlaviyoEmailComposer({
           </Button>
           <Button onClick={handleSend} disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Send to Klaviyo
+            Create Draft in Klaviyo
           </Button>
         </div>
       </DialogContent>
