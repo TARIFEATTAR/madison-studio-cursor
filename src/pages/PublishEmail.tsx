@@ -67,7 +67,8 @@ export default function PublishEmail() {
           .from("organization_members")
           .select("organization_id")
           .eq("user_id", user.id)
-          .single();
+          .limit(1)
+          .maybeSingle();
 
         if (!orgMember) {
           toast({
@@ -110,7 +111,10 @@ export default function PublishEmail() {
   // Load content
   useEffect(() => {
     const loadContent = async () => {
-      if (!contentId || !sourceTable) return;
+        if (!contentId || !sourceTable) {
+          setLoading(false);
+          return;
+        }
 
       try {
         const { data, error } = await supabase
@@ -325,6 +329,15 @@ export default function PublishEmail() {
             Campaigns are created as <strong>Drafts</strong> in Klaviyo. You can review and send them from Klaviyo → Campaigns.
           </AlertDescription>
         </Alert>
+
+        {!contentId && (
+          <Alert className="mb-6" variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              No source content was provided. You can still compose your email below manually.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Tabs defaultValue="compose" className="space-y-6">
           <TabsList className="grid w-full max-w-md grid-cols-2">
