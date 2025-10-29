@@ -11,13 +11,12 @@ const GoldButton = forwardRef<HTMLButtonElement, GoldButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "group relative overflow-hidden",
+          "group relative flex items-center justify-center gap-2 whitespace-nowrap",
           "bg-[hsl(var(--aged-brass))] text-[hsl(var(--ink-black))]",
-          "px-7 py-3 rounded-md min-h-[44px]",
-          "font-serif font-semibold tracking-wide text-base",
+          "px-6 md:px-7 h-10 rounded-md",
+          "font-serif font-semibold text-base leading-none",
           "border-none cursor-pointer",
-          "flex items-center justify-center",
-          "transition-all duration-300 ease-out",
+          "transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--aged-brass))] focus-visible:ring-offset-2 focus-visible:ring-offset-card",
           "hover:-translate-y-0.5",
           "hover:shadow-[0_4px_14px_rgba(184,149,106,0.4)]",
           className

@@ -151,6 +151,17 @@ const getBaseStyles = (
     margin: 30px 0;
     transition: all 0.3s ease;
   }
+  .cta-button--full-mobile {
+    /* becomes full-width on mobile */
+  }
+  @media only screen and (max-width: 600px) {
+    .cta-button--full-mobile {
+      width: 100% !important;
+      display: block !important;
+      box-sizing: border-box;
+      text-align: center !important;
+    }
+  }
   .cta-button-outline {
     background-color: transparent;
     color: ${buttonColor || brandColor};
@@ -266,8 +277,8 @@ export function generateNewsletterTemplate(content: EmailContent): string {
               ${content.ctaText && content.ctaUrl ? `
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 30px 0;">
                 <tr>
-                  <td style="text-align: center;">
-                    <a href="${content.ctaUrl}" class="cta-button">${content.ctaText}</a>
+                  <td style="text-align: ${content.ctaAlignment || 'center'};">
+                    <a href="${content.ctaUrl}" class="cta-button ${content.expandButtonOnMobile ? 'cta-button--full-mobile' : ''}">${content.ctaText}</a>
                   </td>
                 </tr>
               </table>
@@ -384,8 +395,8 @@ export function generateProductLaunchTemplate(content: EmailContent): string {
               ${content.ctaText && content.ctaUrl ? `
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 40px auto;">
                 <tr>
-                  <td style="text-align: center;">
-                    <a href="${content.ctaUrl}" class="cta-button" style="font-size: 18px; padding: 18px 40px;">${content.ctaText}</a>
+                  <td style="text-align: ${content.ctaAlignment || 'center'};">
+                    <a href="${content.ctaUrl}" class="cta-button ${content.expandButtonOnMobile ? 'cta-button--full-mobile' : ''}" style="font-size: 18px; padding: 18px 40px;">${content.ctaText}</a>
                   </td>
                 </tr>
               </table>
@@ -502,8 +513,8 @@ export function generateAnnouncementTemplate(content: EmailContent): string {
               ${content.ctaText && content.ctaUrl ? `
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 35px auto;">
                 <tr>
-                  <td style="text-align: center;">
-                    <a href="${content.ctaUrl}" class="cta-button">${content.ctaText}</a>
+                  <td style="text-align: ${content.ctaAlignment || 'center'};">
+                    <a href="${content.ctaUrl}" class="cta-button ${content.expandButtonOnMobile ? 'cta-button--full-mobile' : ''}">${content.ctaText}</a>
                   </td>
                 </tr>
               </table>
@@ -622,8 +633,8 @@ export function generateWelcomeTemplate(content: EmailContent): string {
               ${content.ctaText && content.ctaUrl ? `
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 35px 0;">
                 <tr>
-                  <td style="text-align: center;">
-                    <a href="${content.ctaUrl}" class="cta-button" style="font-size: 16px;">${content.ctaText}</a>
+                  <td style="text-align: ${content.ctaAlignment || 'center'};">
+                    <a href="${content.ctaUrl}" class="cta-button ${content.expandButtonOnMobile ? 'cta-button--full-mobile' : ''}" style="font-size: 16px;">${content.ctaText}</a>
                   </td>
                 </tr>
               </table>
@@ -750,8 +761,8 @@ export function generatePromoTemplate(content: EmailContent): string {
               ${content.ctaText && content.ctaUrl ? `
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 40px auto;">
                 <tr>
-                  <td style="text-align: center;">
-                    <a href="${content.ctaUrl}" class="cta-button" style="font-size: 20px; padding: 20px 50px; background-color: ${secondaryColor};">${content.ctaText}</a>
+                  <td style="text-align: ${content.ctaAlignment || 'center'};">
+                    <a href="${content.ctaUrl}" class="cta-button ${content.expandButtonOnMobile ? 'cta-button--full-mobile' : ''}" style="font-size: 20px; padding: 20px 50px; background-color: ${secondaryColor};">${content.ctaText}</a>
                   </td>
                 </tr>
               </table>
