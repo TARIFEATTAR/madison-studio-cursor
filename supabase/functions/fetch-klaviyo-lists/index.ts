@@ -65,14 +65,17 @@ serve(async (req) => {
       throw new Error("Encryption key not configured");
     }
 
-    const apiKey = decryptApiKey(connection.api_key_encrypted, encryptionKey);
+    const apiKeyRaw = decryptApiKey(connection.api_key_encrypted, encryptionKey);
+    const apiKey = apiKeyRaw.trim();
+    const masked = apiKey.length > 6 ? `${apiKey.slice(0,3)}***${apiKey.slice(-3)}` : "***";
+    console.log(`[fetch-klaviyo-lists] Decrypted key looks valid? startsWith pk_:`, apiKey.startsWith("pk_"), `len=`, apiKey.length, `mask=`, masked);
 
     // Fetch lists from Klaviyo with profile_count (requires additional-fields parameter)
-    const response = await fetch("https://a.klaviyo.com/api/lists", {
+    const response = await fetch("https://a.klaviyo.com/api/lists/", {
       headers: {
         "Authorization": `Klaviyo-API-Key ${apiKey}`,
         "revision": "2024-10-15",
-        "Accept": "application/vnd.api+json",
+        "Accept": "application/json",
       },
     });
 
