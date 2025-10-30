@@ -96,7 +96,7 @@ serve(async (req) => {
       // Continue with original HTML if inlining fails
     }
 
-    // Create a DRAFT campaign in Klaviyo (no send_strategy = draft)
+    // Create a DRAFT campaign in Klaviyo (2-step process: campaign first, then message)
     const campaignPayload = {
       data: {
         type: "campaign",
@@ -104,24 +104,8 @@ serve(async (req) => {
           name: campaign_name || content_title || subject,
           audiences: {
             included: [{ type: audience_type, id: audience_id }]
-          },
-          // Omit send_strategy to create a draft campaign
-          campaign_messages: {
-            data: [{
-              type: "campaign-message",
-              attributes: {
-                channel: "email",
-                label: "Email 1",
-                content: {
-                  subject: subject,
-                  preview_text: preview_text || subject,
-                  from_email: "noreply@example.com", // This should be configured per org
-                  from_label: "Madison",
-                  reply_to_email: "noreply@example.com"
-                }
-              }
-            }]
           }
+          // Omit send_strategy to create a draft campaign
         }
       }
     };
@@ -151,16 +135,16 @@ serve(async (req) => {
 
     const campaignData = await campaignResponse.json();
     const campaignId = campaignData.data.id;
-    const messageId = campaignData.data.attributes.campaign_messages.data[0].id;
 
-    console.log(`Created Klaviyo campaign ${campaignId} with message ${messageId}`);
+    console.log(`Created Klaviyo campaign ${campaignId}`);
 
-    // Update the campaign message with the HTML content
-    const updatePayload = {
+    // Now create campaign message separately
+    const messagePayload = {
       data: {
         type: "campaign-message",
-        id: messageId,
         attributes: {
+          channel: "email",
+          label: "Email 1",
           content: {
             subject: subject,
             preview_text: preview_text || subject,
@@ -169,24 +153,32 @@ serve(async (req) => {
             reply_to_email: "noreply@example.com",
             html_content: inlinedHtml
           }
+        },
+        relationships: {
+          campaign: {
+            data: {
+              type: "campaign",
+              id: campaignId
+            }
+          }
         }
       }
     };
 
-    const updateResponse = await fetch(`https://a.klaviyo.com/api/campaign-messages/${messageId}/`, {
-      method: "PATCH",
+    const messageResponse = await fetch("https://a.klaviyo.com/api/campaign-messages/", {
+      method: "POST",
       headers: {
         "Authorization": `Klaviyo-API-Key ${apiKey}`,
         "revision": "2024-10-15",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(updatePayload),
+      body: JSON.stringify(messagePayload),
     });
 
-    if (!updateResponse.ok) {
-      const errorText = await updateResponse.text();
-      console.error("Klaviyo message update error:", errorText);
-      let errorDetail = "Failed to update campaign content";
+    if (!messageResponse.ok) {
+      const errorText = await messageResponse.text();
+      console.error("Klaviyo message creation error:", errorText);
+      let errorDetail = "Failed to create campaign message";
       try {
         const errorJson = JSON.parse(errorText);
         errorDetail = errorJson.errors?.[0]?.detail || errorDetail;
@@ -195,6 +187,9 @@ serve(async (req) => {
       }
       throw new Error(errorDetail);
     }
+
+    const messageData = await messageResponse.json();
+    const messageId = messageData.data.id;
 
     // Log to publishing history
     if (content_id) {
