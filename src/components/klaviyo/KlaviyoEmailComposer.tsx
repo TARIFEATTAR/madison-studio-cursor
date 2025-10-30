@@ -33,14 +33,6 @@ interface KlaviyoCampaign {
   channel: string;
 }
 
-interface KlaviyoSenderProfile {
-  id: string;
-  name: string;
-  email: string;
-  is_verified: boolean;
-  default_from_name?: string;
-  default_reply_to_email?: string;
-}
 
 type AudienceType = "list" | "segment" | "campaign";
 
@@ -68,7 +60,6 @@ export function KlaviyoEmailComposer({
   const [lists, setLists] = useState<KlaviyoList[]>([]);
   const [segments, setSegments] = useState<KlaviyoSegment[]>([]);
   const [campaigns, setCampaigns] = useState<KlaviyoCampaign[]>([]);
-  const [senderProfiles, setSenderProfiles] = useState<KlaviyoSenderProfile[]>([]);
   const [loadingAudiences, setLoadingAudiences] = useState(false);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [audienceType, setAudienceType] = useState<AudienceType>("list");
@@ -78,7 +69,8 @@ export function KlaviyoEmailComposer({
   const [subject, setSubject] = useState(initialTitle);
   const [previewText, setPreviewText] = useState("");
   const [selectedList, setSelectedList] = useState("");
-  const [selectedSenderProfile, setSelectedSenderProfile] = useState("");
+  const [fromEmail, setFromEmail] = useState("hello@messages.tarifeattar.com");
+  const [fromName, setFromName] = useState("TARIFE ATTAR LLC");
   const [emailHtml, setEmailHtml] = useState(initialHtml || "");
 
   // Sanitize HTML more permissively for email templates (keeping design intact)
@@ -157,12 +149,12 @@ export function KlaviyoEmailComposer({
         return;
       }
 
-      // Fetch lists, segments, campaigns, and sender profiles in parallel
+      // Fetch lists, segments, and campaigns in parallel
       setLoadingAudiences(true);
       setApiError("");
-      console.log("[KlaviyoEmailComposer] Fetching lists, segments, campaigns, sender profiles");
+      console.log("[KlaviyoEmailComposer] Fetching lists, segments, campaigns");
       
-      const [listsResult, segmentsResult, campaignsResult, senderProfilesResult] = await Promise.all([
+      const [listsResult, segmentsResult, campaignsResult] = await Promise.all([
         supabase.functions.invoke("fetch-klaviyo-lists", {
           body: { organization_id: membership.organization_id },
         }),
@@ -172,15 +164,11 @@ export function KlaviyoEmailComposer({
         supabase.functions.invoke("fetch-klaviyo-campaigns", {
           body: { organization_id: membership.organization_id },
         }),
-        supabase.functions.invoke("fetch-klaviyo-sender-profiles", {
-          body: { organization_id: membership.organization_id },
-        }),
       ]);
 
       console.log("[KlaviyoEmailComposer] Lists result:", listsResult);
       console.log("[KlaviyoEmailComposer] Segments result:", segmentsResult);
       console.log("[KlaviyoEmailComposer] Campaigns result:", campaignsResult);
-      console.log("[KlaviyoEmailComposer] Sender profiles result:", senderProfilesResult);
 
       // Collect all errors to show user
       const errors: string[] = [];
@@ -208,18 +196,6 @@ export function KlaviyoEmailComposer({
       } else if (campaignsResult.data?.campaigns) {
         console.log("[KlaviyoEmailComposer] Setting campaigns:", campaignsResult.data.campaigns.length);
         setCampaigns(campaignsResult.data.campaigns);
-      }
-
-      if (senderProfilesResult.error) {
-        console.error("[KlaviyoEmailComposer] Sender profiles fetch error:", senderProfilesResult.error);
-        errors.push(`Sender Profiles: ${senderProfilesResult.error.message || 'Failed to fetch'}`);
-      } else if (senderProfilesResult.data?.sender_profiles) {
-        console.log("[KlaviyoEmailComposer] Setting sender profiles:", senderProfilesResult.data.sender_profiles.length);
-        setSenderProfiles(senderProfilesResult.data.sender_profiles);
-        // Auto-select first sender profile if available
-        if (senderProfilesResult.data.sender_profiles.length > 0) {
-          setSelectedSenderProfile(senderProfilesResult.data.sender_profiles[0].id);
-        }
       }
 
       if (errors.length > 0) {
@@ -252,9 +228,9 @@ export function KlaviyoEmailComposer({
       return;
     }
 
-    if (!selectedSenderProfile) {
-      console.error("[KlaviyoEmailComposer] No sender profile selected");
-      toast.error("Please select a verified sender profile");
+    if (!fromEmail.trim() || !fromName.trim()) {
+      console.error("[KlaviyoEmailComposer] Missing from email or name");
+      toast.error("Please enter both from email and from name");
       return;
     }
 
@@ -291,7 +267,8 @@ export function KlaviyoEmailComposer({
           content_html: emailHtml,
           content_id: contentId,
           content_title: subject,
-          sender_profile_id: selectedSenderProfile,
+          from_email: fromEmail.trim(),
+          from_name: fromName.trim(),
         },
       });
 
@@ -368,40 +345,35 @@ export function KlaviyoEmailComposer({
                 <p className="font-semibold">Klaviyo API Errors:</p>
                 <p className="text-xs mt-1">{apiError}</p>
                 <p className="text-xs mt-2 text-muted-foreground">
-                  Check that your API key has required scopes: Lists:Read, Segments:Read, Campaigns:Read, Campaigns:Write, Sender-Profiles:Read
+                  Check that your API key has required scopes: Lists:Read, Segments:Read, Campaigns:Read, Campaigns:Write
                 </p>
               </div>
             )}
 
-            {/* Sender Profile Selection */}
+            {/* From Email */}
             <div className="space-y-2">
-              <Label htmlFor="sender">Sender Profile *</Label>
-              {loadingAudiences ? (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading sender profiles...
-                </div>
-              ) : senderProfiles.length === 0 ? (
-                <div className="rounded-lg bg-yellow-500/10 border border-yellow-500/20 p-3 text-sm">
-                  <p className="font-semibold text-yellow-600 dark:text-yellow-500">No verified sender profiles found</p>
-                  <p className="text-xs mt-1 text-muted-foreground">
-                    Create and verify a sender profile in Klaviyo first. Your API key needs the <code className="bg-muted px-1 rounded">sender-profiles:read</code> scope.
-                  </p>
-                </div>
-              ) : (
-                <Select value={selectedSenderProfile} onValueChange={setSelectedSenderProfile}>
-                  <SelectTrigger className="z-[1201]">
-                    <SelectValue placeholder="Select sender profile" />
-                  </SelectTrigger>
-                  <SelectContent className="z-[1200] bg-popover text-popover-foreground border shadow-md">
-                    {senderProfiles.map((profile) => (
-                      <SelectItem key={profile.id} value={profile.id}>
-                        {profile.name} ({profile.email})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+              <Label htmlFor="from-email">From Email *</Label>
+              <Input
+                id="from-email"
+                type="email"
+                placeholder="hello@messages.tarifeattar.com"
+                value={fromEmail}
+                onChange={(e) => setFromEmail(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Must be a verified email in your Klaviyo account
+              </p>
+            </div>
+
+            {/* From Name */}
+            <div className="space-y-2">
+              <Label htmlFor="from-name">From Name *</Label>
+              <Input
+                id="from-name"
+                placeholder="TARIFE ATTAR LLC"
+                value={fromName}
+                onChange={(e) => setFromName(e.target.value)}
+              />
             </div>
 
             {/* Audience Type Selection */}

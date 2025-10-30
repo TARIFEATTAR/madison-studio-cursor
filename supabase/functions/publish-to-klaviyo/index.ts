@@ -52,15 +52,16 @@ serve(async (req) => {
       content_html,
       content_id,
       content_title,
-      sender_profile_id
+      from_email,
+      from_name
     } = await req.json();
 
     if (!organization_id || !audience_id || !subject || !content_html) {
       throw new Error("Missing required fields: organization_id, audience_id, subject, content_html");
     }
 
-    if (!sender_profile_id) {
-      throw new Error("Sender profile is required. Please select a verified sender profile.");
+    if (!from_email || !from_name) {
+      throw new Error("From email and from name are required");
     }
 
     // Get the encrypted API key
@@ -215,7 +216,8 @@ const campaignPayload = {
           content: {
             subject: subject,
             preview_text: preview_text || subject,
-            sender_profile_id: sender_profile_id,
+            from_email: from_email,
+            from_name: from_name,
             html_content: inlinedHtml
           }
         },
@@ -252,7 +254,8 @@ const campaignPayload = {
             content: {
               subject: subject,
               preview_text: preview_text || subject,
-              sender_profile_id: sender_profile_id,
+              from_email: from_email,
+              from_name: from_name,
               html_content: inlinedHtml
             }
           }
