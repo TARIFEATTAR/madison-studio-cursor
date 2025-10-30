@@ -102,10 +102,13 @@ serve(async (req) => {
         type: "campaign",
         attributes: {
           name: campaign_name || content_title || subject,
+        },
+        relationships: {
           audiences: {
-            included: [{ type: audience_type, id: audience_id }]
+            data: [
+              { type: audience_type === "segment" ? "segment" : "list", id: audience_id }
+            ]
           }
-          // Omit send_strategy to create a draft campaign
         }
       }
     };
@@ -156,9 +159,43 @@ serve(async (req) => {
     }
 
     const messagesData = await messagesResponse.json();
-    const messageId = messagesData.data?.[0]?.id;
+    let messageId = messagesData.data?.[0]?.id as string | undefined;
+
+    // If no message exists yet, create one
     if (!messageId) {
-      throw new Error("No message found for campaign");
+      console.log("No campaign message found. Creating one...");
+      const createMsgPayload = {
+        data: {
+          type: "campaign-message",
+          attributes: { channel: "email", label: "Email" },
+          relationships: {
+            campaign: { data: { type: "campaign", id: campaignId } }
+          }
+        }
+      };
+
+      const createMsgRes = await fetch(`https://a.klaviyo.com/api/campaign-messages/`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Klaviyo-API-Key ${apiKey}`,
+          "revision": "2024-10-15",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(createMsgPayload),
+      });
+
+      if (!createMsgRes.ok) {
+        const errorText = await createMsgRes.text();
+        console.error("Failed to create campaign message:", errorText);
+        throw new Error("Failed to create campaign message");
+      }
+
+      const created = await createMsgRes.json();
+      messageId = created.data?.id as string | undefined;
+    }
+
+    if (!messageId) {
+      throw new Error("No message found or created for campaign");
     }
 
     console.log(`Found message ID: ${messageId}`);
