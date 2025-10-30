@@ -13,6 +13,18 @@ import { Loader2, Mail, Eye } from "lucide-react";
 import { convertToEmailHtml } from "@/utils/emailHtmlConverter";
 import { deserializeEmailState } from "@/utils/emailStateSerializer";
 import DOMPurify from "dompurify";
+import { logger } from "@/lib/logger";
+import { z } from "zod";
+
+const klaviyoEmailSchema = z.object({
+  campaignName: z.string().min(1, "Campaign name is required").max(100, "Campaign name too long"),
+  subject: z.string().min(1, "Subject is required").max(200, "Subject too long"),
+  fromEmail: z.string().email("Invalid email address"),
+  fromName: z.string().min(1, "From name is required").max(100, "From name too long"),
+  previewText: z.string().max(150, "Preview text too long"),
+  emailHtml: z.string().min(1, "Email content is required"),
+  audienceId: z.string().min(1, "Please select an audience"),
+});
 
 interface KlaviyoList {
   id: string;
@@ -96,18 +108,18 @@ export function KlaviyoEmailComposer({
   }, [emailHtml]);
 
   useEffect(() => {
-    console.log("[KlaviyoEmailComposer] useEffect triggered", { open, hasInitialHtml: !!initialHtml, contentId, sourceTable });
+    logger.debug("[KlaviyoEmailComposer] useEffect triggered", { open, hasInitialHtml: !!initialHtml, contentId, sourceTable });
     if (open) {
       loadOrganizationAndLists();
       
       // If initialHtml is provided, use it directly
       if (initialHtml) {
-        console.log("[KlaviyoEmailComposer] Setting email HTML from initialHtml");
+        logger.debug("[KlaviyoEmailComposer] Setting email HTML from initialHtml");
         setEmailHtml(initialHtml);
       }
       // If contentId and sourceTable are provided, fetch content from database
       else if (contentId && sourceTable) {
-        console.log("[KlaviyoEmailComposer] Fetching content from database", { contentId, sourceTable });
+        logger.debug("[KlaviyoEmailComposer] Fetching content from database", { contentId, sourceTable });
         loadContentFromDatabase(contentId, sourceTable);
       }
     }
@@ -115,7 +127,7 @@ export function KlaviyoEmailComposer({
 
   const loadContentFromDatabase = async (id: string, table: string) => {
     try {
-      console.log("[KlaviyoEmailComposer] Loading content from", table, id);
+      logger.debug("[KlaviyoEmailComposer] Loading content from", table, id);
       const { data, error } = await supabase
         .from(table as any)
         .select("*")
@@ -125,7 +137,7 @@ export function KlaviyoEmailComposer({
       if (error) throw error;
 
       if (data) {
-        console.log("[KlaviyoEmailComposer] Content loaded successfully");
+        logger.debug("[KlaviyoEmailComposer] Content loaded successfully");
         
         // Set campaign name from title
         if ('title' in data && data.title) {
@@ -155,17 +167,17 @@ export function KlaviyoEmailComposer({
           htmlContent = convertToEmailHtml({ content: data.content as string });
         }
 
-        console.log("[KlaviyoEmailComposer] Setting email HTML from database content");
+        logger.debug("[KlaviyoEmailComposer] Setting email HTML from database content");
         setEmailHtml(htmlContent);
       }
     } catch (error: any) {
-      console.error("[KlaviyoEmailComposer] Error loading content:", error);
+      logger.error("[KlaviyoEmailComposer] Error loading content:", error);
       toast.error(`Failed to load content: ${error.message}`);
     }
   };
 
   const loadOrganizationAndLists = async () => {
-    console.log("[KlaviyoEmailComposer] loadOrganizationAndLists starting", { user: !!user });
+    logger.debug("[KlaviyoEmailComposer] loadOrganizationAndLists starting", { user: !!user });
     if (!user) {
       console.error("[KlaviyoEmailComposer] No user found");
       return;
@@ -275,45 +287,29 @@ export function KlaviyoEmailComposer({
 
 
   const handleSend = async () => {
-    console.log("[KlaviyoEmailComposer] handleSend called", {
-      selectedList,
+    // Validate input with Zod schema
+    const validation = klaviyoEmailSchema.safeParse({
+      campaignName: campaignName.trim(),
       subject: subject.trim(),
-      hasEmailHtml: !!emailHtml && emailHtml.trim() !== "",
-      organizationId
+      fromEmail: fromEmail.trim(),
+      fromName: fromName.trim(),
+      previewText: previewText.trim(),
+      emailHtml: emailHtml?.trim() || "",
+      audienceId: selectedList || "",
     });
 
-    if (!selectedList) {
-      console.error("[KlaviyoEmailComposer] No list/segment selected");
-      toast.error("Please select a Klaviyo list or segment");
-      return;
-    }
-
-    if (!fromEmail.trim() || !fromName.trim()) {
-      console.error("[KlaviyoEmailComposer] Missing from email or name");
-      toast.error("Please enter both from email and from name");
-      return;
-    }
-
-    if (!subject.trim()) {
-      console.error("[KlaviyoEmailComposer] No subject");
-      toast.error("Please enter an email subject");
-      return;
-    }
-
-    if (!emailHtml || emailHtml.trim() === "") {
-      console.error("[KlaviyoEmailComposer] No email HTML");
-      toast.error("Email content is missing");
+    if (!validation.success) {
+      const firstError = validation.error.errors[0];
+      toast.error(firstError.message);
       return;
     }
 
     if (!organizationId) {
-      console.error("[KlaviyoEmailComposer] No organization ID");
       toast.error("Organization not found");
       return;
     }
 
     setLoading(true);
-    console.log("[KlaviyoEmailComposer] Invoking publish-to-klaviyo");
 
     try {
       const { data, error } = await supabase.functions.invoke("publish-to-klaviyo", {

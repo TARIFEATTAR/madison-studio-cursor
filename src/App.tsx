@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import React from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
 
 import Navigation from "./components/Navigation";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -76,7 +77,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
-    console.log("[RouteGuard] ProtectedRoute check", { path: location.pathname, loading, hasUser: !!user });
+    logger.debug("[RouteGuard] ProtectedRoute check", { path: location.pathname, loading, hasUser: !!user });
 
     if (loading) return; // wait for initial auth hook
 
@@ -88,11 +89,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     // Extra safety: double-check session before redirecting to /auth
     setVerifying(true);
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("[RouteGuard] getSession (guard)", { path: location.pathname, hasUser: !!session?.user });
+      logger.debug("[RouteGuard] getSession (guard)", { path: location.pathname, hasUser: !!session?.user });
       if (session?.user) {
         setAllowed(true);
       } else {
-        console.warn("[RouteGuard] Redirect → /auth (reason: no authenticated user)", { path: location.pathname });
+        logger.warn("[RouteGuard] Redirect → /auth (reason: no authenticated user)", { path: location.pathname });
         navigate("/auth", { replace: true });
       }
     }).finally(() => setVerifying(false));
@@ -119,7 +120,7 @@ const RootRoute = () => {
   useEffect(() => {
     // Redirect loop protection
     if (redirectCount >= 3) {
-      console.error("[RootRoute] Redirect loop detected - stopping after", redirectCount, "attempts");
+      logger.error("[RootRoute] Redirect loop detected - stopping after", redirectCount, "attempts");
       navigate("/dashboard", { replace: true });
       return;
     }
@@ -129,12 +130,12 @@ const RootRoute = () => {
 
     // Safety timeout so we never hang on "Loading…"
     const safetyTimer = setTimeout(() => {
-      console.warn("[RootRoute] Safety timeout reached. Proceeding to dashboard.");
+      logger.warn("[RootRoute] Safety timeout reached. Proceeding to dashboard.");
       setIsChecking(false);
     }, 3500);
 
     const checkOnboardingStatus = async () => {
-      console.log("[RootRoute] Checking onboarding status…");
+      logger.debug("[RootRoute] Checking onboarding status…");
       // Check database for organization with brand_config
       const { data: orgMember, error: memberErr } = await supabase
         .from("organization_members")
@@ -144,14 +145,14 @@ const RootRoute = () => {
         .maybeSingle();
 
       if (memberErr) {
-        console.warn("[RootRoute] organization_members lookup error", memberErr);
+        logger.warn("[RootRoute] organization_members lookup error", memberErr);
         setIsChecking(false);
         clearTimeout(safetyTimer);
         return;
       }
 
       if (!orgMember?.organization_id) {
-        console.warn("[RootRoute] Redirect → /onboarding (reason: no organization membership)");
+        logger.warn("[RootRoute] Redirect → /onboarding (reason: no organization membership)");
         setRedirectCount(prev => prev + 1);
         navigate('/onboarding', { replace: true });
         setIsChecking(false);
@@ -166,7 +167,7 @@ const RootRoute = () => {
         .maybeSingle();
 
       if (orgErr) {
-        console.warn("[RootRoute] organizations lookup error", orgErr);
+        logger.warn("[RootRoute] organizations lookup error", orgErr);
         setIsChecking(false);
         clearTimeout(safetyTimer);
         return;
@@ -178,11 +179,11 @@ const RootRoute = () => {
         'industry' in org.brand_config;
 
       if (!hasBrandInfo) {
-        console.warn("[RootRoute] Redirect → /onboarding (reason: missing brand_config.industry)");
+        logger.warn("[RootRoute] Redirect → /onboarding (reason: missing brand_config.industry)");
         setRedirectCount(prev => prev + 1);
         navigate('/onboarding', { replace: true });
       } else {
-        console.log("[RootRoute] Onboarding OK (has brand info). Staying on dashboard.");
+        logger.debug("[RootRoute] Onboarding OK (has brand info). Staying on dashboard.");
         localStorage.setItem(`onboarding_completed_${user.id}`, "true");
       }
 
@@ -229,7 +230,7 @@ const RootRoute = () => {
 };
 
 const AppContent = () => {
-  console.log("[App-Con]");
+  logger.debug("[App-Con]");
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -315,7 +316,7 @@ const AppContent = () => {
 };
 
 const App = () => {
-  console.log("[App] App component rendering...");
+  logger.debug("[App] App component rendering...");
   
   return (
     <QueryClientProvider client={queryClient}>

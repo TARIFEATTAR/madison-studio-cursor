@@ -11,18 +11,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+import { logger } from "@/lib/logger";
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("[AuthProvider] Initializing auth context");
+    logger.debug("[AuthProvider] Initializing auth context");
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        console.log("[AuthProvider] Auth state changed", { hasUser: !!session?.user });
+        logger.debug("[AuthProvider] Auth state changed", { hasUser: !!session?.user });
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -33,18 +35,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession()
       .then(({ data: { session }, error }) => {
         if (error) {
-          console.error("[AuthProvider] getSession error:", error);
+          logger.error("[AuthProvider] getSession error:", error);
           setSession(null);
           setUser(null);
         } else {
-          console.log("[AuthProvider] getSession resolved", { hasUser: !!session?.user });
+          logger.debug("[AuthProvider] getSession resolved", { hasUser: !!session?.user });
           setSession(session);
           setUser(session?.user ?? null);
         }
         setLoading(false);
       })
       .catch((err) => {
-        console.error("[AuthProvider] getSession exception:", err);
+        logger.error("[AuthProvider] getSession exception:", err);
         setSession(null);
         setUser(null);
         setLoading(false);
@@ -56,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
-    console.log("[AuthProvider] Signing out and clearing all data...");
+    logger.debug("[AuthProvider] Signing out and clearing all data...");
     
     await supabase.auth.signOut();
     
@@ -67,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     keysToRemove.forEach(key => localStorage.removeItem(key));
     
-    console.log("[AuthProvider] Cleared all localStorage and session data");
+    logger.debug("[AuthProvider] Cleared all localStorage and session data");
     window.location.href = '/';
   };
 
