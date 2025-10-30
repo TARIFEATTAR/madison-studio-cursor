@@ -14,6 +14,7 @@ export function EmailPreview({ html }: EmailPreviewProps) {
   const sanitizedHtml = useMemo(() => {
     return DOMPurify.sanitize(html, {
       // Allow full email document head so embedded styles are preserved
+      WHOLE_DOCUMENT: true,
       ADD_TAGS: ['html','head','meta','title','style','link'],
       ADD_ATTR: [
         // keep inline email design intact

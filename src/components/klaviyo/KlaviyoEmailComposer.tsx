@@ -65,6 +65,7 @@ export function KlaviyoEmailComposer({
   const sanitizedHtml = useMemo(() => {
     return DOMPurify.sanitize(emailHtml, {
       // Allow full email document head so embedded styles are preserved
+      WHOLE_DOCUMENT: true,
       ADD_TAGS: ['html','head','meta','title','style','link'],
       ADD_ATTR: [
         // keep inline email design intact
