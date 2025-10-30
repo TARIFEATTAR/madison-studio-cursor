@@ -86,7 +86,10 @@ serve(async (req) => {
       throw new Error("Encryption key not configured");
     }
 
-    const apiKey = decryptApiKey(connection.api_key_encrypted, encryptionKey);
+    const apiKeyRaw = decryptApiKey(connection.api_key_encrypted, encryptionKey);
+    const apiKey = apiKeyRaw.trim();
+    const masked = apiKey.length > 6 ? `${apiKey.slice(0,3)}***${apiKey.slice(-3)}` : "***";
+    console.log(`[publish-to-klaviyo] Decrypted key looks valid? startsWith pk_:`, apiKey.startsWith("pk_"), `len=`, apiKey.length, `mask=`, masked);
 
     // Inline CSS styles for Klaviyo (Klaviyo strips <head> and <style> tags)
     console.log("Inlining CSS styles for Klaviyo compatibility...");
