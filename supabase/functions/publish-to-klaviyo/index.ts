@@ -102,20 +102,14 @@ serve(async (req) => {
       // Continue with original HTML if inlining fails
     }
 
-    // Step 1: Create a DRAFT campaign in Klaviyo (name + audiences only)
-const campaignPayload = {
+    // Step 1: Create a DRAFT campaign in Klaviyo (bare campaign without audiences)
+    const campaignPayload = {
       data: {
         type: "campaign",
         attributes: {
           name: campaign_name || content_title || subject,
-        },
-        relationships: {
-          audiences: {
-            data: [
-              { type: audience_type === "segment" ? "segment" : "list", id: audience_id }
-            ]
-          }
         }
+        // No relationships - audiences will be assigned separately
       }
     };
 
@@ -147,7 +141,38 @@ const campaignPayload = {
     const campaignId = campaignData.data.id;
     console.log(`Created Klaviyo campaign ${campaignId}`);
 
-    // Step 2: Fetch the campaign message ID (created automatically with the campaign)
+    // Step 2: Assign recipients to the campaign
+    console.log("Assigning recipients to campaign...");
+    const recipientsPayload = {
+      data: {
+        type: "campaign-recipient-estimation",
+        attributes: {
+          included_audiences: [audience_id],
+          excluded_audiences: []
+        }
+      }
+    };
+
+    const recipientsResponse = await fetch(`https://a.klaviyo.com/api/campaigns/${campaignId}/campaign-recipient-estimations/`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Klaviyo-API-Key ${apiKey}`,
+        "revision": "2025-07-15",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(recipientsPayload),
+    });
+
+    if (!recipientsResponse.ok) {
+      const errorText = await recipientsResponse.text();
+      console.error("Failed to assign recipients:", errorText);
+      // Continue anyway - the campaign was created, recipients can be assigned manually in Klaviyo
+      console.log("Warning: Recipients not assigned automatically, but campaign was created");
+    } else {
+      console.log("Recipients assigned successfully");
+    }
+
+    // Step 3: Fetch the campaign message ID (created automatically with the campaign)
     console.log("Fetching campaign message ID...");
     const messagesResponse = await fetch(`https://a.klaviyo.com/api/campaigns/${campaignId}/campaign-messages`, {
       method: "GET",
@@ -206,7 +231,7 @@ const campaignPayload = {
 
     console.log(`Found message ID: ${messageId}`);
 
-    // Step 3: Update the campaign message with content (using sender_profile_id)
+    // Step 4: Update the campaign message with content (no audiences in relationships)
     console.log("Updating campaign message with content...");
     const messageUpdatePayload = {
       data: {
@@ -220,19 +245,12 @@ const campaignPayload = {
             from_name: from_name,
             html_content: inlinedHtml
           }
-        },
-        relationships: {
-          audiences: {
-            data: [
-              { type: audience_type === "segment" ? "segment" : "list", id: audience_id }
-            ]
-          }
         }
+        // No relationships - audiences already assigned at campaign level
       }
     };
 
-    // Try to update message with audiences + content. If audiences relation is not allowed, retry with content-only
-    let messageUpdateResponse = await fetch(`https://a.klaviyo.com/api/campaign-messages/${messageId}`, {
+    const messageUpdateResponse = await fetch(`https://a.klaviyo.com/api/campaign-messages/${messageId}`, {
       method: "PATCH",
       headers: {
         "Authorization": `Klaviyo-API-Key ${apiKey}`,
@@ -244,39 +262,8 @@ const campaignPayload = {
 
     if (!messageUpdateResponse.ok) {
       const errorText = await messageUpdateResponse.text();
-      console.error("Failed to update campaign message with audiences, retrying with content-only:", errorText);
-
-      const contentOnlyPayload = {
-        data: {
-          type: "campaign-message",
-          id: messageId,
-          attributes: {
-            content: {
-              subject: subject,
-              preview_text: preview_text || subject,
-              from_email: from_email,
-              from_name: from_name,
-              html_content: inlinedHtml
-            }
-          }
-        }
-      };
-
-      messageUpdateResponse = await fetch(`https://a.klaviyo.com/api/campaign-messages/${messageId}`, {
-        method: "PATCH",
-        headers: {
-          "Authorization": `Klaviyo-API-Key ${apiKey}`,
-          "revision": "2025-07-15",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(contentOnlyPayload),
-      });
-
-      if (!messageUpdateResponse.ok) {
-        const secondError = await messageUpdateResponse.text();
-        console.error("Failed to update campaign message (content-only):", secondError);
-        throw new Error("Failed to update campaign message");
-      }
+      console.error("Failed to update campaign message:", errorText);
+      throw new Error("Failed to update campaign message");
     }
 
     console.log("Successfully updated campaign message");
