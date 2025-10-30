@@ -102,7 +102,7 @@ serve(async (req) => {
       // Continue with original HTML if inlining fails
     }
 
-    // Step 1: Create a DRAFT campaign in Klaviyo (with audiences and a required email message stub)
+    // Step 1: Create a DRAFT campaign in Klaviyo (audience only; message created separately)
     const campaignPayload = {
       data: {
         type: "campaign",
@@ -111,10 +111,7 @@ serve(async (req) => {
           audiences: {
             included: [audience_id],
             excluded: []
-          },
-          "campaign-messages": [
-            { channel: "email", label: "Email" }
-          ]
+          }
         }
       }
     };
