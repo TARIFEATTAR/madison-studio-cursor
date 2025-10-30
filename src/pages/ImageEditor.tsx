@@ -301,6 +301,9 @@ export default function ImageEditor() {
         });
       }
       
+      console.log('🚀 About to invoke generate-madison-image edge function');
+      console.log('User:', user?.id, 'Org:', orgId);
+      
       const { data: functionData, error: functionError } = await supabase.functions.invoke(
         'generate-madison-image',
         {
@@ -327,8 +330,21 @@ export default function ImageEditor() {
         }
       );
 
-      if (functionError) throw functionError;
-      if (!functionData?.imageUrl) throw new Error("No image URL returned");
+      console.log('✅ Edge function response received:', { 
+        hasError: !!functionError, 
+        hasData: !!functionData,
+        hasImageUrl: !!functionData?.imageUrl,
+        hasSavedId: !!functionData?.savedImageId 
+      });
+      
+      if (functionError) {
+        console.error('❌ Edge function error:', functionError);
+        throw functionError;
+      }
+      if (!functionData?.imageUrl) {
+        console.error('❌ No image URL in response:', functionData);
+        throw new Error("No image URL returned");
+      }
       if (!functionData?.savedImageId) {
         console.error('❌ No savedImageId returned from backend');
         throw new Error("Image generation failed: Database save unsuccessful");
@@ -365,15 +381,23 @@ export default function ImageEditor() {
       }
       
     } catch (error: any) {
-      console.error('Generation error:', error);
+      console.error('❌❌❌ Generation error:', error);
       console.error('User ID:', user?.id);
       console.error('Organization ID:', orgId);
+      console.error('Session ID:', sessionId);
       console.error('Error details:', {
         message: error.message,
         stack: error.stack,
-        functionError: error.context
+        functionError: error.context,
+        fullError: error
       });
-      toast.error(error.message || "Failed to generate image. Check console for details.");
+      
+      // Show more specific error message
+      const errorMessage = error.message || "Failed to generate image";
+      toast.error(errorMessage, {
+        description: "Check browser console (F12) for full error details",
+        duration: 5000
+      });
     } finally {
       setIsGenerating(false);
     }
