@@ -27,7 +27,7 @@ export function WelcomeModal({ open, onComplete, onSkip }: WelcomeModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onSkip?.()}>
-      <DialogContent className="max-w-md bg-card border-border/20" onPointerDownOutside={(e) => e.preventDefault()}>
+      <DialogContent className="max-w-2xl bg-card border-border/20" onPointerDownOutside={(e) => e.preventDefault()}>
         {onSkip && (
           <button
             onClick={onSkip}
@@ -38,15 +38,34 @@ export function WelcomeModal({ open, onComplete, onSkip }: WelcomeModalProps) {
           </button>
         )}
         <DialogHeader>
-          <DialogTitle className="font-serif text-2xl text-foreground">
+          <DialogTitle className="font-serif text-3xl text-foreground">
             Welcome to MADISON
           </DialogTitle>
-          <p className="text-sm text-muted-foreground mt-2">
-            Step 1 of 3 • This takes 30 seconds
+          <p className="text-base text-muted-foreground mt-3">
+            Your AI-powered editorial director for brand-perfect content
           </p>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        {/* Value Proposition Cards */}
+        <div className="grid grid-cols-3 gap-3 py-4">
+          <div className="text-center p-3 rounded-lg bg-accent/10 border border-accent/20">
+            <div className="text-2xl mb-1">⚡</div>
+            <div className="text-xs font-medium text-foreground">10x Faster</div>
+            <div className="text-xs text-muted-foreground">Content creation</div>
+          </div>
+          <div className="text-center p-3 rounded-lg bg-accent/10 border border-accent/20">
+            <div className="text-2xl mb-1">🎯</div>
+            <div className="text-xs font-medium text-foreground">Always On-Brand</div>
+            <div className="text-xs text-muted-foreground">Every piece</div>
+          </div>
+          <div className="text-center p-3 rounded-lg bg-accent/10 border border-accent/20">
+            <div className="text-2xl mb-1">📈</div>
+            <div className="text-xs font-medium text-foreground">Better Results</div>
+            <div className="text-xs text-muted-foreground">Data-driven</div>
+          </div>
+        </div>
+
+        <div className="space-y-4 py-2">
           <div className="space-y-2">
             <Label htmlFor="brandName" className="text-foreground">
               Brand Name <span className="text-destructive">*</span>
@@ -100,6 +119,16 @@ export function WelcomeModal({ open, onComplete, onSkip }: WelcomeModalProps) {
           </div>
         </div>
 
+        {/* What's Next Preview */}
+        <div className="bg-muted/30 rounded-lg p-4 border border-border/20">
+          <div className="text-xs font-medium text-foreground mb-2">🎬 What's Next:</div>
+          <ol className="text-xs text-muted-foreground space-y-1">
+            <li>1. Optional: Upload brand documents (30 sec)</li>
+            <li>2. Create your first piece of content (2 min)</li>
+            <li>3. Start scaling your content strategy</li>
+          </ol>
+        </div>
+
         <div className="pt-2">
           <Button
             onClick={handleSubmit}
@@ -107,12 +136,12 @@ export function WelcomeModal({ open, onComplete, onSkip }: WelcomeModalProps) {
             className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
             size="lg"
           >
-            Continue
+            Continue to Setup
           </Button>
         </div>
 
-        <p className="text-xs text-muted-foreground text-center pt-2">
-          You can always update this later in your settings.
+        <p className="text-xs text-muted-foreground text-center">
+          Takes 30 seconds • Skip anytime • Edit later in settings
         </p>
       </DialogContent>
     </Dialog>

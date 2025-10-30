@@ -8,6 +8,8 @@ import { useOrganization } from "@/hooks/useOrganization";
 import { BrandPulseBar } from "@/components/dashboard/BrandPulseBar";
 import { ContentFlowZone } from "@/components/dashboard/ContentFlowZone";
 import { PerformanceMomentumZone } from "@/components/dashboard/PerformanceMomentumZone";
+import { PostOnboardingGuide } from "@/components/onboarding/PostOnboardingGuide";
+import { usePostOnboardingGuide } from "@/hooks/usePostOnboardingGuide";
 
 import MadisonPanel from "@/components/image-editor/MadisonPanel";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
@@ -19,6 +21,7 @@ export default function DashboardNew() {
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const [longLoad, setLongLoad] = useState(false);
   const [madisonPanelOpen, setMadisonPanelOpen] = useState(false);
+  const { showGuide, dismissGuide } = usePostOnboardingGuide();
 
   // Organization ID now handled by useOrganization hook
 
@@ -114,6 +117,9 @@ export default function DashboardNew() {
 
       {/* Mobile Navigation */}
       <BottomNavigation />
+
+      {/* Post-Onboarding Guide */}
+      {showGuide && <PostOnboardingGuide onDismiss={dismissGuide} userName={user?.email?.split("@")[0]} />}
     </div>
   );
 }
