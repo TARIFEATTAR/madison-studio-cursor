@@ -111,12 +111,26 @@ serve(async (req) => {
           audiences: {
             included: [audience_id],
             excluded: []
-          },
-          "campaign-messages": [
-            { channel: "email", label: "Email" }
-          ]
+          }
+        },
+        relationships: {
+          "campaign-messages": {
+            data: [
+              { type: "campaign-message", lid: "msg_email" }
+            ]
+          }
         }
-      }
+      },
+      included: [
+        {
+          type: "campaign-message",
+          lid: "msg_email",
+          attributes: {
+            channel: "email",
+            label: "Email"
+          }
+        }
+      ]
     };
 
     console.log("Creating Klaviyo campaign...");
