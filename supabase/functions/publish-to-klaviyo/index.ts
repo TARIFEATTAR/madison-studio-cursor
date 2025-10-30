@@ -102,7 +102,7 @@ serve(async (req) => {
       // Continue with original HTML if inlining fails
     }
 
-    // Step 1: Create a DRAFT campaign in Klaviyo (audience only; message created separately)
+    // Step 1: Create a DRAFT campaign in Klaviyo with an initial email message (required)
     const campaignPayload = {
       data: {
         type: "campaign",
@@ -112,9 +112,22 @@ serve(async (req) => {
             included: [audience_id],
             excluded: []
           }
-          // Note: Do NOT include "campaign-messages" here. We'll fetch/create and update it separately.
+        },
+        relationships: {
+          "campaign-messages": {
+            data: [
+              { type: "campaign-message", "temp-id": "msg1", method: "create" }
+            ]
+          }
         }
-      }
+      },
+      included: [
+        {
+          type: "campaign-message",
+          "temp-id": "msg1",
+          attributes: { channel: "email", label: "Email" }
+        }
+      ]
     };
 
     console.log("Creating Klaviyo campaign...");
