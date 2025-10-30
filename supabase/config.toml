@@ -74,3 +74,6 @@ verify_jwt = true
 
 [functions.publish-to-klaviyo]
 verify_jwt = true
+
+[functions.add-text-to-image]
+verify_jwt = true
