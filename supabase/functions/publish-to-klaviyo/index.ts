@@ -97,11 +97,18 @@ serve(async (req) => {
     }
 
     // Step 1: Create a DRAFT campaign in Klaviyo (name + audiences only)
-    const campaignPayload = {
+const campaignPayload = {
       data: {
         type: "campaign",
         attributes: {
           name: campaign_name || content_title || subject,
+        },
+        relationships: {
+          audiences: {
+            data: [
+              { type: audience_type === "segment" ? "segment" : "list", id: audience_id }
+            ]
+          }
         }
       }
     };
