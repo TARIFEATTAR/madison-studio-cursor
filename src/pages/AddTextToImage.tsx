@@ -113,35 +113,41 @@ export default function AddTextToImage() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-studio-dark">
+      <div className="min-h-screen bg-[#000000]">
         {/* Header */}
-        <header className="sticky top-0 z-50 bg-studio-dark border-b border-studio-border">
+        <header className="sticky top-0 z-50 bg-[#000000] border-b border-[#1a1a1a]">
           <div className="flex h-14 items-center gap-4 px-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate(-1)}
-              className="shrink-0 text-studio-text-primary"
+              className="shrink-0 text-white hover:bg-[#1a1a1a]"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex-1">
-              <h1 className="text-lg font-bold text-studio-text-primary">Add Text to Image</h1>
+              <h1 className="text-lg font-bold text-white">Add Text to Image</h1>
             </div>
-            <div className="text-sm font-medium text-aged-brass bg-aged-brass/10 px-3 py-1 rounded-full">
+            <div className="text-sm font-medium text-[#C9A66B] bg-[#C9A66B]/10 px-3 py-1 rounded-full">
               {user?.id?.slice(0, 6) || "0"}K
             </div>
           </div>
         </header>
 
         {/* Main Content */}
-        <main className="px-4 py-6 pb-20">
+        <main className="px-4 py-6 pb-20 bg-[#111111]">
           <Tabs defaultValue="create" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6 bg-studio-charcoal">
-              <TabsTrigger value="create" className="data-[state=active]:bg-aged-brass data-[state=active]:text-studio-dark">
+            <TabsList className="grid w-full grid-cols-2 mb-6 bg-[#1a1a1a] border border-[#2a2a2a] p-1">
+              <TabsTrigger 
+                value="create" 
+                className="data-[state=active]:bg-[#C9A66B] data-[state=active]:text-[#000000] data-[state=inactive]:text-[#A0A0A0] rounded"
+              >
                 Create
               </TabsTrigger>
-              <TabsTrigger value="settings" className="data-[state=active]:bg-aged-brass data-[state=active]:text-studio-dark">
+              <TabsTrigger 
+                value="settings" 
+                className="data-[state=active]:bg-[#C9A66B] data-[state=active]:text-[#000000] data-[state=inactive]:text-[#A0A0A0] rounded"
+              >
                 Settings
               </TabsTrigger>
             </TabsList>
@@ -154,11 +160,11 @@ export default function AddTextToImage() {
                   value={textInstruction}
                   onChange={(e) => setTextInstruction(e.target.value)}
                   rows={6}
-                  className="bg-studio-charcoal border-aged-brass text-studio-text-primary placeholder:text-studio-text-muted resize-none"
+                  className="bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder:text-[#666666] resize-none focus:border-[#C9A66B] focus:ring-[#C9A66B]"
                 />
                 
                 {/* Image Upload Button */}
-                <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-studio-charcoal border border-studio-border text-studio-text-secondary cursor-pointer hover:bg-studio-card transition-colors">
+                <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] text-[#A0A0A0] cursor-pointer hover:bg-[#222222] hover:border-[#C9A66B]/50 transition-colors">
                   <Upload className="h-4 w-4" />
                   <span className="text-sm font-medium">
                     {selectedImage ? "Change Image" : "Upload Image"}
@@ -174,7 +180,7 @@ export default function AddTextToImage() {
 
               {/* Image Preview */}
               {selectedImage && (
-                <div className="relative aspect-square rounded-lg overflow-hidden bg-studio-charcoal border border-studio-border">
+                <div className="relative aspect-square rounded-lg overflow-hidden bg-[#1a1a1a] border border-[#2a2a2a]">
                   <img
                     src={selectedImage.url}
                     alt="Selected"
@@ -186,31 +192,31 @@ export default function AddTextToImage() {
               {/* Option Cards Grid */}
               <div className="grid grid-cols-3 gap-3">
                 {/* Tint Overlay Card */}
-                <Card className="bg-studio-charcoal border-studio-border p-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-studio-card transition-colors">
-                  <div className="text-2xl">{OVERLAY_OPTIONS.find(o => o.value === overlayOpacity)?.icon || "◑"}</div>
+                <Card className="bg-[#1a1a1a] border-[#2a2a2a] p-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-[#222222] hover:border-[#C9A66B]/30 transition-colors">
+                  <div className="text-2xl text-[#C9A66B]">{OVERLAY_OPTIONS.find(o => o.value === overlayOpacity)?.icon || "◑"}</div>
                   <div className="text-center">
-                    <div className="text-xs font-medium text-studio-text-primary">Tint</div>
-                    <div className="text-[10px] text-studio-text-muted">
+                    <div className="text-xs font-medium text-white">Tint</div>
+                    <div className="text-[10px] text-[#A0A0A0]">
                       {OVERLAY_OPTIONS.find(o => o.value === overlayOpacity)?.label}
                     </div>
                   </div>
                 </Card>
 
                 {/* Aspect Ratio Card */}
-                <Card className="bg-studio-charcoal border-studio-border p-4 flex flex-col items-center gap-2">
-                  <div className="text-2xl">⬜</div>
+                <Card className="bg-[#1a1a1a] border-[#2a2a2a] p-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-[#222222] hover:border-[#C9A66B]/30 transition-colors">
+                  <div className="text-2xl text-[#C9A66B]">⬜</div>
                   <div className="text-center">
-                    <div className="text-xs font-medium text-studio-text-primary">Size</div>
-                    <div className="text-[10px] text-studio-text-muted">{aspectRatio}</div>
+                    <div className="text-xs font-medium text-white">Size</div>
+                    <div className="text-[10px] text-[#A0A0A0]">{aspectRatio}</div>
                   </div>
                 </Card>
 
                 {/* Style Card (placeholder for future features) */}
-                <Card className="bg-studio-charcoal border-studio-border p-4 flex flex-col items-center gap-2 opacity-50">
-                  <div className="text-2xl">✨</div>
+                <Card className="bg-[#1a1a1a] border-[#2a2a2a] p-4 flex flex-col items-center gap-2 opacity-40">
+                  <div className="text-2xl text-[#A0A0A0]">✨</div>
                   <div className="text-center">
-                    <div className="text-xs font-medium text-studio-text-primary">Style</div>
-                    <div className="text-[10px] text-studio-text-muted">Default</div>
+                    <div className="text-xs font-medium text-white">Style</div>
+                    <div className="text-[10px] text-[#A0A0A0]">Default</div>
                   </div>
                 </Card>
               </div>
@@ -220,7 +226,7 @@ export default function AddTextToImage() {
                 onClick={handleGenerate}
                 disabled={!selectedImage || !textInstruction.trim() || isGenerating}
                 size="lg"
-                className="w-full bg-aged-brass hover:bg-aged-brass/90 text-studio-dark font-semibold rounded-full h-14"
+                className="w-full bg-[#C9A66B] hover:bg-[#B8956A] text-[#000000] font-bold rounded-full h-14 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isGenerating ? (
                   <>
@@ -238,7 +244,7 @@ export default function AddTextToImage() {
               {/* Generated Image */}
               {generatedImage && (
                 <div className="space-y-4">
-                  <div className="relative aspect-square rounded-lg overflow-hidden bg-studio-charcoal border border-aged-brass">
+                  <div className="relative aspect-square rounded-lg overflow-hidden bg-[#1a1a1a] border-2 border-[#C9A66B] shadow-lg shadow-[#C9A66B]/20">
                     <img
                       src={generatedImage}
                       alt="Generated with text"
@@ -248,7 +254,7 @@ export default function AddTextToImage() {
                   <Button
                     onClick={handleDownload}
                     variant="outline"
-                    className="w-full border-aged-brass text-aged-brass hover:bg-aged-brass/10"
+                    className="w-full border-[#C9A66B] bg-transparent text-[#C9A66B] hover:bg-[#C9A66B]/10 hover:border-[#C9A66B]"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download Image
@@ -260,7 +266,7 @@ export default function AddTextToImage() {
             <TabsContent value="settings" className="space-y-6 mt-0">
               {/* Tint Overlay Options */}
               <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-studio-text-primary">Background Overlay</h3>
+                <h3 className="text-sm font-semibold text-white">Background Overlay</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {OVERLAY_OPTIONS.map((option) => (
                     <button
@@ -269,8 +275,8 @@ export default function AddTextToImage() {
                       className={cn(
                         "flex items-center gap-3 p-4 rounded-lg border-2 transition-all",
                         overlayOpacity === option.value
-                          ? "border-aged-brass bg-aged-brass/10 text-aged-brass"
-                          : "border-studio-border bg-studio-charcoal text-studio-text-secondary hover:bg-studio-card"
+                          ? "border-[#C9A66B] bg-[#C9A66B]/10 text-[#C9A66B]"
+                          : "border-[#2a2a2a] bg-[#1a1a1a] text-[#A0A0A0] hover:bg-[#222222] hover:border-[#C9A66B]/30"
                       )}
                     >
                       <span className="text-2xl">{option.icon}</span>
@@ -285,7 +291,7 @@ export default function AddTextToImage() {
 
               {/* Aspect Ratio Options */}
               <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-studio-text-primary">Aspect Ratio</h3>
+                <h3 className="text-sm font-semibold text-white">Aspect Ratio</h3>
                 <MobileAspectRatioSelector
                   value={aspectRatio}
                   onChange={setAspectRatio}
@@ -296,8 +302,8 @@ export default function AddTextToImage() {
                     className={cn(
                       "px-3 py-2 rounded-lg border text-sm font-medium transition-all",
                       aspectRatio === "4:5"
-                        ? "border-aged-brass bg-aged-brass/10 text-aged-brass"
-                        : "border-studio-border bg-studio-charcoal text-studio-text-secondary hover:bg-studio-card"
+                        ? "border-[#C9A66B] bg-[#C9A66B]/10 text-[#C9A66B]"
+                        : "border-[#2a2a2a] bg-[#1a1a1a] text-[#A0A0A0] hover:bg-[#222222] hover:border-[#C9A66B]/30"
                     )}
                   >
                     4:5 Portrait
@@ -307,8 +313,8 @@ export default function AddTextToImage() {
                     className={cn(
                       "px-3 py-2 rounded-lg border text-sm font-medium transition-all",
                       aspectRatio === "16:9"
-                        ? "border-aged-brass bg-aged-brass/10 text-aged-brass"
-                        : "border-studio-border bg-studio-charcoal text-studio-text-secondary hover:bg-studio-card"
+                        ? "border-[#C9A66B] bg-[#C9A66B]/10 text-[#C9A66B]"
+                        : "border-[#2a2a2a] bg-[#1a1a1a] text-[#A0A0A0] hover:bg-[#222222] hover:border-[#C9A66B]/30"
                     )}
                   >
                     16:9 Wide
@@ -317,9 +323,9 @@ export default function AddTextToImage() {
               </div>
 
               {/* Tips */}
-              <Card className="p-4 bg-studio-charcoal/50 border-studio-border">
-                <h3 className="font-semibold text-sm mb-3 text-studio-text-primary">Tips for Social Posts</h3>
-                <ul className="space-y-2 text-xs text-studio-text-muted">
+              <Card className="p-4 bg-[#1a1a1a] border-[#2a2a2a]">
+                <h3 className="font-semibold text-sm mb-3 text-white">Tips for Social Posts</h3>
+                <ul className="space-y-2 text-xs text-[#A0A0A0]">
                   <li>• 1:1 - Perfect for Instagram feed posts</li>
                   <li>• 9:16 - Ideal for Stories and Reels</li>
                   <li>• 4:5 - Great for portrait posts</li>
