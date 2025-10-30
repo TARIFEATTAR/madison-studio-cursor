@@ -41,7 +41,7 @@ export function useOrganization() {
 
       const { data, error } = await supabase
         .from("organizations")
-        .select("id, name, industry")
+        .select("id, name")
         .eq("id", membership.organization_id)
         .maybeSingle();
 
