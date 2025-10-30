@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Loader2, Mail, Eye } from "lucide-react";
 import { convertToEmailHtml } from "@/utils/emailHtmlConverter";
+import { deserializeEmailState } from "@/utils/emailStateSerializer";
 import DOMPurify from "dompurify";
 
 interface KlaviyoList {
@@ -40,6 +41,7 @@ interface KlaviyoEmailComposerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   contentId?: string;
+  sourceTable?: "master_content" | "derivative_assets" | "outputs";
   initialContent?: string;
   initialTitle?: string;
   initialHtml?: string;
@@ -50,6 +52,7 @@ export function KlaviyoEmailComposer({
   open,
   onOpenChange,
   contentId,
+  sourceTable,
   initialContent = "",
   initialTitle = "",
   initialHtml,
@@ -93,16 +96,73 @@ export function KlaviyoEmailComposer({
   }, [emailHtml]);
 
   useEffect(() => {
-    console.log("[KlaviyoEmailComposer] useEffect triggered", { open, hasInitialHtml: !!initialHtml });
+    console.log("[KlaviyoEmailComposer] useEffect triggered", { open, hasInitialHtml: !!initialHtml, contentId, sourceTable });
     if (open) {
       loadOrganizationAndLists();
+      
       // If initialHtml is provided, use it directly
       if (initialHtml) {
         console.log("[KlaviyoEmailComposer] Setting email HTML from initialHtml");
         setEmailHtml(initialHtml);
       }
+      // If contentId and sourceTable are provided, fetch content from database
+      else if (contentId && sourceTable) {
+        console.log("[KlaviyoEmailComposer] Fetching content from database", { contentId, sourceTable });
+        loadContentFromDatabase(contentId, sourceTable);
+      }
     }
-  }, [open, initialHtml]);
+  }, [open, initialHtml, contentId, sourceTable]);
+
+  const loadContentFromDatabase = async (id: string, table: string) => {
+    try {
+      console.log("[KlaviyoEmailComposer] Loading content from", table, id);
+      const { data, error } = await supabase
+        .from(table as any)
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        console.log("[KlaviyoEmailComposer] Content loaded successfully");
+        
+        // Set campaign name from title
+        if ('title' in data && data.title) {
+          setCampaignName(data.title as string);
+          setSubject(data.title as string);
+        }
+
+        // Try to extract HTML from various possible fields
+        let htmlContent = "";
+        
+        if ('full_content' in data && data.full_content) {
+          try {
+            // Try to deserialize email state
+            const emailState = deserializeEmailState(data.full_content as string);
+            if (emailState.generatedHtml) {
+              htmlContent = emailState.generatedHtml;
+            } else {
+              htmlContent = data.full_content as string;
+            }
+          } catch {
+            // Not serialized, use as is
+            htmlContent = data.full_content as string;
+          }
+        } else if ('generated_content' in data && data.generated_content) {
+          htmlContent = convertToEmailHtml({ content: data.generated_content as string });
+        } else if ('content' in data && data.content) {
+          htmlContent = convertToEmailHtml({ content: data.content as string });
+        }
+
+        console.log("[KlaviyoEmailComposer] Setting email HTML from database content");
+        setEmailHtml(htmlContent);
+      }
+    } catch (error: any) {
+      console.error("[KlaviyoEmailComposer] Error loading content:", error);
+      toast.error(`Failed to load content: ${error.message}`);
+    }
+  };
 
   const loadOrganizationAndLists = async () => {
     console.log("[KlaviyoEmailComposer] loadOrganizationAndLists starting", { user: !!user });

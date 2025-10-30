@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { KlaviyoEmailComposer } from "@/components/klaviyo/KlaviyoEmailComposer";
 import {
   Sheet,
   SheetContent,
@@ -51,31 +51,17 @@ export function PublishingDrawer({
   onSuccess,
 }: PublishingDrawerProps) {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [platformUrls, setPlatformUrls] = useState<Record<string, string>>({});
   const [publishDate, setPublishDate] = useState<Date>(new Date());
   const [notes, setNotes] = useState("");
+  const [klaviyoModalOpen, setKlaviyoModalOpen] = useState(false);
 
   const handlePlatformToggle = (platformId: string) => {
-    // If Klaviyo is selected, navigate to dedicated email publishing page
+    // If Klaviyo is selected, open the Klaviyo modal
     if (platformId === "klaviyo") {
-      const params = new URLSearchParams({
-        contentId,
-        sourceTable,
-        title: contentTitle,
-      });
-
-      // Close the drawer first to avoid overlay/focus lock, then navigate
-      onOpenChange(false);
-      toast({
-        title: "Opening Email Composer",
-        description: "Configure your Klaviyo draft.",
-      });
-      requestAnimationFrame(() => {
-        navigate(`/publish/email?${params.toString()}`);
-      });
+      setKlaviyoModalOpen(true);
       return;
     }
 
@@ -155,158 +141,168 @@ export function PublishingDrawer({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent 
-        className="z-[50] w-full sm:w-[540px] sm:max-w-[540px] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-        onPointerDown={(e) => e.stopPropagation()}
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        <SheetHeader>
-          <SheetTitle>Mark as Published</SheetTitle>
-          <SheetDescription className="line-clamp-2">
-            Track where <span className="font-medium">"{contentTitle}"</span> has been published
-          </SheetDescription>
-        </SheetHeader>
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent 
+          className="z-[50] w-full sm:w-[540px] sm:max-w-[540px] overflow-y-auto"
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <SheetHeader>
+            <SheetTitle>Mark as Published</SheetTitle>
+            <SheetDescription className="line-clamp-2">
+              Track where <span className="font-medium">"{contentTitle}"</span> has been published
+            </SheetDescription>
+          </SheetHeader>
 
-        <div className="mt-4 sm:mt-6 space-y-4 sm:space-y-6 px-1">
-          {/* Publish Date */}
-          <div className="space-y-2">
-            <Label>Publish Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !publishDate && "text-muted-foreground"
-                  )}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {publishDate ? format(publishDate, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent 
-                className="w-auto p-0" 
-                align="start"
-                side="bottom"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Calendar
-                  mode="single"
-                  selected={publishDate}
-                  onSelect={(date) => date && setPublishDate(date)}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* Platform Selection */}
-          <div className="space-y-3">
-            <Label>Publishing Platforms</Label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {PLATFORMS.map((platform) => (
-                <div
-                  key={platform.id}
-                  className={cn(
-                    "flex items-center space-x-2 p-3 rounded-lg border transition-colors cursor-pointer",
-                    selectedPlatforms.includes(platform.id)
-                      ? "bg-primary/5 border-primary"
-                      : "hover:bg-muted/50"
-                  )}
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePlatformToggle(platform.id); }}
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onPointerDown={(e) => e.stopPropagation()}
-                >
-                  <Checkbox
-                    id={platform.id}
-                    checked={selectedPlatforms.includes(platform.id)}
-                    onCheckedChange={() => {}}
-                    className="shrink-0"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  <label
-                    htmlFor={platform.id}
-                    className="flex-1 text-sm font-medium cursor-pointer truncate"
+          <div className="mt-4 sm:mt-6 space-y-4 sm:space-y-6 px-1">
+            {/* Publish Date */}
+            <div className="space-y-2">
+              <Label>Publish Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !publishDate && "text-muted-foreground"
+                    )}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <span className="mr-1">{platform.icon}</span>
-                    <span className="truncate">{platform.label}</span>
-                  </label>
-                </div>
-              ))}
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {publishDate ? format(publishDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent 
+                  className="w-auto p-0" 
+                  align="start"
+                  side="bottom"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Calendar
+                    mode="single"
+                    selected={publishDate}
+                    onSelect={(date) => date && setPublishDate(date)}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
-          </div>
 
-          {/* Platform URLs */}
-          {selectedPlatforms.length > 0 && (
+            {/* Platform Selection */}
             <div className="space-y-3">
-              <Label>External URLs (Optional)</Label>
-              <p className="text-sm text-muted-foreground">
-                Add links to where your content is live
-              </p>
-              {selectedPlatforms.map((platformId) => {
-                const platform = PLATFORMS.find((p) => p.id === platformId);
-                return (
-                  <div key={platformId} className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">
-                      {platform?.icon} {platform?.label}
-                    </Label>
-                    <Input
-                      type="url"
-                      placeholder={`https://...`}
-                      value={platformUrls[platformId] || ""}
-                      onChange={(e) => handleUrlChange(platformId, e.target.value)}
+              <Label>Publishing Platforms</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {PLATFORMS.map((platform) => (
+                  <div
+                    key={platform.id}
+                    className={cn(
+                      "flex items-center space-x-2 p-3 rounded-lg border transition-colors cursor-pointer",
+                      selectedPlatforms.includes(platform.id)
+                        ? "bg-primary/5 border-primary"
+                        : "hover:bg-muted/50"
+                    )}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePlatformToggle(platform.id); }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
+                  >
+                    <Checkbox
+                      id={platform.id}
+                      checked={selectedPlatforms.includes(platform.id)}
+                      onCheckedChange={() => {}}
+                      className="shrink-0"
                       onClick={(e) => e.stopPropagation()}
                     />
+                    <label
+                      htmlFor={platform.id}
+                      className="flex-1 text-sm font-medium cursor-pointer truncate"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span className="mr-1">{platform.icon}</span>
+                      <span className="truncate">{platform.label}</span>
+                    </label>
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          )}
 
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label>Publishing Notes (Optional)</Label>
-            <Textarea
-              placeholder="Add notes about performance, engagement..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-              className="text-sm"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
+            {/* Platform URLs */}
+            {selectedPlatforms.length > 0 && (
+              <div className="space-y-3">
+                <Label>External URLs (Optional)</Label>
+                <p className="text-sm text-muted-foreground">
+                  Add links to where your content is live
+                </p>
+                {selectedPlatforms.map((platformId) => {
+                  const platform = PLATFORMS.find((p) => p.id === platformId);
+                  return (
+                    <div key={platformId} className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">
+                        {platform?.icon} {platform?.label}
+                      </Label>
+                      <Input
+                        type="url"
+                        placeholder={`https://...`}
+                        value={platformUrls[platformId] || ""}
+                        onChange={(e) => handleUrlChange(platformId, e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button
-              variant="outline"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenChange(false);
-              }}
-              className="flex-1"
-              disabled={saving}
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePublish();
-              }} 
-              className="flex-1" 
-              disabled={saving}
-            >
-              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Mark as Published
-            </Button>
+            {/* Notes */}
+            <div className="space-y-2">
+              <Label>Publishing Notes (Optional)</Label>
+              <Textarea
+                placeholder="Add notes about performance, engagement..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+                className="text-sm"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenChange(false);
+                }}
+                className="flex-1"
+                disabled={saving}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePublish();
+                }} 
+                className="flex-1" 
+                disabled={saving}
+              >
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Mark as Published
+              </Button>
+            </div>
           </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </SheetContent>
+      </Sheet>
+
+      <KlaviyoEmailComposer
+        open={klaviyoModalOpen}
+        onOpenChange={setKlaviyoModalOpen}
+        contentId={contentId}
+        sourceTable={sourceTable === "generated_images" ? "master_content" : sourceTable}
+        initialTitle={contentTitle}
+      />
+    </>
   );
 }

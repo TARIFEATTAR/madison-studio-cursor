@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import { Edit2, Send, Copy, Check, FileDown, Calendar, MessageSquare, Download, Trash2, X, Mail } from "lucide-react";
+import { KlaviyoEmailComposer } from "@/components/klaviyo/KlaviyoEmailComposer";
 import {
   Dialog,
   DialogContent,
@@ -58,7 +58,6 @@ export function ContentDetailModal({
   onEditWithMadison,
 }: ContentDetailModalProps) {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
   const [isCopied, setIsCopied] = useState(false);
@@ -68,6 +67,7 @@ export function ContentDetailModal({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState("");
+  const [klaviyoModalOpen, setKlaviyoModalOpen] = useState(false);
   const [dependencyCounts, setDependencyCounts] = useState<{
     derivatives: number;
     scheduled: number;
@@ -562,7 +562,7 @@ export function ContentDetailModal({
               {/* Special Edit button for Email Composer emails */}
               {isEmailComposer ? (
                 <Button 
-                  onClick={() => navigate(`/email-composer?contentId=${content.id}&sourceTable=master_content`)} 
+                  onClick={() => window.location.href = `/email-composer?contentId=${content.id}&sourceTable=master_content`} 
                   variant="default" 
                   size="sm"
                   className="bg-brass hover:bg-brass/90"
@@ -611,13 +611,7 @@ export function ContentDetailModal({
               {contentType && (contentType.toLowerCase().includes('email') || contentType === 'email_campaign') && (
                 <Button
                   onClick={() => {
-                    const sourceTable = 
-                      category === "master" ? "master_content" :
-                      category === "derivative" ? "derivative_assets" :
-                      category === "output" ? "outputs" : "master_content";
-                    
-                    navigate(`/publish/email?contentId=${content.id}&sourceTable=${sourceTable}&title=${encodeURIComponent(content.title || 'Untitled')}`);
-                    onOpenChange(false);
+                    setKlaviyoModalOpen(true);
                   }}
                   variant="outline"
                   size="sm"
@@ -754,6 +748,19 @@ export function ContentDetailModal({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Klaviyo Email Composer */}
+      <KlaviyoEmailComposer
+        open={klaviyoModalOpen}
+        onOpenChange={setKlaviyoModalOpen}
+        contentId={content.id}
+        sourceTable={
+          category === "master" ? "master_content" :
+          category === "derivative" ? "derivative_assets" :
+          "outputs"
+        }
+        initialTitle={content.title || 'Untitled'}
+      />
     </Dialog>
   );
 }
