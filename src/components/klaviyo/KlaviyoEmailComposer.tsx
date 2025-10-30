@@ -309,6 +309,27 @@ export function KlaviyoEmailComposer({
       return;
     }
 
+    // Validate audience has members (for lists and segments)
+    if (audienceType === "list") {
+      const selectedListData = lists.find(l => l.id === selectedList);
+      if (selectedListData && selectedListData.profile_count === 0) {
+        toast.error("Cannot create campaign", {
+          description: `The list "${selectedListData.name}" has 0 subscribers. Please select a list with subscribers.`,
+          duration: 6000,
+        });
+        return;
+      }
+    } else if (audienceType === "segment") {
+      const selectedSegmentData = segments.find(s => s.id === selectedList);
+      if (selectedSegmentData && selectedSegmentData.profile_count === 0) {
+        toast.error("Cannot create campaign", {
+          description: `The segment "${selectedSegmentData.name}" has 0 profiles. Please select a segment with profiles.`,
+          duration: 6000,
+        });
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
