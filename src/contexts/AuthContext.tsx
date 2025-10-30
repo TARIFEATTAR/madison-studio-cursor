@@ -18,26 +18,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     console.log("[AuthProvider] Initializing auth context");
-    
-    const safetyTimeout = setTimeout(() => {
-      console.warn("[AuthProvider] Safety timeout reached. Proceeding without session.");
-      setSession(null);
-      setUser(null);
-      setLoading(false);
-    }, 2000);
 
-    // Set up auth state listener FIRST
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         console.log("[AuthProvider] Auth state changed", { hasUser: !!session?.user });
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-        clearTimeout(safetyTimeout);
       }
     );
 
-    // THEN check for existing session
+    // Check for existing session
     supabase.auth.getSession()
       .then(({ data: { session }, error }) => {
         if (error) {
@@ -50,19 +42,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(session?.user ?? null);
         }
         setLoading(false);
-        clearTimeout(safetyTimeout);
       })
       .catch((err) => {
         console.error("[AuthProvider] getSession exception:", err);
         setSession(null);
         setUser(null);
         setLoading(false);
-        clearTimeout(safetyTimeout);
       });
 
     return () => {
       subscription.unsubscribe();
-      clearTimeout(safetyTimeout);
     };
   }, []);
 

@@ -120,7 +120,7 @@ export function KlaviyoEmailComposer({
         .from(table as any)
         .select("*")
         .eq("id", id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
