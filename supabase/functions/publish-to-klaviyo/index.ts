@@ -102,13 +102,6 @@ serve(async (req) => {
         type: "campaign",
         attributes: {
           name: campaign_name || content_title || subject,
-        },
-        relationships: {
-          audiences: {
-            data: [
-              { type: audience_type === "segment" ? "segment" : "list", id: audience_id }
-            ]
-          }
         }
       }
     };
@@ -215,11 +208,19 @@ serve(async (req) => {
             reply_to_email: "noreply@example.com",
             html_content: inlinedHtml
           }
+        },
+        relationships: {
+          audiences: {
+            data: [
+              { type: audience_type === "segment" ? "segment" : "list", id: audience_id }
+            ]
+          }
         }
       }
     };
 
-    const messageUpdateResponse = await fetch(`https://a.klaviyo.com/api/campaign-messages/${messageId}`, {
+    // Try to update message with audiences + content. If audiences relation is not allowed, retry with content-only
+    let messageUpdateResponse = await fetch(`https://a.klaviyo.com/api/campaign-messages/${messageId}`, {
       method: "PATCH",
       headers: {
         "Authorization": `Klaviyo-API-Key ${apiKey}`,
@@ -231,8 +232,40 @@ serve(async (req) => {
 
     if (!messageUpdateResponse.ok) {
       const errorText = await messageUpdateResponse.text();
-      console.error("Failed to update campaign message:", errorText);
-      throw new Error("Failed to update campaign message");
+      console.error("Failed to update campaign message with audiences, retrying with content-only:", errorText);
+
+      const contentOnlyPayload = {
+        data: {
+          type: "campaign-message",
+          id: messageId,
+          attributes: {
+            content: {
+              subject: subject,
+              preview_text: preview_text || subject,
+              from_email: "noreply@example.com",
+              from_label: "Madison",
+              reply_to_email: "noreply@example.com",
+              html_content: inlinedHtml
+            }
+          }
+        }
+      };
+
+      messageUpdateResponse = await fetch(`https://a.klaviyo.com/api/campaign-messages/${messageId}`, {
+        method: "PATCH",
+        headers: {
+          "Authorization": `Klaviyo-API-Key ${apiKey}`,
+          "revision": "2024-10-15",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(contentOnlyPayload),
+      });
+
+      if (!messageUpdateResponse.ok) {
+        const secondError = await messageUpdateResponse.text();
+        console.error("Failed to update campaign message (content-only):", secondError);
+        throw new Error("Failed to update campaign message");
+      }
     }
 
     console.log("Successfully updated campaign message");
