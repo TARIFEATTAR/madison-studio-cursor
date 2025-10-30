@@ -29,6 +29,12 @@ export function EmailPreview({ html }: EmailPreviewProps) {
     });
   }, [html]);
 
+  // Trust our own generator output (full HTML docs) to keep rich styles intact
+  const docToRender = useMemo(() => {
+    const isFullDoc = /^\s*<!DOCTYPE html>/i.test(html) || /<html[\s>]/i.test(html);
+    return isFullDoc ? html : sanitizedHtml;
+  }, [html, sanitizedHtml]);
+
   return (
     <div className="h-full flex flex-col bg-card border-l border-border">
       {/* Preview Controls */}
@@ -67,7 +73,7 @@ export function EmailPreview({ html }: EmailPreviewProps) {
           }}
         >
           <iframe
-            srcDoc={sanitizedHtml}
+            srcDoc={docToRender}
             title="Email Preview"
             className="w-full border-0"
             style={{
