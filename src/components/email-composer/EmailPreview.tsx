@@ -14,7 +14,13 @@ export function EmailPreview({ html }: EmailPreviewProps) {
   const sanitizedHtml = useMemo(() => {
     return DOMPurify.sanitize(html, {
       ADD_TAGS: ['style', 'link'],
-      ADD_ATTR: ['role', 'cellspacing', 'cellpadding', 'border', 'bgcolor', 'http-equiv'],
+      ADD_ATTR: [
+        // keep inline email design intact
+        'style', 'class', 'id', 'href', 'src', 'width', 'height',
+        'align', 'valign', 'border', 'cellpadding', 'cellspacing',
+        'bgcolor', 'background', 'color', 'face', 'size', 'target', 'rel', 'type',
+        'role', 'http-equiv'
+      ],
       ALLOW_UNKNOWN_PROTOCOLS: false,
       FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input', 'button'],
       FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onmouseout', 'onfocus', 'onblur']

@@ -67,19 +67,19 @@ serve(async (req) => {
 
     const apiKey = decryptApiKey(connection.api_key_encrypted, encryptionKey);
 
-    // Fetch lists from Klaviyo with correct pagination parameter
+    // Fetch lists from Klaviyo (use JSON:API accept header)
     const response = await fetch("https://a.klaviyo.com/api/lists/", {
       headers: {
         "Authorization": `Klaviyo-API-Key ${apiKey}`,
         "revision": "2024-10-15",
-        "Accept": "application/json",
+        "Accept": "application/vnd.api+json",
       },
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Klaviyo API error:", errorText);
-      throw new Error("Failed to fetch Klaviyo lists");
+      console.error("Klaviyo API error (lists)", response.status, errorText);
+      throw new Error(`Klaviyo lists failed (${response.status}): ${errorText}`);
     }
 
     const listsData = await response.json();
