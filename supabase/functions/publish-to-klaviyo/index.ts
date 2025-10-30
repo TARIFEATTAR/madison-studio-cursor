@@ -111,7 +111,10 @@ serve(async (req) => {
           audiences: {
             included: [audience_id],
             excluded: []
-          }
+          },
+          "campaign-messages": [
+            { channel: "email", label: "Email" }
+          ]
         }
       }
     };
@@ -121,7 +124,7 @@ serve(async (req) => {
       method: "POST",
       headers: {
         "Authorization": `Klaviyo-API-Key ${apiKey}`,
-        "revision": "2025-07-15",
+        "revision": "2024-07-15",
         "Content-Type": "application/json",
       },
       body: JSON.stringify(campaignPayload),
@@ -150,7 +153,7 @@ serve(async (req) => {
       method: "GET",
       headers: {
         "Authorization": `Klaviyo-API-Key ${apiKey}`,
-        "revision": "2025-07-15",
+        "revision": "2024-07-15",
         "Accept": "application/json",
       },
     });
@@ -181,7 +184,7 @@ serve(async (req) => {
         method: "POST",
         headers: {
           "Authorization": `Klaviyo-API-Key ${apiKey}`,
-          "revision": "2025-07-15",
+          "revision": "2024-07-15",
           "Content-Type": "application/json",
         },
         body: JSON.stringify(createMsgPayload),
@@ -226,7 +229,7 @@ serve(async (req) => {
       method: "PATCH",
       headers: {
         "Authorization": `Klaviyo-API-Key ${apiKey}`,
-        "revision": "2025-07-15",
+        "revision": "2024-07-15",
         "Content-Type": "application/json",
       },
       body: JSON.stringify(messageUpdatePayload),
