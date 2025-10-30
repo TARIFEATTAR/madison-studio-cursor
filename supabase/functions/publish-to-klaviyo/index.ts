@@ -20,17 +20,24 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("Unauthorized");
+    }
+
+    const accessToken = authHeader.replace(/^Bearer\s+/i, "").trim();
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       {
         global: {
-          headers: { Authorization: req.headers.get("Authorization")! },
+          headers: { Authorization: authHeader },
         },
       }
     );
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabase.auth.getUser(accessToken);
     if (userError || !user) {
       throw new Error("Unauthorized");
     }
@@ -96,7 +103,7 @@ serve(async (req) => {
         attributes: {
           name: campaign_name || content_title || subject,
           audiences: {
-            included: [audience_id]
+            included: [{ type: audience_type, id: audience_id }]
           },
           // Omit send_strategy to create a draft campaign
           campaign_messages: {
