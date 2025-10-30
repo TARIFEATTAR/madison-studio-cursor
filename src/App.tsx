@@ -126,9 +126,14 @@ const RootRoute = () => {
     }
 
     if (!user || isChecking) return;
-    
     setIsChecking(true);
-    
+
+    // Safety timeout so we never hang on "Loading…"
+    const safetyTimer = setTimeout(() => {
+      console.warn("[RootRoute] Safety timeout reached. Proceeding to dashboard.");
+      setIsChecking(false);
+    }, 3500);
+
     const checkOnboardingStatus = async () => {
       console.log("[RootRoute] Checking onboarding status…");
       // Check database for organization with brand_config
@@ -142,6 +147,7 @@ const RootRoute = () => {
       if (memberErr) {
         console.warn("[RootRoute] organization_members lookup error", memberErr);
         setIsChecking(false);
+        clearTimeout(safetyTimer);
         return;
       }
 
@@ -150,6 +156,7 @@ const RootRoute = () => {
         setRedirectCount(prev => prev + 1);
         navigate('/onboarding', { replace: true });
         setIsChecking(false);
+        clearTimeout(safetyTimer);
         return;
       }
 
@@ -157,11 +164,12 @@ const RootRoute = () => {
         .from("organizations")
         .select("brand_config")
         .eq("id", orgMember.organization_id)
-        .single();
+        .maybeSingle();
 
       if (orgErr) {
         console.warn("[RootRoute] organizations lookup error", orgErr);
         setIsChecking(false);
+        clearTimeout(safetyTimer);
         return;
       }
 
@@ -176,14 +184,16 @@ const RootRoute = () => {
         navigate('/onboarding', { replace: true });
       } else {
         console.log("[RootRoute] Onboarding OK (has brand info). Staying on dashboard.");
-        // Sync localStorage with database state
         localStorage.setItem(`onboarding_completed_${user.id}`, "true");
       }
-      
+
       setIsChecking(false);
+      clearTimeout(safetyTimer);
     };
 
     checkOnboardingStatus();
+
+    return () => clearTimeout(safetyTimer);
   }, [user, navigate, location, redirectCount, isChecking]);
 
   if (isChecking) {
