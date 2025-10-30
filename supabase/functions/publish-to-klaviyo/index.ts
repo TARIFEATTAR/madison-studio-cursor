@@ -56,12 +56,17 @@ serve(async (req) => {
       from_name
     } = await req.json();
 
-    if (!organization_id || !audience_id || !subject || !content_html) {
-      throw new Error("Missing required fields: organization_id, audience_id, subject, content_html");
+    if (!organization_id || !subject || !content_html) {
+      throw new Error("Missing required fields: organization_id, subject, content_html");
     }
 
     if (!from_email || !from_name) {
       throw new Error("From email and from name are required");
+    }
+
+    // Validate audience_id is provided unless we're updating an existing campaign
+    if (!audience_id) {
+      throw new Error("Missing audience_id (list, segment, or campaign ID)");
     }
 
     // Get the encrypted API key
@@ -102,122 +107,160 @@ serve(async (req) => {
       // Continue with original HTML if inlining fails
     }
 
-    // Step 1: Create a DRAFT campaign in Klaviyo with an initial email message (required)
-    const campaignPayload = {
-      data: {
-        type: "campaign",
-        attributes: {
-          name: campaign_name || content_title || subject,
-          audiences: {
-            included: [audience_id],
-            excluded: []
+    // Handle two scenarios: 
+    // 1. Update existing campaign (audience_type === "campaign")
+    // 2. Create new campaign (audience_type === "list" or "segment")
+    
+    let campaignId: string;
+    let messageId: string | undefined;
+
+    if (audience_type === "campaign") {
+      // Scenario 1: Update an EXISTING campaign
+      campaignId = audience_id;
+      console.log(`Updating existing campaign ${campaignId}...`);
+      // Fetch existing campaign messages
+      const messagesResponse = await fetch(`https://a.klaviyo.com/api/campaigns/${campaignId}/campaign-messages`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Klaviyo-API-Key ${apiKey}`,
+          "revision": "2024-07-15",
+          "Accept": "application/json",
+        },
+      });
+
+      if (!messagesResponse.ok) {
+        const errorText = await messagesResponse.text();
+        console.error("Failed to fetch campaign messages:", errorText);
+        throw new Error("Failed to fetch campaign messages");
+      }
+
+      const messagesData = await messagesResponse.json();
+      messageId = messagesData.data?.[0]?.id as string | undefined;
+
+      if (!messageId) {
+        throw new Error("No email message found in the selected campaign");
+      }
+      
+      console.log(`Found message ID: ${messageId} in existing campaign`);
+    } else {
+      // Scenario 2: Create a NEW campaign for list/segment
+      const campaignPayload = {
+        data: {
+          type: "campaign",
+          attributes: {
+            name: campaign_name || content_title || subject,
+            audiences: {
+              included: [audience_id],
+              excluded: []
+            }
+          },
+          relationships: {
+            "campaign-messages": {
+              data: [
+                { type: "campaign-message", "temp-id": "msg1", method: "create" }
+              ]
+            }
           }
         },
-        relationships: {
-          "campaign-messages": {
-            data: [
-              { type: "campaign-message", "temp-id": "msg1", method: "create" }
-            ]
+        included: [
+          {
+            type: "campaign-message",
+            "temp-id": "msg1",
+            attributes: { channel: "email", label: "Email" }
           }
-        }
-      },
-      included: [
-        {
-          type: "campaign-message",
-          "temp-id": "msg1",
-          attributes: { channel: "email", label: "Email" }
-        }
-      ]
-    };
-
-    console.log("Creating Klaviyo campaign...");
-    const campaignResponse = await fetch("https://a.klaviyo.com/api/campaigns/", {
-      method: "POST",
-      headers: {
-        "Authorization": `Klaviyo-API-Key ${apiKey}`,
-        "revision": "2024-07-15",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(campaignPayload),
-    });
-
-    if (!campaignResponse.ok) {
-      const errorText = await campaignResponse.text();
-      console.error("Klaviyo campaign creation error:", errorText);
-      let errorDetail = "Failed to create Klaviyo campaign";
-      try {
-        const errorJson = JSON.parse(errorText);
-        errorDetail = errorJson.errors?.[0]?.detail || errorDetail;
-      } catch (e) {
-        errorDetail = errorText || errorDetail;
-      }
-      throw new Error(errorDetail);
-    }
-
-    const campaignData = await campaignResponse.json();
-    const campaignId = campaignData.data.id;
-    console.log(`Created Klaviyo campaign ${campaignId}`);
-
-    // Step 2: Fetch the campaign message ID (created automatically with the campaign)
-    console.log("Fetching campaign message ID...");
-    const messagesResponse = await fetch(`https://a.klaviyo.com/api/campaigns/${campaignId}/campaign-messages`, {
-      method: "GET",
-      headers: {
-        "Authorization": `Klaviyo-API-Key ${apiKey}`,
-        "revision": "2024-07-15",
-        "Accept": "application/json",
-      },
-    });
-
-    if (!messagesResponse.ok) {
-      const errorText = await messagesResponse.text();
-      console.error("Failed to fetch campaign messages:", errorText);
-      throw new Error("Failed to fetch campaign messages");
-    }
-
-    const messagesData = await messagesResponse.json();
-    let messageId = messagesData.data?.[0]?.id as string | undefined;
-
-    // If no message exists yet, create one
-    if (!messageId) {
-      console.log("No campaign message found. Creating one...");
-      const createMsgPayload = {
-        data: {
-          type: "campaign-message",
-          attributes: { channel: "email", label: "Email" },
-          relationships: {
-            campaign: { data: { type: "campaign", id: campaignId } }
-          }
-        }
+        ]
       };
 
-      const createMsgRes = await fetch(`https://a.klaviyo.com/api/campaign-messages/`, {
+      console.log("Creating new Klaviyo campaign...");
+      const campaignResponse = await fetch("https://a.klaviyo.com/api/campaigns/", {
         method: "POST",
         headers: {
           "Authorization": `Klaviyo-API-Key ${apiKey}`,
           "revision": "2024-07-15",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(createMsgPayload),
+        body: JSON.stringify(campaignPayload),
       });
 
-      if (!createMsgRes.ok) {
-        const errorText = await createMsgRes.text();
-        console.error("Failed to create campaign message:", errorText);
-        throw new Error("Failed to create campaign message");
+      if (!campaignResponse.ok) {
+        const errorText = await campaignResponse.text();
+        console.error("Klaviyo campaign creation error:", errorText);
+        let errorDetail = "Failed to create Klaviyo campaign";
+        try {
+          const errorJson = JSON.parse(errorText);
+          const firstError = errorJson.errors?.[0];
+          errorDetail = firstError?.detail || firstError?.title || errorDetail;
+        } catch (e) {
+          errorDetail = errorText || errorDetail;
+        }
+        throw new Error(errorDetail);
       }
 
-      const created = await createMsgRes.json();
-      messageId = created.data?.id as string | undefined;
+      const campaignData = await campaignResponse.json();
+      campaignId = campaignData.data.id;
+      console.log(`Created new Klaviyo campaign ${campaignId}`);
+
+      // Fetch the campaign message ID (created automatically with the campaign)
+      console.log("Fetching new campaign message ID...");
+      const newMessagesResponse = await fetch(`https://a.klaviyo.com/api/campaigns/${campaignId}/campaign-messages`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Klaviyo-API-Key ${apiKey}`,
+          "revision": "2024-07-15",
+          "Accept": "application/json",
+        },
+      });
+
+      if (!newMessagesResponse.ok) {
+        const errorText = await newMessagesResponse.text();
+        console.error("Failed to fetch campaign messages:", errorText);
+        throw new Error("Failed to fetch campaign messages");
+      }
+
+      const newMessagesData = await newMessagesResponse.json();
+      messageId = newMessagesData.data?.[0]?.id as string | undefined;
+
+      // If no message exists yet, create one
+      if (!messageId) {
+        console.log("No campaign message found. Creating one...");
+        const createMsgPayload = {
+          data: {
+            type: "campaign-message",
+            attributes: { channel: "email", label: "Email" },
+            relationships: {
+              campaign: { data: { type: "campaign", id: campaignId } }
+            }
+          }
+        };
+
+        const createMsgRes = await fetch(`https://a.klaviyo.com/api/campaign-messages/`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Klaviyo-API-Key ${apiKey}`,
+            "revision": "2024-07-15",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(createMsgPayload),
+        });
+
+        if (!createMsgRes.ok) {
+          const errorText = await createMsgRes.text();
+          console.error("Failed to create campaign message:", errorText);
+          throw new Error("Failed to create campaign message");
+        }
+
+        const created = await createMsgRes.json();
+        messageId = created.data?.id as string | undefined;
+      }
+
+      if (!messageId) {
+        throw new Error("No message found or created for campaign");
+      }
+
+      console.log(`Found message ID: ${messageId}`);
     }
 
-    if (!messageId) {
-      throw new Error("No message found or created for campaign");
-    }
-
-    console.log(`Found message ID: ${messageId}`);
-
-    // Step 4: Update the campaign message with content (no audiences in relationships)
+    // Update the campaign message with content
     console.log("Updating campaign message with content...");
     const messageUpdatePayload = {
       data: {
@@ -232,7 +275,6 @@ serve(async (req) => {
             html_content: inlinedHtml
           }
         }
-        // No relationships - audiences already assigned at campaign level
       }
     };
 
@@ -249,7 +291,24 @@ serve(async (req) => {
     if (!messageUpdateResponse.ok) {
       const errorText = await messageUpdateResponse.text();
       console.error("Failed to update campaign message:", errorText);
-      throw new Error("Failed to update campaign message");
+      
+      // Parse and extract detailed Klaviyo error
+      let errorDetail = "Failed to update campaign message";
+      try {
+        const errorJson = JSON.parse(errorText);
+        const firstError = errorJson.errors?.[0];
+        if (firstError) {
+          // Check for sender email verification error
+          if (firstError.detail?.includes("from_email") || firstError.source?.pointer === "/data/attributes/content/from_email") {
+            errorDetail = `Sender email '${from_email}' is not verified in your Klaviyo account. Please verify it in Klaviyo Settings > Email > Sender Profiles.`;
+          } else {
+            errorDetail = firstError.detail || firstError.title || errorDetail;
+          }
+        }
+      } catch (e) {
+        errorDetail = errorText || errorDetail;
+      }
+      throw new Error(errorDetail);
     }
 
     console.log("Successfully updated campaign message");

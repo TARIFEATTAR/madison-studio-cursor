@@ -332,9 +332,21 @@ export function KlaviyoEmailComposer({
 
       if (error) {
         console.error("[KlaviyoEmailComposer] Klaviyo publish error:", error);
-        // Surface the actual error message from the function
+        // Surface the actual error message from Klaviyo
         const errorMessage = error.message || 'Unknown error occurred';
-        toast.error(`Failed to create Klaviyo campaign: ${errorMessage}`);
+        
+        // Show detailed error with action items if available
+        if (errorMessage.includes('not verified')) {
+          toast.error("Sender Email Not Verified", {
+            description: errorMessage,
+            duration: 10000, // Show longer for important errors
+          });
+        } else {
+          toast.error("Failed to publish to Klaviyo", {
+            description: errorMessage,
+            duration: 8000,
+          });
+        }
         return;
       }
 
@@ -344,7 +356,11 @@ export function KlaviyoEmailComposer({
         await onSendSuccess();
       }
 
-      toast.success("Draft campaign created in Klaviyo!", {
+      const successMessage = audienceType === "campaign" 
+        ? "Campaign updated in Klaviyo!" 
+        : "Draft campaign created in Klaviyo!";
+      
+      toast.success(successMessage, {
         description: "Review and send from your Klaviyo dashboard.",
       });
 
