@@ -96,40 +96,20 @@ serve(async (req) => {
       // Continue with original HTML if inlining fails
     }
 
-    // Create a DRAFT campaign in Klaviyo including the initial email message
+    // Step 1: Create a DRAFT campaign in Klaviyo (without messages)
     const campaignPayload = {
       data: {
         type: "campaign",
         attributes: {
           name: campaign_name || content_title || subject,
           audiences: {
-            included: [{ type: audience_type, id: audience_id }]
-          },
-          // Include at least one campaign message at creation time (required by API)
-          campaign_messages: {
-            data: [
-              {
-                type: "campaign-message",
-                attributes: {
-                  channel: "email",
-                  label: "Email 1",
-                  content: {
-                    subject: subject,
-                    preview_text: preview_text || subject,
-                    from_email: "noreply@example.com",
-                    from_label: "Madison",
-                    reply_to_email: "noreply@example.com",
-                    html_content: inlinedHtml
-                  }
-                }
-              }
-            ]
+            included: [audience_id]
           }
-          // Omit send_strategy to create a draft campaign
         }
       }
     };
 
+    console.log("Creating Klaviyo campaign...");
     const campaignResponse = await fetch("https://a.klaviyo.com/api/campaigns/", {
       method: "POST",
       headers: {
@@ -155,16 +135,72 @@ serve(async (req) => {
 
     const campaignData = await campaignResponse.json();
     const campaignId = campaignData.data.id;
-
     console.log(`Created Klaviyo campaign ${campaignId}`);
 
-    // Extract created message id (Klaviyo returns campaign with nested campaign_messages)
-    let messageId: string | null = null;
-    try {
-      messageId = campaignData?.data?.attributes?.campaign_messages?.data?.[0]?.id ?? null;
-    } catch (_) {
-      messageId = null;
+    // Step 2: Get the campaign messages to find the message ID
+    console.log("Fetching campaign message ID...");
+    const messagesResponse = await fetch(`https://a.klaviyo.com/api/campaigns/${campaignId}/campaign-messages`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Klaviyo-API-Key ${apiKey}`,
+        "revision": "2024-10-15",
+        "Accept": "application/json",
+      },
+    });
+
+    if (!messagesResponse.ok) {
+      const errorText = await messagesResponse.text();
+      console.error("Failed to fetch campaign messages:", errorText);
+      throw new Error("Failed to fetch campaign messages");
     }
+
+    const messagesData = await messagesResponse.json();
+    const messageId = messagesData.data?.[0]?.id;
+    
+    if (!messageId) {
+      throw new Error("No message found for campaign");
+    }
+
+    console.log(`Found message ID: ${messageId}`);
+
+    // Step 3: Update the campaign message with content
+    const messagePayload = {
+      data: {
+        type: "campaign-message",
+        id: messageId,
+        attributes: {
+          channel: "email",
+          label: "Email",
+          content: {
+            subject: subject,
+            preview_text: preview_text || subject,
+            from_email: "noreply@example.com",
+            from_label: "Madison",
+            reply_to_email: "noreply@example.com",
+            html_content: inlinedHtml
+          }
+        }
+      }
+    };
+
+    console.log("Updating campaign message with content...");
+    const updateResponse = await fetch(`https://a.klaviyo.com/api/campaign-messages/${messageId}`, {
+      method: "PATCH",
+      headers: {
+        "Authorization": `Klaviyo-API-Key ${apiKey}`,
+        "revision": "2024-10-15",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(messagePayload),
+    });
+
+    if (!updateResponse.ok) {
+      const errorText = await updateResponse.text();
+      console.error("Failed to update campaign message:", errorText);
+      throw new Error("Failed to update campaign message with content");
+    }
+
+    console.log(`Successfully updated campaign message ${messageId}`);
 
     // Log to publishing history
     if (content_id) {

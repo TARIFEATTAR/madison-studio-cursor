@@ -77,3 +77,12 @@ verify_jwt = true
 
 [functions.add-text-to-image]
 verify_jwt = true
+
+[functions.fetch-klaviyo-lists]
+verify_jwt = true
+
+[functions.fetch-klaviyo-segments]
+verify_jwt = true
+
+[functions.connect-klaviyo]
+verify_jwt = true
