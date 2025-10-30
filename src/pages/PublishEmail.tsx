@@ -61,6 +61,8 @@ export default function PublishEmail() {
   const [headerImageUrl, setHeaderImageUrl] = useState("");
   const [content, setContent] = useState("");
   const [emailHtml, setEmailHtml] = useState("");
+  const [fromEmail, setFromEmail] = useState("");
+  const [fromName, setFromName] = useState("");
 
   // Load organization and check Klaviyo connection
   useEffect(() => {
@@ -244,6 +246,15 @@ export default function PublishEmail() {
       return;
     }
 
+    if (!fromEmail.trim() || !fromName.trim()) {
+      toast({
+        title: "From Details Required",
+        description: "Please enter both from email and from name",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSending(true);
 
     try {
@@ -258,6 +269,8 @@ export default function PublishEmail() {
           content_html: emailHtml,
           content_id: contentId,
           content_title: contentTitle,
+          from_email: fromEmail.trim(),
+          from_name: fromName.trim(),
         },
       });
 
@@ -451,6 +464,30 @@ export default function PublishEmail() {
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="Your email subject"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>From Email *</Label>
+                  <Input
+                    value={fromEmail}
+                    onChange={(e) => setFromEmail(e.target.value)}
+                    placeholder="hello@yourdomain.com"
+                    type="email"
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Must be a verified email in your Klaviyo account
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>From Name *</Label>
+                  <Input
+                    value={fromName}
+                    onChange={(e) => setFromName(e.target.value)}
+                    placeholder="Your Company Name"
                     required
                   />
                 </div>
