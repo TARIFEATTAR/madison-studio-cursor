@@ -102,14 +102,17 @@ serve(async (req) => {
       // Continue with original HTML if inlining fails
     }
 
-    // Step 1: Create a DRAFT campaign in Klaviyo (bare campaign without audiences)
+    // Step 1: Create a DRAFT campaign in Klaviyo (with audiences in attributes)
     const campaignPayload = {
       data: {
         type: "campaign",
         attributes: {
           name: campaign_name || content_title || subject,
+          audiences: {
+            included: [audience_id],
+            excluded: []
+          }
         }
-        // No relationships - audiences will be assigned separately
       }
     };
 
@@ -141,38 +144,7 @@ serve(async (req) => {
     const campaignId = campaignData.data.id;
     console.log(`Created Klaviyo campaign ${campaignId}`);
 
-    // Step 2: Assign recipients to the campaign
-    console.log("Assigning recipients to campaign...");
-    const recipientsPayload = {
-      data: {
-        type: "campaign-recipient-estimation",
-        attributes: {
-          included_audiences: [audience_id],
-          excluded_audiences: []
-        }
-      }
-    };
-
-    const recipientsResponse = await fetch(`https://a.klaviyo.com/api/campaigns/${campaignId}/campaign-recipient-estimations/`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Klaviyo-API-Key ${apiKey}`,
-        "revision": "2025-07-15",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(recipientsPayload),
-    });
-
-    if (!recipientsResponse.ok) {
-      const errorText = await recipientsResponse.text();
-      console.error("Failed to assign recipients:", errorText);
-      // Continue anyway - the campaign was created, recipients can be assigned manually in Klaviyo
-      console.log("Warning: Recipients not assigned automatically, but campaign was created");
-    } else {
-      console.log("Recipients assigned successfully");
-    }
-
-    // Step 3: Fetch the campaign message ID (created automatically with the campaign)
+    // Step 2: Fetch the campaign message ID (created automatically with the campaign)
     console.log("Fetching campaign message ID...");
     const messagesResponse = await fetch(`https://a.klaviyo.com/api/campaigns/${campaignId}/campaign-messages`, {
       method: "GET",
