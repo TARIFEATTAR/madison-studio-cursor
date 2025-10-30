@@ -67,8 +67,8 @@ serve(async (req) => {
 
     const apiKey = decryptApiKey(connection.api_key_encrypted, encryptionKey);
 
-    // Fetch lists from Klaviyo (use JSON:API accept header)
-    const response = await fetch("https://a.klaviyo.com/api/lists/", {
+    // Fetch lists from Klaviyo with profile_count (requires additional-fields parameter)
+    const response = await fetch("https://a.klaviyo.com/api/lists/?additional-fields[list]=profile_count", {
       headers: {
         "Authorization": `Klaviyo-API-Key ${apiKey}`,
         "revision": "2024-10-15",
