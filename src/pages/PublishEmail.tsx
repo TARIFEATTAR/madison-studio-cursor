@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Mail, ArrowLeft, ExternalLink, Loader2, AlertCircle } from "lucide-react";
 import { convertToEmailHtml } from "@/utils/emailHtmlConverter";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -60,6 +61,8 @@ export default function PublishEmail() {
   const [emailTitle, setEmailTitle] = useState(contentTitle);
   const [headerImageUrl, setHeaderImageUrl] = useState("");
   const [content, setContent] = useState("");
+  const [rawHtml, setRawHtml] = useState("");
+  const [isHtmlMode, setIsHtmlMode] = useState(false);
   const [emailHtml, setEmailHtml] = useState("");
   const [fromEmail, setFromEmail] = useState("");
   const [fromName, setFromName] = useState("");
@@ -169,15 +172,17 @@ export default function PublishEmail() {
 
   // Update preview when content or settings change
   useEffect(() => {
-    if (content) {
-      const html = convertToEmailHtml({
-        content,
-        title: emailTitle,
-        imageUrl: headerImageUrl,
-      });
-      setEmailHtml(html);
+    if (isHtmlMode) {
+      setEmailHtml(rawHtml || "");
+      return;
     }
-  }, [content, emailTitle, headerImageUrl]);
+    const html = convertToEmailHtml({
+      content,
+      title: emailTitle,
+      imageUrl: headerImageUrl,
+    });
+    setEmailHtml(html);
+  }, [isHtmlMode, rawHtml, content, emailTitle, headerImageUrl]);
 
   const loadLists = async (orgId: string) => {
     try {
@@ -246,16 +251,25 @@ export default function PublishEmail() {
       return;
     }
 
-    if (!fromEmail.trim() || !fromName.trim()) {
-      toast({
-        title: "From Details Required",
-        description: "Please enter both from email and from name",
-        variant: "destructive",
-      });
-      return;
-    }
+  if (!fromEmail.trim() || !fromName.trim()) {
+    toast({
+      title: "From Details Required",
+      description: "Please enter both from email and from name",
+      variant: "destructive",
+    });
+    return;
+  }
 
-    setSending(true);
+  if (!emailHtml?.trim()) {
+    toast({
+      title: "Add Content",
+      description: "Please add content or paste HTML for your email",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  setSending(true);
 
     try {
       const { data, error } = await supabase.functions.invoke("publish-to-klaviyo", {
