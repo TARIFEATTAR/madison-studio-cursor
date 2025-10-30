@@ -18,37 +18,38 @@ export default function DashboardNew() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { organizationId } = useOrganization();
-  const { data: stats, isLoading: statsLoading } = useDashboardStats();
-  const [longLoad, setLongLoad] = useState(false);
+  const { data: stats, isLoading: statsLoading, error, isError } = useDashboardStats();
+  const [showFallback, setShowFallback] = useState(false);
   const [madisonPanelOpen, setMadisonPanelOpen] = useState(false);
   const { showGuide, dismissGuide } = usePostOnboardingGuide();
 
-  // Organization ID now handled by useOrganization hook
-
-  // Safety timeout for long loads
+  // Safety timeout - show fallback after 3 seconds of loading
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setLongLoad(true);
-    }, 2500);
-    return () => clearTimeout(timeout);
-  }, []);
+    if (statsLoading) {
+      const timeout = setTimeout(() => {
+        console.log("Dashboard loading timeout - showing fallback");
+        setShowFallback(true);
+      }, 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [statsLoading]);
 
-  // Show spinner initially
-  if (statsLoading && !longLoad) {
-    return (
-      <div className="min-h-screen bg-vellum-cream flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-brass" />
-      </div>
-    );
-  }
+  // Log errors for debugging
+  useEffect(() => {
+    if (isError) {
+      console.error("Dashboard stats error:", error);
+    }
+  }, [isError, error]);
 
-  // Show fallback if loading too long
-  if (statsLoading && longLoad) {
+  // Show fallback if loading too long or error occurred
+  if ((statsLoading && showFallback) || isError) {
     return (
       <div className="min-h-screen bg-vellum-cream flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Loader2 className="w-8 h-8 animate-spin text-brass mx-auto" />
-          <div className="text-charcoal text-sm">Setting up your workspace…</div>
+          {statsLoading && !isError && <Loader2 className="w-8 h-8 animate-spin text-brass mx-auto" />}
+          <div className="text-charcoal text-sm">
+            {isError ? "Welcome! Let's get started." : "Setting up your workspace…"}
+          </div>
           <Button 
             onClick={() => navigate("/create")} 
             className="bg-ink-black hover:bg-charcoal text-parchment-white"
@@ -56,6 +57,15 @@ export default function DashboardNew() {
             Start Creating
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  // Show brief initial spinner
+  if (statsLoading) {
+    return (
+      <div className="min-h-screen bg-vellum-cream flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-brass" />
       </div>
     );
   }
