@@ -69,7 +69,7 @@ serve(async (req) => {
       .from("klaviyo_connections")
       .select("api_key_encrypted")
       .eq("organization_id", organization_id)
-      .single();
+      .maybeSingle();
 
     if (connectionError || !connection) {
       throw new Error("Klaviyo not connected for this organization");
@@ -111,10 +111,8 @@ serve(async (req) => {
           audiences: {
             included: [audience_id],
             excluded: []
-          },
-          "campaign-messages": [
-            { channel: "email", label: "Email" }
-          ]
+          }
+          // Note: Do NOT include "campaign-messages" here. We'll fetch/create and update it separately.
         }
       }
     };
@@ -124,7 +122,7 @@ serve(async (req) => {
       method: "POST",
       headers: {
         "Authorization": `Klaviyo-API-Key ${apiKey}`,
-        "revision": "2025-10-15",
+        "revision": "2024-07-15",
         "Content-Type": "application/json",
       },
       body: JSON.stringify(campaignPayload),

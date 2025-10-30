@@ -272,7 +272,6 @@ const AppContent = () => {
                   <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/publish/email" element={<ProtectedRoute><RouteErrorBoundary routeName="Publish Email"><PublishEmail /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/publish-email" element={<Navigate to="/publish/email" replace />} />
                   <Route path="/email-sequence" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Sequence"><EmailSequence /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/email-composer" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Composer"><EmailComposer /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="*" element={<NotFound />} />
@@ -308,7 +307,7 @@ const AppContent = () => {
             <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/publish/email" element={<ProtectedRoute><RouteErrorBoundary routeName="Publish Email"><PublishEmail /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/publish-email" element={<Navigate to="/publish/email" replace />} />
+            
             <Route path="/email-sequence" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Sequence"><EmailSequence /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/email-composer" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Composer"><EmailComposer /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
