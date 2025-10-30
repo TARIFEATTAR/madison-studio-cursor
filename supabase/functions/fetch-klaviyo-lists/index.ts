@@ -74,7 +74,7 @@ serve(async (req) => {
     const response = await fetch("https://a.klaviyo.com/api/lists/", {
       headers: {
         "Authorization": `Klaviyo-API-Key ${apiKey}`,
-        "revision": "2024-10-15",
+        "revision": "2024-07-15",
         "Accept": "application/json",
       },
     });

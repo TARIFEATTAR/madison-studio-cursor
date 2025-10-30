@@ -86,3 +86,6 @@ verify_jwt = true
 
 [functions.connect-klaviyo]
 verify_jwt = true
+
+[functions.fetch-klaviyo-campaigns]
+verify_jwt = true

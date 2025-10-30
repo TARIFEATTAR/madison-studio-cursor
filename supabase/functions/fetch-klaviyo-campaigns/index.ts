@@ -8,9 +8,9 @@ const corsHeaders = {
 
 function decryptApiKey(encryptedApiKey: string, encryptionKey: string): string {
   const decoded = atob(encryptedApiKey);
-  return Array.from(decoded).map((char, i) =>
-    String.fromCharCode(char.charCodeAt(0) ^ encryptionKey.charCodeAt(i % encryptionKey.length))
-  ).join('');
+  return Array.from(decoded)
+    .map((char, i) => String.fromCharCode(char.charCodeAt(0) ^ encryptionKey.charCodeAt(i % encryptionKey.length)))
+    .join("");
 }
 
 serve(async (req) => {
@@ -53,7 +53,7 @@ serve(async (req) => {
       .from("klaviyo_connections")
       .select("api_key_encrypted")
       .eq("organization_id", organization_id)
-      .single();
+      .maybeSingle();
 
     if (connectionError || !connection) {
       throw new Error("Klaviyo not connected for this organization");
@@ -68,10 +68,10 @@ serve(async (req) => {
     const apiKeyRaw = decryptApiKey(connection.api_key_encrypted, encryptionKey);
     const apiKey = apiKeyRaw.trim();
     const masked = apiKey.length > 6 ? `${apiKey.slice(0,3)}***${apiKey.slice(-3)}` : "***";
-    console.log(`[fetch-klaviyo-segments] Decrypted key looks valid? startsWith pk_:`, apiKey.startsWith("pk_"), `len=`, apiKey.length, `mask=`, masked);
+    console.log(`[fetch-klaviyo-campaigns] Decrypted key startsWith pk_:`, apiKey.startsWith("pk_"), `len=`, apiKey.length, `mask=`, masked);
 
-    // Fetch segments from Klaviyo with profile_count (requires additional-fields parameter)
-    const response = await fetch("https://a.klaviyo.com/api/segments/", {
+    // Fetch campaigns from Klaviyo
+    const response = await fetch("https://a.klaviyo.com/api/campaigns/", {
       method: "GET",
       headers: {
         "Authorization": `Klaviyo-API-Key ${apiKey}`,
@@ -82,31 +82,32 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Klaviyo segments fetch error:", errorText);
-      throw new Error("Failed to fetch Klaviyo segments");
+      console.error("Klaviyo API error (campaigns)", response.status, errorText);
+      throw new Error(`Klaviyo campaigns failed (${response.status}): ${errorText}`);
     }
 
-    const data = await response.json();
-    
-    // Simplify the segment data
-    const segments = data.data.map((segment: any) => ({
-      id: segment.id,
-      name: segment.attributes.name,
-      profile_count: segment.attributes.profile_count || 0,
-      is_active: segment.attributes.is_active,
+    const campaignsData = await response.json();
+
+    const campaigns = (campaignsData?.data || []).map((c: any) => ({
+      id: c.id,
+      name: c.attributes?.name,
+      status: c.attributes?.status,
+      channel: c.attributes?.channel,
+      created: c.attributes?.created,
+      updated: c.attributes?.updated,
     }));
 
-    console.log(`Fetched ${segments.length} Klaviyo segments`);
+    console.log(`Fetched ${campaigns.length} Klaviyo campaigns for organization ${organization_id}`);
 
     return new Response(
-      JSON.stringify({ segments }),
+      JSON.stringify({ campaigns }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       }
     );
   } catch (error: any) {
-    console.error("Error in fetch-klaviyo-segments function:", error);
+    console.error("Error in fetch-klaviyo-campaigns function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
