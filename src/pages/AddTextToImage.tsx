@@ -5,25 +5,29 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Upload, Loader2, Download, Image as ImageIcon } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Upload, Loader2, Sparkles, Image as ImageIcon, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
+import MobileAspectRatioSelector from "@/components/image-editor/MobileAspectRatioSelector";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const OVERLAY_OPTIONS = [
-  { value: 25, label: "25% Light", description: "Subtle overlay" },
-  { value: 50, label: "50% Medium", description: "Balanced" },
-  { value: 75, label: "75% Dark", description: "Strong contrast" },
-  { value: 100, label: "100% Full", description: "Maximum opacity" },
+  { value: 0, label: "None", description: "No overlay", icon: "○" },
+  { value: 25, label: "Light", description: "Subtle", icon: "◔" },
+  { value: 50, label: "Medium", description: "Balanced", icon: "◑" },
+  { value: 75, label: "Dark", description: "Strong", icon: "◕" },
 ];
 
 export default function AddTextToImage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   
   const [selectedImage, setSelectedImage] = useState<{ url: string; file?: File } | null>(null);
   const [textInstruction, setTextInstruction] = useState("");
   const [overlayOpacity, setOverlayOpacity] = useState(50);
+  const [aspectRatio, setAspectRatio] = useState("1:1");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
 
@@ -107,6 +111,230 @@ export default function AddTextToImage() {
     toast.success("Image downloaded");
   };
 
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-studio-dark">
+        {/* Header */}
+        <header className="sticky top-0 z-50 bg-studio-dark border-b border-studio-border">
+          <div className="flex h-14 items-center gap-4 px-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="shrink-0 text-studio-text-primary"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex-1">
+              <h1 className="text-lg font-bold text-studio-text-primary">Add Text to Image</h1>
+            </div>
+            <div className="text-sm font-medium text-aged-brass bg-aged-brass/10 px-3 py-1 rounded-full">
+              {user?.id?.slice(0, 6) || "0"}K
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="px-4 py-6 pb-20">
+          <Tabs defaultValue="create" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6 bg-studio-charcoal">
+              <TabsTrigger value="create" className="data-[state=active]:bg-aged-brass data-[state=active]:text-studio-dark">
+                Create
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="data-[state=active]:bg-aged-brass data-[state=active]:text-studio-dark">
+                Settings
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="create" className="space-y-6 mt-0">
+              {/* Text Input */}
+              <div className="space-y-3">
+                <Textarea
+                  placeholder="Write or describe what text to add to your image..."
+                  value={textInstruction}
+                  onChange={(e) => setTextInstruction(e.target.value)}
+                  rows={6}
+                  className="bg-studio-charcoal border-aged-brass text-studio-text-primary placeholder:text-studio-text-muted resize-none"
+                />
+                
+                {/* Image Upload Button */}
+                <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-studio-charcoal border border-studio-border text-studio-text-secondary cursor-pointer hover:bg-studio-card transition-colors">
+                  <Upload className="h-4 w-4" />
+                  <span className="text-sm font-medium">
+                    {selectedImage ? "Change Image" : "Upload Image"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              {/* Image Preview */}
+              {selectedImage && (
+                <div className="relative aspect-square rounded-lg overflow-hidden bg-studio-charcoal border border-studio-border">
+                  <img
+                    src={selectedImage.url}
+                    alt="Selected"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+
+              {/* Option Cards Grid */}
+              <div className="grid grid-cols-3 gap-3">
+                {/* Tint Overlay Card */}
+                <Card className="bg-studio-charcoal border-studio-border p-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-studio-card transition-colors">
+                  <div className="text-2xl">{OVERLAY_OPTIONS.find(o => o.value === overlayOpacity)?.icon || "◑"}</div>
+                  <div className="text-center">
+                    <div className="text-xs font-medium text-studio-text-primary">Tint</div>
+                    <div className="text-[10px] text-studio-text-muted">
+                      {OVERLAY_OPTIONS.find(o => o.value === overlayOpacity)?.label}
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Aspect Ratio Card */}
+                <Card className="bg-studio-charcoal border-studio-border p-4 flex flex-col items-center gap-2">
+                  <div className="text-2xl">⬜</div>
+                  <div className="text-center">
+                    <div className="text-xs font-medium text-studio-text-primary">Size</div>
+                    <div className="text-[10px] text-studio-text-muted">{aspectRatio}</div>
+                  </div>
+                </Card>
+
+                {/* Style Card (placeholder for future features) */}
+                <Card className="bg-studio-charcoal border-studio-border p-4 flex flex-col items-center gap-2 opacity-50">
+                  <div className="text-2xl">✨</div>
+                  <div className="text-center">
+                    <div className="text-xs font-medium text-studio-text-primary">Style</div>
+                    <div className="text-[10px] text-studio-text-muted">Default</div>
+                  </div>
+                </Card>
+              </div>
+
+              {/* Generate Button */}
+              <Button
+                onClick={handleGenerate}
+                disabled={!selectedImage || !textInstruction.trim() || isGenerating}
+                size="lg"
+                className="w-full bg-aged-brass hover:bg-aged-brass/90 text-studio-dark font-semibold rounded-full h-14"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    Generate image
+                  </>
+                )}
+              </Button>
+
+              {/* Generated Image */}
+              {generatedImage && (
+                <div className="space-y-4">
+                  <div className="relative aspect-square rounded-lg overflow-hidden bg-studio-charcoal border border-aged-brass">
+                    <img
+                      src={generatedImage}
+                      alt="Generated with text"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <Button
+                    onClick={handleDownload}
+                    variant="outline"
+                    className="w-full border-aged-brass text-aged-brass hover:bg-aged-brass/10"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Image
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="settings" className="space-y-6 mt-0">
+              {/* Tint Overlay Options */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-studio-text-primary">Background Overlay</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {OVERLAY_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setOverlayOpacity(option.value)}
+                      className={cn(
+                        "flex items-center gap-3 p-4 rounded-lg border-2 transition-all",
+                        overlayOpacity === option.value
+                          ? "border-aged-brass bg-aged-brass/10 text-aged-brass"
+                          : "border-studio-border bg-studio-charcoal text-studio-text-secondary hover:bg-studio-card"
+                      )}
+                    >
+                      <span className="text-2xl">{option.icon}</span>
+                      <div className="text-left">
+                        <div className="font-medium text-sm">{option.label}</div>
+                        <div className="text-xs opacity-70">{option.description}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Aspect Ratio Options */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-studio-text-primary">Aspect Ratio</h3>
+                <MobileAspectRatioSelector
+                  value={aspectRatio}
+                  onChange={setAspectRatio}
+                />
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <button
+                    onClick={() => setAspectRatio("4:5")}
+                    className={cn(
+                      "px-3 py-2 rounded-lg border text-sm font-medium transition-all",
+                      aspectRatio === "4:5"
+                        ? "border-aged-brass bg-aged-brass/10 text-aged-brass"
+                        : "border-studio-border bg-studio-charcoal text-studio-text-secondary hover:bg-studio-card"
+                    )}
+                  >
+                    4:5 Portrait
+                  </button>
+                  <button
+                    onClick={() => setAspectRatio("16:9")}
+                    className={cn(
+                      "px-3 py-2 rounded-lg border text-sm font-medium transition-all",
+                      aspectRatio === "16:9"
+                        ? "border-aged-brass bg-aged-brass/10 text-aged-brass"
+                        : "border-studio-border bg-studio-charcoal text-studio-text-secondary hover:bg-studio-card"
+                    )}
+                  >
+                    16:9 Wide
+                  </button>
+                </div>
+              </div>
+
+              {/* Tips */}
+              <Card className="p-4 bg-studio-charcoal/50 border-studio-border">
+                <h3 className="font-semibold text-sm mb-3 text-studio-text-primary">Tips for Social Posts</h3>
+                <ul className="space-y-2 text-xs text-studio-text-muted">
+                  <li>• 1:1 - Perfect for Instagram feed posts</li>
+                  <li>• 9:16 - Ideal for Stories and Reels</li>
+                  <li>• 4:5 - Great for portrait posts</li>
+                  <li>• 16:9 - Best for landscape images</li>
+                  <li>• Use overlay for better text readability</li>
+                </ul>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </main>
+      </div>
+    );
+  }
+
+  // Desktop Layout
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -134,7 +362,7 @@ export default function AddTextToImage() {
           <div className="space-y-6">
             {/* Image Upload */}
             <Card className="p-6">
-              <Label className="text-base font-semibold mb-4 block">Select Image</Label>
+              <h3 className="text-base font-semibold mb-4">Select Image</h3>
               
               {selectedImage ? (
                 <div className="space-y-4">
@@ -172,11 +400,8 @@ export default function AddTextToImage() {
 
             {/* Text Instruction */}
             <Card className="p-6">
-              <Label htmlFor="text-instruction" className="text-base font-semibold mb-4 block">
-                Text Instructions
-              </Label>
+              <h3 className="text-base font-semibold mb-4">Text Instructions</h3>
               <Textarea
-                id="text-instruction"
                 placeholder="Example: Add 'SALE 50% OFF' in bold red text at the top center"
                 value={textInstruction}
                 onChange={(e) => setTextInstruction(e.target.value)}
@@ -188,25 +413,50 @@ export default function AddTextToImage() {
               </p>
             </Card>
 
-            {/* Overlay Opacity */}
+            {/* Overlay & Aspect Ratio */}
             <Card className="p-6">
-              <Label className="text-base font-semibold mb-4 block">Background Overlay</Label>
-              <div className="grid grid-cols-2 gap-3">
+              <h3 className="text-base font-semibold mb-4">Background Overlay</h3>
+              <div className="grid grid-cols-2 gap-3 mb-6">
                 {OVERLAY_OPTIONS.map((option) => (
                   <button
                     key={option.value}
                     onClick={() => setOverlayOpacity(option.value)}
                     className={cn(
-                      "flex flex-col items-start p-4 rounded-lg border-2 transition-all",
+                      "flex items-center gap-3 p-4 rounded-lg border-2 transition-all",
                       overlayOpacity === option.value
                         ? "border-primary bg-primary/5"
                         : "border-border hover:border-primary/50"
                     )}
                   >
-                    <span className="font-medium">{option.label}</span>
-                    <span className="text-xs text-muted-foreground">{option.description}</span>
+                    <span className="text-2xl">{option.icon}</span>
+                    <div className="text-left">
+                      <div className="font-medium text-sm">{option.label}</div>
+                      <div className="text-xs text-muted-foreground">{option.description}</div>
+                    </div>
                   </button>
                 ))}
+              </div>
+
+              <h3 className="text-base font-semibold mb-4">Aspect Ratio</h3>
+              <MobileAspectRatioSelector
+                value={aspectRatio}
+                onChange={setAspectRatio}
+              />
+              <div className="grid grid-cols-2 gap-2 mt-3">
+                <Button
+                  variant={aspectRatio === "4:5" ? "default" : "outline"}
+                  onClick={() => setAspectRatio("4:5")}
+                  size="sm"
+                >
+                  4:5 Portrait
+                </Button>
+                <Button
+                  variant={aspectRatio === "16:9" ? "default" : "outline"}
+                  onClick={() => setAspectRatio("16:9")}
+                  size="sm"
+                >
+                  16:9 Wide
+                </Button>
               </div>
             </Card>
 
@@ -224,7 +474,7 @@ export default function AddTextToImage() {
                 </>
               ) : (
                 <>
-                  <ImageIcon className="w-4 h-4 mr-2" />
+                  <Sparkles className="w-4 h-4 mr-2" />
                   Add Text to Image
                 </>
               )}
@@ -234,7 +484,7 @@ export default function AddTextToImage() {
           {/* Right Column: Preview */}
           <div className="space-y-6">
             <Card className="p-6">
-              <Label className="text-base font-semibold mb-4 block">Preview</Label>
+              <h3 className="text-base font-semibold mb-4">Preview</h3>
               
               {generatedImage ? (
                 <div className="space-y-4">
@@ -266,12 +516,13 @@ export default function AddTextToImage() {
 
             {/* Tips */}
             <Card className="p-6 bg-muted/50">
-              <h3 className="font-semibold mb-3">Tips for Best Results</h3>
+              <h3 className="font-semibold mb-3">Tips for Social Posts</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>• Be specific about text placement (top, center, bottom)</li>
-                <li>• Mention color, font style (bold, italic), and size</li>
+                <li>• 1:1 - Perfect for Instagram feed posts</li>
+                <li>• 9:16 - Ideal for Stories and Reels</li>
+                <li>• 4:5 - Great for portrait posts</li>
+                <li>• 16:9 - Best for landscape images</li>
                 <li>• Use overlay opacity for better text readability</li>
-                <li>• Higher opacity = stronger contrast for light text</li>
               </ul>
             </Card>
           </div>
