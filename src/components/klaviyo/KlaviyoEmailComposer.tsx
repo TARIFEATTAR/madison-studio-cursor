@@ -64,17 +64,18 @@ export function KlaviyoEmailComposer({
   // Sanitize HTML more permissively for email templates (keeping design intact)
   const sanitizedHtml = useMemo(() => {
     return DOMPurify.sanitize(emailHtml, {
-      ADD_TAGS: ['style', 'link'],
+      // Allow full email document head so embedded styles are preserved
+      ADD_TAGS: ['html','head','meta','title','style','link'],
       ADD_ATTR: [
         // keep inline email design intact
-        'style', 'class', 'id', 'href', 'src', 'width', 'height',
-        'align', 'valign', 'border', 'cellpadding', 'cellspacing',
-        'bgcolor', 'background', 'color', 'face', 'size', 'target', 'rel', 'type',
-        'role', 'http-equiv'
+        'style','class','id','href','src','width','height',
+        'align','valign','border','cellpadding','cellspacing',
+        'bgcolor','background','color','face','size','target','rel','type',
+        'role','http-equiv','content','name','media'
       ],
       ALLOW_UNKNOWN_PROTOCOLS: false,
-      FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input', 'button'],
-      FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onmouseout', 'onfocus', 'onblur']
+      FORBID_TAGS: ['script','iframe','object','embed','form','input','button'],
+      FORBID_ATTR: ['onerror','onload','onclick','onmouseover','onmouseout','onfocus','onblur']
     });
   }, [emailHtml]);
 
