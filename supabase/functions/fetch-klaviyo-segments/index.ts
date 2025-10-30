@@ -68,7 +68,7 @@ serve(async (req) => {
     const apiKey = decryptApiKey(connection.api_key_encrypted, encryptionKey);
 
     // Fetch segments from Klaviyo with profile_count (requires additional-fields parameter)
-    const response = await fetch("https://a.klaviyo.com/api/segments/?additional-fields[segment]=profile_count", {
+    const response = await fetch("https://a.klaviyo.com/api/segments", {
       method: "GET",
       headers: {
         "Authorization": `Klaviyo-API-Key ${apiKey}`,
