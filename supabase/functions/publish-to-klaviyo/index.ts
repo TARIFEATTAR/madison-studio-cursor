@@ -51,11 +51,16 @@ serve(async (req) => {
       preview_text, 
       content_html,
       content_id,
-      content_title 
+      content_title,
+      sender_profile_id
     } = await req.json();
 
     if (!organization_id || !audience_id || !subject || !content_html) {
       throw new Error("Missing required fields: organization_id, audience_id, subject, content_html");
+    }
+
+    if (!sender_profile_id) {
+      throw new Error("Sender profile is required. Please select a verified sender profile.");
     }
 
     // Get the encrypted API key
@@ -118,7 +123,7 @@ const campaignPayload = {
       method: "POST",
       headers: {
         "Authorization": `Klaviyo-API-Key ${apiKey}`,
-        "revision": "2024-10-15",
+        "revision": "2025-07-15",
         "Content-Type": "application/json",
       },
       body: JSON.stringify(campaignPayload),
@@ -147,7 +152,7 @@ const campaignPayload = {
       method: "GET",
       headers: {
         "Authorization": `Klaviyo-API-Key ${apiKey}`,
-        "revision": "2024-10-15",
+        "revision": "2025-07-15",
         "Accept": "application/json",
       },
     });
@@ -178,7 +183,7 @@ const campaignPayload = {
         method: "POST",
         headers: {
           "Authorization": `Klaviyo-API-Key ${apiKey}`,
-          "revision": "2024-10-15",
+          "revision": "2025-07-15",
           "Content-Type": "application/json",
         },
         body: JSON.stringify(createMsgPayload),
@@ -200,7 +205,7 @@ const campaignPayload = {
 
     console.log(`Found message ID: ${messageId}`);
 
-    // Step 3: Update the campaign message with content
+    // Step 3: Update the campaign message with content (using sender_profile_id)
     console.log("Updating campaign message with content...");
     const messageUpdatePayload = {
       data: {
@@ -210,9 +215,7 @@ const campaignPayload = {
           content: {
             subject: subject,
             preview_text: preview_text || subject,
-            from_email: "noreply@example.com",
-            from_label: "Madison",
-            reply_to_email: "noreply@example.com",
+            sender_profile_id: sender_profile_id,
             html_content: inlinedHtml
           }
         },
@@ -231,7 +234,7 @@ const campaignPayload = {
       method: "PATCH",
       headers: {
         "Authorization": `Klaviyo-API-Key ${apiKey}`,
-        "revision": "2024-10-15",
+        "revision": "2025-07-15",
         "Content-Type": "application/json",
       },
       body: JSON.stringify(messageUpdatePayload),
@@ -249,9 +252,7 @@ const campaignPayload = {
             content: {
               subject: subject,
               preview_text: preview_text || subject,
-              from_email: "noreply@example.com",
-              from_label: "Madison",
-              reply_to_email: "noreply@example.com",
+              sender_profile_id: sender_profile_id,
               html_content: inlinedHtml
             }
           }
@@ -262,7 +263,7 @@ const campaignPayload = {
         method: "PATCH",
         headers: {
           "Authorization": `Klaviyo-API-Key ${apiKey}`,
-          "revision": "2024-10-15",
+          "revision": "2025-07-15",
           "Content-Type": "application/json",
         },
         body: JSON.stringify(contentOnlyPayload),
