@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import juice from "https://esm.sh/juice@10.0.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -68,6 +69,25 @@ serve(async (req) => {
     }
 
     const apiKey = decryptApiKey(connection.api_key_encrypted, encryptionKey);
+
+    // Inline CSS styles for Klaviyo (Klaviyo strips <head> and <style> tags)
+    console.log("Inlining CSS styles for Klaviyo compatibility...");
+    let inlinedHtml = content_html;
+    try {
+      inlinedHtml = juice(content_html, {
+        preserveMediaQueries: true,
+        preserveFontFaces: true,
+        preserveKeyFrames: true,
+        removeStyleTags: true,
+        applyWidthAttributes: true,
+        applyHeightAttributes: true,
+        applyAttributesTableElements: true,
+      });
+      console.log("CSS inlining successful");
+    } catch (inlineError) {
+      console.error("CSS inlining failed, using original HTML:", inlineError);
+      // Continue with original HTML if inlining fails
+    }
 
     // Create a DRAFT campaign in Klaviyo (no send_strategy = draft)
     const campaignPayload = {
@@ -140,7 +160,7 @@ serve(async (req) => {
             from_email: "noreply@example.com",
             from_label: "Madison",
             reply_to_email: "noreply@example.com",
-            html_content: content_html
+            html_content: inlinedHtml
           }
         }
       }
