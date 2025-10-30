@@ -136,7 +136,7 @@ export default function AddTextToImage() {
 
         {/* Main Content */}
         <main className="px-4 py-6 pb-20 bg-[#000000]">
-          <Tabs defaultValue="create" className="w-full">
+          <Tabs defaultValue="create" className="w-full bg-[#000000]">
             <TabsList className="grid w-full grid-cols-2 mb-6 bg-[#111111] border border-[#2a2a2a] p-1">
               <TabsTrigger 
                 value="create" 
@@ -152,7 +152,7 @@ export default function AddTextToImage() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="create" className="space-y-6 mt-0">
+            <TabsContent value="create" className="space-y-6 mt-0 bg-[#000000]">
               {/* Text Input */}
               <div className="space-y-3">
                 <Textarea
@@ -263,7 +263,7 @@ export default function AddTextToImage() {
               )}
             </TabsContent>
 
-            <TabsContent value="settings" className="space-y-6 mt-0">
+            <TabsContent value="settings" className="space-y-6 mt-0 bg-[#000000]">
               {/* Tint Overlay Options */}
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-white">Background Overlay</h3>
