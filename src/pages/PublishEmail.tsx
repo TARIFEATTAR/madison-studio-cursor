@@ -24,7 +24,14 @@ interface KlaviyoSegment {
   profile_count: number;
 }
 
-type AudienceType = "list" | "segment";
+interface KlaviyoCampaign {
+  id: string;
+  name: string;
+  status: string;
+  channel: string;
+}
+
+type AudienceType = "list" | "segment" | "campaign";
 
 export default function PublishEmail() {
   const navigate = useNavigate();
@@ -43,7 +50,9 @@ export default function PublishEmail() {
   const [audienceType, setAudienceType] = useState<AudienceType>("list");
   const [lists, setLists] = useState<KlaviyoList[]>([]);
   const [segments, setSegments] = useState<KlaviyoSegment[]>([]);
+  const [campaigns, setCampaigns] = useState<KlaviyoCampaign[]>([]);
   const [selectedAudience, setSelectedAudience] = useState<string>("");
+  const [apiErrors, setApiErrors] = useState<string[]>([]);
 
   const [campaignName, setCampaignName] = useState(contentTitle);
   const [subject, setSubject] = useState("");
@@ -92,8 +101,12 @@ export default function PublishEmail() {
         setKlaviyoConnected(!!connection);
 
         if (connection) {
-          // Load lists and segments
-          await Promise.all([loadLists(orgMember.organization_id), loadSegments(orgMember.organization_id)]);
+          // Load lists, segments, and campaigns
+          await Promise.all([
+            loadLists(orgMember.organization_id), 
+            loadSegments(orgMember.organization_id),
+            loadCampaigns(orgMember.organization_id)
+          ]);
         }
       } catch (error) {
         console.error("Error loading organization:", error);
@@ -170,9 +183,12 @@ export default function PublishEmail() {
         body: { organization_id: orgId },
       });
 
-      if (error) throw error;
+      if (error) {
+        setApiErrors(prev => [...prev, `Lists: ${error.message}`]);
+        throw error;
+      }
       setLists(data?.lists || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading Klaviyo lists:", error);
     }
   };
@@ -183,10 +199,29 @@ export default function PublishEmail() {
         body: { organization_id: orgId },
       });
 
-      if (error) throw error;
+      if (error) {
+        setApiErrors(prev => [...prev, `Segments: ${error.message}`]);
+        throw error;
+      }
       setSegments(data?.segments || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading Klaviyo segments:", error);
+    }
+  };
+
+  const loadCampaigns = async (orgId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("fetch-klaviyo-campaigns", {
+        body: { organization_id: orgId },
+      });
+
+      if (error) {
+        setApiErrors(prev => [...prev, `Campaigns: ${error.message}`]);
+        throw error;
+      }
+      setCampaigns(data?.campaigns || []);
+    } catch (error: any) {
+      console.error("Error loading Klaviyo campaigns:", error);
     }
   };
 
@@ -330,6 +365,21 @@ export default function PublishEmail() {
           </AlertDescription>
         </Alert>
 
+        {apiErrors.length > 0 && (
+          <Alert className="mb-6" variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <p className="font-semibold">Klaviyo API Errors:</p>
+              {apiErrors.map((err, i) => (
+                <p key={i} className="text-xs mt-1">{err}</p>
+              ))}
+              <p className="text-xs mt-2">
+                Ensure your Klaviyo Private API key has Lists:Read, Segments:Read, and Campaigns:Read scopes.
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {!contentId && (
           <Alert className="mb-6" variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -361,42 +411,38 @@ export default function PublishEmail() {
                 <div className="space-y-2">
                   <Label>Audience Type</Label>
                   <Tabs value={audienceType} onValueChange={(v) => setAudienceType(v as AudienceType)}>
-                    <TabsList className="grid w-full grid-cols-2">
+                    <TabsList className="grid w-full grid-cols-3">
                       <TabsTrigger value="list">List</TabsTrigger>
                       <TabsTrigger value="segment">Segment</TabsTrigger>
+                      <TabsTrigger value="campaign">Campaign</TabsTrigger>
                     </TabsList>
                   </Tabs>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Select {audienceType === "list" ? "List" : "Segment"}</Label>
-                  {audienceType === "list" ? (
-                    <Select value={selectedAudience} onValueChange={setSelectedAudience}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose a list..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {lists.map((list) => (
-                          <SelectItem key={list.id} value={list.id}>
-                            {list.name} ({list.profile_count} contacts)
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Select value={selectedAudience} onValueChange={setSelectedAudience}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose a segment..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {segments.map((segment) => (
-                          <SelectItem key={segment.id} value={segment.id}>
-                            {segment.name} ({segment.profile_count} contacts)
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+                  <Label>Select {audienceType === "list" ? "List" : audienceType === "segment" ? "Segment" : "Campaign"}</Label>
+                  <Select value={selectedAudience} onValueChange={setSelectedAudience}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={`Choose a ${audienceType}...`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {audienceType === "list" && lists.map((list) => (
+                        <SelectItem key={list.id} value={list.id}>
+                          {list.name} ({list.profile_count} contacts)
+                        </SelectItem>
+                      ))}
+                      {audienceType === "segment" && segments.map((segment) => (
+                        <SelectItem key={segment.id} value={segment.id}>
+                          {segment.name} ({segment.profile_count} contacts)
+                        </SelectItem>
+                      ))}
+                      {audienceType === "campaign" && campaigns.map((campaign) => (
+                        <SelectItem key={campaign.id} value={campaign.id}>
+                          {campaign.name} ({campaign.status})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">

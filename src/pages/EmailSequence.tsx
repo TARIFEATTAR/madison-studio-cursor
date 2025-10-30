@@ -35,7 +35,13 @@ interface KlaviyoSegment {
   profile_count: number;
 }
 
-type AudienceType = "list" | "segment";
+interface KlaviyoCampaign {
+  id: string;
+  name: string;
+  status: string;
+}
+
+type AudienceType = "list" | "segment" | "campaign";
 
 export default function EmailSequence() {
   const navigate = useNavigate();
@@ -51,7 +57,9 @@ export default function EmailSequence() {
   const [audienceType, setAudienceType] = useState<AudienceType>("list");
   const [lists, setLists] = useState<KlaviyoList[]>([]);
   const [segments, setSegments] = useState<KlaviyoSegment[]>([]);
+  const [campaigns, setCampaigns] = useState<KlaviyoCampaign[]>([]);
   const [selectedAudience, setSelectedAudience] = useState<string>("");
+  const [apiErrors, setApiErrors] = useState<string[]>([]);
   
   const [sequenceEmails, setSequenceEmails] = useState<SequenceEmail[]>([]);
   const [generating, setGenerating] = useState(false);
@@ -97,7 +105,11 @@ export default function EmailSequence() {
         setKlaviyoConnected(!!connection);
 
         if (connection) {
-          await Promise.all([loadLists(orgMember.organization_id), loadSegments(orgMember.organization_id)]);
+          await Promise.all([
+            loadLists(orgMember.organization_id), 
+            loadSegments(orgMember.organization_id),
+            loadCampaigns(orgMember.organization_id)
+          ]);
         }
       } catch (error) {
         console.error("Error loading organization:", error);
@@ -112,9 +124,12 @@ export default function EmailSequence() {
       const { data, error } = await supabase.functions.invoke("fetch-klaviyo-lists", {
         body: { organization_id: orgId },
       });
-      if (error) throw error;
+      if (error) {
+        setApiErrors(prev => [...prev, `Lists: ${error.message}`]);
+        throw error;
+      }
       setLists(data?.lists || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading Klaviyo lists:", error);
     }
   };
@@ -124,10 +139,28 @@ export default function EmailSequence() {
       const { data, error } = await supabase.functions.invoke("fetch-klaviyo-segments", {
         body: { organization_id: orgId },
       });
-      if (error) throw error;
+      if (error) {
+        setApiErrors(prev => [...prev, `Segments: ${error.message}`]);
+        throw error;
+      }
       setSegments(data?.segments || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading Klaviyo segments:", error);
+    }
+  };
+
+  const loadCampaigns = async (orgId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("fetch-klaviyo-campaigns", {
+        body: { organization_id: orgId },
+      });
+      if (error) {
+        setApiErrors(prev => [...prev, `Campaigns: ${error.message}`]);
+        throw error;
+      }
+      setCampaigns(data?.campaigns || []);
+    } catch (error: any) {
+      console.error("Error loading Klaviyo campaigns:", error);
     }
   };
 
@@ -386,45 +419,53 @@ Each email should build on the previous one, creating a cohesive journey. Use pe
                   />
                 </div>
 
+                {apiErrors.length > 0 && (
+                  <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive space-y-1">
+                    <p className="font-semibold">Klaviyo API Errors:</p>
+                    {apiErrors.map((err, i) => (
+                      <p key={i} className="text-xs">{err}</p>
+                    ))}
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Ensure your API key has proper scopes
+                    </p>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label>Audience Type</Label>
                   <Tabs value={audienceType} onValueChange={(v) => setAudienceType(v as AudienceType)}>
-                    <TabsList className="grid w-full grid-cols-2">
+                    <TabsList className="grid w-full grid-cols-3">
                       <TabsTrigger value="list">List</TabsTrigger>
                       <TabsTrigger value="segment">Segment</TabsTrigger>
+                      <TabsTrigger value="campaign">Campaign</TabsTrigger>
                     </TabsList>
                   </Tabs>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Select {audienceType === "list" ? "List" : "Segment"}</Label>
-                  {audienceType === "list" ? (
-                    <Select value={selectedAudience} onValueChange={setSelectedAudience}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {lists.map((list) => (
-                          <SelectItem key={list.id} value={list.id}>
-                            {list.name} ({list.profile_count})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Select value={selectedAudience} onValueChange={setSelectedAudience}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {segments.map((segment) => (
-                          <SelectItem key={segment.id} value={segment.id}>
-                            {segment.name} ({segment.profile_count})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+                  <Label>Select {audienceType === "list" ? "List" : audienceType === "segment" ? "Segment" : "Campaign"}</Label>
+                  <Select value={selectedAudience} onValueChange={setSelectedAudience}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {audienceType === "list" && lists.map((list) => (
+                        <SelectItem key={list.id} value={list.id}>
+                          {list.name} ({list.profile_count})
+                        </SelectItem>
+                      ))}
+                      {audienceType === "segment" && segments.map((segment) => (
+                        <SelectItem key={segment.id} value={segment.id}>
+                          {segment.name} ({segment.profile_count})
+                        </SelectItem>
+                      ))}
+                      {audienceType === "campaign" && campaigns.map((campaign) => (
+                        <SelectItem key={campaign.id} value={campaign.id}>
+                          {campaign.name} ({campaign.status})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {sequenceEmails.length === 0 && (

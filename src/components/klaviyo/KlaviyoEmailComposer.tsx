@@ -26,7 +26,14 @@ interface KlaviyoSegment {
   is_active: boolean;
 }
 
-type AudienceType = "list" | "segment";
+interface KlaviyoCampaign {
+  id: string;
+  name: string;
+  status: string;
+  channel: string;
+}
+
+type AudienceType = "list" | "segment" | "campaign";
 
 interface KlaviyoEmailComposerProps {
   open: boolean;
@@ -51,9 +58,11 @@ export function KlaviyoEmailComposer({
   const [loading, setLoading] = useState(false);
   const [lists, setLists] = useState<KlaviyoList[]>([]);
   const [segments, setSegments] = useState<KlaviyoSegment[]>([]);
+  const [campaigns, setCampaigns] = useState<KlaviyoCampaign[]>([]);
   const [loadingAudiences, setLoadingAudiences] = useState(false);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [audienceType, setAudienceType] = useState<AudienceType>("list");
+  const [apiError, setApiError] = useState<string>("");
 
   const [campaignName, setCampaignName] = useState(initialTitle);
   const [subject, setSubject] = useState(initialTitle);
@@ -137,40 +146,61 @@ export function KlaviyoEmailComposer({
         return;
       }
 
-      // Fetch both lists and segments in parallel
+      // Fetch lists, segments, and campaigns in parallel
       setLoadingAudiences(true);
-      console.log("[KlaviyoEmailComposer] Fetching lists and segments");
+      setApiError("");
+      console.log("[KlaviyoEmailComposer] Fetching lists, segments, campaigns");
       
-      const [listsResult, segmentsResult] = await Promise.all([
+      const [listsResult, segmentsResult, campaignsResult] = await Promise.all([
         supabase.functions.invoke("fetch-klaviyo-lists", {
           body: { organization_id: membership.organization_id },
         }),
         supabase.functions.invoke("fetch-klaviyo-segments", {
           body: { organization_id: membership.organization_id },
         }),
+        supabase.functions.invoke("fetch-klaviyo-campaigns", {
+          body: { organization_id: membership.organization_id },
+        }),
       ]);
 
       console.log("[KlaviyoEmailComposer] Lists result:", listsResult);
       console.log("[KlaviyoEmailComposer] Segments result:", segmentsResult);
+      console.log("[KlaviyoEmailComposer] Campaigns result:", campaignsResult);
+
+      // Collect all errors to show user
+      const errors: string[] = [];
 
       if (listsResult.error) {
         console.error("[KlaviyoEmailComposer] Lists fetch error:", listsResult.error);
-        throw listsResult.error;
-      }
-      if (segmentsResult.error) {
-        console.error("[KlaviyoEmailComposer] Segments fetch error:", segmentsResult.error);
-        throw segmentsResult.error;
-      }
-
-      if (listsResult.data?.lists) {
+        errors.push(`Lists: ${listsResult.error.message || 'Failed to fetch'}`);
+      } else if (listsResult.data?.lists) {
         console.log("[KlaviyoEmailComposer] Setting lists:", listsResult.data.lists.length);
         setLists(listsResult.data.lists);
       }
-      
-      if (segmentsResult.data?.segments) {
+
+      if (segmentsResult.error) {
+        console.error("[KlaviyoEmailComposer] Segments fetch error:", segmentsResult.error);
+        errors.push(`Segments: ${segmentsResult.error.message || 'Failed to fetch'}`);
+      } else if (segmentsResult.data?.segments) {
         const activeSegments = segmentsResult.data.segments.filter((s: KlaviyoSegment) => s.is_active);
         console.log("[KlaviyoEmailComposer] Setting segments:", activeSegments.length);
         setSegments(activeSegments);
+      }
+
+      if (campaignsResult.error) {
+        console.error("[KlaviyoEmailComposer] Campaigns fetch error:", campaignsResult.error);
+        errors.push(`Campaigns: ${campaignsResult.error.message || 'Failed to fetch'}`);
+      } else if (campaignsResult.data?.campaigns) {
+        console.log("[KlaviyoEmailComposer] Setting campaigns:", campaignsResult.data.campaigns.length);
+        setCampaigns(campaignsResult.data.campaigns);
+      }
+
+      if (errors.length > 0) {
+        const errorMsg = errors.join('; ');
+        setApiError(errorMsg);
+        toast.error("Some Klaviyo data failed to load", {
+          description: errorMsg,
+        });
       }
     } catch (error: any) {
       console.error("[KlaviyoEmailComposer] Error in loadOrganizationAndLists:", error);
@@ -298,13 +328,25 @@ export function KlaviyoEmailComposer({
               />
             </div>
 
+            {/* API Error Display */}
+            {apiError && (
+              <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+                <p className="font-semibold">Klaviyo API Errors:</p>
+                <p className="text-xs mt-1">{apiError}</p>
+                <p className="text-xs mt-2 text-muted-foreground">
+                  Check that your API key has Lists:Read, Segments:Read, and Campaigns:Read scopes
+                </p>
+              </div>
+            )}
+
             {/* Audience Type Selection */}
             <div className="space-y-2">
               <Label>Audience Type</Label>
               <Tabs value={audienceType} onValueChange={(v) => setAudienceType(v as AudienceType)}>
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="list">Lists</TabsTrigger>
                   <TabsTrigger value="segment">Segments</TabsTrigger>
+                  <TabsTrigger value="campaign">Campaigns</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
@@ -312,7 +354,7 @@ export function KlaviyoEmailComposer({
             {/* Audience Selection */}
             <div className="space-y-2">
               <Label htmlFor="audience">
-                {audienceType === "list" ? "Select List" : "Select Segment"}
+                {audienceType === "list" ? "Select List" : audienceType === "segment" ? "Select Segment" : "Select Campaign"}
               </Label>
               {loadingAudiences ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -325,19 +367,21 @@ export function KlaviyoEmailComposer({
                     <SelectValue placeholder={`Select a Klaviyo ${audienceType}`} />
                   </SelectTrigger>
                   <SelectContent className="z-[1200] bg-popover text-popover-foreground border shadow-md">
-                    {audienceType === "list" ? (
-                      lists.map((list) => (
-                        <SelectItem key={list.id} value={list.id}>
-                          {list.name} ({list.profile_count.toLocaleString()} subscribers)
-                        </SelectItem>
-                      ))
-                    ) : (
-                      segments.map((segment) => (
-                        <SelectItem key={segment.id} value={segment.id}>
-                          {segment.name} ({segment.profile_count.toLocaleString()} profiles)
-                        </SelectItem>
-                      ))
-                    )}
+                    {audienceType === "list" && lists.map((list) => (
+                      <SelectItem key={list.id} value={list.id}>
+                        {list.name} ({list.profile_count.toLocaleString()} subscribers)
+                      </SelectItem>
+                    ))}
+                    {audienceType === "segment" && segments.map((segment) => (
+                      <SelectItem key={segment.id} value={segment.id}>
+                        {segment.name} ({segment.profile_count.toLocaleString()} profiles)
+                      </SelectItem>
+                    ))}
+                    {audienceType === "campaign" && campaigns.map((campaign) => (
+                      <SelectItem key={campaign.id} value={campaign.id}>
+                        {campaign.name} ({campaign.status})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               )}
