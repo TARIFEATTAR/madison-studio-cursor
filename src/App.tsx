@@ -186,6 +186,14 @@ const RootRoute = () => {
     checkOnboardingStatus();
   }, [user, navigate, location, redirectCount, isChecking]);
 
+  if (isChecking) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground text-lg font-serif">Loading…</div>
+      </div>
+    );
+  }
+
   if (redirectCount >= 3) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
