@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { getIndustryTemplate } from "@/config/industryTemplates";
@@ -15,13 +15,16 @@ export function useOnboarding() {
   const [currentOrganizationId, setCurrentOrganizationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>("completed");
+  const hasCheckedRef = useRef(false);
 
   useEffect(() => {
-    if (!user) {
-      console.log("[useOnboarding] No user, setting loading to false");
-      setIsLoading(false);
+    if (!user || hasCheckedRef.current) {
+      console.log("[useOnboarding] Skipping check:", { hasUser: !!user, hasChecked: hasCheckedRef.current });
+      if (!user) setIsLoading(false);
       return;
     }
+
+    hasCheckedRef.current = true;
 
     console.log("[useOnboarding] Starting onboarding check for user:", user.id);
     const checkOnboardingStatus = async () => {

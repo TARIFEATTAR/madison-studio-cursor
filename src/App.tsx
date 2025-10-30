@@ -194,7 +194,7 @@ const RootRoute = () => {
     checkOnboardingStatus();
 
     return () => clearTimeout(safetyTimer);
-  }, [user, navigate, location, redirectCount, isChecking]);
+  }, [user, navigate, redirectCount]);
 
   if (isChecking) {
     return (
