@@ -135,18 +135,18 @@ export default function AddTextToImage() {
         </header>
 
         {/* Main Content */}
-        <main className="px-4 py-6 pb-20 bg-[#111111]">
+        <main className="px-4 py-6 pb-20 bg-[#000000]">
           <Tabs defaultValue="create" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6 bg-[#1a1a1a] border border-[#2a2a2a] p-1">
+            <TabsList className="grid w-full grid-cols-2 mb-6 bg-[#111111] border border-[#2a2a2a] p-1">
               <TabsTrigger 
                 value="create" 
-                className="data-[state=active]:bg-[#C9A66B] data-[state=active]:text-[#000000] data-[state=inactive]:text-[#A0A0A0] rounded"
+                className="data-[state=active]:bg-[#C9A66B] data-[state=active]:text-[#000000] data-[state=inactive]:text-[#666666] rounded"
               >
                 Create
               </TabsTrigger>
               <TabsTrigger 
                 value="settings" 
-                className="data-[state=active]:bg-[#C9A66B] data-[state=active]:text-[#000000] data-[state=inactive]:text-[#A0A0A0] rounded"
+                className="data-[state=active]:bg-[#C9A66B] data-[state=active]:text-[#000000] data-[state=inactive]:text-[#666666] rounded"
               >
                 Settings
               </TabsTrigger>
@@ -180,7 +180,7 @@ export default function AddTextToImage() {
 
               {/* Image Preview */}
               {selectedImage && (
-                <div className="relative aspect-square rounded-lg overflow-hidden bg-[#1a1a1a] border border-[#2a2a2a]">
+                <div className="relative aspect-square rounded-lg overflow-hidden bg-[#111111] border border-[#2a2a2a]">
                   <img
                     src={selectedImage.url}
                     alt="Selected"
@@ -192,31 +192,31 @@ export default function AddTextToImage() {
               {/* Option Cards Grid */}
               <div className="grid grid-cols-3 gap-3">
                 {/* Tint Overlay Card */}
-                <Card className="bg-[#1a1a1a] border-[#2a2a2a] p-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-[#222222] hover:border-[#C9A66B]/30 transition-colors">
+                <Card className="bg-[#111111] border-[#2a2a2a] p-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-[#1a1a1a] hover:border-[#C9A66B]/30 transition-colors">
                   <div className="text-2xl text-[#C9A66B]">{OVERLAY_OPTIONS.find(o => o.value === overlayOpacity)?.icon || "◑"}</div>
                   <div className="text-center">
                     <div className="text-xs font-medium text-white">Tint</div>
-                    <div className="text-[10px] text-[#A0A0A0]">
+                    <div className="text-[10px] text-[#666666]">
                       {OVERLAY_OPTIONS.find(o => o.value === overlayOpacity)?.label}
                     </div>
                   </div>
                 </Card>
 
                 {/* Aspect Ratio Card */}
-                <Card className="bg-[#1a1a1a] border-[#2a2a2a] p-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-[#222222] hover:border-[#C9A66B]/30 transition-colors">
+                <Card className="bg-[#111111] border-[#2a2a2a] p-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-[#1a1a1a] hover:border-[#C9A66B]/30 transition-colors">
                   <div className="text-2xl text-[#C9A66B]">⬜</div>
                   <div className="text-center">
                     <div className="text-xs font-medium text-white">Size</div>
-                    <div className="text-[10px] text-[#A0A0A0]">{aspectRatio}</div>
+                    <div className="text-[10px] text-[#666666]">{aspectRatio}</div>
                   </div>
                 </Card>
 
                 {/* Style Card (placeholder for future features) */}
-                <Card className="bg-[#1a1a1a] border-[#2a2a2a] p-4 flex flex-col items-center gap-2 opacity-40">
-                  <div className="text-2xl text-[#A0A0A0]">✨</div>
+                <Card className="bg-[#111111] border-[#2a2a2a] p-4 flex flex-col items-center gap-2 opacity-40">
+                  <div className="text-2xl text-[#666666]">✨</div>
                   <div className="text-center">
                     <div className="text-xs font-medium text-white">Style</div>
-                    <div className="text-[10px] text-[#A0A0A0]">Default</div>
+                    <div className="text-[10px] text-[#666666]">Default</div>
                   </div>
                 </Card>
               </div>
@@ -244,7 +244,7 @@ export default function AddTextToImage() {
               {/* Generated Image */}
               {generatedImage && (
                 <div className="space-y-4">
-                  <div className="relative aspect-square rounded-lg overflow-hidden bg-[#1a1a1a] border-2 border-[#C9A66B] shadow-lg shadow-[#C9A66B]/20">
+                  <div className="relative aspect-square rounded-lg overflow-hidden bg-[#111111] border-2 border-[#C9A66B] shadow-lg shadow-[#C9A66B]/20">
                     <img
                       src={generatedImage}
                       alt="Generated with text"
@@ -254,7 +254,7 @@ export default function AddTextToImage() {
                   <Button
                     onClick={handleDownload}
                     variant="outline"
-                    className="w-full border-[#C9A66B] bg-transparent text-[#C9A66B] hover:bg-[#C9A66B]/10 hover:border-[#C9A66B]"
+                    className="w-full border-[#C9A66B] bg-transparent text-[#C9A66B] hover:bg-[#C9A66B]/10 hover:border-[#C9A66B] hover:text-[#C9A66B]"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download Image
@@ -276,7 +276,7 @@ export default function AddTextToImage() {
                         "flex items-center gap-3 p-4 rounded-lg border-2 transition-all",
                         overlayOpacity === option.value
                           ? "border-[#C9A66B] bg-[#C9A66B]/10 text-[#C9A66B]"
-                          : "border-[#2a2a2a] bg-[#1a1a1a] text-[#A0A0A0] hover:bg-[#222222] hover:border-[#C9A66B]/30"
+                          : "border-[#2a2a2a] bg-[#111111] text-[#666666] hover:bg-[#1a1a1a] hover:border-[#C9A66B]/30"
                       )}
                     >
                       <span className="text-2xl">{option.icon}</span>
@@ -303,7 +303,7 @@ export default function AddTextToImage() {
                       "px-3 py-2 rounded-lg border text-sm font-medium transition-all",
                       aspectRatio === "4:5"
                         ? "border-[#C9A66B] bg-[#C9A66B]/10 text-[#C9A66B]"
-                        : "border-[#2a2a2a] bg-[#1a1a1a] text-[#A0A0A0] hover:bg-[#222222] hover:border-[#C9A66B]/30"
+                        : "border-[#2a2a2a] bg-[#111111] text-[#666666] hover:bg-[#1a1a1a] hover:border-[#C9A66B]/30"
                     )}
                   >
                     4:5 Portrait
@@ -314,7 +314,7 @@ export default function AddTextToImage() {
                       "px-3 py-2 rounded-lg border text-sm font-medium transition-all",
                       aspectRatio === "16:9"
                         ? "border-[#C9A66B] bg-[#C9A66B]/10 text-[#C9A66B]"
-                        : "border-[#2a2a2a] bg-[#1a1a1a] text-[#A0A0A0] hover:bg-[#222222] hover:border-[#C9A66B]/30"
+                        : "border-[#2a2a2a] bg-[#111111] text-[#666666] hover:bg-[#1a1a1a] hover:border-[#C9A66B]/30"
                     )}
                   >
                     16:9 Wide
@@ -323,9 +323,9 @@ export default function AddTextToImage() {
               </div>
 
               {/* Tips */}
-              <Card className="p-4 bg-[#1a1a1a] border-[#2a2a2a]">
+              <Card className="p-4 bg-[#111111] border-[#2a2a2a]">
                 <h3 className="font-semibold text-sm mb-3 text-white">Tips for Social Posts</h3>
-                <ul className="space-y-2 text-xs text-[#A0A0A0]">
+                <ul className="space-y-2 text-xs text-[#666666]">
                   <li>• 1:1 - Perfect for Instagram feed posts</li>
                   <li>• 9:16 - Ideal for Stories and Reels</li>
                   <li>• 4:5 - Great for portrait posts</li>
