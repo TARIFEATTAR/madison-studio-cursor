@@ -139,10 +139,15 @@ export default function PublishEmail() {
           .from(sourceTable)
           .select("*")
           .eq("id", contentId)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
-
+        if (!data) {
+          setContent("");
+          setLoading(false);
+          return;
+        }
+ 
         let text = "";
         if (sourceTable === "master_content") {
           text = (data as any).content || "";

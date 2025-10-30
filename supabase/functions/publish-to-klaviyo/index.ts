@@ -111,7 +111,10 @@ serve(async (req) => {
           audiences: {
             included: [audience_id],
             excluded: []
-          }
+          },
+          "campaign-messages": [
+            { channel: "email", label: "Email" }
+          ]
         }
       }
     };
@@ -121,7 +124,7 @@ serve(async (req) => {
       method: "POST",
       headers: {
         "Authorization": `Klaviyo-API-Key ${apiKey}`,
-        "revision": "2024-07-15",
+        "revision": "2025-10-15",
         "Content-Type": "application/json",
       },
       body: JSON.stringify(campaignPayload),
