@@ -18,10 +18,10 @@ import { useBrandColor } from "@/hooks/useBrandColor";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, Eye } from "lucide-react";
-import { TemplateSelector } from "@/components/email-composer/TemplateSelector";
-import { StyleCustomizer } from "@/components/email-composer/StyleCustomizer";
-import { ImagePicker } from "@/components/email-composer/ImagePicker";
 import { EmailPreview } from "@/components/email-composer/EmailPreview";
+import { CampaignDetailsSection } from "@/components/klaviyo/CampaignDetailsSection";
+import { AudienceSelectionSection } from "@/components/klaviyo/AudienceSelectionSection";
+import { EmailDesignSection } from "@/components/klaviyo/EmailDesignSection";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom";
@@ -390,86 +390,20 @@ export function KlaviyoEmailComposer({ organizationId: propOrgId }: KlaviyoEmail
                     </AccordionTrigger>
                     <AccordionContent>
                       <CardContent className="space-y-3 pt-0">
-                  <div className="space-y-2">
-                    <Label htmlFor="campaignName">
-                      Campaign Name <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="campaignName"
-                      value={campaignName}
-                      onChange={(e) => setCampaignName(e.target.value)}
-                      placeholder="e.g., Summer Collection 2024"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="subject">
-                      Email Subject <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="subject"
-                      value={subject}
-                      onChange={(e) => setSubject(e.target.value)}
-                      placeholder="e.g., New Collection Just Dropped"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="previewText">Preview Text</Label>
-                    <Input
-                      id="previewText"
-                      value={previewText}
-                      onChange={(e) => setPreviewText(e.target.value)}
-                      placeholder="Preview text shown in inbox"
-                      maxLength={150}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {previewText.length}/150 characters
-                    </p>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-2">
-                    <Label htmlFor="fromEmail">
-                      From Email <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="fromEmail"
-                      type="email"
-                      value={fromEmail}
-                      onChange={(e) => setFromEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="fromName">
-                      From Name <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="fromName"
-                      value={fromName}
-                      onChange={(e) => setFromName(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="replyToEmail">Reply-To Email</Label>
-                    <Input
-                      id="replyToEmail"
-                      type="email"
-                      value={replyToEmail}
-                      onChange={(e) => setReplyToEmail(e.target.value)}
-                      placeholder={fromEmail}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Leave blank to use From Email
-                    </p>
-                  </div>
+                        <CampaignDetailsSection
+                          campaignName={campaignName}
+                          setCampaignName={setCampaignName}
+                          subject={subject}
+                          setSubject={setSubject}
+                          previewText={previewText}
+                          setPreviewText={setPreviewText}
+                          fromEmail={fromEmail}
+                          setFromEmail={setFromEmail}
+                          fromName={fromName}
+                          setFromName={setFromName}
+                          replyToEmail={replyToEmail}
+                          setReplyToEmail={setReplyToEmail}
+                        />
                       </CardContent>
                     </AccordionContent>
                   </Card>
@@ -483,83 +417,17 @@ export function KlaviyoEmailComposer({ organizationId: propOrgId }: KlaviyoEmail
                     </AccordionTrigger>
                     <AccordionContent>
                       <CardContent className="space-y-3 pt-0">
-                  {loadingAudiences ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                      <span className="ml-2 text-sm text-muted-foreground">
-                        Loading audiences...
-                      </span>
-                    </div>
-                  ) : (
-                    <>
-                      {apiError && (
-                        <div className="p-3 text-sm bg-amber-500/10 text-amber-600 rounded-md">
-                          {apiError}
-                        </div>
-                      )}
-                      <Tabs value={audienceType} onValueChange={(v) => setAudienceType(v as AudienceType)}>
-                        <TabsList className="grid w-full grid-cols-3">
-                          <TabsTrigger value="list">Lists</TabsTrigger>
-                          <TabsTrigger value="segment">Segments</TabsTrigger>
-                          <TabsTrigger value="campaign">Campaigns</TabsTrigger>
-                        </TabsList>
-
-                        <TabsContent value="list" className="space-y-2">
-                          <Label htmlFor="list-select">
-                            Select List <span className="text-destructive">*</span>
-                          </Label>
-                          <Select value={selectedList} onValueChange={setSelectedList}>
-                            <SelectTrigger id="list-select">
-                              <SelectValue placeholder="Choose a list" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {lists.map((list) => (
-                                <SelectItem key={list.id} value={list.id}>
-                                  {list.name} ({list.profile_count} subscribers)
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TabsContent>
-
-                        <TabsContent value="segment" className="space-y-2">
-                          <Label htmlFor="segment-select">
-                            Select Segment <span className="text-destructive">*</span>
-                          </Label>
-                          <Select value={selectedList} onValueChange={setSelectedList}>
-                            <SelectTrigger id="segment-select">
-                              <SelectValue placeholder="Choose a segment" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {segments.map((segment) => (
-                                <SelectItem key={segment.id} value={segment.id}>
-                                  {segment.name} ({segment.profile_count} profiles)
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TabsContent>
-
-                        <TabsContent value="campaign" className="space-y-2">
-                          <Label htmlFor="campaign-select">
-                            Select Campaign <span className="text-destructive">*</span>
-                          </Label>
-                          <Select value={selectedList} onValueChange={setSelectedList}>
-                            <SelectTrigger id="campaign-select">
-                              <SelectValue placeholder="Choose a campaign" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {campaigns.map((campaign) => (
-                                <SelectItem key={campaign.id} value={campaign.id}>
-                                  {campaign.name} ({campaign.status})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TabsContent>
-                      </Tabs>
-                    </>
-                  )}
+                        <AudienceSelectionSection
+                          audienceType={audienceType}
+                          setAudienceType={setAudienceType}
+                          selectedList={selectedList}
+                          setSelectedList={setSelectedList}
+                          lists={lists}
+                          segments={segments}
+                          campaigns={campaigns}
+                          loadingAudiences={loadingAudiences}
+                          apiError={apiError}
+                        />
                       </CardContent>
                     </AccordionContent>
                   </Card>
@@ -573,72 +441,26 @@ export function KlaviyoEmailComposer({ organizationId: propOrgId }: KlaviyoEmail
                     </AccordionTrigger>
                     <AccordionContent>
                       <CardContent className="space-y-4 pt-0">
-                  <div className="space-y-2">
-                    <Label>Template</Label>
-                    <TemplateSelector
-                      selectedTemplate={composer.selectedTemplate}
-                      onSelect={composer.setSelectedTemplate}
-                    />
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email-title">Email Title</Label>
-                    <Input
-                      id="email-title"
-                      value={composer.title}
-                      onChange={(e) => composer.setTitle(e.target.value)}
-                      placeholder="Main headline in email"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email-subtitle">Subtitle</Label>
-                    <Input
-                      id="email-subtitle"
-                      value={composer.subtitle}
-                      onChange={(e) => composer.setSubtitle(e.target.value)}
-                      placeholder="Secondary headline"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email-content">Body Content</Label>
-                    <Textarea
-                      id="email-content"
-                      value={composer.content}
-                      onChange={(e) => composer.setContent(e.target.value)}
-                      placeholder="Main email message"
-                      rows={6}
-                    />
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-2">
-                    <Label>Header Image</Label>
-                    <ImagePicker
-                      value={composer.headerImage}
-                      onChange={composer.setHeaderImage}
-                    />
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-2">
-                    <Label>Style Customization</Label>
-                    <StyleCustomizer
-                      brandColor={composer.brandColor}
-                      secondaryColor={composer.secondaryColor}
-                      fontFamily={composer.fontFamily}
-                      textColor={composer.textColor}
-                      onBrandColorChange={composer.setBrandColor}
-                      onSecondaryColorChange={composer.setSecondaryColor}
-                      onFontChange={composer.setFontFamily}
-                      onTextColorChange={composer.setTextColor}
-                    />
-                  </div>
+                        <EmailDesignSection
+                          selectedTemplate={composer.selectedTemplate}
+                          setSelectedTemplate={composer.setSelectedTemplate}
+                          title={composer.title}
+                          setTitle={composer.setTitle}
+                          subtitle={composer.subtitle}
+                          setSubtitle={composer.setSubtitle}
+                          content={composer.content}
+                          setContent={composer.setContent}
+                          headerImage={composer.headerImage}
+                          setHeaderImage={composer.setHeaderImage}
+                          brandColor={composer.brandColor}
+                          setBrandColor={composer.setBrandColor}
+                          secondaryColor={composer.secondaryColor}
+                          setSecondaryColor={composer.setSecondaryColor}
+                          fontFamily={composer.fontFamily}
+                          setFontFamily={composer.setFontFamily}
+                          textColor={composer.textColor}
+                          setTextColor={composer.setTextColor}
+                        />
                       </CardContent>
                     </AccordionContent>
                   </Card>
@@ -861,73 +683,27 @@ export function KlaviyoEmailComposer({ organizationId: propOrgId }: KlaviyoEmail
                       Customize your email template and content
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="space-y-2">
-                      <Label>Template</Label>
-                      <TemplateSelector
-                        selectedTemplate={composer.selectedTemplate}
-                        onSelect={composer.setSelectedTemplate}
-                      />
-                    </div>
-
-                    <Separator />
-
-                    <div className="space-y-2">
-                      <Label htmlFor="email-title">Email Title</Label>
-                      <Input
-                        id="email-title"
-                        value={composer.title}
-                        onChange={(e) => composer.setTitle(e.target.value)}
-                        placeholder="Main headline in email"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="email-subtitle">Subtitle</Label>
-                      <Input
-                        id="email-subtitle"
-                        value={composer.subtitle}
-                        onChange={(e) => composer.setSubtitle(e.target.value)}
-                        placeholder="Secondary headline"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="email-content">Body Content</Label>
-                      <Textarea
-                        id="email-content"
-                        value={composer.content}
-                        onChange={(e) => composer.setContent(e.target.value)}
-                        placeholder="Main email message"
-                        rows={6}
-                      />
-                    </div>
-
-                    <Separator />
-
-                    <div className="space-y-2">
-                      <Label>Header Image</Label>
-                      <ImagePicker
-                        value={composer.headerImage}
-                        onChange={composer.setHeaderImage}
-                      />
-                    </div>
-
-                    <Separator />
-
-                    <div className="space-y-2">
-                      <Label>Style Customization</Label>
-                      <StyleCustomizer
-                        brandColor={composer.brandColor}
-                        secondaryColor={composer.secondaryColor}
-                        fontFamily={composer.fontFamily}
-                        textColor={composer.textColor}
-                        onBrandColorChange={composer.setBrandColor}
-                        onSecondaryColorChange={composer.setSecondaryColor}
-                        onFontChange={composer.setFontFamily}
-                        onTextColorChange={composer.setTextColor}
-                      />
-                    </div>
+                  <CardContent>
+                    <EmailDesignSection
+                      selectedTemplate={composer.selectedTemplate}
+                      setSelectedTemplate={composer.setSelectedTemplate}
+                      title={composer.title}
+                      setTitle={composer.setTitle}
+                      subtitle={composer.subtitle}
+                      setSubtitle={composer.setSubtitle}
+                      content={composer.content}
+                      setContent={composer.setContent}
+                      headerImage={composer.headerImage}
+                      setHeaderImage={composer.setHeaderImage}
+                      brandColor={composer.brandColor}
+                      setBrandColor={composer.setBrandColor}
+                      secondaryColor={composer.secondaryColor}
+                      setSecondaryColor={composer.setSecondaryColor}
+                      fontFamily={composer.fontFamily}
+                      setFontFamily={composer.setFontFamily}
+                      textColor={composer.textColor}
+                      setTextColor={composer.setTextColor}
+                    />
                   </CardContent>
                 </Card>
               </div>
