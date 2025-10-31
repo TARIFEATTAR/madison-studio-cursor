@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Search, FileText, Image as ImageIcon } from "lucide-react";
@@ -112,6 +112,9 @@ export function ContentPicker({ onSelect, organizationId }: ContentPickerProps) 
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Select Content from Library</DialogTitle>
+          <DialogDescription>
+            Choose existing content to load into the email composer
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

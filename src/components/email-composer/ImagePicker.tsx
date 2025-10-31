@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Image as ImageIcon, X } from "lucide-react";
 import { toast } from "sonner";
@@ -114,6 +114,9 @@ export function ImagePicker({ value, onChange }: ImagePickerProps) {
         <DialogContent className="max-w-3xl bg-popover border-border">
           <DialogHeader>
             <DialogTitle>Select Image from Studio</DialogTitle>
+            <DialogDescription>
+              Choose an image from your Image Studio library
+            </DialogDescription>
           </DialogHeader>
           
           <ScrollArea className="h-[500px] pr-4">

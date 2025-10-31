@@ -320,7 +320,12 @@ const App = () => {
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
-          <BrowserRouter>
+          <BrowserRouter
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true,
+            }}
+          >
             <ErrorBoundary>
               <AppContent />
             </ErrorBoundary>
