@@ -296,13 +296,7 @@ export function PublishingDrawer({
         </SheetContent>
       </Sheet>
 
-      <KlaviyoEmailComposer
-        open={klaviyoModalOpen}
-        onOpenChange={setKlaviyoModalOpen}
-        contentId={contentId}
-        sourceTable={sourceTable === "generated_images" ? "master_content" : sourceTable}
-        initialTitle={contentTitle}
-      />
+      {/* Removed - Use /klaviyo-composer route instead */}
     </>
   );
 }

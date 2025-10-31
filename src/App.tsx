@@ -38,6 +38,7 @@ import BrandBuilder from "./pages/BrandBuilder";
 import ImageEditor from "./pages/ImageEditor";
 import EmailSequence from "./pages/EmailSequence";
 import EmailComposer from "./pages/EmailComposer";
+import KlaviyoComposer from "./pages/KlaviyoComposer";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { AlertCircle } from "lucide-react";
@@ -271,6 +272,7 @@ const AppContent = () => {
                   <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/email-sequence" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Sequence"><EmailSequence /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/email-composer" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Composer"><EmailComposer /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/klaviyo-composer" element={<ProtectedRoute><RouteErrorBoundary routeName="Klaviyo Composer"><KlaviyoComposer /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>

@@ -749,18 +749,7 @@ export function ContentDetailModal({
         </DialogContent>
       </Dialog>
 
-      {/* Klaviyo Email Composer */}
-      <KlaviyoEmailComposer
-        open={klaviyoModalOpen}
-        onOpenChange={setKlaviyoModalOpen}
-        contentId={content.id}
-        sourceTable={
-          category === "master" ? "master_content" :
-          category === "derivative" ? "derivative_assets" :
-          "outputs"
-        }
-        initialTitle={content.title || 'Untitled'}
-      />
+      {/* Removed - Use /klaviyo-composer route instead */}
     </Dialog>
   );
 }

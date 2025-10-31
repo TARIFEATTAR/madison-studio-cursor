@@ -1,28 +1,34 @@
-import { useState, useEffect, useMemo } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { GoldButton } from "@/components/ui/gold-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useEmailComposer } from "@/hooks/useEmailComposer";
+import { useBrandColor } from "@/hooks/useBrandColor";
 import { toast } from "sonner";
-import { Loader2, Mail, Eye } from "lucide-react";
-import { convertToEmailHtml } from "@/utils/emailHtmlConverter";
-import { deserializeEmailState } from "@/utils/emailStateSerializer";
-import DOMPurify from "dompurify";
+import { Loader2, ArrowLeft } from "lucide-react";
+import { TemplateSelector } from "@/components/email-composer/TemplateSelector";
+import { StyleCustomizer } from "@/components/email-composer/StyleCustomizer";
+import { ImagePicker } from "@/components/email-composer/ImagePicker";
+import { EmailPreview } from "@/components/email-composer/EmailPreview";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
+import { useNavigate } from "react-router-dom";
 
 const klaviyoEmailSchema = z.object({
-  campaignName: z.string().max(100, "Campaign name too long").optional(),
+  campaignName: z.string().min(1, "Campaign name is required").max(100, "Campaign name too long"),
   subject: z.string().min(1, "Subject is required").max(200, "Subject too long"),
   fromEmail: z.string().email("Invalid email address"),
   fromName: z.string().min(1, "From name is required").max(100, "From name too long"),
   previewText: z.string().max(150, "Preview text too long").optional(),
-  emailHtml: z.string().min(1, "Email content is required"),
   audienceId: z.string().min(1, "Please select an audience"),
 });
 
@@ -46,136 +52,42 @@ interface KlaviyoCampaign {
   channel: string;
 }
 
-
 type AudienceType = "list" | "segment" | "campaign";
 
 interface KlaviyoEmailComposerProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  contentId?: string;
-  sourceTable?: "master_content" | "derivative_assets" | "outputs";
-  initialContent?: string;
-  initialTitle?: string;
-  initialHtml?: string;
-  onSendSuccess?: () => void | Promise<void>;
+  organizationId?: string;
 }
 
-export function KlaviyoEmailComposer({
-  open,
-  onOpenChange,
-  contentId,
-  sourceTable,
-  initialContent = "",
-  initialTitle = "",
-  initialHtml,
-  onSendSuccess,
-}: KlaviyoEmailComposerProps) {
+export function KlaviyoEmailComposer({ organizationId: propOrgId }: KlaviyoEmailComposerProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { brandColor: defaultBrandColor } = useBrandColor();
   const [loading, setLoading] = useState(false);
   const [lists, setLists] = useState<KlaviyoList[]>([]);
   const [segments, setSegments] = useState<KlaviyoSegment[]>([]);
   const [campaigns, setCampaigns] = useState<KlaviyoCampaign[]>([]);
   const [loadingAudiences, setLoadingAudiences] = useState(false);
-  const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [organizationId, setOrganizationId] = useState<string | null>(propOrgId || null);
   const [audienceType, setAudienceType] = useState<AudienceType>("list");
   const [apiError, setApiError] = useState<string>("");
 
-  const [campaignName, setCampaignName] = useState(initialTitle);
-  const [subject, setSubject] = useState(initialTitle);
+  // Campaign Details
+  const [campaignName, setCampaignName] = useState("");
+  const [subject, setSubject] = useState("");
   const [previewText, setPreviewText] = useState("");
   const [selectedList, setSelectedList] = useState("");
   const [fromEmail, setFromEmail] = useState("hello@messages.tarifeattar.com");
   const [fromName, setFromName] = useState("TARIFE ATTAR LLC");
   const [replyToEmail, setReplyToEmail] = useState("");
-  const [emailHtml, setEmailHtml] = useState(initialHtml || "");
 
-  // Sanitize HTML more permissively for email templates (keeping design intact)
-  const sanitizedHtml = useMemo(() => {
-    return DOMPurify.sanitize(emailHtml, {
-      // Allow full email document head so embedded styles are preserved
-      WHOLE_DOCUMENT: true,
-      ADD_TAGS: ['html','head','meta','title','style','link'],
-      ADD_ATTR: [
-        // keep inline email design intact
-        'style','class','id','href','src','width','height',
-        'align','valign','border','cellpadding','cellspacing',
-        'bgcolor','background','color','face','size','target','rel','type',
-        'role','http-equiv','content','name','media'
-      ],
-      ALLOW_UNKNOWN_PROTOCOLS: false,
-      FORBID_TAGS: ['script','iframe','object','embed','form','input','button'],
-      FORBID_ATTR: ['onerror','onload','onclick','onmouseover','onmouseout','onfocus','onblur']
-    });
-  }, [emailHtml]);
+  // Email composer hook
+  const composer = useEmailComposer({
+    brandColor: defaultBrandColor,
+  });
 
   useEffect(() => {
-    logger.debug("[KlaviyoEmailComposer] useEffect triggered", { open, hasInitialHtml: !!initialHtml, contentId, sourceTable });
-    if (open) {
-      loadOrganizationAndLists();
-      
-      // If initialHtml is provided, use it directly
-      if (initialHtml) {
-        logger.debug("[KlaviyoEmailComposer] Setting email HTML from initialHtml");
-        setEmailHtml(initialHtml);
-      }
-      // If contentId and sourceTable are provided, fetch content from database
-      else if (contentId && sourceTable) {
-        logger.debug("[KlaviyoEmailComposer] Fetching content from database", { contentId, sourceTable });
-        loadContentFromDatabase(contentId, sourceTable);
-      }
-    }
-  }, [open, initialHtml, contentId, sourceTable]);
-
-  const loadContentFromDatabase = async (id: string, table: string) => {
-    try {
-      logger.debug("[KlaviyoEmailComposer] Loading content from", table, id);
-      const { data, error } = await supabase
-        .from(table as any)
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (data) {
-        logger.debug("[KlaviyoEmailComposer] Content loaded successfully");
-        
-        // Set campaign name from title
-        if ('title' in data && data.title) {
-          setCampaignName(data.title as string);
-          setSubject(data.title as string);
-        }
-
-        // Try to extract HTML from various possible fields
-        let htmlContent = "";
-        
-        if ('full_content' in data && data.full_content) {
-          try {
-            // Try to deserialize email state
-            const emailState = deserializeEmailState(data.full_content as string);
-            if (emailState.generatedHtml) {
-              htmlContent = emailState.generatedHtml;
-            } else {
-              htmlContent = data.full_content as string;
-            }
-          } catch {
-            // Not serialized, use as is
-            htmlContent = data.full_content as string;
-          }
-        } else if ('generated_content' in data && data.generated_content) {
-          htmlContent = convertToEmailHtml({ content: data.generated_content as string });
-        } else if ('content' in data && data.content) {
-          htmlContent = convertToEmailHtml({ content: data.content as string });
-        }
-
-        logger.debug("[KlaviyoEmailComposer] Setting email HTML from database content");
-        setEmailHtml(htmlContent);
-      }
-    } catch (error: any) {
-      logger.error("[KlaviyoEmailComposer] Error loading content:", error);
-      toast.error(`Failed to load content: ${error.message}`);
-    }
-  };
+    loadOrganizationAndLists();
+  }, [user]);
 
   const loadOrganizationAndLists = async () => {
     logger.debug("[KlaviyoEmailComposer] loadOrganizationAndLists starting", { user: !!user });
@@ -218,7 +130,7 @@ export function KlaviyoEmailComposer({
       if (!connection) {
         console.error("[KlaviyoEmailComposer] No Klaviyo connection found");
         toast.error("Please connect Klaviyo in Settings first");
-        onOpenChange(false);
+        navigate("/settings");
         return;
       }
 
@@ -257,31 +169,18 @@ export function KlaviyoEmailComposer({
 
       if (listsResult.error) {
         console.error("[KlaviyoEmailComposer] Lists fetch error:", listsResult.error);
-        // Check if it's a connection/CORS error vs API error
-        const errorMsg = listsResult.error.message || 'Failed to fetch';
-        if (errorMsg.includes('NetworkError') || errorMsg.includes('Failed to fetch')) {
-          errors.push(`Lists: Connection error - edge function may not be deployed`);
-        } else {
-          errors.push(`Lists: ${errorMsg}`);
-        }
+        errors.push(`Lists: ${listsResult.error.message || 'Failed to fetch'}`);
       } else if (listsResult.data?.error) {
         console.error("[KlaviyoEmailComposer] Lists API error:", listsResult.data.error);
         errors.push(`Lists: ${listsResult.data.error}`);
       } else if (listsResult.data?.lists) {
         console.log("[KlaviyoEmailComposer] Setting lists:", listsResult.data.lists.length);
         setLists(listsResult.data.lists);
-      } else {
-        console.warn("[KlaviyoEmailComposer] Lists returned no data");
       }
 
       if (segmentsResult.error) {
         console.error("[KlaviyoEmailComposer] Segments fetch error:", segmentsResult.error);
-        const errorMsg = segmentsResult.error.message || 'Failed to fetch';
-        if (errorMsg.includes('NetworkError') || errorMsg.includes('Failed to fetch')) {
-          errors.push(`Segments: Connection error - edge function may not be deployed`);
-        } else {
-          errors.push(`Segments: ${errorMsg}`);
-        }
+        errors.push(`Segments: ${segmentsResult.error.message || 'Failed to fetch'}`);
       } else if (segmentsResult.data?.error) {
         console.error("[KlaviyoEmailComposer] Segments API error:", segmentsResult.data.error);
         errors.push(`Segments: ${segmentsResult.data.error}`);
@@ -289,48 +188,26 @@ export function KlaviyoEmailComposer({
         const activeSegments = segmentsResult.data.segments.filter((s: KlaviyoSegment) => s.is_active);
         console.log("[KlaviyoEmailComposer] Setting segments:", activeSegments.length);
         setSegments(activeSegments);
-      } else {
-        console.warn("[KlaviyoEmailComposer] Segments returned no data");
       }
 
       if (campaignsResult.error) {
         console.error("[KlaviyoEmailComposer] Campaigns fetch error:", campaignsResult.error);
-        const errorMsg = campaignsResult.error.message || 'Failed to fetch';
-        if (errorMsg.includes('NetworkError') || errorMsg.includes('Failed to fetch')) {
-          errors.push(`Campaigns: Connection error - edge function may not be deployed`);
-        } else {
-          errors.push(`Campaigns: ${errorMsg}`);
-        }
+        errors.push(`Campaigns: ${campaignsResult.error.message || 'Failed to fetch'}`);
       } else if (campaignsResult.data?.error) {
         console.error("[KlaviyoEmailComposer] Campaigns API error:", campaignsResult.data.error);
         errors.push(`Campaigns: ${campaignsResult.data.error}`);
       } else if (campaignsResult.data?.campaigns) {
         console.log("[KlaviyoEmailComposer] Setting campaigns:", campaignsResult.data.campaigns.length);
         setCampaigns(campaignsResult.data.campaigns);
-      } else {
-        console.warn("[KlaviyoEmailComposer] Campaigns returned no data");
       }
 
       if (errors.length > 0) {
         const errorMsg = errors.join('; ');
         setApiError(errorMsg);
-        console.warn("[KlaviyoEmailComposer] Partial load - some data failed:", errorMsg);
-        
-        // Only show toast if ALL three failed (complete failure scenario)
-        if (errors.length === 3) {
-          toast.error("Failed to load Klaviyo audiences", {
-            description: errorMsg,
-            duration: 8000,
-          });
-        } else {
-          // Some succeeded - show a warning toast instead
-          toast.warning("Some Klaviyo data failed to load", {
-            description: `${errors.length} of 3 audience types unavailable. You can still use what loaded.`,
-            duration: 6000,
-          });
-        }
-      } else {
-        console.log("[KlaviyoEmailComposer] All Klaviyo data loaded successfully");
+        toast.warning("Some Klaviyo data failed to load", {
+          description: `${errors.length} of 3 audience types unavailable. You can still use what loaded.`,
+          duration: 6000,
+        });
       }
     } catch (error: any) {
       console.error("[KlaviyoEmailComposer] Error in loadOrganizationAndLists:", error);
@@ -340,39 +217,29 @@ export function KlaviyoEmailComposer({
     }
   };
 
-
-  const handleSend = async () => {
-    // Prevent multiple simultaneous submissions
+  const handleCreateDraft = async () => {
     if (loading) {
       console.log("[KlaviyoEmailComposer] Already processing, ignoring duplicate call");
       return;
     }
 
-    // Generate UUID for this campaign session if contentId not provided
-    const campaignContentId = contentId || crypto.randomUUID();
-
-    // Use subject as fallback for campaign name if empty
-    const effectiveCampaignName = campaignName.trim() || subject.trim();
-    
-    console.log("[KlaviyoEmailComposer] handleSend called", {
+    console.log("[KlaviyoEmailComposer] handleCreateDraft called", {
       hasOrganizationId: !!organizationId,
       audienceType,
       selectedList,
       campaignName: campaignName.trim(),
       subject: subject.trim(),
-      effectiveCampaignName,
-      hasEmailHtml: !!emailHtml,
-      emailHtmlLength: emailHtml?.length || 0
+      hasEmailHtml: !!composer.generatedHtml,
+      emailHtmlLength: composer.generatedHtml?.length || 0
     });
 
-    // Validate input with Zod schema
+    // Validate input
     const validation = klaviyoEmailSchema.safeParse({
-      campaignName: campaignName.trim() || undefined,
+      campaignName: campaignName.trim(),
       subject: subject.trim(),
       fromEmail: fromEmail.trim(),
       fromName: fromName.trim(),
       previewText: previewText.trim() || undefined,
-      emailHtml: emailHtml?.trim() || "",
       audienceId: selectedList || "",
     });
 
@@ -389,13 +256,13 @@ export function KlaviyoEmailComposer({
       return;
     }
 
-    if (!emailHtml || emailHtml.trim().length === 0) {
+    if (!composer.generatedHtml || composer.generatedHtml.trim().length === 0) {
       console.error("[KlaviyoEmailComposer] No email HTML content");
-      toast.error("Email content is empty. Please generate or add email content first.");
+      toast.error("Please create email content first using the template and editor below");
       return;
     }
 
-    // Validate audience has members (for lists and segments)
+    // Validate audience has members
     if (audienceType === "list") {
       const selectedListData = lists.find(l => l.id === selectedList);
       if (selectedListData && selectedListData.profile_count === 0) {
@@ -417,14 +284,7 @@ export function KlaviyoEmailComposer({
     }
 
     setLoading(true);
-    console.log("[KlaviyoEmailComposer] Sending to Klaviyo...", {
-      organization_id: organizationId,
-      audience_type: audienceType,
-      audience_id: selectedList,
-      campaign_name: effectiveCampaignName,
-      hasContent: !!emailHtml,
-      contentLength: emailHtml.length
-    });
+    console.log("[KlaviyoEmailComposer] Sending to Klaviyo...");
 
     try {
       const { data, error } = await supabase.functions.invoke("publish-to-klaviyo", {
@@ -432,262 +292,363 @@ export function KlaviyoEmailComposer({
           organization_id: organizationId,
           audience_type: audienceType,
           audience_id: selectedList,
-          campaign_name: effectiveCampaignName,
+          campaign_name: campaignName.trim(),
           subject: subject.trim(),
           preview_text: previewText.trim() || subject.trim(),
-          content_html: emailHtml,
-          content_id: campaignContentId,
-          content_title: subject,
+          content_html: composer.generatedHtml,
+          content_id: crypto.randomUUID(),
+          content_title: subject.trim(),
           from_email: fromEmail.trim(),
           from_name: fromName.trim(),
           reply_to_email: replyToEmail.trim() || fromEmail.trim(),
         },
       });
 
-      console.log("[KlaviyoEmailComposer] publish-to-klaviyo response:", { 
-        hasData: !!data, 
-        hasError: !!error,
-        data: data ? JSON.stringify(data).substring(0, 200) : null,
-        error: error ? JSON.stringify(error).substring(0, 200) : null
-      });
+      console.log("[KlaviyoEmailComposer] Klaviyo response:", { data, error });
 
       if (error) {
-        console.error("[KlaviyoEmailComposer] Klaviyo publish error:", error);
-        // Surface the actual error message from Klaviyo
-        const errorMessage = error.message || 'Unknown error occurred';
-        
-        // Show detailed error with action items if available
-        if (errorMessage.includes('not verified')) {
-          toast.error("Sender Email Not Verified", {
-            description: errorMessage,
-            duration: 10000, // Show longer for important errors
-          });
-        } else {
-          toast.error("Failed to publish to Klaviyo", {
-            description: errorMessage,
-            duration: 8000,
-          });
-        }
-        return;
+        console.error("[KlaviyoEmailComposer] Error from publish-to-klaviyo:", error);
+        throw new Error(error.message || "Failed to create Klaviyo campaign");
       }
 
-      // Call success callback to update database
-      if (onSendSuccess) {
-        console.log("[KlaviyoEmailComposer] Calling onSendSuccess");
-        await onSendSuccess();
+      if (data?.error) {
+        console.error("[KlaviyoEmailComposer] Error in response data:", data.error);
+        throw new Error(data.error);
       }
 
-      const successMessage = audienceType === "campaign" 
-        ? "Campaign updated in Klaviyo!" 
-        : "Draft campaign created in Klaviyo!";
-      
-      toast.success(successMessage, {
-        description: "Review and send from your Klaviyo dashboard.",
+      console.log("[KlaviyoEmailComposer] Successfully created campaign:", data);
+      toast.success("Draft Campaign Created!", {
+        description: `Your campaign "${campaignName}" has been created in Klaviyo as a draft.`,
+        duration: 8000,
       });
 
-      onOpenChange(false);
+      // Navigate back to library
+      setTimeout(() => navigate("/library"), 1500);
     } catch (error: any) {
-      console.error("[KlaviyoEmailComposer] Error in handleSend:", error);
-      const errorMessage = error?.message || 'Unknown error';
-      toast.error(`Klaviyo error: ${errorMessage}`);
+      console.error("[KlaviyoEmailComposer] Error creating campaign:", error);
+      toast.error("Failed to create campaign", {
+        description: error.message || "Please check your settings and try again",
+        duration: 8000,
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(newOpen) => {
-      console.log("[KlaviyoEmailComposer] Dialog onOpenChange:", newOpen);
-      onOpenChange(newOpen);
-    }}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col" aria-describedby="klaviyo-composer-description">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            Compose Klaviyo Email Campaign
-          </DialogTitle>
-          <DialogDescription id="klaviyo-composer-description">
-            Create a draft campaign in Klaviyo. Choose your audience, preview the email, then create the draft to review/send in Klaviyo.
-          </DialogDescription>
-        </DialogHeader>
-
-        <Tabs defaultValue="compose" className="flex-1 overflow-hidden flex flex-col">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="compose">Compose</TabsTrigger>
-            <TabsTrigger value="preview">
-              <Eye className="h-4 w-4 mr-2" />
-              Preview
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="compose" className="flex-1 overflow-y-auto space-y-4 mt-4">
-            {/* Campaign Name */}
-            <div className="space-y-2">
-              <Label htmlFor="campaign">Campaign Name (Optional)</Label>
-              <Input
-                id="campaign"
-                placeholder="Defaults to email subject if empty"
-                value={campaignName}
-                onChange={(e) => setCampaignName(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Internal name for this campaign in Klaviyo
-              </p>
-            </div>
-
-            {/* API Error Display */}
-            {apiError && (
-              <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
-                <p className="font-semibold">Klaviyo API Errors:</p>
-                <p className="text-xs mt-1">{apiError}</p>
-                <p className="text-xs mt-2 text-muted-foreground">
-                  Check that your API key has required scopes: Lists:Read, Segments:Read, Campaigns:Read, Campaigns:Write
-                </p>
-              </div>
-            )}
-
-            {/* From Email */}
-            <div className="space-y-2">
-              <Label htmlFor="from-email">From Email *</Label>
-              <Input
-                id="from-email"
-                type="email"
-                placeholder="hello@messages.tarifeattar.com"
-                value={fromEmail}
-                onChange={(e) => setFromEmail(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Must be a verified email in your Klaviyo account
-              </p>
-            </div>
-
-            {/* From Name */}
-            <div className="space-y-2">
-              <Label htmlFor="from-name">From Name *</Label>
-              <Input
-                id="from-name"
-                placeholder="TARIFE ATTAR LLC"
-                value={fromName}
-                onChange={(e) => setFromName(e.target.value)}
-              />
-            </div>
-
-            {/* Reply-To Email (Optional) */}
-            <div className="space-y-2">
-              <Label htmlFor="reply-to-email">Reply-To Email (Optional)</Label>
-              <Input
-                id="reply-to-email"
-                type="email"
-                placeholder="Leave blank to use From Email"
-                value={replyToEmail}
-                onChange={(e) => setReplyToEmail(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                If left blank, replies will go to the From Email address
-              </p>
-            </div>
-
-            {/* Audience Type Selection */}
-            <div className="space-y-2">
-              <Label>Audience Type</Label>
-              <Tabs value={audienceType} onValueChange={(v) => setAudienceType(v as AudienceType)}>
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="list">Lists</TabsTrigger>
-                  <TabsTrigger value="segment">Segments</TabsTrigger>
-                  <TabsTrigger value="campaign">Campaigns</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-
-            {/* Audience Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="audience">
-                {audienceType === "list" ? "Select List" : audienceType === "segment" ? "Select Segment" : "Select Campaign"}
-              </Label>
-              {loadingAudiences ? (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading audiences...
-                </div>
-              ) : (
-                <Select value={selectedList} onValueChange={setSelectedList}>
-                  <SelectTrigger className="z-[1201]">
-                    <SelectValue placeholder={`Select a Klaviyo ${audienceType}`} />
-                  </SelectTrigger>
-                  <SelectContent className="z-[1200] bg-popover text-popover-foreground border shadow-md">
-                    {audienceType === "list" && lists.map((list) => (
-                      <SelectItem key={list.id} value={list.id}>
-                        {list.name} ({list.profile_count.toLocaleString()} subscribers)
-                      </SelectItem>
-                    ))}
-                    {audienceType === "segment" && segments.map((segment) => (
-                      <SelectItem key={segment.id} value={segment.id}>
-                        {segment.name} ({segment.profile_count.toLocaleString()} profiles)
-                      </SelectItem>
-                    ))}
-                    {audienceType === "campaign" && campaigns.map((campaign) => (
-                      <SelectItem key={campaign.id} value={campaign.id}>
-                        {campaign.name} ({campaign.status})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-
-            {/* Subject */}
-            <div className="space-y-2">
-              <Label htmlFor="subject">Email Subject *</Label>
-              <Input
-                id="subject"
-                placeholder="Enter email subject line"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-              />
-            </div>
-
-            {/* Preview Text */}
-            <div className="space-y-2">
-              <Label htmlFor="preview">Preview Text (Optional)</Label>
-              <Input
-                id="preview"
-                placeholder="Text shown in inbox preview"
-                value={previewText}
-                onChange={(e) => setPreviewText(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Defaults to subject if left empty
-              </p>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="preview" className="flex-1 overflow-hidden mt-4">
-            <div className="border rounded-lg h-full overflow-auto bg-muted/20">
-              <iframe
-                srcDoc={sanitizedHtml}
-                className="w-full h-full min-h-[500px] bg-background"
-                title="Email Preview"
-                sandbox="allow-same-origin allow-popups allow-forms"
-                aria-label="Email content preview"
-              />
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        <div className="flex justify-end gap-3 pt-4 border-t">
+    <div className="h-screen flex flex-col bg-background">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card">
+        <div className="flex items-center gap-4">
           <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={loading}
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/library")}
+            className="gap-2"
           >
-            Cancel
+            <ArrowLeft className="w-4 h-4" />
+            Back
           </Button>
-          <Button onClick={handleSend} disabled={loading} aria-label="Create Draft in Klaviyo">
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Draft in Klaviyo
-          </Button>
+          <div>
+            <h1 className="text-xl font-semibold text-foreground">Create Klaviyo Campaign</h1>
+            <p className="text-sm text-muted-foreground">
+              Design your email and send to Klaviyo
+            </p>
+          </div>
         </div>
-      </DialogContent>
-    </Dialog>
+        <GoldButton
+          onClick={handleCreateDraft}
+          disabled={loading || !organizationId}
+          className="gap-2 px-6"
+        >
+          {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+          Create Draft in Klaviyo
+        </GoldButton>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full grid grid-cols-1 lg:grid-cols-2 gap-0">
+          {/* Left Side - Form */}
+          <ScrollArea className="h-full border-r border-border">
+            <div className="p-6 space-y-6">
+              {/* Section 1: Campaign Details */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Campaign Details</CardTitle>
+                  <CardDescription>
+                    Basic information for your Klaviyo campaign
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="campaignName">
+                      Campaign Name <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="campaignName"
+                      value={campaignName}
+                      onChange={(e) => setCampaignName(e.target.value)}
+                      placeholder="e.g., Summer Collection 2024"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="subject">
+                      Email Subject <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="subject"
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                      placeholder="e.g., New Collection Just Dropped"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="previewText">Preview Text</Label>
+                    <Input
+                      id="previewText"
+                      value={previewText}
+                      onChange={(e) => setPreviewText(e.target.value)}
+                      placeholder="Preview text shown in inbox"
+                      maxLength={150}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {previewText.length}/150 characters
+                    </p>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-2">
+                    <Label htmlFor="fromEmail">
+                      From Email <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="fromEmail"
+                      type="email"
+                      value={fromEmail}
+                      onChange={(e) => setFromEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="fromName">
+                      From Name <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="fromName"
+                      value={fromName}
+                      onChange={(e) => setFromName(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="replyToEmail">Reply-To Email</Label>
+                    <Input
+                      id="replyToEmail"
+                      type="email"
+                      value={replyToEmail}
+                      onChange={(e) => setReplyToEmail(e.target.value)}
+                      placeholder={fromEmail}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Leave blank to use From Email
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Section 2: Audience Selection */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Audience Selection</CardTitle>
+                  <CardDescription>
+                    Choose who will receive this email
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {loadingAudiences ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                      <span className="ml-2 text-sm text-muted-foreground">
+                        Loading audiences...
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      {apiError && (
+                        <div className="p-3 text-sm bg-amber-500/10 text-amber-600 rounded-md">
+                          {apiError}
+                        </div>
+                      )}
+                      <Tabs value={audienceType} onValueChange={(v) => setAudienceType(v as AudienceType)}>
+                        <TabsList className="grid w-full grid-cols-3">
+                          <TabsTrigger value="list">Lists</TabsTrigger>
+                          <TabsTrigger value="segment">Segments</TabsTrigger>
+                          <TabsTrigger value="campaign">Campaigns</TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="list" className="space-y-2">
+                          <Label htmlFor="list-select">
+                            Select List <span className="text-destructive">*</span>
+                          </Label>
+                          <Select value={selectedList} onValueChange={setSelectedList}>
+                            <SelectTrigger id="list-select">
+                              <SelectValue placeholder="Choose a list" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {lists.map((list) => (
+                                <SelectItem key={list.id} value={list.id}>
+                                  {list.name} ({list.profile_count} subscribers)
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TabsContent>
+
+                        <TabsContent value="segment" className="space-y-2">
+                          <Label htmlFor="segment-select">
+                            Select Segment <span className="text-destructive">*</span>
+                          </Label>
+                          <Select value={selectedList} onValueChange={setSelectedList}>
+                            <SelectTrigger id="segment-select">
+                              <SelectValue placeholder="Choose a segment" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {segments.map((segment) => (
+                                <SelectItem key={segment.id} value={segment.id}>
+                                  {segment.name} ({segment.profile_count} profiles)
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TabsContent>
+
+                        <TabsContent value="campaign" className="space-y-2">
+                          <Label htmlFor="campaign-select">
+                            Select Campaign <span className="text-destructive">*</span>
+                          </Label>
+                          <Select value={selectedList} onValueChange={setSelectedList}>
+                            <SelectTrigger id="campaign-select">
+                              <SelectValue placeholder="Choose a campaign" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {campaigns.map((campaign) => (
+                                <SelectItem key={campaign.id} value={campaign.id}>
+                                  {campaign.name} ({campaign.status})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TabsContent>
+                      </Tabs>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Section 3: Email Content Editor */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Email Design</CardTitle>
+                  <CardDescription>
+                    Customize your email template and content
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <Label>Template</Label>
+                    <TemplateSelector
+                      selectedTemplate={composer.selectedTemplate}
+                      onSelect={composer.setSelectedTemplate}
+                    />
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email-title">Email Title</Label>
+                    <Input
+                      id="email-title"
+                      value={composer.title}
+                      onChange={(e) => composer.setTitle(e.target.value)}
+                      placeholder="Main headline in email"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email-subtitle">Subtitle</Label>
+                    <Input
+                      id="email-subtitle"
+                      value={composer.subtitle}
+                      onChange={(e) => composer.setSubtitle(e.target.value)}
+                      placeholder="Secondary headline"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email-content">Body Content</Label>
+                    <Textarea
+                      id="email-content"
+                      value={composer.content}
+                      onChange={(e) => composer.setContent(e.target.value)}
+                      placeholder="Main email message"
+                      rows={6}
+                    />
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-2">
+                    <Label>Header Image</Label>
+                    <ImagePicker
+                      value={composer.headerImage}
+                      onChange={composer.setHeaderImage}
+                    />
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-2">
+                    <Label>Style Customization</Label>
+                    <StyleCustomizer
+                      brandColor={composer.brandColor}
+                      secondaryColor={composer.secondaryColor}
+                      fontFamily={composer.fontFamily}
+                      textColor={composer.textColor}
+                      onBrandColorChange={composer.setBrandColor}
+                      onSecondaryColorChange={composer.setSecondaryColor}
+                      onFontChange={composer.setFontFamily}
+                      onTextColorChange={composer.setTextColor}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </ScrollArea>
+
+          {/* Right Side - Preview */}
+          <div className="bg-muted/30 flex flex-col">
+            <div className="p-4 border-b border-border bg-card">
+              <h2 className="text-lg font-semibold">Email Preview</h2>
+              <p className="text-sm text-muted-foreground">
+                Live preview of your email
+              </p>
+            </div>
+            <ScrollArea className="flex-1">
+              <div className="p-6">
+                <EmailPreview html={composer.generatedHtml} />
+              </div>
+            </ScrollArea>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
