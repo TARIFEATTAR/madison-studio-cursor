@@ -348,6 +348,9 @@ export function KlaviyoEmailComposer({
       return;
     }
 
+    // Generate UUID for this campaign session if contentId not provided
+    const campaignContentId = contentId || crypto.randomUUID();
+
     // Use subject as fallback for campaign name if empty
     const effectiveCampaignName = campaignName.trim() || subject.trim();
     
@@ -433,7 +436,7 @@ export function KlaviyoEmailComposer({
           subject: subject.trim(),
           preview_text: previewText.trim() || subject.trim(),
           content_html: emailHtml,
-          content_id: contentId,
+          content_id: campaignContentId,
           content_title: subject,
           from_email: fromEmail.trim(),
           from_name: fromName.trim(),
