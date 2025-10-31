@@ -7,14 +7,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmailComposer } from "@/hooks/useEmailComposer";
 import { useBrandColor } from "@/hooks/useBrandColor";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Eye } from "lucide-react";
 import { TemplateSelector } from "@/components/email-composer/TemplateSelector";
 import { StyleCustomizer } from "@/components/email-composer/StyleCustomizer";
 import { ImagePicker } from "@/components/email-composer/ImagePicker";
@@ -61,6 +64,7 @@ interface KlaviyoEmailComposerProps {
 export function KlaviyoEmailComposer({ organizationId: propOrgId }: KlaviyoEmailComposerProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { brandColor: defaultBrandColor } = useBrandColor();
   const [loading, setLoading] = useState(false);
   const [lists, setLists] = useState<KlaviyoList[]>([]);
@@ -70,6 +74,7 @@ export function KlaviyoEmailComposer({ organizationId: propOrgId }: KlaviyoEmail
   const [organizationId, setOrganizationId] = useState<string | null>(propOrgId || null);
   const [audienceType, setAudienceType] = useState<AudienceType>("list");
   const [apiError, setApiError] = useState<string>("");
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   // Campaign Details
   const [campaignName, setCampaignName] = useState("");
@@ -336,51 +341,55 @@ export function KlaviyoEmailComposer({ organizationId: propOrgId }: KlaviyoEmail
   };
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className={`h-screen flex flex-col bg-background ${isMobile ? 'pb-20' : ''}`}>
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b border-border bg-card">
+        <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate("/library")}
-            className="gap-2"
+            className="gap-2 shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back
+            {!isMobile && "Back"}
           </Button>
-          <div>
-            <h1 className="text-xl font-semibold text-foreground">Create Klaviyo Campaign</h1>
-            <p className="text-sm text-muted-foreground">
-              Design your email and send to Klaviyo
-            </p>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-base md:text-xl font-semibold text-foreground truncate">Create Campaign</h1>
+            {!isMobile && (
+              <p className="text-sm text-muted-foreground">
+                Design your email and send to Klaviyo
+              </p>
+            )}
           </div>
         </div>
-        <GoldButton
-          onClick={handleCreateDraft}
-          disabled={loading || !organizationId}
-          className="gap-2 px-6"
-        >
-          {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-          Create Draft in Klaviyo
-        </GoldButton>
+        {!isMobile && (
+          <GoldButton
+            onClick={handleCreateDraft}
+            disabled={loading || !organizationId}
+            className="gap-2 px-6"
+          >
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+            Create Draft in Klaviyo
+          </GoldButton>
+        )}
       </div>
 
       {/* Main Content */}
       <div className="flex-1 overflow-hidden">
-        <div className="h-full grid grid-cols-1 lg:grid-cols-2 gap-0">
-          {/* Left Side - Form */}
-          <ScrollArea className="h-full border-r border-border">
-            <div className="p-6 space-y-6">
-              {/* Section 1: Campaign Details */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Campaign Details</CardTitle>
-                  <CardDescription>
-                    Basic information for your Klaviyo campaign
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+        {isMobile ? (
+          // Mobile Layout with Accordion
+          <ScrollArea className="h-full">
+            <div className="p-4 space-y-4">
+              <Accordion type="multiple" defaultValue={["campaign", "audience", "content"]} className="space-y-3">
+                {/* Mobile Section 1: Campaign Details */}
+                <AccordionItem value="campaign">
+                  <Card>
+                    <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                      <CardTitle className="text-base">Campaign Details</CardTitle>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <CardContent className="space-y-3 pt-0">
                   <div className="space-y-2">
                     <Label htmlFor="campaignName">
                       Campaign Name <span className="text-destructive">*</span>
@@ -461,18 +470,19 @@ export function KlaviyoEmailComposer({ organizationId: propOrgId }: KlaviyoEmail
                       Leave blank to use From Email
                     </p>
                   </div>
-                </CardContent>
-              </Card>
+                      </CardContent>
+                    </AccordionContent>
+                  </Card>
+                </AccordionItem>
 
-              {/* Section 2: Audience Selection */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Audience Selection</CardTitle>
-                  <CardDescription>
-                    Choose who will receive this email
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+                {/* Mobile Section 2: Audience Selection */}
+                <AccordionItem value="audience">
+                  <Card>
+                    <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                      <CardTitle className="text-base">Audience</CardTitle>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <CardContent className="space-y-3 pt-0">
                   {loadingAudiences ? (
                     <div className="flex items-center justify-center py-8">
                       <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -550,18 +560,19 @@ export function KlaviyoEmailComposer({ organizationId: propOrgId }: KlaviyoEmail
                       </Tabs>
                     </>
                   )}
-                </CardContent>
-              </Card>
+                      </CardContent>
+                    </AccordionContent>
+                  </Card>
+                </AccordionItem>
 
-              {/* Section 3: Email Content Editor */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Email Design</CardTitle>
-                  <CardDescription>
-                    Customize your email template and content
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
+                {/* Mobile Section 3: Email Content Editor */}
+                <AccordionItem value="content">
+                  <Card>
+                    <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                      <CardTitle className="text-base">Email Design</CardTitle>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <CardContent className="space-y-4 pt-0">
                   <div className="space-y-2">
                     <Label>Template</Label>
                     <TemplateSelector
@@ -628,27 +639,331 @@ export function KlaviyoEmailComposer({ organizationId: propOrgId }: KlaviyoEmail
                       onTextColorChange={composer.setTextColor}
                     />
                   </div>
-                </CardContent>
-              </Card>
+                      </CardContent>
+                    </AccordionContent>
+                  </Card>
+                </AccordionItem>
+              </Accordion>
+
+              {/* Mobile Preview Sheet Trigger */}
+              <Sheet open={previewOpen} onOpenChange={setPreviewOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="w-full gap-2" size="lg">
+                    <Eye className="w-4 h-4" />
+                    Preview Email
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[85vh]">
+                  <SheetHeader>
+                    <SheetTitle>Email Preview</SheetTitle>
+                  </SheetHeader>
+                  <ScrollArea className="h-full mt-4">
+                    <div className="pb-6">
+                      <EmailPreview html={composer.generatedHtml} />
+                    </div>
+                  </ScrollArea>
+                </SheetContent>
+              </Sheet>
             </div>
           </ScrollArea>
+        ) : (
+          // Desktop Layout
+          <div className="h-full grid grid-cols-1 lg:grid-cols-2 gap-0">
+            {/* Left Side - Form */}
+            <ScrollArea className="h-full border-r border-border">
+              <div className="p-6 space-y-6">
+                {/* Section 1: Campaign Details */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Campaign Details</CardTitle>
+                    <CardDescription>
+                      Basic information for your Klaviyo campaign
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="campaignName">
+                        Campaign Name <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="campaignName"
+                        value={campaignName}
+                        onChange={(e) => setCampaignName(e.target.value)}
+                        placeholder="e.g., Summer Collection 2024"
+                        required
+                      />
+                    </div>
 
-          {/* Right Side - Preview */}
-          <div className="bg-muted/30 flex flex-col">
-            <div className="p-4 border-b border-border bg-card">
-              <h2 className="text-lg font-semibold">Email Preview</h2>
-              <p className="text-sm text-muted-foreground">
-                Live preview of your email
-              </p>
-            </div>
-            <ScrollArea className="flex-1">
-              <div className="p-6">
-                <EmailPreview html={composer.generatedHtml} />
+                    <div className="space-y-2">
+                      <Label htmlFor="subject">
+                        Email Subject <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="subject"
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        placeholder="e.g., New Collection Just Dropped"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="previewText">Preview Text</Label>
+                      <Input
+                        id="previewText"
+                        value={previewText}
+                        onChange={(e) => setPreviewText(e.target.value)}
+                        placeholder="Preview text shown in inbox"
+                        maxLength={150}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {previewText.length}/150 characters
+                      </p>
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-2">
+                      <Label htmlFor="fromEmail">
+                        From Email <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="fromEmail"
+                        type="email"
+                        value={fromEmail}
+                        onChange={(e) => setFromEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="fromName">
+                        From Name <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="fromName"
+                        value={fromName}
+                        onChange={(e) => setFromName(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="replyToEmail">Reply-To Email</Label>
+                      <Input
+                        id="replyToEmail"
+                        type="email"
+                        value={replyToEmail}
+                        onChange={(e) => setReplyToEmail(e.target.value)}
+                        placeholder={fromEmail}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Leave blank to use From Email
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Section 2: Audience Selection */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Audience Selection</CardTitle>
+                    <CardDescription>
+                      Choose who will receive this email
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {loadingAudiences ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                        <span className="ml-2 text-sm text-muted-foreground">
+                          Loading audiences...
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        {apiError && (
+                          <div className="p-3 text-sm bg-amber-500/10 text-amber-600 rounded-md">
+                            {apiError}
+                          </div>
+                        )}
+                        <Tabs value={audienceType} onValueChange={(v) => setAudienceType(v as AudienceType)}>
+                          <TabsList className="grid w-full grid-cols-3">
+                            <TabsTrigger value="list">Lists</TabsTrigger>
+                            <TabsTrigger value="segment">Segments</TabsTrigger>
+                            <TabsTrigger value="campaign">Campaigns</TabsTrigger>
+                          </TabsList>
+
+                          <TabsContent value="list" className="space-y-2">
+                            <Label htmlFor="list-select">
+                              Select List <span className="text-destructive">*</span>
+                            </Label>
+                            <Select value={selectedList} onValueChange={setSelectedList}>
+                              <SelectTrigger id="list-select">
+                                <SelectValue placeholder="Choose a list" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {lists.map((list) => (
+                                  <SelectItem key={list.id} value={list.id}>
+                                    {list.name} ({list.profile_count} subscribers)
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TabsContent>
+
+                          <TabsContent value="segment" className="space-y-2">
+                            <Label htmlFor="segment-select">
+                              Select Segment <span className="text-destructive">*</span>
+                            </Label>
+                            <Select value={selectedList} onValueChange={setSelectedList}>
+                              <SelectTrigger id="segment-select">
+                                <SelectValue placeholder="Choose a segment" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {segments.map((segment) => (
+                                  <SelectItem key={segment.id} value={segment.id}>
+                                    {segment.name} ({segment.profile_count} profiles)
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TabsContent>
+
+                          <TabsContent value="campaign" className="space-y-2">
+                            <Label htmlFor="campaign-select">
+                              Select Campaign <span className="text-destructive">*</span>
+                            </Label>
+                            <Select value={selectedList} onValueChange={setSelectedList}>
+                              <SelectTrigger id="campaign-select">
+                                <SelectValue placeholder="Choose a campaign" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {campaigns.map((campaign) => (
+                                  <SelectItem key={campaign.id} value={campaign.id}>
+                                    {campaign.name} ({campaign.status})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TabsContent>
+                        </Tabs>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Section 3: Email Content Editor */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Email Design</CardTitle>
+                    <CardDescription>
+                      Customize your email template and content
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                      <Label>Template</Label>
+                      <TemplateSelector
+                        selectedTemplate={composer.selectedTemplate}
+                        onSelect={composer.setSelectedTemplate}
+                      />
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-2">
+                      <Label htmlFor="email-title">Email Title</Label>
+                      <Input
+                        id="email-title"
+                        value={composer.title}
+                        onChange={(e) => composer.setTitle(e.target.value)}
+                        placeholder="Main headline in email"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="email-subtitle">Subtitle</Label>
+                      <Input
+                        id="email-subtitle"
+                        value={composer.subtitle}
+                        onChange={(e) => composer.setSubtitle(e.target.value)}
+                        placeholder="Secondary headline"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="email-content">Body Content</Label>
+                      <Textarea
+                        id="email-content"
+                        value={composer.content}
+                        onChange={(e) => composer.setContent(e.target.value)}
+                        placeholder="Main email message"
+                        rows={6}
+                      />
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-2">
+                      <Label>Header Image</Label>
+                      <ImagePicker
+                        value={composer.headerImage}
+                        onChange={composer.setHeaderImage}
+                      />
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-2">
+                      <Label>Style Customization</Label>
+                      <StyleCustomizer
+                        brandColor={composer.brandColor}
+                        secondaryColor={composer.secondaryColor}
+                        fontFamily={composer.fontFamily}
+                        textColor={composer.textColor}
+                        onBrandColorChange={composer.setBrandColor}
+                        onSecondaryColorChange={composer.setSecondaryColor}
+                        onFontChange={composer.setFontFamily}
+                        onTextColorChange={composer.setTextColor}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </ScrollArea>
+
+            {/* Right Side - Preview */}
+            <div className="bg-muted/30 flex flex-col">
+              <div className="p-4 border-b border-border bg-card">
+                <h2 className="text-lg font-semibold">Email Preview</h2>
+                <p className="text-sm text-muted-foreground">
+                  Live preview of your email
+                </p>
+              </div>
+              <ScrollArea className="flex-1">
+                <div className="p-6">
+                  <EmailPreview html={composer.generatedHtml} />
+                </div>
+              </ScrollArea>
+            </div>
           </div>
-        </div>
+        )}
       </div>
+
+      {/* Mobile Sticky Bottom Button */}
+      {isMobile && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border z-50">
+          <GoldButton
+            onClick={handleCreateDraft}
+            disabled={loading || !organizationId}
+            className="w-full h-12 gap-2"
+          >
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+            Create Draft in Klaviyo
+          </GoldButton>
+        </div>
+      )}
     </div>
   );
 }
