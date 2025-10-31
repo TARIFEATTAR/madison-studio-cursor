@@ -111,14 +111,9 @@ serve(async (req) => {
       // Continue with original HTML if inlining fails
     }
 
-    // Get environment variables for Klaviyo API
-    const apiBaseUrl = Deno.env.get("KLAVIYO_API_BASE_URL");
-    const apiRevision = Deno.env.get("KLAVIYO_API_REVISION");
-    const senderId = Deno.env.get("KLAVIYO_SENDER_ID");
-
-    if (!apiBaseUrl || !apiRevision || !senderId) {
-      throw new Error("Klaviyo environment variables not configured");
-    }
+    // Klaviyo API constants
+    const apiBaseUrl = "https://a.klaviyo.com/api";
+    const apiRevision = "2024-07-15";
 
     // Handle two scenarios: 
     // 1. Update existing campaign (audience_type === "campaign")
@@ -248,14 +243,7 @@ serve(async (req) => {
               ]
             }
           },
-          relationships: {
-            sender: {
-              data: {
-                type: "sender",
-                id: senderId
-              }
-            }
-          }
+          // Note: sender relationship is optional - Klaviyo will use default sender if not specified
         }
       };
 

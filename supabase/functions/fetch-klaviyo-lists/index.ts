@@ -53,7 +53,7 @@ serve(async (req) => {
       .from("klaviyo_connections")
       .select("api_key_encrypted")
       .eq("organization_id", organization_id)
-      .single();
+      .maybeSingle();
 
     if (connectionError || !connection) {
       throw new Error("Klaviyo not connected for this organization");
