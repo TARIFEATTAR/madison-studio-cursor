@@ -449,20 +449,20 @@ export default function AddTextToImage() {
       </header>
 
       {/* Main Content */}
-      <main className="container max-w-7xl py-6 px-4">
+      <main className="container max-w-7xl py-4 px-4">
         <div className="grid lg:grid-cols-[400px_1fr] gap-6">
           {/* Left Column: Controls */}
           <div className="space-y-4">
-            {/* Select Image Card - Compact */}
-            <Card className="p-4 bg-[#111111] border-[#2a2a2a]">
+            {/* Select Image Card */}
+            <Card className="p-5 bg-[#111111] border-[#2a2a2a]">
               <h3 className="text-sm font-semibold mb-3 text-white">Select Image</h3>
-              <label className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-[#2a2a2a] cursor-pointer hover:border-[#C9A66B]/50 hover:bg-[#1a1a1a] transition-all">
-                <Upload className="h-8 w-8 text-[#C9A66B]" />
+              <label className="flex flex-col items-center justify-center gap-2 p-6 rounded-lg border-2 border-dashed border-[#2a2a2a] cursor-pointer hover:border-[#C9A66B]/50 hover:bg-[#1a1a1a] transition-all">
+                <Upload className="h-10 w-10 text-[#C9A66B]" />
                 <div className="text-center">
-                  <p className="text-xs font-medium text-white">
+                  <p className="text-sm font-medium text-white">
                     {selectedImage ? "Change Image" : "Click to upload"}
                   </p>
-                  <p className="text-[10px] text-[#666666] mt-1">
+                  <p className="text-xs text-[#666666] mt-1">
                     JPG, PNG, or WEBP
                   </p>
                 </div>
@@ -475,8 +475,59 @@ export default function AddTextToImage() {
               </label>
             </Card>
 
-            {/* Background Overlay & Font Styling - Combined Compact Card */}
-            <Card className="p-4 bg-[#111111] border-[#2a2a2a]">
+            {/* Aspect Ratio Card */}
+            <Card className="p-5 bg-[#111111] border-[#2a2a2a]">
+              <h3 className="text-sm font-semibold mb-3 text-white">Aspect Ratio</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setAspectRatio("1:1")}
+                  className={cn(
+                    "px-3 py-2.5 rounded-lg border text-xs font-medium transition-all",
+                    aspectRatio === "1:1"
+                      ? "border-[#C9A66B] bg-[#C9A66B]/10 text-[#C9A66B]"
+                      : "border-[#2a2a2a] bg-[#1a1a1a] text-[#666666] hover:bg-[#222222] hover:border-[#C9A66B]/30"
+                  )}
+                >
+                  1:1 Square
+                </button>
+                <button
+                  onClick={() => setAspectRatio("9:16")}
+                  className={cn(
+                    "px-3 py-2.5 rounded-lg border text-xs font-medium transition-all",
+                    aspectRatio === "9:16"
+                      ? "border-[#C9A66B] bg-[#C9A66B]/10 text-[#C9A66B]"
+                      : "border-[#2a2a2a] bg-[#1a1a1a] text-[#666666] hover:bg-[#222222] hover:border-[#C9A66B]/30"
+                  )}
+                >
+                  9:16 Story
+                </button>
+                <button
+                  onClick={() => setAspectRatio("4:5")}
+                  className={cn(
+                    "px-3 py-2.5 rounded-lg border text-xs font-medium transition-all",
+                    aspectRatio === "4:5"
+                      ? "border-[#C9A66B] bg-[#C9A66B]/10 text-[#C9A66B]"
+                      : "border-[#2a2a2a] bg-[#1a1a1a] text-[#666666] hover:bg-[#222222] hover:border-[#C9A66B]/30"
+                  )}
+                >
+                  4:5 Portrait
+                </button>
+                <button
+                  onClick={() => setAspectRatio("16:9")}
+                  className={cn(
+                    "px-3 py-2.5 rounded-lg border text-xs font-medium transition-all",
+                    aspectRatio === "16:9"
+                      ? "border-[#C9A66B] bg-[#C9A66B]/10 text-[#C9A66B]"
+                      : "border-[#2a2a2a] bg-[#1a1a1a] text-[#666666] hover:bg-[#222222] hover:border-[#C9A66B]/30"
+                  )}
+                >
+                  16:9 Wide
+                </button>
+              </div>
+            </Card>
+
+            {/* Styling Options Card */}
+            <Card className="p-5 bg-[#111111] border-[#2a2a2a]">
               <h3 className="text-sm font-semibold mb-3 text-white">Styling Options</h3>
               
               {/* Overlay in a horizontal row */}
@@ -570,8 +621,8 @@ export default function AddTextToImage() {
 
           {/* Right Column: Preview and Text */}
           <div className="space-y-4">
-            {/* Preview Card - Compact */}
-            <Card className="p-4 bg-[#111111] border-[#2a2a2a]">
+            {/* Preview Card */}
+            <Card className="p-5 bg-[#111111] border-[#2a2a2a]">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-white">Preview</h3>
                 {selectedImage && (
@@ -584,7 +635,10 @@ export default function AddTextToImage() {
               <div 
                 className={cn(
                   "relative rounded-lg overflow-hidden bg-[#0a0a0a] border-2 border-[#2a2a2a] flex items-center justify-center",
-                  "h-[280px]"
+                  aspectRatio === "1:1" && "aspect-square",
+                  aspectRatio === "16:9" && "aspect-video",
+                  aspectRatio === "9:16" && "aspect-[9/16]",
+                  aspectRatio === "4:5" && "aspect-[4/5]"
                 )}
               >
                 {generatedImage ? (
@@ -601,7 +655,7 @@ export default function AddTextToImage() {
                   />
                 ) : (
                   <div className="text-center p-8">
-                    <ImageIcon className="w-12 h-12 mx-auto mb-3 text-[#333333]" />
+                    <ImageIcon className="w-16 h-16 mx-auto mb-3 text-[#333333]" />
                     <p className="text-xs text-[#666666]">Upload an image to get started</p>
                   </div>
                 )}
@@ -620,32 +674,32 @@ export default function AddTextToImage() {
               )}
             </Card>
 
-            {/* Text Instruction Card - Compact */}
-            <Card className="p-4 bg-[#111111] border-[#2a2a2a]">
+            {/* Text Instruction Card */}
+            <Card className="p-5 bg-[#111111] border-[#2a2a2a]">
               <h3 className="text-sm font-semibold mb-3 text-white">What text to add?</h3>
               <Textarea
                 placeholder="Example: Add 'SALE 50% OFF' at the top center"
                 value={textInstruction}
                 onChange={(e) => setTextInstruction(e.target.value)}
-                rows={2}
+                rows={3}
                 className="resize-none text-sm bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder:text-[#666666] focus:border-[#C9A66B] focus:ring-[#C9A66B]"
               />
             </Card>
 
-            {/* Generate Button - Compact */}
+            {/* Generate Button */}
             <Button
               onClick={handleGenerate}
               disabled={!selectedImage || !textInstruction.trim() || isGenerating}
-              className="w-full bg-[#C9A66B] hover:bg-[#B8956A] text-black font-semibold h-11"
+              className="w-full bg-[#C9A66B] hover:bg-[#B8956A] text-black font-semibold h-12"
             >
               {isGenerating ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                   Generating...
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 mr-2" />
+                  <Sparkles className="w-5 h-5 mr-2" />
                   Generate with Text
                 </>
               )}
