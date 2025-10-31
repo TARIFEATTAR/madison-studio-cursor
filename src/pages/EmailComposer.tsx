@@ -19,12 +19,13 @@ import { EmailPreview } from "@/components/email-composer/EmailPreview";
 import { ContentPicker } from "@/components/email-composer/ContentPicker";
 import { KlaviyoEmailComposer } from "@/components/klaviyo/KlaviyoEmailComposer";
 import { AutosaveIndicator } from "@/components/ui/autosave-indicator";
-import { ArrowLeft, Send, Download, Save, ChevronRight, AlignLeft, AlignCenter, AlignRight, ExternalLink, ChevronDown } from "lucide-react";
+import { ArrowLeft, Send, Download, Save, ChevronRight, AlignLeft, AlignCenter, AlignRight, ExternalLink, ChevronDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { serializeEmailState, deserializeEmailState } from "@/utils/emailStateSerializer";
+import { embedImagesInHtml } from "@/utils/emailImageEmbedder";
 
 export default function EmailComposer() {
   const { user, loading: authLoading } = useAuth();
@@ -38,6 +39,7 @@ export default function EmailComposer() {
   const [templateOpen, setTemplateOpen] = useState(true);
   const [contentId, setContentId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const composer = useEmailComposer({
     brandColor: defaultBrandColor,
@@ -161,17 +163,38 @@ export default function EmailComposer() {
     navigate("/klaviyo-composer");
   };
 
-  const handleDownloadHtml = () => {
-    const blob = new Blob([composer.generatedHtml], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${composer.title || "email"}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast.success("Email HTML downloaded");
+  const handleDownloadHtml = async () => {
+    setIsDownloading(true);
+    
+    try {
+      // Embed images as base64 in the HTML
+      const result = await embedImagesInHtml(composer.generatedHtml);
+      
+      // Create and download the file
+      const blob = new Blob([result.html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${composer.title || "email"}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      // Show appropriate success/warning message
+      if (result.success) {
+        toast.success("Email HTML downloaded with embedded images");
+      } else {
+        toast.success("Email HTML downloaded", {
+          description: `${result.failedImages.length} image(s) could not be embedded and will use external URLs`,
+        });
+      }
+    } catch (error) {
+      console.error("Error downloading HTML:", error);
+      toast.error("Failed to download HTML file");
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const handleSaveDraft = async () => {
@@ -313,10 +336,20 @@ export default function EmailComposer() {
             variant="outline"
             size="sm"
             onClick={handleDownloadHtml}
+            disabled={isDownloading}
             className="gap-2 text-xs md:text-sm"
           >
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Download</span>
+            {isDownloading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span className="hidden sm:inline">Embedding...</span>
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">Download</span>
+              </>
+            )}
           </Button>
           <Button
             variant="outline"
