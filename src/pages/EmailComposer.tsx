@@ -19,8 +19,9 @@ import { EmailPreview } from "@/components/email-composer/EmailPreview";
 import { ContentPicker } from "@/components/email-composer/ContentPicker";
 import { KlaviyoEmailComposer } from "@/components/klaviyo/KlaviyoEmailComposer";
 import { AutosaveIndicator } from "@/components/ui/autosave-indicator";
-import { ArrowLeft, Send, Download, Save, ChevronRight, AlignLeft, AlignCenter, AlignRight, ExternalLink } from "lucide-react";
+import { ArrowLeft, Send, Download, Save, ChevronRight, AlignLeft, AlignCenter, AlignRight, ExternalLink, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { serializeEmailState, deserializeEmailState } from "@/utils/emailStateSerializer";
@@ -34,6 +35,7 @@ export default function EmailComposer() {
   const [showFooterOptions, setShowFooterOptions] = useState(false);
   const [showCtaOptions, setShowCtaOptions] = useState(false);
   const [showStyleOptions, setShowStyleOptions] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(true);
   const [contentId, setContentId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -367,10 +369,18 @@ export default function EmailComposer() {
             <div className="p-4 md:p-6">
               <div className="space-y-4 md:space-y-6 max-w-2xl mx-auto lg:mx-0">
                 {/* Template Selection */}
-                <TemplateSelector
-                  selectedTemplate={composer.selectedTemplate}
-                  onSelect={composer.setSelectedTemplate}
-                />
+                <Collapsible open={templateOpen} onOpenChange={setTemplateOpen}>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full py-2 hover:opacity-70 transition-opacity">
+                    <Label className="cursor-pointer text-sm">Email Template</Label>
+                    <ChevronDown className={`h-4 w-4 transition-transform ${templateOpen ? "rotate-180" : ""}`} />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <TemplateSelector
+                      selectedTemplate={composer.selectedTemplate}
+                      onSelect={composer.setSelectedTemplate}
+                    />
+                  </CollapsibleContent>
+                </Collapsible>
 
                 {/* Email Title */}
                 <div className="space-y-2">
