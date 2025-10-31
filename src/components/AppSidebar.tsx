@@ -50,7 +50,6 @@ export function AppSidebar() {
       { url: "/create" },
       { url: "/multiply" },
       { url: "/image-editor" },
-      { url: "/add-text-to-image" },
       { url: "/email-composer" },
     ];
     const libraryItems = [
@@ -89,7 +88,6 @@ export function AppSidebar() {
         { title: "Create", url: "/create", icon: Pencil },
         { title: "Multiply", url: "/multiply", icon: Share2 },
         { title: "Image Studio", url: "/image-editor", icon: Image },
-        { title: "Add Text to Image", url: "/add-text-to-image", icon: FileText },
         { title: "Email Composer", url: "/email-composer", icon: Mail },
       ]
     },
