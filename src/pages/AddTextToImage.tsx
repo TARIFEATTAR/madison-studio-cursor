@@ -633,13 +633,7 @@ export default function AddTextToImage() {
               </div>
               
               <div 
-                className={cn(
-                  "relative rounded-lg overflow-hidden bg-[#0a0a0a] border-2 border-[#2a2a2a] flex items-center justify-center",
-                  aspectRatio === "1:1" && "aspect-square",
-                  aspectRatio === "16:9" && "aspect-video",
-                  aspectRatio === "9:16" && "aspect-[9/16]",
-                  aspectRatio === "4:5" && "aspect-[4/5]"
-                )}
+                className="relative rounded-lg overflow-hidden bg-[#0a0a0a] border-2 border-[#2a2a2a] flex items-center justify-center h-[600px]"
               >
                 {generatedImage ? (
                   <img
@@ -681,7 +675,7 @@ export default function AddTextToImage() {
                 placeholder="Example: Add 'SALE 50% OFF' at the top center"
                 value={textInstruction}
                 onChange={(e) => setTextInstruction(e.target.value)}
-                rows={3}
+                rows={2}
                 className="resize-none text-sm bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder:text-[#666666] focus:border-[#C9A66B] focus:ring-[#C9A66B]"
               />
             </Card>
@@ -690,7 +684,7 @@ export default function AddTextToImage() {
             <Button
               onClick={handleGenerate}
               disabled={!selectedImage || !textInstruction.trim() || isGenerating}
-              className="w-full bg-[#C9A66B] hover:bg-[#B8956A] text-black font-semibold h-12"
+              className="w-full bg-[#C9A66B] hover:bg-[#B8956A] text-black font-semibold h-14"
             >
               {isGenerating ? (
                 <>
