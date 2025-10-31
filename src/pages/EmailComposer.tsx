@@ -192,24 +192,54 @@ export default function EmailComposer() {
           generatedHtml: composer.generatedHtml
         });
 
-        const { data, error } = await supabase
+        // Check if email with this title already exists for this organization
+        const { data: existing } = await supabase
           .from('master_content')
-          .insert({
-            title: composer.title,
-            full_content: serializedState,
-            collection: composer.selectedTemplate,
-            content_type: 'Email',
-            organization_id: organizationId,
-            created_by: user.id
-          })
-          .select()
-          .single();
+          .select('id')
+          .eq('title', composer.title)
+          .eq('organization_id', organizationId)
+          .eq('content_type', 'Email')
+          .maybeSingle();
 
-        if (error) {
-          console.warn("[EmailComposer] Save failed, proceeding to Klaviyo anyway:", error);
-        } else if (data?.id) {
-          console.log("[EmailComposer] Email saved:", data.id);
-          setContentId(data.id);
+        if (existing) {
+          // Update existing email
+          console.log("[EmailComposer] Updating existing email:", existing.id);
+          const { error: updateError } = await supabase
+            .from('master_content')
+            .update({
+              full_content: serializedState,
+              collection: composer.selectedTemplate,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existing.id);
+
+          if (updateError) {
+            console.warn("[EmailComposer] Update failed, proceeding to Klaviyo anyway:", updateError);
+          } else {
+            console.log("[EmailComposer] Email updated successfully");
+            setContentId(existing.id);
+          }
+        } else {
+          // Insert new email
+          const { data, error } = await supabase
+            .from('master_content')
+            .insert({
+              title: composer.title,
+              full_content: serializedState,
+              collection: composer.selectedTemplate,
+              content_type: 'Email',
+              organization_id: organizationId,
+              created_by: user.id
+            })
+            .select()
+            .single();
+
+          if (error) {
+            console.warn("[EmailComposer] Save failed, proceeding to Klaviyo anyway:", error);
+          } else if (data?.id) {
+            console.log("[EmailComposer] Email saved:", data.id);
+            setContentId(data.id);
+          }
         }
       }
 
