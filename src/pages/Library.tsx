@@ -534,15 +534,6 @@ export default function Library() {
               </div>
               <div className="flex gap-3">
                 <Button
-                  onClick={() => navigate("/email-sequence")}
-                  variant="outline"
-                  size="lg"
-                  className="border-[#E1B16A]/30 hover:bg-[#E1B16A]/10"
-                >
-                  <Mail className="w-4 h-4 mr-2" />
-                  Email Sequence
-                </Button>
-                <Button
                   onClick={() => navigate("/create")}
                   variant="brassGradient"
                   size="lg"

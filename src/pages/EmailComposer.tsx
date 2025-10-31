@@ -17,7 +17,6 @@ import { StyleCustomizer } from "@/components/email-composer/StyleCustomizer";
 import { ImagePicker } from "@/components/email-composer/ImagePicker";
 import { EmailPreview } from "@/components/email-composer/EmailPreview";
 import { ContentPicker } from "@/components/email-composer/ContentPicker";
-import { KlaviyoEmailComposer } from "@/components/klaviyo/KlaviyoEmailComposer";
 import { AutosaveIndicator } from "@/components/ui/autosave-indicator";
 import { ArrowLeft, Send, Download, Save, ChevronRight, AlignLeft, AlignCenter, AlignRight, ExternalLink, ChevronDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -157,10 +156,6 @@ export default function EmailComposer() {
       console.error("Error loading content:", error);
       toast.error("Failed to load content");
     }
-  };
-
-  const handleSendToKlaviyo = () => {
-    navigate("/klaviyo-composer");
   };
 
   const handleDownloadHtml = async () => {
@@ -377,20 +372,6 @@ export default function EmailComposer() {
               <span className="hidden sm:inline">View in Library</span>
             </Button>
           )}
-          <GoldButton
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log("[EmailComposer] Klaviyo button physical click event");
-              handleSendToKlaviyo();
-            }}
-            className="gap-2 text-xs md:text-sm px-4 md:px-6"
-            disabled={!organizationId || !user}
-          >
-            <Send className="w-4 h-4" />
-            <span className="hidden sm:inline">Send to Klaviyo</span>
-            <span className="sm:hidden">Send</span>
-          </GoldButton>
         </div>
       </div>
 

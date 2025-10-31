@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Edit2, Send, Copy, Check, FileDown, Calendar, MessageSquare, Download, Trash2, X, Mail } from "lucide-react";
-import { KlaviyoEmailComposer } from "@/components/klaviyo/KlaviyoEmailComposer";
 import {
   Dialog,
   DialogContent,
