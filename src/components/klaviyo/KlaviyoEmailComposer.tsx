@@ -17,11 +17,11 @@ import { logger } from "@/lib/logger";
 import { z } from "zod";
 
 const klaviyoEmailSchema = z.object({
-  campaignName: z.string().min(1, "Campaign name is required").max(100, "Campaign name too long"),
+  campaignName: z.string().max(100, "Campaign name too long").optional(),
   subject: z.string().min(1, "Subject is required").max(200, "Subject too long"),
   fromEmail: z.string().email("Invalid email address"),
   fromName: z.string().min(1, "From name is required").max(100, "From name too long"),
-  previewText: z.string().max(150, "Preview text too long"),
+  previewText: z.string().max(150, "Preview text too long").optional(),
   emailHtml: z.string().min(1, "Email content is required"),
   audienceId: z.string().min(1, "Please select an audience"),
 });
@@ -348,21 +348,27 @@ export function KlaviyoEmailComposer({
       return;
     }
 
+    // Use subject as fallback for campaign name if empty
+    const effectiveCampaignName = campaignName.trim() || subject.trim();
+    
     console.log("[KlaviyoEmailComposer] handleSend called", {
       hasOrganizationId: !!organizationId,
       audienceType,
       selectedList,
+      campaignName: campaignName.trim(),
+      subject: subject.trim(),
+      effectiveCampaignName,
       hasEmailHtml: !!emailHtml,
       emailHtmlLength: emailHtml?.length || 0
     });
 
     // Validate input with Zod schema
     const validation = klaviyoEmailSchema.safeParse({
-      campaignName: campaignName.trim(),
+      campaignName: campaignName.trim() || undefined,
       subject: subject.trim(),
       fromEmail: fromEmail.trim(),
       fromName: fromName.trim(),
-      previewText: previewText.trim(),
+      previewText: previewText.trim() || undefined,
       emailHtml: emailHtml?.trim() || "",
       audienceId: selectedList || "",
     });
@@ -412,7 +418,7 @@ export function KlaviyoEmailComposer({
       organization_id: organizationId,
       audience_type: audienceType,
       audience_id: selectedList,
-      campaign_name: campaignName.trim() || subject.trim(),
+      campaign_name: effectiveCampaignName,
       hasContent: !!emailHtml,
       contentLength: emailHtml.length
     });
@@ -423,7 +429,7 @@ export function KlaviyoEmailComposer({
           organization_id: organizationId,
           audience_type: audienceType,
           audience_id: selectedList,
-          campaign_name: campaignName.trim() || subject.trim(),
+          campaign_name: effectiveCampaignName,
           subject: subject.trim(),
           preview_text: previewText.trim() || subject.trim(),
           content_html: emailHtml,
@@ -514,13 +520,16 @@ export function KlaviyoEmailComposer({
           <TabsContent value="compose" className="flex-1 overflow-y-auto space-y-4 mt-4">
             {/* Campaign Name */}
             <div className="space-y-2">
-              <Label htmlFor="campaign">Campaign Name</Label>
+              <Label htmlFor="campaign">Campaign Name (Optional)</Label>
               <Input
                 id="campaign"
-                placeholder="Internal campaign name"
+                placeholder="Defaults to email subject if empty"
                 value={campaignName}
                 onChange={(e) => setCampaignName(e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">
+                Internal name for this campaign in Klaviyo
+              </p>
             </div>
 
             {/* API Error Display */}
