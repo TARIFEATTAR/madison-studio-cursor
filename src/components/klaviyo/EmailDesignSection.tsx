@@ -5,6 +5,9 @@ import { Separator } from "@/components/ui/separator";
 import { TemplateSelector } from "@/components/email-composer/TemplateSelector";
 import { StyleCustomizer } from "@/components/email-composer/StyleCustomizer";
 import { ImagePicker } from "@/components/email-composer/ImagePicker";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
+import { useState } from "react";
 
 interface EmailDesignSectionProps {
   selectedTemplate: string;
@@ -47,15 +50,22 @@ export function EmailDesignSection({
   textColor,
   setTextColor,
 }: EmailDesignSectionProps) {
+  const [templateOpen, setTemplateOpen] = useState(true);
+
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>Template</Label>
-        <TemplateSelector
-          selectedTemplate={selectedTemplate}
-          onSelect={setSelectedTemplate}
-        />
-      </div>
+      <Collapsible open={templateOpen} onOpenChange={setTemplateOpen}>
+        <CollapsibleTrigger className="flex items-center justify-between w-full py-2 hover:opacity-70 transition-opacity">
+          <Label className="cursor-pointer">Template</Label>
+          <ChevronDown className={`h-4 w-4 transition-transform ${templateOpen ? "rotate-180" : ""}`} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-2">
+          <TemplateSelector
+            selectedTemplate={selectedTemplate}
+            onSelect={setSelectedTemplate}
+          />
+        </CollapsibleContent>
+      </Collapsible>
 
       <Separator />
 
