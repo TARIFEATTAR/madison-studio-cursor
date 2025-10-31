@@ -230,12 +230,21 @@ export function KlaviyoEmailComposer({
       const [listsResult, segmentsResult, campaignsResult] = await Promise.all([
         supabase.functions.invoke("fetch-klaviyo-lists", {
           body: { organization_id: membership.organization_id },
+        }).catch(err => {
+          console.error("[KlaviyoEmailComposer] Lists fetch exception:", err);
+          return { data: null, error: err };
         }),
         supabase.functions.invoke("fetch-klaviyo-segments", {
           body: { organization_id: membership.organization_id },
+        }).catch(err => {
+          console.error("[KlaviyoEmailComposer] Segments fetch exception:", err);
+          return { data: null, error: err };
         }),
         supabase.functions.invoke("fetch-klaviyo-campaigns", {
           body: { organization_id: membership.organization_id },
+        }).catch(err => {
+          console.error("[KlaviyoEmailComposer] Campaigns fetch exception:", err);
+          return { data: null, error: err };
         }),
       ]);
 
@@ -248,35 +257,80 @@ export function KlaviyoEmailComposer({
 
       if (listsResult.error) {
         console.error("[KlaviyoEmailComposer] Lists fetch error:", listsResult.error);
-        errors.push(`Lists: ${listsResult.error.message || 'Failed to fetch'}`);
+        // Check if it's a connection/CORS error vs API error
+        const errorMsg = listsResult.error.message || 'Failed to fetch';
+        if (errorMsg.includes('NetworkError') || errorMsg.includes('Failed to fetch')) {
+          errors.push(`Lists: Connection error - edge function may not be deployed`);
+        } else {
+          errors.push(`Lists: ${errorMsg}`);
+        }
+      } else if (listsResult.data?.error) {
+        console.error("[KlaviyoEmailComposer] Lists API error:", listsResult.data.error);
+        errors.push(`Lists: ${listsResult.data.error}`);
       } else if (listsResult.data?.lists) {
         console.log("[KlaviyoEmailComposer] Setting lists:", listsResult.data.lists.length);
         setLists(listsResult.data.lists);
+      } else {
+        console.warn("[KlaviyoEmailComposer] Lists returned no data");
       }
 
       if (segmentsResult.error) {
         console.error("[KlaviyoEmailComposer] Segments fetch error:", segmentsResult.error);
-        errors.push(`Segments: ${segmentsResult.error.message || 'Failed to fetch'}`);
+        const errorMsg = segmentsResult.error.message || 'Failed to fetch';
+        if (errorMsg.includes('NetworkError') || errorMsg.includes('Failed to fetch')) {
+          errors.push(`Segments: Connection error - edge function may not be deployed`);
+        } else {
+          errors.push(`Segments: ${errorMsg}`);
+        }
+      } else if (segmentsResult.data?.error) {
+        console.error("[KlaviyoEmailComposer] Segments API error:", segmentsResult.data.error);
+        errors.push(`Segments: ${segmentsResult.data.error}`);
       } else if (segmentsResult.data?.segments) {
         const activeSegments = segmentsResult.data.segments.filter((s: KlaviyoSegment) => s.is_active);
         console.log("[KlaviyoEmailComposer] Setting segments:", activeSegments.length);
         setSegments(activeSegments);
+      } else {
+        console.warn("[KlaviyoEmailComposer] Segments returned no data");
       }
 
       if (campaignsResult.error) {
         console.error("[KlaviyoEmailComposer] Campaigns fetch error:", campaignsResult.error);
-        errors.push(`Campaigns: ${campaignsResult.error.message || 'Failed to fetch'}`);
+        const errorMsg = campaignsResult.error.message || 'Failed to fetch';
+        if (errorMsg.includes('NetworkError') || errorMsg.includes('Failed to fetch')) {
+          errors.push(`Campaigns: Connection error - edge function may not be deployed`);
+        } else {
+          errors.push(`Campaigns: ${errorMsg}`);
+        }
+      } else if (campaignsResult.data?.error) {
+        console.error("[KlaviyoEmailComposer] Campaigns API error:", campaignsResult.data.error);
+        errors.push(`Campaigns: ${campaignsResult.data.error}`);
       } else if (campaignsResult.data?.campaigns) {
         console.log("[KlaviyoEmailComposer] Setting campaigns:", campaignsResult.data.campaigns.length);
         setCampaigns(campaignsResult.data.campaigns);
+      } else {
+        console.warn("[KlaviyoEmailComposer] Campaigns returned no data");
       }
 
       if (errors.length > 0) {
         const errorMsg = errors.join('; ');
         setApiError(errorMsg);
-        toast.error("Some Klaviyo data failed to load", {
-          description: errorMsg,
-        });
+        console.warn("[KlaviyoEmailComposer] Partial load - some data failed:", errorMsg);
+        
+        // Only show toast if ALL three failed (complete failure scenario)
+        if (errors.length === 3) {
+          toast.error("Failed to load Klaviyo audiences", {
+            description: errorMsg,
+            duration: 8000,
+          });
+        } else {
+          // Some succeeded - show a warning toast instead
+          toast.warning("Some Klaviyo data failed to load", {
+            description: `${errors.length} of 3 audience types unavailable. You can still use what loaded.`,
+            duration: 6000,
+          });
+        }
+      } else {
+        console.log("[KlaviyoEmailComposer] All Klaviyo data loaded successfully");
       }
     } catch (error: any) {
       console.error("[KlaviyoEmailComposer] Error in loadOrganizationAndLists:", error);
@@ -288,6 +342,14 @@ export function KlaviyoEmailComposer({
 
 
   const handleSend = async () => {
+    console.log("[KlaviyoEmailComposer] handleSend called", {
+      hasOrganizationId: !!organizationId,
+      audienceType,
+      selectedList,
+      hasEmailHtml: !!emailHtml,
+      emailHtmlLength: emailHtml?.length || 0
+    });
+
     // Validate input with Zod schema
     const validation = klaviyoEmailSchema.safeParse({
       campaignName: campaignName.trim(),
@@ -301,12 +363,20 @@ export function KlaviyoEmailComposer({
 
     if (!validation.success) {
       const firstError = validation.error.errors[0];
+      console.error("[KlaviyoEmailComposer] Validation failed:", validation.error.errors);
       toast.error(firstError.message);
       return;
     }
 
     if (!organizationId) {
+      console.error("[KlaviyoEmailComposer] No organization ID");
       toast.error("Organization not found");
+      return;
+    }
+
+    if (!emailHtml || emailHtml.trim().length === 0) {
+      console.error("[KlaviyoEmailComposer] No email HTML content");
+      toast.error("Email content is empty. Please generate or add email content first.");
       return;
     }
 
@@ -332,6 +402,14 @@ export function KlaviyoEmailComposer({
     }
 
     setLoading(true);
+    console.log("[KlaviyoEmailComposer] Sending to Klaviyo...", {
+      organization_id: organizationId,
+      audience_type: audienceType,
+      audience_id: selectedList,
+      campaign_name: campaignName.trim() || subject.trim(),
+      hasContent: !!emailHtml,
+      contentLength: emailHtml.length
+    });
 
     try {
       const { data, error } = await supabase.functions.invoke("publish-to-klaviyo", {
@@ -351,7 +429,12 @@ export function KlaviyoEmailComposer({
         },
       });
 
-      console.log("[KlaviyoEmailComposer] publish-to-klaviyo result:", { data, error });
+      console.log("[KlaviyoEmailComposer] publish-to-klaviyo response:", { 
+        hasData: !!data, 
+        hasError: !!error,
+        data: data ? JSON.stringify(data).substring(0, 200) : null,
+        error: error ? JSON.stringify(error).substring(0, 200) : null
+      });
 
       if (error) {
         console.error("[KlaviyoEmailComposer] Klaviyo publish error:", error);

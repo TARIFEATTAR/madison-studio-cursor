@@ -15,17 +15,22 @@ function decryptApiKey(encryptedApiKey: string, encryptionKey: string): string {
 }
 
 serve(async (req) => {
+  console.log("[publish-to-klaviyo] Function invoked");
+  
   if (req.method === "OPTIONS") {
+    console.log("[publish-to-klaviyo] CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      console.error("[publish-to-klaviyo] Missing authorization header");
       throw new Error("Unauthorized");
     }
 
     const accessToken = authHeader.replace(/^Bearer\s+/i, "").trim();
+    console.log("[publish-to-klaviyo] Auth header present, token length:", accessToken.length);
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -39,8 +44,10 @@ serve(async (req) => {
 
     const { data: { user }, error: userError } = await supabase.auth.getUser(accessToken);
     if (userError || !user) {
+      console.error("[publish-to-klaviyo] Auth error:", userError);
       throw new Error("Unauthorized");
     }
+    console.log("[publish-to-klaviyo] User authenticated:", user.id);
 
     const { 
       organization_id, 
@@ -57,18 +64,39 @@ serve(async (req) => {
       reply_to_email
     } = await req.json();
 
+    console.log("[publish-to-klaviyo] Request params:", {
+      organization_id,
+      audience_type,
+      audience_id,
+      campaign_name,
+      subject,
+      hasContent: !!content_html,
+      contentLength: content_html?.length || 0,
+      from_email,
+      from_name
+    });
+
     if (!organization_id || !subject || !content_html) {
-      throw new Error("Missing required fields: organization_id, subject, content_html");
+      const missing = [];
+      if (!organization_id) missing.push("organization_id");
+      if (!subject) missing.push("subject");
+      if (!content_html) missing.push("content_html");
+      console.error("[publish-to-klaviyo] Missing required fields:", missing);
+      throw new Error(`Missing required fields: ${missing.join(", ")}`);
     }
 
     if (!from_email || !from_name) {
+      console.error("[publish-to-klaviyo] Missing sender info");
       throw new Error("From email and from name are required");
     }
 
     // Validate audience_id is provided unless we're updating an existing campaign
     if (!audience_id) {
+      console.error("[publish-to-klaviyo] Missing audience_id");
       throw new Error("Missing audience_id (list, segment, or campaign ID)");
     }
+
+    console.log("[publish-to-klaviyo] All required fields present");
 
     // Get the encrypted API key
     const { data: connection, error: connectionError } = await supabase
@@ -111,9 +139,11 @@ serve(async (req) => {
       // Continue with original HTML if inlining fails
     }
 
-    // Klaviyo API constants
-    const apiBaseUrl = "https://a.klaviyo.com/api";
-    const apiRevision = "2024-07-15";
+    // Get environment variables for Klaviyo API
+    const apiBaseUrl = Deno.env.get("KLAVIYO_API_BASE_URL") || "https://a.klaviyo.com/api";
+    const apiRevision = Deno.env.get("KLAVIYO_API_REVISION") || "2024-07-15";
+    
+    console.log(`[publish-to-klaviyo] Using API: ${apiBaseUrl}, Revision: ${apiRevision}`);
 
     // Handle two scenarios: 
     // 1. Update existing campaign (audience_type === "campaign")
@@ -243,11 +273,34 @@ serve(async (req) => {
               ]
             }
           },
-          // Note: sender relationship is optional - Klaviyo will use default sender if not specified
+          relationships: (() => {
+            const senderId = Deno.env.get("KLAVIYO_SENDER_ID");
+            if (senderId) {
+              console.log(`[publish-to-klaviyo] Using sender ID: ${senderId}`);
+              return {
+                sender: {
+                  data: {
+                    type: "sender",
+                    id: senderId
+                  }
+                }
+              };
+            }
+            console.log("[publish-to-klaviyo] No sender ID configured, using Klaviyo default");
+            return {};
+          })()
         }
       };
 
       console.log("Creating new Klaviyo campaign with inline message content...");
+      console.log("[publish-to-klaviyo] Campaign payload structure:", {
+        campaign_name: campaignPayload.data.attributes.name,
+        audience_count: campaignPayload.data.attributes.audiences.included.length,
+        send_method: campaignPayload.data.attributes.send_strategy.method,
+        has_message: !!campaignPayload.data.attributes["campaign-messages"],
+        has_sender: !!campaignPayload.data.relationships
+      });
+      
       const campaignResponse = await fetch(`${apiBaseUrl}/campaigns`, {
         method: "POST",
         headers: {
@@ -260,10 +313,15 @@ serve(async (req) => {
 
       if (!campaignResponse.ok) {
         const errorText = await campaignResponse.text();
-        console.error("Klaviyo campaign creation error:", errorText);
+        console.error("[publish-to-klaviyo] Klaviyo campaign creation failed:", {
+          status: campaignResponse.status,
+          statusText: campaignResponse.statusText,
+          errorText: errorText.substring(0, 500)
+        });
         let errorDetail = "Failed to create Klaviyo campaign";
         try {
           const errorJson = JSON.parse(errorText);
+          console.error("[publish-to-klaviyo] Klaviyo error JSON:", JSON.stringify(errorJson, null, 2));
           const firstError = errorJson.errors?.[0];
           if (firstError) {
             // Check for sender email verification error
@@ -274,6 +332,7 @@ serve(async (req) => {
             }
           }
         } catch (e) {
+          console.error("[publish-to-klaviyo] Failed to parse error JSON:", e);
           errorDetail = errorText || errorDetail;
         }
         throw new Error(errorDetail);
@@ -286,7 +345,10 @@ serve(async (req) => {
       const messages = campaignData.included?.filter((item: any) => item.type === "campaign-message");
       messageId = messages?.[0]?.id;
       
-      console.log(`Created new Klaviyo campaign ${campaignId} with message ${messageId}`);
+      console.log(`[publish-to-klaviyo] Successfully created campaign ${campaignId}`, {
+        messageId,
+        status: campaignData.data.attributes?.status
+      });
     }
 
     // Log to publishing history
