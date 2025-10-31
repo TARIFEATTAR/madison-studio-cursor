@@ -85,6 +85,16 @@ serve(async (req) => {
         errorText: errorText.substring(0, 500)
       });
       
+      // Try to parse error as JSON for more details
+      let errorDetails = errorText;
+      try {
+        const errorJson = JSON.parse(errorText);
+        console.error("Nano Banana API error details:", errorJson);
+        errorDetails = JSON.stringify(errorJson);
+      } catch {
+        // Not JSON, use raw text
+      }
+      
       // Handle specific error cases
       if (aiResponse.status === 429) {
         throw new Error("Rate limit exceeded. Please wait a moment and try again.");
@@ -95,8 +105,11 @@ serve(async (req) => {
       if (aiResponse.status === 401) {
         throw new Error("API key invalid or expired. Please contact support.");
       }
+      if (aiResponse.status === 400) {
+        throw new Error(`Invalid request to AI API: ${errorDetails.substring(0, 200)}`);
+      }
       
-      throw new Error(`AI generation failed (${aiResponse.status}): ${errorText.substring(0, 200)}`);
+      throw new Error(`AI generation failed (${aiResponse.status}): ${errorDetails.substring(0, 200)}`);
     }
 
     const aiData = await aiResponse.json();

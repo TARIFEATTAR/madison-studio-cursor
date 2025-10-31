@@ -47,10 +47,21 @@ export default function AddTextToImage() {
       return;
     }
 
+    // Create both blob URL for preview and store the file for conversion
     const url = URL.createObjectURL(file);
     setSelectedImage({ url, file });
     setGeneratedImage(null);
     toast.success("Image uploaded");
+  };
+
+  // Helper function to convert image to base64
+  const convertImageToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleGenerate = async () => {
@@ -72,6 +83,13 @@ export default function AddTextToImage() {
     setIsGenerating(true);
 
     try {
+      // Convert image to base64 if it's a File
+      let imageDataUrl = selectedImage.url;
+      if (selectedImage.file) {
+        console.log("Converting image to base64...");
+        imageDataUrl = await convertImageToBase64(selectedImage.file);
+      }
+
       // Build enhanced prompt with overlay and font styling instruction
       const overlayInstruction = overlayOpacity < 100 
         ? `with a ${overlayOpacity}% opacity dark overlay behind the text for better readability`
@@ -98,12 +116,13 @@ export default function AddTextToImage() {
       console.log("Generating image with text:", {
         instruction: textInstruction,
         overlay: overlayOpacity,
-        fullPrompt
+        fullPrompt,
+        imageType: selectedImage.file ? 'base64' : 'url'
       });
 
       const { data, error } = await supabase.functions.invoke("add-text-to-image", {
         body: {
-          imageUrl: selectedImage.url,
+          imageUrl: imageDataUrl,
           textInstruction: fullPrompt,
           userId: user.id,
         },
