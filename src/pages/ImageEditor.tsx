@@ -339,6 +339,31 @@ export default function ImageEditor() {
       
       if (functionError) {
         console.error('❌ Edge function error:', functionError);
+        
+        // Handle specific error types
+        const errorMsg = functionError.message || functionError.toString();
+        
+        if (errorMsg.includes('Rate limit') || functionError.status === 429) {
+          toast.error("Rate limit reached", {
+            description: "Please wait a moment before generating another image.",
+            duration: 6000,
+          });
+        } else if (errorMsg.includes('credits') || errorMsg.includes('depleted') || functionError.status === 402) {
+          toast.error("AI credits depleted", {
+            description: "Please add credits to your workspace in Settings.",
+            duration: 8000,
+          });
+        } else if (errorMsg.includes('LOVABLE_API_KEY') || errorMsg.includes('not configured')) {
+          toast.error("Configuration error", {
+            description: "Lovable AI is not properly configured. Please contact support.",
+            duration: 8000,
+          });
+        } else {
+          toast.error("Generation failed", {
+            description: errorMsg.substring(0, 150),
+            duration: 6000,
+          });
+        }
         throw functionError;
       }
       if (!functionData?.imageUrl) {
@@ -392,12 +417,16 @@ export default function ImageEditor() {
         fullError: error
       });
       
-      // Show more specific error message
-      const errorMessage = error.message || "Failed to generate image";
-      toast.error(errorMessage, {
-        description: "Check browser console (F12) for full error details",
-        duration: 5000
-      });
+      // Error toast already shown in the functionError handling above
+      // Only show generic error if not already handled
+      if (!error.message?.includes('Rate limit') && 
+          !error.message?.includes('credits') && 
+          !error.message?.includes('LOVABLE_API_KEY')) {
+        toast.error(error.message || "Failed to generate image", {
+          description: "Check browser console (F12) for full error details",
+          duration: 5000
+        });
+      }
     } finally {
       setIsGenerating(false);
     }

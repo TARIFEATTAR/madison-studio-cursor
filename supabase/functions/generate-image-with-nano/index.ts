@@ -9,18 +9,21 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("[generate-image-with-nano] Function invoked");
+  
   if (req.method === 'OPTIONS') {
+    console.log("[generate-image-with-nano] CORS preflight");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     if (!LOVABLE_API_KEY) {
+      console.error("[generate-image-with-nano] LOVABLE_API_KEY not configured");
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
     const { prompt } = await req.json();
-
-    console.log('Generating image with Nano Banana for prompt:', prompt.substring(0, 100));
+    console.log('[generate-image-with-nano] Generating image for prompt:', prompt.substring(0, 100));
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -42,8 +45,24 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Nano Banana API error:', response.status, errorText);
-      throw new Error(`Nano Banana API error: ${response.status} - ${errorText}`);
+      console.error('[generate-image-with-nano] Nano Banana API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorText: errorText.substring(0, 500)
+      });
+      
+      // Handle specific error cases
+      if (response.status === 429) {
+        throw new Error("Rate limit exceeded. Please wait a moment and try again.");
+      }
+      if (response.status === 402) {
+        throw new Error("AI credits depleted. Please add credits to your workspace in Settings.");
+      }
+      if (response.status === 401) {
+        throw new Error("API key invalid or expired. Please contact support.");
+      }
+      
+      throw new Error(`Nano Banana API error: ${response.status} - ${errorText.substring(0, 200)}`);
     }
 
     const data = await response.json();
@@ -51,10 +70,11 @@ serve(async (req) => {
     const description = data.choices?.[0]?.message?.content;
 
     if (!imageUrl) {
+      console.error('[generate-image-with-nano] No image in response:', JSON.stringify(data, null, 2).substring(0, 500));
       throw new Error('No image generated in response');
     }
 
-    console.log('Successfully generated image with Nano Banana');
+    console.log('[generate-image-with-nano] Successfully generated image');
 
     return new Response(
       JSON.stringify({ imageUrl, description }),
@@ -63,12 +83,13 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error in generate-image-with-nano function:', error);
+    console.error('[generate-image-with-nano] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
       JSON.stringify({ error: errorMessage }),
       {
-        status: 500,
+        status: error instanceof Error && errorMessage.includes('Rate limit') ? 429 :
+                error instanceof Error && errorMessage.includes('credits') ? 402 : 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );

@@ -79,8 +79,24 @@ serve(async (req) => {
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error("Nano Banana API error:", aiResponse.status, errorText);
-      throw new Error(`AI generation failed: ${aiResponse.status}`);
+      console.error("Nano Banana API error:", {
+        status: aiResponse.status,
+        statusText: aiResponse.statusText,
+        errorText: errorText.substring(0, 500)
+      });
+      
+      // Handle specific error cases
+      if (aiResponse.status === 429) {
+        throw new Error("Rate limit exceeded. Please wait a moment and try again.");
+      }
+      if (aiResponse.status === 402) {
+        throw new Error("AI credits depleted. Please add credits to your workspace in Settings.");
+      }
+      if (aiResponse.status === 401) {
+        throw new Error("API key invalid or expired. Please contact support.");
+      }
+      
+      throw new Error(`AI generation failed (${aiResponse.status}): ${errorText.substring(0, 200)}`);
     }
 
     const aiData = await aiResponse.json();
@@ -107,12 +123,14 @@ serve(async (req) => {
       }
     );
   } catch (error: any) {
-    console.error("Error in add-text-to-image:", error);
+    console.error("[add-text-to-image] Error:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       {
+        status: error instanceof Error && errorMessage.includes('Rate limit') ? 429 :
+                error instanceof Error && errorMessage.includes('credits') ? 402 : 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
       }
     );
   }

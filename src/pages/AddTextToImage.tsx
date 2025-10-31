@@ -86,14 +86,57 @@ export default function AddTextToImage() {
         },
       });
 
-      if (error) throw error;
-      if (!data?.imageUrl) throw new Error("No image URL returned");
+      console.log("add-text-to-image response:", { 
+        hasData: !!data, 
+        hasError: !!error,
+        dataKeys: data ? Object.keys(data) : [],
+        errorMsg: error?.message 
+      });
+
+      if (error) {
+        console.error("Function invocation error:", error);
+        throw error;
+      }
+      
+      if (data?.error) {
+        console.error("API error in response:", data.error);
+        throw new Error(data.error);
+      }
+      
+      if (!data?.imageUrl) {
+        console.error("No image URL in response:", data);
+        throw new Error("No image URL returned");
+      }
 
       setGeneratedImage(data.imageUrl);
       toast.success("Text added successfully!");
     } catch (error: any) {
       console.error("Generation error:", error);
-      toast.error(error.message || "Failed to add text to image");
+      
+      // Handle specific error types with user-friendly messages
+      const errorMsg = error.message || error.toString();
+      
+      if (errorMsg.includes('Rate limit')) {
+        toast.error("Rate limit reached", {
+          description: "Please wait a moment before trying again.",
+          duration: 6000,
+        });
+      } else if (errorMsg.includes('credits') || errorMsg.includes('402')) {
+        toast.error("AI credits depleted", {
+          description: "Please add credits to your workspace in Settings.",
+          duration: 8000,
+        });
+      } else if (errorMsg.includes('LOVABLE_API_KEY')) {
+        toast.error("Configuration error", {
+          description: "Lovable AI is not properly configured. Please contact support.",
+          duration: 8000,
+        });
+      } else {
+        toast.error("Failed to add text to image", {
+          description: errorMsg.substring(0, 150),
+          duration: 6000,
+        });
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -342,37 +385,55 @@ export default function AddTextToImage() {
 
   // Desktop Layout
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#000000]">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 border-b border-[#1a1a1a] bg-[#000000]">
         <div className="container flex h-16 items-center gap-4 px-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
-            className="shrink-0"
+            className="shrink-0 text-white hover:bg-[#1a1a1a]"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-xl font-serif font-semibold">Add Text to Image</h1>
-            <p className="text-sm text-muted-foreground">Add custom text overlays to your images</p>
+            <h1 className="text-xl font-serif font-semibold text-white">Add Text to Image</h1>
+            <p className="text-sm text-[#666666]">Add custom text overlays to your images</p>
+          </div>
+          <div className="text-sm font-medium text-[#C9A66B] bg-[#C9A66B]/10 px-3 py-1 rounded-full">
+            {user?.id?.slice(0, 6) || "0"}K
           </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="container max-w-6xl py-8 px-4">
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-[400px_1fr] gap-8">
           {/* Left Column: Controls */}
           <div className="space-y-6">
+            {/* Text Instruction Card - Moved to top */}
+            <Card className="p-6 bg-[#111111] border-[#2a2a2a]">
+              <h3 className="text-base font-semibold mb-4 text-white">What text to add?</h3>
+              <Textarea
+                placeholder="Example: Add 'SALE 50% OFF' in bold red text at the top center with a dark overlay"
+                value={textInstruction}
+                onChange={(e) => setTextInstruction(e.target.value)}
+                rows={5}
+                className="resize-none bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder:text-[#666666] focus:border-[#C9A66B] focus:ring-[#C9A66B]"
+              />
+              <p className="text-xs text-[#666666] mt-2">
+                Describe the text, style, position, and any visual effects you want
+              </p>
+            </Card>
+
             {/* Image Upload */}
-            <Card className="p-6">
-              <h3 className="text-base font-semibold mb-4">Select Image</h3>
+            <Card className="p-6 bg-[#111111] border-[#2a2a2a]">
+              <h3 className="text-base font-semibold mb-4 text-white">Select Image</h3>
               
               {selectedImage ? (
                 <div className="space-y-4">
-                  <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+                  <div className="relative aspect-video rounded-lg overflow-hidden bg-[#1a1a1a] border border-[#2a2a2a]">
                     <img
                       src={selectedImage.url}
                       alt="Selected"
@@ -382,14 +443,14 @@ export default function AddTextToImage() {
                   <Button
                     variant="outline"
                     onClick={() => setSelectedImage(null)}
-                    className="w-full"
+                    className="w-full border-[#2a2a2a] bg-transparent text-[#A0A0A0] hover:bg-[#1a1a1a] hover:text-white hover:border-[#C9A66B]/30"
                   >
                     Change Image
                   </Button>
                 </div>
               ) : (
-                <label className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                <label className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-[#2a2a2a] rounded-lg cursor-pointer hover:bg-[#1a1a1a] transition-colors">
+                  <div className="flex flex-col items-center gap-2 text-[#666666]">
                     <Upload className="h-12 w-12" />
                     <span className="text-sm font-medium">Click to upload image</span>
                     <span className="text-xs">PNG, JPG, WEBP up to 10MB</span>
@@ -404,24 +465,9 @@ export default function AddTextToImage() {
               )}
             </Card>
 
-            {/* Text Instruction */}
-            <Card className="p-6">
-              <h3 className="text-base font-semibold mb-4">Text Instructions</h3>
-              <Textarea
-                placeholder="Example: Add 'SALE 50% OFF' in bold red text at the top center"
-                value={textInstruction}
-                onChange={(e) => setTextInstruction(e.target.value)}
-                rows={4}
-                className="resize-none"
-              />
-              <p className="text-xs text-muted-foreground mt-2">
-                Describe what text to add and where (color, position, style, etc.)
-              </p>
-            </Card>
-
-            {/* Overlay & Aspect Ratio */}
-            <Card className="p-6">
-              <h3 className="text-base font-semibold mb-4">Background Overlay</h3>
+            {/* Settings */}
+            <Card className="p-6 bg-[#111111] border-[#2a2a2a]">
+              <h3 className="text-base font-semibold mb-4 text-white">Background Overlay</h3>
               <div className="grid grid-cols-2 gap-3 mb-6">
                 {OVERLAY_OPTIONS.map((option) => (
                   <button
@@ -430,20 +476,20 @@ export default function AddTextToImage() {
                     className={cn(
                       "flex items-center gap-3 p-4 rounded-lg border-2 transition-all",
                       overlayOpacity === option.value
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
+                        ? "border-[#C9A66B] bg-[#C9A66B]/10 text-[#C9A66B]"
+                        : "border-[#2a2a2a] bg-[#1a1a1a] text-[#666666] hover:bg-[#222222] hover:border-[#C9A66B]/30"
                     )}
                   >
                     <span className="text-2xl">{option.icon}</span>
                     <div className="text-left">
                       <div className="font-medium text-sm">{option.label}</div>
-                      <div className="text-xs text-muted-foreground">{option.description}</div>
+                      <div className="text-xs opacity-70">{option.description}</div>
                     </div>
                   </button>
                 ))}
               </div>
 
-              <h3 className="text-base font-semibold mb-4">Aspect Ratio</h3>
+              <h3 className="text-base font-semibold mb-4 text-white">Aspect Ratio</h3>
               <MobileAspectRatioSelector
                 value={aspectRatio}
                 onChange={setAspectRatio}
@@ -453,6 +499,11 @@ export default function AddTextToImage() {
                   variant={aspectRatio === "4:5" ? "default" : "outline"}
                   onClick={() => setAspectRatio("4:5")}
                   size="sm"
+                  className={cn(
+                    aspectRatio === "4:5"
+                      ? "bg-[#C9A66B] text-[#000000] hover:bg-[#B8956A]"
+                      : "border-[#2a2a2a] bg-transparent text-[#A0A0A0] hover:bg-[#1a1a1a] hover:text-white hover:border-[#C9A66B]/30"
+                  )}
                 >
                   4:5 Portrait
                 </Button>
@@ -460,6 +511,11 @@ export default function AddTextToImage() {
                   variant={aspectRatio === "16:9" ? "default" : "outline"}
                   onClick={() => setAspectRatio("16:9")}
                   size="sm"
+                  className={cn(
+                    aspectRatio === "16:9"
+                      ? "bg-[#C9A66B] text-[#000000] hover:bg-[#B8956A]"
+                      : "border-[#2a2a2a] bg-transparent text-[#A0A0A0] hover:bg-[#1a1a1a] hover:text-white hover:border-[#C9A66B]/30"
+                  )}
                 >
                   16:9 Wide
                 </Button>
@@ -471,17 +527,17 @@ export default function AddTextToImage() {
               onClick={handleGenerate}
               disabled={!selectedImage || !textInstruction.trim() || isGenerating}
               size="lg"
-              className="w-full"
+              className="w-full bg-[#C9A66B] hover:bg-[#B8956A] text-[#000000] font-bold rounded-full h-14 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isGenerating ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                   Generating...
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Add Text to Image
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Generate with Text
                 </>
               )}
             </Button>
@@ -489,12 +545,12 @@ export default function AddTextToImage() {
 
           {/* Right Column: Preview */}
           <div className="space-y-6">
-            <Card className="p-6">
-              <h3 className="text-base font-semibold mb-4">Preview</h3>
+            <Card className="p-6 bg-[#111111] border-[#2a2a2a]">
+              <h3 className="text-base font-semibold mb-4 text-white">Preview</h3>
               
               {generatedImage ? (
                 <div className="space-y-4">
-                  <div className="relative aspect-video rounded-lg overflow-hidden bg-muted border">
+                  <div className="relative aspect-video rounded-lg overflow-hidden bg-[#1a1a1a] border-2 border-[#C9A66B] shadow-lg shadow-[#C9A66B]/20">
                     <img
                       src={generatedImage}
                       alt="Generated with text"
@@ -504,31 +560,40 @@ export default function AddTextToImage() {
                   <Button
                     onClick={handleDownload}
                     variant="outline"
-                    className="w-full"
+                    className="w-full border-[#C9A66B] bg-transparent text-[#C9A66B] hover:bg-[#C9A66B]/10 hover:border-[#C9A66B] hover:text-[#C9A66B]"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download Image
                   </Button>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center h-64 rounded-lg border-2 border-dashed bg-muted/20">
-                  <ImageIcon className="h-12 w-12 text-muted-foreground/50 mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    {isGenerating ? "Generating..." : "Your result will appear here"}
-                  </p>
+                <div className="flex flex-col items-center justify-center h-[400px] rounded-lg border-2 border-dashed border-[#2a2a2a] bg-[#0a0a0a]">
+                  {isGenerating ? (
+                    <div className="flex flex-col items-center gap-4">
+                      <Loader2 className="h-12 w-12 text-[#C9A66B] animate-spin" />
+                      <p className="text-sm text-[#666666]">Adding text to your image...</p>
+                    </div>
+                  ) : (
+                    <>
+                      <ImageIcon className="h-12 w-12 text-[#333333] mb-2" />
+                      <p className="text-sm text-[#666666]">
+                        Your result will appear here
+                      </p>
+                    </>
+                  )}
                 </div>
               )}
             </Card>
 
             {/* Tips */}
-            <Card className="p-6 bg-muted/50">
-              <h3 className="font-semibold mb-3">Tips for Social Posts</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>• 1:1 - Perfect for Instagram feed posts</li>
-                <li>• 9:16 - Ideal for Stories and Reels</li>
-                <li>• 4:5 - Great for portrait posts</li>
-                <li>• 16:9 - Best for landscape images</li>
-                <li>• Use overlay opacity for better text readability</li>
+            <Card className="p-6 bg-[#111111] border-[#2a2a2a]">
+              <h3 className="font-semibold mb-3 text-white">Tips for Best Results</h3>
+              <ul className="space-y-2 text-sm text-[#666666]">
+                <li>• Be specific about text position (top, center, bottom)</li>
+                <li>• Specify font style (bold, elegant, modern, etc.)</li>
+                <li>• Mention colors for both text and overlay</li>
+                <li>• Use overlays to improve text readability</li>
+                <li>• Try different aspect ratios for various social platforms</li>
               </ul>
             </Card>
           </div>
