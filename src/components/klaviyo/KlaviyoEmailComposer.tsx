@@ -86,6 +86,7 @@ export function KlaviyoEmailComposer({
   const [selectedList, setSelectedList] = useState("");
   const [fromEmail, setFromEmail] = useState("hello@messages.tarifeattar.com");
   const [fromName, setFromName] = useState("TARIFE ATTAR LLC");
+  const [replyToEmail, setReplyToEmail] = useState("");
   const [emailHtml, setEmailHtml] = useState(initialHtml || "");
 
   // Sanitize HTML more permissively for email templates (keeping design intact)
@@ -346,6 +347,7 @@ export function KlaviyoEmailComposer({
           content_title: subject,
           from_email: fromEmail.trim(),
           from_name: fromName.trim(),
+          reply_to_email: replyToEmail.trim() || fromEmail.trim(),
         },
       });
 
@@ -467,6 +469,21 @@ export function KlaviyoEmailComposer({
                 value={fromName}
                 onChange={(e) => setFromName(e.target.value)}
               />
+            </div>
+
+            {/* Reply-To Email (Optional) */}
+            <div className="space-y-2">
+              <Label htmlFor="reply-to-email">Reply-To Email (Optional)</Label>
+              <Input
+                id="reply-to-email"
+                type="email"
+                placeholder="Leave blank to use From Email"
+                value={replyToEmail}
+                onChange={(e) => setReplyToEmail(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                If left blank, replies will go to the From Email address
+              </p>
             </div>
 
             {/* Audience Type Selection */}
