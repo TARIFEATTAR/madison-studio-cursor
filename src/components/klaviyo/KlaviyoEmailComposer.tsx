@@ -342,6 +342,12 @@ export function KlaviyoEmailComposer({
 
 
   const handleSend = async () => {
+    // Prevent multiple simultaneous submissions
+    if (loading) {
+      console.log("[KlaviyoEmailComposer] Already processing, ignoring duplicate call");
+      return;
+    }
+
     console.log("[KlaviyoEmailComposer] handleSend called", {
       hasOrganizationId: !!organizationId,
       audienceType,
@@ -649,7 +655,8 @@ export function KlaviyoEmailComposer({
                 srcDoc={sanitizedHtml}
                 className="w-full h-full min-h-[500px] bg-background"
                 title="Email Preview"
-                sandbox="allow-same-origin allow-popups"
+                sandbox="allow-same-origin allow-popups allow-forms"
+                aria-label="Email content preview"
               />
             </div>
           </TabsContent>
