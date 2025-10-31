@@ -11,6 +11,9 @@ import { ArrowLeft, Upload, Loader2, Sparkles, Image as ImageIcon, Download } fr
 import { cn } from "@/lib/utils";
 import MobileAspectRatioSelector from "@/components/image-editor/MobileAspectRatioSelector";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const OVERLAY_OPTIONS = [
   { value: 0, label: "None", description: "No overlay", icon: "○" },
@@ -30,6 +33,10 @@ export default function AddTextToImage() {
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [fontColor, setFontColor] = useState("#FFFFFF");
+  const [fontSize, setFontSize] = useState("48");
+  const [fontWeight, setFontWeight] = useState("bold");
+  const [fontStyle, setFontStyle] = useState("modern");
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,12 +72,28 @@ export default function AddTextToImage() {
     setIsGenerating(true);
 
     try {
-      // Build enhanced prompt with overlay instruction
+      // Build enhanced prompt with overlay and font styling instruction
       const overlayInstruction = overlayOpacity < 100 
         ? `with a ${overlayOpacity}% opacity dark overlay behind the text for better readability`
         : "with a solid background overlay for the text";
+      
+      const fontStyleMap: Record<string, string> = {
+        modern: "in a modern sans-serif font",
+        elegant: "in an elegant serif font",
+        bold: "in a bold impact font",
+        handwritten: "in a handwritten style font",
+        minimal: "in a minimal clean font"
+      };
+      
+      const fontWeightMap: Record<string, string> = {
+        light: "with light weight",
+        normal: "with normal weight",
+        bold: "in bold",
+        "extra-bold": "in extra bold"
+      };
 
-      const fullPrompt = `${textInstruction.trim()} ${overlayInstruction}. Maintain the original image composition and quality.`;
+      const fontInstructions = `${fontStyleMap[fontStyle] || ""} ${fontWeightMap[fontWeight] || ""} at size ${fontSize}px in color ${fontColor}`;
+      const fullPrompt = `${textInstruction.trim()} ${fontInstructions} ${overlayInstruction}. Maintain the original image composition and quality.`;
 
       console.log("Generating image with text:", {
         instruction: textInstruction,
@@ -408,118 +431,191 @@ export default function AddTextToImage() {
       </header>
 
       {/* Main Content */}
-      <main className="container max-w-6xl py-8 px-4">
-        <div className="grid lg:grid-cols-[400px_1fr] gap-8">
+      <main className="container max-w-7xl py-8 px-4">
+        <div className="grid lg:grid-cols-[440px_1fr] gap-8">
           {/* Left Column: Controls */}
           <div className="space-y-6">
-            {/* Text Instruction Card - Moved to top */}
-            <Card className="p-6 bg-[#111111] border-[#2a2a2a]">
-              <h3 className="text-base font-semibold mb-4 text-white">What text to add?</h3>
-              <Textarea
-                placeholder="Example: Add 'SALE 50% OFF' in bold red text at the top center with a dark overlay"
-                value={textInstruction}
-                onChange={(e) => setTextInstruction(e.target.value)}
-                rows={5}
-                className="resize-none bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder:text-[#666666] focus:border-[#C9A66B] focus:ring-[#C9A66B]"
-              />
-              <p className="text-xs text-[#666666] mt-2">
-                Describe the text, style, position, and any visual effects you want
-              </p>
-            </Card>
-
-            {/* Image Upload */}
+            {/* Select Image Card - Moved to top */}
             <Card className="p-6 bg-[#111111] border-[#2a2a2a]">
               <h3 className="text-base font-semibold mb-4 text-white">Select Image</h3>
-              
-              {selectedImage ? (
-                <div className="space-y-4">
-                  <div className="relative aspect-video rounded-lg overflow-hidden bg-[#1a1a1a] border border-[#2a2a2a]">
-                    <img
-                      src={selectedImage.url}
-                      alt="Selected"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => setSelectedImage(null)}
-                    className="w-full border-[#2a2a2a] bg-transparent text-[#A0A0A0] hover:bg-[#1a1a1a] hover:text-white hover:border-[#C9A66B]/30"
-                  >
-                    Change Image
-                  </Button>
+              <label className="flex flex-col items-center justify-center gap-3 p-8 rounded-lg border-2 border-dashed border-[#2a2a2a] cursor-pointer hover:border-[#C9A66B]/50 hover:bg-[#1a1a1a] transition-all">
+                <Upload className="h-10 w-10 text-[#C9A66B]" />
+                <div className="text-center">
+                  <p className="text-sm font-medium text-white">
+                    {selectedImage ? "Change Image" : "Click to upload"}
+                  </p>
+                  <p className="text-xs text-[#666666] mt-1">
+                    JPG, PNG, or WEBP
+                  </p>
                 </div>
-              ) : (
-                <label className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-[#2a2a2a] rounded-lg cursor-pointer hover:bg-[#1a1a1a] transition-colors">
-                  <div className="flex flex-col items-center gap-2 text-[#666666]">
-                    <Upload className="h-12 w-12" />
-                    <span className="text-sm font-medium">Click to upload image</span>
-                    <span className="text-xs">PNG, JPG, WEBP up to 10MB</span>
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                </label>
-              )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </label>
             </Card>
 
-            {/* Settings */}
+            {/* Background Overlay Card */}
             <Card className="p-6 bg-[#111111] border-[#2a2a2a]">
               <h3 className="text-base font-semibold mb-4 text-white">Background Overlay</h3>
-              <div className="grid grid-cols-2 gap-3 mb-6">
+              <div className="grid grid-cols-2 gap-3">
                 {OVERLAY_OPTIONS.map((option) => (
                   <button
                     key={option.value}
                     onClick={() => setOverlayOpacity(option.value)}
                     className={cn(
-                      "flex items-center gap-3 p-4 rounded-lg border-2 transition-all",
+                      "flex items-center gap-3 p-3 rounded-lg border-2 transition-all",
                       overlayOpacity === option.value
                         ? "border-[#C9A66B] bg-[#C9A66B]/10 text-[#C9A66B]"
                         : "border-[#2a2a2a] bg-[#1a1a1a] text-[#666666] hover:bg-[#222222] hover:border-[#C9A66B]/30"
                     )}
                   >
-                    <span className="text-2xl">{option.icon}</span>
+                    <span className="text-xl">{option.icon}</span>
                     <div className="text-left">
-                      <div className="font-medium text-sm">{option.label}</div>
+                      <div className="text-sm font-medium">{option.label}</div>
                       <div className="text-xs opacity-70">{option.description}</div>
                     </div>
                   </button>
                 ))}
               </div>
+            </Card>
 
-              <h3 className="text-base font-semibold mb-4 text-white">Aspect Ratio</h3>
-              <MobileAspectRatioSelector
-                value={aspectRatio}
-                onChange={setAspectRatio}
-              />
-              <div className="grid grid-cols-2 gap-2 mt-3">
-                <Button
-                  variant={aspectRatio === "4:5" ? "default" : "outline"}
-                  onClick={() => setAspectRatio("4:5")}
-                  size="sm"
-                  className={cn(
-                    aspectRatio === "4:5"
-                      ? "bg-[#C9A66B] text-[#000000] hover:bg-[#B8956A]"
-                      : "border-[#2a2a2a] bg-transparent text-[#A0A0A0] hover:bg-[#1a1a1a] hover:text-white hover:border-[#C9A66B]/30"
-                  )}
-                >
-                  4:5 Portrait
-                </Button>
-                <Button
-                  variant={aspectRatio === "16:9" ? "default" : "outline"}
-                  onClick={() => setAspectRatio("16:9")}
-                  size="sm"
-                  className={cn(
-                    aspectRatio === "16:9"
-                      ? "bg-[#C9A66B] text-[#000000] hover:bg-[#B8956A]"
-                      : "border-[#2a2a2a] bg-transparent text-[#A0A0A0] hover:bg-[#1a1a1a] hover:text-white hover:border-[#C9A66B]/30"
-                  )}
-                >
-                  16:9 Wide
-                </Button>
+            {/* Font Styling Card */}
+            <Card className="p-6 bg-[#111111] border-[#2a2a2a]">
+              <h3 className="text-base font-semibold mb-4 text-white">Text Styling</h3>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm text-[#666666] mb-2 block">Font Style</Label>
+                  <Select value={fontStyle} onValueChange={setFontStyle}>
+                    <SelectTrigger className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#111111] border-[#2a2a2a]">
+                      <SelectItem value="modern">Modern Sans-Serif</SelectItem>
+                      <SelectItem value="elegant">Elegant Serif</SelectItem>
+                      <SelectItem value="bold">Bold Impact</SelectItem>
+                      <SelectItem value="handwritten">Handwritten</SelectItem>
+                      <SelectItem value="minimal">Minimal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-sm text-[#666666] mb-2 block">Font Weight</Label>
+                  <Select value={fontWeight} onValueChange={setFontWeight}>
+                    <SelectTrigger className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#111111] border-[#2a2a2a]">
+                      <SelectItem value="light">Light</SelectItem>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="bold">Bold</SelectItem>
+                      <SelectItem value="extra-bold">Extra Bold</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-sm text-[#666666] mb-2 block">Font Size (px)</Label>
+                  <Input
+                    type="number"
+                    value={fontSize}
+                    onChange={(e) => setFontSize(e.target.value)}
+                    min="12"
+                    max="200"
+                    className="bg-[#1a1a1a] border-[#2a2a2a] text-white"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-sm text-[#666666] mb-2 block">Font Color</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="color"
+                      value={fontColor}
+                      onChange={(e) => setFontColor(e.target.value)}
+                      className="w-16 h-10 bg-[#1a1a1a] border-[#2a2a2a] cursor-pointer"
+                    />
+                    <Input
+                      type="text"
+                      value={fontColor}
+                      onChange={(e) => setFontColor(e.target.value)}
+                      className="flex-1 bg-[#1a1a1a] border-[#2a2a2a] text-white"
+                      placeholder="#FFFFFF"
+                    />
+                  </div>
+                </div>
               </div>
+            </Card>
+          </div>
+
+          {/* Right Column: Preview & Text Input */}
+          <div className="space-y-6">
+            {/* Preview Card */}
+            <Card className="p-6 bg-[#111111] border-[#2a2a2a]">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-semibold text-white">Preview</h3>
+                {selectedImage && (
+                  <span className="text-xs text-[#666666]">
+                    {aspectRatio}
+                  </span>
+                )}
+              </div>
+              
+              <div 
+                className={cn(
+                  "relative rounded-lg overflow-hidden bg-[#0a0a0a] border-2 border-[#2a2a2a] flex items-center justify-center",
+                  aspectRatio === "1:1" && "aspect-square",
+                  aspectRatio === "16:9" && "aspect-video",
+                  aspectRatio === "9:16" && "aspect-[9/16]",
+                  aspectRatio === "4:5" && "aspect-[4/5]",
+                  !selectedImage && !generatedImage && "min-h-[400px]"
+                )}
+              >
+                {generatedImage ? (
+                  <img
+                    src={generatedImage}
+                    alt="Generated with text"
+                    className="w-full h-full object-cover"
+                  />
+                ) : selectedImage ? (
+                  <img
+                    src={selectedImage.url}
+                    alt="Selected"
+                    className="w-full h-full object-cover opacity-60"
+                  />
+                ) : (
+                  <div className="text-center p-8">
+                    <ImageIcon className="w-16 h-16 mx-auto mb-4 text-[#333333]" />
+                    <p className="text-sm text-[#666666]">Upload an image to get started</p>
+                  </div>
+                )}
+              </div>
+
+              {generatedImage && (
+                <Button
+                  onClick={handleDownload}
+                  variant="outline"
+                  className="w-full mt-4 border-[#C9A66B] bg-transparent text-[#C9A66B] hover:bg-[#C9A66B]/10 hover:border-[#C9A66B]"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Image
+                </Button>
+              )}
+            </Card>
+
+            {/* Text Instruction Card - Below preview */}
+            <Card className="p-6 bg-[#111111] border-[#2a2a2a]">
+              <h3 className="text-base font-semibold mb-4 text-white">What text to add?</h3>
+              <Textarea
+                placeholder="Example: Add 'SALE 50% OFF' at the top center"
+                value={textInstruction}
+                onChange={(e) => setTextInstruction(e.target.value)}
+                rows={4}
+                className="resize-none bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder:text-[#666666] focus:border-[#C9A66B] focus:ring-[#C9A66B]"
+              />
             </Card>
 
             {/* Generate Button */}
@@ -541,61 +637,6 @@ export default function AddTextToImage() {
                 </>
               )}
             </Button>
-          </div>
-
-          {/* Right Column: Preview */}
-          <div className="space-y-6">
-            <Card className="p-6 bg-[#111111] border-[#2a2a2a]">
-              <h3 className="text-base font-semibold mb-4 text-white">Preview</h3>
-              
-              {generatedImage ? (
-                <div className="space-y-4">
-                  <div className="relative aspect-video rounded-lg overflow-hidden bg-[#1a1a1a] border-2 border-[#C9A66B] shadow-lg shadow-[#C9A66B]/20">
-                    <img
-                      src={generatedImage}
-                      alt="Generated with text"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  <Button
-                    onClick={handleDownload}
-                    variant="outline"
-                    className="w-full border-[#C9A66B] bg-transparent text-[#C9A66B] hover:bg-[#C9A66B]/10 hover:border-[#C9A66B] hover:text-[#C9A66B]"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download Image
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-[400px] rounded-lg border-2 border-dashed border-[#2a2a2a] bg-[#0a0a0a]">
-                  {isGenerating ? (
-                    <div className="flex flex-col items-center gap-4">
-                      <Loader2 className="h-12 w-12 text-[#C9A66B] animate-spin" />
-                      <p className="text-sm text-[#666666]">Adding text to your image...</p>
-                    </div>
-                  ) : (
-                    <>
-                      <ImageIcon className="h-12 w-12 text-[#333333] mb-2" />
-                      <p className="text-sm text-[#666666]">
-                        Your result will appear here
-                      </p>
-                    </>
-                  )}
-                </div>
-              )}
-            </Card>
-
-            {/* Tips */}
-            <Card className="p-6 bg-[#111111] border-[#2a2a2a]">
-              <h3 className="font-semibold mb-3 text-white">Tips for Best Results</h3>
-              <ul className="space-y-2 text-sm text-[#666666]">
-                <li>• Be specific about text position (top, center, bottom)</li>
-                <li>• Specify font style (bold, elegant, modern, etc.)</li>
-                <li>• Mention colors for both text and overlay</li>
-                <li>• Use overlays to improve text readability</li>
-                <li>• Try different aspect ratios for various social platforms</li>
-              </ul>
-            </Card>
           </div>
         </div>
       </main>
