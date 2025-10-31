@@ -335,15 +335,8 @@ export function AppSidebar() {
                                   console.log(`AppSidebar → ${item.title.toLowerCase()} click`);
                                   if (isMobile) toggleSidebar();
                                 }}
+                                className="w-full"
                               >
-                                <item.icon 
-                                  strokeWidth={1}
-                                  className={`w-5 h-5 shrink-0 transition-all duration-200 ${
-                                    isActiveRoute
-                                      ? 'text-[hsl(38,33%,56%)] drop-shadow-[0_0_6px_rgba(184,149,106,0.4)]'
-                                      : 'text-white/50 group-hover:text-white/70 group-hover:drop-shadow-[0_0_4px_rgba(184,149,106,0.2)] group-hover:scale-105'
-                                  }`} 
-                                />
                                 {open && (
                                   <span className="text-sm">{item.title}</span>
                                 )}
