@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card";
 import { ContentPicker } from "@/components/email-composer/ContentPicker";
 import { MadisonSuggestions } from "@/components/email-composer/MadisonSuggestions";
 import { EmailPreview } from "@/components/email-composer/EmailPreview";
+import { ImageLibraryPicker } from "@/components/email-composer/ImageLibraryPicker";
 import { LUXURY_TEMPLATES, generateLuxuryEmail } from "@/utils/luxuryEmailTemplates";
 import { ArrowLeft, Download, Check, Monitor, Smartphone } from "lucide-react";
 import { toast } from "sonner";
@@ -266,14 +267,10 @@ export default function EmailComposerNew() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Image URL (optional)</Label>
-                    <Input
-                      value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
-                      placeholder="https://..."
-                    />
-                  </div>
+                  <ImageLibraryPicker
+                    value={imageUrl}
+                    onChange={setImageUrl}
+                  />
 
                   <div className="space-y-2">
                     <Label>Body Text *</Label>
