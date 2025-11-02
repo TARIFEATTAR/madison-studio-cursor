@@ -38,6 +38,7 @@ import BrandBuilder from "./pages/BrandBuilder";
 import ImageEditor from "./pages/ImageEditor";
 import EmailComposer from "./pages/EmailComposer";
 import EmailComposerNew from "./pages/EmailComposerNew";
+import EmailBuilderV2 from "./pages/EmailBuilderV2";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { AlertCircle } from "lucide-react";
@@ -271,6 +272,7 @@ const AppContent = () => {
                   <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/email-composer" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Composer"><EmailComposer /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/email-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Builder"><EmailComposerNew /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/email-builder-v2" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Builder V2"><EmailBuilderV2 /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>
@@ -304,6 +306,7 @@ const AppContent = () => {
             <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/email-composer" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Composer"><EmailComposer /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/email-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Builder"><EmailComposerNew /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/email-builder-v2" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Builder V2"><EmailBuilderV2 /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </>
