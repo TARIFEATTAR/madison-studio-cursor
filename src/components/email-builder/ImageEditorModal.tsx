@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import { Crop, RotateCw, ZoomIn, ZoomOut } from "lucide-react";
@@ -27,38 +26,51 @@ export function ImageEditorModal({ open, onOpenChange, imageUrl, onSave }: Image
   useEffect(() => {
     if (!open || !canvasRef.current) return;
 
-    let isCancelled = false as boolean;
+    let isCancelled = false;
     let canvas: any;
 
-    import('fabric').then((mod: any) => {
-      const fabricLib: any = (mod as any).fabric || (mod as any).default || mod;
-      if (!fabricLib || isCancelled) return;
-      fabricRef.current = fabricLib;
+    (async () => {
+      try {
+        const mod: any = await import('fabric');
+        const fabricLib: any = mod.fabric || mod.default || mod;
+        if (!fabricLib || isCancelled) return;
+        fabricRef.current = fabricLib;
 
-      canvas = new fabricLib.Canvas(canvasRef.current as HTMLCanvasElement, {
-        width: 800,
-        height: 600,
-        backgroundColor: '#f0f0f0',
-      });
-
-      fabricLib.Image.fromURL(imageUrl, (img: any) => {
-        const maxWidth = 700;
-        const maxHeight = 500;
-        const imgScale = Math.min(maxWidth / (img.width || 1), maxHeight / (img.height || 1));
-        img.scale(imgScale);
-        img.set({
-          left: ((canvas.width || 800) - (img.getScaledWidth() || 0)) / 2,
-          top: ((canvas.height || 600) - (img.getScaledHeight() || 0)) / 2,
+        canvas = new fabricLib.Canvas(canvasRef.current as HTMLCanvasElement, {
+          width: 800,
+          height: 600,
+          backgroundColor: '#f0f0f0',
         });
 
-        canvas.add(img);
-        canvas.setActiveObject(img);
-        setFabricImage(img);
-        canvas.renderAll();
-      }, { crossOrigin: 'anonymous' });
+        fabricLib.Image.fromURL(
+          imageUrl,
+          (img: any) => {
+            if (!img || isCancelled) return;
+            const maxWidth = 700;
+            const maxHeight = 500;
+            const imgScale = Math.min(maxWidth / (img.width || 1), maxHeight / (img.height || 1));
+            img.scale(imgScale);
+            img.set({
+              left: ((canvas.width || 800) - (img.getScaledWidth() || 0)) / 2,
+              top: ((canvas.height || 600) - (img.getScaledHeight() || 0)) / 2,
+            });
 
-      setFabricCanvas(canvas);
-    });
+            canvas.add(img);
+            canvas.setActiveObject(img);
+            setFabricImage(img);
+            canvas.renderAll();
+          },
+          { crossOrigin: 'anonymous' }
+        );
+
+        setFabricCanvas(canvas);
+      } catch (e) {
+        console.error("Failed to load fabric:", e);
+        if (!isCancelled) {
+          toast.error("Failed to load image editor. Please try again.");
+        }
+      }
+    })();
 
     return () => {
       isCancelled = true;
