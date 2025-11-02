@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { fabric } from "fabric";
+// @ts-ignore - fabric v5 module resolution
+import fabric from "fabric";
 import { toast } from "sonner";
 import { Crop, RotateCw, ZoomIn, ZoomOut } from "lucide-react";
 
