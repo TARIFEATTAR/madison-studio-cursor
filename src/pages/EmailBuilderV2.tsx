@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useBrandColor } from "@/hooks/useBrandColor";
+import { useEmailHistory } from "@/hooks/useEmailHistory";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useEmailBuilderAutosave } from "@/hooks/useEmailBuilderAutosave";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,10 +16,12 @@ import { ESPExport } from "@/components/email-builder/ESPExport";
 import { TestSend } from "@/components/email-builder/TestSend";
 import { ContentPicker } from "@/components/email-composer/ContentPicker";
 import { MadisonSuggestions } from "@/components/email-composer/MadisonSuggestions";
+import { ComposeSidebar } from "@/components/email-builder/ComposeSidebar";
+import { AutosaveIndicator } from "@/components/ui/autosave-indicator";
 import { LUXURY_TEMPLATES } from "@/utils/luxuryEmailTemplates";
 import { EmailBlock, EmailComposition, HeadlineBlock, ImageBlock, TextBlock, ButtonBlock, DividerBlock, SpacerBlock } from "@/types/emailBlocks";
 import { compositionToHtml, compositionToPlainText } from "@/utils/blockToHtml";
-import { ArrowLeft, Download, Check, Monitor, Smartphone, FileText, Plus } from "lucide-react";
+import { ArrowLeft, Download, Check, Monitor, Smartphone, FileText, Plus, Undo2, Redo2 } from "lucide-react";
 import { toast } from "sonner";
 import { embedImagesInHtml } from "@/utils/emailImageEmbedder";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,6 +48,43 @@ export default function EmailBuilderV2() {
 
   const [viewMode, setViewMode] = useState<"desktop" | "mobile" | "plain">("desktop");
   const [generatedHtml, setGeneratedHtml] = useState("");
+  const [emailId, setEmailId] = useState<string | null>(null);
+
+  // History & Autosave
+  const { pushToHistory, undo, redo, canUndo, canRedo } = useEmailHistory(composition.blocks);
+  const { saveStatus, lastSavedAt } = useEmailBuilderAutosave({
+    composition,
+    emailSubject,
+    organizationId: organizationId || "",
+    emailId: emailId || undefined,
+  });
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    onUndo: () => {
+      const undoneBlocks = undo();
+      if (undoneBlocks) {
+        setComposition(prev => ({ ...prev, blocks: undoneBlocks }));
+        toast.success("Undone");
+      }
+    },
+    onRedo: () => {
+      const redoneBlocks = redo();
+      if (redoneBlocks) {
+        setComposition(prev => ({ ...prev, blocks: redoneBlocks }));
+        toast.success("Redone");
+      }
+    },
+    onSave: async () => {
+      await handleSaveToLibrary();
+    },
+    onPreview: () => {
+      if (activeTab === "compose") {
+        handleGeneratePreview();
+      }
+    },
+    enabled: activeTab === "compose",
+  });
 
   const handleSelectTemplate = (templateId: string) => {
     setComposition(prev => ({ ...prev, templateId }));
@@ -70,17 +112,50 @@ export default function EmailBuilderV2() {
       }
     })();
     
-    setComposition(prev => ({
-      ...prev,
-      blocks: [...prev.blocks, newBlock]
-    }));
+    setComposition(prev => {
+      const newBlocks = [...prev.blocks, newBlock];
+      pushToHistory(newBlocks);
+      return { ...prev, blocks: newBlocks };
+    });
+  };
+
+  const addBlockTemplate = (blocks: EmailBlock[]) => {
+    setComposition(prev => {
+      const newBlocks = [...prev.blocks, ...blocks];
+      pushToHistory(newBlocks);
+      return { ...prev, blocks: newBlocks };
+    });
+    toast.success("Template added");
   };
 
   const updateBlock = (id: string, updated: EmailBlock) => {
-    setComposition(prev => ({
-      ...prev,
-      blocks: prev.blocks.map(b => b.id === id ? updated : b)
-    }));
+    setComposition(prev => {
+      const newBlocks = prev.blocks.map(b => b.id === id ? updated : b);
+      pushToHistory(newBlocks);
+      return { ...prev, blocks: newBlocks };
+    });
+  };
+
+  const duplicateBlock = (id: string) => {
+    setComposition(prev => {
+      const index = prev.blocks.findIndex(b => b.id === id);
+      if (index === -1) return prev;
+      
+      const blockToDuplicate = prev.blocks[index];
+      const duplicatedBlock = {
+        ...blockToDuplicate,
+        id: `block-${Date.now()}`,
+      };
+      
+      const newBlocks = [
+        ...prev.blocks.slice(0, index + 1),
+        duplicatedBlock,
+        ...prev.blocks.slice(index + 1),
+      ];
+      
+      pushToHistory(newBlocks);
+      return { ...prev, blocks: newBlocks };
+    });
   };
 
   const moveBlock = (id: string, direction: 'up' | 'down') => {
@@ -94,15 +169,17 @@ export default function EmailBuilderV2() {
       const newBlocks = [...prev.blocks];
       [newBlocks[index], newBlocks[newIndex]] = [newBlocks[newIndex], newBlocks[index]];
       
+      pushToHistory(newBlocks);
       return { ...prev, blocks: newBlocks };
     });
   };
 
   const deleteBlock = (id: string) => {
-    setComposition(prev => ({
-      ...prev,
-      blocks: prev.blocks.filter(b => b.id !== id)
-    }));
+    setComposition(prev => {
+      const newBlocks = prev.blocks.filter(b => b.id !== id);
+      pushToHistory(newBlocks);
+      return { ...prev, blocks: newBlocks };
+    });
   };
 
   const handleGeneratePreview = () => {
@@ -175,8 +252,27 @@ export default function EmailBuilderV2() {
             <ArrowLeft className="w-4 h-4" />
             Back
           </Button>
-          <h1 className="text-xl font-semibold">Email Builder</h1>
+          <div className="flex flex-col">
+            <h1 className="text-xl font-semibold">Email Builder</h1>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <span>Step {activeTab === "template" ? "1" : activeTab === "compose" ? "2" : "3"} of 3</span>
+              {activeTab === "compose" && <AutosaveIndicator saveStatus={saveStatus} lastSavedAt={lastSavedAt} />}
+            </div>
+          </div>
         </div>
+
+        {activeTab === "compose" && (
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => { const undoneBlocks = undo(); if (undoneBlocks) setComposition(prev => ({ ...prev, blocks: undoneBlocks })); }} disabled={!canUndo}>
+              <Undo2 className="w-4 h-4 mr-2" />
+              Undo
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => { const redoneBlocks = redo(); if (redoneBlocks) setComposition(prev => ({ ...prev, blocks: redoneBlocks })); }} disabled={!canRedo}>
+              <Redo2 className="w-4 h-4 mr-2" />
+              Redo
+            </Button>
+          </div>
+        )}
 
         {activeTab === "preview" && (
           <div className="flex items-center gap-2">
@@ -253,84 +349,11 @@ export default function EmailBuilderV2() {
 
         {activeTab === "compose" && (
           <div className="h-full flex">
-            {/* Sidebar */}
-            <div className="w-80 border-r border-border bg-muted/30 overflow-auto">
-              <div className="p-4 space-y-4">
-                <div>
-                  <h3 className="font-semibold mb-2">Add Content Blocks</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button variant="outline" size="sm" onClick={() => addBlock('headline')}>
-                      📝 Headline
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => addBlock('image')}>
-                      🖼️ Image
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => addBlock('text')}>
-                      📄 Text
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => addBlock('button')}>
-                      🔘 Button
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => addBlock('divider')}>
-                      ➖ Divider
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => addBlock('spacer')}>
-                      ⬛ Spacer
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-border">
-                  <Tabs defaultValue="archive">
-                    <TabsList className="w-full">
-                      <TabsTrigger value="archive" className="flex-1">Archive</TabsTrigger>
-                      <TabsTrigger value="madison" className="flex-1">Madison</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="archive" className="mt-4">
-                      {organizationId && (
-                        <ContentPicker
-                          organizationId={organizationId}
-                          onSelect={(content) => {
-                            addBlock('headline');
-                            const lastBlock = composition.blocks[composition.blocks.length - 1];
-                            if (lastBlock?.type === 'headline') {
-                              updateBlock(lastBlock.id, { ...lastBlock, text: content.title });
-                            }
-                            addBlock('text');
-                            const textBlock = composition.blocks[composition.blocks.length - 1];
-                            if (textBlock?.type === 'text') {
-                              updateBlock(textBlock.id, { ...textBlock, content: content.content });
-                            }
-                          }}
-                        />
-                      )}
-                    </TabsContent>
-                    <TabsContent value="madison" className="mt-4">
-                      <MadisonSuggestions
-                        onSelectHeadline={(headline) => {
-                          addBlock('headline');
-                          const lastBlock = composition.blocks[composition.blocks.length - 1];
-                          if (lastBlock?.type === 'headline') {
-                            updateBlock(lastBlock.id, { ...lastBlock, text: headline });
-                          }
-                        }}
-                        onSelectCTA={(cta) => {
-                          addBlock('button');
-                          const lastBlock = composition.blocks[composition.blocks.length - 1];
-                          if (lastBlock?.type === 'button') {
-                            updateBlock(lastBlock.id, { ...lastBlock, text: cta });
-                          }
-                        }}
-                        currentContent={composition.blocks.map(b => 
-                          b.type === 'text' ? b.content : 
-                          b.type === 'headline' ? b.text : ''
-                        ).join(' ')}
-                      />
-                    </TabsContent>
-                  </Tabs>
-                </div>
-              </div>
-            </div>
+            <ComposeSidebar 
+              onAddBlock={addBlock}
+              onAddBlockTemplate={addBlockTemplate}
+              currentBlocks={composition.blocks}
+            />
 
             {/* Main Editor */}
             <div className="flex-1 overflow-auto p-6">
@@ -362,6 +385,7 @@ export default function EmailBuilderV2() {
                         onMoveUp={() => moveBlock(block.id, 'up')}
                         onMoveDown={() => moveBlock(block.id, 'down')}
                         onDelete={() => deleteBlock(block.id)}
+                        onDuplicate={() => duplicateBlock(block.id)}
                         canMoveUp={index > 0}
                         canMoveDown={index < composition.blocks.length - 1}
                       />

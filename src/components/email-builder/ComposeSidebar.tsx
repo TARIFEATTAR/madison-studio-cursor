@@ -7,14 +7,16 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { EmailBlock, BlockType } from "@/types/emailBlocks";
 import { ContentPicker } from "@/components/email-composer/ContentPicker";
 import { MadisonSuggestions } from "@/components/email-composer/MadisonSuggestions";
+import { BlockTemplates } from "./BlockTemplates";
 import { useState } from "react";
 
 interface ComposeSidebarProps {
   onAddBlock: (type: BlockType) => void;
+  onAddBlockTemplate: (blocks: EmailBlock[]) => void;
   currentBlocks: EmailBlock[];
 }
 
-export function ComposeSidebar({ onAddBlock, currentBlocks }: ComposeSidebarProps) {
+export function ComposeSidebar({ onAddBlock, onAddBlockTemplate, currentBlocks }: ComposeSidebarProps) {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
 
@@ -37,8 +39,9 @@ export function ComposeSidebar({ onAddBlock, currentBlocks }: ComposeSidebarProp
   const sidebarContent = (
     <div className="h-full flex flex-col">
       <Tabs defaultValue="blocks" className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="blocks">Blocks</TabsTrigger>
+          <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="archive">Archive</TabsTrigger>
           <TabsTrigger value="madison">Madison</TabsTrigger>
         </TabsList>
@@ -61,6 +64,12 @@ export function ComposeSidebar({ onAddBlock, currentBlocks }: ComposeSidebarProp
                 </Button>
               ))}
             </div>
+          </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="templates" className="flex-1 mt-4">
+          <ScrollArea className="h-full pr-4">
+            <BlockTemplates onSelectTemplate={onAddBlockTemplate} />
           </ScrollArea>
         </TabsContent>
 

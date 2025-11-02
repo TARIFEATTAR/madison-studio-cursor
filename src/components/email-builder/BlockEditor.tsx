@@ -5,11 +5,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ChevronUp, ChevronDown, Trash2, ChevronRight } from "lucide-react";
+import { ChevronUp, ChevronDown, Trash2, ChevronRight, Copy } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ImageLibraryPicker } from "@/components/email-composer/ImageLibraryPicker";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
 
 interface BlockEditorProps {
   block: EmailBlock;
@@ -17,13 +18,19 @@ interface BlockEditorProps {
   onMoveUp: () => void;
   onMoveDown: () => void;
   onDelete: () => void;
+  onDuplicate: () => void;
   canMoveUp: boolean;
   canMoveDown: boolean;
 }
 
-export function BlockEditor({ block, onUpdate, onMoveUp, onMoveDown, onDelete, canMoveUp, canMoveDown }: BlockEditorProps) {
+export function BlockEditor({ block, onUpdate, onMoveUp, onMoveDown, onDelete, onDuplicate, canMoveUp, canMoveDown }: BlockEditorProps) {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(!isMobile);
+
+  const handleDuplicate = () => {
+    onDuplicate();
+    toast.success("Block duplicated");
+  };
 
   const getBlockPreview = () => {
     switch (block.type) {
@@ -288,6 +295,9 @@ export function BlockEditor({ block, onUpdate, onMoveUp, onMoveDown, onDelete, c
                 <Button variant="ghost" size="sm" onClick={onMoveDown} disabled={!canMoveDown} className="h-8 w-8 p-0">
                   <ChevronDown className="w-4 h-4" />
                 </Button>
+                <Button variant="ghost" size="sm" onClick={handleDuplicate} className="h-8 w-8 p-0">
+                  <Copy className="w-4 h-4" />
+                </Button>
                 <Button variant="ghost" size="sm" onClick={onDelete} className="h-8 w-8 p-0 text-destructive">
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -354,14 +364,24 @@ export function BlockEditor({ block, onUpdate, onMoveUp, onMoveDown, onDelete, c
               <span className="text-2xl">{getBlockIcon()}</span>
               <span className="font-semibold capitalize">{block.type} Block</span>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onDelete}
-              className="text-destructive hover:text-destructive"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDuplicate}
+                className="h-8 w-8 p-0"
+              >
+                <Copy className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onDelete}
+                className="text-destructive hover:text-destructive h-8 w-8 p-0"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
 
           {renderBlockEditor()}
