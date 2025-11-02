@@ -38,32 +38,32 @@ export function EmailPreview({ html }: EmailPreviewProps) {
   return (
     <div className="h-full flex flex-col bg-card border-l border-border">
       {/* Preview Controls */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/50">
-        <h3 className="font-semibold text-foreground">Live Preview</h3>
-        <div className="flex gap-1 p-1 bg-muted rounded-lg">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 sm:px-4 py-2 sm:py-3 border-b border-border bg-card/50">
+        <h3 className="font-semibold text-foreground text-sm sm:text-base">Live Preview</h3>
+        <div className="flex gap-1 p-1 bg-muted rounded-lg w-fit">
           <Button
             variant={viewMode === "desktop" ? "default" : "ghost"}
             size="sm"
             onClick={() => setViewMode("desktop")}
-            className="h-8"
+            className="h-7 sm:h-8"
           >
-            <Monitor className="w-4 h-4 mr-1" />
-            Desktop
+            <Monitor className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+            <span className="hidden sm:inline">Desktop</span>
           </Button>
           <Button
             variant={viewMode === "mobile" ? "default" : "ghost"}
             size="sm"
             onClick={() => setViewMode("mobile")}
-            className="h-8"
+            className="h-7 sm:h-8"
           >
-            <Smartphone className="w-4 h-4 mr-1" />
-            Mobile
+            <Smartphone className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+            <span className="hidden sm:inline">Mobile</span>
           </Button>
         </div>
       </div>
 
       {/* Preview Frame */}
-      <div className="flex-1 p-4 bg-muted/30 overflow-auto">
+      <div className="flex-1 p-2 sm:p-4 bg-muted/30 overflow-auto">
         <div
           className={`mx-auto bg-white transition-all duration-300 ${
             viewMode === "desktop" ? "max-w-full" : "max-w-[375px]"

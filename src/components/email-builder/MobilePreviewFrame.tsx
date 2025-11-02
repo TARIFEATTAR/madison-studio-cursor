@@ -12,8 +12,8 @@ export function MobilePreviewFrame({ html, device = 'iphone' }: MobilePreviewFra
     : 'rounded-[2rem] border-[12px] border-gray-700';
 
   return (
-    <div className="flex justify-center items-center py-8">
-      <div className={`${frameStyles} bg-white shadow-2xl relative`} style={{ width: '375px', height: '667px' }}>
+    <div className="flex justify-center items-center py-4 sm:py-8">
+      <div className={`${frameStyles} bg-white shadow-2xl relative`} style={{ width: '100%', maxWidth: '375px', height: '667px' }}>
         {/* Device Notch (iPhone) */}
         {device === 'iphone' && (
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-6 bg-gray-800 rounded-b-3xl z-10" />

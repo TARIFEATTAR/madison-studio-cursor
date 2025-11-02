@@ -333,20 +333,20 @@ export default function EmailBuilderV2() {
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-3 sm:px-6 py-3 sm:py-4 border-b border-border bg-card">
+        <div className="flex items-center gap-2 sm:gap-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate("/library")}
-            className="gap-2"
+            className="gap-1 sm:gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back
+            <span className="hidden sm:inline">Back</span>
           </Button>
           <div className="flex flex-col">
-            <h1 className="text-xl font-semibold">Email Builder</h1>
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <h1 className="text-lg sm:text-xl font-semibold">Email Builder</h1>
+            <div className="flex items-center gap-2 sm:gap-4 text-xs text-muted-foreground">
               <span>Step {activeTab === "template" ? "1" : activeTab === "compose" ? "2" : "3"} of 3</span>
               {activeTab === "compose" && <AutosaveIndicator saveStatus={saveStatus} lastSavedAt={lastSavedAt} />}
             </div>
@@ -354,27 +354,27 @@ export default function EmailBuilderV2() {
         </div>
 
         {activeTab === "compose" && (
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => { const undoneBlocks = undo(); if (undoneBlocks) setComposition(prev => ({ ...prev, blocks: undoneBlocks })); }} disabled={!canUndo}>
-              <Undo2 className="w-4 h-4 mr-2" />
-              Undo
+          <div className="flex items-center gap-1 sm:gap-2 ml-auto sm:ml-0">
+            <Button variant="ghost" size="sm" onClick={() => { const undoneBlocks = undo(); if (undoneBlocks) setComposition(prev => ({ ...prev, blocks: undoneBlocks })); }} disabled={!canUndo} className="h-8 px-2 sm:px-3">
+              <Undo2 className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Undo</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => { const redoneBlocks = redo(); if (redoneBlocks) setComposition(prev => ({ ...prev, blocks: redoneBlocks })); }} disabled={!canRedo}>
-              <Redo2 className="w-4 h-4 mr-2" />
-              Redo
+            <Button variant="ghost" size="sm" onClick={() => { const redoneBlocks = redo(); if (redoneBlocks) setComposition(prev => ({ ...prev, blocks: redoneBlocks })); }} disabled={!canRedo} className="h-8 px-2 sm:px-3">
+              <Redo2 className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Redo</span>
             </Button>
           </div>
         )}
 
         {activeTab === "preview" && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 ml-auto sm:ml-0">
             <TestSend html={generatedHtml} subject={emailSubject} />
-            <Button variant="outline" size="sm" onClick={handleDownloadHtml}>
-              <Download className="w-4 h-4 mr-2" />
-              Download HTML
+            <Button variant="outline" size="sm" onClick={handleDownloadHtml} className="h-8 px-2 sm:px-3">
+              <Download className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Download HTML</span>
             </Button>
             <ESPExport html={generatedHtml} subject={emailSubject} />
-            <Button size="sm" onClick={handleSaveToLibrary}>
+            <Button size="sm" onClick={handleSaveToLibrary} className="h-8">
               Save to Library
             </Button>
           </div>
@@ -383,15 +383,20 @@ export default function EmailBuilderV2() {
 
       {/* Tab Navigation */}
       <div className="bg-muted/30 border-b border-border">
-        <div className="container max-w-6xl mx-auto px-6">
+        <div className="container max-w-6xl mx-auto px-3 sm:px-6">
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
             <TabsList className="w-full max-w-md mx-auto">
-              <TabsTrigger value="template" className="flex-1">1. Template</TabsTrigger>
-              <TabsTrigger value="compose" className="flex-1" disabled={!composition.templateId}>
-                2. Compose
+              <TabsTrigger value="template" className="flex-1 text-xs sm:text-sm">
+                <span className="hidden sm:inline">1. Template</span>
+                <span className="sm:hidden">Template</span>
               </TabsTrigger>
-              <TabsTrigger value="preview" className="flex-1" disabled={!generatedHtml}>
-                3. Preview
+              <TabsTrigger value="compose" className="flex-1 text-xs sm:text-sm" disabled={!composition.templateId}>
+                <span className="hidden sm:inline">2. Compose</span>
+                <span className="sm:hidden">Compose</span>
+              </TabsTrigger>
+              <TabsTrigger value="preview" className="flex-1 text-xs sm:text-sm" disabled={!generatedHtml}>
+                <span className="hidden sm:inline">3. Preview</span>
+                <span className="sm:hidden">Preview</span>
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -401,14 +406,14 @@ export default function EmailBuilderV2() {
       {/* Main Content */}
       <div className="flex-1 overflow-hidden">
         {activeTab === "template" && (
-          <div className="h-full overflow-auto p-8">
-            <div className="max-w-4xl mx-auto space-y-6">
+          <div className="h-full overflow-auto p-4 sm:p-8">
+            <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
               <div>
-                <h2 className="text-2xl font-semibold mb-2">Choose Your Template</h2>
-                <p className="text-muted-foreground">Select from luxury ecommerce or minimalist founder styles</p>
+                <h2 className="text-xl sm:text-2xl font-semibold mb-2">Choose Your Template</h2>
+                <p className="text-sm sm:text-base text-muted-foreground">Select from luxury ecommerce or minimalist founder styles</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {LUXURY_TEMPLATES.map((template) => (
                   <Card
                     key={template.id}
@@ -440,16 +445,34 @@ export default function EmailBuilderV2() {
         )}
 
         {activeTab === "compose" && (
-          <div className="h-full flex">
-            <ComposeSidebar 
-              onAddBlock={addBlock}
-              onAddBlockTemplate={addBlockTemplate}
-              currentBlocks={composition.blocks}
-            />
+          <div className="h-full flex flex-col sm:flex-row">
+            <div className="hidden sm:block">
+              <ComposeSidebar 
+                onAddBlock={addBlock}
+                onAddBlockTemplate={addBlockTemplate}
+                currentBlocks={composition.blocks}
+              />
+            </div>
 
             {/* Main Editor */}
-            <div className="flex-1 overflow-auto p-6">
-              <div className="max-w-3xl mx-auto space-y-6">
+            <div className="flex-1 overflow-auto p-3 sm:p-6">
+              <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
+                {/* Mobile Add Block Buttons */}
+                <div className="sm:hidden flex flex-wrap gap-2 pb-2 border-b">
+                  <Button size="sm" variant="outline" onClick={() => addBlock('headline')} className="flex-1 min-w-[100px]">
+                    + Headline
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => addBlock('text')} className="flex-1 min-w-[100px]">
+                    + Text
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => addBlock('image')} className="flex-1 min-w-[100px]">
+                    + Image
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => addBlock('button')} className="flex-1 min-w-[100px]">
+                    + Button
+                  </Button>
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Email Subject</label>
                   <Input
@@ -460,11 +483,12 @@ export default function EmailBuilderV2() {
                 </div>
 
                 {composition.blocks.length === 0 ? (
-                  <Card className="p-12 text-center">
-                    <Plus className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Start Building Your Email</h3>
-                    <p className="text-muted-foreground">
-                      Add content blocks from the sidebar to compose your email
+                  <Card className="p-8 sm:p-12 text-center">
+                    <Plus className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-base sm:text-lg font-semibold mb-2">Start Building Your Email</h3>
+                    <p className="text-sm sm:text-base text-muted-foreground">
+                      <span className="hidden sm:inline">Add content blocks from the sidebar to compose your email</span>
+                      <span className="sm:hidden">Tap the buttons above to add content blocks</span>
                     </p>
                   </Card>
                 ) : (
@@ -525,36 +549,39 @@ export default function EmailBuilderV2() {
 
         {activeTab === "preview" && (
           <div className="h-full flex flex-col">
-            <div className="flex items-center justify-between px-6 py-3 border-b border-border">
-              <h2 className="text-lg font-semibold">Preview</h2>
-              <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-3 sm:px-6 py-3 border-b border-border">
+              <h2 className="text-lg sm:text-xl font-semibold">Preview</h2>
+              <div className="flex gap-1 p-1 bg-muted rounded-lg w-fit">
                 <Button
-                  variant={viewMode === "desktop" ? "default" : "outline"}
+                  variant={viewMode === "desktop" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("desktop")}
+                  className="h-8"
                 >
-                  <Monitor className="w-4 h-4 mr-2" />
-                  Desktop
+                  <Monitor className="w-4 h-4" />
+                  <span className="ml-1 hidden sm:inline">Desktop</span>
                 </Button>
                 <Button
-                  variant={viewMode === "mobile" ? "default" : "outline"}
+                  variant={viewMode === "mobile" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("mobile")}
+                  className="h-8"
                 >
-                  <Smartphone className="w-4 h-4 mr-2" />
-                  Mobile
+                  <Smartphone className="w-4 h-4" />
+                  <span className="ml-1 hidden sm:inline">Mobile</span>
                 </Button>
                 <Button
-                  variant={viewMode === "plain" ? "default" : "outline"}
+                  variant={viewMode === "plain" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("plain")}
+                  className="h-8"
                 >
-                  <FileText className="w-4 h-4 mr-2" />
-                  Plain Text
+                  <FileText className="w-4 h-4" />
+                  <span className="ml-1 hidden sm:inline">Text</span>
                 </Button>
               </div>
             </div>
-            <div className="flex-1 overflow-auto bg-muted/30 p-8">
+            <div className="flex-1 overflow-auto bg-muted/30 p-4 sm:p-8">
               {viewMode === "plain" ? (
                 <Card className="max-w-2xl mx-auto p-8">
                   <pre className="whitespace-pre-wrap font-mono text-sm">
