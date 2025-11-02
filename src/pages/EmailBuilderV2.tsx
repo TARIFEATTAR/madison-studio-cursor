@@ -23,7 +23,7 @@ import { AutosaveIndicator } from "@/components/ui/autosave-indicator";
 import { LUXURY_TEMPLATES } from "@/utils/luxuryEmailTemplates";
 import { EmailBlock, EmailComposition, HeadlineBlock, ImageBlock, TextBlock, ButtonBlock, DividerBlock, SpacerBlock } from "@/types/emailBlocks";
 import { compositionToHtml, compositionToPlainText } from "@/utils/blockToHtml";
-import { ArrowLeft, Download, Check, Monitor, Smartphone, FileText, Plus, Undo2, Redo2, GripVertical } from "lucide-react";
+import { ArrowLeft, Download, Check, Monitor, Smartphone, FileText, Plus, Undo2, Redo2, GripVertical, ShoppingBag, PenTool } from "lucide-react";
 import { toast } from "sonner";
 import { embedImagesInHtml } from "@/utils/emailImageEmbedder";
 import { supabase } from "@/integrations/supabase/client";
@@ -433,8 +433,18 @@ export default function EmailBuilderV2() {
                         <h3 className="font-semibold text-lg">{template.name}</h3>
                         <p className="text-sm text-muted-foreground mt-1">{template.description}</p>
                       </div>
-                      <div className="pt-2 text-xs text-muted-foreground">
-                        {template.category === 'luxury-ecommerce' ? '🛍️ Luxury Ecommerce' : '✍️ Founder Minimalist'}
+                      <div className="pt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                        {template.category === 'luxury-ecommerce' ? (
+                          <>
+                            <ShoppingBag className="w-3.5 h-3.5" />
+                            <span>Luxury Ecommerce</span>
+                          </>
+                        ) : (
+                          <>
+                            <PenTool className="w-3.5 h-3.5" />
+                            <span>Founder Minimalist</span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </Card>
