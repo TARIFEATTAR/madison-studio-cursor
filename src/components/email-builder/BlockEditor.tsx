@@ -5,10 +5,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ChevronUp, ChevronDown, Trash2, ChevronRight, Copy } from "lucide-react";
+import { ChevronUp, ChevronDown, Trash2, ChevronRight, Copy, Edit } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ImageLibraryPicker } from "@/components/email-composer/ImageLibraryPicker";
+import { ImageEditorModal } from "./ImageEditorModal";
+import { RichTextToolbar } from "./RichTextToolbar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 
@@ -26,10 +28,49 @@ interface BlockEditorProps {
 export function BlockEditor({ block, onUpdate, onMoveUp, onMoveDown, onDelete, onDuplicate, canMoveUp, canMoveDown }: BlockEditorProps) {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(!isMobile);
+  const [imageEditorOpen, setImageEditorOpen] = useState(false);
+  const [textareaRef, setTextareaRef] = useState<HTMLTextAreaElement | null>(null);
 
   const handleDuplicate = () => {
     onDuplicate();
     toast.success("Block duplicated");
+  };
+
+  const handleTextFormat = (format: string) => {
+    if (!textareaRef || block.type !== 'text') return;
+    
+    const start = textareaRef.selectionStart;
+    const end = textareaRef.selectionEnd;
+    const selectedText = textareaRef.value.substring(start, end);
+    
+    if (!selectedText) {
+      toast.info("Select text to format");
+      return;
+    }
+
+    let formattedText = selectedText;
+    switch (format) {
+      case 'bold':
+        formattedText = `**${selectedText}**`;
+        break;
+      case 'italic':
+        formattedText = `*${selectedText}*`;
+        break;
+      case 'list':
+        formattedText = selectedText.split('\n').map(line => `- ${line}`).join('\n');
+        break;
+      case 'link':
+        formattedText = `[${selectedText}](url)`;
+        break;
+    }
+
+    const newContent = 
+      textareaRef.value.substring(0, start) + 
+      formattedText + 
+      textareaRef.value.substring(end);
+    
+    onUpdate({ ...block, content: newContent });
+    toast.success("Text formatted");
   };
 
   const getBlockPreview = () => {
@@ -102,6 +143,17 @@ export function BlockEditor({ block, onUpdate, onMoveUp, onMoveDown, onDelete, o
               value={block.url}
               onChange={(url) => onUpdate({ ...block, url })}
             />
+            {block.url && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setImageEditorOpen(true)}
+                className="w-full gap-2"
+              >
+                <Edit className="w-4 h-4" />
+                Edit Image
+              </Button>
+            )}
             <div className="space-y-2">
               <Label>Alt Text</Label>
               <Input
@@ -123,36 +175,37 @@ export function BlockEditor({ block, onUpdate, onMoveUp, onMoveDown, onDelete, o
                 </SelectContent>
               </Select>
             </div>
+            {imageEditorOpen && block.url && (
+              <ImageEditorModal
+                open={imageEditorOpen}
+                onOpenChange={setImageEditorOpen}
+                imageUrl={block.url}
+                onSave={(editedUrl) => onUpdate({ ...block, url: editedUrl })}
+              />
+            )}
           </div>
         );
 
       case 'text':
         return (
           <div className="space-y-3">
+            <RichTextToolbar
+              onFormat={handleTextFormat}
+              alignment={block.alignment}
+              onAlignmentChange={(alignment) => onUpdate({ ...block, alignment })}
+            />
             <div className="space-y-2">
               <Label>Text Content</Label>
               <Textarea
+                ref={(el) => setTextareaRef(el)}
                 value={block.content}
                 onChange={(e) => onUpdate({ ...block, content: e.target.value })}
                 placeholder="Enter your text content"
                 rows={6}
               />
               <p className="text-xs text-muted-foreground">
-                Supports **bold**, *italic*, and bullet lists with - or *
+                Select text and use toolbar to format. Supports **bold**, *italic*, and - bullet lists
               </p>
-            </div>
-            <div className="space-y-2">
-              <Label>Alignment</Label>
-              <Select value={block.alignment} onValueChange={(value: any) => onUpdate({ ...block, alignment: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="left">Left</SelectItem>
-                  <SelectItem value="center">Center</SelectItem>
-                  <SelectItem value="right">Right</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
         );

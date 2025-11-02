@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 import { useAuth } from "@/hooks/useAuth";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useBrandColor } from "@/hooks/useBrandColor";
@@ -12,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { BlockEditor } from "@/components/email-builder/BlockEditor";
 import { EmailPreview } from "@/components/email-composer/EmailPreview";
+import { MobilePreviewFrame } from "@/components/email-builder/MobilePreviewFrame";
 import { ESPExport } from "@/components/email-builder/ESPExport";
 import { TestSend } from "@/components/email-builder/TestSend";
 import { ContentPicker } from "@/components/email-composer/ContentPicker";
@@ -21,7 +23,7 @@ import { AutosaveIndicator } from "@/components/ui/autosave-indicator";
 import { LUXURY_TEMPLATES } from "@/utils/luxuryEmailTemplates";
 import { EmailBlock, EmailComposition, HeadlineBlock, ImageBlock, TextBlock, ButtonBlock, DividerBlock, SpacerBlock } from "@/types/emailBlocks";
 import { compositionToHtml, compositionToPlainText } from "@/utils/blockToHtml";
-import { ArrowLeft, Download, Check, Monitor, Smartphone, FileText, Plus, Undo2, Redo2 } from "lucide-react";
+import { ArrowLeft, Download, Check, Monitor, Smartphone, FileText, Plus, Undo2, Redo2, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import { embedImagesInHtml } from "@/utils/emailImageEmbedder";
 import { supabase } from "@/integrations/supabase/client";
@@ -170,6 +172,25 @@ export default function EmailBuilderV2() {
       [newBlocks[index], newBlocks[newIndex]] = [newBlocks[newIndex], newBlocks[index]];
       
       pushToHistory(newBlocks);
+      return { ...prev, blocks: newBlocks };
+    });
+  };
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+    
+    const sourceIndex = result.source.index;
+    const destIndex = result.destination.index;
+    
+    if (sourceIndex === destIndex) return;
+
+    setComposition(prev => {
+      const newBlocks = Array.from(prev.blocks);
+      const [removed] = newBlocks.splice(sourceIndex, 1);
+      newBlocks.splice(destIndex, 0, removed);
+      
+      pushToHistory(newBlocks);
+      toast.success("Block reordered");
       return { ...prev, blocks: newBlocks };
     });
   };
@@ -376,21 +397,51 @@ export default function EmailBuilderV2() {
                     </p>
                   </Card>
                 ) : (
-                  <div className="space-y-4">
-                    {composition.blocks.map((block, index) => (
-                      <BlockEditor
-                        key={block.id}
-                        block={block}
-                        onUpdate={(updated) => updateBlock(block.id, updated)}
-                        onMoveUp={() => moveBlock(block.id, 'up')}
-                        onMoveDown={() => moveBlock(block.id, 'down')}
-                        onDelete={() => deleteBlock(block.id)}
-                        onDuplicate={() => duplicateBlock(block.id)}
-                        canMoveUp={index > 0}
-                        canMoveDown={index < composition.blocks.length - 1}
-                      />
-                    ))}
-                  </div>
+                  <DragDropContext onDragEnd={handleDragEnd}>
+                    <Droppable droppableId="blocks">
+                      {(provided) => (
+                        <div
+                          {...provided.droppableProps}
+                          ref={provided.innerRef}
+                          className="space-y-4"
+                        >
+                          {composition.blocks.map((block, index) => (
+                            <Draggable key={block.id} draggableId={block.id} index={index}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  className={snapshot.isDragging ? "opacity-50" : ""}
+                                >
+                                  <div className="flex items-start gap-2">
+                                    <div
+                                      {...provided.dragHandleProps}
+                                      className="mt-4 cursor-grab active:cursor-grabbing"
+                                    >
+                                      <GripVertical className="w-5 h-5 text-muted-foreground" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <BlockEditor
+                                        block={block}
+                                        onUpdate={(updated) => updateBlock(block.id, updated)}
+                                        onMoveUp={() => moveBlock(block.id, 'up')}
+                                        onMoveDown={() => moveBlock(block.id, 'down')}
+                                        onDelete={() => deleteBlock(block.id)}
+                                        onDuplicate={() => duplicateBlock(block.id)}
+                                        canMoveUp={index > 0}
+                                        canMoveDown={index < composition.blocks.length - 1}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  </DragDropContext>
                 )}
 
                 <Button onClick={handleGeneratePreview} className="w-full" size="lg">
@@ -439,6 +490,8 @@ export default function EmailBuilderV2() {
                     {compositionToPlainText(composition)}
                   </pre>
                 </Card>
+              ) : viewMode === "mobile" ? (
+                <MobilePreviewFrame html={generatedHtml} />
               ) : (
                 <EmailPreview html={generatedHtml} />
               )}
