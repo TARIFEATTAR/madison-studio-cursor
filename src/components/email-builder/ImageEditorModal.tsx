@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { Canvas as FabricCanvas, Image as FabricImage, Rect } from "fabric";
+import { fabric } from "fabric";
 import { toast } from "sonner";
 import { Crop, RotateCw, ZoomIn, ZoomOut } from "lucide-react";
 
@@ -17,40 +17,38 @@ interface ImageEditorModalProps {
 
 export function ImageEditorModal({ open, onOpenChange, imageUrl, onSave }: ImageEditorModalProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
-  const [fabricImage, setFabricImage] = useState<FabricImage | null>(null);
+  const [fabricCanvas, setFabricCanvas] = useState<fabric.Canvas | null>(null);
+  const [fabricImage, setFabricImage] = useState<fabric.Image | null>(null);
   const [scale, setScale] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [cropMode, setCropMode] = useState(false);
-  const [cropRect, setCropRect] = useState<Rect | null>(null);
+  const [cropRect, setCropRect] = useState<fabric.Rect | null>(null);
 
   useEffect(() => {
     if (!open || !canvasRef.current) return;
 
-    const canvas = new FabricCanvas(canvasRef.current, {
+    const canvas = new fabric.Canvas(canvasRef.current, {
       width: 800,
       height: 600,
       backgroundColor: "#f0f0f0",
     });
 
-    FabricImage.fromURL(imageUrl, {
-      crossOrigin: 'anonymous'
-    }).then((img) => {
+    fabric.Image.fromURL(imageUrl, (img) => {
       const maxWidth = 700;
       const maxHeight = 500;
-      const imgScale = Math.min(maxWidth / img.width, maxHeight / img.height);
+      const imgScale = Math.min(maxWidth / (img.width || 1), maxHeight / (img.height || 1));
       
       img.scale(imgScale);
       img.set({
-        left: (canvas.width - img.getScaledWidth()) / 2,
-        top: (canvas.height - img.getScaledHeight()) / 2,
+        left: ((canvas.width || 800) - (img.getScaledWidth() || 0)) / 2,
+        top: ((canvas.height || 600) - (img.getScaledHeight() || 0)) / 2,
       });
 
       canvas.add(img);
       canvas.setActiveObject(img);
       setFabricImage(img);
       canvas.renderAll();
-    });
+    }, { crossOrigin: 'anonymous' });
 
     setFabricCanvas(canvas);
 
@@ -62,7 +60,7 @@ export function ImageEditorModal({ open, onOpenChange, imageUrl, onSave }: Image
   const handleZoom = (newScale: number) => {
     if (!fabricImage) return;
     const scaleFactor = newScale / scale;
-    fabricImage.scale(fabricImage.scaleX * scaleFactor);
+    fabricImage.scale((fabricImage.scaleX || 1) * scaleFactor);
     setScale(newScale);
     fabricCanvas?.renderAll();
   };
@@ -80,11 +78,11 @@ export function ImageEditorModal({ open, onOpenChange, imageUrl, onSave }: Image
 
     if (!cropMode) {
       // Enable crop mode
-      const rect = new Rect({
+      const rect = new fabric.Rect({
         left: fabricImage.left,
         top: fabricImage.top,
-        width: fabricImage.getScaledWidth() * 0.8,
-        height: fabricImage.getScaledHeight() * 0.8,
+        width: (fabricImage.getScaledWidth() || 200) * 0.8,
+        height: (fabricImage.getScaledHeight() || 200) * 0.8,
         fill: 'rgba(0,0,0,0.3)',
         stroke: '#fff',
         strokeWidth: 2,
@@ -103,8 +101,8 @@ export function ImageEditorModal({ open, onOpenChange, imageUrl, onSave }: Image
         const cropped = fabricCanvas.toDataURL({
           left: cropRect.left,
           top: cropRect.top,
-          width: cropRect.width * cropRect.scaleX,
-          height: cropRect.height * cropRect.scaleY,
+          width: (cropRect.width || 100) * (cropRect.scaleX || 1),
+          height: (cropRect.height || 100) * (cropRect.scaleY || 1),
           format: 'png',
           multiplier: 1,
         });
@@ -114,16 +112,14 @@ export function ImageEditorModal({ open, onOpenChange, imageUrl, onSave }: Image
         setCropMode(false);
 
         // Load cropped image
-        FabricImage.fromURL(cropped, {
-          crossOrigin: 'anonymous'
-        }).then((img) => {
+        fabric.Image.fromURL(cropped, (img) => {
           fabricCanvas.clear();
           fabricCanvas.add(img);
           fabricCanvas.setActiveObject(img);
           setFabricImage(img);
           fabricCanvas.renderAll();
           toast.success("Image cropped");
-        });
+        }, { crossOrigin: 'anonymous' });
       }
     }
   };
