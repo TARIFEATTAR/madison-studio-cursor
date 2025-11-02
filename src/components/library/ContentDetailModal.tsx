@@ -561,8 +561,8 @@ export function ContentDetailModal({
               {/* Special Edit button for Email Composer emails */}
               {isEmailComposer ? (
                 <Button 
-                  onClick={() => window.location.href = `/email-composer?contentId=${content.id}&sourceTable=master_content`} 
-                  variant="default" 
+                  onClick={() => window.location.href = `/email-builder?contentId=${content.id}&sourceTable=master_content`} 
+                  variant="default"
                   size="sm"
                   className="bg-brass hover:bg-brass/90"
                 >

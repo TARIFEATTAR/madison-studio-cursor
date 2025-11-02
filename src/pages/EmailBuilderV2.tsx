@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 import { useAuth } from "@/hooks/useAuth";
 import { useOrganization } from "@/hooks/useOrganization";
@@ -33,6 +33,7 @@ export default function EmailBuilderV2() {
   const { organizationId } = useOrganization();
   const { brandColor } = useBrandColor();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [activeTab, setActiveTab] = useState<"template" | "compose" | "preview">("template");
   const [emailSubject, setEmailSubject] = useState("");
@@ -51,6 +52,53 @@ export default function EmailBuilderV2() {
   const [viewMode, setViewMode] = useState<"desktop" | "mobile" | "plain">("desktop");
   const [generatedHtml, setGeneratedHtml] = useState("");
   const [emailId, setEmailId] = useState<string | null>(null);
+
+  // Load content if contentId is provided in URL
+  useEffect(() => {
+    const contentId = searchParams.get("contentId");
+    const sourceTable = searchParams.get("sourceTable");
+
+    if (contentId && sourceTable === "master_content") {
+      loadContent(contentId);
+    }
+  }, [searchParams]);
+
+  const loadContent = async (contentId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('master_content')
+        .select('id, title, full_content, collection')
+        .eq('id', contentId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setEmailId(data.id);
+        
+        // Parse the stored composition
+        if (data.full_content) {
+          const parsed = JSON.parse(data.full_content);
+          
+          // Check if it's a block-based composition or legacy format
+          if (parsed.composition) {
+            setComposition(parsed.composition);
+            setEmailSubject(data.title);
+            if (parsed.html) {
+              setGeneratedHtml(parsed.html);
+            }
+            setActiveTab("compose");
+            toast.success("Email loaded from Library");
+          } else {
+            toast.info("This email uses an older format. Starting fresh.");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error loading content:", error);
+      toast.error("Failed to load email");
+    }
+  };
 
   // History & Autosave
   const { pushToHistory, undo, redo, canUndo, canRedo } = useEmailHistory(composition.blocks);
@@ -241,18 +289,41 @@ export default function EmailBuilderV2() {
     }
 
     try {
-      const { error } = await supabase.from('master_content').insert({
+      const contentData = {
         title: emailSubject || "Untitled Email",
         full_content: JSON.stringify({ composition, html: generatedHtml }),
         collection: composition.templateId,
         content_type: 'Email',
-        organization_id: organizationId,
-        created_by: user.id
-      });
+      };
 
-      if (error) throw error;
-      
-      toast.success("Email saved to Library");
+      if (emailId) {
+        // Update existing email
+        const { error } = await supabase
+          .from('master_content')
+          .update({
+            ...contentData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', emailId);
+
+        if (error) throw error;
+        toast.success("Email updated in Library");
+      } else {
+        // Create new email
+        const { data, error } = await supabase
+          .from('master_content')
+          .insert({
+            ...contentData,
+            organization_id: organizationId,
+            created_by: user.id
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        setEmailId(data.id);
+        toast.success("Email saved to Library");
+      }
     } catch (error) {
       console.error("Error saving:", error);
       toast.error("Failed to save email");

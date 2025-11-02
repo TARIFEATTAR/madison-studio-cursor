@@ -52,7 +52,7 @@ export const BottomNavigation = () => {
     { icon: Edit3, label: 'Create', route: '/create' },
     { icon: Repeat, label: 'Multiply', route: '/multiply' },
     { icon: ImageIcon, label: 'Image Studio', route: '/image-editor' },
-    { icon: Mail, label: 'Email', route: '/email-composer' },
+    { icon: Mail, label: 'Email', route: '/email-builder' },
   ];
 
   const isActive = (route: string) => location.pathname === route;
