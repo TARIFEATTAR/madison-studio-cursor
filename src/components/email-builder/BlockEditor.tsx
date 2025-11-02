@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { EmailBlock } from "@/types/emailBlocks";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ChevronUp, ChevronDown, Trash2 } from "lucide-react";
+import { ChevronUp, ChevronDown, Trash2, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ImageLibraryPicker } from "@/components/email-composer/ImageLibraryPicker";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BlockEditorProps {
   block: EmailBlock;
@@ -19,6 +22,28 @@ interface BlockEditorProps {
 }
 
 export function BlockEditor({ block, onUpdate, onMoveUp, onMoveDown, onDelete, canMoveUp, canMoveDown }: BlockEditorProps) {
+  const isMobile = useIsMobile();
+  const [isOpen, setIsOpen] = useState(!isMobile);
+
+  const getBlockPreview = () => {
+    switch (block.type) {
+      case 'headline':
+        return block.text || 'Empty headline';
+      case 'image':
+        return block.url ? 'Image added' : 'No image';
+      case 'text':
+        return block.content ? block.content.substring(0, 50) + '...' : 'Empty text';
+      case 'button':
+        return block.text || 'Empty button';
+      case 'divider':
+        return 'Divider line';
+      case 'spacer':
+        return `${block.height}px space`;
+      default:
+        return '';
+    }
+  };
+
   const renderBlockEditor = () => {
     switch (block.type) {
       case 'headline':
@@ -234,8 +259,73 @@ export function BlockEditor({ block, onUpdate, onMoveUp, onMoveDown, onDelete, c
     }
   };
 
+  if (isMobile) {
+    return (
+      <Card className="mb-3">
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <div className="p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <ChevronRight className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <span className="text-lg">{getBlockIcon()}</span>
+                  <span className="font-medium capitalize text-sm">{block.type}</span>
+                </div>
+                {!isOpen && (
+                  <p className="text-xs text-muted-foreground mt-1 ml-10 truncate">
+                    {getBlockPreview()}
+                  </p>
+                )}
+              </div>
+              <div className="flex gap-1 flex-shrink-0">
+                <Button variant="ghost" size="sm" onClick={onMoveUp} disabled={!canMoveUp} className="h-8 w-8 p-0">
+                  <ChevronUp className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={onMoveDown} disabled={!canMoveDown} className="h-8 w-8 p-0">
+                  <ChevronDown className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={onDelete} className="h-8 w-8 p-0 text-destructive">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+          
+          <CollapsibleContent>
+            <div className="px-3 pb-3 border-t pt-3 space-y-3">
+              {renderBlockEditor()}
+              {block.type !== 'spacer' && block.type !== 'divider' && (
+                <div className="space-y-2 pt-2 border-t border-border">
+                  <Label>Section Background (Optional)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="color"
+                      value={block.backgroundColor || '#FFFFFF'}
+                      onChange={(e) => onUpdate({ ...block, backgroundColor: e.target.value })}
+                      className="w-16"
+                    />
+                    <Input
+                      value={block.backgroundColor || ''}
+                      onChange={(e) => onUpdate({ ...block, backgroundColor: e.target.value })}
+                      placeholder="#FFFFFF"
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="p-4">
+    <Card className="p-4 mb-4">
       <div className="flex items-start gap-3">
         <div className="flex flex-col gap-1">
           <Button

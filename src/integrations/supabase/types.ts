@@ -974,6 +974,50 @@ export type Database = {
           },
         ]
       }
+      esp_connections: {
+        Row: {
+          connection_name: string | null
+          created_at: string | null
+          esp_type: string
+          id: string
+          is_active: boolean | null
+          last_tested_at: string | null
+          organization_id: string
+          updated_at: string | null
+          webhook_url: string
+        }
+        Insert: {
+          connection_name?: string | null
+          created_at?: string | null
+          esp_type: string
+          id?: string
+          is_active?: boolean | null
+          last_tested_at?: string | null
+          organization_id: string
+          updated_at?: string | null
+          webhook_url: string
+        }
+        Update: {
+          connection_name?: string | null
+          created_at?: string | null
+          esp_type?: string
+          id?: string
+          is_active?: boolean | null
+          last_tested_at?: string | null
+          organization_id?: string
+          updated_at?: string | null
+          webhook_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "esp_connections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       generated_images: {
         Row: {
           archived_at: string | null

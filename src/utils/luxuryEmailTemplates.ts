@@ -7,6 +7,7 @@ export interface LuxuryTemplate {
   description: string;
   category: 'luxury-ecommerce' | 'founder-minimalist';
   preview: string;
+  previewImage?: string;
 }
 
 export const LUXURY_TEMPLATES: LuxuryTemplate[] = [
@@ -16,28 +17,32 @@ export const LUXURY_TEMPLATES: LuxuryTemplate[] = [
     name: 'Luxury Collection',
     description: 'Elegant product showcase with refined typography',
     category: 'luxury-ecommerce',
-    preview: '🎨 Refined product presentation with hero image and elegant CTA'
+    preview: '🎨 Refined product presentation with hero image and elegant CTA',
+    previewImage: 'data:image/svg+xml,%3Csvg width="600" height="400" xmlns="http://www.w3.org/2000/svg"%3E%3Crect width="600" height="400" fill="%23f8f8f8"/%3E%3Crect y="80" width="600" height="240" fill="%23fff"/%3E%3Ctext x="300" y="50" font-family="serif" font-size="20" text-anchor="middle" fill="%231a1a1a"%3ELUXURY COLLECTION%3C/text%3E%3Crect x="50" y="320" width="500" height="40" rx="4" fill="%23d4af37"/%3E%3C/svg%3E'
   },
   {
     id: 'premium-launch',
     name: 'Premium Launch',
     description: 'Bold announcement with sophisticated styling',
     category: 'luxury-ecommerce',
-    preview: '✨ High-impact launch template with centered content'
+    preview: '✨ High-impact launch template with centered content',
+    previewImage: 'data:image/svg+xml,%3Csvg width="600" height="400" xmlns="http://www.w3.org/2000/svg"%3E%3Crect width="600" height="400" fill="%23000"/%3E%3Ctext x="300" y="180" font-family="sans-serif" font-size="32" font-weight="700" text-anchor="middle" fill="%23fff"%3ENEW LAUNCH%3C/text%3E%3Crect x="200" y="220" width="200" height="50" fill="%23d4af37"/%3E%3C/svg%3E'
   },
   {
     id: 'boutique-promo',
     name: 'Boutique Promo',
     description: 'Understated luxury with focus on craftsmanship',
     category: 'luxury-ecommerce',
-    preview: '🛍️ Minimal design emphasizing exclusivity'
+    preview: '🛍️ Minimal design emphasizing exclusivity',
+    previewImage: 'data:image/svg+xml,%3Csvg width="600" height="400" xmlns="http://www.w3.org/2000/svg"%3E%3Crect width="600" height="400" fill="%23f9f7f4"/%3E%3Ctext x="300" y="100" font-family="serif" font-size="28" text-anchor="middle" fill="%232a2a2a"%3EBOUTIQUE%3C/text%3E%3Ccircle cx="300" cy="220" r="80" fill="none" stroke="%23d4af37" stroke-width="2"/%3E%3Crect x="220" y="320" width="160" height="40" rx="20" fill="none" stroke="%23d4af37" stroke-width="2"/%3E%3C/svg%3E'
   },
   {
     id: 'editorial-commerce',
     name: 'Editorial Commerce',
     description: 'Magazine-style layout for storytelling',
     category: 'luxury-ecommerce',
-    preview: '📰 Story-driven design with rich imagery'
+    preview: '📰 Story-driven design with rich imagery',
+    previewImage: 'data:image/svg+xml,%3Csvg width="600" height="400" xmlns="http://www.w3.org/2000/svg"%3E%3Crect width="600" height="400" fill="%23fff"/%3E%3Crect y="0" width="600" height="200" fill="%23e8e8e8"/%3E%3Ctext x="50" y="240" font-family="serif" font-size="24" fill="%231a1a1a"%3EEDITORIAL%3C/text%3E%3Cline x1="50" y1="260" x2="110" y2="260" stroke="%23d4af37" stroke-width="2"/%3E%3C/svg%3E'
   },
   // Founder Minimalist Templates
   {
@@ -45,14 +50,16 @@ export const LUXURY_TEMPLATES: LuxuryTemplate[] = [
     name: 'Founder Note',
     description: 'Personal message with minimal distractions',
     category: 'founder-minimalist',
-    preview: '✍️ Clean, personal correspondence style'
+    preview: '✍️ Clean, personal correspondence style',
+    previewImage: 'data:image/svg+xml,%3Csvg width="600" height="400" xmlns="http://www.w3.org/2000/svg"%3E%3Crect width="600" height="400" fill="%23fafafa"/%3E%3Ctext x="100" y="120" font-family="serif" font-size="18" fill="%232a2a2a"%3EA personal note%3C/text%3E%3Cline x1="100" y1="150" x2="500" y2="150" stroke="%23e0e0e0" stroke-width="1"/%3E%3Cline x1="100" y1="180" x2="450" y2="180" stroke="%23e0e0e0" stroke-width="1"/%3E%3Cline x1="100" y1="210" x2="480" y2="210" stroke="%23e0e0e0" stroke-width="1"/%3E%3C/svg%3E'
   },
   {
     id: 'minimal-update',
     name: 'Minimal Update',
     description: 'Ultra-clean update template with maximum whitespace',
     category: 'founder-minimalist',
-    preview: '📝 Pure text-focused design with subtle accents'
+    preview: '📝 Pure text-focused design with subtle accents',
+    previewImage: 'data:image/svg+xml,%3Csvg width="600" height="400" xmlns="http://www.w3.org/2000/svg"%3E%3Crect width="600" height="400" fill="%23fff"/%3E%3Ctext x="120" y="140" font-family="sans-serif" font-size="20" font-weight="600" fill="%231a1a1a"%3EUpdate%3C/text%3E%3Cline x1="120" y1="170" x2="480" y2="170" stroke="%23e8e8e8" stroke-width="1"/%3E%3Cline x1="120" y1="200" x2="450" y2="200" stroke="%23e8e8e8" stroke-width="1"/%3E%3C/svg%3E'
   },
 ];
 
