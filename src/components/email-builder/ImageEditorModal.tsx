@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-// @ts-ignore - fabric v5 module resolution
-import fabric from "fabric";
 import { toast } from "sonner";
 import { Crop, RotateCw, ZoomIn, ZoomOut } from "lucide-react";
 
@@ -18,43 +16,53 @@ interface ImageEditorModalProps {
 
 export function ImageEditorModal({ open, onOpenChange, imageUrl, onSave }: ImageEditorModalProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [fabricCanvas, setFabricCanvas] = useState<fabric.Canvas | null>(null);
-  const [fabricImage, setFabricImage] = useState<fabric.Image | null>(null);
+  const [fabricCanvas, setFabricCanvas] = useState<any | null>(null);
+  const [fabricImage, setFabricImage] = useState<any | null>(null);
   const [scale, setScale] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [cropMode, setCropMode] = useState(false);
-  const [cropRect, setCropRect] = useState<fabric.Rect | null>(null);
+  const [cropRect, setCropRect] = useState<any | null>(null);
+  const fabricRef = useRef<any>(null);
 
   useEffect(() => {
     if (!open || !canvasRef.current) return;
 
-    const canvas = new fabric.Canvas(canvasRef.current, {
-      width: 800,
-      height: 600,
-      backgroundColor: "#f0f0f0",
-    });
+    let isCancelled = false as boolean;
+    let canvas: any;
 
-    fabric.Image.fromURL(imageUrl, (img) => {
-      const maxWidth = 700;
-      const maxHeight = 500;
-      const imgScale = Math.min(maxWidth / (img.width || 1), maxHeight / (img.height || 1));
-      
-      img.scale(imgScale);
-      img.set({
-        left: ((canvas.width || 800) - (img.getScaledWidth() || 0)) / 2,
-        top: ((canvas.height || 600) - (img.getScaledHeight() || 0)) / 2,
+    import('fabric').then((mod: any) => {
+      const fabricLib: any = (mod as any).fabric || (mod as any).default || mod;
+      if (!fabricLib || isCancelled) return;
+      fabricRef.current = fabricLib;
+
+      canvas = new fabricLib.Canvas(canvasRef.current as HTMLCanvasElement, {
+        width: 800,
+        height: 600,
+        backgroundColor: '#f0f0f0',
       });
 
-      canvas.add(img);
-      canvas.setActiveObject(img);
-      setFabricImage(img);
-      canvas.renderAll();
-    }, { crossOrigin: 'anonymous' });
+      fabricLib.Image.fromURL(imageUrl, (img: any) => {
+        const maxWidth = 700;
+        const maxHeight = 500;
+        const imgScale = Math.min(maxWidth / (img.width || 1), maxHeight / (img.height || 1));
+        img.scale(imgScale);
+        img.set({
+          left: ((canvas.width || 800) - (img.getScaledWidth() || 0)) / 2,
+          top: ((canvas.height || 600) - (img.getScaledHeight() || 0)) / 2,
+        });
 
-    setFabricCanvas(canvas);
+        canvas.add(img);
+        canvas.setActiveObject(img);
+        setFabricImage(img);
+        canvas.renderAll();
+      }, { crossOrigin: 'anonymous' });
+
+      setFabricCanvas(canvas);
+    });
 
     return () => {
-      canvas.dispose();
+      isCancelled = true;
+      if (canvas) canvas.dispose();
     };
   }, [open, imageUrl]);
 
@@ -79,7 +87,7 @@ export function ImageEditorModal({ open, onOpenChange, imageUrl, onSave }: Image
 
     if (!cropMode) {
       // Enable crop mode
-      const rect = new fabric.Rect({
+      const rect = new (fabricRef.current as any).Rect({
         left: fabricImage.left,
         top: fabricImage.top,
         width: (fabricImage.getScaledWidth() || 200) * 0.8,
@@ -113,7 +121,7 @@ export function ImageEditorModal({ open, onOpenChange, imageUrl, onSave }: Image
         setCropMode(false);
 
         // Load cropped image
-        fabric.Image.fromURL(cropped, (img) => {
+        (fabricRef.current as any).Image.fromURL(cropped, (img: any) => {
           fabricCanvas.clear();
           fabricCanvas.add(img);
           fabricCanvas.setActiveObject(img);
