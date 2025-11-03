@@ -123,6 +123,15 @@ export function ESPExport({ html, subject }: ESPExportProps) {
 
     setTesting(true);
     try {
+      const now = new Date();
+      const datetime = now.toISOString();
+      
+      // Build enhanced test payload
+      const brandName = organization?.name || "Tarife Attar";
+      const settings = organization?.settings as { email_sender_name?: string; email_sender_email?: string } | null;
+      const fromName = settings?.email_sender_name || brandName;
+      const fromEmail = settings?.email_sender_email || "hello@messages.tarifeattar.com";
+      
       const response = await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -130,7 +139,14 @@ export function ESPExport({ html, subject }: ESPExportProps) {
         body: JSON.stringify({
           test: true,
           esp,
-          timestamp: new Date().toISOString(),
+          timestamp: datetime,
+          datetime,
+          send_time: datetime,
+          brand_name: brandName,
+          from_name: fromName,
+          from_email: fromEmail,
+          subject: "Test Campaign",
+          name: `${brandName} Campaign - Test`,
         }),
       });
 
@@ -165,6 +181,14 @@ export function ESPExport({ html, subject }: ESPExportProps) {
       const now = new Date();
       const datetime = now.toISOString();
       
+      // Build enhanced Klaviyo payload with all required fields
+      const brandName = organization?.name || "Tarife Attar";
+      const settings = organization?.settings as { email_sender_name?: string; email_sender_email?: string } | null;
+      const fromName = settings?.email_sender_name || brandName;
+      const fromEmail = settings?.email_sender_email || "hello@messages.tarifeattar.com";
+      const campaignSubject = subject || "New Campaign";
+      const campaignName = `${brandName} Campaign - ${campaignSubject}`;
+      
       const response = await fetch(webhookUrl, {
         method: "POST",
         headers: {
@@ -173,11 +197,15 @@ export function ESPExport({ html, subject }: ESPExportProps) {
         mode: "no-cors",
         body: JSON.stringify({
           esp,
-          subject,
+          timestamp: datetime,
+          datetime,
+          send_time: datetime,
+          brand_name: brandName,
+          from_name: fromName,
+          from_email: fromEmail,
+          subject: campaignSubject,
+          name: campaignName,
           html,
-          datetime, // ISO 8601 format for Klaviyo
-          timestamp: datetime, // Keep for backwards compatibility
-          send_time: datetime, // Alternative field name some ESPs use
         }),
       });
 

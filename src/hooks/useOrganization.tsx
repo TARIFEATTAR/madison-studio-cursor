@@ -6,6 +6,8 @@ interface Organization {
   id: string;
   name: string;
   industry?: string;
+  settings?: any;
+  brand_config?: any;
 }
 
 interface OrganizationMembership {
@@ -41,7 +43,7 @@ export function useOrganization() {
 
       const { data, error } = await supabase
         .from("organizations")
-        .select("id, name")
+        .select("id, name, settings, brand_config")
         .eq("id", membership.organization_id)
         .maybeSingle();
 
