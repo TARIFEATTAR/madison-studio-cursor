@@ -161,6 +161,10 @@ export function ESPExport({ html, subject }: ESPExportProps) {
 
     setLoading(true);
     try {
+      // Create ISO 8601 datetime for immediate send
+      const now = new Date();
+      const datetime = now.toISOString();
+      
       const response = await fetch(webhookUrl, {
         method: "POST",
         headers: {
@@ -171,7 +175,9 @@ export function ESPExport({ html, subject }: ESPExportProps) {
           esp,
           subject,
           html,
-          timestamp: new Date().toISOString(),
+          datetime, // ISO 8601 format for Klaviyo
+          timestamp: datetime, // Keep for backwards compatibility
+          send_time: datetime, // Alternative field name some ESPs use
         }),
       });
 
