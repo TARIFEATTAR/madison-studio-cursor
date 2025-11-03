@@ -189,7 +189,8 @@ export function ESPExport({ html, subject }: ESPExportProps) {
       const campaignSubject = subject || "New Campaign";
       const campaignName = `${brandName} - ${campaignSubject}`.substring(0, 255);
       
-      const response = await fetch(webhookUrl, {
+      // Send webhook payload
+      fetch(webhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -207,11 +208,16 @@ export function ESPExport({ html, subject }: ESPExportProps) {
           name: campaignName,
           html,
         }),
+      }).catch(err => {
+        console.error("Webhook error:", err);
       });
 
+      // Show success immediately (no-cors doesn't allow response checking)
       toast.success("Email sent to ESP", {
-        description: "Check your Make.com scenario history to confirm"
+        description: "Check your Make.com scenario history to confirm",
+        duration: 5000,
       });
+      
       setOpen(false);
     } catch (error) {
       console.error("Error pushing to ESP:", error);

@@ -23,7 +23,7 @@ import { AutosaveIndicator } from "@/components/ui/autosave-indicator";
 import { LUXURY_TEMPLATES } from "@/utils/luxuryEmailTemplates";
 import { EmailBlock, EmailComposition, HeadlineBlock, ImageBlock, TextBlock, ButtonBlock, DividerBlock, SpacerBlock } from "@/types/emailBlocks";
 import { compositionToHtml, compositionToPlainText } from "@/utils/blockToHtml";
-import { ArrowLeft, Download, Check, Monitor, Smartphone, FileText, Plus, Undo2, Redo2, GripVertical, ShoppingBag, PenTool } from "lucide-react";
+import { ArrowLeft, Download, Check, Monitor, Smartphone, FileText, Plus, Undo2, Redo2, GripVertical, ShoppingBag, PenTool, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { embedImagesInHtml } from "@/utils/emailImageEmbedder";
 import { supabase } from "@/integrations/supabase/client";
@@ -427,6 +427,23 @@ export default function EmailBuilderV2() {
         {activeTab === "preview" && (
           <div className="flex flex-wrap items-center gap-2 ml-auto sm:ml-0">
             <TestSend html={generatedHtml} subject={emailSubject} />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(generatedHtml);
+                  toast.success("HTML copied to clipboard");
+                } catch (error) {
+                  console.error("Copy failed:", error);
+                  toast.error("Failed to copy HTML");
+                }
+              }} 
+              className="h-8 px-2 sm:px-3"
+            >
+              <Copy className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Copy HTML</span>
+            </Button>
             <Button variant="outline" size="sm" onClick={handleDownloadHtml} className="h-8 px-2 sm:px-3">
               <Download className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Download HTML</span>
