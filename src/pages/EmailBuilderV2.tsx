@@ -251,6 +251,64 @@ export default function EmailBuilderV2() {
     });
   };
 
+  const handleLoadFromArchive = (content: { title: string; content: string; imageUrl?: string }) => {
+    try {
+      // Try to parse as email builder format
+      const parsed = JSON.parse(content.content);
+      
+      if (parsed.composition && parsed.composition.blocks) {
+        // It's an email builder composition
+        setComposition(parsed.composition);
+        setEmailSubject(content.title);
+        if (parsed.html) {
+          setGeneratedHtml(parsed.html);
+        }
+        toast.success("Email content loaded from archive");
+      } else {
+        // It's plain text content - create a text block
+        const textBlock: TextBlock = {
+          id: `block-${Date.now()}`,
+          type: 'text',
+          content: content.content,
+          alignment: 'left'
+        };
+        
+        setComposition(prev => {
+          const newBlocks = [...prev.blocks, textBlock];
+          pushToHistory(newBlocks);
+          return { ...prev, blocks: newBlocks };
+        });
+        
+        // Also set subject from title
+        if (content.title && content.title !== "Untitled" && !emailSubject) {
+          setEmailSubject(content.title);
+        }
+        
+        toast.success("Content added to email");
+      }
+    } catch (error) {
+      // If parsing fails, treat as plain text
+      const textBlock: TextBlock = {
+        id: `block-${Date.now()}`,
+        type: 'text',
+        content: content.content,
+        alignment: 'left'
+      };
+      
+      setComposition(prev => {
+        const newBlocks = [...prev.blocks, textBlock];
+        pushToHistory(newBlocks);
+        return { ...prev, blocks: newBlocks };
+      });
+      
+      if (content.title && content.title !== "Untitled" && !emailSubject) {
+        setEmailSubject(content.title);
+      }
+      
+      toast.success("Content added to email");
+    }
+  };
+
   const handleGeneratePreview = () => {
     if (composition.blocks.length === 0) {
       toast.error("Please add at least one content block");
@@ -457,7 +515,9 @@ export default function EmailBuilderV2() {
         {activeTab === "compose" && (
           <div className="h-full flex flex-col sm:flex-row">
             <div className="hidden sm:block">
-              <ComposeSidebar 
+              <ComposeSidebar
+                organizationId={organizationId || ""}
+                onLoadFromArchive={handleLoadFromArchive}
                 onAddBlock={addBlock}
                 onAddBlockTemplate={addBlockTemplate}
                 currentBlocks={composition.blocks}

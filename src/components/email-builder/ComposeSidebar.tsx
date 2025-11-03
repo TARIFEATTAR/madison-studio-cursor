@@ -14,9 +14,11 @@ interface ComposeSidebarProps {
   onAddBlock: (type: BlockType) => void;
   onAddBlockTemplate: (blocks: EmailBlock[]) => void;
   currentBlocks: EmailBlock[];
+  organizationId: string;
+  onLoadFromArchive: (content: { title: string; content: string; imageUrl?: string }) => void;
 }
 
-export function ComposeSidebar({ onAddBlock, onAddBlockTemplate, currentBlocks }: ComposeSidebarProps) {
+export function ComposeSidebar({ onAddBlock, onAddBlockTemplate, currentBlocks, organizationId, onLoadFromArchive }: ComposeSidebarProps) {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
 
@@ -75,9 +77,17 @@ export function ComposeSidebar({ onAddBlock, onAddBlockTemplate, currentBlocks }
 
         <TabsContent value="archive" className="flex-1 mt-4">
           <ScrollArea className="h-full pr-4">
-            <div className="p-4 text-center text-sm text-muted-foreground">
-              <p>Select from your content library</p>
-              <p className="text-xs mt-2">Archive integration coming soon</p>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Load existing content from your library
+              </p>
+              <ContentPicker 
+                organizationId={organizationId}
+                onSelect={(content) => {
+                  onLoadFromArchive(content);
+                  if (isMobile) setOpen(false);
+                }}
+              />
             </div>
           </ScrollArea>
         </TabsContent>
