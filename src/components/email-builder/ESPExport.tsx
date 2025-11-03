@@ -146,7 +146,7 @@ export function ESPExport({ html, subject }: ESPExportProps) {
           from_name: fromName,
           from_email: fromEmail,
           subject: "Test Campaign",
-          name: `${brandName} Campaign - Test`,
+          name: `${brandName} - Test`.substring(0, 255),
         }),
       });
 
@@ -187,7 +187,7 @@ export function ESPExport({ html, subject }: ESPExportProps) {
       const fromName = settings?.email_sender_name || brandName;
       const fromEmail = settings?.email_sender_email || "hello@messages.tarifeattar.com";
       const campaignSubject = subject || "New Campaign";
-      const campaignName = `${brandName} Campaign - ${campaignSubject}`;
+      const campaignName = `${brandName} - ${campaignSubject}`.substring(0, 255);
       
       const response = await fetch(webhookUrl, {
         method: "POST",
