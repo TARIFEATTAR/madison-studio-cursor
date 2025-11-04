@@ -53,6 +53,28 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Madison Brand Colors - Core Palette
+        'background-new': "var(--background)",
+        'surface': "var(--surface)",
+        'text-primary': "var(--text-primary)",
+        'text-secondary': "var(--text-secondary)",
+        'border-new': "var(--border)",
+        'accent-new': "var(--accent)",
+        'success-new': "var(--success)",
+        'error-new': "var(--error)",
+        'warning-new': "var(--warning)",
+        
+        // Legacy colors (for backward compatibility - mapped to new palette)
+        'midnight-black': "hsl(var(--midnight-black))",
+        'royal-indigo': "hsl(var(--royal-indigo))",
+        'warm-sand': "hsl(var(--warm-sand))",
+        'pearl-white': "hsl(var(--pearl-white))",
+        'saffron-gold': "hsl(var(--saffron-gold))",
+        'copper-rose': "hsl(var(--copper-rose))",
+        'emerald-green': "hsl(var(--emerald-green))",
+        'ai-teal': "hsl(var(--ai-teal))",
+        'amber-gold': "hsl(var(--amber-gold))",
+        'terracotta-red': "hsl(var(--terracotta-red))",
         'ink-black': "hsl(var(--ink-black))",
         'charcoal': "hsl(var(--charcoal))",
         'warm-gray': "hsl(var(--warm-gray))",
@@ -72,17 +94,17 @@ export default {
         'derivative-sms': "hsl(var(--derivative-sms))",
         'derivative-linkedin': "hsl(var(--derivative-linkedin))",
         studio: {
-          charcoal: '#252220',
+          charcoal: '#1F2B3A', // Royal Indigo
           card: '#2F2A26',
           border: '#3D3935',
           text: {
-            primary: '#FFFCF5',
+            primary: '#FFFCF5', // Pearl White
             secondary: '#D4CFC8',
             muted: '#A8A39E',
           },
           accent: {
-            brass: '#B8956A',
-            glow: 'rgba(184, 149, 106, 0.15)',
+            brass: '#D4AF37', // Saffron Gold
+            glow: 'rgba(212, 175, 55, 0.15)',
           }
         },
         'studio-charcoal': '#252220',
