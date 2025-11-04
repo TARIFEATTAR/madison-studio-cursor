@@ -45,8 +45,11 @@ BEFORE UPDATE ON public.brand_products
 FOR EACH ROW
 EXECUTE FUNCTION public.update_updated_at_column();
 
--- Migrate existing products to Jordan's organization (79c923b3-91e5-4f0a-ad50-9806131107b3)
-INSERT INTO public.brand_products (organization_id, name, collection, scent_family, top_notes, middle_notes, base_notes) VALUES
+-- Migrate existing products to Jordan's organization (79c923b3-91e5-4f0a-ad50-9806131107b3) - only if organization exists
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.organizations WHERE id = '79c923b3-91e5-4f0a-ad50-9806131107b3'::uuid) THEN
+    INSERT INTO public.brand_products (organization_id, name, collection, scent_family, top_notes, middle_notes, base_notes) VALUES
 ('79c923b3-91e5-4f0a-ad50-9806131107b3', 'Blackberry Bourbon', 'Cadence Collection', 'Warm', 'Blackberry, Bourbon', 'Vanilla, Tonka Bean', 'Oakmoss, Cedarwood'),
 ('79c923b3-91e5-4f0a-ad50-9806131107b3', 'Eucalyptus Rain', 'Cadence Collection', 'Fresh', 'Eucalyptus, Rain', 'Mint, Sage', 'Vetiver, Moss'),
 ('79c923b3-91e5-4f0a-ad50-9806131107b3', 'White Tea & Ginger', 'Cadence Collection', 'Fresh', 'White Tea, Ginger', 'Jasmine, Lily', 'Musk, Amber'),
@@ -77,3 +80,5 @@ INSERT INTO public.brand_products (organization_id, name, collection, scent_fami
 ('79c923b3-91e5-4f0a-ad50-9806131107b3', 'Dark Honey & Tobacco', 'Limited Edition', 'Warm', 'Dark Honey, Tobacco', 'Leather, Spice', 'Tonka Bean, Musk'),
 ('79c923b3-91e5-4f0a-ad50-9806131107b3', 'Midnight Jasmine', 'Limited Edition', 'Floral', 'Jasmine, Tuberose', 'Night Blooming Cereus', 'Musk, Vanilla'),
 ('79c923b3-91e5-4f0a-ad50-9806131107b3', 'Noir', 'Limited Edition', 'Woody', 'Black Pepper, Bergamot', 'Oud, Leather', 'Patchouli, Amber');
+  END IF;
+END $$;

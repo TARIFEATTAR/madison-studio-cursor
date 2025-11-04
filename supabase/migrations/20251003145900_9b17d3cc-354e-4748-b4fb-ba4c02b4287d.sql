@@ -1,6 +1,3 @@
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 -- Create enums for type safety
 CREATE TYPE content_type AS ENUM ('product', 'email', 'social', 'visual');
 CREATE TYPE collection_type AS ENUM ('cadence', 'reserve', 'purity', 'sacred_space');
@@ -10,7 +7,7 @@ CREATE TYPE visual_world AS ENUM ('silk_road', 'maritime_voyage', 'imperial_gard
 
 -- Create vocabulary_library table
 CREATE TABLE public.vocabulary_library (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   term TEXT NOT NULL,
   pillar pillar_type NOT NULL,
   is_forbidden BOOLEAN DEFAULT false,
@@ -20,7 +17,7 @@ CREATE TABLE public.vocabulary_library (
 
 -- Create prompts table
 CREATE TABLE public.prompts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   content_type content_type NOT NULL,
   collection collection_type NOT NULL,
@@ -39,7 +36,7 @@ CREATE TABLE public.prompts (
 
 -- Create outputs table
 CREATE TABLE public.outputs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   prompt_id UUID REFERENCES public.prompts(id) ON DELETE CASCADE,
   generated_content TEXT NOT NULL,
   quality_rating INTEGER CHECK (quality_rating >= 1 AND quality_rating <= 5),
@@ -52,7 +49,7 @@ CREATE TABLE public.outputs (
 
 -- Create calendar_schedule table
 CREATE TABLE public.calendar_schedule (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   week_number INTEGER CHECK (week_number >= 1 AND week_number <= 4) NOT NULL,
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,

@@ -48,16 +48,27 @@ BEFORE UPDATE ON public.brand_collections
 FOR EACH ROW
 EXECUTE FUNCTION public.update_updated_at_column();
 
--- Seed collections for Tarife Attar's organizations
-INSERT INTO public.brand_collections (organization_id, name, description, sort_order) VALUES
-  ('79789c68-bacd-420b-924b-e559a2d83ebb', 'Cadence Collection', 'Rhythmic and flowing narratives', 1),
-  ('79789c68-bacd-420b-924b-e559a2d83ebb', 'Reserve Collection', 'Exclusive and refined content', 2),
-  ('79789c68-bacd-420b-924b-e559a2d83ebb', 'Purity Collection', 'Clean and authentic storytelling', 3),
-  ('79789c68-bacd-420b-924b-e559a2d83ebb', 'Sacred Space', 'Intimate and meaningful expressions', 4),
-  ('516a4c8f-8451-4ccf-8bbd-5ec38dadf70a', 'Cadence Collection', 'Rhythmic and flowing narratives', 1),
-  ('516a4c8f-8451-4ccf-8bbd-5ec38dadf70a', 'Reserve Collection', 'Exclusive and refined content', 2),
-  ('516a4c8f-8451-4ccf-8bbd-5ec38dadf70a', 'Purity Collection', 'Clean and authentic storytelling', 3),
-  ('516a4c8f-8451-4ccf-8bbd-5ec38dadf70a', 'Sacred Space', 'Intimate and meaningful expressions', 4);
+-- Seed collections for Tarife Attar's organizations (only if organizations exist)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.organizations WHERE id = '79789c68-bacd-420b-924b-e559a2d83ebb'::uuid) THEN
+    INSERT INTO public.brand_collections (organization_id, name, description, sort_order) VALUES
+      ('79789c68-bacd-420b-924b-e559a2d83ebb', 'Cadence Collection', 'Rhythmic and flowing narratives', 1),
+      ('79789c68-bacd-420b-924b-e559a2d83ebb', 'Reserve Collection', 'Exclusive and refined content', 2),
+      ('79789c68-bacd-420b-924b-e559a2d83ebb', 'Purity Collection', 'Clean and authentic storytelling', 3),
+      ('79789c68-bacd-420b-924b-e559a2d83ebb', 'Sacred Space', 'Intimate and meaningful expressions', 4)
+    ON CONFLICT DO NOTHING;
+  END IF;
+  
+  IF EXISTS (SELECT 1 FROM public.organizations WHERE id = '516a4c8f-8451-4ccf-8bbd-5ec38dadf70a'::uuid) THEN
+    INSERT INTO public.brand_collections (organization_id, name, description, sort_order) VALUES
+      ('516a4c8f-8451-4ccf-8bbd-5ec38dadf70a', 'Cadence Collection', 'Rhythmic and flowing narratives', 1),
+      ('516a4c8f-8451-4ccf-8bbd-5ec38dadf70a', 'Reserve Collection', 'Exclusive and refined content', 2),
+      ('516a4c8f-8451-4ccf-8bbd-5ec38dadf70a', 'Purity Collection', 'Clean and authentic storytelling', 3),
+      ('516a4c8f-8451-4ccf-8bbd-5ec38dadf70a', 'Sacred Space', 'Intimate and meaningful expressions', 4)
+    ON CONFLICT DO NOTHING;
+  END IF;
+END $$;
 
 -- Update organizations table to add custom_week_names to settings
 -- Set custom week names for Tarife Attar's organizations (Scriptora's style)
