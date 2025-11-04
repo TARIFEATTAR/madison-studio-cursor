@@ -1,6 +1,6 @@
 /**
  * HELP CENTER VIDEO CONFIGURATION
- * Video tutorials for Madison Studio users
+ * Video tutorials for Madison users
  */
 
 export type VideoCategory = 
@@ -46,8 +46,8 @@ export const helpVideos: HelpVideo[] = [
   // Getting Started
   {
     id: 'welcome-to-madison',
-    title: 'Welcome to Madison Studio',
-    description: 'Get a complete overview of Madison Studio and learn how it transforms your content creation workflow.',
+    title: 'Welcome to Madison',
+    description: 'Get a complete overview of Madison and learn how it transforms your content creation workflow.',
     duration: '4:30',
     category: 'getting-started',
     videoUrl: 'https://www.loom.com/embed/placeholder', // Replace with actual Loom URL
@@ -141,7 +141,7 @@ export const helpVideos: HelpVideo[] = [
   {
     id: 'understanding-smart-amplify',
     title: 'Understanding Smart Amplify',
-    description: 'Learn how Madison\'s AI analyzes your content and recommends the best derivative types for maximum reach and engagement.',
+    description: "Learn how Madison's AI analyzes your content and recommends the best derivative types for maximum reach and engagement.",
     duration: '4:45',
     category: 'multiply',
     videoUrl: 'https://www.loom.com/embed/placeholder',

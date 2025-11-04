@@ -406,6 +406,13 @@ export default function Multiply() {
       const contentId = selectedMaster.id;
       const masterContentToUse = latestContent.full_content || selectedMaster.content;
       
+      console.log('[Multiply] Invoking repurpose-content edge function:', {
+        masterContentId: contentId,
+        derivativeTypes: Array.from(selectedTypes),
+        contentLength: masterContentToUse?.length || 0,
+        hasCollection: !!selectedMaster.collection
+      });
+      
       const { data, error } = await supabase.functions.invoke('repurpose-content', {
         body: {
           masterContentId: contentId,
@@ -415,6 +422,15 @@ export default function Multiply() {
             collection: selectedMaster.collection,
           }
         }
+      });
+      
+      console.log('[Multiply] Edge function response:', {
+        hasError: !!error,
+        hasData: !!data,
+        errorMessage: error?.message,
+        errorContext: error?.context,
+        dataSuccess: data?.success,
+        derivativesCount: data?.derivatives?.length
       });
 
       if (error) throw error;
@@ -486,9 +502,44 @@ export default function Multiply() {
       });
     } catch (error: any) {
       console.error('Error generating derivatives:', error);
+      
+      // Enhanced error handling - extract detailed error message
+      let errorMessage = error.message || "Failed to generate derivatives. Please try again.";
+      
+      // Try to parse structured error from edge function
+      if (error.context?.body) {
+        try {
+          const parsed = typeof error.context.body === 'string' 
+            ? JSON.parse(error.context.body) 
+            : error.context.body;
+          if (parsed.error) {
+            errorMessage = parsed.error;
+          } else if (parsed.message) {
+            errorMessage = parsed.message;
+          }
+        } catch (e) {
+          console.error('Error parsing backend error:', e);
+        }
+      }
+      
+      // Handle specific error types
+      if (error.message?.includes('Failed to send a request') || error.message?.includes('NetworkError')) {
+        errorMessage = "Unable to connect to the server. Please check your internet connection and try again.";
+      } else if (error.message?.includes('LOVABLE_API_KEY') || errorMessage.includes('LOVABLE_API_KEY')) {
+        errorMessage = "AI service is not properly configured. Please contact support.";
+      } else if (error.message?.includes('429') || error.context?.status === 429) {
+        errorMessage = "Rate limit exceeded. Please wait a moment and try again.";
+      } else if (error.message?.includes('402') || error.context?.status === 402) {
+        errorMessage = "Payment required. Please add credits to your Lovable AI workspace.";
+      } else if (error.message?.includes('401') || error.context?.status === 401) {
+        errorMessage = "Authentication failed. Please sign out and sign back in.";
+      } else if (error.message?.includes('404') || error.context?.status === 404) {
+        errorMessage = "Content not found. Please refresh the page and try again.";
+      }
+      
       toast({
         title: "Generation failed",
-        description: error.message || "Failed to generate derivatives. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle, XCircle, RefreshCw } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { logger } from "@/lib/logger";
 
 export function ShopifyConnection() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [shopDomain, setShopDomain] = useState("");
@@ -44,7 +45,7 @@ export function ShopifyConnection() {
         setOrganizationId(data.organization_id);
       }
     } catch (error) {
-      console.error("Error fetching organization:", error);
+      logger.error("Error fetching organization:", error);
     }
   };
 
@@ -61,13 +62,24 @@ export function ShopifyConnection() {
       if (error) throw error;
 
       if (data) {
+        // Check if connection has proper encryption (IV is required)
+        if (data.access_token_encrypted && !data.access_token_iv) {
+          // Old connection without encryption - needs reconnection
+          toast({
+            title: "Connection Update Required",
+            description: "Please disconnect and reconnect your Shopify account to enable encryption.",
+            variant: "destructive",
+            duration: 8000,
+          });
+        }
+        
         setIsConnected(true);
         setShopDomain(data.shop_domain);
         setLastSyncedAt(data.last_synced_at);
         setConnectionId(data.id);
       }
     } catch (error) {
-      console.error("Error checking Shopify connection:", error);
+      // Error checking connection - silently fail
     }
   };
 
@@ -93,17 +105,20 @@ export function ShopifyConnection() {
     setIsLoading(true);
 
     try {
-      // Store connection (in production, access_token should be properly encrypted)
-      const { error } = await supabase
-        .from("shopify_connections")
-        .upsert({
+      // Call edge function to encrypt and store the connection
+      const { data, error } = await supabase.functions.invoke("connect-shopify", {
+        body: {
           organization_id: organizationId,
           shop_domain: shopDomain,
-          access_token_encrypted: accessToken, // TODO: Implement proper encryption
-          sync_status: "idle",
-        });
+          access_token: accessToken,
+        },
+      });
 
       if (error) throw error;
+
+      if (!data?.success) {
+        throw new Error(data?.error || "Failed to connect to Shopify");
+      }
 
       setIsConnected(true);
       setAccessToken(""); // Clear token from UI
@@ -114,10 +129,9 @@ export function ShopifyConnection() {
         description: `Successfully connected to ${shopDomain}`,
       });
     } catch (error: any) {
-      console.error("Error connecting to Shopify:", error);
       toast({
         title: "Connection Failed",
-        description: error.message,
+        description: error.message || "Failed to connect to Shopify",
         variant: "destructive",
       });
     } finally {
@@ -148,7 +162,7 @@ export function ShopifyConnection() {
         description: "Shopify connection removed",
       });
     } catch (error: any) {
-      console.error("Error disconnecting:", error);
+      logger.error("Error disconnecting:", error);
       toast({
         title: "Disconnection Failed",
         description: error.message,
@@ -176,9 +190,93 @@ export function ShopifyConnection() {
         body: { organization_id: organizationId },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Try to extract detailed error message from response
+        let errorMessage = error.message || "Failed to sync products from Shopify";
+        
+        // Check error context for response body (might be a ReadableStream)
+        if (error.context?.body) {
+          try {
+            // If it's a ReadableStream, read it
+            if (error.context.body instanceof ReadableStream) {
+              const reader = error.context.body.getReader();
+              const decoder = new TextDecoder();
+              let chunks = '';
+              
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                chunks += decoder.decode(value, { stream: true });
+              }
+              
+              // Parse the JSON response
+              try {
+                const parsed = JSON.parse(chunks);
+                if (parsed.error) {
+                  errorMessage = parsed.error;
+                } else if (parsed.message) {
+                  errorMessage = parsed.message;
+                }
+              } catch (e) {
+                // If not JSON, use the raw text
+                if (chunks.length < 500) {
+                  errorMessage = chunks;
+                }
+              }
+            } else if (typeof error.context.body === 'string') {
+              // If it's already a string, try to parse as JSON
+              try {
+                const parsed = JSON.parse(error.context.body);
+                if (parsed.error) {
+                  errorMessage = parsed.error;
+                } else if (parsed.message) {
+                  errorMessage = parsed.message;
+                }
+              } catch (e) {
+                // If parsing fails, use the string directly
+                if (error.context.body.length < 500) {
+                  errorMessage = error.context.body;
+                }
+              }
+            } else {
+              // If it's already an object
+              if (error.context.body.error) {
+                errorMessage = error.context.body.error;
+              } else if (error.context.body.message) {
+                errorMessage = error.context.body.message;
+              }
+            }
+          } catch (e) {
+            console.error("Error extracting error message:", e);
+          }
+        }
+        
+        // Check error context for status code and provide helpful messages
+        if (error.context?.status) {
+          const status = error.context.status;
+          if (status === 404) {
+            errorMessage = "Shopify connection not found. Please reconnect your Shopify account.";
+          } else if (status === 500) {
+            errorMessage = errorMessage || "Server error occurred. Please try again or contact support.";
+          } else if (status === 400 && !errorMessage.includes('Shopify') && !errorMessage.includes('encryption')) {
+            errorMessage = errorMessage || "Invalid request. Please check your connection and try again.";
+          }
+        }
+        
+        logger.error("Sync function error:", { 
+          error: error.message,
+          status: error.context?.status,
+          extractedMessage: errorMessage
+        });
+        throw new Error(errorMessage);
+      }
 
-      // Update last synced timestamp
+      // Check if the response indicates failure
+      if (data && !data.success) {
+        throw new Error(data.error || "Failed to sync products from Shopify");
+      }
+
+      // Update last synced timestamp (only if sync was successful)
       await supabase
         .from("shopify_connections")
         .update({ 
@@ -189,12 +287,17 @@ export function ShopifyConnection() {
 
       await checkConnection();
 
+      // Show success message with sync results
+      const totalSynced = data?.total || data?.updated + data?.inserted || 0;
+      const updated = data?.updated || 0;
+      const inserted = data?.inserted || 0;
+      
       toast({
         title: "Products Synced",
-        description: `Successfully synced ${data?.count || 0} products from Shopify`,
+        description: `Successfully synced ${totalSynced} products (${updated} updated, ${inserted} new) from Shopify`,
       });
     } catch (error: any) {
-      console.error("Error syncing products:", error);
+      logger.error("Error syncing products:", error);
       
       // Reset sync status on error
       await supabase
@@ -202,9 +305,26 @@ export function ShopifyConnection() {
         .update({ sync_status: "error" })
         .eq("id", connectionId);
 
+      // Extract error message from response if available
+      let errorMessage = error.message || "Failed to sync products from Shopify";
+      
+      // If error has a context with body, try to parse it
+      if (error.context?.body) {
+        try {
+          const parsed = typeof error.context.body === 'string' 
+            ? JSON.parse(error.context.body) 
+            : error.context.body;
+          if (parsed.error) {
+            errorMessage = parsed.error;
+          }
+        } catch (e) {
+          // If parsing fails, use original message
+        }
+      }
+      
       toast({
         title: "Sync Failed",
-        description: error.message || "Failed to sync products from Shopify",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -212,7 +332,7 @@ export function ShopifyConnection() {
     }
   };
 
-  if (isConnected) {
+      if (isConnected) {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3 p-4 border rounded-lg bg-emerald-500/5 border-emerald-500/20">
@@ -225,6 +345,9 @@ export function ShopifyConnection() {
                 Last synced: {new Date(lastSyncedAt).toLocaleString()}
               </p>
             )}
+            <p className="text-xs text-amber-600 mt-2 font-medium">
+              ⚠️ If sync fails, please disconnect and reconnect to enable encryption.
+            </p>
           </div>
         </div>
 

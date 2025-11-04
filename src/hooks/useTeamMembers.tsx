@@ -12,25 +12,55 @@ export function useTeamMembers(organizationId: string | null) {
     queryFn: async () => {
       if (!organizationId) return [];
       
-      const { data, error } = await supabase
+      // Fetch organization members
+      const { data: memberData, error: memberError } = await supabase
         .from("organization_members")
-        .select(`
-          id,
-          role,
-          created_at,
-          user_id,
-          profiles:user_id (
-            email,
-            full_name
-          )
-        `)
+        .select("id, role, created_at, user_id")
         .eq("organization_id", organizationId)
         .order("created_at", { ascending: true });
 
-      if (error) throw error;
-      return data || [];
+      if (memberError) throw memberError;
+      if (!memberData) return [];
+
+      // Fetch profiles using the SECURITY DEFINER function
+      const { data: profiles, error: profileError } = await supabase
+        .rpc("get_team_member_profiles", { _org_id: organizationId });
+
+      if (profileError) {
+        console.error("Error fetching team member profiles:", profileError);
+        // Fallback: return members without profiles if function fails
+        return memberData.map(member => ({
+          ...member,
+          profiles: {
+            email: null,
+            full_name: null
+          }
+        }));
+      }
+
+      // Create a map of user_id -> profile for quick lookup
+      const profileMap = new Map(
+        (profiles || []).map(p => [p.user_id, p])
+      );
+
+      // Merge members with their profiles
+      return memberData.map(member => {
+        const profile = profileMap.get(member.user_id);
+        return {
+          ...member,
+          profiles: profile ? {
+            email: profile.email,
+            full_name: profile.full_name
+          } : {
+            email: null,
+            full_name: null
+          }
+        };
+      });
     },
     enabled: !!organizationId,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 
   // Fetch pending invitations
@@ -51,6 +81,8 @@ export function useTeamMembers(organizationId: string | null) {
       return data || [];
     },
     enabled: !!organizationId,
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes (invitations change more frequently)
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   // Remove member mutation

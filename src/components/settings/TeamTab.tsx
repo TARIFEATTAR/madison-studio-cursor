@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { useOnboarding } from "@/hooks/useOnboarding";
+import { useCurrentOrganizationId } from "@/hooks/useIndustryConfig";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
 import { InviteMemberDialog } from "./InviteMemberDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -9,7 +9,7 @@ import { Loader2, UserMinus, Mail, Clock } from "lucide-react";
 import { useState } from "react";
 
 export function TeamTab() {
-  const { currentOrganizationId } = useOnboarding();
+  const { orgId: currentOrganizationId, loading: orgIdLoading } = useCurrentOrganizationId();
   const { members, invitations, isLoading, removeMember } = useTeamMembers(currentOrganizationId);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
 
@@ -33,7 +33,9 @@ export function TeamTab() {
     }
   };
 
-  if (isLoading) {
+  // Only show full loading spinner if we don't have orgId yet
+  // If we have cached orgId, show the UI immediately even while data is fetching
+  if (orgIdLoading && !currentOrganizationId) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin text-brass" />
@@ -52,13 +54,20 @@ export function TeamTab() {
         <div>
           <h2 className="text-2xl font-serif text-charcoal">Team Members</h2>
           <p className="text-sm text-neutral-600 mt-1">
-            {memberCount} of {MEMBER_LIMIT} members
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Loading...
+              </span>
+            ) : (
+              `${memberCount} of ${MEMBER_LIMIT} members`
+            )}
           </p>
         </div>
         <Button 
           className="bg-brass hover:bg-brass-light text-charcoal"
           onClick={() => setInviteDialogOpen(true)}
-          disabled={memberCount >= MEMBER_LIMIT}
+          disabled={memberCount >= MEMBER_LIMIT || isLoading}
         >
           Invite Member
         </Button>
@@ -67,7 +76,11 @@ export function TeamTab() {
       {/* Current Members */}
       <div className="space-y-4 mb-8">
         <h3 className="text-lg font-medium text-charcoal">Current Members</h3>
-        {members && members.length > 0 ? (
+        {isLoading && !members ? (
+          <div className="flex items-center justify-center p-8">
+            <Loader2 className="h-6 w-6 animate-spin text-brass" />
+          </div>
+        ) : members && members.length > 0 ? (
           members.map((member) => (
             <div
               key={member.id}
@@ -75,13 +88,17 @@ export function TeamTab() {
             >
               <Avatar className="h-12 w-12">
                 <AvatarFallback className="bg-brass text-charcoal font-serif text-base">
-                  {getInitials((member as any).profiles?.full_name || (member as any).profiles?.email || 'U')}
+                  {getInitials((member as any).profiles?.full_name || (member as any).profiles?.email || member.user_id?.slice(0, 2).toUpperCase() || 'U')}
                 </AvatarFallback>
               </Avatar>
               
               <div className="flex-1">
-                <h3 className="font-medium text-charcoal">{(member as any).profiles?.full_name || (member as any).profiles?.email || 'Unknown User'}</h3>
-                <p className="text-sm text-neutral-600">{(member as any).profiles?.email || 'No email'}</p>
+                <h3 className="font-medium text-charcoal">
+                  {(member as any).profiles?.full_name || (member as any).profiles?.email || `User ${member.user_id?.slice(0, 8)}`}
+                </h3>
+                <p className="text-sm text-neutral-600">
+                  {(member as any).profiles?.email || member.user_id || 'No email'}
+                </p>
               </div>
 
               <Badge 

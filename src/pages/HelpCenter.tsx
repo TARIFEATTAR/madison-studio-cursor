@@ -51,7 +51,7 @@ export default function HelpCenter() {
                 </h1>
                 <div className="flex items-center gap-3 mt-1">
                   <p className="text-[hsl(var(--parchment-white))]/70 text-sm">
-                    Video guides to master Madison Studio
+                    Video guides to master Madison
                   </p>
                   {isAuthenticated && overallProgress.total > 0 && (
                     <Badge variant="outline" className="border-emerald-400 text-emerald-400 bg-emerald-950/30">

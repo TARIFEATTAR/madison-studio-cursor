@@ -134,7 +134,7 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-border/20">
         <div className="flex items-center gap-3">
-          <img src={madisonLogo} alt="MADISON" className="h-8" />
+          <img src={madisonLogo} alt="Madison" className="h-8" />
         </div>
         <div className="flex items-center gap-4">
           <VideoHelpTrigger 
@@ -156,19 +156,10 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
           <OnboardingProgressBar currentStep={1} />
 
           <div className="mt-12 text-center mb-12">
-            {/* Visual Progress Indicator */}
-            <div className="flex items-center justify-center gap-2 mb-6">
-              <div className="w-8 h-8 rounded-full bg-brass text-white flex items-center justify-center text-sm font-semibold">1</div>
-              <div className="w-12 h-0.5 bg-muted"></div>
-              <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm font-semibold">2</div>
-              <div className="w-12 h-0.5 bg-muted"></div>
-              <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm font-semibold">3</div>
-            </div>
-            
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-brass to-gold/80 mb-6">
               <Sparkles className="w-8 h-8 text-white" />
             </div>
-            <h1 className="font-serif text-4xl text-foreground mb-3">Welcome to MADISON</h1>
+            <h1 className="font-serif text-4xl text-foreground mb-3">Welcome to Madison</h1>
             <p className="text-lg text-muted-foreground">
               Let's set up your brand profile to create on-brand content at scale
             </p>

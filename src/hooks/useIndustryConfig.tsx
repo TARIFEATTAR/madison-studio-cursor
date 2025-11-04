@@ -51,8 +51,10 @@ export function useIndustryConfig(organizationId: string | null) {
 
 export function useCurrentOrganizationId() {
   const { user } = useAuth();
-  const [orgId, setOrgId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Check localStorage first for instant initial render
+  const cachedOrgId = typeof window !== 'undefined' ? localStorage.getItem('current_org_id') : null;
+  const [orgId, setOrgId] = useState<string | null>(cachedOrgId);
+  const [loading, setLoading] = useState(!cachedOrgId); // Only loading if no cache
 
   useEffect(() => {
     const loadOrganizationId = async () => {
@@ -83,6 +85,9 @@ export function useCurrentOrganizationId() {
           localStorage.setItem('current_org_id', data.organization_id);
         } else {
           console.log("⚠️ No organization found for user");
+          // Clear cache if no org found
+          localStorage.removeItem('current_org_id');
+          setOrgId(null);
         }
       } catch (error) {
         console.error("❌ Error loading organization ID:", error);
@@ -92,7 +97,7 @@ export function useCurrentOrganizationId() {
     };
 
     loadOrganizationId();
-  }, [user?.id]);
+  }, [user?.id]); // Only run when user changes
 
   return { orgId, loading };
 }

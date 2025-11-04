@@ -40,7 +40,7 @@ export function EmptyState({ hasSearch, hasFilters, onClearFilters, contentType 
         Begin your editorial journey by crafting your first piece of content with Madison's assistance.
       </p>
       
-      <Link to="/forge">
+      <Link to="/create">
         <GoldButton>
           Create Your First Piece
         </GoldButton>

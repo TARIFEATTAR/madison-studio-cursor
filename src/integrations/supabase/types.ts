@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       agent_preferences: {
@@ -2073,6 +2098,7 @@ export type Database = {
       shopify_connections: {
         Row: {
           access_token_encrypted: string
+          access_token_iv: string | null
           created_at: string | null
           id: string
           last_synced_at: string | null
@@ -2083,6 +2109,7 @@ export type Database = {
         }
         Insert: {
           access_token_encrypted: string
+          access_token_iv?: string | null
           created_at?: string | null
           id?: string
           last_synced_at?: string | null
@@ -2093,6 +2120,7 @@ export type Database = {
         }
         Update: {
           access_token_encrypted?: string
+          access_token_iv?: string | null
           created_at?: string | null
           id?: string
           last_synced_at?: string | null
@@ -2256,6 +2284,60 @@ export type Database = {
           },
         ]
       }
+      user_activities: {
+        Row: {
+          activity_type: string
+          content_id: string | null
+          content_type: string | null
+          created_at: string | null
+          duration_ms: number | null
+          id: string
+          metadata: Json | null
+          organization_id: string | null
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          content_id?: string | null
+          content_type?: string | null
+          created_at?: string | null
+          duration_ms?: number | null
+          id?: string
+          metadata?: Json | null
+          organization_id?: string | null
+          session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          content_id?: string | null
+          content_type?: string | null
+          created_at?: string | null
+          duration_ms?: number | null
+          id?: string
+          metadata?: Json | null
+          organization_id?: string | null
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_activities_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "master_content"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_activities_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       video_completions: {
         Row: {
           completed_at: string
@@ -2342,6 +2424,14 @@ export type Database = {
     }
     Functions: {
       cleanup_unsaved_image_sessions: { Args: never; Returns: number }
+      get_team_member_profiles: {
+        Args: { _org_id: string }
+        Returns: {
+          email: string
+          full_name: string
+          user_id: string
+        }[]
+      }
       has_organization_role: {
         Args: {
           _org_id: string
@@ -2488,6 +2578,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       content_type: ["product", "email", "social", "visual", "blog"],

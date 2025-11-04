@@ -29,108 +29,134 @@ export function useOnboarding() {
     console.log("[useOnboarding] Starting onboarding check for user:", user.id);
     const checkOnboardingStatus = async () => {
       try {
-        // Get or create user's organization
-        const { data: existingOrgs } = await supabase
-          .from("organization_members")
-          .select("organization_id")
-          .eq("user_id", user.id)
-          .limit(1)
-          .maybeSingle();
+        // Get onboarding step from localStorage first (fast, no network call)
+        const stepKey = `onboarding_step_${user.id}`;
+        const savedStep = localStorage.getItem(stepKey) as OnboardingStep | null;
+        const currentStep = savedStep || "completed";
+        setOnboardingStep(currentStep);
 
-        let orgId: string;
-
-        if (existingOrgs?.organization_id) {
-          orgId = existingOrgs.organization_id;
-        } else {
-          // Check if user already created an organization but wasn't added as member
-          const { data: userOrgs } = await supabase
+        // Run organization queries in parallel for faster loading
+        const [existingMemberResult, existingOrgResult] = await Promise.all([
+          supabase
+            .from("organization_members")
+            .select("organization_id")
+            .eq("user_id", user.id)
+            .limit(1)
+            .maybeSingle(),
+          supabase
             .from("organizations")
             .select("id")
             .eq("created_by", user.id)
             .limit(1)
-            .maybeSingle();
+            .maybeSingle()
+        ]);
 
-          if (userOrgs) {
-            // User already has an organization, use it
-            orgId = userOrgs.id;
-            console.log("Found existing organization:", orgId);
-            
-            // Use upsert to avoid conflicts - will insert if not exists, update if exists
-            const { error: memberError } = await supabase
-              .from("organization_members")
-              .upsert({
-                organization_id: orgId,
-                user_id: user.id,
-                role: "owner",
-              }, {
-                onConflict: 'user_id,organization_id',
-                ignoreDuplicates: true
-              });
-            
-            if (memberError) {
-              console.error("Failed to ensure user is organization member:", memberError);
-              // Don't throw - this shouldn't block the app
-            }
-          } else {
-            // Create personal organization
-            console.log("Creating new organization for user");
-            const { data: newOrg, error: orgError } = await supabase
-              .from("organizations")
-              .insert({
-                name: `${user.email?.split("@")[0]}'s Workspace`,
-                created_by: user.id,
+        const existingOrgs = existingMemberResult.data;
+        const userOrgs = existingOrgResult.data;
+        let orgId: string;
+
+        if (existingOrgs?.organization_id) {
+          orgId = existingOrgs.organization_id;
+          setCurrentOrganizationId(orgId);
+          
+          // Check brand knowledge in background (non-blocking)
+          if (currentStep === "completed") {
+            supabase
+              .from("brand_knowledge")
+              .select("id")
+              .eq("organization_id", orgId)
+              .limit(1)
+              .then(({ data: brandKnowledge }) => {
+                if (!brandKnowledge || brandKnowledge.length === 0) {
+                  setShowBanner(true);
+                }
               })
-              .select()
-              .single();
+              .catch(err => console.error("Error checking brand knowledge:", err));
+          }
+        } else if (userOrgs) {
+          // User already has an organization, use it
+          orgId = userOrgs.id;
+          console.log("Found existing organization:", orgId);
+          setCurrentOrganizationId(orgId);
+          
+          // Use upsert to avoid conflicts - will insert if not exists, update if exists
+          // Run in background (non-blocking)
+          supabase
+            .from("organization_members")
+            .upsert({
+              organization_id: orgId,
+              user_id: user.id,
+              role: "owner",
+            }, {
+              onConflict: 'user_id,organization_id',
+              ignoreDuplicates: true
+            })
+            .then(({ error: memberError }) => {
+              if (memberError) {
+                console.error("Failed to ensure user is organization member:", memberError);
+              }
+            });
+          
+          // Check brand knowledge in background (non-blocking)
+          if (currentStep === "completed") {
+            supabase
+              .from("brand_knowledge")
+              .select("id")
+              .eq("organization_id", orgId)
+              .limit(1)
+              .then(({ data: brandKnowledge }) => {
+                if (!brandKnowledge || brandKnowledge.length === 0) {
+                  setShowBanner(true);
+                }
+              })
+              .catch(err => console.error("Error checking brand knowledge:", err));
+          }
+        } else {
+          // Create personal organization
+          console.log("Creating new organization for user");
+          const { data: newOrg, error: orgError } = await supabase
+            .from("organizations")
+            .insert({
+              name: `${user.email?.split("@")[0]}'s Workspace`,
+              created_by: user.id,
+            })
+            .select()
+            .single();
 
-            if (orgError) {
-              console.error("Failed to create organization:", orgError);
-              throw orgError;
-            }
-            
-            orgId = newOrg.id;
+          if (orgError) {
+            console.error("Failed to create organization:", orgError);
+            throw orgError;
+          }
+          
+          orgId = newOrg.id;
+          setCurrentOrganizationId(orgId);
 
-            // Add user as owner
-            console.log("Adding user as owner of new organization");
-            const { error: memberError } = await supabase
+          // Run member insertion and collection creation in parallel (non-blocking)
+          Promise.all([
+            supabase
               .from("organization_members")
               .insert({
                 organization_id: orgId,
                 user_id: user.id,
                 role: "owner",
-              });
-            
-            if (memberError) {
-              console.error("Failed to add user as organization owner:", memberError);
-              throw memberError;
-            }
-
-            // Create default "General" collection for new organizations
-            console.log("Creating default collection for new organization");
-            const { error: collectionError } = await supabase
+              }),
+            supabase
               .from("brand_collections")
               .insert({
                 organization_id: orgId,
                 name: "General",
                 description: "Default collection for getting started",
                 sort_order: 1,
-              });
-            
-            if (collectionError) {
-              console.error("Failed to create default collection:", collectionError);
-              // Don't throw - this shouldn't block onboarding
+              })
+          ]).then(([memberResult, collectionResult]) => {
+            if (memberResult.error) {
+              console.error("Failed to add user as organization owner:", memberResult.error);
             }
-          }
+            if (collectionResult.error) {
+              console.error("Failed to create default collection:", collectionResult.error);
+            }
+          });
         }
-
-        setCurrentOrganizationId(orgId);
-
-        // Get onboarding step from localStorage (user-specific)
-        const stepKey = `onboarding_step_${user.id}`;
-        const savedStep = localStorage.getItem(stepKey) as OnboardingStep | null;
-        // Default to 'completed' to avoid blocking users with legacy onboarding
-        const currentStep = savedStep || "completed";
-        setOnboardingStep(currentStep);
 
         // Show appropriate UI based on step
         if (currentStep === "welcome_pending") {
@@ -139,17 +165,6 @@ export function useOnboarding() {
           setShowDocumentUpload(true);
         } else if (currentStep === "first_generation_pending") {
           setShowForgeGuide(true);
-        } else if (currentStep === "completed") {
-          // Check if user has brand knowledge for banner
-          const { data: brandKnowledge } = await supabase
-            .from("brand_knowledge")
-            .select("id")
-            .eq("organization_id", orgId)
-            .limit(1);
-
-          if (!brandKnowledge || brandKnowledge.length === 0) {
-            setShowBanner(true);
-          }
         }
       } catch (error) {
         console.error("[useOnboarding] Error checking onboarding status:", error);
@@ -168,7 +183,7 @@ export function useOnboarding() {
     const safetyTimeout = setTimeout(() => {
       console.warn("[useOnboarding] Safety timeout reached, forcing loading to false");
       setIsLoading(false);
-    }, 2000); // Reduced from 3000ms
+    }, 1000); // Reduced from 2000ms for faster page load
 
     checkOnboardingStatus().finally(() => {
       clearTimeout(safetyTimeout);

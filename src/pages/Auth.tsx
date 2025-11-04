@@ -228,7 +228,7 @@ const Auth = () => {
         <div className="text-center mb-8 fade-enter">
           <img 
             src={maddiLogo} 
-            alt="MADISON"
+            alt="Madison"
             className="h-48 w-auto mx-auto mb-6"
           />
           <p className="text-muted-foreground text-lg">

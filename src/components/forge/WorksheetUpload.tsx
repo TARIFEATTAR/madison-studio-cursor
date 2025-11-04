@@ -105,7 +105,64 @@ export function WorksheetUpload({ onUploadComplete, organizationId }: WorksheetU
         }
       });
 
-      if (parseError) throw parseError;
+      if (parseError) {
+        // Extract detailed error message from response
+        let errorMessage = parseError.message || "Failed to process worksheet";
+        
+        // Check error context for response body (might be a ReadableStream)
+        if (parseError.context?.body) {
+          try {
+            // If it's a ReadableStream, read it
+            if (parseError.context.body instanceof ReadableStream) {
+              const reader = parseError.context.body.getReader();
+              const decoder = new TextDecoder();
+              let chunks = '';
+              
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                chunks += decoder.decode(value, { stream: true });
+              }
+              
+              // Parse the JSON response
+              try {
+                const parsed = JSON.parse(chunks);
+                if (parsed.error) {
+                  errorMessage = parsed.error;
+                } else if (parsed.message) {
+                  errorMessage = parsed.message;
+                }
+              } catch (e) {
+                // If not JSON, use the raw text
+                if (chunks.length < 500) {
+                  errorMessage = chunks;
+                }
+              }
+            } else if (typeof parseError.context.body === 'string') {
+              try {
+                const parsed = JSON.parse(parseError.context.body);
+                if (parsed.error) {
+                  errorMessage = parsed.error;
+                } else if (parsed.message) {
+                  errorMessage = parsed.message;
+                }
+              } catch (e) {
+                if (parseError.context.body.length < 500) {
+                  errorMessage = parseError.context.body;
+                }
+              }
+            } else if (parseError.context.body.error) {
+              errorMessage = parseError.context.body.error;
+            } else if (parseError.context.body.message) {
+              errorMessage = parseError.context.body.message;
+            }
+          } catch (e) {
+            console.error("Error extracting error message:", e);
+          }
+        }
+        
+        throw new Error(errorMessage);
+      }
 
       setProgress(100);
       setProcessing(false);

@@ -302,6 +302,32 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
         // Silently fail - don't interrupt user experience
       }
       
+      // Verify authentication before calling edge function
+      const { data: { user: authUser }, error: authCheckError } = await supabase.auth.getUser();
+      if (authCheckError || !authUser) {
+        throw new Error("Authentication required. Please sign in again.");
+      }
+      
+      if (!currentOrganizationId) {
+        throw new Error("No organization found. Please complete onboarding first.");
+      }
+      
+      // Verify Supabase URL is configured
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (!supabaseUrl) {
+        console.error("Missing VITE_SUPABASE_URL environment variable");
+        throw new Error("Configuration error. Please contact support.");
+      }
+      
+      console.log("Calling edge function with:", {
+        hasPrompt: !!fullPrompt,
+        promptLength: fullPrompt.length,
+        organizationId: currentOrganizationId,
+        mode: "generate",
+        format,
+        userId: authUser.id
+      });
+      
       // Call real AI edge function
       const { data, error } = await supabase.functions.invoke('generate-with-claude', {
         body: { 
@@ -315,17 +341,109 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Enhanced error handling - try to extract detailed error message
+        let errorMessage = error.message || "Failed to send a request to the Edge Function";
+        
+        // Try to read the error response body if it's a ReadableStream
+        if (error.context?.body && error.context.body instanceof ReadableStream) {
+          try {
+            const reader = error.context.body.getReader();
+            const decoder = new TextDecoder();
+            let bodyText = '';
+            let done = false;
+            
+            while (!done) {
+              const { value, done: streamDone } = await reader.read();
+              done = streamDone;
+              if (value) {
+                bodyText += decoder.decode(value, { stream: true });
+              }
+            }
+            
+            if (bodyText) {
+              try {
+                const parsed = JSON.parse(bodyText);
+                if (parsed.error) {
+                  errorMessage = parsed.error;
+                } else if (parsed.message) {
+                  errorMessage = parsed.message;
+                }
+              } catch (e) {
+                // If it's not JSON, use the text as-is (up to 500 chars)
+                if (bodyText.length < 500) {
+                  errorMessage = bodyText;
+                }
+              }
+            }
+          } catch (e) {
+            console.error("Error reading error response stream:", e);
+          }
+        } else if (error.context?.body) {
+          // Handle non-stream body
+          try {
+            const parsed = typeof error.context.body === 'string' 
+              ? JSON.parse(error.context.body) 
+              : error.context.body;
+            if (parsed.error) {
+              errorMessage = parsed.error;
+            } else if (parsed.message) {
+              errorMessage = parsed.message;
+            }
+          } catch (e) {
+            // If parsing fails, check if body is a string with error info
+            if (typeof error.context.body === 'string' && error.context.body.length < 500) {
+              errorMessage = error.context.body;
+            }
+          }
+        }
+        
+        // Check error context for status code
+        if (error.context?.status) {
+          const status = error.context.status;
+          if (status === 401) {
+            errorMessage = errorMessage || "Authentication failed. Please sign in again.";
+          } else if (status === 403) {
+            errorMessage = errorMessage || "You don't have access to this organization. Please check your workspace settings.";
+          } else if (status === 404) {
+            errorMessage = errorMessage || "Edge function not found. Please contact support.";
+          } else if (status === 429) {
+            errorMessage = errorMessage || "Rate limit exceeded. Please wait a moment and try again.";
+          } else if (status === 402) {
+            errorMessage = errorMessage || "AI credits depleted. Please add credits to your workspace in Settings.";
+          } else if (status === 500) {
+            // For 500 errors, preserve the detailed error message if we got one
+            if (!errorMessage || errorMessage.includes('non-2xx')) {
+              errorMessage = "Server error occurred. Please try again or contact support.";
+            }
+          }
+        }
+        
+        // Check for network errors
+        if (error.message?.includes('fetch') || error.message?.includes('network') || error.message?.includes('Failed to fetch')) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        }
+        
+        // Check for CORS errors
+        if (error.message?.includes('CORS') || error.message?.includes('cors')) {
+          errorMessage = "CORS error. Please contact support.";
+        }
+        
+        console.error("Edge function error details:", {
+          message: error.message,
+          context: error.context,
+          status: error.context?.status,
+          bodyType: error.context?.body?.constructor?.name,
+          errorMessage
+        });
+        
+        throw new Error(errorMessage);
+      }
 
       const generatedContent = stripMarkdown(data?.generatedContent || "");
       
-      // Save to database
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      if (!currentOrganizationId) {
-        throw new Error("No organization found. Please complete onboarding first.");
-      }
+      // Save to database (authUser already verified above)
+      if (!authUser) throw new Error("Not authenticated");
 
       // Backup to localStorage immediately
       localStorage.setItem('draft-content-backup', JSON.stringify({
@@ -352,7 +470,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
           title: contentName,
           full_content: generatedContent,
           content_type: format,
-          created_by: user.id,
+          created_by: authUser.id,
           organization_id: currentOrganizationId,
           status: 'draft'
         })
@@ -383,14 +501,25 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
         });
       }, 100);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating content:", error);
       
-      // Show error toast
+      // Extract error message with better handling
+      let errorMessage = "Please try again";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      // Show error toast with detailed message
       toast({
         title: "Generation failed",
-        description: error instanceof Error ? error.message : "Please try again",
-        variant: "destructive"
+        description: errorMessage,
+        variant: "destructive",
+        duration: 8000
       });
       
       // Remove loading overlay
