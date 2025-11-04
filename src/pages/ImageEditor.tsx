@@ -42,7 +42,9 @@ import {
   Upload,
   X,
   MessageCircle,
-  Menu
+  Menu,
+  Bookmark,
+  CheckCircle
 } from "lucide-react";
 
 // Feature Components
@@ -394,6 +396,45 @@ export default function ImageEditor() {
       }));
 
       setAllPrompts(prev => [...prev, { role: 'user', content: effectivePrompt }]);
+      
+      // Automatically create a prompt/recipe linked to the generated image
+      try {
+        // Get the image's metadata from generated_images
+        const { data: generatedImage } = await supabase
+          .from('generated_images')
+          .select('aspect_ratio, output_format, goal_type, image_generator')
+          .eq('id', functionData.savedImageId)
+          .single();
+
+        // Create prompt linked to the generated image
+        await supabase
+          .from('prompts')
+          .insert([{
+            title: `Image Recipe - ${new Date().toLocaleDateString()}`,
+            prompt_text: effectivePrompt,
+            content_type: 'visual' as any,
+            collection: 'General',
+            organization_id: orgId!,
+            created_by: user.id,
+            is_template: true,
+            deliverable_format: 'image_prompt',
+            generated_image_id: functionData.savedImageId,
+            image_source: 'generated' as any,
+            additional_context: {
+              aspect_ratio: generatedImage?.aspect_ratio || aspectRatio,
+              output_format: generatedImage?.output_format || outputFormat,
+              image_type: generatedImage?.goal_type || 'product_photography',
+              model: generatedImage?.image_generator || 'nano-banana',
+              style: 'Photorealistic', // Default style for nano-banana
+            },
+          }]);
+        
+        // Silently fail - don't interrupt user experience if prompt creation fails
+      } catch (promptError) {
+        console.error('Error auto-creating prompt:', promptError);
+        // Don't show error to user - this is a background operation
+      }
+      
       toast.success("Image generated successfully!");
       
       // On mobile, transition to full-screen generated view
@@ -470,6 +511,56 @@ export default function ImageEditor() {
       toast.success("Image deleted");
     } catch (error) {
       toast.error("Failed to delete image");
+    }
+  };
+
+  const handleSaveRecipe = async (imageId: string) => {
+    if (!orgId || !user) {
+      toast.error("Unable to save recipe");
+      return;
+    }
+
+    const image = currentSession.images.find(img => img.id === imageId);
+    if (!image) {
+      toast.error("Image not found");
+      return;
+    }
+
+    try {
+      // Get the image's aspect ratio and other metadata from generated_images
+      const { data: generatedImage } = await supabase
+        .from('generated_images')
+        .select('aspect_ratio, output_format, goal_type')
+        .eq('id', imageId)
+        .single();
+
+      // Create prompt linked to the generated image
+      const { error } = await supabase
+        .from('prompts')
+        .insert([{
+          title: `Image Recipe - ${new Date().toLocaleDateString()}`,
+          prompt_text: image.prompt || mainPrompt,
+          content_type: 'visual' as any,
+          collection: 'General',
+          organization_id: orgId,
+          created_by: user.id,
+          is_template: true,
+          deliverable_format: 'image_prompt',
+          generated_image_id: imageId,
+          image_source: 'generated' as any,
+          additional_context: {
+            aspect_ratio: generatedImage?.aspect_ratio || aspectRatio,
+            output_format: generatedImage?.output_format || outputFormat,
+            image_type: generatedImage?.goal_type || 'product_photography',
+          },
+        }]);
+
+      if (error) throw error;
+
+      toast.success("Recipe saved to library!");
+    } catch (error: any) {
+      console.error("Error saving recipe:", error);
+      toast.error(error.message || "Failed to save recipe");
     }
   };
 
@@ -659,6 +750,95 @@ export default function ImageEditor() {
       toast.error(error.message || "Failed to save image. Please try again.");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const saveHeroImageToLibrary = async () => {
+    if (!heroImage || !user) {
+      toast.error("No image to save");
+      return;
+    }
+    
+    setIsSaving(true);
+    try {
+      console.log('💾 Saving hero image to library via edge function:', heroImage.id);
+
+      // Always use server-side function to avoid RLS intermittency
+      const maxRetries = 3;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const { data: serverData, error: serverError } = await supabase.functions.invoke(
+            'mark-generated-image-saved',
+            { body: { imageId: heroImage.id, userId: user.id } }
+          );
+
+          if (serverError) throw serverError;
+          if (!serverData?.success) throw new Error('Save failed on server');
+
+          console.log('✅ Image saved successfully (server)');
+          break; // success
+        } catch (attemptError) {
+          console.error(`❌ Save attempt ${attempt} failed:`, attemptError);
+          if (attempt === maxRetries) throw attemptError;
+          // Exponential backoff
+          await new Promise((r) => setTimeout(r, 400 * attempt));
+        }
+      }
+      
+      // Update local state to mark as flagged
+      setCurrentSession(prev => ({
+        ...prev,
+        images: prev.images.map(img => 
+          img.id === heroImage.id 
+            ? { ...img, approvalStatus: 'flagged' as ApprovalStatus }
+            : img
+        )
+      }));
+      
+      toast.success("Image saved to library!");
+    } catch (error: any) {
+      console.error('❌ Save error after all retries:', error);
+      toast.error(error.message || "Failed to save image. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDownloadHeroImage = async () => {
+    if (!heroImage) {
+      toast.error("No image to download");
+      return;
+    }
+
+    try {
+      let downloadUrl = heroImage.imageUrl;
+      
+      // If it's a base64 data URL, use it directly
+      if (heroImage.imageUrl.startsWith('data:')) {
+        downloadUrl = heroImage.imageUrl;
+      } else {
+        // For regular URLs, fetch and convert to blob URL
+        const response = await fetch(heroImage.imageUrl, { mode: 'cors' });
+        const blob = await response.blob();
+        downloadUrl = URL.createObjectURL(blob);
+      }
+      
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `madison-image-${Date.now()}.${outputFormat}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up blob URL if we created one
+      if (!heroImage.imageUrl.startsWith('data:')) {
+        URL.revokeObjectURL(downloadUrl);
+      }
+      
+      toast.success("Image downloaded!");
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast.error("Failed to download image");
     }
   };
 
@@ -1214,60 +1394,74 @@ export default function ImageEditor() {
           {/* Image Viewport */}
           <div className="flex-1 bg-studio-card/30 flex items-center justify-center relative overflow-hidden">
             {heroImage ? (
-              <div className="relative w-full h-full flex items-center justify-center p-8">
-                <img 
-                  src={heroImage.imageUrl} 
-                  alt="Generated" 
-                  className="max-w-full max-h-full object-contain rounded-lg border-2 border-studio-border"
-                />
-                <div className="absolute top-8 right-8 flex gap-2">
-                  <Button
-                    size="sm"
-                    variant={heroImage.approvalStatus === 'flagged' ? 'default' : 'secondary'}
-                    onClick={() => handleToggleApproval(heroImage.id)}
-                    className="bg-studio-card/90 backdrop-blur-sm"
-                  >
-                    <Heart className={cn("w-4 h-4", heroImage.approvalStatus === 'flagged' && "fill-current")} />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={async () => {
-                      try {
-                        let downloadUrl = heroImage.imageUrl;
-                        
-                        // If it's a base64 data URL, use it directly
-                        if (heroImage.imageUrl.startsWith('data:')) {
-                          downloadUrl = heroImage.imageUrl;
-                        } else {
-                          // For regular URLs, fetch and convert to blob URL
-                          const response = await fetch(heroImage.imageUrl, { mode: 'cors' });
-                          const blob = await response.blob();
-                          downloadUrl = URL.createObjectURL(blob);
-                        }
-                        
-                        const link = document.createElement('a');
-                        link.href = downloadUrl;
-                        link.download = `madison-image-${Date.now()}.${outputFormat}`;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        
-                        // Clean up blob URL if we created one
-                        if (!heroImage.imageUrl.startsWith('data:')) {
-                          URL.revokeObjectURL(downloadUrl);
-                        }
-                        
-                        toast.success("Image downloaded!");
-                      } catch (error) {
-                        console.error('Download failed:', error);
-                        toast.error("Failed to download image");
-                      }
-                    }}
-                    className="bg-studio-card/90 backdrop-blur-sm"
-                  >
-                    <Download className="w-4 h-4" />
-                  </Button>
+              <div className="relative w-full h-full flex flex-col">
+                {/* Main Image Display */}
+                <div className="flex-1 flex items-center justify-center p-8">
+                  <img 
+                    src={heroImage.imageUrl} 
+                    alt="Generated" 
+                    className="max-w-full max-h-full object-contain rounded-lg border-2 border-studio-border"
+                  />
+                  {/* Quick Action Buttons (Top Right) */}
+                  <div className="absolute top-8 right-8 flex gap-2">
+                    <Button
+                      size="sm"
+                      variant={heroImage.approvalStatus === 'flagged' ? 'default' : 'secondary'}
+                      onClick={() => handleToggleApproval(heroImage.id)}
+                      className="bg-studio-card/90 backdrop-blur-sm"
+                      title="Favorite"
+                    >
+                      <Heart className={cn("w-4 h-4", heroImage.approvalStatus === 'flagged' && "fill-current")} />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => handleSaveRecipe(heroImage.id)}
+                      className="bg-studio-card/90 backdrop-blur-sm"
+                      title="Save as Recipe"
+                    >
+                      <Bookmark className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Prominent Action Buttons (Bottom Center) */}
+                <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
+                  <div className="flex gap-3 bg-studio-card/95 backdrop-blur-md border border-studio-border rounded-lg p-2 shadow-lg">
+                    <Button
+                      onClick={saveHeroImageToLibrary}
+                      disabled={isSaving || heroImage.approvalStatus === 'flagged'}
+                      variant="brass"
+                      size="lg"
+                      className="px-6"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : heroImage.approvalStatus === 'flagged' ? (
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Saved to Library
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" />
+                          Save to Library
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      onClick={handleDownloadHeroImage}
+                      variant="outline"
+                      size="lg"
+                      className="px-6 bg-studio-card/50 border-studio-border hover:bg-studio-card"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
+                    </Button>
+                  </div>
                 </div>
               </div>
             ) : (

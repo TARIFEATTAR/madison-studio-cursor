@@ -701,6 +701,10 @@ ${enhancePromptWithFormula(originalScene, brandContext)}
             colorCount: brandKnowledge.visualStandards?.color_palette?.length || 0
           }
         },
+        // Generator tracking
+        image_generator: 'nano-banana',
+        // Automatically save to library when generated
+        saved_to_library: true,
         // Chain tracking fields
         parent_image_id: isRefinement ? parentImageId : null,
         chain_depth: isRefinement ? parentChainDepth + 1 : 0,

@@ -26,7 +26,9 @@ import { ImportDialog } from "@/components/prompt-library/ImportDialog";
 import { OrganizationGuide } from "@/components/prompt-library/OrganizationGuide";
 import { MadisonPanel } from "@/components/prompt-library/MadisonPanel";
 import { PlaceholderReplacementDialog } from "@/components/prompt-library/PlaceholderReplacementDialog";
+import { ImageUploadDialog } from "@/components/prompt-library/ImageUploadDialog";
 import { usePromptCounts } from "@/hooks/usePromptCounts";
+import { getRecipeImageUrl } from "@/utils/imageRecipeHelpers";
 export interface Prompt {
   id: string;
   title: string;
@@ -45,6 +47,10 @@ export interface Prompt {
   effectiveness_score: number | null;
   meta_instructions?: any;
   additional_context?: any;
+  // Image fields
+  image_url?: string | null;
+  image_source?: 'generated' | 'uploaded' | null;
+  generated_image_id?: string | null;
 }
 
 type SortOption = "recent" | "most-used" | "highest-rated" | "effectiveness";
@@ -78,8 +84,12 @@ const TemplatesContent = () => {
   const [showGuide, setShowGuide] = useState(false);
   const [showMadison, setShowMadison] = useState(false);
   const [showPlaceholderDialog, setShowPlaceholderDialog] = useState(false);
+  const [showImageUpload, setShowImageUpload] = useState(false);
   const [pendingPrompt, setPendingPrompt] = useState<Prompt | null>(null);
   const [wizardInitialData, setWizardInitialData] = useState<any>(null);
+  
+  // Map to store generated image URLs for each prompt
+  const [promptImageMap, setPromptImageMap] = useState<Map<string, string>>(new Map());
 
   // Get counts for filter cards
   const { data: counts } = usePromptCounts(currentOrganizationId);
@@ -101,6 +111,47 @@ const TemplatesContent = () => {
       return data as Prompt[];
     },
     enabled: !!currentOrganizationId,
+  });
+
+  // Fetch generated images for prompts that have generated_image_id
+  useQuery({
+    queryKey: ["prompt-generated-images", currentOrganizationId, allPrompts],
+    queryFn: async () => {
+      const promptsWithGeneratedImages = allPrompts.filter(
+        (p) => (p as any).generated_image_id
+      );
+
+      if (promptsWithGeneratedImages.length === 0) {
+        return new Map<string, string>();
+      }
+
+      const generatedImageIds = promptsWithGeneratedImages.map(
+        (p) => (p as any).generated_image_id
+      );
+
+      const { data: generatedImages, error } = await supabase
+        .from("generated_images")
+        .select("id, image_url")
+        .in("id", generatedImageIds);
+
+      if (error) {
+        console.error("Error fetching generated images:", error);
+        return new Map<string, string>();
+      }
+
+      const imageMap = new Map<string, string>();
+      generatedImages?.forEach((img) => {
+        promptsWithGeneratedImages.forEach((prompt) => {
+          if ((prompt as any).generated_image_id === img.id) {
+            imageMap.set(prompt.id, img.image_url);
+          }
+        });
+      });
+
+      setPromptImageMap(imageMap);
+      return imageMap;
+    },
+    enabled: !!currentOrganizationId && allPrompts.length > 0,
   });
 
   // Apply filters based on sidebar selections
@@ -461,6 +512,14 @@ const TemplatesContent = () => {
                   <HelpCircle className="w-5 h-5" />
                 </Button>
                 <Button
+                  variant="outline"
+                  onClick={() => setShowImageUpload(true)}
+                  className="gap-2 mr-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Upload Image
+                </Button>
+                <Button
                   onClick={() => setShowQuickStart(true)}
                   className="gap-2 bg-ink-black hover:bg-charcoal text-parchment-white border-0"
                 >
@@ -547,15 +606,20 @@ const TemplatesContent = () => {
           {/* 3-COLUMN GRID LAYOUT */}
           {!isLoading && displayedPrompts.length > 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-              {displayedPrompts.map((prompt) => (
-                <PromptCard
-                  key={prompt.id}
-                  prompt={prompt}
-                  onClick={() => setSelectedPrompt(prompt)}
-                  onArchive={handleArchive}
-                  onDelete={handleDelete}
-                />
-              ))}
+              {displayedPrompts.map((prompt) => {
+                const generatedImageUrl = promptImageMap.get(prompt.id) || null;
+                const imageUrl = getRecipeImageUrl(prompt, generatedImageUrl);
+                return (
+                  <PromptCard
+                    key={prompt.id}
+                    prompt={prompt}
+                    onClick={() => setSelectedPrompt(prompt)}
+                    onArchive={handleArchive}
+                    onDelete={handleDelete}
+                    imageUrl={imageUrl}
+                  />
+                );
+              })}
             </div>
           )}
         </main>
@@ -624,6 +688,98 @@ const TemplatesContent = () => {
         />
       )}
 
+      {/* Image Upload Dialog */}
+      <ImageUploadDialog
+        open={showImageUpload}
+        onOpenChange={setShowImageUpload}
+        onUploadComplete={async (imageUrl, promptText, title) => {
+          // Create a new prompt with the uploaded image
+          try {
+            // Build the insert data - include image fields if migration has been applied
+            const insertData: any = {
+              title: title || `Image Recipe ${new Date().toLocaleDateString()}`,
+              prompt_text: promptText || "",
+              content_type: "visual" as any,
+              collection: "General",
+              organization_id: currentOrganizationId!,
+              created_by: user?.id,
+              is_template: true,
+              deliverable_format: "image_prompt",
+              additional_context: {
+                image_type: null, // Can be set later
+                image_url: imageUrl, // Store in additional_context as fallback
+              },
+            };
+
+            // Try to include image_url and image_source if migration has been applied
+            try {
+              insertData.image_url = imageUrl;
+              insertData.image_source = "uploaded" as any;
+            } catch {
+              // Migration not applied yet - will use additional_context fallback
+            }
+
+            const { data: newPrompt, error } = await supabase
+              .from("prompts")
+              .insert([insertData])
+              .select()
+              .single();
+
+            if (error) {
+              console.error("Database insert error:", error);
+              // If error is about missing columns, try without them
+              if (error.message?.includes("column") && (error.message?.includes("image_url") || error.message?.includes("image_source"))) {
+                console.warn("Image fields migration not applied yet. Storing image URL in additional_context.");
+                // Retry without image_url and image_source
+                const { data: retryData, error: retryError } = await supabase
+                  .from("prompts")
+                  .insert([{
+                    title: title || `Image Recipe ${new Date().toLocaleDateString()}`,
+                    prompt_text: promptText || "",
+                    content_type: "visual" as any,
+                    collection: "General",
+                    organization_id: currentOrganizationId!,
+                    created_by: user?.id,
+                    is_template: true,
+                    deliverable_format: "image_prompt",
+                    additional_context: {
+                      image_type: null,
+                      image_url: imageUrl, // Store in additional_context as fallback
+                    },
+                  }])
+                  .select()
+                  .single();
+                
+                if (retryError) throw retryError;
+                queryClient.invalidateQueries({ queryKey: ["templates"] });
+                queryClient.invalidateQueries({ queryKey: ["prompt-counts", currentOrganizationId] });
+                toast({
+                  title: "Image uploaded",
+                  description: "Your image has been added to the recipe library (note: please apply database migration for full functionality)",
+                });
+                return;
+              }
+              throw error;
+            }
+
+            queryClient.invalidateQueries({ queryKey: ["templates"] });
+            queryClient.invalidateQueries({ queryKey: ["prompt-counts", currentOrganizationId] });
+
+            toast({
+              title: "Image uploaded",
+              description: "Your image has been added to the recipe library",
+            });
+          } catch (error: any) {
+            console.error("Error creating prompt from upload:", error);
+            toast({
+              title: "Error",
+              description: error.message || "Failed to save image recipe",
+              variant: "destructive",
+            });
+          }
+        }}
+      />
+
       {/* Detail Modal */}
       {selectedPrompt && (
         <PromptDetailModal
@@ -635,6 +791,10 @@ const TemplatesContent = () => {
             queryClient.invalidateQueries({ queryKey: ["templates"] });
             setSelectedPrompt(null);
           }}
+          imageUrl={getRecipeImageUrl(
+            selectedPrompt,
+            promptImageMap.get(selectedPrompt.id) || null
+          )}
         />
       )}
     </div>
