@@ -63,6 +63,9 @@ verify_jwt = true
 [functions.update-shopify-product]
 verify_jwt = true
 
+[functions.sync-shopify-products]
+verify_jwt = true
+
 [functions.check-auth]
 verify_jwt = true
 
@@ -85,6 +88,9 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.connect-klaviyo]
+verify_jwt = true
+
+[functions.connect-shopify]
 verify_jwt = true
 
 [functions.fetch-klaviyo-campaigns]

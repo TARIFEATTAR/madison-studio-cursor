@@ -6,36 +6,135 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Decrypt tokens from shopify_connections table
+function base64ToBytes(b64: string): Uint8Array {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+async function decryptText(ciphertextB64: string, ivB64: string, keyB64: string): Promise<string> {
+  const keyBytes = base64ToBytes(keyB64);
+  const keyCopy = new Uint8Array(keyBytes.length);
+  keyCopy.set(keyBytes);
+  const keyBuffer: ArrayBuffer = keyCopy.buffer;
+  const cryptoKey = await crypto.subtle.importKey('raw', keyBuffer, { name: 'AES-GCM' }, false, ['decrypt']);
+  const ivBytes = base64ToBytes(ivB64);
+  const ivCopy = new Uint8Array(ivBytes.length);
+  ivCopy.set(ivBytes);
+  const iv: ArrayBuffer = ivCopy.buffer;
+  const ciphertextBytes = base64ToBytes(ciphertextB64);
+  const ciphertextCopy = new Uint8Array(ciphertextBytes.length);
+  ciphertextCopy.set(ciphertextBytes);
+  const ciphertext: ArrayBuffer = ciphertextCopy.buffer;
+  const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, cryptoKey, ciphertext);
+  return new TextDecoder().decode(plaintext);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Get request body
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (e) {
+      throw new Error('Invalid request body. Expected JSON.');
+    }
 
-    const { organization_id } = await req.json();
+    const { organization_id } = requestBody;
 
     if (!organization_id) {
-      throw new Error('organization_id is required');
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'organization_id is required',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      );
     }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Missing Supabase configuration:', {
+        hasUrl: !!supabaseUrl,
+        hasKey: !!supabaseKey,
+      });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Server configuration error',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     console.log(`Starting Shopify product sync for organization: ${organization_id}`);
 
     // Fetch Shopify connection details
     const { data: connection, error: connectionError } = await supabase
       .from('shopify_connections')
-      .select('*')
+      .select('id, access_token_encrypted, access_token_iv, shop_domain')
       .eq('organization_id', organization_id)
       .single();
 
     if (connectionError || !connection) {
+      console.error('Connection fetch error:', connectionError);
       throw new Error('Shopify connection not found');
     }
 
-    const { shop_domain, access_token_encrypted } = connection;
+    const { shop_domain, access_token_encrypted, access_token_iv } = connection;
+
+    console.log('Connection data:', {
+      has_encrypted: !!access_token_encrypted,
+      has_iv: !!access_token_iv,
+      shop_domain: shop_domain,
+      encrypted_length: access_token_encrypted?.length,
+      iv_length: access_token_iv?.length,
+    });
+
+    if (!access_token_encrypted) {
+      throw new Error('Shopify connection is missing encrypted token. Please reconnect your Shopify account.');
+    }
+
+    if (!access_token_iv) {
+      throw new Error('Shopify connection is missing encryption IV. Please disconnect and reconnect your Shopify account to enable encryption.');
+    }
+
+    // Decrypt the access token
+    const ENC_KEY = Deno.env.get('SHOPIFY_TOKEN_ENCRYPTION_KEY');
+    if (!ENC_KEY) {
+      console.error('SHOPIFY_TOKEN_ENCRYPTION_KEY not found in environment');
+      throw new Error('Shopify token encryption key not configured');
+    }
+
+    let accessToken: string;
+    try {
+      accessToken = await decryptText(access_token_encrypted, access_token_iv, ENC_KEY);
+      console.log('Token decrypted successfully, length:', accessToken.length);
+    } catch (decryptError: any) {
+      console.error('Error decrypting Shopify token:', {
+        error: decryptError.message,
+        stack: decryptError.stack,
+        has_encrypted: !!access_token_encrypted,
+        has_iv: !!access_token_iv,
+      });
+      throw new Error('Failed to decrypt Shopify access token. Please reconnect your Shopify account.');
+    }
 
     console.log(`Fetching products from Shopify store: ${shop_domain}`);
 
@@ -44,7 +143,7 @@ serve(async (req) => {
       `https://${shop_domain}/admin/api/2024-01/products.json`,
       {
         headers: {
-          'X-Shopify-Access-Token': access_token_encrypted,
+          'X-Shopify-Access-Token': accessToken,
           'Content-Type': 'application/json',
         },
       }
@@ -219,14 +318,38 @@ serve(async (req) => {
     );
   } catch (error: any) {
     console.error('Error syncing Shopify products:', error);
+    
+    // Provide more detailed error information
+    let errorMessage = error.message || 'Unknown error occurred';
+    let statusCode = 400;
+    
+    // Handle specific error cases
+    if (errorMessage.includes('missing encrypted token data')) {
+      errorMessage = 'Shopify connection needs to be reconnected. Please disconnect and reconnect your Shopify account.';
+      statusCode = 400;
+    } else if (errorMessage.includes('Failed to decrypt')) {
+      errorMessage = 'Token decryption failed. Please reconnect your Shopify account.';
+      statusCode = 500;
+    } else if (errorMessage.includes('encryption key not configured')) {
+      errorMessage = 'Server configuration error. Please contact support.';
+      statusCode = 500;
+    } else if (errorMessage.includes('Shopify API error')) {
+      // Keep the Shopify API error message but make it more user-friendly
+      statusCode = 400;
+    } else if (errorMessage.includes('connection not found')) {
+      errorMessage = 'Shopify connection not found. Please reconnect your Shopify account.';
+      statusCode = 404;
+    }
+    
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: statusCode,
       }
     );
   }

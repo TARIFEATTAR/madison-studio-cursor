@@ -5,6 +5,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 };
 
 // Helper function to fetch Madison's system training (STANDARDIZED)
@@ -18,7 +20,7 @@ async function getMadisonSystemConfig(supabaseClient: any) {
     
     if (error || !data) return '';
     
-    const configParts = [];
+    const configParts: string[] = [];
     configParts.push('\n╔══════════════════════════════════════════════════════════════════╗');
     configParts.push('║              MADISON\'S CORE EDITORIAL TRAINING                   ║');
     configParts.push('║         (Your foundational AI editorial guidelines)             ║');
@@ -92,7 +94,7 @@ async function buildBrandContext(supabaseClient: any, organizationId: string) {
     }
     
     // Build context string with consistent formatting
-    const contextParts = [];
+    const contextParts: string[] = [];
     
     contextParts.push('\n╔══════════════════════════════════════════════════════════════════╗');
     contextParts.push('║          MANDATORY BRAND GUIDELINES - FOLLOW EXACTLY             ║');
@@ -736,7 +738,10 @@ const stripMarkdown = (text: string): string => {
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      status: 200,
+      headers: corsHeaders 
+    });
   }
 
   try {

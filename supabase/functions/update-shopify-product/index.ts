@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
       
       const { data: connection, error: connectionError } = await supabaseClient
         .from('shopify_connections')
-        .select('*')
+        .select('shop_domain, access_token_encrypted, access_token_iv')
         .eq('organization_id', listing.organization_id)
         .single();
 
@@ -108,13 +108,71 @@ Deno.serve(async (req) => {
         });
       }
 
+      if (!connection.access_token_encrypted || !connection.access_token_iv) {
+        console.error('Shopify connection missing encrypted token data');
+        return new Response(JSON.stringify({ 
+          error: 'Shopify connection is missing encrypted token data. Please reconnect.' 
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       shopDomain = connection.shop_domain;
-      accessToken = connection.access_token_encrypted;
       
-      console.log('Shopify connection found in DB:', {
+      // Decrypt the access token
+      const ENC_KEY = Deno.env.get('SHOPIFY_TOKEN_ENCRYPTION_KEY');
+      if (!ENC_KEY) {
+        console.error('Shopify token encryption key not configured');
+        return new Response(JSON.stringify({ 
+          error: 'Shopify token encryption key not configured' 
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Decrypt helper functions
+      function base64ToBytes(b64: string): Uint8Array {
+        const binary = atob(b64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        return bytes;
+      }
+
+      async function decryptText(ciphertextB64: string, ivB64: string, keyB64: string): Promise<string> {
+        const keyBytes = base64ToBytes(keyB64);
+        const keyCopy = new Uint8Array(keyBytes.length);
+        keyCopy.set(keyBytes);
+        const keyBuffer: ArrayBuffer = keyCopy.buffer;
+        const cryptoKey = await crypto.subtle.importKey('raw', keyBuffer, { name: 'AES-GCM' }, false, ['decrypt']);
+        const ivBytes = base64ToBytes(ivB64);
+        const ivCopy = new Uint8Array(ivBytes.length);
+        ivCopy.set(ivBytes);
+        const iv: ArrayBuffer = ivCopy.buffer;
+        const ciphertextBytes = base64ToBytes(ciphertextB64);
+        const ciphertextCopy = new Uint8Array(ciphertextBytes.length);
+        ciphertextCopy.set(ciphertextBytes);
+        const ciphertext: ArrayBuffer = ciphertextCopy.buffer;
+        const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, cryptoKey, ciphertext);
+        return new TextDecoder().decode(plaintext);
+      }
+
+      try {
+        accessToken = await decryptText(connection.access_token_encrypted, connection.access_token_iv, ENC_KEY);
+      } catch (decryptError) {
+        console.error('Error decrypting Shopify token:', decryptError);
+        return new Response(JSON.stringify({ 
+          error: 'Failed to decrypt Shopify access token' 
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      console.log('Shopify connection found in DB and decrypted:', {
         shopDomain: shopDomain,
         hasAccessToken: !!accessToken,
-        tokenLength: accessToken?.length
       });
     } else {
       console.log('Using Shopify credentials from environment secrets');
