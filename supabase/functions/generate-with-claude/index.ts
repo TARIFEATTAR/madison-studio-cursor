@@ -5,12 +5,15 @@ import { getSemanticFields, formatSemanticContext } from '../_shared/productFiel
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 };
 
 // Helper function to verify user has access to organization
@@ -55,7 +58,7 @@ async function getMadisonSystemConfig() {
     
     if (!data) return '';
     
-    const configParts = [];
+    const configParts: string[] = [];
     configParts.push('\n╔══════════════════════════════════════════════════════════════════╗');
     configParts.push('║             MADISON\'S SYSTEM-WIDE TRAINING                       ║');
     configParts.push('║              (Applied to All Organizations)                      ║');
@@ -192,7 +195,7 @@ async function fetchCopywritingOptions(industryType: string, contentFormat: stri
 
 // Helper function to build copywriting style context for Claude selection
 function buildStyleSelectionPrompt(options: any, brandContext: string, productData: any, contentType: string) {
-  const parts = [];
+  const parts: string[] = [];
   
   parts.push('╔══════════════════════════════════════════════════════════════════╗');
   parts.push('║          COPYWRITING STYLE SELECTION PHASE                       ║');
@@ -343,7 +346,7 @@ async function buildBrandContext(organizationId: string) {
     }
     
     // Build context string with proper hierarchy
-    const contextParts = [];
+    const contextParts: string[] = [];
     
     // LAYER 1: Madison's System Training (Foundation)
     if (madisonSystemData) {
@@ -687,7 +690,7 @@ async function fetchCopywritingSequence(industryType: string, contentFormat: str
 
 // Build sequencing prompt for Phase 3.5 (single-pass approach)
 function buildSequencingPrompt(sequenceData: any, contentType: string) {
-  const parts = [];
+  const parts: string[] = [];
   
   parts.push('╔══════════════════════════════════════════════════════════════════╗');
   parts.push('║          PHASE 3.5: COPYWRITING SEQUENCE EXECUTION              ║');
@@ -775,8 +778,13 @@ function buildSequencingPrompt(sequenceData: any, contentType: string) {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    console.log('CORS preflight request received');
+    return new Response(null, { 
+      status: 200,
+      headers: corsHeaders 
+    });
   }
 
   try {
@@ -806,21 +814,52 @@ serve(async (req) => {
 
     console.log(`Authenticated request from user: ${user.id}`);
     
-    // Determine model availability - prefer Anthropic, fallback to Lovable AI when credits/rate limits block requests
+    // Determine model availability - Priority: Gemini Direct > Claude > Lovable AI
+    // Gemini Direct is most cost-effective (subscription-based), Claude is high quality, Lovable is fallback
+    const hasGeminiDirect = !!GEMINI_API_KEY;
     const hasAnthropicAPI = !!ANTHROPIC_API_KEY;
     const hasLovableAI = !!LOVABLE_API_KEY;
     
-    if (!hasAnthropicAPI && !hasLovableAI) {
-      throw new Error('No AI API configured. Please set ANTHROPIC_API_KEY or LOVABLE_API_KEY.');
+    if (!hasGeminiDirect && !hasAnthropicAPI && !hasLovableAI) {
+      throw new Error('No AI API configured. Please set GEMINI_API_KEY, ANTHROPIC_API_KEY, or LOVABLE_API_KEY.');
     }
     
-    if (hasAnthropicAPI && hasLovableAI) {
+    // Log which APIs are available
+    const availableAPIs = [];
+    if (hasGeminiDirect) availableAPIs.push('Gemini Direct');
+    if (hasAnthropicAPI) availableAPIs.push('Claude');
+    if (hasLovableAI) availableAPIs.push('Lovable AI');
+    
+    console.log(`Using API priority: ${availableAPIs.join(' → ')}`);
+    if (hasGeminiDirect) {
+      console.log('Using Gemini Direct API as primary (cost-effective subscription)');
+    } else if (hasAnthropicAPI && hasLovableAI) {
       console.log('Using Anthropic Claude as primary with Lovable AI fallback');
     } else {
       console.log(`Using ${hasAnthropicAPI ? 'Anthropic Claude' : 'Lovable AI (Gemini)'} for generation`);
     }
 
-    const { prompt, organizationId, mode = "generate", styleOverlay = "brand-voice", productData, contentType, userName, images, product_id } = await req.json();
+    // Parse request body with error handling
+    let requestBody: any;
+    try {
+      requestBody = await req.json();
+    } catch (error) {
+      console.error('Error parsing request body:', error);
+      return new Response(
+        JSON.stringify({ error: 'Invalid request body. Please check your request format.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const { prompt, organizationId, mode = "generate", styleOverlay = "brand-voice", productData, contentType, userName, images, product_id } = requestBody;
+    
+    // Validate required fields
+    if (!prompt) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required field: prompt' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     // Validate images if provided (limit count and size)
     if (images && Array.isArray(images)) {
@@ -858,16 +897,18 @@ serve(async (req) => {
       console.log(`User ${user.id} verified for organization ${organizationId}`);
     }
 
-    console.log('Generating content with Claude for prompt:', prompt.substring(0, 100));
-    console.log('Mode:', mode);
-    console.log('Style Overlay:', styleOverlay);
-    console.log('Content Type:', contentType);
-    if (organizationId) {
-      console.log('Organization ID provided:', organizationId);
-    }
-    if (productData) {
-      console.log('Product category:', productData.category);
-    }
+    console.log('Generating content with Claude:', {
+      promptLength: prompt?.length || 0,
+      promptPreview: prompt?.substring(0, 100) || 'N/A',
+      mode,
+      styleOverlay,
+      contentType,
+      organizationId: organizationId || 'N/A',
+      hasProductData: !!productData,
+      productCategory: productData?.category || 'N/A',
+      hasAnthropicAPI,
+      hasLovableAI
+    });
 
     // Fetch full product data from database if product_id is provided
     let enrichedProductData = productData;
@@ -1193,7 +1234,7 @@ DO NOT invent or reference specific products, SKUs, or product details.
     // Build mandatory product specifications section (Phase 1 fix)
     let mandatoryProductSpecs = '';
     if (enrichedProductData && enrichedProductData.category === 'personal_fragrance') {
-      const contextParts = [];
+      const contextParts: string[] = [];
       
       contextParts.push('\n╔══════════════════════════════════════════════════════════════════╗');
       contextParts.push('║           MANDATORY PRODUCT SPECIFICATIONS                       ║');
@@ -1633,6 +1674,16 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
           await new Promise(resolve => setTimeout(resolve, delay));
         }
         
+        // Validate system prompt size
+        if (!systemPrompt || systemPrompt.length === 0) {
+          console.error('System prompt is empty');
+          throw new Error('System prompt generation failed. Please try again.');
+        }
+        
+        if (systemPrompt.length > 200000) {
+          console.warn(`System prompt is very large: ${systemPrompt.length} characters`);
+        }
+        
         // Build message content - support multimodal if images provided
         let messageContent: any;
         
@@ -1673,16 +1724,145 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
         let response: Response;
         let data: any;
         
-        if (hasAnthropicAPI) {
+        if (hasGeminiDirect) {
+          // Use Gemini Direct API (most cost-effective with subscription)
+          try {
+            // Build Gemini API request format
+            // Gemini uses a different format than Anthropic/Lovable
+            const geminiParts: any[] = [];
+            
+            // Handle multimodal content (images + text)
+            if (images && images.length > 0) {
+              // Add text prompt
+              geminiParts.push({ text: prompt });
+              
+              // Add images
+              images.forEach((imageData: string) => {
+                const matches = imageData.match(/^data:([^;]+);base64,(.+)$/);
+                if (matches) {
+                  const mediaType = matches[1];
+                  const base64Data = matches[2];
+                  
+                  geminiParts.push({
+                    inlineData: {
+                      mimeType: mediaType,
+                      data: base64Data
+                    }
+                  });
+                }
+              });
+            } else {
+              // Text-only
+              geminiParts.push({ text: prompt });
+            }
+            
+            const geminiRequestBody: any = {
+              contents: [{
+                parts: geminiParts
+              }],
+              generationConfig: {
+                maxOutputTokens: 4096,
+                temperature: 0.7,
+              }
+            };
+            
+            // Add system instruction if provided (Gemini supports systemInstruction field)
+            if (systemPrompt) {
+              geminiRequestBody.systemInstruction = {
+                parts: [{ text: systemPrompt }]
+              };
+            }
+            
+            console.log('Sending request to Gemini Direct API:', {
+              model: 'gemini-2.0-flash-exp',
+              partsCount: geminiParts.length,
+              hasImages: images && images.length > 0,
+              systemPromptLength: systemPrompt.length
+            });
+            
+            // Use Gemini 2.0 Flash Experimental (latest, fastest) or fallback to 1.5 Flash
+            response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(geminiRequestBody),
+            });
+          } catch (fetchError) {
+            console.error('Error constructing or sending Gemini Direct API request:', fetchError);
+            throw new Error(`Failed to send request to AI service: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`);
+          }
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Gemini Direct API error (attempt ${attempt + 1}):`, {
+              status: response.status,
+              statusText: response.statusText,
+              error: errorText,
+              hasPrompt: !!prompt,
+              promptLength: prompt?.length || 0
+            });
+            
+            // If Gemini is unavailable due to quota/rate limits, fall back to Claude or Lovable
+            const lower = errorText.toLowerCase();
+            const isQuotaOrRateLimit = response.status === 429 
+              || response.status === 403
+              || (response.status === 400 && (lower.includes('quota') || lower.includes('rate') || lower.includes('limit')));
+            
+            if (isQuotaOrRateLimit) {
+              if (hasAnthropicAPI) {
+                console.log('Falling back to Anthropic Claude due to Gemini quota/rate limit');
+                // Will fall through to Claude logic below
+              } else if (hasLovableAI) {
+                console.log('Falling back to Lovable AI due to Gemini quota/rate limit');
+                // Will fall through to Lovable logic below
+              } else {
+                throw new Error(`Gemini API quota/rate limit exceeded: ${response.status} - ${errorText}`);
+              }
+            } else if (response.status === 500) {
+              // Retry on server errors
+              lastError = new Error(`Gemini API error: ${response.status} - ${errorText}`);
+              continue;
+            } else {
+              // For other errors, fail immediately
+              throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
+            }
+          } else {
+            // Success - parse Gemini response
+            data = await response.json();
+            
+            // Validate response structure
+            if (!data || !data.candidates || !Array.isArray(data.candidates) || data.candidates.length === 0) {
+              console.error('Invalid Gemini API response structure:', JSON.stringify(data));
+              throw new Error('Invalid response from AI service. Please try again.');
+            }
+            
+            const candidate = data.candidates[0];
+            if (!candidate || !candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
+              console.error('No content in Gemini API response:', JSON.stringify(data));
+              throw new Error('No content received from AI service. Please try again.');
+            }
+            
+            // Extract text from Gemini response (it's in parts array)
+            const textParts = candidate.content.parts
+              .filter((part: any) => part.text)
+              .map((part: any) => part.text);
+            
+            if (textParts.length === 0) {
+              console.error('No text content in Gemini API response:', JSON.stringify(data));
+              throw new Error('No text content received from AI service. Please try again.');
+            }
+            
+            generatedContent = textParts.join('\n');
+            break; // Success!
+          }
+        }
+        
+        // Fallback to Claude if Gemini not available or failed
+        if (!generatedContent && hasAnthropicAPI) {
           // Use Anthropic Claude API
-          response = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-              'x-api-key': ANTHROPIC_API_KEY!,
-              'anthropic-version': '2023-06-01',
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
+          try {
+            const requestBody = {
               model: 'claude-sonnet-4-20250514',
               max_tokens: 4096,
               system: systemPrompt,
@@ -1692,16 +1872,48 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
                   content: messageContent
                 }
               ],
-            }),
-          });
+            };
+            
+            console.log('Sending request to Anthropic API:', {
+              model: requestBody.model,
+              systemPromptLength: systemPrompt.length,
+              messageContentType: typeof messageContent,
+              messageContentIsArray: Array.isArray(messageContent),
+              hasImages: images && images.length > 0
+            });
+            
+            response = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: {
+                'x-api-key': ANTHROPIC_API_KEY!,
+                'anthropic-version': '2023-06-01',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(requestBody),
+            });
+          } catch (fetchError) {
+            console.error('Error constructing or sending Anthropic API request:', fetchError);
+            throw new Error(`Failed to send request to AI service: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`);
+          }
 
           if (!response.ok) {
             const errorText = await response.text();
-            console.error(`Claude API error (attempt ${attempt + 1}):`, response.status, errorText);
+            console.error(`Claude API error (attempt ${attempt + 1}):`, {
+              status: response.status,
+              statusText: response.statusText,
+              error: errorText,
+              model: 'claude-sonnet-4-20250514',
+              hasPrompt: !!prompt,
+              promptLength: prompt?.length || 0
+            });
             
             // If Anthropic is unavailable due to credits/rate limits and Lovable is configured, fall back immediately
             const lower = errorText.toLowerCase();
-            const isCreditOrRateLimit = response.status === 429 || response.status === 402 || lower.includes('credit') || lower.includes('rate');
+            const isCreditOrRateLimit = response.status === 429 
+              || response.status === 402 
+              || (response.status === 400 && (lower.includes('credit') || lower.includes('balance')))
+              || lower.includes('credit')
+              || lower.includes('rate');
             if (isCreditOrRateLimit && hasLovableAI) {
               console.log('Falling back to Lovable AI (Gemini) due to Anthropic limitation');
               
@@ -1757,6 +1969,18 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
               }
 
               const lovableData = await lovableResp.json();
+              
+              // Validate fallback response structure
+              if (!lovableData || !lovableData.choices || !Array.isArray(lovableData.choices) || lovableData.choices.length === 0) {
+                console.error('Invalid Lovable AI fallback response structure:', JSON.stringify(lovableData));
+                throw new Error('Invalid response from AI service. Please try again.');
+              }
+              
+              if (!lovableData.choices[0].message || !lovableData.choices[0].message.content) {
+                console.error('No message content in Lovable AI fallback response:', JSON.stringify(lovableData));
+                throw new Error('No content received from AI service. Please try again.');
+              }
+              
               generatedContent = lovableData.choices[0].message.content;
               break; // Success via fallback
             }
@@ -1772,49 +1996,76 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
           }
 
           data = await response.json();
-          generatedContent = data.content[0].text;
-        } else {
-          // Use Lovable AI (Gemini) as fallback
           
-          // Build Gemini-compatible multimodal content
-          let geminiContent: any;
-          if (images && images.length > 0) {
-            // Multimodal message for Gemini
-            const contentParts: any[] = [{ type: 'text', text: prompt }];
-            
-            images.forEach((imageData: string) => {
-              const matches = imageData.match(/^data:([^;]+);base64,(.+)$/);
-              if (matches) {
-                contentParts.push({
-                  type: 'image_url',
-                  image_url: { url: imageData }
-                });
-              }
-            });
-            
-            geminiContent = contentParts;
-          } else {
-            geminiContent = prompt;
+          // Validate response structure
+          if (!data || !data.content || !Array.isArray(data.content) || data.content.length === 0) {
+            console.error('Invalid Anthropic API response structure:', JSON.stringify(data));
+            throw new Error('Invalid response from AI service. Please try again.');
           }
           
-          const messages: any[] = [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: geminiContent }
-          ];
+          const textContent = data.content.find((item: any) => item.type === 'text');
+          if (!textContent || !textContent.text) {
+            console.error('No text content in Anthropic API response:', JSON.stringify(data));
+            throw new Error('No text content received from AI service. Please try again.');
+          }
           
-          response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
+          generatedContent = textContent.text;
+        }
+        
+        // Final fallback to Lovable AI if neither Gemini nor Claude worked
+        if (!generatedContent && hasLovableAI) {
+          // Use Lovable AI (Gemini) as fallback
+          try {
+            // Build Gemini-compatible multimodal content
+            let geminiContent: any;
+            if (images && images.length > 0) {
+              // Multimodal message for Gemini
+              const contentParts: any[] = [{ type: 'text', text: prompt }];
+              
+              images.forEach((imageData: string) => {
+                const matches = imageData.match(/^data:([^;]+);base64,(.+)$/);
+                if (matches) {
+                  contentParts.push({
+                    type: 'image_url',
+                    image_url: { url: imageData }
+                  });
+                }
+              });
+              
+              geminiContent = contentParts;
+            } else {
+              geminiContent = prompt;
+            }
+            
+            const messages: any[] = [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: geminiContent }
+            ];
+            
+            console.log('Sending request to Lovable AI (Gemini):', {
               model: 'google/gemini-2.5-flash',
-              messages: messages,
-              max_tokens: 4096,
-              stream: false,
-            }),
-          });
+              messagesCount: messages.length,
+              systemPromptLength: systemPrompt.length,
+              hasImages: images && images.length > 0
+            });
+            
+            response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'google/gemini-2.5-flash',
+                messages: messages,
+                max_tokens: 4096,
+                stream: false,
+              }),
+            });
+          } catch (fetchError) {
+            console.error('Error constructing or sending Lovable AI request:', fetchError);
+            throw new Error(`Failed to send request to AI service: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`);
+          }
 
           if (!response.ok) {
             const errorText = await response.text();
@@ -1837,6 +2088,18 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
           }
 
           data = await response.json();
+          
+          // Validate response structure
+          if (!data || !data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+            console.error('Invalid Lovable AI response structure:', JSON.stringify(data));
+            throw new Error('Invalid response from AI service. Please try again.');
+          }
+          
+          if (!data.choices[0].message || !data.choices[0].message.content) {
+            console.error('No message content in Lovable AI response:', JSON.stringify(data));
+            throw new Error('No content received from AI service. Please try again.');
+          }
+          
           generatedContent = data.choices[0].message.content;
         }
         
@@ -1861,12 +2124,40 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
       }
     );
   } catch (error) {
-    console.error('Error in generate-with-claude function:', error);
+    console.error('Error in generate-with-claude function:', {
+      error,
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : typeof error
+    });
+    
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    
+    // Provide more specific error messages based on error type
+    let statusCode = 500;
+    let userMessage = errorMessage;
+    
+    if (errorMessage.includes('API key') || errorMessage.includes('authentication')) {
+      statusCode = 401;
+      userMessage = 'AI service authentication failed. Please check API configuration.';
+    } else if (errorMessage.includes('model') || errorMessage.includes('invalid')) {
+      statusCode = 400;
+      userMessage = 'Invalid AI model configuration. Please contact support.';
+    } else if (errorMessage.includes('rate limit') || errorMessage.includes('429')) {
+      statusCode = 429;
+      userMessage = 'Rate limit exceeded. Please wait a moment and try again.';
+    } else if (errorMessage.includes('credit') || errorMessage.includes('402')) {
+      statusCode = 402;
+      userMessage = 'AI credits depleted. Please add credits to your workspace.';
+    }
+    
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ 
+        error: userMessage,
+        details: Deno.env.get('ENVIRONMENT') === 'development' ? errorMessage : undefined
+      }),
       {
-        status: 500,
+        status: statusCode,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
