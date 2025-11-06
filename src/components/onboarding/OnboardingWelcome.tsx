@@ -275,7 +275,7 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
             <Button
               onClick={() => handleContinue({ useBrandDNAScan: true })}
               disabled={!isValid}
-              variant="brassGradient"
+              variant="brass"
               className="flex-1 h-12 text-base"
             >
               Start with Quick Scan

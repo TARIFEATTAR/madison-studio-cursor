@@ -262,7 +262,7 @@ export default function MarketplaceLibrary() {
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button className="bg-aged-brass hover:bg-aged-brass/90">
+                <Button variant="brass">
                   <Plus className="w-4 h-4 mr-2" />
                   Create Listing
                 </Button>
@@ -402,7 +402,7 @@ export default function MarketplaceLibrary() {
                   : 'Create your first marketplace listing to get started'}
               </p>
               {!searchQuery && platformFilter === 'all' && statusFilter === 'all' && (
-                <Button onClick={() => navigate('/marketplace')} className="bg-aged-brass hover:bg-aged-brass/90">
+                <Button onClick={() => navigate('/marketplace')} variant="brass">
                   <Plus className="w-4 h-4 mr-2" />
                   Create Your First Listing
                 </Button>

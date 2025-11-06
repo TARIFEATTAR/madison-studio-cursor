@@ -14,3 +14,7 @@ COMMENT ON COLUMN public.shopify_connections.access_token_iv IS
 -- This should be handled by the connect-shopify edge function when users reconnect
 
 
+
+
+
+

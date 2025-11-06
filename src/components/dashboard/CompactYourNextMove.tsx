@@ -41,7 +41,8 @@ export function CompactYourNextMove() {
         <div className="flex-shrink-0">
           <Button
             onClick={insight.primaryAction.handler}
-            className="bg-gradient-to-r from-brass to-brass-glow hover:opacity-90 text-ink-black font-semibold whitespace-nowrap h-10 px-6"
+            variant="brass"
+            className="whitespace-nowrap h-10 px-6"
           >
             {insight.primaryAction.label}
           </Button>

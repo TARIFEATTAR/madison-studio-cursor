@@ -15,7 +15,7 @@
     
     /* Core Palette - Hex values for direct CSS use */
     --background-hex: #FFFEF2;           /* Ivory - main canvas */
-    --surface-hex: #F4EACD;              /* Parchment - cards, panels */
+    --surface-hex: #f7f4ed;              /* Warm cream - cards, panels */
     --text-primary-hex: #141414;         /* Night - headlines, body */
     --text-secondary-hex: #252525;       /* Darker gray - metadata */
     --border-hex: #E1E1E1;               /* Platinum - dividers */
@@ -31,11 +31,11 @@
     /* Legacy mappings for backward compatibility */
     --midnight-black: 0 0% 8%;            /* Same as text-primary */
     --royal-indigo: 0 0% 8%;              /* Same as text-primary */
-    --warm-sand: 43 66% 88%;              /* Same as surface */
+    --warm-sand: 42 38% 95%;              /* Same as surface */
     --pearl-white: 60 100% 98%;          /* Same as background */
     --ink-black: 0 0% 8%;                 /* Same as text-primary */
     --charcoal: 0 0% 8%;                  /* Same as text-primary */
-    --vellum-cream: 43 66% 88%;           /* Same as surface */
+    --vellum-cream: 42 38% 95%;           /* Same as surface */
     --parchment-white: 60 100% 98%;      /* Same as background */
     --warm-gray: 0 0% 15%;                /* Same as text-secondary */
     --aged-brass: 32 25% 43%;             /* Same as accent */
@@ -67,7 +67,7 @@
     --background: 60 100% 98%;        /* Ivory - #FFFEF2 */
     --foreground: 0 0% 8%;            /* Night - #141414 */
 
-    --card: 43 66% 88%;              /* Parchment - #F4EACD */
+    --card: 42 38% 95%;              /* Warm cream - #f7f4ed */
     --card-foreground: 0 0% 8%;      /* Night - #141414 */
 
     --popover: 60 100% 98%;          /* Ivory - #FFFEF2 */
@@ -78,10 +78,10 @@
     --primary-dark: 32 25% 35%;      /* Darker accent */
     --primary-light: 32 25% 51%;     /* Lighter accent */
 
-    --secondary: 43 66% 88%;         /* Parchment - #F4EACD */
+    --secondary: 42 38% 95%;         /* Warm cream - #f7f4ed */
     --secondary-foreground: 0 0% 8%; /* Night - #141414 */
 
-    --muted: 43 66% 88%;             /* Parchment - #F4EACD */
+    --muted: 42 38% 95%;             /* Warm cream - #f7f4ed */
     --muted-foreground: 0 0% 15%;    /* Darker gray - #252525 */
 
     --accent: 32 25% 43%;            /* Lion/Coyote - #8B7355 */
@@ -128,8 +128,8 @@
        GRADIENT SYSTEM - Madison Depth and Richness
        ────────────────────────────────────────────────────────────────────── */
     --gradient-nav: linear-gradient(180deg, #141414 0%, #252525 100%);
-    --gradient-sidebar: linear-gradient(180deg, #F4EACD 0%, #E8DCC0 100%);
-    --gradient-card: radial-gradient(circle at top left, #FFFEF2 0%, #F4EACD 100%);
+    --gradient-sidebar: linear-gradient(180deg, #f7f4ed 0%, #E8DCC0 100%);
+    --gradient-card: radial-gradient(circle at top left, #FFFEF2 0%, #f7f4ed 100%);
     --gradient-accent: linear-gradient(135deg, #8B7355 0%, #D4A574 50%, #8B7355 100%);
     
     /* Legacy aliases */

@@ -246,7 +246,7 @@ export function BrandDNAScan({ onContinue, onBack, onSkip, brandData }: BrandDNA
                     <Button
                       onClick={handleStartScan}
                       disabled={!isValidUrl(websiteUrl)}
-                      variant="brassGradient"
+                      variant="brass"
                       className="flex-1 h-12 text-base"
                     >
                       Analyze Brand DNA
@@ -480,7 +480,7 @@ export function BrandDNAScan({ onContinue, onBack, onSkip, brandData }: BrandDNA
                 <div className="flex items-center gap-4">
                   <Button
                     onClick={handleContinue}
-                    variant="brassGradient"
+                    variant="brass"
                     className="flex-1 h-12 text-base"
                   >
                     Continue to Deep Dive

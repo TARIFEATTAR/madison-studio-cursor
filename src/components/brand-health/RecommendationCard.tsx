@@ -90,7 +90,7 @@ export function RecommendationCard({ recommendation, priority }: RecommendationC
 
               <Button
                 onClick={() => setShowWizard(true)}
-                className="bg-aged-brass hover:bg-aged-brass/90 text-ink-black"
+                variant="brass"
               >
                 Fix This Issue
               </Button>

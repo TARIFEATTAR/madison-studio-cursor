@@ -650,8 +650,8 @@ Be conversational, encouraging, and editorial in your tone.
               e.currentTarget.click();
             }}
             disabled={(!input.trim() && uploadedImages.length === 0) || isGenerating}
-            className="h-[52px] w-[52px] sm:h-[60px] sm:w-[60px] flex-shrink-0 bg-gradient-to-r from-aged-brass to-antique-gold hover:opacity-90 active:opacity-80"
-            style={{ color: "#1A1816" }}
+            variant="brass"
+            className="h-[52px] w-[52px] sm:h-[60px] sm:w-[60px] flex-shrink-0"
           >
             {isGenerating ? (
               <Loader2 className="w-5 h-5 animate-spin" />

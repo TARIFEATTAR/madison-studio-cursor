@@ -55,7 +55,8 @@ export function ThisWeekContent() {
           <p className="text-charcoal/60 text-sm">No content scheduled this week.</p>
           <Button
             onClick={() => navigate("/schedule")}
-            className="bg-gradient-to-r from-brass to-brass-glow hover:opacity-90 text-ink-black text-sm h-9"
+            variant="brass"
+            className="text-sm h-9"
           >
             Schedule Your Week
           </Button>

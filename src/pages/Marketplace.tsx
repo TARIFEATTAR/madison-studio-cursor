@@ -69,7 +69,8 @@ export default function Marketplace() {
                     </div>
                   </div>
                   <Button 
-                    className="w-full mt-4 bg-aged-brass hover:bg-aged-brass/90"
+                    variant="brass"
+                    className="w-full mt-4"
                     onClick={() => navigate(`/marketplace/${platform.id}`)}
                   >
                     Create {platform.name} Listing

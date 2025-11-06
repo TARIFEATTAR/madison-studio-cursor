@@ -149,7 +149,7 @@ export function GuidedPromptBuilder({ onPromptGenerated, brandContext, hasRefere
               placeholder="E.g., brass props, soft shadows, warm tones..."
               className="bg-[#252220] border-[#3D3935] text-[#FFFCF5] placeholder:text-[#A8A39E] text-xs" />
           </div>
-          <Button onClick={handleBuildPrompt} className="w-full bg-brass hover:bg-brass/90 text-[#1A1816] text-xs font-medium">
+          <Button onClick={handleBuildPrompt} variant="brass" className="w-full text-xs font-medium">
             <Lightbulb className="w-3 h-3 mr-1.5" />Build Prompt
           </Button>
         </div>
@@ -162,7 +162,7 @@ export function GuidedPromptBuilder({ onPromptGenerated, brandContext, hasRefere
               <h4 className="font-serif text-xs text-[#FFFCF5] flex items-center gap-1.5">
                 <Wand2 className="w-3 h-3 text-brass" />Built Prompt
               </h4>
-              <Button size="sm" onClick={handleUsePrompt} className="bg-brass hover:bg-brass/90 text-[#1A1816] h-7 text-xs px-2">
+              <Button size="sm" onClick={handleUsePrompt} variant="brass" className="h-7 text-xs px-2">
                 Use This Prompt
               </Button>
             </div>

@@ -15,8 +15,8 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0",
         ghost: "hover:bg-aged-brass/10 hover:text-aged-brass hover:shadow-sm",
         link: "text-aged-brass underline-offset-4 hover:underline hover:text-antique-gold",
-        brass: "bg-aged-brass text-ink-black font-semibold shadow-level-1 hover:bg-antique-gold hover:shadow-level-2 hover:-translate-y-0.5 active:translate-y-0 active:bg-primary-dark",
-        brassGradient: "bg-gradient-to-r from-[hsl(var(--aged-brass))] to-[hsl(var(--antique-gold))] text-ink-black font-semibold shadow-level-1 hover:shadow-level-2 hover:-translate-y-0.5 hover:opacity-90 active:translate-y-0",
+        brass: "bg-aged-brass text-parchment-white font-semibold shadow-level-1 hover:bg-antique-gold hover:shadow-level-2 hover:-translate-y-0.5 active:translate-y-0 active:bg-primary-dark",
+        brassGradient: "bg-gradient-to-r from-[hsl(var(--aged-brass))] to-[hsl(var(--antique-gold))] text-parchment-white font-semibold shadow-level-1 hover:shadow-level-2 hover:-translate-y-0.5 hover:opacity-90 active:translate-y-0",
       },
       size: {
         default: "h-10 px-4 py-2",

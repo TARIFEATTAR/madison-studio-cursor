@@ -567,11 +567,8 @@ const CreateShopifyListing = () => {
                                 size="lg"
                                 onClick={handlePushToShopify}
                                 disabled={!isPushButtonEnabled}
-                                className={`w-full h-12 transition-all ${
-                                  isPushButtonEnabled
-                                    ? "bg-aged-brass hover:bg-aged-brass/90 text-white"
-                                    : "bg-muted text-muted-foreground"
-                                }`}
+                                variant={isPushButtonEnabled ? "brass" : "secondary"}
+                                className="w-full h-12 transition-all"
                               >
                                 <Upload className="h-4 w-4 mr-2" />
                                 {isPushing ? (
@@ -601,10 +598,8 @@ const CreateShopifyListing = () => {
                   size="sm"
                   onClick={handleSave}
                   disabled={isSaving}
-                  variant={saveSuccess ? "default" : "outline"}
-                  className={`flex items-center gap-2 transition-all h-9 ${
-                    saveSuccess ? "bg-aged-brass hover:bg-aged-brass/90 text-white" : ""
-                  }`}
+                  variant={saveSuccess ? "brass" : "outline"}
+                  className="flex items-center gap-2 transition-all h-9"
                 >
                   {saveSuccess ? (
                     <>
@@ -681,11 +676,8 @@ const CreateShopifyListing = () => {
                           size="sm"
                           onClick={handlePushToShopify}
                           disabled={!isPushButtonEnabled}
-                          className={`transition-all ${
-                            isPushButtonEnabled
-                              ? "bg-aged-brass hover:bg-aged-brass/90 text-white"
-                              : "bg-muted text-muted-foreground"
-                          }`}
+                          variant={isPushButtonEnabled ? "brass" : "secondary"}
+                          className="transition-all"
                         >
                           <Upload className="h-4 w-4 mr-2" />
                           {isPushing ? (

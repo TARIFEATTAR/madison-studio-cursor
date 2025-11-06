@@ -75,7 +75,8 @@ export function BrandBuilderWidget() {
 
       <Button
         onClick={() => navigate("/brand-builder")}
-        className="w-full bg-brass hover:bg-antique-gold text-ink"
+        variant="brass"
+        className="w-full"
       >
         Complete Essential 5
         <ArrowRight className="w-4 h-4 ml-2" />

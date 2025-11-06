@@ -178,7 +178,7 @@ export function AppSidebar() {
 
       <Sidebar
         collapsible="icon"
-        className="border-r-0"
+        className="border-r border-black/50"
         style={{
           backgroundColor: "#0A0A0A"
         }}
@@ -207,7 +207,7 @@ export function AppSidebar() {
           {!open && (
             <div className="px-2 pt-6 pb-4 flex flex-col items-center gap-3">
               <NavLink to="/dashboard" className="group">
-                <span className="font-serif text-sm tracking-wider" style={{ fontWeight: 300, color: '#F5F5DC' }}>A</span>
+                <span className="font-serif text-sm tracking-wider" style={{ fontWeight: 300, color: '#F5F5DC' }}>M</span>
               </NavLink>
               <button
                 onClick={toggleSidebar}

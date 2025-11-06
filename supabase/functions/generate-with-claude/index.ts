@@ -96,13 +96,14 @@ async function getMadisonSystemConfig() {
     
     configParts.push('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
-    // Fetch Madison's training documents
+    // ✨ PERFORMANCE FIX: Limit training documents and truncate long content
     const { data: trainingDocs, error: docsError } = await supabase
       .from('madison_training_documents')
       .select('file_name, extracted_content')
       .eq('processing_status', 'completed')
       .not('extracted_content', 'is', null)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: true })
+      .limit(3); // Limit to 3 most recent training documents
     
     if (!docsError && trainingDocs && trainingDocs.length > 0) {
       configParts.push('\n╔══════════════════════════════════════════════════════════════════╗');
@@ -110,9 +111,13 @@ async function getMadisonSystemConfig() {
       configParts.push('║          (Foundational Editorial Guidelines)                     ║');
       configParts.push('╚══════════════════════════════════════════════════════════════════╝');
       
+      const MAX_TRAINING_DOC_LENGTH = 3000; // Limit each training doc to 3000 chars
       trainingDocs.forEach((doc, index) => {
         configParts.push(`\n━━━ TRAINING DOCUMENT ${index + 1}: ${doc.file_name} ━━━`);
-        configParts.push(doc.extracted_content);
+        const content = doc.extracted_content.length > MAX_TRAINING_DOC_LENGTH
+          ? doc.extracted_content.substring(0, MAX_TRAINING_DOC_LENGTH) + '\n[... truncated for performance ...]'
+          : doc.extracted_content;
+        configParts.push(content);
         configParts.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       });
       
@@ -158,25 +163,31 @@ async function fetchCopywritingOptions(industryType: string, contentFormat: stri
       if (m.secondary_copywriter) copywriterNames.add(m.secondary_copywriter);
     });
     
-    // Fetch copywriter techniques
-    const { data: techniques, error: techniquesError } = await supabase
-      .from('copywriter_techniques')
-      .select('*')
-      .in('copywriter_name', Array.from(copywriterNames));
-    
-    if (techniquesError) {
-      console.error('Error fetching copywriter techniques:', techniquesError);
-    }
-    
     // Get unique framework codes from mappings
     const frameworkCodes = new Set<string>();
     mappings.forEach(m => frameworkCodes.add(m.persuasion_framework));
     
-    // Fetch marketing frameworks
-    const { data: frameworks, error: frameworksError } = await supabase
-      .from('marketing_frameworks')
-      .select('*')
-      .in('framework_code', Array.from(frameworkCodes));
+    // ✨ PERFORMANCE FIX: Fetch techniques and frameworks in parallel
+    const [
+      { data: techniques, error: techniquesError },
+      { data: frameworks, error: frameworksError }
+    ] = await Promise.all([
+      // Fetch copywriter techniques
+      supabase
+        .from('copywriter_techniques')
+        .select('*')
+        .in('copywriter_name', Array.from(copywriterNames)),
+      
+      // Fetch marketing frameworks
+      supabase
+        .from('marketing_frameworks')
+        .select('*')
+        .in('framework_code', Array.from(frameworkCodes))
+    ]);
+    
+    if (techniquesError) {
+      console.error('Error fetching copywriter techniques:', techniquesError);
+    }
     
     if (frameworksError) {
       console.error('Error fetching marketing frameworks:', frameworksError);
@@ -284,22 +295,55 @@ async function buildBrandContext(organizationId: string) {
   try {
     console.log(`Fetching brand context for organization: ${organizationId}`);
     
-    // Fetch Madison system config
-    const { data: madisonSystemData } = await supabase
-      .from('madison_system_config')
-      .select('*')
-      .limit(1)
-      .maybeSingle();
-    
-    // Fetch brand knowledge entries (including visual standards)
-    const { data: knowledgeData, error: knowledgeError } = await supabase
-      .from('brand_knowledge')
-      .select('knowledge_type, content')
-      .eq('organization_id', organizationId)
-      .eq('is_active', true);
+    // ✨ PERFORMANCE FIX: Run all database queries in parallel instead of sequentially
+    const [
+      { data: madisonSystemData },
+      { data: knowledgeData, error: knowledgeError },
+      { data: orgData, error: orgError },
+      { data: docsData, error: docsError }
+    ] = await Promise.all([
+      // Fetch Madison system config
+      supabase
+        .from('madison_system_config')
+        .select('*')
+        .limit(1)
+        .maybeSingle(),
+      
+      // ✨ PERFORMANCE FIX: Fetch brand knowledge entries (limit to prevent excessive context)
+      supabase
+        .from('brand_knowledge')
+        .select('knowledge_type, content')
+        .eq('organization_id', organizationId)
+        .eq('is_active', true)
+        .limit(20), // Limit to 20 most recent knowledge entries
+      
+      // Fetch organization brand config
+      supabase
+        .from('organizations')
+        .select('name, brand_config')
+        .eq('id', organizationId)
+        .single(),
+      
+      // Fetch brand documents with extracted content (limit to 5 most recent to reduce context size)
+      supabase
+        .from('brand_documents')
+        .select('file_name, file_type, extracted_content, created_at')
+        .eq('organization_id', organizationId)
+        .eq('processing_status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(5)
+    ]);
     
     if (knowledgeError) {
       console.error('Error fetching brand knowledge:', knowledgeError);
+    }
+    
+    if (orgError) {
+      console.error('Error fetching organization:', orgError);
+    }
+    
+    if (docsError) {
+      console.error('Error fetching brand documents:', docsError);
     }
     
     // ✨ BRAND KNOWLEDGE TRANSPARENCY LOGGING
@@ -321,29 +365,6 @@ async function buildBrandContext(organizationId: string) {
     // Extract visual standards separately
     const visualStandardsEntry = knowledgeData?.find(k => k.knowledge_type === 'visual_standards');
     const visualStandards = visualStandardsEntry?.content as any;
-    
-    // Fetch organization brand config
-    const { data: orgData, error: orgError } = await supabase
-      .from('organizations')
-      .select('name, brand_config')
-      .eq('id', organizationId)
-      .single();
-    
-    if (orgError) {
-      console.error('Error fetching organization:', orgError);
-    }
-    
-    // Fetch brand documents with extracted content
-    const { data: docsData, error: docsError } = await supabase
-      .from('brand_documents')
-      .select('file_name, file_type, extracted_content, created_at')
-      .eq('organization_id', organizationId)
-      .eq('processing_status', 'completed')
-      .order('created_at', { ascending: false });
-    
-    if (docsError) {
-      console.error('Error fetching brand documents:', docsError);
-    }
     
     // Build context string with proper hierarchy
     const contextParts: string[] = [];
@@ -537,10 +558,15 @@ async function buildBrandContext(organizationId: string) {
       contextParts.push(`\n╔════ UPLOADED BRAND DOCUMENTS ════╗`);
       contextParts.push(`📄 ${docsData.length} brand document(s) with detailed guidelines:\n`);
       
+      // ✨ PERFORMANCE FIX: Truncate very long documents to prevent excessive context
+      const MAX_DOCUMENT_LENGTH = 5000; // Limit each document to 5000 chars
       docsData.forEach((doc, index) => {
         contextParts.push(`━━━ DOCUMENT ${index + 1}: ${doc.file_name} ━━━`);
         if (doc.extracted_content) {
-          contextParts.push(doc.extracted_content);
+          const content = doc.extracted_content.length > MAX_DOCUMENT_LENGTH
+            ? doc.extracted_content.substring(0, MAX_DOCUMENT_LENGTH) + '\n[... content truncated for performance ...]'
+            : doc.extracted_content;
+          contextParts.push(content);
           contextParts.push(''); // Empty line for separation
         } else {
           contextParts.push(`   • ${doc.file_name} (${doc.file_type}) - Content not yet extracted`);
@@ -633,6 +659,7 @@ async function fetchCopywritingSequence(industryType: string, contentFormat: str
   try {
     console.log(`[PHASE 3.5] Fetching sequence for industry: ${industryType}, format: ${contentFormat}`);
     
+    // ✨ PERFORMANCE FIX: Run database queries in parallel
     // Query sequences ordered by sequence_order
     const { data: sequences, error: sequencesError } = await supabase
       .from('copywriting_sequences')
@@ -652,22 +679,28 @@ async function fetchCopywritingSequence(industryType: string, contentFormat: str
       return null;
     }
     
-    // Fetch forbidden copywriters for this format
-    const { data: forbidden } = await supabase
-      .from('copywriting_sequences')
-      .select('copywriter_name')
-      .eq('industry_type', industryType)
-      .eq('content_format', contentFormat)
-      .eq('is_forbidden', true);
-    
     // Get unique copywriter names from sequence
     const copywriterNames = [...new Set(sequences.map(s => s.copywriter_name))];
     
-    // Fetch copywriter techniques
-    const { data: techniques } = await supabase
-      .from('copywriter_techniques')
-      .select('*')
-      .in('copywriter_name', copywriterNames);
+    // ✨ PERFORMANCE FIX: Fetch forbidden copywriters and techniques in parallel
+    const [
+      { data: forbidden },
+      { data: techniques }
+    ] = await Promise.all([
+      // Fetch forbidden copywriters for this format
+      supabase
+        .from('copywriting_sequences')
+        .select('copywriter_name')
+        .eq('industry_type', industryType)
+        .eq('content_format', contentFormat)
+        .eq('is_forbidden', true),
+      
+      // Fetch copywriter techniques
+      supabase
+        .from('copywriter_techniques')
+        .select('*')
+        .in('copywriter_name', copywriterNames)
+    ]);
     
     // Build techniques lookup
     const techniquesMap: Record<string, any> = {};
@@ -1661,7 +1694,8 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
     
     // Retry configuration
     const MAX_RETRIES = 3;
-    const INITIAL_RETRY_DELAY = 1000; // 1 second
+    const INITIAL_RETRY_DELAY = 500; // ✨ PERFORMANCE FIX: Reduced from 1000ms to 500ms
+    const API_TIMEOUT = 60000; // ✨ PERFORMANCE FIX: 60 second timeout for API calls
     let lastError: Error | null = null;
     let generatedContent = '';
     
@@ -1780,14 +1814,28 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
               systemPromptLength: systemPrompt.length
             });
             
-            // Use Gemini 2.0 Flash Experimental (latest, fastest) or fallback to 1.5 Flash
-            response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(geminiRequestBody),
-            });
+            // ✨ PERFORMANCE FIX: Add timeout to prevent hanging requests
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+            
+            try {
+              // Use Gemini 2.0 Flash Experimental (latest, fastest) or fallback to 1.5 Flash
+              response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(geminiRequestBody),
+                signal: controller.signal,
+              });
+              clearTimeout(timeoutId);
+            } catch (fetchError: any) {
+              clearTimeout(timeoutId);
+              if (fetchError.name === 'AbortError') {
+                throw new Error('API request timed out. Please try again.');
+              }
+              throw fetchError;
+            }
           } catch (fetchError) {
             console.error('Error constructing or sending Gemini Direct API request:', fetchError);
             throw new Error(`Failed to send request to AI service: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`);
@@ -1882,15 +1930,29 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
               hasImages: images && images.length > 0
             });
             
-            response = await fetch('https://api.anthropic.com/v1/messages', {
-              method: 'POST',
-              headers: {
-                'x-api-key': ANTHROPIC_API_KEY!,
-                'anthropic-version': '2023-06-01',
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(requestBody),
-            });
+            // ✨ PERFORMANCE FIX: Add timeout to prevent hanging requests
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+            
+            try {
+              response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                  'x-api-key': ANTHROPIC_API_KEY!,
+                  'anthropic-version': '2023-06-01',
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody),
+                signal: controller.signal,
+              });
+              clearTimeout(timeoutId);
+            } catch (fetchError: any) {
+              clearTimeout(timeoutId);
+              if (fetchError.name === 'AbortError') {
+                throw new Error('API request timed out. Please try again.');
+              }
+              throw fetchError;
+            }
           } catch (fetchError) {
             console.error('Error constructing or sending Anthropic API request:', fetchError);
             throw new Error(`Failed to send request to AI service: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`);
@@ -1943,19 +2005,34 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
                 { role: 'user', content: geminiContent }
               ];
               
-              const lovableResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  model: 'google/gemini-2.5-flash',
-                  messages: messages,
-                  max_tokens: 4096,
-                  stream: false,
-                }),
-              });
+              // ✨ PERFORMANCE FIX: Add timeout to prevent hanging requests
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+              
+              let lovableResp: Response;
+              try {
+                lovableResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    model: 'google/gemini-2.5-flash',
+                    messages: messages,
+                    max_tokens: 4096,
+                    stream: false,
+                  }),
+                  signal: controller.signal,
+                });
+                clearTimeout(timeoutId);
+              } catch (fetchError: any) {
+                clearTimeout(timeoutId);
+                if (fetchError.name === 'AbortError') {
+                  throw new Error('API request timed out. Please try again.');
+                }
+                throw fetchError;
+              }
 
               if (!lovableResp.ok) {
                 const lovableErr = await lovableResp.text();
@@ -2049,19 +2126,33 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
               hasImages: images && images.length > 0
             });
             
-            response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                model: 'google/gemini-2.5-flash',
-                messages: messages,
-                max_tokens: 4096,
-                stream: false,
-              }),
-            });
+            // ✨ PERFORMANCE FIX: Add timeout to prevent hanging requests
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+            
+            try {
+              response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  model: 'google/gemini-2.5-flash',
+                  messages: messages,
+                  max_tokens: 4096,
+                  stream: false,
+                }),
+                signal: controller.signal,
+              });
+              clearTimeout(timeoutId);
+            } catch (fetchError: any) {
+              clearTimeout(timeoutId);
+              if (fetchError.name === 'AbortError') {
+                throw new Error('API request timed out. Please try again.');
+              }
+              throw fetchError;
+            }
           } catch (fetchError) {
             console.error('Error constructing or sending Lovable AI request:', fetchError);
             throw new Error(`Failed to send request to AI service: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`);

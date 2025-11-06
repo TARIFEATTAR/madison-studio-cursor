@@ -433,7 +433,7 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
             <Button
               onClick={handleSave}
               disabled={isSaving || isAnalyzing}
-              className="bg-aged-brass hover:bg-aged-brass/90 text-ink-black"
+              variant="brass"
             >
               {isSaving ? (
                 <>

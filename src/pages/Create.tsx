@@ -957,7 +957,8 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                 <Button
                   onClick={handleThinkModeSend}
                   disabled={!thinkModeInput.trim() || isThinking}
-                  className="absolute bottom-3 right-3 bg-gradient-to-r from-brass to-brass-glow hover:opacity-90 text-white"
+                  variant="brass"
+                  className="absolute bottom-3 right-3"
                   size="icon"
                 >
                   {isThinking ? (
@@ -1314,7 +1315,8 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
               <Button
                 onClick={handleSubmit}
                 disabled={!format}
-                className="w-full gap-2 min-h-[44px] bg-gradient-to-r from-brass to-brass-glow hover:opacity-90 text-ink-black font-semibold disabled:from-warm-gray/20 disabled:to-warm-gray/20 disabled:text-warm-gray"
+                variant="brass"
+                className="w-full gap-2 min-h-[44px]"
               >
                 <PenTool className="w-5 h-5" />
                 <span>Generate</span>
@@ -1360,7 +1362,9 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                 <Button
                   onClick={handleSubmit}
                   disabled={!format}
-                  className="gap-2 px-8 bg-gradient-to-r from-brass to-brass-glow hover:opacity-90 text-ink-black font-semibold disabled:from-warm-gray/20 disabled:to-warm-gray/20 disabled:text-warm-gray"
+                  variant="brass"
+                  className="gap-2 px-8"
+                  size="lg"
                 >
                   <PenTool className="w-5 h-5" />
                   <span className="text-base">Generate</span>

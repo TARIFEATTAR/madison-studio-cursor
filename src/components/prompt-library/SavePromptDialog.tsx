@@ -598,7 +598,8 @@ try {
           <Button
             onClick={handleSave}
             disabled={isSaving || !title.trim()}
-            className="w-full sm:w-auto min-h-[44px] gap-2 bg-gradient-to-r from-brass to-brass-glow hover:from-brass-glow hover:to-brass text-ink-black font-semibold"
+            variant="brass"
+            className="w-full sm:w-auto min-h-[44px] gap-2"
           >
             {isSaving ? (
               <>

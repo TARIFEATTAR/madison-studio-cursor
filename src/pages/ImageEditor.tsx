@@ -1245,8 +1245,8 @@ export default function ImageEditor() {
   return (
     <div className="flex flex-col h-screen bg-studio-charcoal text-aged-paper">
       {/* Top Toolbar */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-studio-border bg-studio-card/50 backdrop-blur-sm sticky top-0 z-20">
-        <div className="flex items-center gap-4">
+      <header className="flex items-center justify-between px-6 pr-6 py-3 border-b border-studio-border bg-studio-card/50 backdrop-blur-sm sticky top-0 z-20 overflow-hidden">
+        <div className="flex items-center gap-4 flex-shrink-0">
           <Button
             variant="ghost"
             size="icon"
@@ -1261,7 +1261,7 @@ export default function ImageEditor() {
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-shrink-0 ml-4">
           {/* Product Selector */}
           <ProductSelector
             value={selectedProduct?.name || ""}
@@ -1378,8 +1378,8 @@ export default function ImageEditor() {
           {/* Ask Madison Button */}
           <Button
             onClick={() => setIsMadisonOpen(!isMadisonOpen)}
-            variant="outline"
-            className="border-[#B8956A] bg-[#2A241C] text-[#E9E3D5] hover:bg-[#3A3228] hover:text-[#FFFCF5] font-medium px-4 transition-all duration-200 ease-in-out hover:shadow-[0_0_12px_rgba(184,149,106,0.2)]"
+            variant="brass"
+            className="px-4"
           >
             <Sparkles className="w-4 h-4 mr-2" />
             Ask Madison
@@ -1390,7 +1390,7 @@ export default function ImageEditor() {
       {/* Main Layout */}
       <main className="flex flex-1 overflow-hidden relative">
         {/* Center Viewport (Fixed) */}
-        <section className="flex-1 flex flex-col relative">
+        <section className="flex-1 flex flex-col relative overflow-hidden">
           {/* Image Viewport */}
           <div className="flex-1 bg-studio-card/30 flex items-center justify-center relative overflow-hidden">
             {heroImage ? (
@@ -1533,10 +1533,10 @@ export default function ImageEditor() {
           )}
 
           {/* Prompt Bar (Fixed Bottom) */}
-          <footer className="border-t border-studio-border bg-studio-card backdrop-blur-sm sticky bottom-0 z-[15]">
+          <footer className="border-t border-studio-border bg-studio-card backdrop-blur-sm sticky bottom-0 z-[15] overflow-hidden">
             {/* Pro Mode Status Indicator */}
             {Object.keys(proModeControls).length > 0 && (
-              <div className="px-6 py-2 border-b border-studio-border/50 bg-aged-brass/5">
+              <div className="px-6 pr-6 py-2 border-b border-studio-border/50 bg-aged-brass/5">
                 <div className="flex items-center gap-2 text-xxs">
                   <Settings className="w-3 h-3 text-aged-brass" />
                   <span className="text-aged-brass font-medium">Pro mode active</span>
@@ -1547,9 +1547,9 @@ export default function ImageEditor() {
                 </div>
               </div>
             )}
-            <div className="px-6 py-4">
+            <div className="px-6 pr-6 py-4">
               {/* Horizontal Layout: Drop Zone + Prompt + Generate Button */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 max-w-full overflow-hidden">
                 {/* Drop Zone */}
                 <div className="min-w-[220px] max-w-[280px]">
                   <ProductImageUpload

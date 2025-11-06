@@ -373,7 +373,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
             <Button
               onClick={handleContinue}
               disabled={!isValid() || isProcessing}
-              variant="brassGradient"
+              variant="brass"
               className="flex-1 h-12 text-base"
             >
               {isProcessing ? "Processing..." : "Continue"}

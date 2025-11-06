@@ -75,7 +75,8 @@ export function ContentQuality() {
 
       <Button
         onClick={() => navigate(insight.route)}
-        className="w-full bg-gradient-to-r from-brass to-brass-glow hover:opacity-90 text-ink-black font-semibold"
+        variant="brass"
+        className="w-full"
       >
         {insight.action}
       </Button>

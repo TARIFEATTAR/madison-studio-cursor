@@ -535,7 +535,7 @@ export default function Library() {
               <div className="flex gap-3">
                 <Button
                   onClick={() => navigate("/create")}
-                  variant="brassGradient"
+                  variant="brass"
                   size="lg"
                 >
                   <Plus className="w-4 h-4 mr-2" />

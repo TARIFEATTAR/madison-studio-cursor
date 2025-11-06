@@ -208,7 +208,7 @@ export default function CreateTikTokShopListing() {
                 Export CSV
               </Button>
               <Button
-                className="bg-aged-brass hover:bg-aged-brass/90"
+                variant="brass"
                 onClick={handlePreview}
               >
                 <Eye className="w-4 h-4 mr-2" />

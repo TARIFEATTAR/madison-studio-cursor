@@ -122,6 +122,8 @@ export default function ContentEditorPage() {
   const historyIndexRef = useRef(0);
   const isUndoRedoRef = useRef(false);
   const updateTimeoutRef = useRef<NodeJS.Timeout>();
+  const wordCountTimeoutRef = useRef<NodeJS.Timeout>();
+  const historyTimeoutRef = useRef<NodeJS.Timeout>();
   const hasInitialized = useRef(false);
   const currentHtmlRef = useRef<string>("");
   const savedSelectionRef = useRef<SavedSelection | null>(null);
@@ -211,7 +213,7 @@ export default function ContentEditorPage() {
         const text = element.innerText;
         const words = text.trim().split(/\s+/).filter(word => word.length > 0);
         setWordCount(words.length);
-        console.debug("[ContentEditor] Word count set in attachEditableRef:", words.length);
+        // Word count set in attachEditableRef
       }
     });
   }, [editableContent, plainTextToHtml]);
@@ -308,6 +310,21 @@ export default function ContentEditorPage() {
     loadContent();
   }, [location.state, location.search, navigate, toast]);
 
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (wordCountTimeoutRef.current) {
+        clearTimeout(wordCountTimeoutRef.current);
+      }
+      if (historyTimeoutRef.current) {
+        clearTimeout(historyTimeoutRef.current);
+      }
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Calculate word count on initial load
   useEffect(() => {
     if (isEditorReady && editableRef.current) {
@@ -317,7 +334,7 @@ export default function ContentEditorPage() {
           const text = editableRef.current.innerText;
           const words = text.trim().split(/\s+/).filter(word => word.length > 0);
           setWordCount(words.length);
-          console.debug("[ContentEditor] Initial word count calculated:", words.length, "from text:", text.substring(0, 50));
+          // Initial word count calculated
         }
       });
     }
@@ -346,29 +363,47 @@ export default function ContentEditorPage() {
     
     const html = editableRef.current.innerHTML;
     currentHtmlRef.current = html;
-    const saved = saveSelection(editableRef.current);
     
-    // Update word count immediately (cheap, doesn't cause re-render issues)
-    const text = editableRef.current.innerText;
-    const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-    setWordCount(words.length);
+    // Update word count with throttling to avoid excessive calculations
+    if (wordCountTimeoutRef.current) {
+      clearTimeout(wordCountTimeoutRef.current);
+    }
     
-    // Update history immediately (no state update during typing)
+    wordCountTimeoutRef.current = setTimeout(() => {
+      if (editableRef.current) {
+        const text = editableRef.current.innerText;
+        const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+        setWordCount(words.length);
+      }
+    }, 300); // Throttle word count updates
+    
+    // Debounce history updates to avoid performance issues during rapid typing
     if (!isUndoRedoRef.current) {
       const lastEntry = historyRef.current[historyRef.current.length - 1];
       
       // Only push if content actually changed
       if (!lastEntry || lastEntry.html !== html) {
-        const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
-        newHistory.push({ html, selection: saved });
-        
-        if (newHistory.length > 50) {
-          newHistory.shift();
-        } else {
-          historyIndexRef.current++;
+        // Clear any pending history update
+        if (historyTimeoutRef.current) {
+          clearTimeout(historyTimeoutRef.current);
         }
-        historyRef.current = newHistory;
-        console.debug("[ContentEditor] History pushed, index:", historyIndexRef.current);
+        
+        // Debounce history updates to every 500ms during typing
+        historyTimeoutRef.current = setTimeout(() => {
+          if (editableRef.current && !isUndoRedoRef.current) {
+            const currentHtml = editableRef.current.innerHTML;
+            const saved = saveSelection(editableRef.current);
+            const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
+            newHistory.push({ html: currentHtml, selection: saved });
+            
+            if (newHistory.length > 50) {
+              newHistory.shift();
+            } else {
+              historyIndexRef.current++;
+            }
+            historyRef.current = newHistory;
+          }
+        }, 500);
       }
     }
   };
@@ -379,12 +414,12 @@ export default function ContentEditorPage() {
       historyIndexRef.current--;
       const entry = historyRef.current[historyIndexRef.current];
       
-      console.debug("[ContentEditor] Undo - setting innerHTML, index:", historyIndexRef.current);
+      // Undo - setting innerHTML
       editableRef.current.innerHTML = entry.html;
       
       requestAnimationFrame(() => {
         if (editableRef.current && entry.selection) {
-          console.debug("[ContentEditor] Restoring selection:", entry.selection);
+          // Restoring selection
           restoreSelection(editableRef.current, entry.selection);
         }
         isUndoRedoRef.current = false;
@@ -398,12 +433,12 @@ export default function ContentEditorPage() {
       historyIndexRef.current++;
       const entry = historyRef.current[historyIndexRef.current];
       
-      console.debug("[ContentEditor] Redo - setting innerHTML, index:", historyIndexRef.current);
+      // Redo - setting innerHTML
       editableRef.current.innerHTML = entry.html;
       
       requestAnimationFrame(() => {
         if (editableRef.current && entry.selection) {
-          console.debug("[ContentEditor] Restoring selection:", entry.selection);
+          // Restoring selection
           restoreSelection(editableRef.current, entry.selection);
         }
         isUndoRedoRef.current = false;
@@ -854,8 +889,6 @@ export default function ContentEditorPage() {
     );
   }
 
-  const currentFontFamily = FONT_OPTIONS.find(f => f.value === selectedFont)?.family || FONT_OPTIONS[0].family;
-
   return (
     <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: "#F5F1E8" }}>
       {/* Top Toolbar - Clean & Minimal */}
@@ -866,9 +899,9 @@ export default function ContentEditorPage() {
           borderColor: "#E5E0D8"
         }}
       >
-        <div className="flex items-center justify-between px-4 py-2 gap-2 overflow-x-auto">
+        <div className="flex items-center justify-between px-4 py-2 gap-2 overflow-x-auto scrollbar-hide">
           {/* Left: Exit Button + Font & Formatting */}
-          <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2 flex-nowrap min-w-0">
+          <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2 flex-nowrap min-w-0 flex-shrink-0">
             {/* Exit Button */}
             <Button
               variant="ghost"
@@ -886,7 +919,63 @@ export default function ContentEditorPage() {
             <div className="hidden md:block">
               <Select 
                 value={selectedFont} 
-                onValueChange={setSelectedFont}
+                onValueChange={(value) => {
+                  const fontFamily = FONT_OPTIONS.find(f => f.value === value)?.family;
+                  if (fontFamily && editableRef.current) {
+                    const editor = editableRef.current;
+                    const sel = window.getSelection();
+                    const withinEditor = !!(sel && sel.rangeCount > 0 && sel.anchorNode && editor.contains(sel.anchorNode));
+                    
+                    // If toolbar click blurred the editor, restore the last saved selection
+                    if (!withinEditor && savedSelectionRef.current) {
+                      try {
+                        editor.focus();
+                        restoreSelection(editor, savedSelectionRef.current);
+                      } catch {}
+                    } else {
+                      editor.focus();
+                    }
+                    
+                    // Apply font to selected text only
+                    if (sel && sel.rangeCount > 0) {
+                      const range = sel.getRangeAt(0);
+                      
+                      if (!range.collapsed) {
+                        // Has selection - wrap selected text in span with font
+                        try {
+                          const contents = range.extractContents();
+                          const span = document.createElement('span');
+                          span.style.fontFamily = fontFamily;
+                          span.appendChild(contents);
+                          range.insertNode(span);
+                          
+                          // Select the newly wrapped content
+                          const newRange = document.createRange();
+                          newRange.selectNodeContents(span);
+                          sel.removeAllRanges();
+                          sel.addRange(newRange);
+                        } catch (e) {
+                          // Fallback: use execCommand if surroundContents fails
+                          document.execCommand('fontName', false, fontFamily);
+                        }
+                      } else {
+                        // No selection - insert span at cursor for future typing
+                        const span = document.createElement('span');
+                        span.style.fontFamily = fontFamily;
+                        span.textContent = '\u200B'; // Zero-width space
+                        range.insertNode(span);
+                        // Move cursor after the span
+                        range.setStartAfter(span);
+                        range.collapse(true);
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                      }
+                    }
+                    
+                    setSelectedFont(value);
+                    updateContentFromEditable();
+                  }
+                }}
               >
                 <SelectTrigger className="w-[180px] h-9 border-none shadow-none">
                   <SelectValue />
@@ -1036,34 +1125,31 @@ export default function ContentEditorPage() {
 
           {/* Center: Editorial Assistant - Hidden on mobile */}
           <Button
-            variant={assistantOpen ? "default" : "ghost"}
+            variant={assistantOpen ? "brass" : "ghost"}
             onClick={handleToggleAssistant}
-            className="gap-2 h-9 hidden md:flex"
-            style={{
-              backgroundColor: assistantOpen ? "#B8956A" : undefined,
-              color: assistantOpen ? "#FFFFFF" : undefined
-            }}
+            className="gap-2 h-9 hidden lg:flex flex-shrink-0 whitespace-nowrap"
           >
-            <MessageSquare className="w-4 h-4" />
-            <span>Editorial Assistant</span>
+            <MessageSquare className="w-4 h-4 flex-shrink-0" />
+            <span className="hidden xl:inline">Editorial Assistant</span>
+            <span className="xl:hidden">Assistant</span>
           </Button>
 
           {/* Right: Word Count, Quality Rating, Save, Next */}
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 min-w-0">
             {/* Word Count - Compact on mobile */}
-            <span className="text-xs sm:text-sm text-muted-foreground px-1 sm:px-2">
+            <span className="text-xs sm:text-sm text-muted-foreground px-1 sm:px-2 whitespace-nowrap flex-shrink-0">
               {wordCount}w
             </span>
 
-            {/* Autosave Indicator - Hidden on mobile */}
-            <div className="hidden md:block">
+            {/* Autosave Indicator - Hidden on mobile, responsive */}
+            <div className="hidden md:block flex-shrink-0">
               <AutosaveIndicator 
                 saveStatus={saveStatus} 
                 lastSavedAt={lastSavedAt}
               />
             </div>
 
-            <div className="hidden lg:block">
+            <div className="hidden xl:block flex-shrink-0">
               <QualityRating 
                 rating={qualityRating} 
                 onRatingChange={setQualityRating} 
@@ -1073,7 +1159,8 @@ export default function ContentEditorPage() {
             <Button
               onClick={handleSave}
               disabled={saveStatus === "saving"}
-              className="gap-1 sm:gap-2 h-8 sm:h-9 bg-gradient-to-r from-aged-brass to-antique-gold text-ink-black hover:opacity-90"
+              variant="brass"
+              className="gap-1 sm:gap-2 h-8 sm:h-9"
             >
               {saveStatus === "saving" ? (
                 <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
@@ -1088,11 +1175,8 @@ export default function ContentEditorPage() {
             <Button
               onClick={handleNextToMultiply}
               disabled={saveStatus === "saving"}
+              variant="default"
               className="gap-1 sm:gap-2 h-8 sm:h-9"
-              style={{
-                backgroundColor: "#1A1816",
-                color: "#FFFFFF"
-              }}
             >
               {saveStatus === "saving" ? (
                 <>
@@ -1131,7 +1215,6 @@ export default function ContentEditorPage() {
                     suppressContentEditableWarning
                     className="editor-content w-full min-h-[calc(100vh-200px)] focus:outline-none prose prose-lg max-w-none"
                     style={{
-                      fontFamily: currentFontFamily,
                       color: "#1A1816",
                       lineHeight: "1.8"
                     }}
@@ -1173,7 +1256,6 @@ export default function ContentEditorPage() {
                 suppressContentEditableWarning
                 className="editor-content w-full min-h-[calc(100vh-200px)] focus:outline-none prose prose-lg max-w-none"
                 style={{
-                  fontFamily: currentFontFamily,
                   color: "#1A1816",
                   lineHeight: "1.8"
                 }}

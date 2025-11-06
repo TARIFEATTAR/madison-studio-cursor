@@ -385,7 +385,7 @@ export const CollectionsTab = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button onClick={handleCreate} className="bg-brass hover:bg-brass/90 text-charcoal">
+                  <Button onClick={handleCreate} variant="brass">
                     <Save className="w-4 h-4 mr-2" />
                     Create Collection
                   </Button>

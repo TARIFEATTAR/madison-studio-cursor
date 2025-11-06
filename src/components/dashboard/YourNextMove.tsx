@@ -64,7 +64,8 @@ export function YourNextMove() {
         <div className="flex flex-col sm:flex-row gap-3">
           <Button
             onClick={insight.primaryAction.handler}
-            className="bg-gradient-to-r from-brass to-brass-glow hover:opacity-90 text-ink-black font-semibold text-base h-12 shadow-sm"
+            variant="brass"
+            className="text-base h-12 shadow-sm"
           >
             {insight.primaryAction.label}
           </Button>
