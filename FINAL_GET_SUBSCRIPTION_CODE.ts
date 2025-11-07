@@ -8,15 +8,15 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
 };
 
 serve(async (req) => {
-  // Handle CORS preflight - return 204 No Content
+  // Handle CORS preflight - MUST return 200, not 204
   if (req.method === 'OPTIONS') {
+    console.log('OPTIONS preflight request received');
     return new Response(null, { 
-      status: 204,
+      status: 200,
       headers: corsHeaders 
     });
   }

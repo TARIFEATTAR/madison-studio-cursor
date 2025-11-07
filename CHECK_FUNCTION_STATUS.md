@@ -1,3 +1,65 @@
+# Check Function Status - Step by Step
+
+## The Problem
+Console shows CORS error - function can't be reached. This means either:
+1. Function wasn't deployed
+2. Function was deployed with wrong code
+3. Function needs to be redeployed
+
+## Step 1: Verify Function Exists
+
+Go to: https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/functions
+
+**Question: Do you see `get-subscription` in the list?**
+
+- ✅ **YES** → Go to Step 2
+- ❌ **NO** → Function wasn't deployed. Go to Step 3
+
+---
+
+## Step 2: Check Function Code
+
+If `get-subscription` exists:
+
+1. **Click on `get-subscription`** in the list
+2. **Click "View Source"** or **"Edit"**
+3. **Check the code** - does it have:
+
+```typescript
+if (req.method === 'OPTIONS') {
+  return new Response(null, { 
+    status: 204,
+    headers: corsHeaders 
+  });
+}
+```
+
+- ✅ **YES** → Code is correct, but might need redeploy
+- ❌ **NO** → Code is wrong, needs to be replaced
+
+---
+
+## Step 3: Redeploy the Function
+
+### Option A: If function exists but code is wrong
+
+1. Click on `get-subscription`
+2. Click **"Edit"** or **"View Source"**
+3. Replace ALL code with the correct code (see below)
+4. Click **"Save"** then **"Deploy"**
+
+### Option B: If function doesn't exist
+
+1. Click **"Deploy a new function"** (green button)
+2. Name: `get-subscription`
+3. Paste the code below
+4. Click **"Deploy"**
+
+---
+
+## Correct Code to Deploy
+
+```typescript
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
@@ -8,12 +70,11 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
 };
 
 serve(async (req) => {
-  // Handle CORS preflight - return 204 No Content
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       status: 204,
@@ -124,6 +185,26 @@ serve(async (req) => {
     );
   }
 });
+```
+
+---
+
+## Step 4: After Deployment
+
+1. Wait 10-15 seconds for deployment to complete
+2. Go back to billing page: http://localhost:8080/settings
+3. **Hard refresh:** Cmd+Shift+R
+4. Check console - CORS error should be gone!
+
+---
+
+## Quick Check List
+
+Tell me:
+- [ ] Is `get-subscription` visible in Functions list?
+- [ ] When was it last deployed?
+- [ ] Does the code have the OPTIONS handler with status 204?
+
 
 
 

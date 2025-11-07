@@ -45,6 +45,9 @@ export default function Onboarding() {
     } else if (stepData.skipDeepDive) {
       // User scanned DNA but wants to skip document upload
       setCurrentStep(4); // Go directly to success
+    } else if (stepData.useBrandDNAScan === false) {
+      // User chose to upload documents, skip Brand DNA scan
+      setCurrentStep(3); // Go directly to document upload step
     } else if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     }

@@ -99,15 +99,63 @@ serve(async (req) => {
 });
 
 async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
-  const organizationId = subscription.metadata.organization_id;
-  const planId = subscription.metadata.plan_id;
+  let organizationId = subscription.metadata.organization_id;
+  let planId = subscription.metadata.plan_id;
 
+  // If metadata is missing, try to get from existing subscription
   if (!organizationId || !planId) {
-    console.error('Missing metadata in subscription:', subscription.id);
+    const { data: existingSub } = await supabase
+      .from('subscriptions')
+      .select('organization_id, plan_id')
+      .eq('stripe_subscription_id', subscription.id)
+      .maybeSingle();
+
+    if (existingSub) {
+      organizationId = organizationId || existingSub.organization_id;
+      planId = planId || existingSub.plan_id;
+    }
+
+    // If still missing organization_id, try to get from customer metadata
+    if (!organizationId && subscription.customer) {
+      try {
+        const customer = await stripe.customers.retrieve(subscription.customer as string) as Stripe.Customer;
+        organizationId = customer.metadata?.organization_id || organizationId;
+      } catch (err) {
+        console.error('Error fetching customer:', err);
+      }
+    }
+
+    // If plan_id is still missing, derive it from subscription items
+    if (!planId && subscription.items?.data && subscription.items.data.length > 0) {
+      const priceId = subscription.items.data[0].price.id;
+      
+      // Try to find plan by matching either monthly or yearly price ID
+      const { data: planFromPrice } = await supabase
+        .from('subscription_plans')
+        .select('id')
+        .or(`stripe_price_id_monthly.eq.${priceId},stripe_price_id_yearly.eq.${priceId}`)
+        .maybeSingle();
+
+      if (planFromPrice) {
+        planId = planFromPrice.id;
+        console.log('Derived plan_id from price_id:', priceId, '-> plan_id:', planId);
+      } else {
+        console.warn('Could not find plan for Stripe price_id:', priceId);
+      }
+    }
+  }
+
+  if (!organizationId) {
+    console.error('Missing organization_id in subscription:', subscription.id);
     return;
   }
 
-  // Get plan details
+  if (!planId) {
+    console.error('Missing plan_id in subscription:', subscription.id);
+    return;
+  }
+
+  // Verify plan exists
   const { data: plan } = await supabase
     .from('subscription_plans')
     .select('id')
@@ -144,14 +192,45 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   }
 
   // Update organization subscription_id
-  await supabase
-    .from('organizations')
-    .update({ subscription_id: (await supabase.from('subscriptions').select('id').eq('stripe_subscription_id', subscription.id).single()).data?.id })
-    .eq('id', organizationId);
+  const { data: subRecord } = await supabase
+    .from('subscriptions')
+    .select('id')
+    .eq('stripe_subscription_id', subscription.id)
+    .single();
+
+  if (subRecord) {
+    await supabase
+      .from('organizations')
+      .update({ subscription_id: subRecord.id })
+      .eq('id', organizationId);
+  }
 }
 
 async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
-  const organizationId = subscription.metadata.organization_id;
+  let organizationId = subscription.metadata.organization_id;
+
+  // If metadata is missing, try to get from existing subscription
+  if (!organizationId) {
+    const { data: existingSub } = await supabase
+      .from('subscriptions')
+      .select('organization_id')
+      .eq('stripe_subscription_id', subscription.id)
+      .maybeSingle();
+
+    if (existingSub) {
+      organizationId = existingSub.organization_id;
+    }
+
+    // If still missing, try to get from customer metadata
+    if (!organizationId && subscription.customer) {
+      try {
+        const customer = await stripe.customers.retrieve(subscription.customer as string) as Stripe.Customer;
+        organizationId = customer.metadata?.organization_id || organizationId;
+      } catch (err) {
+        console.error('Error fetching customer:', err);
+      }
+    }
+  }
 
   if (!organizationId) {
     console.error('Missing organization_id in subscription:', subscription.id);
