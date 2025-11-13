@@ -5,6 +5,32 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+// Validate environment variables to prevent crashes
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  console.error('❌ Missing Supabase environment variables!');
+  console.error('SUPABASE_URL:', SUPABASE_URL ? '✓ Set' : '✗ Missing');
+  console.error('SUPABASE_PUBLISHABLE_KEY:', SUPABASE_PUBLISHABLE_KEY ? '✓ Set' : '✗ Missing');
+  console.error('Please check your .env file and ensure VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY are set.');
+  
+  // Show user-friendly error in browser
+  if (typeof window !== 'undefined') {
+    document.body.innerHTML = `
+      <div style="padding: 40px; font-family: system-ui; max-width: 600px; margin: 50px auto;">
+        <h1 style="color: #dc2626; margin-bottom: 20px;">Configuration Error</h1>
+        <p style="color: #374151; margin-bottom: 10px;">Missing required environment variables:</p>
+        <ul style="color: #6b7280; margin-left: 20px;">
+          <li>${!SUPABASE_URL ? 'VITE_SUPABASE_URL' : ''}</li>
+          <li>${!SUPABASE_PUBLISHABLE_KEY ? 'VITE_SUPABASE_PUBLISHABLE_KEY' : ''}</li>
+        </ul>
+        <p style="color: #6b7280; margin-top: 20px;">Please check your <code>.env</code> file in the <code>asala-studio</code> directory and restart the dev server.</p>
+      </div>
+    `;
+  }
+  
+  // Still throw to prevent further execution
+  throw new Error('Missing Supabase environment variables. Check console for details.');
+}
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
