@@ -1,5 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
+import {
+  generateGeminiContent,
+  extractTextFromGeminiResponse,
+} from "../_shared/geminiClient.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -62,13 +66,7 @@ serve(async (req) => {
                      fileUrl.toLowerCase().match(/\.(jpg|jpeg)$/i) ? 'image/jpeg' : 'image/png';
     const dataUrl = `data:${mimeType};base64,${base64}`;
 
-    console.log('Calling Lovable AI to parse worksheet...');
-
-    // Call Lovable AI to extract data
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
-    }
+    console.log('Calling Gemini AI to parse worksheet...');
 
     const systemPrompt = `You are a document parser for Scriptora content worksheets.
 Extract the following information from the uploaded worksheet:
@@ -103,38 +101,26 @@ For format, use the exact options:
 Return confidence scores (0-1) for each field. If handwriting is unclear, return lower confidence.
 If a field is completely blank or unreadable, return null for that field and confidence of 0.`;
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: 'Please extract the data from this content brief worksheet.' },
-              { type: 'image_url', image_url: { url: dataUrl } }
-            ]
-          }
-        ],
-        response_format: { type: 'json_object' }
-      }),
+    const aiData = await generateGeminiContent({
+      systemPrompt,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Please extract the data from this content brief worksheet.' },
+            { type: 'image_url', image_url: { url: dataUrl } },
+          ],
+        },
+      ],
+      responseMimeType: 'application/json',
+      model: 'models/gemini-2.0-flash-exp',
+      maxOutputTokens: 2048,
+      temperature: 0.2,
     });
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI API error:', aiResponse.status, errorText);
-      throw new Error(`AI processing failed: ${aiResponse.status}`);
-    }
-
-    const aiData = await aiResponse.json();
     console.log('AI response received:', JSON.stringify(aiData, null, 2));
 
-    const content = aiData.choices?.[0]?.message?.content;
+    const content = extractTextFromGeminiResponse(aiData);
     if (!content) {
       throw new Error('No content in AI response');
     }

@@ -355,9 +355,9 @@ export default function ImageEditor() {
             description: "Please add credits to your workspace in Settings.",
             duration: 8000,
           });
-        } else if (errorMsg.includes('LOVABLE_API_KEY') || errorMsg.includes('not configured')) {
+        } else if (errorMsg.includes('GEMINI_API_KEY') || errorMsg.includes('not configured')) {
           toast.error("Configuration error", {
-            description: "Lovable AI is not properly configured. Please contact support.",
+            description: "Gemini AI is not properly configured. Please contact support.",
             duration: 8000,
           });
         } else {
@@ -462,7 +462,7 @@ export default function ImageEditor() {
       // Only show generic error if not already handled
       if (!error.message?.includes('Rate limit') && 
           !error.message?.includes('credits') && 
-          !error.message?.includes('LOVABLE_API_KEY')) {
+          !error.message?.includes('GEMINI_API_KEY')) {
         toast.error(error.message || "Failed to generate image", {
           description: "Check browser console (F12) for full error details",
           duration: 5000

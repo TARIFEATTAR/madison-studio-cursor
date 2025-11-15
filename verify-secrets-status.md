@@ -49,9 +49,6 @@
 - [ ] `ANTHROPIC_API_KEY` (Optional)
   - Status: [ ] ✅ Set / [ ] ❌ Missing
 
-- [ ] `LOVABLE_API_KEY` (Optional)
-  - Status: [ ] ✅ Set / [ ] ❌ Missing
-
 **Shopify (If using):**
 - [ ] `SHOPIFY_TOKEN_ENCRYPTION_KEY`
   - Status: [ ] ✅ Set / [ ] ❌ Missing / [ ] Not using Shopify
@@ -113,7 +110,6 @@
 | `GOOGLE_TOKEN_ENCRYPTION_KEY` | [ ] ✅ / [ ] ❌ | |
 | `GEMINI_API_KEY` | [ ] ✅ / [ ] ❌ | |
 | `ANTHROPIC_API_KEY` | [ ] ✅ / [ ] ❌ | |
-| `LOVABLE_API_KEY` | [ ] ✅ / [ ] ❌ | |
 | `SHOPIFY_TOKEN_ENCRYPTION_KEY` | [ ] ✅ / [ ] ❌ / [ ] N/A | |
 
 ---
@@ -151,6 +147,8 @@ Once all critical secrets are verified:
 - ✅ Google OAuth will work  
 - ✅ AI features will work
 - ✅ Ready for launch! 🚀
+
+
 
 
 

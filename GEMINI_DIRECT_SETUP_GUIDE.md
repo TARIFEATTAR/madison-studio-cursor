@@ -86,14 +86,12 @@ After adding the API key:
 
 After setup, the system will use APIs in this order:
 
-1. **Gemini Direct API** (if `GEMINI_API_KEY` is set) ← **NEW!**
+1. **Gemini Direct API** (if `GEMINI_API_KEY` is set) ← **Primary**
 2. **Anthropic Claude** (if `ANTHROPIC_API_KEY` is set)
-3. **Lovable AI Gateway** (if `LOVABLE_API_KEY` is set)
 
 **Why this order?**
 - Gemini Direct is most cost-effective (your subscription)
-- Claude is high quality but expensive
-- Lovable is fallback for flexibility
+- Claude is high quality but expensive, so it's used only if Gemini fails
 
 ---
 
@@ -158,6 +156,8 @@ If you encounter issues:
 2. Verify API key in Google AI Studio
 3. Check Google Cloud Console for quota limits
 4. Review error messages in browser console
+
+
 
 
 

@@ -1,6 +1,10 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import {
+  generateGeminiContent,
+  extractTextFromGeminiResponse,
+} from "../_shared/geminiClient.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,11 +19,6 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-
-    if (!lovableApiKey) {
-      throw new Error('LOVABLE_API_KEY not configured');
-    }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -99,7 +98,9 @@ serve(async (req) => {
     const context = contextParts.join('\n');
 
     // Build tool definition based on knowledge_type
-    let systemPrompt, tools, toolChoice, userPrompt;
+    let systemPrompt: string;
+    let userPrompt: string;
+    let schemaExample: Record<string, unknown> | string = {};
 
     switch (knowledge_type) {
       case 'target_audience':
@@ -114,26 +115,10 @@ GUIDELINES:
 - Keep it 2-3 sentences, actionable and clear
 - Reference patterns you observe in their content/products`;
 
-        tools = [{
-          type: "function",
-          function: {
-            name: "suggest_target_audience",
-            description: "Generate target audience suggestion",
-            parameters: {
-              type: "object",
-              properties: {
-                target_audience: { 
-                  type: "string", 
-                  description: "Clear, specific description of ideal customers (2-3 sentences)" 
-                }
-              },
-              required: ["target_audience"],
-              additionalProperties: false
-            }
-          }
-        }];
-        toolChoice = { type: "function", function: { name: "suggest_target_audience" } };
         userPrompt = "Generate a target audience suggestion based on the context.";
+        schemaExample = {
+          target_audience: "2-3 sentence description of the specific ideal customer, their psychographics, and motivations."
+        };
         break;
 
       case 'brand_voice':
@@ -148,26 +133,10 @@ GUIDELINES:
 - Include do's and don'ts if patterns are clear
 - Keep it 3-4 sentences, actionable`;
 
-        tools = [{
-          type: "function",
-          function: {
-            name: "suggest_voice",
-            description: "Generate brand voice guidelines",
-            parameters: {
-              type: "object",
-              properties: {
-                voice_guidelines: { 
-                  type: "string", 
-                  description: "Brand voice description with personality and tone (3-4 sentences)" 
-                }
-              },
-              required: ["voice_guidelines"],
-              additionalProperties: false
-            }
-          }
-        }];
-        toolChoice = { type: "function", function: { name: "suggest_voice" } };
         userPrompt = "Generate brand voice guidelines based on the context.";
+        schemaExample = {
+          voice_guidelines: "3-4 sentence description covering personality traits, tone, do's and don'ts."
+        };
         break;
 
       case 'mission':
@@ -182,26 +151,10 @@ GUIDELINES:
 - Keep it inspiring but grounded
 - 2-3 sentences maximum`;
 
-        tools = [{
-          type: "function",
-          function: {
-            name: "suggest_mission",
-            description: "Generate mission statement",
-            parameters: {
-              type: "object",
-              properties: {
-                mission: { 
-                  type: "string", 
-                  description: "Clear, inspiring mission statement (2-3 sentences)" 
-                }
-              },
-              required: ["mission"],
-              additionalProperties: false
-            }
-          }
-        }];
-        toolChoice = { type: "function", function: { name: "suggest_mission" } };
         userPrompt = "Generate a mission statement based on the context.";
+        schemaExample = {
+          mission: "2-3 sentence inspiring mission statement grounded in brand impact."
+        };
         break;
 
       case 'usp':
@@ -216,26 +169,10 @@ GUIDELINES:
 - Highlight competitive advantages
 - 2-3 sentences`;
 
-        tools = [{
-          type: "function",
-          function: {
-            name: "suggest_usp",
-            description: "Generate unique selling proposition",
-            parameters: {
-              type: "object",
-              properties: {
-                differentiator: { 
-                  type: "string", 
-                  description: "Clear USP highlighting what makes them unique (2-3 sentences)" 
-                }
-              },
-              required: ["differentiator"],
-              additionalProperties: false
-            }
-          }
-        }];
-        toolChoice = { type: "function", function: { name: "suggest_usp" } };
         userPrompt = "Generate a USP based on the context.";
+        schemaExample = {
+          differentiator: "Concise paragraph describing what makes the brand unique."
+        };
         break;
 
       case 'key_messages':
@@ -250,27 +187,13 @@ GUIDELINES:
 - Easy to remember and repeat
 - Return exactly 3-5 messages`;
 
-        tools = [{
-          type: "function",
-          function: {
-            name: "suggest_messages",
-            description: "Generate key brand messages",
-            parameters: {
-              type: "object",
-              properties: {
-                messages: { 
-                  type: "array",
-                  items: { type: "string" },
-                  description: "3-5 short, memorable brand messages" 
-                }
-              },
-              required: ["messages"],
-              additionalProperties: false
-            }
-          }
-        }];
-        toolChoice = { type: "function", function: { name: "suggest_messages" } };
         userPrompt = "Generate 3-5 key brand messages based on the context.";
+        schemaExample = {
+          messages: [
+            "Short, memorable hook",
+            "Another key message"
+          ]
+        };
         break;
 
       default:
@@ -282,93 +205,45 @@ ${context}
 
 ${recommendation ? `\nRECOMMENDATION CONTEXT: ${recommendation.title} - ${recommendation.description}` : ''}`;
 
-        tools = [{
-          type: "function",
-          function: {
-            name: "suggest_brand_guideline",
-            description: "Generate brand guideline suggestions",
-            parameters: {
-              type: "object",
-              properties: {
-                content: { type: "string", description: "Brand guideline content" }
-              },
-              required: ["content"],
-              additionalProperties: false
-            }
-          }
-        }];
-        toolChoice = { type: "function", function: { name: "suggest_brand_guideline" } };
         userPrompt = `Generate brand guideline suggestions for: ${knowledge_type}`;
+        schemaExample = {
+          content: "Guideline content tailored to the requested knowledge type."
+        };
     }
 
-    // Call Lovable AI Gateway with tool-calling
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        tools,
-        tool_choice: toolChoice,
-      }),
+    const jsonInstruction = typeof schemaExample === 'string'
+      ? schemaExample
+      : JSON.stringify(schemaExample, null, 2);
+
+    const geminiResponse = await generateGeminiContent({
+      systemPrompt,
+      messages: [
+        {
+          role: 'user',
+          content: `${userPrompt}
+
+Respond ONLY with valid JSON matching this structure:
+${jsonInstruction}`,
+        },
+      ],
+      responseMimeType: 'application/json',
+      temperature: 0.4,
+      maxOutputTokens: 1024,
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('AI Gateway error:', response.status, errorText);
-      
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ 
-          error: 'Rate limit exceeded. Please try again in a moment.' 
-        }), {
-          status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ 
-          error: 'AI credits exhausted. Please add credits to continue.' 
-        }), {
-          status: 402,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      
-      throw new Error('Failed to generate suggestions');
+    let rawSuggestions = extractTextFromGeminiResponse(geminiResponse);
+    if (!rawSuggestions) {
+      const fallbackPart = geminiResponse?.candidates?.[0]?.content?.parts?.[0]?.text;
+      rawSuggestions = typeof fallbackPart === 'string' ? fallbackPart : '';
     }
 
-    const data = await response.json();
-    console.log('AI Gateway response:', JSON.stringify(data));
-
-    // Extract tool call arguments
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     let suggestions;
-
-    if (toolCall?.function?.arguments) {
-      try {
-        suggestions = typeof toolCall.function.arguments === 'string' 
-          ? JSON.parse(toolCall.function.arguments)
-          : toolCall.function.arguments;
-      } catch (parseError) {
-        console.error('Failed to parse tool arguments:', parseError);
-        return new Response(JSON.stringify({ 
-          error: 'Failed to parse AI response' 
-        }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-    } else {
-      console.error('No tool call in response');
+    try {
+      suggestions = rawSuggestions ? JSON.parse(rawSuggestions) : {};
+    } catch (parseError) {
+      console.error('Failed to parse Gemini response:', parseError, rawSuggestions);
       return new Response(JSON.stringify({ 
-        error: 'AI did not return structured suggestions' 
+        error: 'Failed to parse AI response' 
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -1,12 +1,14 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import {
+  generateGeminiContent,
+  extractTextFromGeminiResponse,
+} from "../_shared/geminiClient.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -18,10 +20,6 @@ serve(async (req) => {
 
     if (!extractedText || !organizationId) {
       throw new Error('extractedText and organizationId are required');
-    }
-
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
     }
 
     console.log(`Extracting brand knowledge from ${documentName || 'document'} for org: ${organizationId}`);
@@ -207,33 +205,14 @@ CRITICAL INSTRUCTIONS:
 - Return ONLY valid JSON, no additional commentary`;
     }
 
-    // Call Lovable AI (Claude)
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'user',
-            content: extractionPrompt
-          }
-        ],
-        temperature: 0.3, // Lower temperature for more consistent extraction
-      }),
+    const data = await generateGeminiContent({
+      messages: [{ role: 'user', content: extractionPrompt }],
+      temperature: 0.3,
+      responseMimeType: 'application/json',
+      maxOutputTokens: 4096,
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Lovable AI error:', response.status, errorText);
-      throw new Error(`AI extraction failed: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const extractedContent = data.choices[0].message.content;
+    const extractedContent = extractTextFromGeminiResponse(data);
 
     console.log('Raw AI response:', extractedContent.substring(0, 500));
 

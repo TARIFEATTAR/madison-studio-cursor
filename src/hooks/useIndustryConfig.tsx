@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { IndustryConfig } from "./usePromptGeneration";
 import { isEcommerceIndustry } from "@/config/industryTemplates";
 import { useAuth } from "./useAuth";
+import { logger } from "@/lib/logger";
 
 export function useIndustryConfig(organizationId: string | null) {
   const [industryConfig, setIndustryConfig] = useState<IndustryConfig | null>(null);
@@ -23,7 +24,7 @@ export function useIndustryConfig(organizationId: string | null) {
           .maybeSingle();
 
         if (error) {
-          console.error("Error loading industry config:", error);
+          logger.error("Error loading industry config:", error);
           setLoading(false);
           return;
         }
@@ -34,10 +35,10 @@ export function useIndustryConfig(organizationId: string | null) {
         };
         if (config?.id) {
           setIndustryConfig(config);
-          console.log("✅ Industry config loaded:", config);
+          logger.debug("✅ Industry config loaded:", config);
         }
       } catch (error) {
-        console.error("Error loading industry config:", error);
+        logger.error("Error loading industry config:", error);
       } finally {
         setLoading(false);
       }
@@ -59,12 +60,12 @@ export function useCurrentOrganizationId() {
   useEffect(() => {
     const loadOrganizationId = async () => {
       if (!user?.id) {
-        console.log("⚠️ No user ID found");
+        logger.debug("⚠️ No user ID found");
         setLoading(false);
         return;
       }
 
-      console.log("🔍 Looking for org for user:", user.id);
+      logger.debug("🔍 Looking for org for user:", user.id);
 
       try {
         const { data, error } = await supabase
@@ -74,23 +75,23 @@ export function useCurrentOrganizationId() {
           .maybeSingle();
 
         if (error) {
-          console.error("❌ Error loading organization ID:", error);
+          logger.error("❌ Error loading organization ID:", error);
           setLoading(false);
           return;
         }
 
         if (data?.organization_id) {
-          console.log("✅ Found organization:", data.organization_id);
+          logger.debug("✅ Found organization:", data.organization_id);
           setOrgId(data.organization_id);
           localStorage.setItem('current_org_id', data.organization_id);
         } else {
-          console.log("⚠️ No organization found for user");
+          logger.debug("⚠️ No organization found for user");
           // Clear cache if no org found
           localStorage.removeItem('current_org_id');
           setOrgId(null);
         }
       } catch (error) {
-        console.error("❌ Error loading organization ID:", error);
+        logger.error("❌ Error loading organization ID:", error);
       } finally {
         setLoading(false);
       }
@@ -108,24 +109,24 @@ export function useIsEcommerceOrg() {
 
   // If still loading org, return loading true
   if (orgLoading) {
-    console.log("⏳ Still loading organization...");
+    logger.debug("⏳ Still loading organization...");
     return { isEcommerce: false, loading: true };
   }
 
   // If no org found, user is not e-commerce
   if (!orgId) {
-    console.log("⚠️ No organization ID - not e-commerce");
+    logger.debug("⚠️ No organization ID - not e-commerce");
     return { isEcommerce: false, loading: false };
   }
 
   // If still loading config, return loading true
   if (configLoading) {
-    console.log("⏳ Still loading config...");
+    logger.debug("⏳ Still loading config...");
     return { isEcommerce: false, loading: true };
   }
 
   const isEcomm = isEcommerceIndustry(industryConfig?.id);
-  console.log("🎯 Final e-commerce check:", { 
+  logger.debug("🎯 Final e-commerce check:", { 
     industryId: industryConfig?.id, 
     isEcommerce: isEcomm 
   });

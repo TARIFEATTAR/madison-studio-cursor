@@ -1,5 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import {
+  generateGeminiContent,
+  extractTextFromGeminiResponse,
+} from "../_shared/geminiClient.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -122,56 +126,30 @@ serve(async (req) => {
         
         console.log('Sending PDF to AI for text extraction...');
         
-        // Use Lovable AI with Gemini to extract text from PDF
-        const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-        if (!lovableApiKey) {
-          throw new Error('LOVABLE_API_KEY not configured');
-        }
-
-        const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${lovableApiKey}`,
-          },
-          body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
-            messages: [
-              {
-                role: 'user',
-                content: [
-                  {
-                    type: 'text',
-                    text: 'Extract all text content from this PDF document. Return ONLY the extracted text, preserving formatting and structure as much as possible. Do not add any commentary or explanations.'
+        const aiData = await generateGeminiContent({
+          systemPrompt: 'You are a precise document transcription engine. Extract every readable piece of text from the provided PDF and return ONLY the raw text (no commentary). Preserve paragraph breaks when possible.',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Extract all text content from this PDF document.',
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: `data:application/pdf;base64,${base64}`,
                   },
-                  {
-                    type: 'image_url',
-                    image_url: {
-                      url: `data:application/pdf;base64,${base64}`
-                    }
-                  }
-                ]
-              }
-            ],
-            max_tokens: 16000,
-          }),
+                },
+              ],
+            },
+          ],
+          maxOutputTokens: 8192,
+          temperature: 0.1,
         });
 
-        if (!aiResponse.ok) {
-          const errorText = await aiResponse.text();
-          const errorMessage = `AI extraction failed: ${aiResponse.status} - ${errorText}`;
-          console.error(`[ERROR] ${errorMessage}`);
-          
-          // For image-heavy PDFs that fail extraction
-          if (aiResponse.status === 400 && errorText.includes('Failed to extract')) {
-            throw new Error('PDF contains images that cannot be processed. Please upload a text-based PDF or convert to plain text format.');
-          }
-          
-          throw new Error(errorMessage);
-        }
-
-        const aiData = await aiResponse.json();
-        extractedText = aiData.choices?.[0]?.message?.content || '';
+        extractedText = extractTextFromGeminiResponse(aiData) || '';
         
         if (!extractedText) {
           throw new Error('No text extracted from PDF');

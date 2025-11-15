@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 
 interface AgentPreferences {
   id?: string;
@@ -83,7 +84,7 @@ export function useCompetitiveIntelligence(organizationId: string | null) {
         }
       }
     } catch (error: any) {
-      console.error('Error loading competitive intelligence data:', error);
+      logger.error('Error loading competitive intelligence data:', error);
       toast({
         title: "Error loading data",
         description: error.message,
@@ -116,7 +117,7 @@ export function useCompetitiveIntelligence(organizationId: string | null) {
           : "AI agent monitoring has been disabled",
       });
     } catch (error: any) {
-      console.error('Error toggling competitive intelligence:', error);
+      logger.error('Error toggling competitive intelligence:', error);
       toast({
         title: "Error",
         description: error.message,
@@ -147,7 +148,7 @@ export function useCompetitiveIntelligence(organizationId: string | null) {
         description: `Now monitoring ${name}`,
       });
     } catch (error: any) {
-      console.error('Error adding competitor:', error);
+      logger.error('Error adding competitor:', error);
       toast({
         title: "Error adding competitor",
         description: error.message,
@@ -172,7 +173,7 @@ export function useCompetitiveIntelligence(organizationId: string | null) {
         description: "Competitor has been removed from watchlist",
       });
     } catch (error: any) {
-      console.error('Error removing competitor:', error);
+      logger.error('Error removing competitor:', error);
       toast({
         title: "Error",
         description: error.message,
@@ -198,7 +199,7 @@ export function useCompetitiveIntelligence(organizationId: string | null) {
         )
       );
     } catch (error: any) {
-      console.error('Error marking insight as read:', error);
+      logger.error('Error marking insight as read:', error);
     }
   };
 

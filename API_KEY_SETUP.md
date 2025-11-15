@@ -3,10 +3,9 @@
 The `generate-with-claude` edge function requires at least one AI API key to be configured. You can use any of:
 
 1. **Gemini Direct API** (`GEMINI_API_KEY`) - **Recommended** for cost-effectiveness (subscription-based)
-2. **Anthropic Claude** (`ANTHROPIC_API_KEY`) - High quality, pay-per-use
-3. **Lovable AI (Gemini)** (`LOVABLE_API_KEY`) - Fallback option
+2. **Anthropic Claude** (`ANTHROPIC_API_KEY`) - High quality, pay-per-use backup
 
-**Priority Order**: Gemini Direct → Claude → Lovable AI
+**Priority Order**: Gemini Direct → Anthropic Claude
 
 ## Setting Up API Keys in Supabase
 
@@ -27,10 +26,6 @@ The `generate-with-claude` edge function requires at least one AI API key to be 
    - Value: Your Anthropic API key from https://console.anthropic.com
    - Click **Save**
 
-   **For Lovable AI (Fallback):**
-   - Name: `LOVABLE_API_KEY`
-   - Value: Your Lovable API key from https://gateway.lovable.dev
-   - Click **Save**
 
 ### Option 2: Using Supabase CLI
 
@@ -41,27 +36,14 @@ supabase secrets set GEMINI_API_KEY="AIzaSy..."
 # Or set Anthropic API key
 supabase secrets set ANTHROPIC_API_KEY="your-anthropic-api-key-here"
 
-# Or set Lovable API key (fallback)
-supabase secrets set LOVABLE_API_KEY="your-lovable-api-key-here"
-
-# Or set all three (priority: Gemini → Claude → Lovable)
-supabase secrets set GEMINI_API_KEY="AIzaSy..." ANTHROPIC_API_KEY="your-anthropic-key" LOVABLE_API_KEY="your-lovable-key"
+# Or set both (priority: Gemini → Claude)
+supabase secrets set GEMINI_API_KEY="AIzaSy..." ANTHROPIC_API_KEY="your-anthropic-key"
 ```
 
 ### For Local Development
 
 If you're running Supabase locally:
 
-```bash
-# Create a .env file in your supabase directory (if it doesn't exist)
-# Add the secrets
-echo 'LOVABLE_API_KEY=your-lovable-api-key-here' >> supabase/.env.local
-```
-
-Or use the CLI:
-```bash
-supabase secrets set LOVABLE_API_KEY="your-lovable-api-key-here" --local
-```
 
 ## Getting Your API Keys
 
@@ -83,13 +65,6 @@ supabase secrets set LOVABLE_API_KEY="your-lovable-api-key-here" --local
 5. Copy the key
 6. Add it as `ANTHROPIC_API_KEY` in Supabase
 
-### Lovable AI API Key (Fallback)
-1. Go to https://gateway.lovable.dev
-2. Sign up or log in
-3. Navigate to your API keys section
-4. Copy your API key
-5. Add it as `LOVABLE_API_KEY` in Supabase
-
 ## Verifying Setup
 
 After setting up the API keys:
@@ -98,8 +73,7 @@ After setting up the API keys:
 2. Check the browser console - you should see logs indicating which API is being used
 3. Look for messages like:
    - "Using Gemini Direct API as primary (cost-effective subscription)" ← Best option
-   - "Using Anthropic Claude as primary with Lovable AI fallback"
-   - "Using Lovable AI (Gemini) for generation"
+   - "Using Anthropic Claude for generation"
 4. Check Supabase Edge Function logs to see which API was actually used
 
 ## Troubleshooting

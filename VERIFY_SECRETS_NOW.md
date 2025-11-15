@@ -90,7 +90,6 @@
 **What to look for:**
 - [ ] Secret name: `GEMINI_API_KEY` (recommended)
   - OR `ANTHROPIC_API_KEY`
-  - OR `LOVABLE_API_KEY`
 - [ ] `GEMINI_API_KEY` starts with: `AIza...`
 - [ ] Status: ✅ **FOUND** / ❌ **MISSING**
 
@@ -176,6 +175,8 @@ APP_URL:                     [ ] ✅ FOUND  [ ] ⚠️ DEFAULT
 ## 📝 NOTES
 
 **Write any issues or notes here:**
+
+
 
 
 

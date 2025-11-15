@@ -44,6 +44,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 import {
   Collapsible,
   CollapsibleContent,
@@ -294,11 +295,11 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
           .insert(promptData);
 
         if (promptError) {
-          console.error("Error saving prompt:", promptError);
+          logger.error("Error saving prompt:", promptError);
           // Don't block user flow - auto-save is best-effort
         }
       } catch (error) {
-        console.error("Auto-save failed:", error);
+        logger.error("Auto-save failed:", error);
         // Silently fail - don't interrupt user experience
       }
       
@@ -315,11 +316,11 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
       // Verify Supabase URL is configured
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       if (!supabaseUrl) {
-        console.error("Missing VITE_SUPABASE_URL environment variable");
+        logger.error("Missing VITE_SUPABASE_URL environment variable");
         throw new Error("Configuration error. Please contact support.");
       }
       
-      console.log("Calling edge function with:", {
+      logger.debug("Calling edge function with:", {
         hasPrompt: !!fullPrompt,
         promptLength: fullPrompt.length,
         organizationId: currentOrganizationId,
@@ -377,7 +378,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
               }
             }
           } catch (e) {
-            console.error("Error reading error response stream:", e);
+            logger.error("Error reading error response stream:", e);
           }
         } else if (error.context?.body) {
           // Handle non-stream body
@@ -429,7 +430,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
           errorMessage = "CORS error. Please contact support.";
         }
         
-        console.error("Edge function error details:", {
+        logger.error("Edge function error details:", {
           message: error.message,
           context: error.context,
           status: error.context?.status,
@@ -478,7 +479,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
         .single();
 
       if (saveError) {
-        console.error('Save failed:', saveError);
+        logger.error('Save failed:', saveError);
         toast({
           title: "Content saved locally",
           description: "We'll retry saving to your library shortly.",
@@ -502,7 +503,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
       }, 100);
 
     } catch (error: any) {
-      console.error("Error generating content:", error);
+      logger.error("Error generating content:", error);
       
       // Extract error message with better handling
       let errorMessage = "Please try again";
@@ -651,7 +652,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
       });
 
     } catch (error) {
-      console.error('Worksheet load error:', error);
+      logger.error('Worksheet load error:', error);
       toast({
         title: "Error loading worksheet",
         description: error instanceof Error ? error.message : "Please try again",
@@ -804,7 +805,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
         }
       }
     } catch (error) {
-      console.error('Think Mode error:', error);
+      logger.error('Think Mode error:', error);
       toast({
         title: "Chat error",
         description: "Failed to connect to AI. Please try again.",

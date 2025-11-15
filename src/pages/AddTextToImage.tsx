@@ -168,9 +168,9 @@ export default function AddTextToImage() {
           description: "Please add credits to your workspace in Settings.",
           duration: 8000,
         });
-      } else if (errorMsg.includes('LOVABLE_API_KEY')) {
+      } else if (errorMsg.includes('GEMINI_API_KEY')) {
         toast.error("Configuration error", {
-          description: "Lovable AI is not properly configured. Please contact support.",
+          description: "Gemini AI is not properly configured. Please contact support.",
           duration: 8000,
         });
       } else {

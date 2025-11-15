@@ -525,12 +525,12 @@ export default function Multiply() {
       // Handle specific error types
       if (error.message?.includes('Failed to send a request') || error.message?.includes('NetworkError')) {
         errorMessage = "Unable to connect to the server. Please check your internet connection and try again.";
-      } else if (error.message?.includes('LOVABLE_API_KEY') || errorMessage.includes('LOVABLE_API_KEY')) {
-        errorMessage = "AI service is not properly configured. Please contact support.";
+      } else if (error.message?.includes('GEMINI_API_KEY') || errorMessage.includes('GEMINI_API_KEY')) {
+        errorMessage = "AI service is not properly configured (missing Gemini API key). Please contact support.";
       } else if (error.message?.includes('429') || error.context?.status === 429) {
         errorMessage = "Rate limit exceeded. Please wait a moment and try again.";
       } else if (error.message?.includes('402') || error.context?.status === 402) {
-        errorMessage = "Payment required. Please add credits to your Lovable AI workspace.";
+        errorMessage = "Payment required. Please add AI credits to your workspace.";
       } else if (error.message?.includes('401') || error.context?.status === 401) {
         errorMessage = "Authentication failed. Please sign out and sign back in.";
       } else if (error.message?.includes('404') || error.context?.status === 404) {

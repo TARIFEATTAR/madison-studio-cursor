@@ -823,10 +823,12 @@ serve(async (req) => {
 
     console.log(`Using organization_id: ${masterContentRecord.organization_id}`);
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
+    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!ANTHROPIC_API_KEY) {
+      throw new Error('ANTHROPIC_API_KEY not configured');
     }
+    const DEFAULT_ANTHROPIC_MODEL = 'claude-3-haiku-20240307';
+    const configuredAnthropicModel = Deno.env.get('ANTHROPIC_MODEL') || DEFAULT_ANTHROPIC_MODEL;
 
     // Fetch brand context for consistent voice
     const brandContext = await buildBrandContext(supabaseClient, masterContentRecord.organization_id);
@@ -992,33 +994,55 @@ INSTRUCTIONS:
 FAILURE TO FOLLOW CODEX V2 PRINCIPLES OR BRAND GUIDELINES IS UNACCEPTABLE.`;
       }
 
-      // Call Lovable AI Gateway (default to Gemini 2.5 Flash)
-      const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          // During promo period, Gemini models are free
-          model: 'google/gemini-2.5-flash',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: fullPrompt }
-          ]
-        }),
-      });
+      // Call Anthropic Claude directly (sonnet is closest to previous gateway defaults)
+      const callAnthropic = async (model: string) => {
+        console.log(`Calling Anthropic with model: ${model}`);
+        return await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'x-api-key': ANTHROPIC_API_KEY,
+            'Content-Type': 'application/json',
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model,
+            max_tokens: 1200,
+            system: systemPrompt,
+            messages: [
+              {
+                role: 'user',
+                content: [
+                  {
+                    type: 'text',
+                    text: fullPrompt,
+                  },
+                ],
+              },
+            ],
+          }),
+        });
+      };
+
+      let modelToUse = configuredAnthropicModel;
+      let aiResponse = await callAnthropic(modelToUse);
+
+      // If the configured model isn't available, fall back automatically
+      if (aiResponse.status === 404 && modelToUse !== DEFAULT_ANTHROPIC_MODEL) {
+        console.warn(`Anthropic model ${modelToUse} not found. Falling back to ${DEFAULT_ANTHROPIC_MODEL}.`);
+        modelToUse = DEFAULT_ANTHROPIC_MODEL;
+        aiResponse = await callAnthropic(modelToUse);
+      }
 
       if (!aiResponse.ok) {
         const t = await aiResponse.text();
         console.error(`AI gateway error for ${derivativeType}:`, aiResponse.status, t);
-        if (aiResponse.status === 429) throw new Error('Rate limits exceeded. Please wait a moment and retry.');
-        if (aiResponse.status === 402) throw new Error('Payment required: please add credits to Lovable AI workspace.');
+        if (aiResponse.status === 429) throw new Error('Anthropic rate limits exceeded. Please wait a moment and retry.');
+        if (aiResponse.status === 402) throw new Error('Anthropic billing error: please verify your Anthropic account.');
         throw new Error(`AI gateway error: ${aiResponse.status}`);
       }
 
       const aiData = await aiResponse.json();
-      const generatedContent = aiData.choices?.[0]?.message?.content ?? '';
+      const generatedContent = aiData.content?.[0]?.text ?? '';
       const cleanedContent = stripMarkdown(generatedContent);
 
       // Parse platform-specific specs (from cleaned text to avoid markdown tokens)

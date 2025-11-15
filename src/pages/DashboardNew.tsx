@@ -10,6 +10,7 @@ import { ContentFlowZone } from "@/components/dashboard/ContentFlowZone";
 import { PerformanceMomentumZone } from "@/components/dashboard/PerformanceMomentumZone";
 import { PostOnboardingGuide } from "@/components/onboarding/PostOnboardingGuide";
 import { usePostOnboardingGuide } from "@/hooks/usePostOnboardingGuide";
+import { logger } from "@/lib/logger";
 
 import MadisonPanel from "@/components/image-editor/MadisonPanel";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
@@ -27,7 +28,7 @@ export default function DashboardNew() {
   useEffect(() => {
     if (statsLoading) {
       const timeout = setTimeout(() => {
-        console.log("Dashboard loading timeout - showing fallback");
+        logger.debug("Dashboard loading timeout - showing fallback");
         setShowFallback(true);
       }, 3000);
       return () => clearTimeout(timeout);
@@ -37,7 +38,7 @@ export default function DashboardNew() {
   // Log errors for debugging
   useEffect(() => {
     if (isError) {
-      console.error("Dashboard stats error:", error);
+      logger.error("Dashboard stats error:", error);
     }
   }, [isError, error]);
 

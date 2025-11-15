@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import madisonLogo from "@/assets/madison-horizontal-logo.png";
 import { motion, AnimatePresence } from "framer-motion";
 import { getOrCreateOrganizationId } from "@/lib/organization";
+import { logger } from "@/lib/logger";
 
 interface BrandDNAScanProps {
   onContinue: (data: any) => void;
@@ -97,7 +98,7 @@ export function BrandDNAScan({ onContinue, onBack, onSkip, brandData }: BrandDNA
       setStage("preview");
 
     } catch (error) {
-      console.error('Error scanning brand DNA:', error);
+      logger.error('Error scanning brand DNA:', error);
       toast({
         title: "Scan failed",
         description: "Unable to analyze your website. Please try again or upload documents instead.",

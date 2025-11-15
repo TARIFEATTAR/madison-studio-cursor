@@ -11,6 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import { VideoHelpTrigger } from "@/components/help/VideoHelpTrigger";
 import madisonLogo from "@/assets/madison-horizontal-logo.png";
 import { getOrCreateOrganizationId } from "@/lib/organization";
+import { logger } from "@/lib/logger";
 
 interface OnboardingBrandUploadProps {
   onContinue: (data: any) => void;
@@ -139,7 +140,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
         uploadContent
       });
     } catch (error) {
-      console.error('Error processing brand upload:', error);
+      logger.error('Error processing brand upload:', error);
       toast({
         title: "Error",
         description: "Failed to process your brand guidelines. Please try again.",

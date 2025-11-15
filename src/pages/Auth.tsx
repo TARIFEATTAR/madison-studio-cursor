@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import maddiLogo from "@/assets/madison-auth-logo.png";
+import { logger } from "@/lib/logger";
 
 const Auth = () => {
-  console.log("[Auth] Rendering Auth page...");
+  logger.debug("[Auth] Rendering Auth page...");
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -26,7 +27,7 @@ const Auth = () => {
   const safeGoHome = () => {
     if (hasNavigated.current) return;
     if (location.pathname !== "/") {
-      console.log("[Auth] Navigating to home");
+      logger.debug("[Auth] Navigating to home");
       hasNavigated.current = true;
       navigate("/", { replace: true });
     }

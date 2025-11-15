@@ -1,5 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  generateGeminiContent,
+  extractTextFromGeminiResponse,
+} from "../_shared/geminiClient.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -51,24 +55,8 @@ serve(async (req) => {
 
     console.log("Extracted content lengths - text:", textContent.length, "css:", cssContent.length);
 
-    // Use Lovable AI to analyze brand DNA
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY not configured");
-    }
-
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: `You are a brand DNA analyst specializing in extracting visual brand identity from websites.
+    const aiData = await generateGeminiContent({
+      systemPrompt: `You are a brand DNA analyst specializing in extracting visual brand identity from websites.
 
 Analyze the provided website content and CSS to extract a comprehensive visual Brand DNA.
 
@@ -95,10 +83,10 @@ Return ONLY a valid JSON object (no markdown, no explanations) with this exact s
 }
 
 Focus on extracting actual colors from CSS (hex, rgb values), real font families used, and observable visual patterns.`,
-          },
-          {
-            role: "user",
-            content: `Analyze this website for Brand DNA:
+      messages: [
+        {
+          role: "user",
+          content: `Analyze this website for Brand DNA:
 
 TEXT CONTENT:
 ${textContent}
@@ -107,19 +95,14 @@ CSS CONTENT:
 ${cssContent}
 
 Extract the visual brand identity as structured JSON.`,
-          },
-        ],
-      }),
+        },
+      ],
+      responseMimeType: "application/json",
+      maxOutputTokens: 2048,
+      temperature: 0.2,
     });
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error("AI API error:", aiResponse.status, errorText);
-      throw new Error(`AI analysis failed: ${aiResponse.status}`);
-    }
-
-    const aiData = await aiResponse.json();
-    const analysisText = aiData.choices?.[0]?.message?.content;
+    const analysisText = extractTextFromGeminiResponse(aiData);
 
     console.log("AI Analysis received");
 

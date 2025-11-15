@@ -1,5 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import {
+  streamGeminiTextResponse,
+  OpenAIMessage,
+} from "../_shared/geminiClient.ts";
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -148,12 +152,15 @@ serve(async (req) => {
       );
     }
 
-    const { messages, platform, organizationId, formData, productId, actionType, userName } = await req.json();
-    
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
-    }
+    const { messages, platform, organizationId, formData, productId, actionType, userName } = await req.json() as {
+      messages: OpenAIMessage[];
+      platform: string;
+      organizationId?: string;
+      formData?: Record<string, unknown>;
+      productId?: string;
+      actionType?: string;
+      userName?: string;
+    };
 
     console.log('Marketplace assistant request:', { platform, actionType, hasProduct: !!productId, organizationId, productId });
 
@@ -285,45 +292,15 @@ Always maintain brand voice while optimizing for the platform's audience and alg
       systemContent += `\n\n(Note: You're assisting ${userName} with this listing. Use their name naturally in greetings or when acknowledging their work. Example: "Great choice, ${userName}!" or "Here's what I suggest, ${userName}...")`;
     }
 
-    // Call Lovable AI with streaming
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
+    return await streamGeminiTextResponse(
+      {
+        systemPrompt: systemContent,
+        messages,
+        temperature: 0.7,
+        maxOutputTokens: 2048,
       },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemContent },
-          ...messages
-        ],
-        stream: true,
-      }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }),
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'AI credits depleted. Please add funds to your workspace.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      const errorText = await response.text();
-      console.error('AI gateway error:', response.status, errorText);
-      throw new Error('AI gateway error');
-    }
-
-    // Return streaming response
-    return new Response(response.body, {
-      headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' },
-    });
+      corsHeaders,
+    );
 
   } catch (error) {
     console.error('Marketplace assistant error:', error);

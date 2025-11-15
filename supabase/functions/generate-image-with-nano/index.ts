@@ -1,7 +1,9 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+import {
+  GEMINI_API_BASE,
+  getGeminiApiKey,
+} from "../_shared/geminiClient.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,29 +19,26 @@ serve(async (req) => {
   }
 
   try {
-    if (!LOVABLE_API_KEY) {
-      console.error("[generate-image-with-nano] LOVABLE_API_KEY not configured");
-      throw new Error('LOVABLE_API_KEY is not configured');
-    }
+    const GEMINI_API_KEY = getGeminiApiKey();
 
     const { prompt } = await req.json();
     console.log('[generate-image-with-nano] Generating image for prompt:', prompt.substring(0, 100));
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`${GEMINI_API_BASE}/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-image-preview',
-        messages: [
+        contents: [
           {
             role: 'user',
-            content: prompt
-          }
+            parts: [{ text: prompt }],
+          },
         ],
-        modalities: ['image', 'text']
+        generationConfig: {
+          responseMimeType: 'image/png',
+        },
       }),
     });
 
@@ -66,8 +65,15 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-    const description = data.choices?.[0]?.message?.content;
+    const parts = data?.candidates?.[0]?.content?.parts || [];
+    const imagePart = parts.find((part: any) => part?.inlineData);
+    const textPart = parts.find((part: any) => typeof part?.text === 'string');
+
+    const inlineData = imagePart?.inlineData;
+    const imageUrl = inlineData
+      ? `data:${inlineData.mimeType || 'image/png'};base64,${inlineData.data}`
+      : undefined;
+    const description = textPart?.text || 'Image generated via Gemini';
 
     if (!imageUrl) {
       console.error('[generate-image-with-nano] No image in response:', JSON.stringify(data, null, 2).substring(0, 500));

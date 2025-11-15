@@ -1,5 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  generateGeminiContent,
+  extractTextFromGeminiResponse,
+} from "../_shared/geminiClient.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,24 +51,7 @@ serve(async (req) => {
 
     console.log("Extracted text length:", textContent.length);
 
-    // Use Lovable AI to analyze brand voice
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY not configured");
-    }
-
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: `You are a brand voice analyst. Analyze the website content and extract:
+    const analysisPrompt = `You are a brand voice analyst. Analyze the website content and extract:
 1. Brand voice characteristics (tone, personality)
 2. Common vocabulary and key phrases
 3. Writing style patterns
@@ -75,24 +62,22 @@ Return your analysis as a structured JSON object with these fields:
 - vocabulary: array of 10-15 commonly used brand-specific words
 - writingStyle: string describing the writing style
 - brandValues: array of 3-5 core brand values or themes
-- recommendations: array of 3-5 content guidelines based on the analysis`,
-          },
-          {
-            role: "user",
-            content: `Analyze this website content and extract brand voice:\n\n${textContent}`,
-          },
-        ],
-      }),
+- recommendations: array of 3-5 content guidelines based on the analysis`;
+
+    const aiData = await generateGeminiContent({
+      systemPrompt: analysisPrompt,
+      messages: [
+        {
+          role: "user",
+          content: `Analyze this website content and extract brand voice:\n\n${textContent}\n\nRespond ONLY with JSON.`,
+        },
+      ],
+      responseMimeType: "application/json",
+      maxOutputTokens: 1536,
+      temperature: 0.35,
     });
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error("AI API error:", aiResponse.status, errorText);
-      throw new Error(`AI analysis failed: ${aiResponse.status}`);
-    }
-
-    const aiData = await aiResponse.json();
-    const analysisText = aiData.choices?.[0]?.message?.content;
+    const analysisText = extractTextFromGeminiResponse(aiData);
 
     console.log("AI Analysis:", analysisText);
 

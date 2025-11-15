@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { getDeliverableByValue } from "@/config/deliverableFormats";
+import { logger } from "@/lib/logger";
 
 export interface LibraryContentItem {
   id: string;
@@ -74,7 +75,7 @@ export const useLibraryContent = (groupBySessions = false, page = 1, limit = 30)
       ]);
 
       if (masterError) {
-        console.error("Error fetching master content:", masterError);
+        logger.error("Error fetching master content:", masterError);
       } else if (masterContent) {
         items.push(
           ...masterContent.map((item) => {
@@ -105,7 +106,7 @@ export const useLibraryContent = (groupBySessions = false, page = 1, limit = 30)
 
       // Fetch outputs
       if (outputsError) {
-        console.error("Error fetching outputs:", outputsError);
+        logger.error("Error fetching outputs:", outputsError);
       } else if (outputs) {
         items.push(
           ...outputs.map((item) => {
@@ -131,7 +132,7 @@ export const useLibraryContent = (groupBySessions = false, page = 1, limit = 30)
 
       // Fetch derivative assets
       if (derivativesError) {
-        console.error("Error fetching derivatives:", derivativesError);
+        logger.error("Error fetching derivatives:", derivativesError);
       } else if (derivatives) {
         items.push(
           ...derivatives.map((item) => {
@@ -163,7 +164,7 @@ export const useLibraryContent = (groupBySessions = false, page = 1, limit = 30)
 
       // Fetch generated images (from Madison Image Studio)
       if (imagesError) {
-        console.error("Error fetching generated images:", imagesError);
+        logger.error("Error fetching generated images:", imagesError);
       } else if (generatedImages) {
         items.push(
           ...generatedImages.map((item) => {

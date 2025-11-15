@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { VideoHelpTrigger } from "@/components/help/VideoHelpTrigger";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
 
 interface OnboardingSuccessProps {
   brandData: any;
@@ -57,7 +58,7 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
         });
         if (data?.generatedContent) setSampleContent(data.generatedContent);
       } catch (error) {
-        console.error('Sample generation error:', error);
+        logger.error('Sample generation error:', error);
       } finally {
         setIsGeneratingSample(false);
       }

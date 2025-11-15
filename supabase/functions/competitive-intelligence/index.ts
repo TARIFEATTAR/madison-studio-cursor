@@ -1,5 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.58.0";
+import {
+  generateGeminiContent,
+  extractTextFromGeminiResponse,
+} from "../_shared/geminiClient.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,7 +18,6 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!;
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -108,7 +111,7 @@ serve(async (req) => {
             .trim()
             .substring(0, 8000); // Limit content size
 
-          // Analyze with Lovable AI
+          // Analyze with Gemini AI
           const aiPrompt = `You are Madison's competitive research assistant.
 
 OUR BRAND:
@@ -138,29 +141,15 @@ Return a JSON array of insights with this structure:
 
 Be specific, actionable, and brand-aware.`;
 
-          const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${lovableApiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
-              messages: [
-                { role: 'system', content: 'You are a competitive intelligence analyst. Return only valid JSON.' },
-                { role: 'user', content: aiPrompt }
-              ],
-              temperature: 0.7,
-            }),
+          const aiData = await generateGeminiContent({
+            systemPrompt: 'You are a competitive intelligence analyst. Return only valid JSON.',
+            messages: [{ role: 'user', content: aiPrompt }],
+            responseMimeType: 'application/json',
+            temperature: 0.7,
+            maxOutputTokens: 1536,
           });
 
-          if (!aiResponse.ok) {
-            console.error(`AI analysis failed for ${competitor.competitor_name}`);
-            continue;
-          }
-
-          const aiData = await aiResponse.json();
-          const aiContent = aiData.choices?.[0]?.message?.content || '';
+          const aiContent = extractTextFromGeminiResponse(aiData) || '';
 
           // Parse insights
           let insights = [];

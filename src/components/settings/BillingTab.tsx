@@ -52,7 +52,7 @@ export function BillingTab() {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [availablePlans, setAvailablePlans] = useState<any[]>([]);
-  const [isLoadingCheckout, setIsLoadingCheckout] = useState(false);
+  const [checkoutPlanId, setCheckoutPlanId] = useState<string | null>(null);
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -296,7 +296,7 @@ export function BillingTab() {
   const handleUpgrade = async (planId: string) => {
     if (!user) return;
 
-    setIsLoadingCheckout(true);
+    setCheckoutPlanId(planId);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('No session');
@@ -331,7 +331,7 @@ export function BillingTab() {
         description: error.message || "Failed to start checkout. Please ensure Stripe products are configured.",
         variant: "destructive",
       });
-      setIsLoadingCheckout(false);
+      setCheckoutPlanId(null);
     }
   };
 
@@ -532,10 +532,10 @@ export function BillingTab() {
                     <Button
                       variant={isCurrentPlan ? "outline" : "brass"}
                       onClick={() => handleUpgrade(plan.id)}
-                      disabled={isLoadingCheckout || shouldDisable}
+                      disabled={(checkoutPlanId !== null && checkoutPlanId !== plan.id) || shouldDisable}
                       className="w-full"
                     >
-                      {isLoadingCheckout ? (
+                      {checkoutPlanId === plan.id ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           Processing...

@@ -13,6 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { VideoHelpTrigger } from "@/components/help/VideoHelpTrigger";
 import madisonLogo from "@/assets/madison-horizontal-logo.png";
 import { getOrCreateOrganizationId } from "@/lib/organization";
+import { logger } from "@/lib/logger";
 
 interface OnboardingWelcomeProps {
   onContinue: (data: any) => void;
@@ -46,14 +47,14 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
           .eq('id', user.id);
 
         if (profileError) {
-          console.error('[Onboarding] Error updating profile:', profileError);
+          logger.error('[Onboarding] Error updating profile:', profileError);
           toast({
             title: "Warning",
             description: "Your profile name may not have been saved. You can update it in Settings.",
             variant: "destructive"
           });
         } else {
-          console.log('[Onboarding] Profile updated successfully with name:', userName.trim());
+          logger.debug('[Onboarding] Profile updated successfully with name:', userName.trim());
         }
 
         organizationId = await getOrCreateOrganizationId(user.id);
@@ -77,7 +78,7 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
 
         if (orgUpdateError) throw orgUpdateError;
       } catch (error) {
-        console.error('Error saving brand config:', error);
+        logger.error('Error saving brand config:', error);
         toast({
           title: "Error",
           description: "Failed to save brand information. Please try again.",

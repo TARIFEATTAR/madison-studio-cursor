@@ -2,8 +2,11 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { formatVisualContext } from '../_shared/productFieldFilters.ts';
-
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+import {
+  GEMINI_API_BASE,
+  getGeminiApiKey,
+  convertContentToGeminiParts,
+} from "../_shared/geminiClient.ts";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -129,10 +132,6 @@ serve(async (req) => {
   }
 
   try {
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
-    }
-
     const { 
       prompt, 
       organizationId, 
@@ -583,13 +582,30 @@ ${enhancePromptWithFormula(originalScene, brandContext)}
       requestBody.image_config = { aspect_ratio: aspectRatio };
     }
     
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const geminiRequest: Record<string, unknown> = {
+      contents: [
+        {
+          role: 'user',
+          parts: convertContentToGeminiParts(messageContent),
+        },
+      ],
+      generationConfig: {
+        responseMimeType: 'image/png',
+      },
+    };
+
+    if (aspectRatio) {
+      geminiRequest.imageConfig = { aspectRatio };
+    }
+
+    const GEMINI_API_KEY = getGeminiApiKey();
+
+    const response = await fetch(`${GEMINI_API_BASE}/models/gemini-2.5-flash-image-preview:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify(geminiRequest),
     });
 
     if (!response.ok) {
@@ -600,13 +616,6 @@ ${enhancePromptWithFormula(originalScene, brandContext)}
         return new Response(
           JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'Lovable AI credits depleted. Please add credits in Settings.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
@@ -624,8 +633,14 @@ ${enhancePromptWithFormula(originalScene, brandContext)}
     }
 
     const data = await response.json();
-    let imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-    const description = data.choices?.[0]?.message?.content;
+    const parts = data?.candidates?.[0]?.content?.parts || [];
+    const imagePart = parts.find((part: any) => part?.inlineData);
+    const textPart = parts.find((part: any) => typeof part?.text === 'string');
+
+    let imageUrl = imagePart?.inlineData
+      ? `data:${imagePart.inlineData.mimeType || 'image/png'};base64,${imagePart.inlineData.data}`
+      : undefined;
+    const description = textPart?.text || 'AI generated visual description';
 
     if (!imageUrl) {
       throw new Error('No image generated in response');

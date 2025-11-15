@@ -1,5 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  generateGeminiContent,
+  extractTextFromGeminiResponse,
+} from "../_shared/geminiClient.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,14 +27,6 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-
-    if (!lovableApiKey) {
-      return new Response(
-        JSON.stringify({ error: 'LOVABLE_API_KEY not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -57,7 +53,7 @@ serve(async (req) => {
       `${kb.knowledge_type}: ${JSON.stringify(kb.content)}`
     ).join('\n\n');
 
-    // Call Lovable AI for brand consistency analysis
+    // Call AI service for brand consistency analysis
     const prompt = `You are a brand consistency analyzer. Analyze the following content against the brand guidelines and provide a detailed assessment.
 
 BRAND GUIDELINES:
@@ -82,33 +78,14 @@ Provide your analysis in the following JSON format:
 
 Be specific and actionable in your feedback.`;
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: 'You are a brand consistency expert. Always respond with valid JSON only.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.3,
-      }),
+    const aiData = await generateGeminiContent({
+      systemPrompt: 'You are a brand consistency expert. Always respond with valid JSON only.',
+      messages: [{ role: 'user', content: prompt }],
+      responseMimeType: 'application/json',
+      temperature: 0.3,
+      maxOutputTokens: 1536,
     });
-
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI API error:', aiResponse.status, errorText);
-      return new Response(
-        JSON.stringify({ error: 'AI analysis failed', details: errorText }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const aiData = await aiResponse.json();
-    const analysisText = aiData.choices[0].message.content;
+    const analysisText = extractTextFromGeminiResponse(aiData);
 
     // Parse the AI response
     let analysis;

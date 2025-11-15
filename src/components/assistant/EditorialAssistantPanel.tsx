@@ -368,7 +368,7 @@ Be conversational, encouraging, and editorial in your tone.
         
         // Handle HTTP status codes
         if (error.message?.includes('402') || error.context?.status === 402) {
-          errorMessage = 'Payment required. Please add credits to your Lovable AI workspace.';
+          errorMessage = 'Payment required. Please add AI credits to your workspace in Settings.';
         } else if (error.message?.includes('429') || error.context?.status === 429) {
           errorMessage = 'Rate limit exceeded. Please try again in a moment.';
         } else if (error.message?.includes('413') || error.context?.status === 413) {

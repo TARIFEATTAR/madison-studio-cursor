@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ScheduleModal } from "@/components/calendar/ScheduleModal";
 import { MadisonSplitEditor } from "@/components/library/MadisonSplitEditor";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { logger } from "@/lib/logger";
 
 export default function Library() {
   const navigate = useNavigate();
@@ -216,7 +217,7 @@ export default function Library() {
       setSelectedItems(new Set());
       refetch();
     } catch (error) {
-      console.error('Error archiving items:', error);
+      logger.error('Error archiving items:', error);
       toast({
         title: "Archive failed",
         description: "Failed to archive selected items. Please try again.",
@@ -275,7 +276,7 @@ export default function Library() {
       
       // Delete derivative assets first (they may reference master_content)
       if (itemsByTable.derivative_assets.length > 0) {
-        console.log('[Library] Deleting derivative_assets:', itemsByTable.derivative_assets);
+        logger.debug('[Library] Deleting derivative_assets:', itemsByTable.derivative_assets);
         const { error, data } = await supabase
           .from('derivative_assets')
           .delete()
@@ -283,18 +284,18 @@ export default function Library() {
           .select();
         
         if (error) {
-          console.error('[Library] Error deleting derivatives:', error);
+          logger.error('[Library] Error deleting derivatives:', error);
           deletionResults.failed += itemsByTable.derivative_assets.length;
           deletionResults.errors.push(`Derivatives: ${error.message} (Code: ${error.code})`);
         } else {
-          console.log('[Library] Deleted derivatives:', data);
+          logger.debug('[Library] Deleted derivatives:', data);
           deletionResults.successful += itemsByTable.derivative_assets.length;
         }
       }
 
       // Delete master content (CASCADE will handle related derivatives and scheduled content)
       if (itemsByTable.master_content.length > 0) {
-        console.log('[Library] Deleting master_content:', itemsByTable.master_content);
+        logger.debug('[Library] Deleting master_content:', itemsByTable.master_content);
         const { error, data } = await supabase
           .from('master_content')
           .delete()
@@ -302,18 +303,18 @@ export default function Library() {
           .select();
         
         if (error) {
-          console.error('[Library] Error deleting master content:', error);
+          logger.error('[Library] Error deleting master content:', error);
           deletionResults.failed += itemsByTable.master_content.length;
           deletionResults.errors.push(`Master content: ${error.message} (Code: ${error.code})`);
         } else {
-          console.log('[Library] Deleted master content:', data);
+          logger.debug('[Library] Deleted master content:', data);
           deletionResults.successful += itemsByTable.master_content.length;
         }
       }
 
       // Delete outputs
       if (itemsByTable.outputs.length > 0) {
-        console.log('[Library] Deleting outputs:', itemsByTable.outputs);
+        logger.debug('[Library] Deleting outputs:', itemsByTable.outputs);
         const { error, data } = await supabase
           .from('outputs')
           .delete()
@@ -321,18 +322,18 @@ export default function Library() {
           .select();
         
         if (error) {
-          console.error('[Library] Error deleting outputs:', error);
+          logger.error('[Library] Error deleting outputs:', error);
           deletionResults.failed += itemsByTable.outputs.length;
           deletionResults.errors.push(`Outputs: ${error.message} (Code: ${error.code})`);
         } else {
-          console.log('[Library] Deleted outputs:', data);
+          logger.debug('[Library] Deleted outputs:', data);
           deletionResults.successful += itemsByTable.outputs.length;
         }
       }
 
       // Delete generated images
       if (itemsByTable.generated_images.length > 0) {
-        console.log('[Library] Deleting generated_images:', itemsByTable.generated_images);
+        logger.debug('[Library] Deleting generated_images:', itemsByTable.generated_images);
         const { error, data } = await supabase
           .from('generated_images')
           .delete()
@@ -340,11 +341,11 @@ export default function Library() {
           .select();
         
         if (error) {
-          console.error('[Library] Error deleting images:', error);
+          logger.error('[Library] Error deleting images:', error);
           deletionResults.failed += itemsByTable.generated_images.length;
           deletionResults.errors.push(`Images: ${error.message} (Code: ${error.code})`);
         } else {
-          console.log('[Library] Deleted images:', data);
+          logger.debug('[Library] Deleted images:', data);
           deletionResults.successful += itemsByTable.generated_images.length;
         }
       }
@@ -372,7 +373,7 @@ export default function Library() {
       setSelectedItems(new Set());
       refetch();
     } catch (error) {
-      console.error('Critical error during deletion:', error);
+      logger.error('Critical error during deletion:', error);
       toast({
         title: "Delete failed",
         description: error instanceof Error ? error.message : "An unexpected error occurred",
@@ -680,7 +681,7 @@ export default function Library() {
                     archived={content.archived}
                     onClick={async () => {
                       // Fetch all images for this session
-                      console.log('[Library] Fetching session images for:', content.id);
+                      logger.debug('[Library] Fetching session images for:', content.id);
                       const { data: images, error } = await supabase
                         .from('generated_images')
                         .select('*')
@@ -689,7 +690,7 @@ export default function Library() {
                         .order('image_order', { ascending: true });
                       
                       if (error) {
-                        console.error('[Library] Error fetching session images:', error);
+                        logger.error('[Library] Error fetching session images:', error);
                         toast({
                           title: "Error loading session",
                           description: error.message,
@@ -698,7 +699,7 @@ export default function Library() {
                         return;
                       }
                       
-                      console.log('[Library] Fetched images:', images?.length || 0);
+                      logger.debug('[Library] Fetched images:', images?.length || 0);
                       
                       if (images && images.length > 0) {
                         setSelectedSession({
@@ -755,7 +756,7 @@ export default function Library() {
 
                       refetch();
                     } catch (error) {
-                      console.error('Error archiving item:', error);
+                      logger.error('Error archiving item:', error);
                       toast({
                         title: "Archive failed",
                         description: "Failed to archive item. Please try again.",

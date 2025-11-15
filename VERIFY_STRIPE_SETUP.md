@@ -93,3 +93,5 @@ Once all 4 functions are deployed and secrets are correct:
 - "Function not found" → Function not deployed
 - CORS error → Function deployment issue
 
+
+

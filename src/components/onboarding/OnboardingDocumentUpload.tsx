@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { OnboardingProgressBar } from "./OnboardingProgressBar";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 interface OnboardingDocumentUploadProps {
   open: boolean;
@@ -117,7 +118,7 @@ export function OnboardingDocumentUpload({
       }, 2000);
 
     } catch (error) {
-      console.error("Error uploading document:", error);
+      logger.error("Error uploading document:", error);
       toast({
         title: "Upload Failed",
         description: error instanceof Error ? error.message : "Failed to upload document.",

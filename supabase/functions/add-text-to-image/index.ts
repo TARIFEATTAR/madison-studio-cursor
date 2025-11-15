@@ -1,5 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import {
+  GEMINI_API_BASE,
+  getGeminiApiKey,
+  convertContentToGeminiParts,
+} from "../_shared/geminiClient.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,42 +44,42 @@ serve(async (req) => {
       userId
     });
 
-    // Get Lovable API key
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY not configured");
-    }
+    const ensureDataUrl = async (url: string) => {
+      if (url.startsWith("data:")) return url;
+      const fetched = await fetch(url);
+      if (!fetched.ok) {
+        throw new Error(`Failed to download reference image (${fetched.status})`);
+      }
+      const contentType = fetched.headers.get("Content-Type") || "image/png";
+      const buffer = await fetched.arrayBuffer();
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+      return `data:${contentType};base64,${base64}`;
+    };
 
-    // Call Nano Banana (Gemini 2.5 Flash Image Preview) to edit the image
-    console.log("Calling Lovable AI (Nano Banana) for image editing...");
+    const referenceImageDataUrl = await ensureDataUrl(imageUrl);
+
+    console.log("Calling Gemini for image editing...");
     
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const GEMINI_API_KEY = getGeminiApiKey();
+    const aiResponse = await fetch(`${GEMINI_API_BASE}/models/gemini-2.5-flash-image-preview:generateContent?key=${GEMINI_API_KEY}`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image-preview",
-        messages: [
+        contents: [
           {
             role: "user",
-            content: [
-              {
-                type: "text",
-                text: textInstruction
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: imageUrl
-                }
-              }
-            ]
-          }
+            parts: convertContentToGeminiParts([
+              { type: "text", text: textInstruction },
+              { type: "image_url", image_url: { url: referenceImageDataUrl } },
+            ]),
+          },
         ],
-        modalities: ["image", "text"]
-      })
+        generationConfig: {
+          responseMimeType: "image/png",
+        },
+      }),
     });
 
     if (!aiResponse.ok) {
@@ -113,10 +118,13 @@ serve(async (req) => {
     }
 
     const aiData = await aiResponse.json();
-    console.log("Nano Banana response received");
+    console.log("Gemini image edit response received");
 
-    // Extract the generated image
-    const generatedImageUrl = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    const parts = aiData?.candidates?.[0]?.content?.parts || [];
+    const imagePart = parts.find((part: any) => part?.inlineData);
+    const generatedImageUrl = imagePart?.inlineData
+      ? `data:${imagePart.inlineData.mimeType || "image/png"};base64,${imagePart.inlineData.data}`
+      : undefined;
     
     if (!generatedImageUrl) {
       console.error("No image in AI response:", JSON.stringify(aiData, null, 2));

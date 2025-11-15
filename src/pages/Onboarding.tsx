@@ -6,6 +6,7 @@ import { OnboardingWelcome } from "@/components/onboarding/OnboardingWelcome";
 import { BrandDNAScan } from "@/components/onboarding/BrandDNAScan";
 import { OnboardingBrandUpload } from "@/components/onboarding/OnboardingBrandUpload";
 import { OnboardingSuccess } from "@/components/onboarding/OnboardingSuccess";
+import { logger } from "@/lib/logger";
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -87,10 +88,10 @@ export default function Onboarding() {
           // Fire and forget - don't wait for completion
           supabase.functions.invoke('analyze-brand-health', {
             body: { organizationId: orgs.id }
-          }).catch(err => console.error('Brand health analysis error:', err));
+          }).catch(err => logger.error('Brand health analysis error:', err));
         }
       } catch (error) {
-        console.error('Error triggering brand health:', error);
+        logger.error('Error triggering brand health:', error);
       }
     }
     

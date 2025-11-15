@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { EmailComposition } from "@/types/emailBlocks";
 import { AUTOSAVE_CONFIG } from "@/config/autosaveConfig";
+import { logger } from "@/lib/logger";
 
 export type SaveStatus = "unsaved" | "saving" | "saved";
 
@@ -85,9 +86,9 @@ export function useEmailBuilderAutosave({
       const savedTime = new Date();
       setLastSavedAt(savedTime);
       setSaveStatus("saved");
-      console.log("[EmailBuilder Autosave] Saved to localStorage at:", savedTime.toLocaleTimeString());
+      logger.debug("[EmailBuilder Autosave] Saved to localStorage at:", savedTime.toLocaleTimeString());
     } catch (error) {
-      console.error("[EmailBuilder Autosave] Error saving to localStorage:", error);
+      logger.error("[EmailBuilder Autosave] Error saving to localStorage:", error);
       setSaveStatus("unsaved");
     }
   };
@@ -146,9 +147,9 @@ export function useEmailBuilderAutosave({
       const savedTime = new Date();
       setLastSavedAt(savedTime);
       setSaveStatus("saved");
-      console.log("[EmailBuilder Autosave] Saved to database at:", savedTime.toLocaleTimeString());
+      logger.debug("[EmailBuilder Autosave] Saved to database at:", savedTime.toLocaleTimeString());
     } catch (error) {
-      console.error("[EmailBuilder Autosave] Error saving to database:", error);
+      logger.error("[EmailBuilder Autosave] Error saving to database:", error);
       setSaveStatus("unsaved");
     }
   };
@@ -160,7 +161,7 @@ export function useEmailBuilderAutosave({
         return JSON.parse(saved);
       }
     } catch (error) {
-      console.error("[EmailBuilder Autosave] Error loading draft:", error);
+      logger.error("[EmailBuilder Autosave] Error loading draft:", error);
     }
     return null;
   };
@@ -168,9 +169,9 @@ export function useEmailBuilderAutosave({
   const clearDraft = () => {
     try {
       localStorage.removeItem(`email-builder-draft-${organizationId}`);
-      console.log("[EmailBuilder Autosave] Draft cleared");
+      logger.debug("[EmailBuilder Autosave] Draft cleared");
     } catch (error) {
-      console.error("[EmailBuilder Autosave] Error clearing draft:", error);
+      logger.error("[EmailBuilder Autosave] Error clearing draft:", error);
     }
   };
 

@@ -132,20 +132,7 @@ Copy the output and add to Supabase secrets:
    - Name: `ANTHROPIC_API_KEY`
    - Value: (paste your key)
 
-#### `LOVABLE_API_KEY` ⚠️ FALLBACK
-- **Used by:** Various functions as fallback
-- **Format:** Lovable API key
-- **Get from:** https://gateway.lovable.dev
-- **Status:** [ ] Set / [ ] Missing
-
-**To set:**
-1. Go to Lovable Gateway
-2. Get your API key
-3. Add to Supabase secrets:
-   - Name: `LOVABLE_API_KEY`
-   - Value: (paste your key)
-
-**Priority:** Gemini → Claude → Lovable (functions try in this order)
+**Priority:** Gemini → Claude
 
 ---
 
@@ -212,7 +199,6 @@ npx supabase secrets set GOOGLE_TOKEN_ENCRYPTION_KEY=$(node -e "console.log(requ
 # AI APIs
 npx supabase secrets set GEMINI_API_KEY=AIza...
 npx supabase secrets set ANTHROPIC_API_KEY=your_key  # Optional
-npx supabase secrets set LOVABLE_API_KEY=your_key    # Optional
 
 # Shopify (if using)
 npx supabase secrets set SHOPIFY_TOKEN_ENCRYPTION_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('base64'))")
@@ -251,8 +237,7 @@ npx supabase secrets set SHOPIFY_TOKEN_ENCRYPTION_KEY=$(node -e "console.log(req
 - **Get from:** Google Cloud Console → Credentials
 
 ### "No AI API configured"
-- **Fix:** Add at least one: `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, or `LOVABLE_API_KEY`
-- **Recommended:** `GEMINI_API_KEY` (most cost-effective)
+- **Fix:** Add at least one: `GEMINI_API_KEY` (recommended) or `ANTHROPIC_API_KEY`
 
 ---
 
@@ -268,7 +253,6 @@ npx supabase secrets set SHOPIFY_TOKEN_ENCRYPTION_KEY=$(node -e "console.log(req
 | `GEMINI_API_KEY` | ✅ Yes* | [ ] Set | 🟡 High |
 | `APP_URL` | ⚠️ Optional | [ ] Set | 🟢 Low |
 | `ANTHROPIC_API_KEY` | ⚠️ Optional | [ ] Set | 🟢 Low |
-| `LOVABLE_API_KEY` | ⚠️ Optional | [ ] Set | 🟢 Low |
 | `SHOPIFY_TOKEN_ENCRYPTION_KEY` | ⚠️ If using | [ ] Set | 🟢 Low |
 
 *At least one AI API key required
@@ -293,6 +277,8 @@ After verifying secrets:
 3. Test content generation
 4. Check function logs for any errors
 5. Proceed with launch! 🚀
+
+
 
 
 

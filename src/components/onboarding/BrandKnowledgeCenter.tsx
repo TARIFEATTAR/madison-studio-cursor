@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
+import { logger } from "@/lib/logger";
 
 interface BrandKnowledgeCenterProps {
   organizationId: string;
@@ -62,9 +63,9 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
 
       if (error) throw error;
       setUploadedDocuments(data || []);
-      console.log("📄 Fetched documents:", data?.length || 0);
+      logger.debug("📄 Fetched documents:", data?.length || 0);
     } catch (error: any) {
-      console.error("Error fetching documents:", error);
+      logger.error("Error fetching documents:", error);
     } finally {
       setLoadingDocuments(false);
     }
@@ -99,7 +100,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
         setWebsiteUrl("");
       }
     } catch (error) {
-      console.error("Error scraping website:", error);
+      logger.error("Error scraping website:", error);
       setUploadStatus("error");
       toast({
         title: "Scraping Failed",
@@ -139,7 +140,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
       
       setBrandVoice("");
     } catch (error) {
-      console.error("Error saving brand voice:", error);
+      logger.error("Error saving brand voice:", error);
       toast({
         title: "Save Failed",
         description: error instanceof Error ? error.message : "Failed to save brand voice.",
@@ -189,7 +190,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
         });
       }
       
-      console.log("📎 Files staged:", [...prev, ...newFiles].map(f => f.name));
+      logger.debug("📎 Files staged:", [...prev, ...newFiles].map(f => f.name));
       return [...prev, ...newFiles];
     });
   };
@@ -226,7 +227,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
           });
 
         if (uploadError) {
-          console.error('Storage upload error:', uploadError);
+          logger.error('Storage upload error:', uploadError);
           throw uploadError;
         }
 
@@ -246,7 +247,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
           .single();
 
         if (insertError) {
-          console.error('Database insert error:', insertError);
+          logger.error('Database insert error:', insertError);
           throw insertError;
         }
 
@@ -257,7 +258,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
           });
           
           if (invokeError) {
-            console.error('Edge function invocation failed:', invokeError);
+            logger.error('Edge function invocation failed:', invokeError);
             
             // Mark as failed immediately so user can retry
             await supabase
@@ -274,7 +275,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
               variant: "destructive"
             });
           } else {
-            console.log('Processing started for', file.name);
+            logger.debug('Processing started for', file.name);
           }
         }
       }
@@ -285,13 +286,13 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
         description: `Successfully uploaded ${stagedFiles.length} document${stagedFiles.length > 1 ? 's' : ''}.`,
       });
 
-      console.log("✅ Documents uploaded successfully:", stagedFiles.map(f => f.name));
+      logger.debug("✅ Documents uploaded successfully:", stagedFiles.map(f => f.name));
       
       // Clear staging area and refresh list
       setStagedFiles([]);
       await fetchUploadedDocuments();
     } catch (error) {
-      console.error("Error uploading documents:", error);
+      logger.error("Error uploading documents:", error);
       setUploadStatus("error");
       toast({
         title: "Upload Failed",
@@ -351,7 +352,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
         fetchUploadedDocuments();
       }, 2000);
     } catch (error: any) {
-      console.error('Retry error:', error);
+      logger.error('Retry error:', error);
       toast({
         title: "Retry Failed",
         description: error.message || "Failed to retry processing",

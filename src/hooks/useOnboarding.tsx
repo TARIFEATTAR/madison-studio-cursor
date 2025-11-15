@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { getIndustryTemplate } from "@/config/industryTemplates";
+import { logger } from "@/lib/logger";
 
 type OnboardingStep = "welcome_pending" | "document_pending" | "first_generation_pending" | "completed";
 
@@ -19,14 +20,14 @@ export function useOnboarding() {
 
   useEffect(() => {
     if (!user || hasCheckedRef.current) {
-      console.log("[useOnboarding] Skipping check:", { hasUser: !!user, hasChecked: hasCheckedRef.current });
+      logger.debug("[useOnboarding] Skipping check:", { hasUser: !!user, hasChecked: hasCheckedRef.current });
       if (!user) setIsLoading(false);
       return;
     }
 
     hasCheckedRef.current = true;
 
-    console.log("[useOnboarding] Starting onboarding check for user:", user.id);
+    logger.debug("[useOnboarding] Starting onboarding check for user:", user.id);
     const checkOnboardingStatus = async () => {
       try {
         // Get onboarding step from localStorage first (fast, no network call)
@@ -71,12 +72,12 @@ export function useOnboarding() {
                   setShowBanner(true);
                 }
               })
-              .catch(err => console.error("Error checking brand knowledge:", err));
+              .catch(err => logger.error("Error checking brand knowledge:", err));
           }
         } else if (userOrgs) {
           // User already has an organization, use it
           orgId = userOrgs.id;
-          console.log("Found existing organization:", orgId);
+          logger.debug("Found existing organization:", orgId);
           setCurrentOrganizationId(orgId);
           
           // Use upsert to avoid conflicts - will insert if not exists, update if exists
@@ -93,7 +94,7 @@ export function useOnboarding() {
             })
             .then(({ error: memberError }) => {
               if (memberError) {
-                console.error("Failed to ensure user is organization member:", memberError);
+                logger.error("Failed to ensure user is organization member:", memberError);
               }
             });
           
@@ -109,11 +110,11 @@ export function useOnboarding() {
                   setShowBanner(true);
                 }
               })
-              .catch(err => console.error("Error checking brand knowledge:", err));
+              .catch(err => logger.error("Error checking brand knowledge:", err));
           }
         } else {
           // Create personal organization
-          console.log("Creating new organization for user");
+          logger.debug("Creating new organization for user");
           const { data: newOrg, error: orgError } = await supabase
             .from("organizations")
             .insert({
@@ -124,7 +125,7 @@ export function useOnboarding() {
             .single();
 
           if (orgError) {
-            console.error("Failed to create organization:", orgError);
+            logger.error("Failed to create organization:", orgError);
             throw orgError;
           }
           
@@ -150,10 +151,10 @@ export function useOnboarding() {
               })
           ]).then(([memberResult, collectionResult]) => {
             if (memberResult.error) {
-              console.error("Failed to add user as organization owner:", memberResult.error);
+              logger.error("Failed to add user as organization owner:", memberResult.error);
             }
             if (collectionResult.error) {
-              console.error("Failed to create default collection:", collectionResult.error);
+              logger.error("Failed to create default collection:", collectionResult.error);
             }
           });
         }
@@ -167,21 +168,21 @@ export function useOnboarding() {
           setShowForgeGuide(true);
         }
       } catch (error) {
-        console.error("[useOnboarding] Error checking onboarding status:", error);
+        logger.error("[useOnboarding] Error checking onboarding status:", error);
         // On error, mark as completed to not block the user
         setOnboardingStep("completed");
         if (user) {
           localStorage.setItem(`onboarding_step_${user.id}`, "completed");
         }
       } finally {
-        console.log("[useOnboarding] Onboarding check complete, setting loading to false");
+        logger.debug("[useOnboarding] Onboarding check complete, setting loading to false");
         setIsLoading(false);
       }
     };
 
     // Reduced safety timeout for faster initial load
     const safetyTimeout = setTimeout(() => {
-      console.warn("[useOnboarding] Safety timeout reached, forcing loading to false");
+      logger.warn("[useOnboarding] Safety timeout reached, forcing loading to false");
       setIsLoading(false);
     }, 1000); // Reduced from 2000ms for faster page load
 
@@ -227,7 +228,7 @@ export function useOnboarding() {
       setShowWelcome(false);
       setShowDocumentUpload(true);
     } catch (error) {
-      console.error("Error completing welcome:", error);
+      logger.error("Error completing welcome:", error);
     }
   };
 
