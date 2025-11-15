@@ -49,17 +49,17 @@ Open browser DevTools (F12) → Console tab, run:
 ```javascript
 console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL)
 ```
-Should show: `https://iflwjiwkbxuvmiviqdxv.supabase.co`
+Should show: `https://likkskifwsrvszxdvufw.supabase.co`
 
 ### Check 2: Verify Supabase Connection
 In DevTools → Network tab:
-1. Filter by: `iflwjiwkbxuvmiviqdxv.supabase.co`
+1. Filter by: `likkskifwsrvszxdvufw.supabase.co`
 2. Sign in or navigate pages
 3. You should see requests to your Supabase project ✅
 
 ### Check 3: Verify Database Tables
 In Supabase Dashboard:
-1. Go to: `https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/editor`
+1. Go to: `https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/editor`
 2. Check "Table Editor"
 3. You should see tables like:
    - `organizations`

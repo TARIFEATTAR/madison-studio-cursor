@@ -4,11 +4,11 @@
 
 ### 1. Environment Variables
 - [x] `.env` file exists with:
-  - `VITE_SUPABASE_URL=https://iflwjiwkbxuvmiviqdxv.supabase.co`
+  - `VITE_SUPABASE_URL=https://likkskifwsrvszxdvufw.supabase.co`
   - `VITE_SUPABASE_PUBLISHABLE_KEY=your_anon_key`
 
 ### 2. Supabase Project
-- [x] Supabase project: `iflwjiwkbxuvmiviqdxv`
+- [x] Supabase project: `likkskifwsrvszxdvufw`
 - [x] All 111 database migrations applied successfully
 - [x] Google Auth enabled and working
 - [x] Auth redirect URLs configured:

@@ -2,7 +2,7 @@
 
 ## Quick Deploy via Supabase Dashboard
 
-You're at: https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/functions
+You're at: https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/functions
 
 ### Steps:
 
@@ -22,7 +22,7 @@ You're at: https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/functions
 If you have Supabase CLI access configured:
 
 ```bash
-npx supabase functions deploy get-subscription --project-ref iflwjiwkbxuvmiviqdxv
+npx supabase functions deploy get-subscription --project-ref likkskifwsrvszxdvufw
 ```
 
 ---
@@ -31,7 +31,7 @@ npx supabase functions deploy get-subscription --project-ref iflwjiwkbxuvmiviqdx
 
 Once deployed, you should see `get-subscription` appear in the functions list with:
 - Status: Active
-- URL: `https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/get-subscription`
+- URL: `https://likkskifwsrvszxdvufw.supabase.co/functions/v1/get-subscription`
 
 Then:
 1. Go back to billing page: http://localhost:8080/settings
@@ -50,6 +50,12 @@ The main issue was the missing table, which we fixed. Let's test if the billing 
 3. Check browser console (F12)
 
 If the only error is about the function not existing, we can deploy it. If the page loads the 3 plans, we might not need to deploy it at all!
+
+
+
+
+
+
 
 
 

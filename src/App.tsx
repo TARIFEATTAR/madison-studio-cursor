@@ -268,10 +268,11 @@ const AppContent = () => {
                   <Route path="/help-center" element={<ProtectedRoute><RouteErrorBoundary routeName="Help Center"><HelpCenter /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/email-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Builder"><EmailBuilderV2 /></RouteErrorBoundary></ProtectedRoute>} />
+                  {/* Email Builder routes - Temporarily hidden for launch */}
+                  {/* <Route path="/email-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Builder"><EmailBuilderV2 /></RouteErrorBoundary></ProtectedRoute>} /> */}
                   {/* Legacy redirects */}
-                  <Route path="/email-composer" element={<Navigate to="/email-builder" replace />} />
-                  <Route path="/email-builder-v2" element={<Navigate to="/email-builder" replace />} />
+                  {/* <Route path="/email-composer" element={<Navigate to="/email-builder" replace />} /> */}
+                  {/* <Route path="/email-builder-v2" element={<Navigate to="/email-builder" replace />} /> */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>
@@ -303,10 +304,11 @@ const AppContent = () => {
             <Route path="/help-center" element={<ProtectedRoute><RouteErrorBoundary routeName="Help Center"><HelpCenter /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/email-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Builder"><EmailBuilderV2 /></RouteErrorBoundary></ProtectedRoute>} />
+            {/* Email Builder routes - Temporarily hidden for launch */}
+            {/* <Route path="/email-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Builder"><EmailBuilderV2 /></RouteErrorBoundary></ProtectedRoute>} /> */}
             {/* Legacy redirects */}
-            <Route path="/email-composer" element={<Navigate to="/email-builder" replace />} />
-            <Route path="/email-builder-v2" element={<Navigate to="/email-builder" replace />} />
+            {/* <Route path="/email-composer" element={<Navigate to="/email-builder" replace />} /> */}
+            {/* <Route path="/email-builder-v2" element={<Navigate to="/email-builder" replace />} /> */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </>

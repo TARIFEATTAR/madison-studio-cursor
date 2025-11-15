@@ -11,7 +11,7 @@ The OPTIONS handler now explicitly returns `status: 200` instead of `status: 204
 ### Option 1: Via Supabase Dashboard (Recommended)
 
 1. **Go to Supabase Dashboard:**
-   - Navigate to: https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/functions
+   - Navigate to: https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/functions
    - Or: Your Project → Edge Functions → `get-subscription`
 
 2. **Open the Function:**
@@ -71,7 +71,7 @@ supabase functions deploy get-subscription
 Run this in browser console:
 
 ```javascript
-fetch('https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/get-subscription', {
+fetch('https://likkskifwsrvszxdvufw.supabase.co/functions/v1/get-subscription', {
   method: 'OPTIONS',
   headers: {
     'Access-Control-Request-Method': 'GET',
@@ -226,6 +226,12 @@ serve(async (req) => {
   }
 });
 ```
+
+
+
+
+
+
 
 
 

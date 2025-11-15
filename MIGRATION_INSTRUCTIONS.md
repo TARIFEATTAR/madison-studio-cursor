@@ -5,11 +5,11 @@
 ### Step-by-Step:
 
 1. **Go to Supabase Dashboard**
-   - URL: https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv
+   - URL: https://supabase.com/dashboard/project/likkskifwsrvszxdvufw
 
 2. **Navigate to SQL Editor**
    - Click **SQL Editor** in the left sidebar
-   - Or go directly: https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/sql/new
+   - Or go directly: https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/sql/new
 
 3. **Open the Migration File**
    - File location: `supabase/migrations/20251105120000_update_madison_pricing_tiers.sql`
@@ -91,6 +91,12 @@ Expected output:
 **If you get permission errors:**
 - Make sure you're logged in as a project owner/admin
 - Try running individual sections of the migration separately
+
+
+
+
+
+
 
 
 

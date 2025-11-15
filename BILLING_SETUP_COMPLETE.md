@@ -74,7 +74,7 @@ APP_URL=http://localhost:5173
 
 1. **In Stripe Dashboard**: Go to **Developers** → **Webhooks**
 2. **Add Endpoint**:
-   - URL: `https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/stripe-webhook`
+   - URL: `https://likkskifwsrvszxdvufw.supabase.co/functions/v1/stripe-webhook`
    - Description: "Madison Billing Webhook"
 3. **Select Events to Listen To**:
    - `customer.subscription.created`

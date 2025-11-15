@@ -6,7 +6,7 @@
 
 **Check:**
 - [ ] You see a webhook endpoint listed
-- [ ] Endpoint URL matches: `https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/stripe-webhook`
+- [ ] Endpoint URL matches: `https://likkskifwsrvszxdvufw.supabase.co/functions/v1/stripe-webhook`
 - [ ] Status shows as "Enabled" or "Receiving events"
 - [ ] All 6 events are selected:
   - [ ] `customer.subscription.created`
@@ -20,7 +20,7 @@
 
 ## Step 2: Verify Supabase Secret is Set
 
-**Go to:** https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/settings/functions
+**Go to:** https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/settings/functions
 
 **Scroll to "Secrets" section**
 
@@ -37,7 +37,7 @@
 
 ## Step 3: Verify Edge Function is Deployed
 
-**Go to:** https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/functions
+**Go to:** https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/functions
 
 **Check:**
 - [ ] `stripe-webhook` function appears in the list
@@ -171,6 +171,12 @@ SELECT status, COUNT(*)
 FROM subscriptions 
 GROUP BY status;
 ```
+
+
+
+
+
+
 
 
 

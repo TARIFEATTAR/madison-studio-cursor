@@ -67,25 +67,13 @@ export function BillingTab() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      console.log('[BillingTab] Calling get-subscription function...');
       const { data, error } = await supabase.functions.invoke('get-subscription', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
       });
 
-      // Log for debugging
-      console.log('[BillingTab] get-subscription response:', { 
-        hasData: !!data, 
-        hasError: !!error,
-        subscription: data?.subscription ? 'present' : 'missing',
-        paymentMethods: data?.paymentMethods?.length || 0,
-        invoices: data?.invoices?.length || 0,
-        error: error?.message || null
-      });
-
       if (error) {
-        console.error('[BillingTab] Function error:', error);
         // Handle specific error cases
         if (error.message?.includes('No organization') || error.message?.includes('not found')) {
           // User hasn't completed onboarding - this is OK
@@ -108,8 +96,6 @@ export function BillingTab() {
         setInvoices([]);
       }
     } catch (error: any) {
-      console.error('Error fetching subscription:', error);
-      
       // Don't show error toast for expected cases (no subscription, no org)
       const errorMessage = error?.message || '';
       if (!errorMessage.includes('No organization') && !errorMessage.includes('No subscription')) {
@@ -178,6 +164,22 @@ export function BillingTab() {
         features.push('Full white-label included');
       }
       
+      // Stripe Price IDs from Stripe Dashboard (test mode)
+      const priceIds: Record<TierId, { monthly: string; yearly: string }> = {
+        atelier: {
+          monthly: 'price_1SQKzID9l7wPFqooVHalDG2R',
+          yearly: 'price_1SQLepD9l7wPFqooLEeJ92JN',
+        },
+        studio: {
+          monthly: 'price_1SQLg8D9l7wPFqoodEyzyrE8',
+          yearly: 'price_1SQLgjD9l7wPFqooCaYOejpK',
+        },
+        maison: {
+          monthly: 'price_1SQLiKD9l7wPFqooNhmlAOB7',
+          yearly: 'price_1SQLigD9l7wPFqooiVrldrhF',
+        },
+      };
+
       return {
         id: tierId, // Use tier ID as fallback ID
         name: tier.name,
@@ -188,8 +190,8 @@ export function BillingTab() {
         features: features,
         is_active: true,
         sort_order: index + 1,
-        stripe_price_id_monthly: null,
-        stripe_price_id_yearly: null,
+        stripe_price_id_monthly: priceIds[tierId]?.monthly || null,
+        stripe_price_id_yearly: priceIds[tierId]?.yearly || null,
       };
     });
   }, []);
@@ -198,7 +200,6 @@ export function BillingTab() {
   useEffect(() => {
     const fallbackPlans = convertTiersToPlans();
     setAvailablePlans(fallbackPlans);
-    console.log('[BillingTab] Initialized with fallback plans:', fallbackPlans.length);
   }, [convertTiersToPlans]);
 
   useEffect(() => {
@@ -250,7 +251,6 @@ export function BillingTab() {
 
   const fetchAvailablePlans = async () => {
     try {
-      console.log('[BillingTab] Fetching plans from database...');
       const { data, error } = await supabase
         .from('subscription_plans' as any)
         .select('*')
@@ -258,9 +258,7 @@ export function BillingTab() {
         .order('sort_order');
 
       if (error) {
-        console.error('[BillingTab] Database error fetching plans:', error);
         // Fall back to hardcoded tiers from config
-        console.log('[BillingTab] Falling back to hardcoded tiers from subscriptionTiers.ts');
         const fallbackPlans = convertTiersToPlans();
         setAvailablePlans(fallbackPlans);
         toast({
@@ -271,11 +269,8 @@ export function BillingTab() {
         return;
       }
       
-      console.log('[BillingTab] Plans loaded from database:', data?.length || 0, data);
-      
       // If no plans loaded from database, use fallback
       if (!data || data.length === 0) {
-        console.warn('[BillingTab] No plans in database, using fallback from subscriptionTiers.ts');
         const fallbackPlans = convertTiersToPlans();
         setAvailablePlans(fallbackPlans);
         toast({
@@ -287,7 +282,6 @@ export function BillingTab() {
         setAvailablePlans(data);
       }
     } catch (error) {
-      console.error('[BillingTab] Exception fetching plans:', error);
       // Always fall back to hardcoded tiers
       const fallbackPlans = convertTiersToPlans();
       setAvailablePlans(fallbackPlans);
@@ -332,7 +326,6 @@ export function BillingTab() {
         throw new Error('No checkout URL returned');
       }
     } catch (error: any) {
-      console.error('Error creating checkout session:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to start checkout. Please ensure Stripe products are configured.",
@@ -362,7 +355,6 @@ export function BillingTab() {
         window.location.href = data.url;
       }
     } catch (error: any) {
-      console.error('Error creating portal session:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to open billing portal",

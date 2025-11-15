@@ -53,7 +53,7 @@ ORDER BY sort_order;
 Open browser console and run:
 
 ```javascript
-fetch('https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/get-subscription', {
+fetch('https://likkskifwsrvszxdvufw.supabase.co/functions/v1/get-subscription', {
   method: 'OPTIONS',
   headers: {
     'Access-Control-Request-Method': 'GET',
@@ -252,6 +252,12 @@ serve(async (req) => {
   }
 });
 ```
+
+
+
+
+
+
 
 
 

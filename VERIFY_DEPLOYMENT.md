@@ -20,7 +20,7 @@
 Run this in browser console to see what status the function is actually returning:
 
 ```javascript
-fetch('https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/get-subscription', {
+fetch('https://likkskifwsrvszxdvufw.supabase.co/functions/v1/get-subscription', {
   method: 'OPTIONS',
   headers: {
     'Access-Control-Request-Method': 'GET',
@@ -69,6 +69,12 @@ The function might need to be completely redeployed. Try:
 2. **Or use a different CORS pattern** - some Supabase functions use different approaches
 
 Let me know what you see when you check the deployed code!
+
+
+
+
+
+
 
 
 

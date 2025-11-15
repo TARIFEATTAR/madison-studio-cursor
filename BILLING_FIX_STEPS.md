@@ -9,7 +9,7 @@
 ## Step 1: Create the subscription_plans table
 
 ### Go to Supabase SQL Editor
-https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/sql/new
+https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/sql/new
 
 ### Run this SQL:
 
@@ -106,7 +106,7 @@ You should see 3 rows:
 
 ### Option A: Via Supabase Dashboard (Easiest)
 
-1. Go to: https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/functions
+1. Go to: https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/functions
 2. Find `get-subscription` in the list
 3. Click the **︙** (3 dots) menu
 4. Click **"Deploy new version"** or **"Redeploy"**
@@ -150,6 +150,12 @@ If your functions are deployed via GitHub:
 
 ### Plans show but no prices
 → Check Stripe Price IDs are correct in the database
+
+
+
+
+
+
 
 
 

@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { VideoHelpTrigger } from "@/components/help/VideoHelpTrigger";
 import madisonLogo from "@/assets/madison-horizontal-logo.png";
+import { getOrCreateOrganizationId } from "@/lib/organization";
 
 interface OnboardingBrandUploadProps {
   onContinue: (data: any) => void;
@@ -53,16 +54,11 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
     setIsProcessing(true);
 
     try {
-      // Get organization ID
-      const { data: org } = await supabase
-        .from('organizations')
-        .select('id')
-        .eq('created_by', user?.id)
-        .single();
-
-      if (!org) {
-        throw new Error('Organization not found');
+      if (!user?.id) {
+        throw new Error('User not authenticated');
       }
+
+      const organizationId = await getOrCreateOrganizationId(user.id);
 
       let uploadContent = "";
 
@@ -71,7 +67,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
         const fileName = `${Date.now()}-${uploadedFile.name}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('brand-documents')
-          .upload(`${org.id}/${fileName}`, uploadedFile);
+          .upload(`${organizationId}/${fileName}`, uploadedFile);
 
         if (uploadError) throw uploadError;
 
@@ -84,7 +80,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
         const { error: docError } = await supabase
           .from('brand_documents')
           .insert({
-            organization_id: org.id,
+            organization_id: organizationId,
             uploaded_by: user?.id,
             file_name: uploadedFile.name,
             file_type: 'pdf',
@@ -109,7 +105,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
           {
             body: {
               url: websiteUrlTrimmed,
-              organizationId: org.id
+              organizationId
             }
           }
         );
@@ -130,7 +126,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
         const { error: knowledgeError } = await supabase
           .from('brand_knowledge')
           .insert({
-            organization_id: org.id,
+            organization_id: organizationId,
             knowledge_type: 'brand_guidelines',
             content: { text: manualText }
           });

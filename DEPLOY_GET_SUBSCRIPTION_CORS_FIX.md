@@ -11,7 +11,7 @@ The CORS preflight handler was returning the wrong status code. Updated to:
 
 ### Option 1: Supabase Dashboard (Recommended)
 
-1. Go to: https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/functions
+1. Go to: https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/functions
 2. Find `get-subscription` in the list
 3. Click the **"Deploy"** or **"Redeploy"** button
 4. Wait for deployment to complete (~30 seconds)
@@ -22,14 +22,14 @@ If you have your Supabase access token:
 
 ```bash
 npx supabase@latest functions deploy get-subscription \
-  --project-ref iflwjiwkbxuvmiviqdxv \
+  --project-ref likkskifwsrvszxdvufw \
   --access-token YOUR_ACCESS_TOKEN
 ```
 
 ## Verify Deployment
 
 After deploying, check the function logs:
-1. Go to: https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/functions/get-subscription/logs
+1. Go to: https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/functions/get-subscription/logs
 2. Look for any errors
 
 ## Test the Fix
@@ -66,5 +66,11 @@ The key changes:
 ---
 
 **After deploying, the CORS error should be resolved!** 🚀
+
+
+
+
+
+
 
 

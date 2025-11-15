@@ -8,7 +8,7 @@ Console shows CORS error - function can't be reached. This means either:
 
 ## Step 1: Verify Function Exists
 
-Go to: https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/functions
+Go to: https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/functions
 
 **Question: Do you see `get-subscription` in the list?**
 
@@ -204,6 +204,12 @@ Tell me:
 - [ ] Is `get-subscription` visible in Functions list?
 - [ ] When was it last deployed?
 - [ ] Does the code have the OPTIONS handler with status 204?
+
+
+
+
+
+
 
 
 

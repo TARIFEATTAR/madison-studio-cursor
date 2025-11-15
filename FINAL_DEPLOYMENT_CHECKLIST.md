@@ -34,7 +34,7 @@ Cmd+Shift+R (Mac) or Ctrl+Shift+R (Windows)
 ### Step 3: Test OPTIONS Request
 Open browser console and run:
 ```javascript
-fetch('https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/get-subscription', {
+fetch('https://likkskifwsrvszxdvufw.supabase.co/functions/v1/get-subscription', {
   method: 'OPTIONS'
 })
 .then(r => {
@@ -87,6 +87,9 @@ After deployment, answer these:
 - [ ] Subscription plans appear?
 
 Let me know what you see after testing!
+
+
+
 
 
 

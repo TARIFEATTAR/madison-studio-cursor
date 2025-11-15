@@ -3,7 +3,7 @@
 ## Quick Method: Use Supabase Dashboard SQL Editor
 
 ### Step 1: Open SQL Editor
-1. Go to: https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv
+1. Go to: https://supabase.com/dashboard/project/likkskifwsrvszxdvufw
 2. Click **"SQL Editor"** in the left sidebar
 3. Click **"New query"** button
 

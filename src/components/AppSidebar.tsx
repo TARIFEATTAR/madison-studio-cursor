@@ -50,7 +50,7 @@ export function AppSidebar() {
       { url: "/create" },
       { url: "/multiply" },
       { url: "/image-editor" },
-      { url: "/email-builder" },
+      // { url: "/email-builder" }, // Temporarily hidden for launch
     ];
     const libraryItems = [
       { url: "/library" },
@@ -88,7 +88,7 @@ export function AppSidebar() {
         { title: "Create", url: "/create", icon: Pencil },
         { title: "Multiply", url: "/multiply", icon: Share2 },
         { title: "Image Studio", url: "/image-editor", icon: Image },
-        { title: "Email Builder", url: "/email-builder", icon: Mail },
+        // { title: "Email Builder", url: "/email-builder", icon: Mail }, // Temporarily hidden for launch
       ]
     },
     {

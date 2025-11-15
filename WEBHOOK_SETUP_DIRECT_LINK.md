@@ -16,7 +16,7 @@ After clicking the link above:
 
 ### Endpoint URL:
 ```
-https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/stripe-webhook
+https://likkskifwsrvszxdvufw.supabase.co/functions/v1/stripe-webhook
 ```
 
 ### Description:
@@ -35,6 +35,12 @@ Madison Studio Billing Webhook
 ### After Saving:
 - Copy the **Signing secret** (starts with `whsec_`)
 - Add it to Supabase secrets as `STRIPE_WEBHOOK_SECRET`
+
+
+
+
+
+
 
 
 

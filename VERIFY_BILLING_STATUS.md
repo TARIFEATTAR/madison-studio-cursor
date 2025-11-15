@@ -3,14 +3,14 @@
 ## Quick Checks
 
 ### 1. Check Function is Deployed
-Go to: https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/functions
+Go to: https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/functions
 
 **Look for:** `get-subscription` in the list
 - ✅ **If you see it:** Function is deployed!
 - ❌ **If you don't see it:** Function wasn't deployed yet
 
 ### 2. Check Table Exists
-Go to: https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/sql/new
+Go to: https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/sql/new
 
 Run this:
 ```sql
@@ -47,6 +47,12 @@ Please tell me:
 1. **Do you see `get-subscription` in the Functions list?** (Yes/No)
 2. **What does the billing page show?** (Plans visible? Error messages?)
 3. **What errors are in the console?** (Copy/paste or describe)
+
+
+
+
+
+
 
 
 

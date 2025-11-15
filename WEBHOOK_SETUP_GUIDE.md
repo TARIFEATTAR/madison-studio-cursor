@@ -3,7 +3,7 @@
 ## 🎯 Your Webhook URL
 
 ```
-https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/stripe-webhook
+https://likkskifwsrvszxdvufw.supabase.co/functions/v1/stripe-webhook
 ```
 
 ---
@@ -17,7 +17,7 @@ https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/stripe-webhook
 
 3. **Endpoint URL**: Paste this exact URL:
    ```
-   https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/stripe-webhook
+   https://likkskifwsrvszxdvufw.supabase.co/functions/v1/stripe-webhook
    ```
 
 4. **Description**: `Madison Studio Billing Webhook`
@@ -54,7 +54,7 @@ https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/stripe-webhook
 ## Step 3: Add Secret to Supabase
 
 1. **Go to Supabase Dashboard**: 
-   - https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/settings/functions
+   - https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/settings/functions
 
 2. **Scroll down to "Secrets"** section
 
@@ -72,7 +72,7 @@ https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/stripe-webhook
 
 Make sure your `stripe-webhook` function is deployed:
 
-1. **Go to**: https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/functions
+1. **Go to**: https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/functions
 
 2. **Look for** `stripe-webhook` in the list
 
@@ -121,7 +121,7 @@ Make sure your `stripe-webhook` function is deployed:
 ## ✅ Verification Checklist
 
 - [ ] Webhook endpoint created in Stripe
-- [ ] Webhook URL is correct: `https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/stripe-webhook`
+- [ ] Webhook URL is correct: `https://likkskifwsrvszxdvufw.supabase.co/functions/v1/stripe-webhook`
 - [ ] All 6 events are selected
 - [ ] Webhook signing secret copied (`whsec_...`)
 - [ ] `STRIPE_WEBHOOK_SECRET` added to Supabase secrets
@@ -163,6 +163,12 @@ Your billing system will automatically:
 - ✅ Handle subscription cancellations
 
 The webhook is critical for keeping your database in sync with Stripe!
+
+
+
+
+
+
 
 
 

@@ -21,7 +21,7 @@ This suggests either:
 Run this in your browser console:
 
 ```javascript
-fetch('https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/get-subscription', {
+fetch('https://likkskifwsrvszxdvufw.supabase.co/functions/v1/get-subscription', {
   method: 'OPTIONS',
   headers: {
     'Access-Control-Request-Method': 'GET',
@@ -72,7 +72,7 @@ const token = session?.access_token;
 if (!token) {
   console.error('Not logged in!');
 } else {
-  fetch('https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/get-subscription', {
+  fetch('https://likkskifwsrvszxdvufw.supabase.co/functions/v1/get-subscription', {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -147,6 +147,12 @@ After running the tests, share:
 3. Whether the GET request works (if OPTIONS works)
 
 This will help determine if it's a deployment issue, caching, or something else.
+
+
+
+
+
+
 
 
 

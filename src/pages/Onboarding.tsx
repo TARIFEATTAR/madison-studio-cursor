@@ -40,7 +40,6 @@ export default function Onboarding() {
 
     // Check if user chose Brand DNA scan
     if (stepData.useBrandDNAScan) {
-      setScanningBrandDNA(true);
       setCurrentStep(2); // Go to Brand DNA scan
     } else if (stepData.skipDeepDive) {
       // User scanned DNA but wants to skip document upload
@@ -100,36 +99,37 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-screen bg-background">
-      {currentStep === 1 && (
+      {currentStep === 1 ? (
         <OnboardingWelcome
           onContinue={handleStepComplete}
           onSkip={handleSkip}
           initialData={onboardingData}
         />
-      )}
-
-      {currentStep === 2 && scanningBrandDNA && (
+      ) : currentStep === 2 ? (
         <BrandDNAScan
           onContinue={handleStepComplete}
           onBack={handleBack}
           onSkip={handleSkip}
           brandData={onboardingData}
         />
-      )}
-
-      {currentStep === 3 && (
+      ) : currentStep === 3 ? (
         <OnboardingBrandUpload
           onContinue={handleStepComplete}
           onBack={handleBack}
           onSkip={handleSkip}
           brandData={onboardingData}
         />
-      )}
-
-      {currentStep === 4 && (
+      ) : currentStep === 4 ? (
         <OnboardingSuccess
           brandData={onboardingData}
           onComplete={handleComplete}
+        />
+      ) : (
+        // Fallback: if currentStep is invalid or state is corrupt, reset to step 1
+        <OnboardingWelcome
+          onContinue={handleStepComplete}
+          onSkip={handleSkip}
+          initialData={onboardingData}
         />
       )}
     </div>

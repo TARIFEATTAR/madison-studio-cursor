@@ -64,7 +64,7 @@ Go to: https://dashboard.stripe.com/test/products
 
 1. **Stripe Dashboard** → **Developers** → **Webhooks**
 2. **Add Endpoint:**
-   - URL: `https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/stripe-webhook`
+   - URL: `https://likkskifwsrvszxdvufw.supabase.co/functions/v1/stripe-webhook`
    - Events: `customer.subscription.*`, `invoice.*`, `payment_method.attached`
 3. **Copy Signing Secret** (`whsec_...`)
 4. **Add to Supabase Secrets:**
@@ -115,6 +115,12 @@ In Supabase Dashboard → **Settings** → **Edge Functions** → **Secrets**:
 ---
 
 Once you complete Steps 2-4, your billing system will be fully configured! 🚀
+
+
+
+
+
+
 
 
 

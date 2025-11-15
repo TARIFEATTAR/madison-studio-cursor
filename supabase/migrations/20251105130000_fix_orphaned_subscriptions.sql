@@ -48,3 +48,9 @@ AND EXISTS (SELECT 1 FROM subscription_plans WHERE slug = 'studio');
 
 
 
+
+
+
+
+
+

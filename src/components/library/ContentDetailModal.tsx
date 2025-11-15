@@ -558,8 +558,8 @@ export function ContentDetailModal({
           {/* Action Buttons */}
           {!isEditing && (
             <div className="flex items-center gap-2 pt-4 border-t border-border/40">
-              {/* Special Edit button for Email Composer emails */}
-              {isEmailComposer ? (
+              {/* Special Edit button for Email Composer emails - Temporarily hidden for launch */}
+              {/* {isEmailComposer ? (
                 <Button 
                   onClick={() => window.location.href = `/email-builder?contentId=${content.id}&sourceTable=master_content`} 
                   variant="default"
@@ -569,7 +569,7 @@ export function ContentDetailModal({
                   <Mail className="w-4 h-4 mr-2" />
                   Edit in Email Composer
                 </Button>
-              ) : !isVisualAsset && (
+              ) : */ !isVisualAsset && (
                 <Button onClick={handleEdit} variant="outline" size="sm">
                   <Edit2 className="w-4 h-4 mr-2" />
                   Edit

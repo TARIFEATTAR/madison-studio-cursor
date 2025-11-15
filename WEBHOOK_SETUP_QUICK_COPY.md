@@ -4,7 +4,7 @@
 
 ### Webhook URL (paste into Stripe):
 ```
-https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/stripe-webhook
+https://likkskifwsrvszxdvufw.supabase.co/functions/v1/stripe-webhook
 ```
 
 ### Events to Select (check all 6):
@@ -30,6 +30,12 @@ https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/stripe-webhook
 5. **Supabase Dashboard** → **Settings** → **Edge Functions** → **Secrets**
 6. **Add secret**: `STRIPE_WEBHOOK_SECRET` = `whsec_...`
 7. **Done!** ✅
+
+
+
+
+
+
 
 
 

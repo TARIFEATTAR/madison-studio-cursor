@@ -17,22 +17,22 @@ Your React app needs these environment variables in a `.env` file in the project
 
 ```bash
 # Supabase Project URL
-VITE_SUPABASE_URL=https://iflwjiwkbxuvmiviqdxv.supabase.co
+VITE_SUPABASE_URL=https://likkskifwsrvszxdvufw.supabase.co
 
 # Supabase Anon/Public Key (safe to expose in frontend)
 VITE_SUPABASE_PUBLISHABLE_KEY=your_anon_key_here
 
 # Optional: Project ID
-VITE_SUPABASE_PROJECT_ID=iflwjiwkbxuvmiviqdxv
+VITE_SUPABASE_PROJECT_ID=likkskifwsrvszxdvufw
 ```
 
 ### Where to get these values:
 
 1. **Go to Supabase Dashboard:**
-   - https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/settings/api
+   - https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/settings/api
 
 2. **Copy these values:**
-   - **Project URL**: `https://iflwjiwkbxuvmiviqdxv.supabase.co` (shown at top)
+   - **Project URL**: `https://likkskifwsrvszxdvufw.supabase.co` (shown at top)
    - **anon/public key**: Copy the "anon public" key (starts with `eyJhbGci...`)
 
 3. **Create `.env` file** in your project root:
@@ -43,7 +43,7 @@ VITE_SUPABASE_PROJECT_ID=iflwjiwkbxuvmiviqdxv
 
 4. **Add the values** to `.env`:
    ```bash
-   VITE_SUPABASE_URL=https://iflwjiwkbxuvmiviqdxv.supabase.co
+   VITE_SUPABASE_URL=https://likkskifwsrvszxdvufw.supabase.co
    VITE_SUPABASE_PUBLISHABLE_KEY=paste_your_anon_key_here
    ```
 
@@ -62,7 +62,7 @@ console.log('Has Key:', !!import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
 ```
 
 Should show:
-- `Supabase URL: https://iflwjiwkbxuvmiviqdxv.supabase.co`
+- `Supabase URL: https://likkskifwsrvszxdvufw.supabase.co`
 - `Has Key: true`
 
 ---
@@ -76,7 +76,7 @@ Edge Functions automatically get these environment variables from Supabase:
 ### Verify Edge Function Environment Variables:
 
 1. **Go to Supabase Dashboard:**
-   - https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/settings/functions
+   - https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/settings/functions
 
 2. **Check Secrets:**
    - These are automatically set by Supabase
@@ -92,7 +92,7 @@ Edge Functions automatically get these environment variables from Supabase:
 ## Quick Checklist
 
 - [ ] `.env` file exists in project root
-- [ ] `VITE_SUPABASE_URL` is set to `https://iflwjiwkbxuvmiviqdxv.supabase.co`
+- [ ] `VITE_SUPABASE_URL` is set to `https://likkskifwsrvszxdvufw.supabase.co`
 - [ ] `VITE_SUPABASE_PUBLISHABLE_KEY` is set (your anon key)
 - [ ] Dev server restarted after creating `.env`
 - [ ] Browser console shows correct URL when testing
@@ -123,8 +123,8 @@ Edge Functions automatically get these environment variables from Supabase:
 ## Your Current Configuration
 
 Based on your project:
-- **Project URL**: `https://iflwjiwkbxuvmiviqdxv.supabase.co`
-- **Project ID**: `iflwjiwkbxuvmiviqdxv`
+- **Project URL**: `https://likkskifwsrvszxdvufw.supabase.co`
+- **Project ID**: `likkskifwsrvszxdvufw`
 - **Frontend needs**: `.env` file with `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`
 - **Edge Functions**: Automatically configured ✅
 
@@ -139,12 +139,12 @@ Based on your project:
 
 2. **If it doesn't exist, create it:**
    ```bash
-   echo "VITE_SUPABASE_URL=https://iflwjiwkbxuvmiviqdxv.supabase.co" > .env
+   echo "VITE_SUPABASE_URL=https://likkskifwsrvszxdvufw.supabase.co" > .env
    echo "VITE_SUPABASE_PUBLISHABLE_KEY=your_anon_key_here" >> .env
    ```
 
 3. **Get your anon key from Supabase Dashboard:**
-   - Go to: https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/settings/api
+   - Go to: https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/settings/api
    - Copy the "anon public" key
    - Replace `your_anon_key_here` in `.env`
 
@@ -157,6 +157,12 @@ Based on your project:
    - Open browser console
    - Run: `console.log(import.meta.env.VITE_SUPABASE_URL)`
    - Should show your Supabase URL
+
+
+
+
+
+
 
 
 

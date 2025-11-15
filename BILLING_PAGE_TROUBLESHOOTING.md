@@ -12,7 +12,7 @@ Look for errors like:
 
 ### 2. Check if Function is Deployed
 
-**Go to:** https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/functions
+**Go to:** https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/functions
 
 **Verify:**
 - [ ] `get-subscription` appears in the list
@@ -77,6 +77,12 @@ If still not working, please share:
 1. Browser console errors (screenshot or copy/paste)
 2. Supabase function logs (from Dashboard → Functions → get-subscription → Logs)
 3. What you see on the billing page (blank, error message, loading forever?)
+
+
+
+
+
+
 
 
 

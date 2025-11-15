@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import madisonLogo from "@/assets/madison-horizontal-logo.png";
 import { motion, AnimatePresence } from "framer-motion";
+import { getOrCreateOrganizationId } from "@/lib/organization";
 
 interface BrandDNAScanProps {
   onContinue: (data: any) => void;
@@ -51,16 +52,11 @@ export function BrandDNAScan({ onContinue, onBack, onSkip, brandData }: BrandDNA
     setProgressPercent(10);
 
     try {
-      // Get organization ID
-      const { data: org } = await supabase
-        .from('organizations')
-        .select('id')
-        .eq('created_by', user?.id)
-        .single();
-
-      if (!org) {
-        throw new Error('Organization not found');
+      if (!user?.id) {
+        throw new Error('User not authenticated');
       }
+
+      const organizationId = await getOrCreateOrganizationId(user.id);
 
       // Simulate progress updates
       const progressStages = [
@@ -85,7 +81,7 @@ export function BrandDNAScan({ onContinue, onBack, onSkip, brandData }: BrandDNA
         {
           body: {
             websiteUrl: normalizedUrl,
-            organizationId: org.id
+            organizationId
           }
         }
       );
@@ -180,12 +176,6 @@ export function BrandDNAScan({ onContinue, onBack, onSkip, brandData }: BrandDNA
                 className="mt-12"
               >
                 <div className="text-center mb-12">
-                  {/* PLACEHOLDER: Custom Madison pencil sketch icon */}
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-[hsl(var(--aged-brass))] to-[hsl(var(--antique-gold))]/80 mb-6">
-                    {/* TODO: Replace with custom Madison pencil sketch SVG */}
-                    <Sparkles className="w-10 h-10 text-white" />
-                  </div>
-                  
                   <h1 className="font-serif text-4xl text-foreground mb-3">
                     Let's analyze your brand
                   </h1>

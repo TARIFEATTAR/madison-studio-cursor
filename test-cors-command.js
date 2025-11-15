@@ -1,6 +1,6 @@
 // Copy and paste this entire block into your browser console
 
-fetch('https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/get-subscription', {
+fetch('https://likkskifwsrvszxdvufw.supabase.co/functions/v1/get-subscription', {
   method: 'OPTIONS',
   headers: {
     'Access-Control-Request-Method': 'GET',
@@ -16,6 +16,12 @@ fetch('https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/get-subscription', 
 })
 .then(text => console.log('Body:', text))
 .catch(error => console.error('Error:', error));
+
+
+
+
+
+
 
 
 

@@ -155,7 +155,7 @@ WHERE slug = 'atelier';
 
 1. Go to **Stripe Dashboard** → **Developers** → **Webhooks**
 2. Click **Add Endpoint**
-3. **Endpoint URL**: `https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/stripe-webhook`
+3. **Endpoint URL**: `https://likkskifwsrvszxdvufw.supabase.co/functions/v1/stripe-webhook`
 4. **Description**: `Madison Studio Billing Webhook`
 5. **Events to send**:
    - `customer.subscription.created`
@@ -311,6 +311,12 @@ If you encounter issues:
 **Setup Complete!** 🎉
 
 Your billing system is now configured for Madison Studio v2.0 pricing.
+
+
+
+
+
+
 
 
 

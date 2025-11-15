@@ -7,11 +7,11 @@
 
 **Verify:**
 - [ ] You see your webhook endpoint listed
-- [ ] URL matches: `https://iflwjiwkbxuvmiviqdxv.supabase.co/functions/v1/stripe-webhook`
+- [ ] URL matches: `https://likkskifwsrvszxdvufw.supabase.co/functions/v1/stripe-webhook`
 - [ ] Status shows "Enabled" or similar (not red/error)
 
 ### 2. Quick Supabase Check
-**Go to:** https://supabase.com/dashboard/project/iflwjiwkbxuvmiviqdxv/settings/functions
+**Go to:** https://supabase.com/dashboard/project/likkskifwsrvszxdvufw/settings/functions
 
 **Scroll to "Secrets"**
 
@@ -95,6 +95,12 @@ Your billing system is fully configured! 🚀
 - ✅ Plan changes update in real-time
 - ✅ Payment methods sync
 - ✅ Everything is ready for production!
+
+
+
+
+
+
 
 
 

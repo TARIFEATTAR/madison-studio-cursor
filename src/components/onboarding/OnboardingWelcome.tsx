@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { VideoHelpTrigger } from "@/components/help/VideoHelpTrigger";
 import madisonLogo from "@/assets/madison-horizontal-logo.png";
+import { getOrCreateOrganizationId } from "@/lib/organization";
 
 interface OnboardingWelcomeProps {
   onContinue: (data: any) => void;
@@ -30,6 +31,7 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
 
   const handleContinue = async (options?: { useBrandDNAScan?: boolean }) => {
     if (!userName.trim() || !brandName.trim()) return;
+    let organizationId: string | null = null;
 
     // Update organization with brand config AND user profile
     if (user) {
@@ -54,59 +56,26 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
           console.log('[Onboarding] Profile updated successfully with name:', userName.trim());
         }
 
-        // Find or create organization
-        const { data: orgs } = await supabase
+        organizationId = await getOrCreateOrganizationId(user.id);
+
+        const { error: orgUpdateError } = await supabase
           .from('organizations')
-          .select('id')
-          .eq('created_by', user.id)
-          .maybeSingle();
-
-        let orgId = orgs?.id;
-
-        if (!orgId) {
-          // Create organization
-          const { data: newOrg, error: createError } = await supabase
-            .from('organizations')
-            .insert({
-              name: brandName.trim(),
-              created_by: user.id,
-              brand_config: {
-                brandName: brandName.trim(),
-                industry: industry || null,
-                primaryColor: primaryColor,
-                industryTemplate: industry || 'other',
-                industry_config: {
-                  id: industry || 'other',
-                  name: INDUSTRY_OPTIONS.find(opt => opt.value === industry)?.label || 'Other'
-                }
+          .update({
+            name: brandName.trim(),
+            brand_config: {
+              brandName: brandName.trim(),
+              industry: industry || null,
+              primaryColor: primaryColor,
+              industryTemplate: industry || 'other',
+              industry_config: {
+                id: industry || 'other',
+                name: INDUSTRY_OPTIONS.find(opt => opt.value === industry)?.label || 'Other'
               }
-            })
-            .select()
-            .single();
+            }
+          })
+          .eq('id', organizationId);
 
-          if (createError) throw createError;
-          orgId = newOrg.id;
-        } else {
-          // Update existing organization
-          const { error: updateError } = await supabase
-            .from('organizations')
-            .update({
-              name: brandName.trim(),
-              brand_config: {
-                brandName: brandName.trim(),
-                industry: industry || null,
-                primaryColor: primaryColor,
-                industryTemplate: industry || 'other',
-                industry_config: {
-                  id: industry || 'other',
-                  name: INDUSTRY_OPTIONS.find(opt => opt.value === industry)?.label || 'Other'
-                }
-              }
-            })
-            .eq('id', orgId);
-
-          if (updateError) throw updateError;
-        }
+        if (orgUpdateError) throw orgUpdateError;
       } catch (error) {
         console.error('Error saving brand config:', error);
         toast({
@@ -123,7 +92,8 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
       brandName: brandName.trim(),
       industry: industry || null,
       primaryColor,
-      useBrandDNAScan: options?.useBrandDNAScan || false
+      useBrandDNAScan: options?.useBrandDNAScan || false,
+      organizationId
     });
   };
 
