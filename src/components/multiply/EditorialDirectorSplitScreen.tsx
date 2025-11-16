@@ -10,6 +10,7 @@ import { X, Sparkles, Mail, Instagram, Twitter, Tag, MessageSquare, FileText, Sa
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
 import { ScheduleButton } from "@/components/forge/ScheduleButton";
 import { useToast } from "@/hooks/use-toast";
+import { parseEmailSequence } from "@/lib/emailSequence";
 
 interface DerivativeContent {
   id: string;
@@ -71,6 +72,27 @@ const CHAR_LIMITS = {
   pinterest: 500,
 };
 
+const buildSequenceEmails = (source: DerivativeContent) => {
+  if (source.sequenceEmails && source.sequenceEmails.length > 0) {
+    return source.sequenceEmails;
+  }
+
+  if (!source.content) {
+    return [];
+  }
+
+  const parsed = parseEmailSequence(source.content);
+
+  return parsed.map((part, index) => ({
+    id: `${source.id}-parsed-${index + 1}`,
+    sequenceNumber: index + 1,
+    subject: part.subject || `Email ${index + 1}`,
+    preview: part.preview || part.content.slice(0, 140),
+    content: part.content,
+    charCount: part.content.length,
+  }));
+};
+
 export function EditorialDirectorSplitScreen({
   derivative,
   derivatives,
@@ -80,9 +102,7 @@ export function EditorialDirectorSplitScreen({
   const [editedContent, setEditedContent] = useState(derivative.content);
   const [selectedDerivativeId, setSelectedDerivativeId] = useState(derivative.id);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [editedSequenceEmails, setEditedSequenceEmails] = useState(
-    derivative.sequenceEmails || []
-  );
+  const [editedSequenceEmails, setEditedSequenceEmails] = useState(() => buildSequenceEmails(derivative));
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
 
@@ -92,7 +112,8 @@ export function EditorialDirectorSplitScreen({
   const color = DERIVATIVE_COLORS[selectedDerivative.typeId as keyof typeof DERIVATIVE_COLORS] || "#B8956A";
   const charLimit = CHAR_LIMITS[selectedDerivative.typeId as keyof typeof CHAR_LIMITS];
   const charCount = editedContent.length;
-  const isSequence = selectedDerivative.isSequence && selectedDerivative.sequenceEmails;
+  const sequenceType = selectedDerivative.isSequence || selectedDerivative.typeId.includes("email_");
+  const isSequence = sequenceType && editedSequenceEmails.length > 0;
 
   const handleSave = () => {
     onUpdateDerivative({
@@ -156,10 +177,9 @@ export function EditorialDirectorSplitScreen({
   };
 
   useEffect(() => {
-    if (selectedDerivative.sequenceEmails) {
-      setEditedSequenceEmails(selectedDerivative.sequenceEmails);
-    }
-  }, [selectedDerivativeId]);
+    setEditedSequenceEmails(buildSequenceEmails(selectedDerivative));
+    setEditedContent(selectedDerivative.content);
+  }, [selectedDerivativeId, selectedDerivative]);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: "#F5F1E8" }}>

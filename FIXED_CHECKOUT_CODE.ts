@@ -1,3 +1,6 @@
+// Fixed code for create-checkout-session function
+// Copy and paste this entire code into the Supabase function editor
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
@@ -6,7 +9,7 @@ import Stripe from "npm:stripe@14.21.0";
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')!;
-const APP_URL = Deno.env.get('APP_URL') || 'http://localhost:5173';
+const APP_URL = Deno.env.get('APP_URL') || 'http://localhost:8080';
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, {
   apiVersion: '2024-06-20',
@@ -184,6 +187,10 @@ serve(async (req) => {
     );
   }
 });
+
+
+
+
 
 
 

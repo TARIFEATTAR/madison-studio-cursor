@@ -6,22 +6,69 @@ import { OnboardingWelcome } from "@/components/onboarding/OnboardingWelcome";
 import { BrandDNAScan } from "@/components/onboarding/BrandDNAScan";
 import { OnboardingBrandUpload } from "@/components/onboarding/OnboardingBrandUpload";
 import { OnboardingSuccess } from "@/components/onboarding/OnboardingSuccess";
-import { logger } from "@/lib/logger";
+import { Button } from "@/components/ui/button";
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState<any>({});
   const [scanningBrandDNA, setScanningBrandDNA] = useState(false);
 
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth', { replace: true });
+    }
+  }, [user, loading, navigate]);
+
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground text-lg font-serif">Loading…</div>
+      </div>
+    );
+  }
+
+  // Don't render if no user (will redirect)
+  if (!user) {
+    return null;
+  }
+
+  const resetProgress = () => {
+    localStorage.removeItem('madison-onboarding-progress');
+    setOnboardingData({});
+    setCurrentStep(1);
+    setScanningBrandDNA(false);
+  };
+
+  const isValidStep = currentStep >= 1 && currentStep <= 4;
+
   // Load saved progress on mount and align storage keys
   useEffect(() => {
-    const savedProgress = localStorage.getItem('madison-onboarding-progress');
-    if (savedProgress) {
-      const progress = JSON.parse(savedProgress);
-      setCurrentStep(progress.step || 1);
-      setOnboardingData(progress.data || {});
+    try {
+      const savedProgress = localStorage.getItem('madison-onboarding-progress');
+      if (savedProgress) {
+        const progress = JSON.parse(savedProgress);
+        const progressData = progress.data || {};
+        const rawStep = Number(progress.step);
+        const safeStep = [1, 2, 3, 4].includes(rawStep) ? rawStep : 1;
+        const shouldScan = progressData.useBrandDNAScan === true;
+
+        setOnboardingData(progressData);
+        setScanningBrandDNA(shouldScan);
+
+        if (safeStep === 2 && !shouldScan) {
+          setCurrentStep(1);
+        } else {
+          setCurrentStep(safeStep);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading saved onboarding progress:', error);
+      // Clear corrupted data
+      localStorage.removeItem('madison-onboarding-progress');
     }
   }, []);
 
@@ -41,6 +88,7 @@ export default function Onboarding() {
 
     // Check if user chose Brand DNA scan
     if (stepData.useBrandDNAScan) {
+      setScanningBrandDNA(true);
       setCurrentStep(2); // Go to Brand DNA scan
     } else if (stepData.skipDeepDive) {
       // User scanned DNA but wants to skip document upload
@@ -88,49 +136,64 @@ export default function Onboarding() {
           // Fire and forget - don't wait for completion
           supabase.functions.invoke('analyze-brand-health', {
             body: { organizationId: orgs.id }
-          }).catch(err => logger.error('Brand health analysis error:', err));
+          }).catch(err => console.error('Brand health analysis error:', err));
         }
       } catch (error) {
-        logger.error('Error triggering brand health:', error);
+        console.error('Error triggering brand health:', error);
       }
     }
     
     navigate(destination, { replace: true });
   };
 
+  if (!isValidStep) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="text-center space-y-4 max-w-md">
+          <h1 className="text-2xl font-serif text-foreground">Let's restart your onboarding</h1>
+          <p className="text-muted-foreground">
+            We couldn't resume your previous onboarding progress. Click below to start over.
+          </p>
+          <Button onClick={resetProgress} className="px-6">
+            Restart Onboarding
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
-      {currentStep === 1 ? (
+      {currentStep === 1 && (
         <OnboardingWelcome
           onContinue={handleStepComplete}
           onSkip={handleSkip}
           initialData={onboardingData}
         />
-      ) : currentStep === 2 ? (
+      )}
+
+      {currentStep === 2 && scanningBrandDNA && (
         <BrandDNAScan
           onContinue={handleStepComplete}
           onBack={handleBack}
           onSkip={handleSkip}
           brandData={onboardingData}
         />
-      ) : currentStep === 3 ? (
+      )}
+
+      {currentStep === 3 && (
         <OnboardingBrandUpload
           onContinue={handleStepComplete}
           onBack={handleBack}
           onSkip={handleSkip}
           brandData={onboardingData}
         />
-      ) : currentStep === 4 ? (
+      )}
+
+      {currentStep === 4 && (
         <OnboardingSuccess
           brandData={onboardingData}
           onComplete={handleComplete}
-        />
-      ) : (
-        // Fallback: if currentStep is invalid or state is corrupt, reset to step 1
-        <OnboardingWelcome
-          onContinue={handleStepComplete}
-          onSkip={handleSkip}
-          initialData={onboardingData}
         />
       )}
     </div>

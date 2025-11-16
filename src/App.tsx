@@ -73,6 +73,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const [verifying, setVerifying] = useState(false);
   const [allowed, setAllowed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     logger.debug("[RouteGuard] ProtectedRoute check", { path: location.pathname, loading, hasUser: !!user });
@@ -81,20 +82,34 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
     if (user) {
       setAllowed(true);
+      setError(null);
       return;
     }
 
     // Extra safety: double-check session before redirecting to /auth
     setVerifying(true);
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      logger.debug("[RouteGuard] getSession (guard)", { path: location.pathname, hasUser: !!session?.user });
-      if (session?.user) {
-        setAllowed(true);
-      } else {
-        logger.warn("[RouteGuard] Redirect → /auth (reason: no authenticated user)", { path: location.pathname });
+    setError(null);
+    supabase.auth.getSession()
+      .then(({ data: { session }, error: sessionError }) => {
+        logger.debug("[RouteGuard] getSession (guard)", { path: location.pathname, hasUser: !!session?.user });
+        if (sessionError) {
+          logger.error("[RouteGuard] Session check error", sessionError);
+          setError(sessionError.message);
+        }
+        if (session?.user) {
+          setAllowed(true);
+        } else {
+          logger.warn("[RouteGuard] Redirect → /auth (reason: no authenticated user)", { path: location.pathname });
+          navigate("/auth", { replace: true });
+        }
+      })
+      .catch((err) => {
+        logger.error("[RouteGuard] Unexpected error in getSession", err);
+        setError(err.message || "Authentication check failed");
+        // On error, redirect to auth page
         navigate("/auth", { replace: true });
-      }
-    }).finally(() => setVerifying(false));
+      })
+      .finally(() => setVerifying(false));
   }, [loading, user, navigate, location.pathname]);
 
   if (loading || verifying) {
@@ -105,7 +120,28 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  return allowed ? <>{children}</> : null;
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <h2 className="text-xl font-serif text-foreground mb-4">Authentication Error</h2>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <button
+            onClick={() => navigate("/auth", { replace: true })}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return allowed ? <>{children}</> : (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-muted-foreground text-lg font-serif">Redirecting…</div>
+    </div>
+  );
 };
 
 const RootRoute = () => {
@@ -133,60 +169,77 @@ const RootRoute = () => {
     }, 3500);
 
     const checkOnboardingStatus = async () => {
-      logger.debug("[RootRoute] Checking onboarding status…");
-      // Check database for organization with brand_config
-      const { data: orgMember, error: memberErr } = await supabase
-        .from("organization_members")
-        .select("organization_id")
-        .eq("user_id", user.id)
-        .limit(1)
-        .maybeSingle();
+      try {
+        logger.debug("[RootRoute] Checking onboarding status…");
+        // Check database for organization with brand_config
+        const { data: orgMember, error: memberErr } = await supabase
+          .from("organization_members")
+          .select("organization_id")
+          .eq("user_id", user.id)
+          .limit(1)
+          .maybeSingle();
 
-      if (memberErr) {
-        logger.warn("[RootRoute] organization_members lookup error", memberErr);
+        if (memberErr) {
+          logger.warn("[RootRoute] organization_members lookup error", memberErr);
+          // On error, redirect to onboarding to be safe
+          logger.warn("[RootRoute] Redirect → /onboarding (error fallback)");
+          setRedirectCount(prev => prev + 1);
+          navigate('/onboarding', { replace: true });
+          setIsChecking(false);
+          clearTimeout(safetyTimer);
+          return;
+        }
+
+        if (!orgMember?.organization_id) {
+          logger.warn("[RootRoute] Redirect → /onboarding (reason: no organization membership)");
+          setRedirectCount(prev => prev + 1);
+          navigate('/onboarding', { replace: true });
+          setIsChecking(false);
+          clearTimeout(safetyTimer);
+          return;
+        }
+
+        const { data: org, error: orgErr } = await supabase
+          .from("organizations")
+          .select("brand_config")
+          .eq("id", orgMember.organization_id)
+          .maybeSingle();
+
+        if (orgErr) {
+          logger.warn("[RootRoute] organizations lookup error", orgErr);
+          // On error, redirect to onboarding to be safe
+          logger.warn("[RootRoute] Redirect → /onboarding (error fallback)");
+          setRedirectCount(prev => prev + 1);
+          navigate('/onboarding', { replace: true });
+          setIsChecking(false);
+          clearTimeout(safetyTimer);
+          return;
+        }
+
+        // If organization has brand info, consider onboarding complete
+        const hasBrandInfo = org?.brand_config && 
+          typeof org.brand_config === 'object' && 
+          'industry' in org.brand_config;
+
+        if (!hasBrandInfo) {
+          logger.warn("[RootRoute] Redirect → /onboarding (reason: missing brand_config.industry)");
+          setRedirectCount(prev => prev + 1);
+          navigate('/onboarding', { replace: true });
+        } else {
+          logger.debug("[RootRoute] Onboarding OK (has brand info). Staying on dashboard.");
+          localStorage.setItem(`onboarding_completed_${user.id}`, "true");
+        }
+
         setIsChecking(false);
         clearTimeout(safetyTimer);
-        return;
-      }
-
-      if (!orgMember?.organization_id) {
-        logger.warn("[RootRoute] Redirect → /onboarding (reason: no organization membership)");
+      } catch (error) {
+        logger.error("[RootRoute] Unexpected error in checkOnboardingStatus", error);
+        // On any unexpected error, redirect to onboarding
         setRedirectCount(prev => prev + 1);
         navigate('/onboarding', { replace: true });
         setIsChecking(false);
         clearTimeout(safetyTimer);
-        return;
       }
-
-      const { data: org, error: orgErr } = await supabase
-        .from("organizations")
-        .select("brand_config")
-        .eq("id", orgMember.organization_id)
-        .maybeSingle();
-
-      if (orgErr) {
-        logger.warn("[RootRoute] organizations lookup error", orgErr);
-        setIsChecking(false);
-        clearTimeout(safetyTimer);
-        return;
-      }
-
-      // If organization has brand info, consider onboarding complete
-      const hasBrandInfo = org?.brand_config && 
-        typeof org.brand_config === 'object' && 
-        'industry' in org.brand_config;
-
-      if (!hasBrandInfo) {
-        logger.warn("[RootRoute] Redirect → /onboarding (reason: missing brand_config.industry)");
-        setRedirectCount(prev => prev + 1);
-        navigate('/onboarding', { replace: true });
-      } else {
-        logger.debug("[RootRoute] Onboarding OK (has brand info). Staying on dashboard.");
-        localStorage.setItem(`onboarding_completed_${user.id}`, "true");
-      }
-
-      setIsChecking(false);
-      clearTimeout(safetyTimer);
     };
 
     checkOnboardingStatus();

@@ -29,6 +29,7 @@ import { DerivativeFullModal } from "@/components/amplify/DerivativeFullModal";
 import { DerivativeTypeSelector } from "@/components/multiply/DerivativeTypeSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { parseEmailSequence } from "@/lib/emailSequence";
 import fannedPagesImage from "@/assets/fanned-pages-new.png";
 import ticketIcon from "@/assets/ticket-icon.png";
 import envelopeIcon from "@/assets/envelope-icon.png";
@@ -182,6 +183,48 @@ const ADDITIONAL_DERIVATIVE_TYPES: DerivativeType[] = [
 ];
 
 const DERIVATIVE_TYPES = [...TOP_DERIVATIVE_TYPES, ...ADDITIONAL_DERIVATIVE_TYPES];
+
+interface RawEmailSpec {
+  subject?: string;
+  preview?: string;
+  body?: string;
+}
+
+interface RawDerivativeResponse {
+  id: string;
+  generated_content?: string;
+  platform_specs?: {
+    emails?: RawEmailSpec[];
+    [key: string]: unknown;
+  };
+}
+
+const buildSequenceEmailsFromDerivative = (derivative: RawDerivativeResponse) => {
+  if (derivative?.platform_specs?.emails?.length) {
+    return derivative.platform_specs.emails.map((email, index) => {
+      const body = email?.body || "";
+      return {
+        id: `${derivative.id}-email-${index + 1}`,
+        sequenceNumber: index + 1,
+        subject: email?.subject || `Email ${index + 1}`,
+        preview: email?.preview || body.slice(0, 140),
+        content: body,
+        charCount: body.length,
+      };
+    });
+  }
+
+  const parsed = parseEmailSequence(derivative?.generated_content || "");
+
+  return parsed.map((part, index) => ({
+    id: `${derivative.id}-parsed-${index + 1}`,
+    sequenceNumber: index + 1,
+    subject: part.subject || `Email ${index + 1}`,
+    preview: part.preview || part.content.slice(0, 140),
+    content: part.content,
+    charCount: part.content.length,
+  }));
+};
 
 export default function Multiply() {
   const { toast } = useToast();
@@ -441,7 +484,8 @@ export default function Multiply() {
 
       data.derivatives.forEach((derivative: any) => {
         const typeId = derivative.asset_type;
-        const isSequence = typeId.includes('email_') && (typeId.includes('3part') || typeId.includes('5part') || typeId.includes('7part'));
+        const isSequenceType = typeId.includes('email_') && (typeId.includes('3part') || typeId.includes('5part') || typeId.includes('7part'));
+        const sequenceEmails = isSequenceType ? buildSequenceEmailsFromDerivative(derivative) : [];
         
         // Defensive check: verify master_content_id matches
         if (derivative.master_content_id && derivative.master_content_id !== selectedMaster.id) {
@@ -452,42 +496,19 @@ export default function Multiply() {
           });
         }
         
-        if (isSequence && derivative.platform_specs?.emails) {
-          const sequenceEmails = derivative.platform_specs.emails.map((email: any, index: number) => ({
-            id: `${derivative.id}-email-${index + 1}`,
-            sequenceNumber: index + 1,
-            subject: email.subject || '',
-            preview: email.preview || '',
-            content: email.body || '',
-            charCount: (email.body || '').length,
-          }));
-
-          newDerivatives.push({
-            id: derivative.id,
-            typeId,
-            content: derivative.generated_content,
-            status: derivative.approval_status,
-            charCount: derivative.generated_content.length,
-            isSequence: true,
-            sequenceEmails,
-            platformSpecs: derivative.platform_specs,
-            asset_type: derivative.asset_type,
-            generated_content: derivative.generated_content,
-            master_content_id: derivative.master_content_id,
-          });
-        } else {
-          newDerivatives.push({
-            id: derivative.id,
-            typeId,
-            content: derivative.generated_content,
-            status: derivative.approval_status,
-            charCount: derivative.generated_content.length,
-            platformSpecs: derivative.platform_specs,
-            asset_type: derivative.asset_type,
-            generated_content: derivative.generated_content,
-            master_content_id: derivative.master_content_id,
-          });
-        }
+        newDerivatives.push({
+          id: derivative.id,
+          typeId,
+          content: derivative.generated_content,
+          status: derivative.approval_status,
+          charCount: derivative.generated_content.length,
+          isSequence: isSequenceType && sequenceEmails.length > 0,
+          sequenceEmails: sequenceEmails.length > 0 ? sequenceEmails : undefined,
+          platformSpecs: derivative.platform_specs,
+          asset_type: derivative.asset_type,
+          generated_content: derivative.generated_content,
+          master_content_id: derivative.master_content_id,
+        });
 
         newExpandedTypes.add(typeId);
       });
