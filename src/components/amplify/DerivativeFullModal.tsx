@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
+import { parseEmailSequence } from "@/lib/emailSequence";
 
 interface DerivativeFullModalProps {
   open: boolean;
@@ -394,35 +395,4 @@ export function DerivativeFullModal({
       </DialogContent>
     </Dialog>
   );
-}
-
-// Helper function to parse email sequences
-function parseEmailSequence(content: string): Array<{ subject: string; content: string }> {
-  const parts: Array<{ subject: string; content: string }> = [];
-  
-  // Try to split by common patterns
-  const emailPattern = /(?:Email|Part)\s*(\d+)[\s:]*(?:Subject:?\s*([^\n]+))?\s*([\s\S]+?)(?=(?:Email|Part)\s*\d+|$)/gi;
-  let match;
-  
-  while ((match = emailPattern.exec(content)) !== null) {
-    parts.push({
-      subject: match[2]?.trim() || '',
-      content: match[3]?.trim() || '',
-    });
-  }
-  
-  // Fallback: if no pattern found, split by double newlines
-  if (parts.length === 0) {
-    const sections = content.split(/\n\n\n+/);
-    sections.forEach((section) => {
-      const lines = section.trim().split('\n');
-      const subjectLine = lines.find(line => line.toLowerCase().includes('subject:'));
-      parts.push({
-        subject: subjectLine?.replace(/subject:\s*/i, '').trim() || '',
-        content: section.trim(),
-      });
-    });
-  }
-  
-  return parts.filter(p => p.content.length > 0);
 }

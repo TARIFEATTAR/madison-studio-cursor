@@ -317,6 +317,8 @@ export function BillingTab() {
         throw new Error('Plan is not yet configured with Stripe. Please contact support.');
       }
 
+      console.log('[BillingTab] Calling create-checkout-session with:', { planId, billingInterval: 'month' });
+      
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: { planId, billingInterval: 'month' },
         headers: {
@@ -324,12 +326,27 @@ export function BillingTab() {
         },
       });
 
-      if (error) throw error;
+      console.log('[BillingTab] Edge function response:', { data, error });
+
+      if (error) {
+        console.error('[BillingTab] Edge function error:', error);
+        throw error;
+      }
+
+      if (!data) {
+        console.error('[BillingTab] No data returned from edge function');
+        throw new Error('No response from checkout service');
+      }
+
+      console.log('[BillingTab] Response data:', data);
+      console.log('[BillingTab] Checkout URL:', data.url);
 
       if (data?.url) {
+        console.log('[BillingTab] Redirecting to Stripe Checkout:', data.url);
         window.location.href = data.url;
       } else {
-        throw new Error('No checkout URL returned');
+        console.error('[BillingTab] No URL in response. Full data:', JSON.stringify(data, null, 2));
+        throw new Error(`No checkout URL returned. Response: ${JSON.stringify(data)}`);
       }
     } catch (error: any) {
       console.error('Error creating checkout session:', error);
