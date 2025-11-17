@@ -236,6 +236,25 @@ export async function callGeminiImage(
     throw new Error("GEMINI_API_KEY not configured");
   }
 
+  const mapAspectRatio = (ratio?: string) => {
+    switch (ratio) {
+      case "1:1":
+        return "1:1";
+      case "16:9":
+        return "16:9";
+      case "9:16":
+        return "9:16";
+      case "4:3":
+        return "4:3";
+      case "4:5":
+        return "4:5";
+      case "5:4":
+        return "5:4";
+      default:
+        return undefined;
+    }
+  };
+
   // Build content parts array
   const parts: Array<Record<string, unknown>> = [{ text: request.prompt }];
   
@@ -260,18 +279,23 @@ export async function callGeminiImage(
 
   // Add generation config with aspect ratio if provided
   if (request.aspectRatio || request.negativePrompt) {
-    body.generationConfig = {};
-    if (request.aspectRatio) {
-      (body.generationConfig as any).responseModalities = ["IMAGE"];
-      // Note: aspect ratio might need to be in a different format
-      // For now, we'll add it to the prompt
-      if (parts[0] && typeof parts[0].text === "string") {
-        parts[0].text = `${parts[0].text}\n\nAspect ratio: ${request.aspectRatio}`;
-      }
-    }
+    body.generationConfig = {
+      responseModalities: ["IMAGE"],
+    };
     if (request.negativePrompt) {
       (body.generationConfig as any).negativePrompt = request.negativePrompt;
     }
+  } else {
+    body.generationConfig = {
+      responseModalities: ["IMAGE"],
+    };
+  }
+
+  const aspectRatioValue = mapAspectRatio(request.aspectRatio);
+  if (aspectRatioValue) {
+    (body.generationConfig as any).imageGenerationConfig = {
+      aspectRatio: aspectRatioValue,
+    };
   }
 
   const response = await withTimeout(

@@ -65,9 +65,11 @@ import MobileCreateForm from "@/components/image-editor/MobileCreateForm";
 import { ProductSelector } from "@/components/forge/ProductSelector";
 import { Product } from "@/hooks/useProducts";
 
-
 // Prompt Formula Utilities
 import { CAMERA_LENS, LIGHTING, ENVIRONMENTS } from "@/utils/promptFormula";
+
+const DEFAULT_PROMPT =
+  "A clean studio product shot on a pure white background, soft shadow, high-resolution lighting.";
 
 type ApprovalStatus = "pending" | "flagged" | "rejected";
 
@@ -106,7 +108,7 @@ export default function ImageEditor() {
   const [aspectRatio, setAspectRatio] = useState<string>("5:4");
   const [outputFormat, setOutputFormat] = useState<"png" | "jpeg" | "webp">("png");
   
-  const [mainPrompt, setMainPrompt] = useState("");
+  const [mainPrompt, setMainPrompt] = useState(DEFAULT_PROMPT);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showProMode, setShowProMode] = useState(false);
@@ -262,22 +264,24 @@ export default function ImageEditor() {
       const finalPrompt = effectivePrompt;
       
       // Prepare reference images array based on mode
-      let generationReferenceImages = [];
+      const generationReferenceImages: Array<{ url: string; description: string; label: ReferenceImage["label"] }> = [];
       
       if (productImage) {
-        // Image-to-image mode: use product image as primary reference
-        generationReferenceImages = [{
+        generationReferenceImages.push({
           url: productImage.url,
-          label: 'Product' as const,
+          label: 'Product',
           description: 'User-uploaded product for enhancement'
-        }];
-      } else if (showProMode && referenceImages.length > 0) {
-        // Pro Mode: use Pro Mode references
-        generationReferenceImages = referenceImages.map(r => ({ 
-          url: r.url, 
-          description: r.description, 
-          label: r.label 
-        }));
+        });
+      }
+      
+      if (referenceImages.length > 0) {
+        generationReferenceImages.push(
+          ...referenceImages.map((r) => ({
+            url: r.url,
+            description: r.description,
+            label: r.label,
+          }))
+        );
       }
       
       // Determine if Pro Mode controls are active
