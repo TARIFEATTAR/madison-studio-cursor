@@ -1,5 +1,35 @@
 // Global error handler to catch any unhandled errors
 window.addEventListener('error', (event) => {
+  const errorMessage = event.message || event.error?.message || '';
+  const errorString = String(errorMessage).toLowerCase();
+  
+  // Suppress ResizeObserver loop errors - these are harmless browser quirks
+  if (errorString.includes('resizeobserver') && 
+      (errorString.includes('loop') || errorString.includes('completed'))) {
+    event.preventDefault();
+    event.stopPropagation();
+    return;
+  }
+  
+  // Suppress CORS errors for edge functions - these are handled gracefully
+  if (errorString.includes('cors') || errorString.includes('blocked by cors policy')) {
+    event.preventDefault();
+    event.stopPropagation();
+    return;
+  }
+  
+  // Suppress network errors that are expected (403, 404, etc.)
+  if (errorString.includes('failed to fetch') || 
+      errorString.includes('networkerror') ||
+      errorString.includes('load failed')) {
+    // Only suppress if it's a CORS or network issue, not a real application error
+    if (errorString.includes('cors') || errorString.includes('blocked')) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+  }
+  
   console.error('[Global Error Handler]', event.error);
   if (document.body) {
     const errorDiv = document.createElement('div');
@@ -14,6 +44,22 @@ window.addEventListener('error', (event) => {
 
 // Catch unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {
+  const reason = event.reason;
+  const errorMessage = reason?.message || String(reason || '').toLowerCase();
+  
+  // Suppress ResizeObserver errors in promise rejections
+  if (errorMessage.includes('resizeobserver') && 
+      (errorMessage.includes('loop') || errorMessage.includes('completed'))) {
+    event.preventDefault();
+    return;
+  }
+  
+  // Suppress CORS errors in promise rejections
+  if (errorMessage.includes('cors') || errorMessage.includes('blocked by cors policy')) {
+    event.preventDefault();
+    return;
+  }
+  
   console.error('[Unhandled Promise Rejection]', event.reason);
 });
 
