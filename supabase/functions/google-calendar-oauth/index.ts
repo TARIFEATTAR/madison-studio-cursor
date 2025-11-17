@@ -131,7 +131,7 @@ serve(async (req) => {
 
       // Get app origin from request body
       const body = await req.json();
-      const appOrigin = body.app_origin || 'https://the-whispered-codex.lovable.app';
+      const appOrigin = body.app_origin || 'https://madison-studio-cursor.vercel.app';
 
       // Store user ID and app origin in state parameter for callback
       const stateData = {
