@@ -1397,31 +1397,37 @@ export default function ImageEditor() {
               <div className="relative w-full h-full flex flex-col">
                 {/* Main Image Display */}
                 <div className="flex-1 flex items-center justify-center p-8">
-                  <img 
-                    src={heroImage.imageUrl} 
-                    alt="Generated" 
-                    className="max-w-full max-h-full object-contain rounded-lg border-2 border-studio-border"
-                  />
-                  {/* Quick Action Buttons (Top Right) */}
-                  <div className="absolute top-8 right-8 flex gap-2">
-                    <Button
-                      size="sm"
-                      variant={heroImage.approvalStatus === 'flagged' ? 'default' : 'secondary'}
-                      onClick={() => handleToggleApproval(heroImage.id)}
-                      className="bg-studio-card/90 backdrop-blur-sm"
-                      title="Favorite"
-                    >
-                      <Heart className={cn("w-4 h-4", heroImage.approvalStatus === 'flagged' && "fill-current")} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => handleSaveRecipe(heroImage.id)}
-                      className="bg-studio-card/90 backdrop-blur-sm"
-                      title="Save as Recipe"
-                    >
-                      <Bookmark className="w-4 h-4" />
-                    </Button>
+                  <div className="relative w-full max-w-5xl max-h-[90%] flex items-center justify-center rounded-[32px] border border-studio-border/70 bg-gradient-to-br from-[#1f1a16] via-[#0f0f0f] to-[#050505] shadow-[0_45px_120px_rgba(0,0,0,0.65)] overflow-hidden">
+                    <div
+                      className="absolute inset-0 pointer-events-none opacity-30"
+                      style={{ background: "radial-gradient(circle at 50% 30%, rgba(255,255,255,0.12), transparent 60%)" }}
+                    />
+                    <img 
+                      src={heroImage.imageUrl} 
+                      alt="Generated" 
+                      className="relative z-10 max-w-[92%] max-h-[92%] object-contain rounded-[28px] border border-white/5 shadow-[0_25px_80px_rgba(0,0,0,0.65)]"
+                    />
+                    {/* Quick Action Buttons (Top Right) */}
+                    <div className="absolute top-6 right-6 z-20 flex gap-2">
+                      <Button
+                        size="sm"
+                        variant={heroImage.approvalStatus === 'flagged' ? 'default' : 'secondary'}
+                        onClick={() => handleToggleApproval(heroImage.id)}
+                        className="bg-studio-card/90 backdrop-blur-sm"
+                        title="Favorite"
+                      >
+                        <Heart className={cn("w-4 h-4", heroImage.approvalStatus === 'flagged' && "fill-current")} />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => handleSaveRecipe(heroImage.id)}
+                        className="bg-studio-card/90 backdrop-blur-sm"
+                        title="Save as Recipe"
+                      >
+                        <Bookmark className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
                 

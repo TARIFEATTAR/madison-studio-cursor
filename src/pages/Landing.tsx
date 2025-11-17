@@ -238,7 +238,7 @@ const Landing = () => {
                 Where Luxury Beauty Brands Craft Their
               </span>
               <span 
-                className="block text-4xl sm:text-5xl md:text-7xl lg:text-8xl leading-tight mt-1 md:mt-2 transition-all duration-[400ms]"
+                className="block text-4xl sm:text-5xl md:text-7xl lg:text-8xl leading-tight mt-1 md:mt-2 transition-all duration-500"
                 style={{ 
                   color: 'hsl(42, 77%, 70%)',
                   textShadow: '0 0 30px rgba(212, 175, 55, 0.4)',

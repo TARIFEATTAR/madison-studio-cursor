@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { generateText } from "../_shared/aiProviders.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -823,11 +824,6 @@ serve(async (req) => {
 
     console.log(`Using organization_id: ${masterContentRecord.organization_id}`);
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
-    }
-
     // Fetch brand context for consistent voice
     const brandContext = await buildBrandContext(supabaseClient, masterContentRecord.organization_id);
 
@@ -992,33 +988,10 @@ INSTRUCTIONS:
 FAILURE TO FOLLOW CODEX V2 PRINCIPLES OR BRAND GUIDELINES IS UNACCEPTABLE.`;
       }
 
-      // Call Lovable AI Gateway (default to Gemini 2.5 Flash)
-      const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          // During promo period, Gemini models are free
-          model: 'google/gemini-2.5-flash',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: fullPrompt }
-          ]
-        }),
+      const generatedContent = await generateText({
+        systemPrompt,
+        prompt: fullPrompt,
       });
-
-      if (!aiResponse.ok) {
-        const t = await aiResponse.text();
-        console.error(`AI gateway error for ${derivativeType}:`, aiResponse.status, t);
-        if (aiResponse.status === 429) throw new Error('Rate limits exceeded. Please wait a moment and retry.');
-        if (aiResponse.status === 402) throw new Error('Payment required: please add credits to Lovable AI workspace.');
-        throw new Error(`AI gateway error: ${aiResponse.status}`);
-      }
-
-      const aiData = await aiResponse.json();
-      const generatedContent = aiData.choices?.[0]?.message?.content ?? '';
       const cleanedContent = stripMarkdown(generatedContent);
 
       // Parse platform-specific specs (from cleaned text to avoid markdown tokens)
@@ -1100,12 +1073,13 @@ FAILURE TO FOLLOW CODEX V2 PRINCIPLES OR BRAND GUIDELINES IS UNACCEPTABLE.`;
     });
 
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    const stack = error instanceof Error ? error.stack : undefined;
     console.error('Error in repurpose-content function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Error details:', errorMessage);
     
     return new Response(JSON.stringify({ 
-      error: errorMessage,
+      error: message,
+      stack,
       success: false,
     }), {
       status: 500,

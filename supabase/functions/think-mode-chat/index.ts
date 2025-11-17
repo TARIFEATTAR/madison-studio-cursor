@@ -4,6 +4,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
+const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+const GEMINI_TEXT_MODEL = Deno.env.get('GEMINI_TEXT_MODEL') ?? 'models/gemini-1.5-pro-latest';
+const GEMINI_API_ENDPOINT = Deno.env.get('GEMINI_API_ENDPOINT') ?? 'https://generativelanguage.googleapis.com/v1beta';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -39,6 +42,13 @@ async function getMadisonSystemConfig() {
   }
 }
 
+function mapMessagesToGemini(messages: Array<{ role: string; content: string }>) {
+  return messages.map((message) => ({
+    role: message.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: message.content ?? '' }],
+  }));
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -71,10 +81,8 @@ serve(async (req) => {
     console.log(`Authenticated request from user: ${user.id}`);
 
     const { messages, userName } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY not configured');
     }
 
     console.log('Think Mode chat request, messages:', messages.length);
@@ -146,23 +154,18 @@ Remember: You're Madison—a trusted advisor helping them think through their cr
       systemContent += `\n\n(Note: You're brainstorming with ${userName}. Use their name naturally—especially in opening greetings ("Hi ${userName}!"), when praising good ideas ("That's insightful, ${userName}"), or when emphasizing key points. Keep it professional and warm.)`;
     }
 
-    // Call Lovable AI Gateway with streaming
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const geminiUrl = `${GEMINI_API_ENDPOINT}/${GEMINI_TEXT_MODEL}:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`;
+    const response = await fetch(geminiUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { 
-            role: 'system', 
-            content: systemContent
-          },
-          ...messages
-        ],
-        stream: true,
+        systemInstruction: {
+          role: 'system',
+          parts: [{ text: systemContent }]
+        },
+        contents: mapMessagesToGemini(messages || []),
       }),
     });
 
@@ -181,7 +184,7 @@ Remember: You're Madison—a trusted advisor helping them think through their cr
       }
       const errorText = await response.text();
       console.error('AI gateway error:', response.status, errorText);
-      throw new Error('AI gateway error');
+      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
     }
 
     // Return streaming response
@@ -192,7 +195,10 @@ Remember: You're Madison—a trusted advisor helping them think through their cr
   } catch (error) {
     console.error('Think Mode error:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

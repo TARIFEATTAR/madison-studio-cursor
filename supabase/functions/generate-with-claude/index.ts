@@ -2,9 +2,9 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 import { getSemanticFields, formatSemanticContext } from '../_shared/productFieldFilters.ts';
+import { callGeminiText } from '../_shared/aiProviders.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -847,29 +847,25 @@ serve(async (req) => {
 
     console.log(`Authenticated request from user: ${user.id}`);
     
-    // Determine model availability - Priority: Gemini Direct > Claude > Lovable AI
-    // Gemini Direct is most cost-effective (subscription-based), Claude is high quality, Lovable is fallback
+    // Determine model availability - Priority: Claude > Gemini
     const hasGeminiDirect = !!GEMINI_API_KEY;
     const hasAnthropicAPI = !!ANTHROPIC_API_KEY;
-    const hasLovableAI = !!LOVABLE_API_KEY;
     
-    if (!hasGeminiDirect && !hasAnthropicAPI && !hasLovableAI) {
-      throw new Error('No AI API configured. Please set GEMINI_API_KEY, ANTHROPIC_API_KEY, or LOVABLE_API_KEY.');
+    if (!hasGeminiDirect && !hasAnthropicAPI) {
+      throw new Error('No AI API configured. Please set GEMINI_API_KEY and/or ANTHROPIC_API_KEY.');
     }
     
     // Log which APIs are available
     const availableAPIs = [];
-    if (hasGeminiDirect) availableAPIs.push('Gemini Direct');
     if (hasAnthropicAPI) availableAPIs.push('Claude');
-    if (hasLovableAI) availableAPIs.push('Lovable AI');
+    if (hasGeminiDirect) availableAPIs.push('Gemini');
     
     console.log(`Using API priority: ${availableAPIs.join(' → ')}`);
+    if (hasAnthropicAPI) {
+      console.log('Using Anthropic Claude as primary model');
+    }
     if (hasGeminiDirect) {
-      console.log('Using Gemini Direct API as primary (cost-effective subscription)');
-    } else if (hasAnthropicAPI && hasLovableAI) {
-      console.log('Using Anthropic Claude as primary with Lovable AI fallback');
-    } else {
-      console.log(`Using ${hasAnthropicAPI ? 'Anthropic Claude' : 'Lovable AI (Gemini)'} for generation`);
+      console.log('Gemini available for fallback / secondary tasks');
     }
 
     // Parse request body with error handling
@@ -940,7 +936,7 @@ serve(async (req) => {
       hasProductData: !!productData,
       productCategory: productData?.category || 'N/A',
       hasAnthropicAPI,
-      hasLovableAI
+      hasGeminiDirect
     });
 
     // Fetch full product data from database if product_id is provided
@@ -1762,7 +1758,7 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
           // Use Gemini Direct API (most cost-effective with subscription)
           try {
             // Build Gemini API request format
-            // Gemini uses a different format than Anthropic/Lovable
+            // Gemini uses a different format than Anthropic
             const geminiParts: any[] = [];
             
             // Handle multimodal content (images + text)
@@ -1851,7 +1847,7 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
               promptLength: prompt?.length || 0
             });
             
-            // If Gemini is unavailable due to quota/rate limits, fall back to Claude or Lovable
+            // If Gemini is unavailable due to quota/rate limits, fall back to Claude when possible
             const lower = errorText.toLowerCase();
             const isQuotaOrRateLimit = response.status === 429 
               || response.status === 403
@@ -1861,9 +1857,6 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
               if (hasAnthropicAPI) {
                 console.log('Falling back to Anthropic Claude due to Gemini quota/rate limit');
                 // Will fall through to Claude logic below
-              } else if (hasLovableAI) {
-                console.log('Falling back to Lovable AI due to Gemini quota/rate limit');
-                // Will fall through to Lovable logic below
               } else {
                 throw new Error(`Gemini API quota/rate limit exceeded: ${response.status} - ${errorText}`);
               }
@@ -1969,32 +1962,25 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
               promptLength: prompt?.length || 0
             });
             
-            // If Anthropic is unavailable due to credits/rate limits and Lovable is configured, fall back immediately
+            // If Anthropic is unavailable due to credits/rate limits and Gemini is configured, fall back immediately
             const lower = errorText.toLowerCase();
             const isCreditOrRateLimit = response.status === 429 
               || response.status === 402 
               || (response.status === 400 && (lower.includes('credit') || lower.includes('balance')))
               || lower.includes('credit')
               || lower.includes('rate');
-            if (isCreditOrRateLimit && hasLovableAI) {
-              console.log('Falling back to Lovable AI (Gemini) due to Anthropic limitation');
+            if (isCreditOrRateLimit && hasGeminiDirect) {
+              console.log('Falling back to Gemini due to Anthropic limitation');
               
-              // Build Gemini-compatible multimodal content
               let geminiContent: any;
               if (images && images.length > 0) {
-                // Multimodal message for Gemini
                 const contentParts: any[] = [{ type: 'text', text: prompt }];
-                
                 images.forEach((imageData: string) => {
-                  const matches = imageData.match(/^data:([^;]+);base64,(.+)$/);
-                  if (matches) {
-                    contentParts.push({
-                      type: 'image_url',
-                      image_url: { url: imageData }
-                    });
-                  }
+                  contentParts.push({
+                    type: 'image_url',
+                    image_url: { url: imageData }
+                  });
                 });
-                
                 geminiContent = contentParts;
               } else {
                 geminiContent = prompt;
@@ -2005,60 +1991,12 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
                 { role: 'user', content: geminiContent }
               ];
               
-              // ✨ PERFORMANCE FIX: Add timeout to prevent hanging requests
-              const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
-              
-              let lovableResp: Response;
-              try {
-                lovableResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    model: 'google/gemini-2.5-flash',
-                    messages: messages,
-                    max_tokens: 4096,
-                    stream: false,
-                  }),
-                  signal: controller.signal,
-                });
-                clearTimeout(timeoutId);
-              } catch (fetchError: any) {
-                clearTimeout(timeoutId);
-                if (fetchError.name === 'AbortError') {
-                  throw new Error('API request timed out. Please try again.');
-                }
-                throw fetchError;
-              }
-
-              if (!lovableResp.ok) {
-                const lovableErr = await lovableResp.text();
-                console.error('Lovable AI fallback failed:', lovableResp.status, lovableErr);
-                // If fallback also fails with 500, retry; otherwise bubble up a combined error
-                if (lovableResp.status === 500) {
-                  lastError = new Error(`Lovable AI error: ${lovableResp.status} - ${lovableErr}`);
-                  continue;
-                }
-                throw new Error(`Lovable AI error: ${lovableResp.status} - ${lovableErr}`);
-              }
-
-              const lovableData = await lovableResp.json();
-              
-              // Validate fallback response structure
-              if (!lovableData || !lovableData.choices || !Array.isArray(lovableData.choices) || lovableData.choices.length === 0) {
-                console.error('Invalid Lovable AI fallback response structure:', JSON.stringify(lovableData));
-                throw new Error('Invalid response from AI service. Please try again.');
-              }
-              
-              if (!lovableData.choices[0].message || !lovableData.choices[0].message.content) {
-                console.error('No message content in Lovable AI fallback response:', JSON.stringify(lovableData));
-                throw new Error('No content received from AI service. Please try again.');
-              }
-              
-              generatedContent = lovableData.choices[0].message.content;
+              generatedContent = await callGeminiText({
+                systemPrompt,
+                messages,
+                temperature: requestPayload?.temperature,
+                maxOutputTokens: requestPayload?.max_tokens,
+              });
               break; // Success via fallback
             }
 
@@ -2089,109 +2027,33 @@ Return plain text only with no Markdown formatting. No asterisks, bold, italics,
           generatedContent = textContent.text;
         }
         
-        // Final fallback to Lovable AI if neither Gemini nor Claude worked
-        if (!generatedContent && hasLovableAI) {
-          // Use Lovable AI (Gemini) as fallback
-          try {
-            // Build Gemini-compatible multimodal content
-            let geminiContent: any;
-            if (images && images.length > 0) {
-              // Multimodal message for Gemini
-              const contentParts: any[] = [{ type: 'text', text: prompt }];
-              
-              images.forEach((imageData: string) => {
-                const matches = imageData.match(/^data:([^;]+);base64,(.+)$/);
-                if (matches) {
-                  contentParts.push({
-                    type: 'image_url',
-                    image_url: { url: imageData }
-                  });
-                }
+        // Final fallback to Gemini if Claude failed completely
+        if (!generatedContent && hasGeminiDirect) {
+          let geminiContent: any;
+          if (images && images.length > 0) {
+            const contentParts: any[] = [{ type: 'text', text: prompt }];
+            images.forEach((imageData: string) => {
+              contentParts.push({
+                type: 'image_url',
+                image_url: { url: imageData }
               });
-              
-              geminiContent = contentParts;
-            } else {
-              geminiContent = prompt;
-            }
-            
-            const messages: any[] = [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: geminiContent }
-            ];
-            
-            console.log('Sending request to Lovable AI (Gemini):', {
-              model: 'google/gemini-2.5-flash',
-              messagesCount: messages.length,
-              systemPromptLength: systemPrompt.length,
-              hasImages: images && images.length > 0
             });
-            
-            // ✨ PERFORMANCE FIX: Add timeout to prevent hanging requests
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
-            
-            try {
-              response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  model: 'google/gemini-2.5-flash',
-                  messages: messages,
-                  max_tokens: 4096,
-                  stream: false,
-                }),
-                signal: controller.signal,
-              });
-              clearTimeout(timeoutId);
-            } catch (fetchError: any) {
-              clearTimeout(timeoutId);
-              if (fetchError.name === 'AbortError') {
-                throw new Error('API request timed out. Please try again.');
-              }
-              throw fetchError;
-            }
-          } catch (fetchError) {
-            console.error('Error constructing or sending Lovable AI request:', fetchError);
-            throw new Error(`Failed to send request to AI service: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`);
-          }
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`Lovable AI error (attempt ${attempt + 1}):`, response.status, errorText);
-            
-            if (response.status === 429) {
-              throw new Error('Rate limit exceeded. Please try again in a moment.');
-            }
-            if (response.status === 402) {
-              throw new Error('Lovable AI credits exhausted. Please add credits in Settings → Workspace → Usage.');
-            }
-            
-            // Only retry on 500 errors
-            if (response.status === 500) {
-              lastError = new Error(`Lovable AI error: ${response.status} - ${errorText}`);
-              continue;
-            }
-            
-            throw new Error(`Lovable AI error: ${response.status} - ${errorText}`);
-          }
-
-          data = await response.json();
-          
-          // Validate response structure
-          if (!data || !data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
-            console.error('Invalid Lovable AI response structure:', JSON.stringify(data));
-            throw new Error('Invalid response from AI service. Please try again.');
+            geminiContent = contentParts;
+          } else {
+            geminiContent = prompt;
           }
           
-          if (!data.choices[0].message || !data.choices[0].message.content) {
-            console.error('No message content in Lovable AI response:', JSON.stringify(data));
-            throw new Error('No content received from AI service. Please try again.');
-          }
+          const messages: any[] = [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: geminiContent }
+          ];
           
-          generatedContent = data.choices[0].message.content;
+          generatedContent = await callGeminiText({
+            systemPrompt,
+            messages,
+            temperature: requestPayload?.temperature,
+            maxOutputTokens: requestPayload?.max_tokens,
+          });
         }
         
         // Success - break out of retry loop

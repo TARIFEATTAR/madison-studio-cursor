@@ -660,6 +660,25 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
     }
   };
 
+  const extractThinkModeText = (chunk: any) => {
+    const openAIContent = chunk?.choices?.[0]?.delta?.content;
+    if (openAIContent) return openAIContent as string;
+
+    const candidate = chunk?.candidates?.[0];
+    if (candidate?.content?.parts?.length) {
+      return candidate.content.parts
+        .map((part: any) => part?.text ?? '')
+        .join('');
+    }
+
+    const parts = chunk?.message?.content?.parts;
+    if (parts?.length) {
+      return parts.map((part: any) => part?.text ?? '').join('');
+    }
+
+    return '';
+  };
+
   const handleThinkModeSend = async () => {
     if (!thinkModeInput.trim() || isThinking) return;
     
@@ -747,7 +766,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
 
           try {
             const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            const content = extractThinkModeText(parsed);
             
             if (content) {
               aiMessage += content;
@@ -789,7 +808,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
           if (jsonStr === "[DONE]") continue;
           try {
             const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            const content = extractThinkModeText(parsed);
             if (content) {
               aiMessage += content;
               setThinkModeMessages(prev => {

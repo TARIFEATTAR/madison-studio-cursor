@@ -1,7 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+import { callGeminiImage } from "../_shared/aiProviders.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,62 +16,19 @@ serve(async (req) => {
   }
 
   try {
-    if (!LOVABLE_API_KEY) {
-      console.error("[generate-image-with-nano] LOVABLE_API_KEY not configured");
-      throw new Error('LOVABLE_API_KEY is not configured');
-    }
-
     const { prompt } = await req.json();
     console.log('[generate-image-with-nano] Generating image for prompt:', prompt.substring(0, 100));
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-image-preview',
-        messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        modalities: ['image', 'text']
-      }),
-    });
+    const geminiImage = await callGeminiImage({ prompt });
+    const base64Image = geminiImage?.data ?? geminiImage?.bytesBase64 ?? geminiImage?.base64;
+    const mimeType = geminiImage?.mimeType ?? 'image/png';
+    const description = geminiImage?.description ?? '';
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[generate-image-with-nano] Nano Banana API error:', {
-        status: response.status,
-        statusText: response.statusText,
-        errorText: errorText.substring(0, 500)
-      });
-      
-      // Handle specific error cases
-      if (response.status === 429) {
-        throw new Error("Rate limit exceeded. Please wait a moment and try again.");
-      }
-      if (response.status === 402) {
-        throw new Error("AI credits depleted. Please add credits to your workspace in Settings.");
-      }
-      if (response.status === 401) {
-        throw new Error("API key invalid or expired. Please contact support.");
-      }
-      
-      throw new Error(`Nano Banana API error: ${response.status} - ${errorText.substring(0, 200)}`);
-    }
-
-    const data = await response.json();
-    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-    const description = data.choices?.[0]?.message?.content;
-
-    if (!imageUrl) {
-      console.error('[generate-image-with-nano] No image in response:', JSON.stringify(data, null, 2).substring(0, 500));
+    if (!base64Image) {
       throw new Error('No image generated in response');
     }
+
+    const imageUrl = `data:${mimeType};base64,${base64Image}`;
 
     console.log('[generate-image-with-nano] Successfully generated image');
 
