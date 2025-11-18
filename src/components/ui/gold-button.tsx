@@ -30,9 +30,10 @@ const GoldButton = forwardRef<HTMLButtonElement, GoldButtonProps>(
             "absolute inset-0 -left-[75%] w-1/2 h-full",
             "bg-gradient-to-r from-white/30 via-white/20 to-transparent",
             "skew-x-[-20deg]",
-            "transition-all duration-[1200ms] ease-out",
+            "transition-all ease-out",
             "group-hover:left-[125%]"
           )}
+          style={{ transitionDuration: "1200ms" }}
           aria-hidden="true"
         />
         

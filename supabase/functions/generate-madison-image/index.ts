@@ -2,14 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { formatVisualContext } from "../_shared/productFieldFilters.ts";
-
-// Gemini configuration
-const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-const GEMINI_MODEL = "models/gemini-2.5-flash-image-preview:generateContent";
-
-if (!GEMINI_API_KEY) {
-  console.error("❌ Missing GEMINI_API_KEY env variable");
-}
+import { callGeminiImage } from "../_shared/aiProviders.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -97,6 +90,58 @@ Apply these professional settings exactly.
  * MAIN EDGE FUNCTION
  * ------------------------------
  */
+
+function extractMissingColumn(message: string) {
+  const patterns = [
+    /column generated_images\.([a-zA-Z0-9_]+)/i,
+    /"generated_images"\."([a-zA-Z0-9_]+)"/i,
+    /'([a-zA-Z0-9_]+)' column of 'generated_images'/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = message.match(pattern);
+    if (match?.[1]) {
+      return match[1];
+    }
+  }
+  return null;
+}
+
+async function insertGeneratedImageRecord(
+  supabase: ReturnType<typeof createClient>,
+  payload: Record<string, unknown>,
+) {
+  let attemptPayload = { ...payload };
+  const maxAttempts = Object.keys(payload).length + 1;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const { data, error } = await supabase
+      .from("generated_images")
+      .insert(attemptPayload)
+      .select()
+      .single();
+
+    if (!error) {
+      return data;
+    }
+
+    const column = extractMissingColumn(error.message ?? "");
+    if (column && column in attemptPayload) {
+      console.warn(
+        `[generate-madison-image] Column '${column}' missing in generated_images. Retrying without it.`,
+      );
+
+      delete attemptPayload[column];
+      continue;
+    }
+
+    throw error;
+  }
+
+  throw new Error(
+    "Failed to insert generated_images record after removing missing columns.",
+  );
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -310,68 +355,37 @@ serve(async (req) => {
      * 7. Convert reference images to base64 (Gemini requirement)
      * -------------------------
      */
-    const geminiContent: any[] = [
-      {
-        text: enhancedPrompt,
-      },
-    ];
+    const referenceImagesPayload = [];
 
     for (const ref of actualReferenceImages) {
       if (!ref.url) continue;
-
       const response = await fetch(ref.url);
       const buffer = await response.arrayBuffer();
-      const base64 = btoa(
-        String.fromCharCode(...new Uint8Array(buffer))
-      );
-
-      geminiContent.push({
-        inline_data: {
-          mime_type: "image/png",
-          data: base64,
-        },
+      const bytes = new Uint8Array(buffer);
+      // Convert to base64 in chunks to avoid "Maximum call stack size exceeded"
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64 = btoa(binary);
+      referenceImagesPayload.push({
+        data: base64,
+        mimeType: "image/png",
       });
     }
 
-    /**
-     * -------------------------
-     * 8. Call Gemini 2.5 Flash Image Preview
-     * -------------------------
-     */
-    const geminiURL =
-      `https://generativelanguage.googleapis.com/v1beta/${GEMINI_MODEL}?key=${GEMINI_API_KEY}`;
-
-    const geminiResp = await fetch(geminiURL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: geminiContent,
-          },
-        ],
-      }),
+    const geminiImage = await callGeminiImage({
+      prompt: enhancedPrompt,
+      aspectRatio,
+      referenceImages: referenceImagesPayload.length
+        ? referenceImagesPayload
+        : undefined,
     });
 
-    const geminiData = await geminiResp.json();
-
-    if (!geminiResp.ok) {
-      console.error("Gemini Error:", geminiData);
-      throw new Error(`Gemini Error: ${JSON.stringify(geminiData)}`);
-    }
-
-    const base64Image =
-      geminiData?.candidates?.[0]?.content?.parts?.find(
-        (p: any) => p.inline_data
-      )?.inline_data?.data;
+    const base64Image = geminiImage?.data ?? geminiImage?.bytesBase64 ?? geminiImage?.base64;
 
     if (!base64Image) {
-      throw new Error(
-        "Gemini returned no image. Check prompt and reference images."
-      );
+      throw new Error("Gemini returned no image. Check prompt and reference images.");
     }
 
     /**
@@ -405,43 +419,46 @@ serve(async (req) => {
      * 10. Save DB record
      * -------------------------
      */
-    const { data: savedImage, error: dbError } = await supabase
-      .from("generated_images")
-      .insert({
-        organization_id: resolvedOrgId,
-        user_id: userId,
-        session_id: sessionId,
-        goal_type: goalType,
-        aspect_ratio: aspectRatio,
-        output_format: outputFormat,
-        selected_template: selectedTemplate,
-        user_refinements: userRefinements,
+    const insertPayload: Record<string, unknown> = {
+      organization_id: resolvedOrgId,
+      user_id: userId,
+      session_id: sessionId,
+      goal_type: goalType,
+      aspect_ratio: aspectRatio,
+      output_format: outputFormat,
+      final_prompt: enhancedPrompt,
+      image_url: imageUrl,
+      description: "Gemini 2.5 generated image",
+    };
 
-        final_prompt: enhancedPrompt,
-        image_url: imageUrl,
-        description: "Gemini 2.5 generated image",
-        reference_images: actualReferenceImages,
-
-        brand_context_used: {
-          ...brandContext,
-          knowledgeUsed: {
-            hasVisualStandards: !!brandKnowledge.visualStandards,
-          },
-        },
-
-        image_generator: "gemini-2.5-flash-image-preview",
-        saved_to_library: true,
-        parent_image_id: isRefinement ? parentImageId : null,
-        chain_depth: isRefinement ? 1 : 0,
-        is_chain_origin: !isRefinement,
-        refinement_instruction: isRefinement ? refinementInstruction : null,
-      })
-      .select()
-      .single();
-
-    if (dbError) {
-      throw dbError;
+    if (selectedTemplate) insertPayload.selected_template = selectedTemplate;
+    if (userRefinements) insertPayload.user_refinements = userRefinements;
+    if (actualReferenceImages?.length) {
+      insertPayload.reference_images = actualReferenceImages;
     }
+
+    if (brandContext || brandKnowledge.visualStandards) {
+      insertPayload.brand_context_used = {
+        ...brandContext,
+        knowledgeUsed: {
+          hasVisualStandards: !!brandKnowledge.visualStandards,
+        },
+      };
+    }
+
+    insertPayload.image_generator = "gemini-2.5-flash-image-preview";
+    insertPayload.saved_to_library = true;
+    insertPayload.parent_image_id = isRefinement ? parentImageId : null;
+    insertPayload.chain_depth = isRefinement ? 1 : 0;
+    insertPayload.is_chain_origin = !isRefinement;
+    insertPayload.refinement_instruction = isRefinement
+      ? refinementInstruction
+      : null;
+
+    const savedImage = await insertGeneratedImageRecord(
+      supabase,
+      insertPayload,
+    );
 
     /**
      * -------------------------
@@ -454,7 +471,12 @@ serve(async (req) => {
         savedImageId: savedImage?.id,
         description: "Generated via Gemini",
       }),
-      { headers: corsHeaders }
+      {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+        },
+      },
     );
   } catch (error) {
     console.error("❌ generate-madison-image Error:", error);
@@ -462,7 +484,13 @@ serve(async (req) => {
       JSON.stringify({
         error: error.message || "Image generation failed.",
       }),
-      { status: 500, headers: corsHeaders }
+      {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+        },
+      },
     );
   }
 });

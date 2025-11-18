@@ -37,6 +37,8 @@ import BrandHealth from "./pages/BrandHealth";
 import BrandBuilder from "./pages/BrandBuilder";
 import ImageEditor from "./pages/ImageEditor";
 import EmailBuilderV2 from "./pages/EmailBuilderV2";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { AlertCircle } from "lucide-react";
@@ -319,6 +321,8 @@ const AppContent = () => {
                   <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/meet-madison" element={<ProtectedRoute><RouteErrorBoundary routeName="Meet Madison"><MeetMadison /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/help-center" element={<ProtectedRoute><RouteErrorBoundary routeName="Help Center"><HelpCenter /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
                   {/* Email Builder routes - Temporarily hidden for launch */}
@@ -355,6 +359,8 @@ const AppContent = () => {
             <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/meet-madison" element={<ProtectedRoute><RouteErrorBoundary routeName="Meet Madison"><MeetMadison /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/help-center" element={<ProtectedRoute><RouteErrorBoundary routeName="Help Center"><HelpCenter /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
             <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
             {/* Email Builder routes - Temporarily hidden for launch */}

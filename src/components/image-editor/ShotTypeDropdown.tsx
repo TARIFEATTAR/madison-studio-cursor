@@ -22,6 +22,10 @@ const SHOT_TYPES = [
     label: "Editorial Luxury", 
     prompt: "High-end editorial perfume shot, dramatic lighting, deep contrast, cinematic tone." 
   },
+  {
+    label: "Flat Lay",
+    prompt: "Flat lay arrangement shot from above, thoughtfully styled props, balanced composition, crisp diffused lighting."
+  },
 ];
 
 interface ShotTypeDropdownProps {

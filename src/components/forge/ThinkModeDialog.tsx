@@ -52,6 +52,17 @@ export function ThinkModeDialog({ open, onOpenChange }: ThinkModeDialogProps) {
     setIdea("");
     setIsLoading(true);
 
+    const removePendingUserMessage = () => {
+      setMessages((prev) => {
+        if (prev.length === 0) return prev;
+        const last = prev[prev.length - 1];
+        if (last.role === "user" && last.content === userMessage.content) {
+          return prev.slice(0, -1);
+        }
+        return prev;
+      });
+    };
+
     try {
       const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/think-mode-chat`;
       
@@ -88,6 +99,24 @@ export function ThinkModeDialog({ open, onOpenChange }: ThinkModeDialogProps) {
       const decoder = new TextDecoder();
       let assistantContent = "";
 
+      const extractTextFromChunk = (chunk: any) => {
+        const openAIText = chunk?.choices?.[0]?.delta?.content;
+        if (openAIText) return openAIText;
+
+        const candidate = chunk?.candidates?.[0];
+        if (candidate?.content?.parts?.length) {
+          return candidate.content.parts
+            .map((part: any) => part?.text ?? "")
+            .join("");
+        }
+
+        const messageParts = chunk?.message?.content?.parts;
+        if (messageParts?.length) {
+          return messageParts.map((part: any) => part?.text ?? "").join("");
+        }
+        return "";
+      };
+
       if (reader) {
         let buffer = "";
         
@@ -111,7 +140,7 @@ export function ThinkModeDialog({ open, onOpenChange }: ThinkModeDialogProps) {
             
             try {
               const parsed = JSON.parse(jsonStr);
-              const content = parsed.choices?.[0]?.delta?.content;
+              const content = extractTextFromChunk(parsed);
               if (content) {
                 assistantContent += content;
                 setMessages((prev) => {
@@ -139,7 +168,7 @@ export function ThinkModeDialog({ open, onOpenChange }: ThinkModeDialogProps) {
             if (jsonStr === "[DONE]") continue;
             try {
               const parsed = JSON.parse(jsonStr);
-              const content = parsed.choices?.[0]?.delta?.content;
+              const content = extractTextFromChunk(parsed);
               if (content) {
                 assistantContent += content;
                 setMessages((prev) => {
@@ -158,6 +187,7 @@ export function ThinkModeDialog({ open, onOpenChange }: ThinkModeDialogProps) {
       }
     } catch (error: any) {
       console.error("Think Mode error:", error);
+      removePendingUserMessage();
       toast({
         title: "Think Mode Error",
         description: error.message || "Failed to connect to AI",

@@ -122,7 +122,13 @@ serve(async (req) => {
       try {
         // Convert PDF to base64 for AI processing
         pdfArrayBuffer = await fileData.arrayBuffer();
-        const base64 = btoa(String.fromCharCode(...new Uint8Array(pdfArrayBuffer)));
+        const bytes = new Uint8Array(pdfArrayBuffer);
+        // Convert to base64 in chunks to avoid "Maximum call stack size exceeded"
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64 = btoa(binary);
         
         console.log('Sending PDF to AI for text extraction...');
         
