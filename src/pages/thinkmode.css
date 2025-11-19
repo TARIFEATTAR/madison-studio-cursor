@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Inter:wght@400;500&display=swap');
+
+.think-mode {
+  font-family: 'Inter', sans-serif;
+}
+
+.think-mode-heading {
+  font-family: 'Cormorant Garamond', serif;
+  letter-spacing: 0.04em;
+}
+
+.think-mode-body {
+  font-family: 'Inter', sans-serif;
+}
+
+.think-mode textarea::-webkit-scrollbar {
+  display: none;
+}

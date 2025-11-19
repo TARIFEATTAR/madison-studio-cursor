@@ -236,25 +236,6 @@ export async function callGeminiImage(
     throw new Error("GEMINI_API_KEY not configured");
   }
 
-  const mapAspectRatio = (ratio?: string) => {
-    switch (ratio) {
-      case "1:1":
-        return "1:1";
-      case "16:9":
-        return "16:9";
-      case "9:16":
-        return "9:16";
-      case "4:3":
-        return "4:3";
-      case "4:5":
-        return "4:5";
-      case "5:4":
-        return "5:4";
-      default:
-        return undefined;
-    }
-  };
-
   // Build content parts array
   const parts: Array<Record<string, unknown>> = [{ text: request.prompt }];
   
@@ -288,13 +269,6 @@ export async function callGeminiImage(
   } else {
     body.generationConfig = {
       responseModalities: ["IMAGE"],
-    };
-  }
-
-  const aspectRatioValue = mapAspectRatio(request.aspectRatio);
-  if (aspectRatioValue) {
-    (body.generationConfig as any).imageGenerationConfig = {
-      aspectRatio: aspectRatioValue,
     };
   }
 

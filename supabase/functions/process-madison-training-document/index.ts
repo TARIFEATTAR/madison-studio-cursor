@@ -62,10 +62,10 @@ serve(async (req) => {
       throw new Error(`Failed to download file: ${dlErr?.message || JSON.stringify(dlErr)}`);
     }
 
-    if (doc.file_type !== "application/pdf") {
-      throw new Error(`Unsupported file type: ${doc.file_type}`);
-    }
+    let extracted: string;
 
+    // Handle different file types
+    if (doc.file_type === "application/pdf") {
     // Extract text from PDF using Deno-native library
     console.log("Parsing PDF to extract text...");
     const arrayBuffer = await fileData.arrayBuffer();
@@ -74,13 +74,29 @@ serve(async (req) => {
     // Load PDF and extract text using unpdf
     const pdf = await getDocumentProxy(pdfBuffer);
     const { text } = await extractText(pdf, { mergePages: true });
-    const extracted = text;
+      extracted = text;
     
     if (!extracted || extracted.trim().length < 20) {
       throw new Error("No text content found in PDF");
     }
     
     console.log("PDF text extracted successfully. Characters:", extracted.length);
+    } else if (doc.file_type.includes('text') || doc.file_type.includes('markdown') || 
+               doc.file_name.toLowerCase().endsWith('.txt') || 
+               doc.file_name.toLowerCase().endsWith('.md') ||
+               doc.file_name.toLowerCase().endsWith('.markdown')) {
+      // Direct text file - read as text (most accurate, no extraction needed)
+      console.log("Reading text file directly...");
+      extracted = await fileData.text();
+      
+      if (!extracted || extracted.trim().length < 20) {
+        throw new Error("No text content found in file");
+      }
+      
+      console.log("Text file read successfully. Characters:", extracted.length);
+    } else {
+      throw new Error(`Unsupported file type: ${doc.file_type}. Supported: PDF, TXT, MD, Markdown`);
+    }
 
     // Save extracted content
     await supabase

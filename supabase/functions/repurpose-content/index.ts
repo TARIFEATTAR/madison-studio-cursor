@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { generateGeminiContent, extractTextFromGeminiResponse } from "../_shared/geminiClient.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -823,12 +824,17 @@ serve(async (req) => {
 
     console.log(`Using organization_id: ${masterContentRecord.organization_id}`);
 
+    // Check for Gemini first (cost-effective), fallback to Anthropic
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-    if (!ANTHROPIC_API_KEY) {
-      throw new Error('ANTHROPIC_API_KEY not configured');
+    
+    if (!GEMINI_API_KEY && !ANTHROPIC_API_KEY) {
+      throw new Error('Neither GEMINI_API_KEY nor ANTHROPIC_API_KEY is configured');
     }
+    
     const DEFAULT_ANTHROPIC_MODEL = 'claude-3-haiku-20240307';
     const configuredAnthropicModel = Deno.env.get('ANTHROPIC_MODEL') || DEFAULT_ANTHROPIC_MODEL;
+    const useGemini = !!GEMINI_API_KEY;
 
     // Fetch brand context for consistent voice
     const brandContext = await buildBrandContext(supabaseClient, masterContentRecord.organization_id);
@@ -994,13 +1000,30 @@ INSTRUCTIONS:
 FAILURE TO FOLLOW CODEX V2 PRINCIPLES OR BRAND GUIDELINES IS UNACCEPTABLE.`;
       }
 
-      // Call Anthropic Claude directly (sonnet is closest to previous gateway defaults)
+      // Call Gemini first (cost-effective), fallback to Anthropic
+      const callGemini = async () => {
+        console.log(`Calling Gemini for ${derivativeType}...`);
+        try {
+          const geminiResponse = await generateGeminiContent({
+            model: 'models/gemini-2.0-flash-exp',
+            systemPrompt,
+            messages: [{ role: 'user', content: fullPrompt }],
+            maxOutputTokens: 1200,
+            temperature: 0.7,
+          });
+          return extractTextFromGeminiResponse(geminiResponse);
+        } catch (error) {
+          console.error(`Gemini error for ${derivativeType}:`, error);
+          throw error;
+        }
+      };
+
       const callAnthropic = async (model: string) => {
         console.log(`Calling Anthropic with model: ${model}`);
         return await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {
-            'x-api-key': ANTHROPIC_API_KEY,
+            'x-api-key': ANTHROPIC_API_KEY!,
             'Content-Type': 'application/json',
             'anthropic-version': '2023-06-01',
           },
@@ -1023,26 +1046,67 @@ FAILURE TO FOLLOW CODEX V2 PRINCIPLES OR BRAND GUIDELINES IS UNACCEPTABLE.`;
         });
       };
 
-      let modelToUse = configuredAnthropicModel;
-      let aiResponse = await callAnthropic(modelToUse);
+      let generatedContent = '';
+      
+      // Try Gemini first if available
+      if (useGemini) {
+        try {
+          generatedContent = await callGemini();
+          console.log(`✅ Gemini generated ${derivativeType} successfully`);
+        } catch (geminiError) {
+          console.warn(`Gemini failed for ${derivativeType}, falling back to Anthropic:`, geminiError);
+          // Fallback to Anthropic
+          if (!ANTHROPIC_API_KEY) {
+            throw new Error(`Gemini failed and ANTHROPIC_API_KEY not configured: ${geminiError}`);
+          }
+          let modelToUse = configuredAnthropicModel;
+          let aiResponse = await callAnthropic(modelToUse);
 
-      // If the configured model isn't available, fall back automatically
-      if (aiResponse.status === 404 && modelToUse !== DEFAULT_ANTHROPIC_MODEL) {
-        console.warn(`Anthropic model ${modelToUse} not found. Falling back to ${DEFAULT_ANTHROPIC_MODEL}.`);
-        modelToUse = DEFAULT_ANTHROPIC_MODEL;
-        aiResponse = await callAnthropic(modelToUse);
+          // If the configured model isn't available, fall back automatically
+          if (aiResponse.status === 404 && modelToUse !== DEFAULT_ANTHROPIC_MODEL) {
+            console.warn(`Anthropic model ${modelToUse} not found. Falling back to ${DEFAULT_ANTHROPIC_MODEL}.`);
+            modelToUse = DEFAULT_ANTHROPIC_MODEL;
+            aiResponse = await callAnthropic(modelToUse);
+          }
+
+          if (!aiResponse.ok) {
+            const t = await aiResponse.text();
+            console.error(`AI gateway error for ${derivativeType}:`, aiResponse.status, t);
+            if (aiResponse.status === 429) throw new Error('AI rate limits exceeded. Please wait a moment and retry.');
+            if (aiResponse.status === 402) throw new Error('AI billing error: please verify your API account.');
+            throw new Error(`AI gateway error: ${aiResponse.status}`);
+          }
+
+          const aiData = await aiResponse.json();
+          generatedContent = aiData.content?.[0]?.text ?? '';
+        }
+      } else {
+        // Use Anthropic directly
+        if (!ANTHROPIC_API_KEY) {
+          throw new Error('ANTHROPIC_API_KEY not configured');
+        }
+        let modelToUse = configuredAnthropicModel;
+        let aiResponse = await callAnthropic(modelToUse);
+
+        // If the configured model isn't available, fall back automatically
+        if (aiResponse.status === 404 && modelToUse !== DEFAULT_ANTHROPIC_MODEL) {
+          console.warn(`Anthropic model ${modelToUse} not found. Falling back to ${DEFAULT_ANTHROPIC_MODEL}.`);
+          modelToUse = DEFAULT_ANTHROPIC_MODEL;
+          aiResponse = await callAnthropic(modelToUse);
+        }
+
+        if (!aiResponse.ok) {
+          const t = await aiResponse.text();
+          console.error(`AI gateway error for ${derivativeType}:`, aiResponse.status, t);
+          if (aiResponse.status === 429) throw new Error('Anthropic rate limits exceeded. Please wait a moment and retry.');
+          if (aiResponse.status === 402) throw new Error('Anthropic billing error: please verify your Anthropic account.');
+          throw new Error(`AI gateway error: ${aiResponse.status}`);
+        }
+
+        const aiData = await aiResponse.json();
+        generatedContent = aiData.content?.[0]?.text ?? '';
       }
 
-      if (!aiResponse.ok) {
-        const t = await aiResponse.text();
-        console.error(`AI gateway error for ${derivativeType}:`, aiResponse.status, t);
-        if (aiResponse.status === 429) throw new Error('Anthropic rate limits exceeded. Please wait a moment and retry.');
-        if (aiResponse.status === 402) throw new Error('Anthropic billing error: please verify your Anthropic account.');
-        throw new Error(`AI gateway error: ${aiResponse.status}`);
-      }
-
-      const aiData = await aiResponse.json();
-      const generatedContent = aiData.content?.[0]?.text ?? '';
       const cleanedContent = stripMarkdown(generatedContent);
 
       // Parse platform-specific specs (from cleaned text to avoid markdown tokens)

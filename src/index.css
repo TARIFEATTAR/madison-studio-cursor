@@ -9,132 +9,129 @@
 
 @layer base {
   :root {
-    /* ──────────────────────────────────────────────────────────────────────
-       MADISON PRIMARY PALETTE
-       ────────────────────────────────────────────────────────────────────── */
-    
-    /* Core Palette - Hex values for direct CSS use */
-    --background-hex: #FFFEF2;           /* Ivory - main canvas */
-    --surface-hex: #f7f4ed;              /* Warm cream - cards, panels */
-    --text-primary-hex: #141414;         /* Night - headlines, body */
-    --text-secondary-hex: #252525;       /* Darker gray - metadata */
-    --border-hex: #E1E1E1;               /* Platinum - dividers */
-    
-    /* Accent Color - Hex value */
-    --accent-hex: #8B7355;               /* Lion/Coyote - warm, regal, premium */
-    
-    /* Semantic Colors - Hex values */
-    --success-hex: #6B8E23;              /* Olive green - subtle, luxe */
-    --error-hex: #8B4513;                /* Saddle brown - not aggressive red */
-    --warning-hex: #D4A574;              /* Gold - ties to accent */
-    
-    /* Legacy mappings for backward compatibility */
-    --midnight-black: 0 0% 8%;            /* Same as text-primary */
-    --royal-indigo: 0 0% 8%;              /* Same as text-primary */
-    --warm-sand: 42 38% 95%;              /* Same as surface */
-    --pearl-white: 60 100% 98%;          /* Same as background */
-    --ink-black: 0 0% 8%;                 /* Same as text-primary */
-    --charcoal: 0 0% 8%;                  /* Same as text-primary */
-    --vellum-cream: 42 38% 95%;           /* Same as surface */
-    --parchment-white: 60 100% 98%;      /* Same as background */
-    --warm-gray: 0 0% 15%;                /* Same as text-secondary */
-    --aged-brass: 32 25% 43%;             /* Same as accent */
-    --brass: 32 25% 43%;                  /* Same as accent */
-    --brass-glow: 32 25% 43%;            /* Same as accent */
-    --antique-gold: 32 25% 43%;          /* Same as accent */
-    --saffron-gold: 32 25% 43%;          /* Same as accent */
-    --copper-rose: 32 25% 43%;           /* Same as accent */
-    --emerald-green: 70 60% 35%;          /* Same as success */
-    --forest-ink: 70 60% 35%;             /* Same as success */
-    --terracotta-red: 25 75% 31%;         /* Same as error */
-    --deep-burgundy: 25 75% 31%;          /* Same as error */
-    --amber-gold: 33 56% 65%;             /* Same as warning */
-    --ai-teal: 190 42% 19%;               /* Keep for AI indicators */
-    --midnight-blue: 190 42% 19%;         /* Same as ai-teal */
-    
-    /* Derivative Type Colors - Content Organization */
-    --derivative-email: 217 91% 60%;        /* #3B82F6 - Blue for email */
-    --derivative-instagram: 291 64% 42%;    /* #A855F7 - Purple for Instagram */
-    --derivative-twitter: 199 89% 48%;      /* #0EA5E9 - Sky blue for Twitter */
-    --derivative-product: 25 95% 53%;       /* #FB923C - Orange for products */
-    --derivative-sms: 142 71% 45%;          /* #22C55E - Green for SMS */
-    --derivative-linkedin: 221 83% 53%;     /* #3B82F6 - Professional blue */
+    /* ══════════════════════════════════════════════════════════════════════
+       MADISON STUDIO - THE CODEX DESIGN SYSTEM
+       Premium brand intelligence platform - Refined color palette
+       Philosophy: Elegant restraint, Madison Avenue sophistication
+       ══════════════════════════════════════════════════════════════════════ */
     
     /* ──────────────────────────────────────────────────────────────────────
-       SEMANTIC COLOR TOKENS
+       CORE NEUTRALS (4 colors)
        ────────────────────────────────────────────────────────────────────── */
-    /* Core colors - converted to HSL for Tailwind compatibility */
-    --background: 60 100% 98%;        /* Ivory - #FFFEF2 */
-    --foreground: 0 0% 8%;            /* Night - #141414 */
+    --ink-black-hex: #1A1816;            /* Primary text, headers, high contrast */
+    --charcoal-hex: #2F2A26;             /* Secondary text, supporting elements */
+    --vellum-cream-hex: #F5F1E8;         /* Primary background (the "paper") */
+    --parchment-white-hex: #FFFCF5;      /* Cards, elevated surfaces */
+    
+    /* ──────────────────────────────────────────────────────────────────────
+       ACCENT COLORS (2 colors)
+       ────────────────────────────────────────────────────────────────────── */
+    --aged-brass-hex: #B8956A;           /* Interactive elements, borders on hover */
+    --brass-glow-hex: #D4AF37;           /* CTAs, active states, highlights */
+    
+    /* ──────────────────────────────────────────────────────────────────────
+       FUNCTIONAL COLORS (3 colors - Minimal Use)
+       ────────────────────────────────────────────────────────────────────── */
+    --muted-sage-hex: #8B9474;           /* Success/Approval (not bright green) */
+    --aged-amber-hex: #C4975C;           /* Warning/Attention (not bright orange) */
+    --faded-rust-hex: #A85C5C;           /* Error/Deletion (not bright red) */
+    
+    /* ──────────────────────────────────────────────────────────────────────
+       FORM/UI SUPPORT (1 color)
+       ────────────────────────────────────────────────────────────────────── */
+    --stone-hex: #E5DFD1;                /* Default input borders, subtle dividers */
+    
+    /* ──────────────────────────────────────────────────────────────────────
+       PLATFORM BADGES (Derivative types ONLY - Small badges/icons)
+       Use sparingly: Never for large UI elements, only tiny indicators
+       ────────────────────────────────────────────────────────────────────── */
+    --derivative-email: 210 71% 58%;        /* #4A90E2 - Muted blue */
+    --derivative-instagram: 258 90% 66%;    /* #8B5CF6 - Muted purple */
+    --derivative-twitter: 199 89% 60%;      /* #38BDF8 - Sky blue */
+    --derivative-product: 25 95% 53%;       /* #F97316 - Muted orange */
+    --derivative-sms: 160 84% 39%;          /* #10B981 - Muted green */
+    
+    /* ──────────────────────────────────────────────────────────────────────
+       SEMANTIC COLOR TOKENS (Shadcn/UI compatibility)
+       Mapped to Madison Studio core palette
+       ────────────────────────────────────────────────────────────────────── */
+    
+    /* Background & Foreground */
+    --background: 42 38% 93%;        /* Vellum Cream - #F5F1E8 (the "paper") */
+    --foreground: 30 3% 10%;         /* Ink Black - #1A1816 (primary text) */
 
-    --card: 42 38% 95%;              /* Warm cream - #f7f4ed */
-    --card-foreground: 0 0% 8%;      /* Night - #141414 */
+    /* Cards & Elevated Surfaces */
+    --card: 48 100% 98%;             /* Parchment White - #FFFCF5 */
+    --card-foreground: 30 3% 10%;    /* Ink Black - #1A1816 */
 
-    --popover: 60 100% 98%;          /* Ivory - #FFFEF2 */
-    --popover-foreground: 0 0% 8%;    /* Night - #141414 */
+    /* Popovers & Dropdowns */
+    --popover: 48 100% 98%;          /* Parchment White - #FFFCF5 */
+    --popover-foreground: 30 3% 10%; /* Ink Black - #1A1816 */
 
-    --primary: 32 25% 43%;           /* Lion/Coyote - #8B7355 */
-    --primary-foreground: 60 100% 98%; /* Ivory - #FFFEF2 */
-    --primary-dark: 32 25% 35%;      /* Darker accent */
-    --primary-light: 32 25% 51%;     /* Lighter accent */
+    /* Primary Actions (Brass) */
+    --primary: 38 33% 56%;           /* Aged Brass - #B8956A */
+    --primary-foreground: 48 100% 98%; /* Parchment White - #FFFCF5 */
 
-    --secondary: 42 38% 95%;         /* Warm cream - #f7f4ed */
-    --secondary-foreground: 0 0% 8%; /* Night - #141414 */
+    /* Secondary Actions */
+    --secondary: 42 38% 93%;         /* Vellum Cream - #F5F1E8 */
+    --secondary-foreground: 30 3% 10%; /* Ink Black - #1A1816 */
 
-    --muted: 42 38% 95%;             /* Warm cream - #f7f4ed */
-    --muted-foreground: 0 0% 15%;    /* Darker gray - #252525 */
+    /* Muted Elements */
+    --muted: 42 38% 93%;             /* Vellum Cream - #F5F1E8 */
+    --muted-foreground: 20 8% 17%;   /* Charcoal - #2F2A26 */
 
-    --accent: 32 25% 43%;            /* Lion/Coyote - #8B7355 */
-    --accent-foreground: 60 100% 98%; /* Ivory - #FFFEF2 */
+    /* Accent Elements (Brass Glow) */
+    --accent: 43 65% 52%;            /* Brass Glow - #D4AF37 */
+    --accent-foreground: 30 3% 10%;  /* Ink Black - #1A1816 */
 
-    --destructive: 25 75% 31%;       /* Saddle brown - #8B4513 */
-    --destructive-foreground: 60 100% 98%; /* Ivory - #FFFEF2 */
+    /* Destructive Actions */
+    --destructive: 0 30% 51%;        /* Faded Rust - #A85C5C */
+    --destructive-foreground: 48 100% 98%; /* Parchment White - #FFFCF5 */
 
-    --border: 0 0% 88%;              /* Platinum - #E1E1E1 */
-    --input: 60 100% 98%;            /* Ivory - #FFFEF2 */
-    --ring: 32 25% 43%;              /* Lion/Coyote - #8B7355 */
+    /* Borders & Inputs */
+    --border: 40 31% 85%;            /* Stone - #E5DFD1 (subtle dividers) */
+    --input: 40 31% 85%;             /* Stone - #E5DFD1 (default border) */
+    --ring: 43 65% 52%;              /* Brass Glow - #D4AF37 (focus ring) */
 
     --radius: 0.25rem;               /* 4px - Sharp, editorial corners */
 
     /* ──────────────────────────────────────────────────────────────────────
-       SOPHISTICATED SHADOW SYSTEM - Madison Depth
+       SOPHISTICATED SHADOW SYSTEM - WITH BRASS ACCENTS
+       Premium depth with subtle brass undertones for luxury feel
        ────────────────────────────────────────────────────────────────────── */
     
-    /* Level 1: Resting cards */
+    /* Level 1: Resting cards - Subtle lift with brass rim */
     --shadow-level-1: 
-      0 1px 3px hsl(0 0% 8% / 0.08),
-      0 1px 2px hsl(0 0% 8% / 0.06);
+      0 1px 3px rgba(26, 24, 22, 0.08),
+      0 1px 2px rgba(26, 24, 22, 0.06),
+      0 0 0 1px rgba(184, 149, 106, 0.03);
     
-    /* Level 2: Hover, slight elevation */
+    /* Level 2: Hover, slight elevation - Brass undertone */
     --shadow-level-2:
-      0 2px 4px hsl(0 0% 8% / 0.10),
-      0 4px 8px hsl(0 0% 8% / 0.08);
+      0 3px 8px rgba(26, 24, 22, 0.12),
+      0 1px 3px rgba(184, 149, 106, 0.08);
     
-    /* Level 3: Modals, dropdowns, high elevation */
+    /* Level 3: Modals, dropdowns - Brass depth */
     --shadow-level-3:
-      0 4px 12px hsl(0 0% 8% / 0.15),
-      0 8px 24px hsl(0 0% 8% / 0.12);
+      0 8px 24px rgba(26, 24, 22, 0.15),
+      0 2px 6px rgba(184, 149, 106, 0.12);
     
-    /* Accent Glow: Primary actions, focused inputs */
-    --shadow-accent-glow:
-      0 0 0 3px hsl(32 25% 43% / 0.15),
-      0 2px 8px hsl(32 25% 43% / 0.2);
+    /* Level 4: Maximum elevation - Maximum brass glow */
+    --shadow-level-4:
+      0 16px 48px rgba(26, 24, 22, 0.20),
+      0 4px 12px rgba(184, 149, 106, 0.15);
     
-    /* Legacy aliases */
-    --shadow-saffron-glow: var(--shadow-accent-glow);
-    --shadow-brass-glow: var(--shadow-accent-glow);
+    /* Brass Glow: Focus/active states, primary CTAs */
+    --shadow-brass-glow:
+      0 0 0 3px rgba(212, 175, 55, 0.15),
+      0 4px 16px rgba(212, 175, 55, 0.25);
 
     /* ──────────────────────────────────────────────────────────────────────
        GRADIENT SYSTEM - Madison Depth and Richness
        ────────────────────────────────────────────────────────────────────── */
-    --gradient-nav: linear-gradient(180deg, #141414 0%, #252525 100%);
-    --gradient-sidebar: linear-gradient(180deg, #f7f4ed 0%, #E8DCC0 100%);
-    --gradient-card: radial-gradient(circle at top left, #FFFEF2 0%, #f7f4ed 100%);
-    --gradient-accent: linear-gradient(135deg, #8B7355 0%, #D4A574 50%, #8B7355 100%);
-    
-    /* Legacy aliases */
-    --gradient-saffron: var(--gradient-accent);
-    --gradient-brass: var(--gradient-accent);
+    --gradient-nav: linear-gradient(180deg, #1A1816 0%, #2F2A26 100%);
+    --gradient-card: radial-gradient(circle at top left, #FFFCF5 0%, #F5F1E8 100%);
+    --gradient-brass: linear-gradient(135deg, #B8956A 0%, #D4AF37 50%, #B8956A 100%);
     
     /* ──────────────────────────────────────────────────────────────────────
        EASING CURVES - Purposeful, Sophisticated Motion
@@ -162,40 +159,49 @@
 }
 
 @layer components {
+  /* ───────────────────────────────────────────────────────────────────────
+     BUTTON COMPONENTS
+     ─────────────────────────────────────────────────────────────────────── */
   .btn {
-    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-brass-glow focus:ring-offset-2 disabled:opacity-40 disabled:pointer-events-none;
   }
 
   .btn-primary {
-    @apply bg-primary text-primary-foreground shadow-level-2 hover:bg-primary-dark;
+    @apply bg-aged-brass text-parchment-white shadow-level-1 hover:bg-brass-glow hover:shadow-level-2 hover:-translate-y-0.5 active:translate-y-0;
   }
 
   .btn-secondary {
-    @apply bg-secondary text-secondary-foreground shadow-level-1 hover:bg-muted;
+    @apply bg-vellum-cream text-ink-black border border-stone shadow-level-1 hover:border-aged-brass/40 hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0;
   }
 
+  /* ───────────────────────────────────────────────────────────────────────
+     FORM COMPONENTS
+     ─────────────────────────────────────────────────────────────────────── */
   .input {
-    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex h-10 w-full rounded-md border border-stone bg-parchment-white px-3 py-2 text-sm text-ink-black ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-charcoal/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-glow focus-visible:border-brass-glow disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .label {
-    @apply text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70;
+    @apply text-sm font-medium leading-none text-ink-black peer-disabled:cursor-not-allowed peer-disabled:opacity-40;
   }
 
   .textarea {
-    @apply flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex min-h-[80px] w-full rounded-md border border-stone bg-parchment-white px-3 py-2 text-sm text-ink-black ring-offset-background placeholder:text-charcoal/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-glow focus-visible:border-brass-glow disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .select {
-    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex h-10 w-full rounded-md border border-stone bg-parchment-white px-3 py-2 text-sm text-ink-black ring-offset-background placeholder:text-charcoal/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-glow focus-visible:border-brass-glow disabled:cursor-not-allowed disabled:opacity-40;
   }
 
+  /* ───────────────────────────────────────────────────────────────────────
+     OVERLAY COMPONENTS
+     ─────────────────────────────────────────────────────────────────────── */
   .popover-content {
-    @apply z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none;
+    @apply z-50 w-72 rounded-md border border-stone bg-parchment-white p-4 text-ink-black shadow-level-3 outline-none;
   }
 
   .card {
-    @apply rounded-md border bg-card text-card-foreground shadow-sm;
+    @apply rounded-md border border-stone/50 bg-parchment-white text-ink-black shadow-level-1;
   }
 }
 
@@ -226,7 +232,7 @@
     margin-bottom: 0.8888889em;
     line-height: 1.1111111;
     font-weight: 600;
-    color: hsl(var(--ink-black));
+    color: #1A1816; /* Ink Black */
   }
 
   .prose h2 {
@@ -236,7 +242,7 @@
     margin-bottom: 1em;
     line-height: 1.3333333;
     font-weight: 600;
-    color: hsl(var(--ink-black));
+    color: #1A1816; /* Ink Black */
   }
 
   .prose h3 {
@@ -246,12 +252,12 @@
     margin-bottom: 0.6em;
     line-height: 1.6;
     font-weight: 500;
-    color: hsl(var(--charcoal));
+    color: #1A1816; /* Ink Black */
   }
 
   .prose strong {
     font-weight: 600;
-    color: hsl(var(--ink-black));
+    color: #1A1816; /* Ink Black */
   }
 
   .prose em {
@@ -277,10 +283,10 @@
 
   .prose blockquote {
     font-style: italic;
-    border-left: 3px solid hsl(var(--saffron-gold));
+    border-left: 3px solid #B8956A; /* Aged Brass */
     padding-left: 1em;
     margin: 1.6em 0;
-    color: hsl(var(--royal-indigo) / 0.9);
+    color: #2F2A26; /* Charcoal */
   }
 }
 

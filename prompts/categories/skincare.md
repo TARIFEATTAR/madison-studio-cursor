@@ -1,0 +1,1 @@
+readFileSync(path.join(rootDir, "prompts", "madison_core_v1.md"))

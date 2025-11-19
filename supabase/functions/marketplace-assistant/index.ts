@@ -1,7 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import {
-  streamGeminiTextResponse,
+  generateGeminiContent,
+  extractTextFromGeminiResponse,
+  createOpenAISSEStream,
   OpenAIMessage,
 } from "../_shared/geminiClient.ts";
 
@@ -292,15 +294,42 @@ Always maintain brand voice while optimizing for the platform's audience and alg
       systemContent += `\n\n(Note: You're assisting ${userName} with this listing. Use their name naturally in greetings or when acknowledging their work. Example: "Great choice, ${userName}!" or "Here's what I suggest, ${userName}...")`;
     }
 
-    return await streamGeminiTextResponse(
-      {
+    try {
+      const completion = await generateGeminiContent({
         systemPrompt: systemContent,
         messages,
         temperature: 0.7,
         maxOutputTokens: 2048,
-      },
-      corsHeaders,
-    );
+      });
+
+      const content = extractTextFromGeminiResponse(completion) ||
+        "I couldn’t generate marketplace copy right now. Please try again.";
+
+      const stream = createOpenAISSEStream(content, 300);
+
+      return new Response(stream, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+        },
+      });
+    } catch (error) {
+      console.error("Marketplace assistant completion error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+
+      if (errorMessage.includes("GEMINI_API_KEY") || errorMessage.includes("not configured")) {
+        return new Response(
+          JSON.stringify({ error: "AI service is not configured. Please contact support." }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ error: `Failed to generate response: ${errorMessage}` }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
   } catch (error) {
     console.error('Marketplace assistant error:', error);

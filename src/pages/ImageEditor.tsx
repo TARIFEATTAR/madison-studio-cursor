@@ -1247,21 +1247,21 @@ export default function ImageEditor() {
 
   // Desktop Layout
   return (
-    <div className="flex flex-col h-screen bg-studio-charcoal text-aged-paper">
+    <div className="flex flex-col h-screen bg-ink-black text-parchment-white">
       {/* Top Toolbar */}
-      <header className="flex items-center justify-between px-6 pr-6 py-3 border-b border-studio-border bg-studio-card/50 backdrop-blur-sm sticky top-0 z-20 overflow-hidden">
+      <header className="flex items-center justify-between px-6 pr-6 py-3 border-b border-charcoal/50 bg-charcoal/30 backdrop-blur-sm sticky top-0 z-20 overflow-hidden">
         <div className="flex items-center gap-4 flex-shrink-0">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
-            className="text-studio-text-muted hover:text-aged-paper"
+            className="text-parchment-white/50 hover:text-parchment-white"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
             <h1 className="text-lg font-semibold text-aged-brass">Image Studio</h1>
-            <p className="text-xxs text-studio-text-muted">Powered by Nano Banana</p>
+            <p className="text-xxs text-parchment-white/40">Powered by Nano Banana</p>
           </div>
         </div>
         
@@ -1273,7 +1273,7 @@ export default function ImageEditor() {
             onProductDataChange={setSelectedProduct}
             showLabel={false}
             className="w-[200px]"
-            buttonClassName="w-[200px] bg-studio-charcoal border-studio-border text-studio-text-primary hover:bg-studio-card transition-colors justify-between"
+            buttonClassName="w-[200px] bg-charcoal/50 border-charcoal/70 text-parchment-white hover:bg-charcoal transition-colors justify-between"
           />
           
           {/* Shot Type */}
@@ -1299,33 +1299,33 @@ export default function ImageEditor() {
                 console.error('Failed to log shot type:', error);
               }
             }}
-            className="w-[160px] bg-studio-charcoal border-studio-border text-studio-text-primary"
+            className="w-[160px] bg-charcoal/50 border-charcoal/70 text-parchment-white"
           />
 
           {/* Aspect Ratio */}
           <Select value={aspectRatio} onValueChange={setAspectRatio}>
-            <SelectTrigger className="w-[140px] bg-studio-charcoal border-studio-border text-studio-text-primary hover:bg-studio-card transition-colors">
+            <SelectTrigger className="w-[140px] bg-charcoal/50 border-charcoal/70 text-parchment-white hover:bg-charcoal transition-colors">
               <SelectValue placeholder="Aspect ratio" />
             </SelectTrigger>
-            <SelectContent className="bg-studio-charcoal border-studio-border text-studio-text-primary z-50 backdrop-blur-sm">
-              <SelectItem value="1:1" className="hover:bg-studio-card">1:1 Square</SelectItem>
-              <SelectItem value="16:9" className="hover:bg-studio-card">16:9 Landscape</SelectItem>
-              <SelectItem value="9:16" className="hover:bg-studio-card">9:16 Portrait</SelectItem>
-              <SelectItem value="4:3" className="hover:bg-studio-card">4:3 Classic</SelectItem>
-              <SelectItem value="4:5" className="hover:bg-studio-card">4:5 Portrait</SelectItem>
-              <SelectItem value="5:4" className="hover:bg-studio-card">5:4 Etsy</SelectItem>
+            <SelectContent className="bg-charcoal border-charcoal/70 text-parchment-white z-50 backdrop-blur-sm">
+              <SelectItem value="1:1" className="hover:bg-aged-brass/10">1:1 Square</SelectItem>
+              <SelectItem value="16:9" className="hover:bg-aged-brass/10">16:9 Landscape</SelectItem>
+              <SelectItem value="9:16" className="hover:bg-aged-brass/10">9:16 Portrait</SelectItem>
+              <SelectItem value="4:3" className="hover:bg-aged-brass/10">4:3 Classic</SelectItem>
+              <SelectItem value="4:5" className="hover:bg-aged-brass/10">4:5 Portrait</SelectItem>
+              <SelectItem value="5:4" className="hover:bg-aged-brass/10">5:4 Etsy</SelectItem>
             </SelectContent>
           </Select>
 
           {/* Output Format */}
           <Select value={outputFormat} onValueChange={(v: any) => setOutputFormat(v)}>
-            <SelectTrigger className="w-[120px] bg-studio-charcoal border-studio-border text-studio-text-primary hover:bg-studio-card transition-colors">
+            <SelectTrigger className="w-[120px] bg-charcoal/50 border-charcoal/70 text-parchment-white hover:bg-charcoal transition-colors">
               <SelectValue placeholder="Output" />
             </SelectTrigger>
-            <SelectContent className="bg-studio-charcoal border-studio-border text-studio-text-primary z-50 backdrop-blur-sm">
-              <SelectItem value="png" className="hover:bg-studio-card">PNG</SelectItem>
-              <SelectItem value="jpeg" className="hover:bg-studio-card">JPG</SelectItem>
-              <SelectItem value="webp" className="hover:bg-studio-card">WEBP</SelectItem>
+            <SelectContent className="bg-charcoal border-charcoal/70 text-parchment-white z-50 backdrop-blur-sm">
+              <SelectItem value="png" className="hover:bg-aged-brass/10">PNG</SelectItem>
+              <SelectItem value="jpeg" className="hover:bg-aged-brass/10">JPG</SelectItem>
+              <SelectItem value="webp" className="hover:bg-aged-brass/10">WEBP</SelectItem>
             </SelectContent>
           </Select>
 
@@ -1335,7 +1335,7 @@ export default function ImageEditor() {
             onClick={() => setShowProMode(!showProMode)}
             className={showProMode 
               ? 'bg-aged-brass/10 border-aged-brass text-aged-brass hover:bg-aged-brass/20' 
-              : 'bg-studio-charcoal border-studio-border text-studio-text-primary hover:bg-studio-card'
+              : 'bg-charcoal/50 border-charcoal/70 text-parchment-white hover:bg-charcoal'
             }
           >
             <Settings className="w-4 h-4 mr-2" />
@@ -1396,12 +1396,12 @@ export default function ImageEditor() {
         {/* Center Viewport (Fixed) */}
         <section className="flex-1 flex flex-col relative overflow-hidden">
           {/* Image Viewport */}
-          <div className="flex-1 bg-studio-card/30 flex items-center justify-center relative overflow-hidden">
+          <div className="flex-1 bg-charcoal/20 flex items-center justify-center relative overflow-hidden">
             {heroImage ? (
               <div className="relative w-full h-full flex flex-col">
                 {/* Main Image Display */}
                 <div className="flex-1 flex items-center justify-center p-8">
-                  <div className="relative w-full max-w-5xl max-h-[90%] flex items-center justify-center rounded-[32px] border border-studio-border/70 bg-gradient-to-br from-[#1f1a16] via-[#0f0f0f] to-[#050505] shadow-[0_45px_120px_rgba(0,0,0,0.65)] overflow-hidden">
+                  <div className="relative w-full max-w-5xl max-h-[90%] flex items-center justify-center rounded-[32px] border border-studio-border/70 bg-gradient-to-br from-ink-black via-charcoal to-ink-black shadow-[0_45px_120px_rgba(26,24,22,0.65)] overflow-hidden">
                     <div
                       className="absolute inset-0 pointer-events-none opacity-30"
                       style={{ background: "radial-gradient(circle at 50% 30%, rgba(255,255,255,0.12), transparent 60%)" }}
@@ -1476,12 +1476,12 @@ export default function ImageEditor() {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center text-center space-y-4 p-8">
-                <Sparkles className="w-20 h-20 text-aged-brass opacity-40" />
+                <Sparkles className="w-20 h-20 text-aged-brass/60" strokeWidth={1.5} />
                 <div>
-                  <h3 className="text-2xl font-semibold text-aged-paper mb-2">
+                  <h3 className="text-2xl font-semibold text-parchment-white mb-2">
                     Your canvas awaits
                   </h3>
-                  <p className="text-studio-text-muted text-lg">
+                  <p className="text-parchment-white/60 text-lg">
                     Describe your vision below and watch Madison bring it to life
                   </p>
                 </div>
@@ -1543,15 +1543,15 @@ export default function ImageEditor() {
           )}
 
           {/* Prompt Bar (Fixed Bottom) */}
-          <footer className="border-t border-studio-border bg-studio-card backdrop-blur-sm sticky bottom-0 z-[15] overflow-hidden">
+          <footer className="border-t border-charcoal/50 bg-charcoal/30 backdrop-blur-sm sticky bottom-0 z-[15] overflow-hidden">
             {/* Pro Mode Status Indicator */}
             {Object.keys(proModeControls).length > 0 && (
-              <div className="px-6 pr-6 py-2 border-b border-studio-border/50 bg-aged-brass/5">
+              <div className="px-6 pr-6 py-2 border-b border-charcoal/50 bg-aged-brass/5">
                 <div className="flex items-center gap-2 text-xxs">
                   <Settings className="w-3 h-3 text-aged-brass" />
                   <span className="text-aged-brass font-medium">Pro mode active</span>
-                  <span className="text-studio-text-muted">—</span>
-                  <span className="text-studio-text-muted">
+                  <span className="text-parchment-white/40">—</span>
+                  <span className="text-parchment-white/40">
                     Advanced settings applied ({Object.keys(proModeControls).length} parameter{Object.keys(proModeControls).length > 1 ? 's' : ''})
                   </span>
                 </div>
@@ -1576,7 +1576,7 @@ export default function ImageEditor() {
                   value={mainPrompt}
                   onChange={(e) => setMainPrompt(e.target.value)}
                   placeholder="Describe the image you want to create..."
-                  className="flex-1 resize-none bg-[#111111] border border-zinc-700 text-[#F5F1E8] placeholder:text-zinc-500 focus-visible:ring-aged-brass/50"
+                  className="flex-1 resize-none bg-charcoal border border-stone/20 text-parchment-white placeholder:text-charcoal/60 focus-visible:ring-brass-glow/50"
                   style={{ 
                     color: '#F5F1E8',
                     minHeight: '3rem',
@@ -1634,7 +1634,7 @@ export default function ImageEditor() {
             />
             
             {/* Drawer */}
-            <aside className="fixed right-0 top-[69px] bottom-0 w-96 border-l border-studio-border bg-studio-card shadow-2xl z-50 overflow-y-auto animate-in slide-in-from-right duration-300">
+            <aside className="fixed right-0 top-[69px] bottom-0 w-96 border-l border-charcoal bg-charcoal shadow-2xl z-50 overflow-y-auto animate-in slide-in-from-right duration-300">
               <ScrollArea className="h-full">
                 <div className="p-6 space-y-6">
                   <div className="flex items-center justify-between mb-4">
@@ -1643,7 +1643,7 @@ export default function ImageEditor() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setShowProMode(false)}
-                      className="text-studio-text-muted hover:text-aged-paper"
+                      className="text-parchment-white/50 hover:text-parchment-white"
                     >
                       <X className="w-4 h-4" />
                     </Button>
@@ -1651,7 +1651,7 @@ export default function ImageEditor() {
 
                   {/* Reference Images */}
                   <div>
-                    <h3 className="text-studio-text-primary text-sm font-medium flex items-center gap-2 mb-3">
+                    <h3 className="text-parchment-white text-sm font-medium flex items-center gap-2 mb-3">
                       <span className="text-aged-brass">📸</span> Add a reference image to guide Madison's creation
                     </h3>
                     <ReferenceUpload
@@ -1665,7 +1665,7 @@ export default function ImageEditor() {
                   {/* Pro Mode Controls */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-medium text-aged-paper">Advanced controls</h3>
+                      <h3 className="text-sm font-medium text-parchment-white">Advanced controls</h3>
                       {Object.keys(proModeControls).length > 0 && (
                         <Badge className="bg-aged-brass/20 text-aged-brass border-aged-brass/30 text-xxs">
                           {Object.keys(proModeControls).length} active
@@ -1680,11 +1680,11 @@ export default function ImageEditor() {
 
                   {/* Brand Context Info */}
                   {brandContext && (
-                    <Card className="p-3 bg-studio-charcoal/50 border-studio-border">
+                    <Card className="p-3 bg-ink-black/50 border-charcoal/70">
                       <div className="flex items-start gap-2">
-                        <Info className="w-4 h-4 mt-0.5 text-zinc-400 flex-shrink-0" />
-                        <div className="text-xs text-zinc-400">
-                          <p className="font-medium mb-1 text-zinc-300">Brand Context Active</p>
+                        <Info className="w-4 h-4 mt-0.5 text-parchment-white/60 flex-shrink-0" />
+                        <div className="text-xs text-parchment-white/60">
+                          <p className="font-medium mb-1 text-parchment-white/80">Brand Context Active</p>
                           <p>Images will align with your brand guidelines</p>
                         </div>
                       </div>
@@ -1700,8 +1700,8 @@ export default function ImageEditor() {
 
       {/* Refinement Modal Overlay */}
       {refinementMode && selectedForRefinement && (
-        <div className="fixed inset-0 bg-zinc-950/90 backdrop-blur-sm z-30 flex items-center justify-center p-4">
-          <Card className="w-full max-w-2xl bg-zinc-900 border-zinc-800">
+        <div className="fixed inset-0 bg-ink-black/90 backdrop-blur-sm z-30 flex items-center justify-center p-4">
+          <Card className="w-full max-w-2xl bg-charcoal border-stone/20">
             <RefinementPanel
               baseImage={selectedForRefinement}
               onRefine={handleRefine}

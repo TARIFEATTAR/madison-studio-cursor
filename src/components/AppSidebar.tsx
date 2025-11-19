@@ -1,4 +1,4 @@
-import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu, ShoppingBag, Store, Image, Mail, ChevronDown, Palette, FolderOpen, BookOpen, HelpCircle } from "lucide-react";
+import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu, ShoppingBag, Store, Image, Mail, ChevronDown, Palette, FolderOpen, BookOpen, HelpCircle, Sparkles } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,6 +75,7 @@ export function AppSidebar() {
   const topLevelItems = [
     { title: "Dashboard", url: "/dashboard", icon: Home },
     { title: "Schedule", url: "/schedule", icon: Calendar },
+    { title: "Think Mode", url: "/think-mode", icon: Sparkles },
   ];
 
   // Grouped navigation structure
@@ -269,8 +270,8 @@ export function AppSidebar() {
 
           <Separator className="mx-4 bg-white/10" />
 
-          {/* Collapsible Groups */}
-          <div className="px-2 py-4 space-y-2">
+        {/* Collapsible Groups */}
+        <div className="px-2 py-4 space-y-2">
             {navGroups.map((group) => {
               const hasActiveChild = group.items.some(item => isActive(item.url));
               
@@ -348,7 +349,7 @@ export function AppSidebar() {
                 </Collapsible>
               );
             })}
-          </div>
+        </div>
         </SidebarContent>
 
         {/* Footer */}

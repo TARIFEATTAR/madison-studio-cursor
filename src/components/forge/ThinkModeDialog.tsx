@@ -86,107 +86,220 @@ export function ThinkModeDialog({ open, onOpenChange }: ThinkModeDialogProps) {
       });
 
       if (!response.ok) {
+        let errorMessage = "Failed to connect to Think Mode";
+        try {
+          const errorData = await response.text();
+          const parsed = JSON.parse(errorData);
+          errorMessage = parsed.error || errorMessage;
+        } catch {
+          // If response isn't JSON, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        
         if (response.status === 429) {
           throw new Error("Rate limit exceeded. Please try again later.");
         }
         if (response.status === 402) {
           throw new Error("AI credits depleted. Please add credits to continue.");
         }
-        throw new Error("Failed to connect to Think Mode");
+        throw new Error(`${errorMessage} (Status: ${response.status})`);
       }
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let assistantContent = "";
 
-      const extractTextFromChunk = (chunk: any) => {
-        const openAIText = chunk?.choices?.[0]?.delta?.content;
-        if (openAIText) return openAIText;
+      // Robust text extraction - tries multiple formats to handle any valid response structure
+      const extractTextFromChunk = (chunk: any): string => {
+        if (!chunk || typeof chunk !== 'object') return "";
 
+        // Strategy 1: OpenAI SSE format (primary format from geminiClient conversion)
+        const openAIText = chunk?.choices?.[0]?.delta?.content;
+        if (openAIText && typeof openAIText === 'string' && openAIText.trim()) {
+          return openAIText;
+        }
+
+        // Strategy 2: Direct OpenAI content (fallback)
+        const openAIContent = chunk?.choices?.[0]?.message?.content;
+        if (openAIContent && typeof openAIContent === 'string' && openAIContent.trim()) {
+          return openAIContent;
+        }
+
+        // Strategy 3: Gemini native format (candidates)
         const candidate = chunk?.candidates?.[0];
         if (candidate?.content?.parts?.length) {
-          return candidate.content.parts
-            .map((part: any) => part?.text ?? "")
-            .join("");
+          const parts = candidate.content.parts
+            .map((part: any) => {
+              if (typeof part?.text === 'string') return part.text;
+              if (typeof part === 'string') return part;
+              return "";
+            })
+            .filter((text: string) => text.trim());
+          if (parts.length > 0) return parts.join("");
         }
 
+        // Strategy 4: Message content parts
         const messageParts = chunk?.message?.content?.parts;
-        if (messageParts?.length) {
-          return messageParts.map((part: any) => part?.text ?? "").join("");
+        if (Array.isArray(messageParts) && messageParts.length > 0) {
+          const parts = messageParts
+            .map((part: any) => {
+              if (typeof part?.text === 'string') return part.text;
+              if (typeof part === 'string') return part;
+              return "";
+            })
+            .filter((text: string) => text.trim());
+          if (parts.length > 0) return parts.join("");
         }
+
+        // Strategy 5: Direct text field
+        if (typeof chunk?.text === 'string' && chunk.text.trim()) {
+          return chunk.text;
+        }
+
+        // Strategy 6: Content field
+        if (typeof chunk?.content === 'string' && chunk.content.trim()) {
+          return chunk.content;
+        }
+
+        // Strategy 7: Deep search for any text field
+        const deepSearch = (obj: any, depth = 0): string => {
+          if (depth > 3) return ""; // Prevent infinite recursion
+          if (typeof obj === 'string' && obj.trim()) return obj;
+          if (typeof obj !== 'object' || obj === null) return "";
+          
+          for (const key in obj) {
+            if (key === 'text' || key === 'content') {
+              const value = obj[key];
+              if (typeof value === 'string' && value.trim()) return value;
+            }
+            if (typeof obj[key] === 'object') {
+              const found = deepSearch(obj[key], depth + 1);
+              if (found) return found;
+            }
+          }
+          return "";
+        };
+
+        const deepFound = deepSearch(chunk);
+        if (deepFound) return deepFound;
+
         return "";
       };
 
-      if (reader) {
-        let buffer = "";
-        
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          
-          buffer += decoder.decode(value, { stream: true });
-          
-          let newlineIndex: number;
-          while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
-            let line = buffer.slice(0, newlineIndex);
-            buffer = buffer.slice(newlineIndex + 1);
-            
-            if (line.endsWith("\r")) line = line.slice(0, -1);
-            if (line.startsWith(":") || line.trim() === "") continue;
-            if (!line.startsWith("data: ")) continue;
-            
-            const jsonStr = line.slice(6).trim();
-            if (jsonStr === "[DONE]") break;
-            
-            try {
-              const parsed = JSON.parse(jsonStr);
-              const content = extractTextFromChunk(parsed);
-              if (content) {
-                assistantContent += content;
-                setMessages((prev) => {
-                  const last = prev[prev.length - 1];
-                  if (last?.role === "assistant") {
-                    return prev.map((m, i) => 
-                      i === prev.length - 1 ? { ...m, content: assistantContent } : m
-                    );
-                  }
-                  return [...prev, { role: "assistant", content: assistantContent }];
-                });
-              }
-            } catch {
-              buffer = line + "\n" + buffer;
-              break;
-            }
-          }
+      if (!reader) {
+        throw new Error("No response body reader available");
+      }
+
+      // Initialize assistant message
+      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+      
+      let buffer = "";
+      let hasReceivedContent = false;
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          console.log("Stream ended. Total content length:", assistantContent.length);
+          break;
         }
         
-        // Flush remaining buffer
-        if (buffer.trim()) {
-          for (let raw of buffer.split("\n")) {
-            if (!raw || raw.startsWith(":") || !raw.startsWith("data: ")) continue;
-            const jsonStr = raw.slice(6).trim();
-            if (jsonStr === "[DONE]") continue;
-            try {
-              const parsed = JSON.parse(jsonStr);
-              const content = extractTextFromChunk(parsed);
-              if (content) {
-                assistantContent += content;
-                setMessages((prev) => {
-                  const last = prev[prev.length - 1];
-                  if (last?.role === "assistant") {
-                    return prev.map((m, i) => 
-                      i === prev.length - 1 ? { ...m, content: assistantContent } : m
-                    );
-                  }
-                  return [...prev, { role: "assistant", content: assistantContent }];
-                });
-              }
-            } catch {}
+        buffer += decoder.decode(value, { stream: true });
+        
+        // Process complete lines
+        let newlineIndex: number;
+        while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+          let line = buffer.slice(0, newlineIndex);
+          buffer = buffer.slice(newlineIndex + 1);
+          
+          // Handle CRLF
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          
+          // Skip empty lines and SSE comments
+          if (line.trim() === "" || line.startsWith(":")) continue;
+          
+          // Must start with "data:"
+          if (!line.startsWith("data:")) {
+            console.warn("Unexpected SSE line format:", line.substring(0, 50));
+            continue;
+          }
+          
+          const jsonStr = line.slice(5).trim();
+          if (jsonStr === "[DONE]") {
+            console.log("Received [DONE] marker");
+            break;
+          }
+          
+          try {
+            const parsed = JSON.parse(jsonStr);
+            console.log("Parsed chunk:", parsed);
+            
+            const content = extractTextFromChunk(parsed);
+            if (content) {
+              hasReceivedContent = true;
+              assistantContent += content;
+              console.log("Extracted content:", content.substring(0, 50));
+              
+              // Update the last message (assistant message)
+              setMessages((prev) => {
+                const updated = [...prev];
+                const lastIndex = updated.length - 1;
+                if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
+                  updated[lastIndex] = { ...updated[lastIndex], content: assistantContent };
+                } else {
+                  updated.push({ role: "assistant", content: assistantContent });
+                }
+                return updated;
+              });
+            } else {
+              console.log("No content extracted from chunk:", parsed);
+            }
+          } catch (parseError) {
+            // Incomplete JSON - put line back in buffer
+            console.warn("JSON parse error, buffering:", parseError);
+            buffer = line + "\n" + buffer;
+            break;
           }
         }
       }
+      
+      // Flush remaining buffer
+      if (buffer.trim()) {
+        console.log("Flushing remaining buffer:", buffer.substring(0, 100));
+        const lines = buffer.split("\n");
+        for (const raw of lines) {
+          if (!raw || raw.startsWith(":") || !raw.startsWith("data:")) continue;
+          const jsonStr = raw.slice(5).trim();
+          if (jsonStr === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = extractTextFromChunk(parsed);
+            if (content) {
+              assistantContent += content;
+              setMessages((prev) => {
+                const updated = [...prev];
+                const lastIndex = updated.length - 1;
+                if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
+                  updated[lastIndex] = { ...updated[lastIndex], content: assistantContent };
+                }
+                return updated;
+              });
+            }
+          } catch {}
+        }
+      }
+      
+      // Only throw error if we truly got nothing AND the stream completed without errors
+      if (!hasReceivedContent && assistantContent.length === 0) {
+        console.warn("Think Mode: Stream completed but no content extracted. Raw response may have unexpected format.");
+        throw new Error("I ran into an issue generating a response. Please try again in a moment.");
+      }
     } catch (error: any) {
       console.error("Think Mode error:", error);
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      });
       removePendingUserMessage();
       toast({
         title: "Think Mode Error",

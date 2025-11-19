@@ -26,6 +26,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import MeetMadison from "./pages/MeetMadison";
 import HelpCenter from "./pages/HelpCenter";
+import ThinkMode from "./pages/ThinkMode";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import Marketplace from "./pages/Marketplace";
@@ -321,6 +322,7 @@ const AppContent = () => {
                   <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/meet-madison" element={<ProtectedRoute><RouteErrorBoundary routeName="Meet Madison"><MeetMadison /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/help-center" element={<ProtectedRoute><RouteErrorBoundary routeName="Help Center"><HelpCenter /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/think-mode" element={<ProtectedRoute><RouteErrorBoundary routeName="Think Mode"><ThinkMode /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
@@ -359,6 +361,7 @@ const AppContent = () => {
             <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/meet-madison" element={<ProtectedRoute><RouteErrorBoundary routeName="Meet Madison"><MeetMadison /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/help-center" element={<ProtectedRoute><RouteErrorBoundary routeName="Help Center"><HelpCenter /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/think-mode" element={<ProtectedRoute><RouteErrorBoundary routeName="Think Mode"><ThinkMode /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />

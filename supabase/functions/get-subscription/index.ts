@@ -127,8 +127,14 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error fetching subscription:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    // Don't expose internal error details in production
+    const isDevelopment = Deno.env.get('ENVIRONMENT') === 'development';
     return new Response(
-      JSON.stringify({ error: error.message || 'Internal server error' }),
+      JSON.stringify({ 
+        error: 'Failed to fetch subscription data',
+        ...(isDevelopment && { details: errorMessage })
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

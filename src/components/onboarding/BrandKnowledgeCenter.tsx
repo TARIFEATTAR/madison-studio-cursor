@@ -153,16 +153,18 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
 
   const handleFilesAdded = (files: FileList | File[]) => {
     const fileArray = Array.from(files);
-    const supportedFiles = fileArray.filter(file =>
-      file.type === 'application/pdf' ||
-      file.type.startsWith('text/') ||
-      /\.(md|markdown)$/i.test(file.name)
-    );
+    const supportedFiles = fileArray.filter(file => {
+      // Check by MIME type
+      const validMimeType = file.type === 'application/pdf' || file.type.startsWith('text/');
+      // Check by file extension (some systems don't set MIME type correctly)
+      const validExtension = /\.(txt|md|markdown|pdf)$/i.test(file.name);
+      return validMimeType || validExtension;
+    });
 
     if (supportedFiles.length === 0) {
       toast({
         title: "Unsupported File Type",
-        description: "Please upload PDF or text/markdown files.",
+        description: "Please upload PDF, TXT, or Markdown (.md) files. Text files are recommended for best accuracy.",
         variant: "destructive",
       });
       return;
@@ -631,7 +633,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
             <div className="space-y-2">
               <Label className="text-foreground">Brand Documents</Label>
               <p className="text-xs text-muted-foreground">
-                Upload text files (.txt, .md) or text-based PDFs containing brand guidelines, style guides, or documentation.
+                Upload text files (.txt, .md) or text-based PDFs containing brand guidelines, style guides, or documentation. <strong>Text files (.txt, .md) are recommended for best accuracy.</strong>
               </p>
               
               {/* PDF Warning Banner */}
@@ -676,7 +678,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
                   <FileUp className="h-12 w-12 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium text-foreground">
-                      {isDragging ? 'Drop files here' : 'Drag & drop PDFs or .txt/.md here'}
+                      {isDragging ? 'Drop files here' : 'Drag & drop PDF, TXT, or Markdown files here'}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       or click to browse • Max 20MB per file

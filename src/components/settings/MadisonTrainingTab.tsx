@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, Loader2, Lock, Upload, FileText, Trash2, X } from "lucide-react";
+import { Sparkles, Loader2, Lock, Upload, FileText, Trash2, X, FileUp, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
 
@@ -35,6 +35,7 @@ export function MadisonTrainingTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [documents, setDocuments] = useState<TrainingDocument[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const triggeredRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -133,20 +134,57 @@ export function MadisonTrainingTab() {
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleFileSelect = async (file: File) => {
     if (!file) return;
 
-    // Validate file type
-    if (file.type !== 'application/pdf') {
+    // Validate file type - support PDF, text, and markdown
+    const allowedTypes = ['application/pdf', 'text/plain', 'text/markdown'];
+    const allowedExtensions = ['.pdf', '.txt', '.md', '.markdown'];
+    const fileName = file.name.toLowerCase();
+    const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
+    
+    if (!allowedTypes.includes(file.type) && !hasValidExtension) {
       toast({
         title: "Invalid file type",
-        description: "Please upload a PDF document",
+        description: "Please upload a PDF, TXT, or Markdown (.md) document. Text files are recommended for best accuracy.",
         variant: "destructive",
       });
       return;
     }
 
+    await uploadFile(file);
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    await handleFileSelect(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      await handleFileSelect(files[0]);
+    }
+  };
+
+  const uploadFile = async (file: File) => {
     setIsUploading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -197,7 +235,6 @@ export function MadisonTrainingTab() {
       });
     } finally {
       setIsUploading(false);
-      event.target.value = '';
     }
   };
 
@@ -443,40 +480,68 @@ export function MadisonTrainingTab() {
       </div>
 
       {/* Training Documents Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 mt-8 pt-8 border-t">
+        <div className="space-y-3">
           <div>
-            <h3 className="text-lg font-medium">Training Documents</h3>
+            <h3 className="text-lg font-semibold">Training Documents</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Upload PDF documents to train Madison's knowledge and writing style
+              Upload comprehensive training documentation to teach Madison's writing style, copywriting techniques, and editorial guidelines. <strong>Text files (.txt, .md) are recommended for best accuracy.</strong>
             </p>
           </div>
-          <div>
+
+          {/* File Format Recommendation */}
+          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 text-sm">
+                <p className="font-medium text-blue-900 dark:text-blue-100 mb-1">Recommended: Text Files</p>
+                <p className="text-blue-700 dark:text-blue-300 text-xs">
+                  Upload your training documentation as <strong>.txt</strong> or <strong>.md</strong> files for 100% accuracy. Text files process instantly with no extraction errors, making them ideal for large training documents.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Drag and Drop Upload Area */}
+          <div
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            className={`
+              relative border-2 border-dashed rounded-lg p-8 text-center transition-all
+              ${isDragging 
+                ? 'border-primary bg-primary/5 scale-[1.02]' 
+                : 'border-border/40 bg-muted/20 hover:border-primary/50 hover:bg-muted/30'
+              }
+              ${isUploading ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}
+            `}
+          >
             <input
               type="file"
               id="doc-upload"
-              accept="application/pdf"
+              accept=".pdf,.txt,.md,.markdown,application/pdf,text/plain,text/markdown"
               onChange={handleFileUpload}
-              className="hidden"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               disabled={isUploading}
             />
-            <Button
-              onClick={() => document.getElementById('doc-upload')?.click()}
-              disabled={isUploading}
-              variant="outline"
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Uploading...
-                </>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload PDF
-                </>
+            
+            <div className="flex flex-col items-center gap-3">
+              <FileUp className="h-12 w-12 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  {isDragging ? 'Drop file here' : 'Drag & drop PDF, TXT, or Markdown file here'}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  or click to browse • Max 20MB per file
+                </p>
+              </div>
+              {isUploading && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Uploading and processing...</span>
+                </div>
               )}
-            </Button>
+            </div>
           </div>
         </div>
 

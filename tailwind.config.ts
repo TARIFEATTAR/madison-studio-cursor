@@ -18,6 +18,13 @@ export default {
         'tiny': '0.6875rem',  // 11px
       },
       colors: {
+        // ═══════════════════════════════════════════════════════════════
+        // MADISON STUDIO - THE CODEX DESIGN SYSTEM
+        // Core Palette: 6 colors + 3 functional + minimal platform badges
+        // Philosophy: Elegant restraint, Madison Avenue sophistication
+        // ═══════════════════════════════════════════════════════════════
+        
+        // Shadcn/UI semantic tokens (mapped to Madison palette)
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -26,8 +33,6 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
-          dark: "hsl(var(--primary-dark))",
-          light: "hsl(var(--primary-light))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -53,67 +58,87 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Madison Brand Colors - Core Palette
-        'background-new': "var(--background)",
-        'surface': "var(--surface)",
-        'text-primary': "var(--text-primary)",
-        'text-secondary': "var(--text-secondary)",
-        'border-new': "var(--border)",
-        'accent-new': "var(--accent)",
-        'success-new': "var(--success)",
-        'error-new': "var(--error)",
-        'warning-new': "var(--warning)",
-        
-        // Legacy colors (for backward compatibility - mapped to new palette)
-        'midnight-black': "hsl(var(--midnight-black))",
-        'royal-indigo': "hsl(var(--royal-indigo))",
-        'warm-sand': "hsl(var(--warm-sand))",
-        'pearl-white': "hsl(var(--pearl-white))",
-        'saffron-gold': "hsl(var(--saffron-gold))",
-        'copper-rose': "hsl(var(--copper-rose))",
-        'emerald-green': "hsl(var(--emerald-green))",
-        'ai-teal': "hsl(var(--ai-teal))",
-        'amber-gold': "hsl(var(--amber-gold))",
-        'terracotta-red': "hsl(var(--terracotta-red))",
-        'ink-black': "hsl(var(--ink-black))",
-        'charcoal': "hsl(var(--charcoal))",
-        'warm-gray': "hsl(var(--warm-gray))",
-        'vellum-cream': "hsl(var(--vellum-cream))",
-        'parchment-white': "hsl(var(--parchment-white))",
-        'aged-brass': "hsl(var(--aged-brass))",
-        'brass': "hsl(var(--brass))",
-        'brass-glow': "hsl(var(--brass-glow))",
-        'antique-gold': "hsl(var(--antique-gold))",
-        'deep-burgundy': "hsl(var(--deep-burgundy))",
-        'forest-ink': "hsl(var(--forest-ink))",
-        'midnight-blue': "hsl(var(--midnight-blue))",
-        'derivative-email': "hsl(var(--derivative-email))",
-        'derivative-instagram': "hsl(var(--derivative-instagram))",
-        'derivative-twitter': "hsl(var(--derivative-twitter))",
-        'derivative-product': "hsl(var(--derivative-product))",
-        'derivative-sms': "hsl(var(--derivative-sms))",
-        'derivative-linkedin': "hsl(var(--derivative-linkedin))",
-        studio: {
-          charcoal: '#1F2B3A', // Royal Indigo
-          card: '#2F2A26',
-          border: '#3D3935',
-          text: {
-            primary: '#FFFCF5', // Pearl White
-            secondary: '#D4CFC8',
-            muted: '#A8A39E',
-          },
-          accent: {
-            brass: '#D4AF37', // Saffron Gold
-            glow: 'rgba(212, 175, 55, 0.15)',
-          }
+
+        // ───────────────────────────────────────────────────────────────
+        // CORE NEUTRALS (4 colors)
+        // ───────────────────────────────────────────────────────────────
+        'ink-black': {
+          DEFAULT: '#1A1816',           // Primary text, headers, high contrast
+          hsl: '30 3% 10%',
         },
-        'studio-charcoal': '#252220',
-        'studio-card': '#2F2A26',
-        'studio-border': '#3D3935',
-        'studio-text-primary': '#FFFCF5',
-        'studio-text-secondary': '#D4CFC8',
-        'studio-text-muted': '#A8A39E',
-        'aged-paper': '#F5F1E8',
+        'charcoal': {
+          DEFAULT: '#2F2A26',           // Secondary text, supporting elements
+          hsl: '20 8% 17%',
+        },
+        'vellum-cream': {
+          DEFAULT: '#F5F1E8',           // Primary background (the "paper")
+          hsl: '42 38% 93%',
+        },
+        'parchment-white': {
+          DEFAULT: '#FFFCF5',           // Cards, elevated surfaces
+          hsl: '48 100% 98%',
+        },
+
+        // ───────────────────────────────────────────────────────────────
+        // ACCENT COLORS (2 colors)
+        // ───────────────────────────────────────────────────────────────
+        'aged-brass': {
+          DEFAULT: '#B8956A',           // Primary interactive elements, borders on hover
+          hsl: '38 33% 56%',
+        },
+        'brass-glow': {
+          DEFAULT: '#D4AF37',           // CTAs, active states, highlights
+          hsl: '43 65% 52%',
+        },
+
+        // ───────────────────────────────────────────────────────────────
+        // FUNCTIONAL COLORS (3 colors - Minimal Use)
+        // ───────────────────────────────────────────────────────────────
+        'muted-sage': {
+          DEFAULT: '#8B9474',           // Success/Approval (not bright green)
+          hsl: '90 13% 52%',
+        },
+        'aged-amber': {
+          DEFAULT: '#C4975C',           // Warning/Attention (not bright orange)
+          hsl: '38 48% 56%',
+        },
+        'faded-rust': {
+          DEFAULT: '#A85C5C',           // Error/Deletion (not bright red)
+          hsl: '0 30% 51%',
+        },
+
+        // ───────────────────────────────────────────────────────────────
+        // FORM/UI SUPPORT COLOR (1 color)
+        // ───────────────────────────────────────────────────────────────
+        'stone': {
+          DEFAULT: '#E5DFD1',           // Default input borders, subtle dividers
+          hsl: '40 31% 85%',
+        },
+
+        // ───────────────────────────────────────────────────────────────
+        // PLATFORM BADGES (Derivative types ONLY - Small badges/icons)
+        // Use sparingly: Never for large UI elements, only tiny indicators
+        // ───────────────────────────────────────────────────────────────
+        'derivative-email': {
+          DEFAULT: '#4A90E2',           // Muted blue (not bright)
+          hsl: '210 71% 58%',
+        },
+        'derivative-instagram': {
+          DEFAULT: '#8B5CF6',           // Muted purple (not bright)
+          hsl: '258 90% 66%',
+        },
+        'derivative-twitter': {
+          DEFAULT: '#38BDF8',           // Sky blue (muted)
+          hsl: '199 89% 60%',
+        },
+        'derivative-product': {
+          DEFAULT: '#F97316',           // Muted orange (not neon)
+          hsl: '25 95% 53%',
+        },
+        'derivative-sms': {
+          DEFAULT: '#10B981',           // Muted green (not bright)
+          hsl: '160 84% 39%',
+        },
       },
       fontFamily: {
         serif: ['Cormorant Garamond', 'serif'],
@@ -124,7 +149,8 @@ export default {
         'level-1': 'var(--shadow-level-1)',
         'level-2': 'var(--shadow-level-2)',
         'level-3': 'var(--shadow-level-3)',
-        'saffron-glow': 'var(--shadow-saffron-glow)',
+        'level-4': 'var(--shadow-level-4)',
+        'brass-glow': 'var(--shadow-brass-glow)',
       },
       borderRadius: {
         lg: "var(--radius)",
