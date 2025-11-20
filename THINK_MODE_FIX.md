@@ -75,3 +75,5 @@ When working correctly:
 **Status:** Function redeployed ✅  
 **Next Step:** Verify `GEMINI_API_KEY` is set in Supabase secrets
 
+
+
