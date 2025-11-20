@@ -2,17 +2,19 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
 
+import { BrandConfig, OrganizationRole } from "@/types/shared";
+
 interface Organization {
   id: string;
   name: string;
   industry?: string;
-  settings?: any;
-  brand_config?: any;
+  settings?: Record<string, any>;
+  brand_config?: BrandConfig;
 }
 
 interface OrganizationMembership {
   organization_id: string;
-  role: string;
+  role: OrganizationRole;
 }
 
 export function useOrganization() {

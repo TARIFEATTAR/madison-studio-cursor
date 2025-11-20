@@ -117,13 +117,17 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
       }
 
       // Update form data with AI suggestions
-      if (suggestions.mission) setFormData(prev => ({ ...prev, mission: suggestions.mission }));
-      if (suggestions.vision) setFormData(prev => ({ ...prev, vision: suggestions.vision }));
-      if (suggestions.values) setFormData(prev => ({ ...prev, values: suggestions.values }));
-      if (suggestions.personality) setFormData(prev => ({ ...prev, personality: suggestions.personality }));
-      if (suggestions.voice_guidelines) setFormData(prev => ({ ...prev, voiceGuidelines: suggestions.voice_guidelines }));
-      if (suggestions.tone_spectrum) setFormData(prev => ({ ...prev, toneSpectrum: suggestions.tone_spectrum }));
-      if (suggestions.content) setFormData(prev => ({ ...prev, contentTemplate: suggestions.content }));
+      setFormData(prev => {
+        const next = { ...prev };
+        if (suggestions.mission) next.mission = suggestions.mission;
+        if (suggestions.vision) next.vision = suggestions.vision;
+        if (suggestions.values) next.values = suggestions.values;
+        if (suggestions.personality) next.personality = suggestions.personality;
+        if (suggestions.voice_guidelines) next.voiceGuidelines = suggestions.voice_guidelines;
+        if (suggestions.tone_spectrum) next.toneSpectrum = suggestions.tone_spectrum;
+        if (suggestions.content) next.contentTemplate = suggestions.content;
+        return next;
+      });
 
       // Store sources for display
       if (suggestions.sources) {

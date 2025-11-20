@@ -3,12 +3,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 
+interface BrandHealthRecommendation {
+  title: string;
+  description: string;
+  fix_type?: string;
+  priority?: 'high' | 'medium' | 'low';
+}
+
 interface BrandHealthData {
   id: string;
   organization_id: string;
   completeness_score: number;
-  gap_analysis: any;
-  recommendations: any[];
+  gap_analysis: Record<string, any>;
+  recommendations: BrandHealthRecommendation[];
   last_analyzed_at: string;
 }
 

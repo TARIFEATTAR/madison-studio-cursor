@@ -412,7 +412,9 @@ export const ContentEditor = ({
       try {
         editor.focus();
         restoreSelection(editor, savedSelectionRef.current);
-      } catch {}
+      } catch {
+        // Ignore selection restoration errors
+      }
     } else {
       editor.focus();
     }

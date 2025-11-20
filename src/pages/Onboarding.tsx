@@ -15,27 +15,6 @@ export default function Onboarding() {
   const [onboardingData, setOnboardingData] = useState<any>({});
   const [scanningBrandDNA, setScanningBrandDNA] = useState(false);
 
-  // Redirect to auth if not logged in
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth', { replace: true });
-    }
-  }, [user, loading, navigate]);
-
-  // Show loading while checking auth
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground text-lg font-serif">Loading…</div>
-      </div>
-    );
-  }
-
-  // Don't render if no user (will redirect)
-  if (!user) {
-    return null;
-  }
-
   const resetProgress = () => {
     localStorage.removeItem('madison-onboarding-progress');
     setOnboardingData({});
@@ -81,6 +60,27 @@ export default function Onboarding() {
       }));
     }
   }, [currentStep, onboardingData]);
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth', { replace: true });
+    }
+  }, [user, loading, navigate]);
+
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground text-lg font-serif">Loading…</div>
+      </div>
+    );
+  }
+
+  // Don't render if no user (will redirect)
+  if (!user) {
+    return null;
+  }
 
   const handleStepComplete = (stepData: any) => {
     const updatedData = { ...onboardingData, ...stepData };

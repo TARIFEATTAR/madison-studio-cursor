@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { encode, decode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { formatVisualContext } from "../_shared/productFieldFilters.ts";
 import { callGeminiImage } from "../_shared/aiProviders.ts";
@@ -361,13 +362,8 @@ serve(async (req) => {
       if (!ref.url) continue;
       const response = await fetch(ref.url);
       const buffer = await response.arrayBuffer();
-      const bytes = new Uint8Array(buffer);
-      // Convert to base64 in chunks to avoid "Maximum call stack size exceeded"
-      let binary = '';
-      for (let i = 0; i < bytes.length; i++) {
-        binary += String.fromCharCode(bytes[i]);
-      }
-      const base64 = btoa(binary);
+      
+      const base64 = encode(new Uint8Array(buffer));
       referenceImagesPayload.push({
         data: base64,
         mimeType: "image/png",
@@ -397,9 +393,7 @@ serve(async (req) => {
 
     const { data: uploadData, error: uploadErr } = await supabase.storage
       .from("generated-images")
-      .upload(filename, Uint8Array.from(atob(base64Image), (c) =>
-        c.charCodeAt(0)
-      ), {
+      .upload(filename, decode(base64Image), {
         contentType: "image/png",
       });
 
@@ -446,7 +440,7 @@ serve(async (req) => {
       };
     }
 
-    insertPayload.image_generator = "gemini-2.5-flash-image-preview";
+    // Note: image_generator column doesn't exist in schema, removed
     insertPayload.saved_to_library = true;
     insertPayload.parent_image_id = isRefinement ? parentImageId : null;
     insertPayload.chain_depth = isRefinement ? 1 : 0;

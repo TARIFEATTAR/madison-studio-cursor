@@ -10,16 +10,6 @@ export const NotesPanel = () => {
   const [loading, setLoading] = useState(true);
   const debouncedNotes = useDebounce(notes, 1000);
 
-  useEffect(() => {
-    fetchNotes();
-  }, []);
-
-  useEffect(() => {
-    if (!loading) {
-      saveNotes();
-    }
-  }, [debouncedNotes]);
-
   const fetchNotes = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -76,6 +66,18 @@ export const NotesPanel = () => {
       });
     }
   };
+
+  useEffect(() => {
+    fetchNotes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      saveNotes();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedNotes]);
 
   if (loading) {
     return (

@@ -65,10 +65,19 @@ export function AppSidebar() {
       { url: "/help-center" },
     ];
 
-    if (isGroupActive(studioItems)) setStudioOpen(true);
-    if (isGroupActive(libraryItems)) setLibraryOpen(true);
-    if (isGroupActive(marketplaceItems)) setMarketplaceOpen(true);
-    if (isGroupActive(helpItems)) setHelpOpen(true);
+    // Use local isGroupActive function for checking active routes
+    const checkGroupActive = (items: { url: string }[]) => {
+      return items.some(item => {
+        if (item.url === "/" && location.pathname === "/") return true;
+        if (item.url !== "/" && location.pathname.startsWith(item.url)) return true;
+        return false;
+      });
+    };
+
+    if (checkGroupActive(studioItems)) setStudioOpen(true);
+    if (checkGroupActive(libraryItems)) setLibraryOpen(true);
+    if (checkGroupActive(marketplaceItems)) setMarketplaceOpen(true);
+    if (checkGroupActive(helpItems)) setHelpOpen(true);
   }, [location.pathname]);
 
   // Top-level nav items (always visible)

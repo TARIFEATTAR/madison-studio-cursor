@@ -23,10 +23,6 @@ export const TasksList = () => {
   const [newTaskDueDate, setNewTaskDueDate] = useState<Date | undefined>();
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
   const fetchTasks = async () => {
     try {
       const { data, error } = await supabase
@@ -40,6 +36,10 @@ export const TasksList = () => {
       console.error("Error fetching tasks:", error);
     }
   };
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
 
   const addTask = async () => {
     if (!newTaskText.trim()) return;
