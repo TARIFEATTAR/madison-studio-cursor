@@ -23,31 +23,39 @@ const Auth = () => {
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const hasNavigated = useRef(false);
 
-  // Safe navigation helper to prevent loops
-  const safeGoHome = () => {
-    if (hasNavigated.current) return;
-    if (location.pathname !== "/") {
-      logger.debug("[Auth] Navigating to home");
-      hasNavigated.current = true;
+  // -------------------------------------------
+  // NEW REDIRECT LOGIC
+  // -------------------------------------------
+  const redirectAfterLogin = (user: User) => {
+    const created = new Date(user.created_at).getTime();
+    const signedIn = new Date(user.last_sign_in_at || 0).getTime();
+    const isNewUser = created === signedIn;
+
+    if (isNewUser) {
+      navigate("/onboarding", { replace: true });
+    } else {
       navigate("/", { replace: true });
     }
   };
 
+  // -------------------------------------------
+  // AUTH STATE + CALLBACK HANDLING
+  // -------------------------------------------
   useEffect(() => {
-    // Listen for auth changes FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-        safeGoHome();
-      } else {
-        setUser(null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (session?.user) {
+          setUser(session.user);
+          redirectAfterLogin(session.user);
+        } else {
+          setUser(null);
+        }
       }
-    });
+    );
 
-    // Handle auth callbacks in URL (magic link, recovery, OAuth PKCE)
     const params = new URLSearchParams(window.location.search);
     const token_hash = params.get("token_hash");
-    const type = params.get("type") as "magiclink" | "recovery" | "signup" | "email_change" | null;
+    const type = params.get("type");
     const code = params.get("code");
     const error_description = params.get("error_description");
 
@@ -69,34 +77,69 @@ const Auth = () => {
           });
         } else {
           toast({ title: "Signed in", description: "Welcome back." });
-          safeGoHome();
         }
       });
-    } else if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+    } 
+    else if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error, data }) => {
         if (error) {
           toast({
             title: "Authentication error",
             description: error.message,
             variant: "destructive",
           });
-        } else {
-          safeGoHome();
+        } else if (data?.session?.user) {
+          redirectAfterLogin(data.session.user);
         }
       });
-    } else {
-      // THEN check for existing session
+    } 
+    else {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session?.user) {
           setUser(session.user);
-          safeGoHome();
+          redirectAfterLogin(session.user);
         }
       });
     }
 
     return () => subscription.unsubscribe();
-  }, [navigate, toast, location.pathname]);
+  }, []);
 
+  // -------------------------------------------
+  // GOOGLE SIGN-IN — FIXED VERSION
+  // -------------------------------------------
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: "https://app.madisonstudio.io/auth/v1/callback",
+        },
+      });
+
+      if (error) {
+        toast({
+          title: "Google sign-in error",
+          description: error.message || "Failed to initiate Google sign-in.",
+          variant: "destructive",
+        });
+        setLoading(false);
+      }
+    } catch (err: any) {
+      toast({
+        title: "Google sign-in error",
+        description: err.message || "Unexpected error.",
+        variant: "destructive",
+      });
+      setLoading(false);
+    }
+  };
+
+  // -------------------------------------------
+  // SIGN UP / SIGN IN / MAGIC LINK / RESET PW
+  // -------------------------------------------
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -112,11 +155,7 @@ const Auth = () => {
     setLoading(false);
 
     if (error) {
-      toast({
-        title: "Sign up error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Sign up error", description: error.message, variant: "destructive" });
     } else {
       toast({
         title: "Welcome to Madison",
@@ -129,11 +168,7 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
 
     if (error) {
@@ -164,7 +199,7 @@ const Auth = () => {
     } else {
       toast({
         title: "Check your email",
-        description: "We've sent you a password reset link.",
+        description: "We've sent a reset link.",
       });
       setResetMode(false);
     }
@@ -176,16 +211,14 @@ const Auth = () => {
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth`,
-      },
+      options: { emailRedirectTo: `${window.location.origin}/auth` },
     });
 
     setLoading(false);
 
     if (error) {
       toast({
-        title: "Error sending magic link",
+        title: "Magic link error",
         description: error.message,
         variant: "destructive",
       });
@@ -193,91 +226,28 @@ const Auth = () => {
       setMagicLinkSent(true);
       toast({
         title: "Check your email",
-        description: "We've sent you a magic link to sign in.",
+        description: "We've sent you a magic link.",
       });
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        },
-      });
+  if (user) return null;
 
-      if (error) {
-        console.error('Google sign-in error:', error);
-        toast({
-          title: "Google sign-in error",
-          description: error.message || "Failed to initiate Google sign-in. Please check that Google OAuth is configured in Supabase.",
-          variant: "destructive",
-        });
-        setLoading(false);
-      }
-      // Note: If successful, user will be redirected, so we don't set loading to false here
-    } catch (err: any) {
-      console.error('Google sign-in exception:', err);
-      toast({
-        title: "Google sign-in error",
-        description: err.message || "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
-      setLoading(false);
-    }
-  };
-
-  if (user) {
-    return null;
-  }
-
+  // -------------------------------------------
+  // UI
+  // -------------------------------------------
   return (
     <div className="min-h-screen flex items-center justify-center px-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8 fade-enter">
-          <img 
-            src={maddiLogo} 
-            alt="Madison"
-            className="h-48 w-auto mx-auto mb-6"
-          />
+          <img src={maddiLogo} alt="Madison" className="h-48 w-auto mx-auto mb-6" />
           <p className="text-muted-foreground text-lg">
             Where brands craft and multiply their narrative
           </p>
         </div>
 
         <div className="card-matte p-8 rounded-lg border border-border/40 fade-enter">
-          {/* Google Sign In Button */}
-          <Button
-            onClick={handleGoogleSignIn}
-            variant="outline"
-            className="w-full mb-6 gap-2"
-            disabled={loading}
-          >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-              />
-              <path
-                fill="currentColor"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              />
-              <path
-                fill="currentColor"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-              />
-              <path
-                fill="currentColor"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-              />
-            </svg>
+          <Button onClick={handleGoogleSignIn} variant="outline" className="w-full mb-6 gap-2" disabled={loading}>
             Continue with Google
           </Button>
 
@@ -302,29 +272,12 @@ const Auth = () => {
                 <form onSubmit={handleResetPassword} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="reset-email">Email</Label>
-                    <Input
-                      id="reset-email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="bg-background/50"
-                      placeholder="your@email.com"
-                    />
+                    <Input id="reset-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                   </div>
-                  <Button
-                    type="submit"
-                    className="w-full btn-craft"
-                    disabled={loading}
-                  >
+                  <Button type="submit" className="w-full btn-craft" disabled={loading}>
                     {loading ? "Sending..." : "Send Reset Link"}
                   </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full"
-                    onClick={() => setResetMode(false)}
-                  >
+                  <Button type="button" variant="ghost" className="w-full" onClick={() => setResetMode(false)}>
                     Back to Sign In
                   </Button>
                 </form>
@@ -332,41 +285,18 @@ const Auth = () => {
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">Email</Label>
-                    <Input
-                      id="signin-email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="bg-background/50"
-                      placeholder="your@email.com"
-                    />
+                    <Input id="signin-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="signin-password">Password</Label>
-                    <Input
-                      id="signin-password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="bg-background/50"
-                      placeholder="••••••••"
-                    />
+                    <Input id="signin-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
                   </div>
-                  <Button
-                    type="submit"
-                    className="w-full btn-craft"
-                    disabled={loading}
-                  >
+
+                  <Button type="submit" className="w-full btn-craft" disabled={loading}>
                     {loading ? "Entering..." : "Begin"}
                   </Button>
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="w-full text-sm text-muted-foreground"
-                    onClick={() => setResetMode(true)}
-                  >
+                  <Button type="button" variant="link" className="w-full text-sm text-muted-foreground" onClick={() => setResetMode(true)}>
                     Forgot password?
                   </Button>
                 </form>
@@ -376,15 +306,8 @@ const Auth = () => {
             <TabsContent value="magic">
               {magicLinkSent ? (
                 <div className="space-y-4 text-center">
-                  <p className="text-muted-foreground">
-                    Check your email for a magic link to sign in.
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setMagicLinkSent(false)}
-                  >
+                  <p className="text-muted-foreground">Check your email for a magic link.</p>
+                  <Button type="button" variant="outline" className="w-full" onClick={() => setMagicLinkSent(false)}>
                     Send Another Link
                   </Button>
                 </div>
@@ -392,26 +315,11 @@ const Auth = () => {
                 <form onSubmit={handleMagicLink} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="magic-email">Email</Label>
-                    <Input
-                      id="magic-email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="bg-background/50"
-                      placeholder="your@email.com"
-                    />
+                    <Input id="magic-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                   </div>
-                  <Button
-                    type="submit"
-                    className="w-full btn-craft"
-                    disabled={loading}
-                  >
+                  <Button type="submit" className="w-full btn-craft" disabled={loading}>
                     {loading ? "Sending..." : "Send Magic Link"}
                   </Button>
-                  <p className="text-sm text-muted-foreground text-center">
-                    We'll email you a link to sign in without a password.
-                  </p>
                 </form>
               )}
             </TabsContent>
@@ -420,34 +328,15 @@ const Auth = () => {
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="bg-background/50"
-                    placeholder="your@email.com"
-                  />
+                  <Input id="signup-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="bg-background/50"
-                    placeholder="••••••••"
-                    minLength={6}
-                  />
+                  <Input id="signup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
                 </div>
-                <Button
-                  type="submit"
-                  className="w-full btn-craft"
-                  disabled={loading}
-                >
+
+                <Button type="submit" className="w-full btn-craft" disabled={loading}>
                   {loading ? "Crafting..." : "Craft Account"}
                 </Button>
               </form>
