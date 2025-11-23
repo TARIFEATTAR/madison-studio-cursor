@@ -204,6 +204,56 @@ export const AUTHOR_PROFILES: Record<string, string> = {
 - Does each section end with a natural bridge to the next stage or CTA?
 - Would a reader feel seen—like you understand exactly where they are in the journey?`,
 
+  collier: `# Robert Collier — The Conversation Hook
+
+## When to Channel Collier
+- Email subject lines and opening paragraphs
+- Sales letters that need to disarm skepticism immediately
+- Connecting a product to a current event, season, or universal feeling
+- When you need to bridge the gap between "unaware" and "interested"
+
+## Core Principles
+1. **Enter the Conversation in Their Mind**
+   - Don't start with your product. Start with what they are *already* thinking about.
+   - Is it the weather? The news? A nagging worry? Join that thought stream first.
+2. **The "Mental Wallet"**
+   - People buy because they want to, then justify it with logic.
+   - Appeal to the "will" (desire/emotion) before the "mind" (logic/specs).
+3. **The Smooth Bridge**
+   - The transition from the "hook" (conversation) to the "pitch" (product) must be invisible.
+   - "And that is exactly why..."
+4. **Curiosity + Benefit**
+   - Never just tease. Tease a result they want.
+   - "The simple 3-minute habit that doubles focus..." (Curiosity: What habit? Benefit: Double focus.)
+
+## Signature Techniques
+- **The "As I Sit Here" Opener:** "As I sit here watching the rain lash against the window..." (Sets a mood, creates intimacy).
+- **The Newsjack:** "You've probably read the headlines about [Topic]. It's scary. But there's one thing they missed..."
+- **The "If... Then" Proposition:** "If you are willing to [small action], then I am willing to [big reward]."
+- **The Hidden Secret:** Implication that others know something the reader doesn't—yet.
+
+## Rhythm & Structure
+- **Opener:** Short, punchy, often a question or observation.
+- **Body:** Conversational, like a letter to a friend, but with a driving logic.
+- **Transition:** The "Pivot" sentence that connects the opener to the offer.
+- **Close:** A gentle but firm push to action, often framed as "trying" rather than "buying."
+
+## Example Transformation
+**Before:** "Our new productivity app helps you organize tasks and get more done. Download it today."
+
+**After (Collier style):**
+"Have you ever had one of those days where you work hard for eight hours, but at 5:00 PM you look at your list and wonder, 'What did I actually get done?'
+It’s a sinking feeling. I used to feel it every Tuesday.
+Then I discovered that the problem wasn't my work ethic. It was the way I was organizing my list.
+There is a different way to handle your morning..."
+
+## Checklist
+- Did you start with the reader's current reality/thoughts?
+- Is the transition from hook to product smooth?
+- Did you appeal to their desire (the "will") before giving the specs?
+- Is the tone personal, intimate, and understanding?
+- Does the opening sentence force them to read the second?`,
+
   peterman: `# J. Peterman — Narrative Storyteller
 
 ## When to Channel Peterman
@@ -981,7 +1031,61 @@ The product is how they get it.
 *Transform features → story*  
 *Transform hype → trust*
 
-**That's the Peterman way.**`
+**That's the Peterman way.**`,
+
+  joyner: `# Mark Joyner — The Irresistible Simplifier
+
+## When to Channel Joyner
+- Business strategy and high-level marketing methodology
+- Product positioning that needs to cut through noise
+- Situations where you need to simplify complexity into a "formula"
+- When the audience feels overwhelmed and needs a clear path
+- Sales copy that relies on an "Irresistible Offer"
+
+## Core Principles
+1. **Simplicity is Power**
+   - Reduce complex business strategies to elegant, 3-step formulas.
+   - If it's not simple, it's not actionable.
+2. **The Irresistible Offer (TIO)**
+   - An offer where the ROI is so clear, you'd be a fool to pass it up.
+   - Components: High ROI, Touchstone, Believability.
+3. **The Great Formula**
+   - 1. Create The Irresistible Offer.
+   - 2. Present it to a Thirsty Crowd.
+   - 3. Sell them a Second Glass.
+4. **Conversational Authority**
+   - Speak directly to the reader ("Are you back?", "Make sense?").
+   - Challenge them to disprove you ("Go on, tough guy—give it a shot").
+
+## Signature Techniques
+- **The Thirsty Crowd Metaphor:** Transform "target market" into visceral imagery of people dying of thirst.
+- **The Formula Reveal:** Build anticipation, then reveal a shockingly simple 3-step framework.
+- **The Defiant Challenge:** Challenge the reader to find an exception to your rule, then demolish objections.
+- **The Chunking Frame:** Position your formula as the ultimate way to organize complex information (7±2 rule).
+- **The Historical Proof:** Validate formulas with iconic cases (Ford, Domino's, Columbia House).
+
+## Rhythm & Structure
+- **Punchy & Direct:** Short sentences for impact. "That's it." "Simple as pie."
+- **Interrogative Engagement:** Frequent questions to check in. "Read on..." "Make sense?"
+- **Visual Formatting:** Use bolding for formulas, numbered lists for steps.
+- **The "Reveal" Structure:** Setup -> Story/Evidence -> The Simple Formula -> "That's it."
+
+## Example Transformation
+**Before:** "We have a comprehensive marketing strategy that involves optimizing your product appeal, finding the right audience segments, and maximizing customer lifetime value through retention."
+
+**After (Joyner style):**
+"Let's cut through the rubbish. You don't need a 50-page marketing plan. You need The Great Formula.
+1. Create an Irresistible Offer (make it foolish to refuse).
+2. Put it in front of a Thirsty Crowd (people actively looking for it).
+3. Sell them a Second Glass (upsell the backend).
+That's it. Every successful business in history fits into these three steps. I defy you to find one that doesn't."
+
+## Checklist
+- Did you reduce the complexity to a simple (ideally 3-step) formula?
+- Did you use the "Thirsty Crowd" or physical metaphors?
+- Is the offer positioned as "Irresistible" (High ROI)?
+- Did you challenge the reader or speak directly to them?
+- Did you end a section with "That's it" or a similar definitive closer?`
 };
 
 /**
@@ -1017,7 +1121,7 @@ export function buildAuthorProfilesSection(): string {
   parts.push('These are the foundational writing styles Madison can channel:');
   parts.push('');
   
-  const authorOrder = ['halbert', 'ogilvy', 'hopkins', 'schwartz', 'peterman'];
+  const authorOrder = ['halbert', 'ogilvy', 'hopkins', 'schwartz', 'collier', 'peterman', 'joyner'];
   
   authorOrder.forEach((author, index) => {
     const profile = AUTHOR_PROFILES[author];
