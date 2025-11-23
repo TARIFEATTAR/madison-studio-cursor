@@ -17,17 +17,17 @@ export function GeneratingLoader() {
         <div className="relative mb-6">
           <Loader2 
             className="w-16 h-16 animate-spin mx-auto" 
-            style={{ color: "#B8956A" }} 
+            style={{ color: "var(--aged-brass-hex)" }} 
           />
           <Sparkles 
             className="w-8 h-8 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" 
-            style={{ color: "#D4AF37" }} 
+            style={{ color: "var(--aged-brass-hex)" }} 
           />
         </div>
 
         <h2 
           className="text-3xl font-serif mb-3" 
-          style={{ color: "#1A1816" }}
+          style={{ color: "var(--ink-black-hex)" }}
         >
           Generating your content...
         </h2>
@@ -35,7 +35,7 @@ export function GeneratingLoader() {
         {/* Subtext */}
         <p 
           className="text-base" 
-          style={{ color: "#6B6560" }}
+          style={{ color: "#2F2A26" }}
         >
           This usually takes 20-30 seconds
         </p>

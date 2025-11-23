@@ -1,7 +1,7 @@
 # PolyMet Export - Phase 3: Interactions & Transitions
 
 ## Overview
-This document exports the Scriptora sidebar interaction patterns, animations, transitions, and responsive behaviors. It builds upon Phase 1 (Layout & Structure) and Phase 2 (Navigation Items).
+This document exports the Madison Studio sidebar interaction patterns, animations, transitions, and responsive behaviors. It builds upon Phase 1 (Layout & Structure) and Phase 2 (Navigation Items).
 
 ---
 

@@ -105,7 +105,7 @@ SEQUENCE CONSISTENCY:
 
 ### Example Prompt Structure:
 ```
-SYSTEM: You are Madison, Scriptora's Editorial Director...
+SYSTEM: You are Madison, Madison Studio's Editorial Director...
 
 BRAND CONTEXT:
 Organization: [Brand Name]

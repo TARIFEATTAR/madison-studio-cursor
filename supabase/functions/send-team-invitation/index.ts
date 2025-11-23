@@ -37,15 +37,15 @@ const handler = async (req: Request): Promise<Response> => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Scriptora <onboarding@resend.dev>",
+        from: "Madison Studio <onboarding@resend.dev>",
         to: [email],
-        subject: `You've been invited to join ${organizationName} on Scriptora`,
+        subject: `You've been invited to join ${organizationName} on Madison Studio`,
         html: `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
             <h1 style="color: #2D2D2D; font-size: 24px; margin-bottom: 24px;">You've been invited to join ${organizationName}</h1>
             
             <p style="color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
-              ${invitedByName} has invited you to join <strong>${organizationName}</strong> on Scriptora as a <strong>${role}</strong>.
+              ${invitedByName} has invited you to join <strong>${organizationName}</strong> on Madison Studio as a <strong>${role}</strong>.
             </p>
             
             <p style="color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 32px;">

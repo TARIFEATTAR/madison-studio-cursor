@@ -149,16 +149,16 @@ export function ReferenceUpload({ images, onUpload, onRemove, isUploading = fals
                   aria-label="Upload a reference image to guide Madison"
                   className={`flex flex-col items-center justify-center p-5 border border-dashed rounded-lg cursor-pointer transition-all duration-300 group ${
                     isDragging 
-                      ? 'border-[#B8956A] bg-[#B8956A]/8' 
-                      : 'border-[#B8956A] bg-[#B8956A]/5 hover:bg-[#B8956A]/8'
+                      ? 'border-brand-brass bg-brand-brass/8' 
+                      : 'border-brand-brass bg-brand-brass/5 hover:bg-brand-brass/8'
                   }`}
                   style={{ borderRadius: '8px' }}
                 >
-                  <Upload className="w-6 h-6 text-[#B8956A] mb-2 group-hover:scale-110 transition-transform" />
+                  <Upload className="w-6 h-6 text-brand-brass mb-2 group-hover:scale-110 transition-transform" />
                   <span className="text-[#F5F1E8] text-sm font-medium text-center">
                     Click or drag an image to start (Max 20MB)
                   </span>
-                  <span className="text-[#B8956A] text-sm italic mt-1 text-center">
+                  <span className="text-brand-brass text-sm italic mt-1 text-center">
                     {images.length === 0 ? "Your first reference image helps guide Madison." : `${maxImages - images.length} more reference${maxImages - images.length !== 1 ? 's' : ''} available`}
                   </span>
                 </Label>

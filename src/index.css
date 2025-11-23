@@ -27,7 +27,9 @@
        ACCENT COLORS (2 colors)
        ────────────────────────────────────────────────────────────────────── */
     --aged-brass-hex: #B8956A;           /* Interactive elements, borders on hover */
-    --brass-glow-hex: #D4AF37;           /* CTAs, active states, highlights */
+    /* DEPRECATED: --brass-glow-hex: #D4AF37; */ 
+    /* Mapped to aged-brass for consistency */
+    --brass-glow-hex: #B8956A;           
     
     /* ──────────────────────────────────────────────────────────────────────
        FUNCTIONAL COLORS (3 colors - Minimal Use)
@@ -80,8 +82,8 @@
     --muted: 42 38% 93%;             /* Vellum Cream - #F5F1E8 */
     --muted-foreground: 20 8% 17%;   /* Charcoal - #2F2A26 */
 
-    /* Accent Elements (Brass Glow) */
-    --accent: 43 65% 52%;            /* Brass Glow - #D4AF37 */
+    /* Accent Elements (NOW MAPPED TO AGED BRASS) */
+    --accent: 38 33% 56%;            /* Aged Brass - #B8956A (Was Brass Glow) */
     --accent-foreground: 30 3% 10%;  /* Ink Black - #1A1816 */
 
     /* Destructive Actions */
@@ -91,12 +93,12 @@
     /* Borders & Inputs */
     --border: 40 31% 85%;            /* Stone - #E5DFD1 (subtle dividers) */
     --input: 40 31% 85%;             /* Stone - #E5DFD1 (default border) */
-    --ring: 43 65% 52%;              /* Brass Glow - #D4AF37 (focus ring) */
+    --ring: 38 33% 56%;              /* Aged Brass - #B8956A (Was Brass Glow) */
 
     --radius: 0.25rem;               /* 4px - Sharp, editorial corners */
 
     /* ──────────────────────────────────────────────────────────────────────
-       SOPHISTICATED SHADOW SYSTEM - WITH BRASS ACCENTS
+       SOPHISTICATED SHADOW SYSTEM
        Premium depth with subtle brass undertones for luxury feel
        ────────────────────────────────────────────────────────────────────── */
     
@@ -123,15 +125,15 @@
     
     /* Brass Glow: Focus/active states, primary CTAs */
     --shadow-brass-glow:
-      0 0 0 3px rgba(212, 175, 55, 0.15),
-      0 4px 16px rgba(212, 175, 55, 0.25);
+      0 0 0 3px rgba(184, 149, 106, 0.15),
+      0 4px 16px rgba(184, 149, 106, 0.25);
 
     /* ──────────────────────────────────────────────────────────────────────
        GRADIENT SYSTEM - Madison Depth and Richness
        ────────────────────────────────────────────────────────────────────── */
     --gradient-nav: linear-gradient(180deg, #1A1816 0%, #2F2A26 100%);
     --gradient-card: radial-gradient(circle at top left, #FFFCF5 0%, #F5F1E8 100%);
-    --gradient-brass: linear-gradient(135deg, #B8956A 0%, #D4AF37 50%, #B8956A 100%);
+    --gradient-brass: linear-gradient(135deg, #B8956A 0%, #C4B5A0 100%); /* Updated to Brass -> Stone */
     
     /* ──────────────────────────────────────────────────────────────────────
        EASING CURVES - Purposeful, Sophisticated Motion
@@ -163,45 +165,45 @@
      BUTTON COMPONENTS
      ─────────────────────────────────────────────────────────────────────── */
   .btn {
-    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-brass-glow focus:ring-offset-2 disabled:opacity-40 disabled:pointer-events-none;
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-brand-brass focus:ring-offset-2 disabled:opacity-40 disabled:pointer-events-none;
   }
 
   .btn-primary {
-    @apply bg-aged-brass text-parchment-white shadow-level-1 hover:bg-brass-glow hover:shadow-level-2 hover:-translate-y-0.5 active:translate-y-0;
+    @apply bg-brand-brass text-brand-parchment shadow-level-1 hover:bg-brand-brass/90 hover:shadow-level-2 hover:-translate-y-0.5 active:translate-y-0;
   }
 
   .btn-secondary {
-    @apply bg-vellum-cream text-ink-black border border-stone shadow-level-1 hover:border-aged-brass/40 hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0;
+    @apply bg-brand-vellum text-brand-ink border border-brand-stone shadow-level-1 hover:border-brand-brass/40 hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0;
   }
 
   /* ───────────────────────────────────────────────────────────────────────
      FORM COMPONENTS
      ─────────────────────────────────────────────────────────────────────── */
   .input {
-    @apply flex h-10 w-full rounded-md border border-stone bg-parchment-white px-3 py-2 text-sm text-ink-black ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-charcoal/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-glow focus-visible:border-brass-glow disabled:cursor-not-allowed disabled:opacity-40;
+    @apply flex h-10 w-full rounded-md border border-brand-stone bg-brand-parchment px-3 py-2 text-sm text-brand-ink ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-brand-charcoal/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-brass focus-visible:border-brand-brass disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .label {
-    @apply text-sm font-medium leading-none text-ink-black peer-disabled:cursor-not-allowed peer-disabled:opacity-40;
+    @apply text-sm font-medium leading-none text-brand-ink peer-disabled:cursor-not-allowed peer-disabled:opacity-40;
   }
 
   .textarea {
-    @apply flex min-h-[80px] w-full rounded-md border border-stone bg-parchment-white px-3 py-2 text-sm text-ink-black ring-offset-background placeholder:text-charcoal/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-glow focus-visible:border-brass-glow disabled:cursor-not-allowed disabled:opacity-40;
+    @apply flex min-h-[80px] w-full rounded-md border border-brand-stone bg-brand-parchment px-3 py-2 text-sm text-brand-ink ring-offset-background placeholder:text-brand-charcoal/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-brass focus-visible:border-brand-brass disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .select {
-    @apply flex h-10 w-full rounded-md border border-stone bg-parchment-white px-3 py-2 text-sm text-ink-black ring-offset-background placeholder:text-charcoal/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-glow focus-visible:border-brass-glow disabled:cursor-not-allowed disabled:opacity-40;
+    @apply flex h-10 w-full rounded-md border border-brand-stone bg-brand-parchment px-3 py-2 text-sm text-brand-ink ring-offset-background placeholder:text-brand-charcoal/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-brass focus-visible:border-brand-brass disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   /* ───────────────────────────────────────────────────────────────────────
      OVERLAY COMPONENTS
      ─────────────────────────────────────────────────────────────────────── */
   .popover-content {
-    @apply z-50 w-72 rounded-md border border-stone bg-parchment-white p-4 text-ink-black shadow-level-3 outline-none;
+    @apply z-50 w-72 rounded-md border border-brand-stone bg-brand-parchment p-4 text-brand-ink shadow-level-3 outline-none;
   }
 
   .card {
-    @apply rounded-md border border-stone/50 bg-parchment-white text-ink-black shadow-level-1;
+    @apply rounded-md border border-brand-stone/50 bg-brand-parchment text-brand-ink shadow-level-1;
   }
 }
 
@@ -393,7 +395,7 @@
   font-size: 72px;
   color: hsl(42, 77%, 75%);
   margin-top: 4px;
-  text-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+  text-shadow: 0 0 30px rgba(184, 149, 106, 0.4);
 }
 
 /* Subheadline */
@@ -416,7 +418,7 @@
 .btn-primary-brass {
   padding: 18px 48px;
   font-size: 19px;
-  background: linear-gradient(135deg, #D4AF37 0%, #F9DC7C 100%);
+  background: linear-gradient(135deg, #B8956A 0%, #C4B5A0 100%);
   color: hsl(26, 6%, 9%);
   border: none;
   border-radius: 8px;
@@ -424,13 +426,13 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 4px 12px rgba(184, 149, 106, 0.3);
 }
 
 .btn-primary-brass:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
-  background: linear-gradient(135deg, #F9DC7C 0%, #D4AF37 100%);
+  box-shadow: 0 6px 20px rgba(184, 149, 106, 0.5);
+  background: linear-gradient(135deg, #C4B5A0 0%, #B8956A 100%);
 }
 
 .btn-secondary-ghost {

@@ -2,7 +2,7 @@
 
 ## 1. Overview & Vision
 
-Madison is an AI-powered Editorial Director integrated into the Scriptora brand intelligence platform. It serves as a conversational assistant that helps content creators generate high-quality, on-brand content across multiple formats and channels. Madison combines brand knowledge absorption (from uploaded documents and websites) with AI generation capabilities to ensure all content maintains consistent brand voice, adheres to product-specific guidelines, and meets platform requirements. The primary user personas are: (1) Brand managers needing to scale content production while maintaining quality, (2) Marketing teams requiring multi-channel derivative assets from master content, and (3) Solo entrepreneurs seeking professional-grade content creation without hiring agencies.
+Madison is an AI-powered Editorial Director integrated into the Madison Studio brand intelligence platform. It serves as a conversational assistant that helps content creators generate high-quality, on-brand content across multiple formats and channels. Madison combines brand knowledge absorption (from uploaded documents and websites) with AI generation capabilities to ensure all content maintains consistent brand voice, adheres to product-specific guidelines, and meets platform requirements. The primary user personas are: (1) Brand managers needing to scale content production while maintaining quality, (2) Marketing teams requiring multi-channel derivative assets from master content, and (3) Solo entrepreneurs seeking professional-grade content creation without hiring agencies.
 
 ---
 
@@ -248,7 +248,7 @@ Madison is an AI-powered Editorial Director integrated into the Scriptora brand 
 **Technical Implementation**:
 - Google OAuth 2.0 integration
 - Encrypted token storage
-- Bidirectional sync (Scriptora ↔ Google Calendar)
+- Bidirectional sync (Madison Studio ↔ Google Calendar)
 - Event creation with content associations
 - Task management with completion tracking
 
@@ -762,7 +762,7 @@ Madison is an AI-powered Editorial Director integrated into the Scriptora brand 
 
 **Version**: 1.0  
 **Generated**: January 2025  
-**Based on**: Live Scriptora/Madison build (commit as of user session)  
+**Based on**: Live Madison Studio/Madison build (commit as of user session)  
 **Author**: AI-generated from current codebase  
 **Next Review**: After Etsy listing feature launch  
 

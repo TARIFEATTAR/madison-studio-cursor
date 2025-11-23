@@ -806,7 +806,7 @@ const Templates = () => {
     <ErrorBoundary
       fallback={
         <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-8 bg-[#F5F1E8]">
-          <h2 className="text-2xl font-serif text-[#1A1816]">Unable to load Prompt Library</h2>
+          <h2 className="text-2xl font-serif text-brand-ink">Unable to load Prompt Library</h2>
           <p className="text-[#6B6560] text-center max-w-md">
             There was an error loading your prompts. Please refresh the page or try again later.
           </p>

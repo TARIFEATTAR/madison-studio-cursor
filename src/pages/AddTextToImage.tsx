@@ -311,7 +311,7 @@ export default function AddTextToImage() {
                 onClick={handleGenerate}
                 disabled={!selectedImage || !textInstruction.trim() || isGenerating}
                 size="lg"
-                className="w-full bg-[#C9A66B] hover:bg-[#B8956A] text-[#000000] font-bold rounded-full h-14 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-[#C9A66B] hover:bg-brand-brass text-[#000000] font-bold rounded-full h-14 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isGenerating ? (
                   <>
@@ -684,7 +684,7 @@ export default function AddTextToImage() {
             <Button
               onClick={handleGenerate}
               disabled={!selectedImage || !textInstruction.trim() || isGenerating}
-              className="w-full bg-[#C9A66B] hover:bg-[#B8956A] text-black font-semibold h-14"
+              className="w-full bg-[#C9A66B] hover:bg-brand-brass text-black font-semibold h-14"
             >
               {isGenerating ? (
                 <>

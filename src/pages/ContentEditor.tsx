@@ -882,22 +882,18 @@ export default function ContentEditorPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ backgroundColor: "#F5F1E8" }}>
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#B8956A" }} />
-        <p className="text-sm" style={{ color: "#6B6662" }}>Loading your content...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-brand-vellum">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-brass" />
+        <p className="text-sm text-brand-charcoal">Loading your content...</p>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: "#F5F1E8" }}>
+    <div className="h-screen flex flex-col overflow-hidden bg-brand-vellum">
       {/* Top Toolbar - Clean & Minimal */}
       <div 
-        className="border-b z-10 flex-shrink-0"
-        style={{ 
-          backgroundColor: "#FFFCF5",
-          borderColor: "#E5E0D8"
-        }}
+        className="border-b z-10 flex-shrink-0 bg-brand-parchment border-brand-stone"
       >
         <div className="flex items-center justify-between px-4 py-2 gap-2 overflow-x-auto scrollbar-hide">
           {/* Left: Exit Button + Font & Formatting */}
@@ -1202,7 +1198,7 @@ export default function ContentEditorPage() {
           <ResizablePanelGroup direction="horizontal" className="w-full h-full">
             {/* Content Editor Panel */}
             <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
-              <div className="w-full overflow-auto h-full" style={{ backgroundColor: "#F5F1E8" }}>
+              <div className="w-full overflow-auto h-full bg-brand-vellum">
                 <div className="max-w-4xl mx-auto py-16 px-8 md:px-16">
                   <div
                     ref={attachEditableRef}
@@ -1213,11 +1209,7 @@ export default function ContentEditorPage() {
                     onCompositionEnd={() => setIsComposing(false)}
                     onKeyDown={handleKeyDown}
                     suppressContentEditableWarning
-                    className="editor-content w-full min-h-[calc(100vh-200px)] focus:outline-none prose prose-lg max-w-none"
-                    style={{
-                      color: "#1A1816",
-                      lineHeight: "1.8"
-                    }}
+                    className="editor-content w-full min-h-[calc(100vh-200px)] focus:outline-none prose prose-lg max-w-none text-brand-ink leading-loose"
                   />
                 </div>
               </div>
@@ -1225,14 +1217,13 @@ export default function ContentEditorPage() {
             
             {/* Resizable Handle */}
             <ResizableHandle 
-              className="w-1 hover:w-2 transition-all bg-warm-gray/20 hover:bg-aged-brass/40"
+              className="w-1 hover:w-2 transition-all bg-brand-stone/20 hover:bg-brand-brass/40"
             />
             
             {/* Madison Assistant Panel */}
             <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
               <div 
-                className="w-full h-full"
-                style={{ backgroundColor: "#FFFCF5" }}
+                className="w-full h-full bg-brand-parchment"
               >
                 <EditorialAssistantPanel 
                   onClose={handleToggleAssistant}
@@ -1243,7 +1234,7 @@ export default function ContentEditorPage() {
           </ResizablePanelGroup>
         ) : (
           /* Full-width editor when Madison is closed */
-          <div className="w-full overflow-auto h-full" style={{ backgroundColor: "#F5F1E8" }}>
+          <div className="w-full overflow-auto h-full bg-brand-vellum">
             <div className="max-w-4xl mx-auto py-16 px-8 md:px-16">
               <div
                 ref={attachEditableRef}
@@ -1254,11 +1245,7 @@ export default function ContentEditorPage() {
                 onCompositionEnd={() => setIsComposing(false)}
                 onKeyDown={handleKeyDown}
                 suppressContentEditableWarning
-                className="editor-content w-full min-h-[calc(100vh-200px)] focus:outline-none prose prose-lg max-w-none"
-                style={{
-                  color: "#1A1816",
-                  lineHeight: "1.8"
-                }}
+                className="editor-content w-full min-h-[calc(100vh-200px)] focus:outline-none prose prose-lg max-w-none text-brand-ink leading-loose"
               />
             </div>
           </div>
@@ -1276,7 +1263,7 @@ export default function ContentEditorPage() {
               style={{
                 width: '64px',
                 height: '64px',
-                background: 'linear-gradient(135deg, #B8956A 0%, #8B7355 100%)',
+                background: 'linear-gradient(135deg, #B8956A 0%, #A3865A 100%)',
                 borderRadius: '16px 16px 16px 4px',
                 boxShadow: '0 8px 24px rgba(184, 149, 106, 0.4), inset 0 -2px 8px rgba(0, 0, 0, 0.15)',
                 border: '2px solid rgba(139, 115, 85, 0.3)',
@@ -1287,9 +1274,8 @@ export default function ContentEditorPage() {
               <div className="relative w-full h-full flex items-center justify-center">
                 {/* Engraved M */}
                 <span 
-                  className="font-serif text-3xl font-bold"
+                  className="font-serif text-3xl font-bold text-brand-parchment"
                   style={{
-                    color: '#F5F1E8',
                     textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 -1px 2px rgba(255, 255, 255, 0.1)',
                     transform: 'translateY(-1px)'
                   }}
@@ -1309,8 +1295,8 @@ export default function ContentEditorPage() {
           
           <Drawer open={assistantOpen} onOpenChange={setAssistantOpen}>
             <DrawerContent 
-              className="h-screen max-h-[100dvh] mt-0 rounded-t-none flex flex-col overflow-hidden"
-              style={{ backgroundColor: "#FFFCF5", paddingBottom: "env(safe-area-inset-bottom)" }}
+              className="h-screen max-h-[100dvh] mt-0 rounded-t-none flex flex-col overflow-hidden bg-brand-parchment"
+              style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
             >
               <div className="flex-1 overflow-hidden">
                 <EditorialAssistantPanel

@@ -7,7 +7,7 @@
 
 ## Purpose
 
-This document defines the official **product line collections** used in Scriptora. Collections are product groupings that represent different themes and positioning strategies for the organization's product catalog.
+This document defines the official **product line collections** used in Madison Studio. Collections are product groupings that represent different themes and positioning strategies for the organization's product catalog.
 
 **Important Distinction**: Collections refer to product lines (e.g., Humanities, Reserve), NOT content categories or content types (e.g., Blog, Email, Social).
 
@@ -15,7 +15,7 @@ This document defines the official **product line collections** used in Scriptor
 
 ## Official Collections
 
-Scriptora supports **four primary product line collections**:
+Madison Studio supports **four primary product line collections**:
 
 ### 1. Humanities Collection
 **Theme**: Accessible sophistication  

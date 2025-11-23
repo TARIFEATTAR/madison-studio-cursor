@@ -10,8 +10,8 @@ import archivesIcon from "@/assets/archives-icon-new.png";
 import createIcon from "@/assets/create-icon.png";
 import multiplyIcon from "@/assets/multiply-icon.png";
 import calendarIcon from "@/assets/calendar-icon.png";
-import scriptoraLogo from "@/assets/scriptora-logo-icon.png";
-import scriptoraIcon from "@/assets/scriptora-icon-transparent.png";
+import madisonStudioLogo from "@/assets/scriptora-logo-icon.png";
+import madisonStudioIcon from "@/assets/scriptora-icon-transparent.png";
 import madisonHero from "@/assets/madison-hero.jpg";
 import madisonNibb from "@/assets/madison-nibb.png";
 
@@ -43,7 +43,7 @@ const Landing = () => {
       <header 
         className="fixed top-0 w-full z-[1000] transition-all duration-300"
         style={{ 
-          backgroundColor: '#1A1816',
+          backgroundColor: 'var(--ink-black-hex)',
           padding: '20px 40px',
           border: 'none',
           boxShadow: 'none'
@@ -144,7 +144,7 @@ const Landing = () => {
                             asChild 
                             className="w-full text-ink-black font-serif font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0" 
                             style={{
-                              backgroundColor: '#B8956A',
+                              backgroundColor: 'var(--aged-brass-hex)',
                               padding: '14px 36px',
                               borderRadius: '8px',
                               boxShadow: '0 4px 12px rgba(184, 149, 106, 0.3)'
@@ -181,7 +181,7 @@ const Landing = () => {
                     asChild 
                     className="hidden md:inline-flex text-ink-black font-serif font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(184,149,106,0.45)] active:translate-y-0 active:shadow-[0_2px_8px_rgba(184,149,106,0.3)]" 
                     style={{
-                      backgroundColor: '#B8956A',
+                      backgroundColor: 'var(--aged-brass-hex)',
                       padding: '14px 36px',
                       borderRadius: '8px',
                       boxShadow: '0 4px 12px rgba(184, 149, 106, 0.3)',
@@ -274,7 +274,7 @@ const Landing = () => {
                 to="/auth" 
                 className="inline-block px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-[18px] text-sm sm:text-base md:text-lg font-serif font-semibold text-ink-black rounded-lg transition-all duration-300"
                 style={{
-                  backgroundColor: '#B8956A',
+                  backgroundColor: 'var(--aged-brass-hex)',
                   boxShadow: '0 4px 16px rgba(184, 149, 106, 0.35)'
                 }}
                 onMouseEnter={(e) => {

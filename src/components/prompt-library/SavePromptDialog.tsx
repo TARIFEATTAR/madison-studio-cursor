@@ -285,7 +285,7 @@ try {
                       Add Placeholder
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="bottom" className="bg-[#FFFCF5] h-[50vh]">
+                    <SheetContent side="bottom" className="bg-brand-parchment h-[50vh]">
                     <SheetHeader>
                       <SheetTitle>Insert Placeholder</SheetTitle>
                     </SheetHeader>
@@ -294,10 +294,10 @@ try {
                         <button
                           key={suggestion.value}
                           onClick={() => handleInsertPlaceholder(suggestion.value)}
-                          className="w-full text-left px-4 py-3 min-h-[48px] rounded-lg hover:bg-[#B8956A]/10 transition-colors flex items-center justify-between active:bg-[#B8956A]/20"
+                          className="w-full text-left px-4 py-3 min-h-[48px] rounded-lg hover:bg-brand-brass/10 transition-colors flex items-center justify-between active:bg-brand-brass/20"
                         >
-                          <span className="text-[#2F2A26] font-medium">{suggestion.label}</span>
-                          <code className="text-sm text-[#B8956A]">
+                          <span className="text-brand-charcoal font-medium">{suggestion.label}</span>
+                          <code className="text-sm text-brand-brass">
                             {suggestion.value}
                           </code>
                         </button>
@@ -312,25 +312,25 @@ try {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="gap-1 text-xs border-[#B8956A] text-[#B8956A] hover:bg-[#B8956A]/10"
+                      className="gap-1 text-xs border-brand-brass text-brand-brass hover:bg-brand-brass/10"
                     >
                       <Plus className="w-3 h-3" />
                       Add Placeholder
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-64 p-2 bg-[#FFFCF5]" align="end">
+                  <PopoverContent className="w-64 p-2 bg-brand-parchment" align="end">
                     <div className="space-y-1">
-                      <p className="text-xs text-[#6B6560] px-2 py-1 font-medium">
+                      <p className="text-xs text-brand-charcoal px-2 py-1 font-medium">
                         Click to insert:
                       </p>
                       {placeholderSuggestions.map((suggestion) => (
                         <button
                           key={suggestion.value}
                           onClick={() => handleInsertPlaceholder(suggestion.value)}
-                          className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-[#B8956A]/10 transition-colors flex items-center justify-between group"
+                          className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-brand-brass/10 transition-colors flex items-center justify-between group"
                         >
-                          <span className="text-[#2F2A26]">{suggestion.label}</span>
-                          <code className="text-xs text-[#B8956A] opacity-60 group-hover:opacity-100">
+                          <span className="text-brand-charcoal">{suggestion.label}</span>
+                          <code className="text-xs text-brand-brass opacity-60 group-hover:opacity-100">
                             {suggestion.value}
                           </code>
                         </button>
@@ -343,12 +343,12 @@ try {
             <Textarea
               value={editedPromptText}
               onChange={(e) => setEditedPromptText(e.target.value)}
-              className="bg-parchment-white border-warm-gray/20 min-h-[150px] sm:min-h-[120px] font-mono text-sm touch-auto"
+              className="bg-brand-parchment border-brand-stone/20 min-h-[150px] sm:min-h-[120px] font-mono text-sm touch-auto"
               placeholder="Enter your prompt text here. Use {{PLACEHOLDER}} syntax for dynamic values."
             />
-            <p className="text-xs text-[#6B6560] mt-1">
+            <p className="text-xs text-brand-charcoal mt-1">
               <Sparkles className="w-3 h-3 inline mr-1" />
-              Tip: Add placeholders like <code className="bg-[#B8956A]/10 px-1 rounded">{"{{PRODUCT_NAME}}"}</code> to make this template reusable
+              Tip: Add placeholders like <code className="bg-brand-brass/10 px-1 rounded">{"{{PRODUCT_NAME}}"}</code> to make this template reusable
             </p>
           </div>
 

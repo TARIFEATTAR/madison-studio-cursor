@@ -1,7 +1,7 @@
 # PolyMet Export - Phase 1: Side Navigation Layout & Structure
 
 ## Overview
-This document exports the Scriptora side navigation UI for import into PolyMet. It includes both React/Tailwind code and structured natural language specifications.
+This document exports the Madison Studio side navigation UI for import into PolyMet. It includes both React/Tailwind code and structured natural language specifications.
 
 ---
 
@@ -27,7 +27,7 @@ This document exports the Scriptora side navigation UI for import into PolyMet. 
 - **Layout:** Flex row, space-between alignment
 - **Contains:**
   - Menu trigger button (left)
-  - Scriptora logo (center, 32px height)
+  - Madison Studio logo (center, 32px height)
   - Spacer (right, for centering)
 
 ### Header Section
@@ -46,7 +46,7 @@ This document exports the Scriptora side navigation UI for import into PolyMet. 
   - Transition: 200ms duration
   - Asset: `pen-nib-logo.png`
 - **Brand Text (Expanded only):**
-  - **Title:** "Scriptora"
+  - **Title:** "Madison Studio"
     - Font: Serif (Cormorant Garamond)
     - Size: 24px (text-2xl)
     - Color: White (`#FFFFFF`)
@@ -235,7 +235,7 @@ export function AppSidebar({ }: AppSidebarProps) {
             <Menu className="w-6 h-6 text-parchment-white" />
           </button>
           
-          <img src="/logo.png" alt="Scriptora" className="h-8 w-auto" />
+          <img src="/logo.png" alt="Madison Studio" className="h-8 w-auto" />
           
           <div className="w-10" /> {/* Spacer */}
         </header>
@@ -252,13 +252,13 @@ export function AppSidebar({ }: AppSidebarProps) {
           <div className="flex items-center gap-3 px-4 py-6">
             <img 
               src="/assets/pen-nib-logo.png"
-              alt="Scriptora"
+              alt="Madison Studio"
               className={`${open ? 'w-16 h-16' : 'w-12 h-12'} shrink-0 object-contain transition-all duration-200`}
             />
             {open && (
               <div className="flex-1 min-w-0">
                 <h1 className="text-white text-2xl font-serif tracking-tight">
-                  Scriptora
+                  Madison Studio
                 </h1>
                 <p className="text-aged-brass text-[10px] font-sans uppercase tracking-wider">
                   EDITORIAL INTELLIGENCE

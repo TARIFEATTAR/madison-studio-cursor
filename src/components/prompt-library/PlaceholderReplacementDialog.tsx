@@ -126,13 +126,13 @@ export function PlaceholderReplacementDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-[#FFFCF5]">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-brand-parchment">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-2xl font-serif text-[#1A1816]">
-            <Sparkles className="w-6 h-6 text-[#B8956A]" />
+          <DialogTitle className="flex items-center gap-2 text-2xl font-serif text-brand-ink">
+            <Sparkles className="w-6 h-6 text-brand-brass" />
             Customize Your Prompt
           </DialogTitle>
-          <p className="text-sm text-[#6B6560] mt-2">
+          <p className="text-sm text-brand-charcoal mt-2">
             Fill in the details below to personalize this template for your specific needs.
           </p>
           <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -147,7 +147,7 @@ export function PlaceholderReplacementDialog({
             <div key={placeholder.key} className="space-y-2">
               <Label 
                 htmlFor={placeholder.key}
-                className="text-sm font-medium text-[#2F2A26]"
+                className="text-sm font-medium text-brand-charcoal"
               >
                 {placeholder.label}
               </Label>
@@ -157,7 +157,7 @@ export function PlaceholderReplacementDialog({
                   value={placeholder.value}
                   onChange={(e) => handleValueChange(placeholder.key, e.target.value)}
                   placeholder={`Enter ${placeholder.label.toLowerCase()}...`}
-                  className="min-h-[100px] bg-white border-2 border-[#D4CFC8] focus:border-[#B8956A] rounded-lg text-[#2F2A26] placeholder:text-[#A8A39E]"
+                  className="min-h-[100px] bg-white border-2 border-brand-stone focus:border-brand-brass rounded-lg text-brand-charcoal placeholder:text-brand-charcoal/60"
                 />
               ) : (
                 <Input
@@ -165,7 +165,7 @@ export function PlaceholderReplacementDialog({
                   value={placeholder.value}
                   onChange={(e) => handleValueChange(placeholder.key, e.target.value)}
                   placeholder={`Enter ${placeholder.label.toLowerCase()}...`}
-                  className="bg-white border-2 border-[#D4CFC8] focus:border-[#B8956A] rounded-lg text-[#2F2A26] placeholder:text-[#A8A39E]"
+                  className="bg-white border-2 border-brand-stone focus:border-brand-brass rounded-lg text-brand-charcoal placeholder:text-brand-charcoal/60"
                 />
               )}
             </div>
@@ -176,14 +176,14 @@ export function PlaceholderReplacementDialog({
           <Button
             variant="outline"
             onClick={handleSkip}
-            className="border-2 border-[#D4CFC8] text-[#6B6560] hover:bg-[#F5F1E8]"
+            className="border-2 border-brand-stone text-brand-charcoal hover:bg-brand-vellum"
           >
             Use As-Is
           </Button>
           <Button
             onClick={handleConfirm}
             disabled={!isValid}
-            className="bg-gradient-to-r from-[#B8956A] to-[#D4AF37] hover:from-[#D4AF37] hover:to-[#B8956A] text-white disabled:opacity-50"
+            className="bg-brand-brass hover:bg-brand-brass/90 text-white disabled:opacity-50"
           >
             Apply & Continue
           </Button>

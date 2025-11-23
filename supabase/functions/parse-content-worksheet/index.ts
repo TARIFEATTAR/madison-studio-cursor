@@ -68,7 +68,7 @@ serve(async (req) => {
 
     console.log('Calling Gemini AI to parse worksheet...');
 
-    const systemPrompt = `You are a document parser for Scriptora content worksheets.
+    const systemPrompt = `You are a document parser for Madison Studio content worksheets.
 Extract the following information from the uploaded worksheet:
 
 1. Product/Collection Name (text field)

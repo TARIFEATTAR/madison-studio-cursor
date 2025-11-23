@@ -29,7 +29,7 @@ export const getPaperTexture = (variant: 'pageBackground' | 'cardPaper' | 'manus
     agedPaper: 'bg-[#F0EDE5]', // Slightly aged, darker cream
     
     // Dark backgrounds
-    darkPaper: 'bg-[#1A1816] text-[#FFFCF5]', // Ink black with parchment text
+    darkPaper: 'bg-brand-ink text-brand-parchment', // Ink black with parchment text
   };
 
   return textures[variant];
@@ -44,7 +44,7 @@ export const paperTextures = {
   manuscriptPaper: 'bg-[#FAF8F3]',
   minimalTexture: 'bg-white',
   agedPaper: 'bg-[#F0EDE5]',
-  darkPaper: 'bg-[#1A1816] text-[#FFFCF5]',
+  darkPaper: 'bg-brand-ink text-brand-parchment',
 } as const;
 
 /**

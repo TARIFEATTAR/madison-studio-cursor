@@ -70,13 +70,13 @@ export function TransitionLoader({ onComplete }: TransitionLoaderProps) {
         >
           <PenTool 
             className="w-12 h-12 mx-auto" 
-            style={{ color: "#B8956A" }} 
+            style={{ color: "var(--aged-brass-hex)" }} 
           />
         </motion.div>
 
         <h2 
           className="text-2xl font-serif" 
-          style={{ color: "#1A1816" }}
+          style={{ color: "var(--ink-black-hex)" }}
         >
           Preparing your content...
         </h2>

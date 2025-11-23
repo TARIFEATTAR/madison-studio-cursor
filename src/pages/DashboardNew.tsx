@@ -79,7 +79,7 @@ export default function DashboardNew() {
         <Button
           size="sm"
           onClick={() => setMadisonPanelOpen(true)}
-          className="bg-[#B8956A] hover:bg-[#A3865A] text-white flex items-center gap-2 shadow-sm"
+          className="bg-brand-brass hover:bg-[#A3865A] text-white flex items-center gap-2 shadow-sm"
         >
           <Sparkles className="w-4 h-4" />
           Ask Madison
@@ -92,7 +92,7 @@ export default function DashboardNew() {
         <Button
           size="sm"
           onClick={() => setMadisonPanelOpen(true)}
-          className="bg-[#B8956A] hover:bg-[#A3865A] text-white px-3 py-2"
+          className="bg-brand-brass hover:bg-[#A3865A] text-white px-3 py-2"
         >
           <Sparkles className="w-4 h-4" />
         </Button>

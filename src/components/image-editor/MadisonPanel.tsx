@@ -329,8 +329,8 @@ export default function MadisonPanel({
       {/* Header */}
       <div className="flex items-center justify-between h-12 px-4 border-b border-[#E7E1D4] bg-white">
         <div className="flex items-center gap-3">
-          <Sparkles className="w-4 h-4 text-[#B8956A]" />
-          <span className="font-semibold text-[#B8956A] text-sm">Madison</span>
+          <Sparkles className="w-4 h-4 text-brand-brass" />
+          <span className="font-semibold text-brand-brass text-sm">Madison</span>
           {productContext && (
             <Badge variant="secondary" className="text-xs">
               {productContext.name}
@@ -356,7 +356,7 @@ export default function MadisonPanel({
         <div className="space-y-4 pb-4">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center py-12">
-              <Sparkles className="w-12 h-12 text-[#B8956A]/40 mb-4" />
+              <Sparkles className="w-12 h-12 text-brand-brass/40 mb-4" />
               <p className="text-[#1C150D]/80 text-sm">
                 Madison is ready to assist with your dashboard insights.
               </p>
@@ -392,7 +392,7 @@ export default function MadisonPanel({
                     </Button>
                   </div>
                 ) : (
-                  <div className="max-w-[85%] bg-[#B8956A]/10 text-[#1C150D] border border-[#B8956A]/30 rounded-lg px-3 py-2 text-sm">
+                  <div className="max-w-[85%] bg-brand-brass/10 text-brand-ink border border-brand-brass/30 rounded-lg px-3 py-2 text-sm">
                     {msg.content}
                   </div>
                 )}
@@ -411,14 +411,14 @@ export default function MadisonPanel({
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask Madison for feedback…"
-          className="flex-1 min-h-[44px] max-h-[120px] resize-none bg-[#FFFCF5] border-[#E7E1D4] text-[#1C150D] placeholder:text-[#1C150D]/60 focus-visible:ring-[#B8956A]/50"
+          className="flex-1 min-h-[44px] max-h-[120px] resize-none bg-brand-parchment border-[#E7E1D4] text-brand-ink placeholder:text-brand-ink/60 focus-visible:ring-brand-brass/50"
           disabled={isSending}
         />
         <Button
           onClick={handleSend}
           disabled={!inputValue.trim() || isSending}
           size="icon"
-          className="h-[44px] w-[44px] shrink-0 bg-[#B8956A] hover:bg-[#A3865A] text-white"
+          className="h-[44px] w-[44px] shrink-0 bg-brand-brass hover:bg-[#A3865A] text-white"
         >
           <Send className="w-4 h-4" />
         </Button>

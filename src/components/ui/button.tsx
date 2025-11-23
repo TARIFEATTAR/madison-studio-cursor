@@ -9,29 +9,29 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Primary CTA: Ink Black with brass border → Brass Glow on hover
-        default: "bg-ink-black text-parchment-white border border-aged-brass/30 shadow-level-1 hover:border-brass-glow hover:shadow-brass-glow hover:-translate-y-0.5 active:translate-y-0",
+        // Primary CTA: Ink Black with brass border → Brass on hover
+        default: "bg-brand-ink text-brand-parchment border border-brand-brass/30 shadow-level-1 hover:border-brand-brass hover:shadow-brass-glow hover:-translate-y-0.5 active:translate-y-0",
         
         // Destructive: Faded Rust with refined hover
-        destructive: "bg-faded-rust text-parchment-white shadow-level-1 hover:bg-faded-rust/90 hover:shadow-level-2 hover:-translate-y-0.5 active:translate-y-0",
+        destructive: "bg-faded-rust text-brand-parchment shadow-level-1 hover:bg-faded-rust/90 hover:shadow-level-2 hover:-translate-y-0.5 active:translate-y-0",
         
         // Outline: Subtle border with brass hover
-        outline: "border-[1.5px] border-stone bg-background text-charcoal hover:bg-aged-brass/8 hover:border-aged-brass hover:text-ink-black hover:shadow-sm",
+        outline: "border-[1.5px] border-brand-stone bg-background text-brand-charcoal hover:bg-brand-brass/8 hover:border-brand-brass hover:text-brand-ink hover:shadow-sm",
         
         // Secondary: Vellum Cream with subtle hover
-        secondary: "bg-vellum-cream text-ink-black border border-stone shadow-level-1 hover:bg-vellum-cream/80 hover:border-aged-brass/40 hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0",
+        secondary: "bg-brand-vellum text-brand-ink border border-brand-stone shadow-level-1 hover:bg-brand-vellum/80 hover:border-brand-brass/40 hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0",
         
         // Ghost: Transparent with vellum cream hover
-        ghost: "hover:bg-vellum-cream/50 hover:text-aged-brass",
+        ghost: "hover:bg-brand-vellum/50 hover:text-brand-brass",
         
         // Link: Aged brass with brass glow hover
-        link: "text-aged-brass underline-offset-4 hover:underline hover:text-brass-glow",
+        link: "text-brand-brass underline-offset-4 hover:underline hover:text-brand-brass/80",
         
         // Brass: Primary accent button
-        brass: "bg-aged-brass text-parchment-white font-semibold shadow-level-1 hover:bg-brass-glow hover:shadow-level-2 hover:-translate-y-0.5 active:translate-y-0",
+        brass: "bg-brand-brass text-brand-parchment font-semibold shadow-level-1 hover:bg-brand-brass/90 hover:shadow-level-2 hover:-translate-y-0.5 active:translate-y-0",
         
         // Brass Gradient: Premium CTA with gradient
-        brassGradient: "bg-[linear-gradient(135deg,#B8956A_0%,#D4AF37_50%,#B8956A_100%)] text-parchment-white font-semibold shadow-level-1 hover:shadow-level-2 hover:-translate-y-0.5 hover:opacity-90 active:translate-y-0",
+        brassGradient: "bg-brand-brass text-brand-parchment font-semibold shadow-level-1 hover:bg-brand-brass/90 hover:shadow-level-2 hover:-translate-y-0.5 active:translate-y-0",
       },
       size: {
         default: "h-10 px-4 py-2",

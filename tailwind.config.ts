@@ -60,35 +60,44 @@ export default {
         },
 
         // ───────────────────────────────────────────────────────────────
-        // CORE NEUTRALS (4 colors)
+        // BRAND PALETTE (Semantic Aliases)
         // ───────────────────────────────────────────────────────────────
-        'ink-black': {
-          DEFAULT: '#1A1816',           // Primary text, headers, high contrast
-          hsl: '30 3% 10%',
-        },
-        'charcoal': {
-          DEFAULT: '#2F2A26',           // Secondary text, supporting elements
-          hsl: '20 8% 17%',
-        },
-        'vellum-cream': {
-          DEFAULT: '#F5F1E8',           // Primary background (the "paper")
-          hsl: '42 38% 93%',
-        },
-        'parchment-white': {
-          DEFAULT: '#FFFCF5',           // Cards, elevated surfaces
-          hsl: '48 100% 98%',
+        brand: {
+          ink: '#1A1816',           // Primary text, headers, high contrast
+          charcoal: '#2F2A26',      // Secondary text, supporting elements
+          vellum: '#F5F1E8',        // Primary background (the "paper")
+          parchment: '#FFFCF5',     // Cards, elevated surfaces
+          brass: '#B8956A',         // Primary interactive elements, borders on hover
+          stone: '#C4B5A0',         // Tertiary elements, borders, dividers
         },
 
         // ───────────────────────────────────────────────────────────────
-        // ACCENT COLORS (2 colors)
+        // LEGACY / COMPATIBILITY ALIASES (To be deprecated eventually)
         // ───────────────────────────────────────────────────────────────
+        'ink-black': {
+          DEFAULT: '#1A1816',
+          hsl: '30 3% 10%',
+        },
+        'charcoal': {
+          DEFAULT: '#2F2A26',
+          hsl: '20 8% 17%',
+        },
+        'vellum-cream': {
+          DEFAULT: '#F5F1E8',
+          hsl: '42 38% 93%',
+        },
+        'parchment-white': {
+          DEFAULT: '#FFFCF5',
+          hsl: '48 100% 98%',
+        },
         'aged-brass': {
-          DEFAULT: '#B8956A',           // Primary interactive elements, borders on hover
+          DEFAULT: '#B8956A',
           hsl: '38 33% 56%',
         },
+        // DEPRECATED: Mapped to aged-brass for safety during migration
         'brass-glow': {
-          DEFAULT: '#D4AF37',           // CTAs, active states, highlights
-          hsl: '43 65% 52%',
+          DEFAULT: '#B8956A', 
+          hsl: '38 33% 56%',
         },
 
         // ───────────────────────────────────────────────────────────────

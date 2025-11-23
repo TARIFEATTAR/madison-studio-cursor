@@ -1,4 +1,4 @@
-# Scriptora - Product Requirements Document (PRD)
+# Madison Studio - Product Requirements Document (PRD)
 
 **Version**: 1.0  
 **Last Updated**: October 9, 2025  
@@ -26,11 +26,11 @@
 
 ### 1.1 Product Overview
 
-**Product Name**: Scriptora  
+**Product Name**: Madison Studio  
 **Tagline**: Brand Intelligence Platform  
 **Category**: SaaS, Content Marketing, AI-Powered Creative Tools
 
-Scriptora is an AI-powered brand intelligence platform that enables businesses to create consistent, on-brand content at scale. By uploading brand guidelines once, users can generate master content pieces and automatically repurpose them into multiple derivative formats optimized for different channels (email, social media, SMS, etc.).
+Madison Studio is an AI-powered brand intelligence platform that enables businesses to create consistent, on-brand content at scale. By uploading brand guidelines once, users can generate master content pieces and automatically repurpose them into multiple derivative formats optimized for different channels (email, social media, SMS, etc.).
 
 ### 1.2 Core Value Propositions
 
@@ -71,7 +71,7 @@ To become the definitive brand intelligence platform that empowers businesses to
 
 ### 2.2 Design Philosophy: "The Codex"
 
-Scriptora's design philosophy draws inspiration from traditional luxury publishing houses and David Ogilvy's editorial approach. The aesthetic evokes:
+Madison Studio's design philosophy draws inspiration from traditional luxury publishing houses and David Ogilvy's editorial approach. The aesthetic evokes:
 
 - **Leather-bound journals** - Timeless, premium quality
 - **Brass accents** - Craftsmanship and attention to detail
@@ -89,7 +89,7 @@ This creates a sophisticated yet approachable experience that positions content 
 | ChatGPT | General AI power | Industry-specific templates, editorial quality control |
 | Later/Buffer | Social scheduling | Integrated content creation + scheduling in one platform |
 
-**Unique Differentiation**: Scriptora is the only platform that combines brand guideline ingestion, master content creation, intelligent multi-channel repurposing, and calendar scheduling in a single unified workflow.
+**Unique Differentiation**: Madison Studio is the only platform that combines brand guideline ingestion, master content creation, intelligent multi-channel repurposing, and calendar scheduling in a single unified workflow.
 
 ---
 
@@ -243,7 +243,7 @@ Brass Glow (Focus)         0 0 0 3px rgba(212, 175, 55, 0.3)
 
 The interface uses publishing-inspired terminology to elevate the experience:
 
-| Standard Term | Scriptora Term |
+| Standard Term | Madison Studio Term |
 |---------------|----------------|
 | Library | The Archives |
 | Composer | The Editorial Desk |
@@ -259,7 +259,7 @@ The interface uses publishing-inspired terminology to elevate the experience:
 
 ### 4.1 Feature Overview
 
-Scriptora consists of 6 core feature areas:
+Madison Studio consists of 6 core feature areas:
 
 1. **Library (The Archives)** - Content repository and management
 2. **Composer (The Editorial Desk)** - AI-powered content creation

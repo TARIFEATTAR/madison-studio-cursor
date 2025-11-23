@@ -220,7 +220,7 @@ The Content Creation Flow (internally called "The Forge") is where users generat
 - **Product Selector**: Custom multi-select with product images
 
 ### Loading Animation
-- **Component**: `ScriptoraLoadingAnimation` or `GeneratingLoader`
+- **Component**: `MadisonStudioLoadingAnimation` or `GeneratingLoader`
 - **Features**:
   - CSS/Framer Motion animation
   - Rotating pen nib icon
@@ -441,7 +441,7 @@ sequenceDiagram
 2. `ProductSelector` - Searchable product multi-select
 3. `ContentOutput` - Preview pane with editing
 4. `GeneratingLoader` - Loading animation
-5. `ScriptoraLoadingAnimation` - Alternative loader
+5. `MadisonStudioLoadingAnimation` - Alternative loader
 6. `NameContentDialog` - Save modal
 7. `MasterContentForm` - Wrapper for all content forms
 8. `VisualAssetForm` - Image generation form

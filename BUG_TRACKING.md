@@ -1,7 +1,7 @@
 # Bug Tracking & Fix Roadmap
 
 ## Overview
-This document tracks all identified bugs and their resolution status across the Scriptora application. Bugs are categorized by severity and grouped into implementation phases.
+This document tracks all identified bugs and their resolution status across the Madison Studio application. Bugs are categorized by severity and grouped into implementation phases.
 
 ---
 

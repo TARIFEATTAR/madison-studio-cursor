@@ -1,4 +1,4 @@
-# Scriptora - Project Reference Documentation
+# Madison Studio - Project Reference Documentation
 
 ## Table of Contents
 1. [Project Overview](#project-overview)
@@ -17,7 +17,7 @@
 ## Project Overview
 
 ### Project Identity
-- **Name**: Scriptora
+- **Name**: Madison Studio
 - **Tagline**: Brand Intelligence Platform
 - **Core Purpose**: AI-powered content creation system that enforces brand voice through uploaded brand guidelines
 
@@ -1533,4 +1533,4 @@ For questions, feature requests, or bug reports:
 
 **Last Updated**: 2025-10-08  
 **Version**: 1.0  
-**Maintained by**: Scriptora Development Team
+**Maintained by**: Madison Studio Development Team

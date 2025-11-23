@@ -61,14 +61,14 @@ export const ProductImageUpload = ({
   // When image is uploaded - compact chip inside drop zone
   if (productImage) {
     return (
-      <div className="flex flex-col items-center justify-center h-12 px-3 py-2 bg-[#1A1A1A] border border-[#B8956A] rounded-md transition-all duration-200">
+      <div className="flex flex-col items-center justify-center h-12 px-3 py-2 bg-[#1A1A1A] border border-brand-brass rounded-md transition-all duration-200">
         <div className="flex items-center gap-2 w-full">
-          <Upload className="w-4 h-4 text-[#B8956A] flex-shrink-0" />
+          <Upload className="w-4 h-4 text-brand-brass flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium text-[#E0E0E0] truncate">
               {productImage.file.name}
             </p>
-            <p className="text-[10px] text-[#B8956A]">Enhancement Mode Active</p>
+            <p className="text-[10px] text-brand-brass">Enhancement Mode Active</p>
           </div>
           <Button
             type="button"
@@ -100,14 +100,14 @@ export const ProductImageUpload = ({
         }}
         className={`flex flex-col items-center justify-center h-full px-3 py-2 border border-dashed rounded-md cursor-pointer transition-all duration-200 ${
           isDragging 
-            ? 'border-[#B8956A] bg-[#B8956A]/10 shadow-[0_0_8px_rgba(184,149,106,0.5)]' 
+            ? 'border-brand-brass bg-brand-brass/10 shadow-[0_0_8px_rgba(184,149,106,0.5)]' 
             : 'border-white/8 bg-[#111111] hover:border-white/12 hover:bg-[#1A1A1A]'
         } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         title="Upload your product image for Madison to use directly in the scene."
       >
         <div className="flex items-center gap-2">
           <Upload className={`w-4 h-4 transition-all ${
-            isDragging ? 'text-[#B8956A]' : 'text-[#E0E0E0]'
+            isDragging ? 'text-brand-brass' : 'text-[#E0E0E0]'
           }`} />
           <span className="text-xs font-medium text-[#E0E0E0]">
             {isDragging ? 'Drop Image Here' : 'Upload or Drop Image'}

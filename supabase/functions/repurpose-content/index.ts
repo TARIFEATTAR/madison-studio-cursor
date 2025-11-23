@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { generateGeminiContent, extractTextFromGeminiResponse } from "../_shared/geminiClient.ts";
+import { buildAuthorProfilesSection } from "../_shared/authorProfiles.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -42,6 +43,15 @@ async function getMadisonSystemConfig(supabaseClient: any) {
     if (data.quality_standards) {
       configParts.push('\n━━━ QUALITY STANDARDS ━━━');
       configParts.push(data.quality_standards);
+    }
+    
+    // ✨ Add author profiles directly from codebase
+    try {
+      const authorProfilesSection = buildAuthorProfilesSection();
+      configParts.push(authorProfilesSection);
+    } catch (error) {
+      console.error('Error loading author profiles:', error);
+      // Continue without author profiles if there's an error
     }
     
     console.log('[BRAND CONTEXT] Madison system config loaded');

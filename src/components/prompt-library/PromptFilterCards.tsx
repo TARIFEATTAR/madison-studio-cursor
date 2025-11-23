@@ -53,13 +53,13 @@ export default function PromptFilterCards({
     <div className="grid grid-cols-3 gap-4">
       {/* Quick Access Card */}
       <Collapsible defaultOpen={true}>
-        <div className="bg-[#FFFCF5] border border-[#D4CFC8] rounded-xl p-6">
+        <div className="bg-brand-parchment border border-brand-stone rounded-xl p-6">
           <CollapsibleTrigger className="w-full flex items-center justify-between mb-4 hover:opacity-80 transition-opacity">
             <div className="flex items-center gap-2">
-              <Star className="w-5 h-5 text-[#6B6560]" />
-              <h3 className="font-semibold text-base text-[#1A1816]">Quick Access</h3>
+              <Star className="w-5 h-5 text-brand-charcoal" />
+              <h3 className="font-semibold text-base text-brand-ink">Quick Access</h3>
             </div>
-            <ChevronDown className="w-4 h-4 text-[#6B6560]" />
+            <ChevronDown className="w-4 h-4 text-brand-charcoal" />
           </CollapsibleTrigger>
 
           <CollapsibleContent>
@@ -68,8 +68,8 @@ export default function PromptFilterCards({
                 onClick={() => onQuickAccessSelect(selectedQuickAccess === "favorites" ? null : "favorites")}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all ${
                   selectedQuickAccess === "favorites"
-                    ? "bg-gradient-to-r from-[#B8956A] to-[#D4AF37] text-white"
-                    : "hover:bg-[#F5F1E8] text-[#6B6560]"
+                    ? "bg-brand-brass text-white"
+                    : "hover:bg-brand-vellum text-brand-charcoal"
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -80,7 +80,7 @@ export default function PromptFilterCards({
                   className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                     selectedQuickAccess === "favorites"
                       ? "bg-white/20 text-white"
-                      : "bg-[#D4CFC8] text-[#1A1816]"
+                      : "bg-brand-stone text-brand-ink"
                   }`}
                 >
                   {counts.favorites}
@@ -91,8 +91,8 @@ export default function PromptFilterCards({
                 onClick={() => onQuickAccessSelect(selectedQuickAccess === "recently_used" ? null : "recently_used")}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all ${
                   selectedQuickAccess === "recently_used"
-                    ? "bg-gradient-to-r from-[#B8956A] to-[#D4AF37] text-white"
-                    : "hover:bg-[#F5F1E8] text-[#6B6560]"
+                    ? "bg-brand-brass text-white"
+                    : "hover:bg-brand-vellum text-brand-charcoal"
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -103,7 +103,7 @@ export default function PromptFilterCards({
                   className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                     selectedQuickAccess === "recently_used"
                       ? "bg-white/20 text-white"
-                      : "bg-[#D4CFC8] text-[#1A1816]"
+                      : "bg-brand-stone text-brand-ink"
                   }`}
                 >
                   {counts.recentlyUsed}
@@ -114,8 +114,8 @@ export default function PromptFilterCards({
                 onClick={() => onQuickAccessSelect(selectedQuickAccess === "most_used" ? null : "most_used")}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all ${
                   selectedQuickAccess === "most_used"
-                    ? "bg-gradient-to-r from-[#B8956A] to-[#D4AF37] text-white"
-                    : "hover:bg-[#F5F1E8] text-[#6B6560]"
+                    ? "bg-brand-brass text-white"
+                    : "hover:bg-brand-vellum text-brand-charcoal"
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -126,7 +126,7 @@ export default function PromptFilterCards({
                   className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                     selectedQuickAccess === "most_used"
                       ? "bg-white/20 text-white"
-                      : "bg-[#D4CFC8] text-[#1A1816]"
+                      : "bg-brand-stone text-brand-ink"
                   }`}
                 >
                   {counts.mostUsed}
@@ -139,13 +139,13 @@ export default function PromptFilterCards({
 
       {/* Collections Card */}
       <Collapsible defaultOpen={true}>
-        <div className="bg-[#FFFCF5] border border-[#D4CFC8] rounded-xl p-6">
+        <div className="bg-brand-parchment border border-brand-stone rounded-xl p-6">
           <CollapsibleTrigger className="w-full flex items-center justify-between mb-4 hover:opacity-80 transition-opacity">
             <div className="flex items-center gap-2">
-              <Folder className="w-5 h-5 text-[#6B6560]" />
-              <h3 className="font-semibold text-base text-[#1A1816]">Collections</h3>
+              <Folder className="w-5 h-5 text-brand-charcoal" />
+              <h3 className="font-semibold text-base text-brand-ink">Collections</h3>
             </div>
-            <ChevronDown className="w-4 h-4 text-[#6B6560]" />
+            <ChevronDown className="w-4 h-4 text-brand-charcoal" />
           </CollapsibleTrigger>
 
           <CollapsibleContent>
@@ -156,8 +156,8 @@ export default function PromptFilterCards({
                   onClick={() => onCollectionSelect(selectedCollection === key ? null : key)}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all ${
                     selectedCollection === key
-                      ? "bg-gradient-to-r from-[#B8956A] to-[#D4AF37] text-white"
-                      : "hover:bg-[#F5F1E8] text-[#6B6560]"
+                      ? "bg-brand-brass text-white"
+                      : "hover:bg-brand-vellum text-brand-charcoal"
                   }`}
                 >
                   <span className="flex items-center gap-2">
@@ -168,7 +168,7 @@ export default function PromptFilterCards({
                     className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                       selectedCollection === key
                         ? "bg-white/20 text-white"
-                        : "bg-[#D4CFC8] text-[#1A1816]"
+                        : "bg-brand-stone text-brand-ink"
                     }`}
                   >
                     {counts.collections[key] || 0}
@@ -178,7 +178,7 @@ export default function PromptFilterCards({
 
               <Button
                 variant="ghost"
-                className="w-full justify-start text-[#B8956A] hover:text-[#D4AF37] hover:bg-[#F5F1E8]/50 mt-2"
+                className="w-full justify-start text-brand-brass hover:text-brand-brass hover:bg-brand-vellum/50 mt-2"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 New Collection
@@ -190,13 +190,13 @@ export default function PromptFilterCards({
 
       {/* Categories Card */}
       <Collapsible defaultOpen={true}>
-        <div className="bg-[#FFFCF5] border border-[#D4CFC8] rounded-xl p-6">
+        <div className="bg-brand-parchment border border-brand-stone rounded-xl p-6">
           <CollapsibleTrigger className="w-full flex items-center justify-between mb-4 hover:opacity-80 transition-opacity">
             <div className="flex items-center gap-2">
-              <Hash className="w-5 h-5 text-[#6B6560]" />
-              <h3 className="font-semibold text-base text-[#1A1816]">Categories</h3>
+              <Hash className="w-5 h-5 text-brand-charcoal" />
+              <h3 className="font-semibold text-base text-brand-ink">Categories</h3>
             </div>
-            <ChevronDown className="w-4 h-4 text-[#6B6560]" />
+            <ChevronDown className="w-4 h-4 text-brand-charcoal" />
           </CollapsibleTrigger>
 
           <CollapsibleContent>
@@ -207,8 +207,8 @@ export default function PromptFilterCards({
                   onClick={() => onCategorySelect(selectedCategory === key ? null : key)}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all ${
                     selectedCategory === key
-                      ? "bg-gradient-to-r from-[#B8956A] to-[#D4AF37] text-white"
-                      : "hover:bg-[#F5F1E8] text-[#6B6560]"
+                      ? "bg-brand-brass text-white"
+                      : "hover:bg-brand-vellum text-brand-charcoal"
                   }`}
                 >
                   <span className="font-medium text-sm">{label}</span>
@@ -216,7 +216,7 @@ export default function PromptFilterCards({
                     className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                       selectedCategory === key
                         ? "bg-white/20 text-white"
-                        : "bg-[#D4CFC8] text-[#1A1816]"
+                        : "bg-brand-stone text-brand-ink"
                     }`}
                   >
                     {counts.categories[key] || 0}

@@ -427,7 +427,7 @@ Be conversational, encouraging, and editorial in your tone.
   return (
     <div 
       className="h-full flex flex-col max-w-full" 
-      style={{ backgroundColor: darkMode ? "#18181B" : "#FFFCF5" }}
+      style={{ backgroundColor: darkMode ? "#18181B" : "#FFFCF5" }} // Keep hex for inline style or use class? Using hex for style prop compatibility with dark mode logic
     >
       {/* Header */}
       <div 
@@ -436,19 +436,15 @@ Be conversational, encouraging, and editorial in your tone.
       >
         <div className="flex items-center gap-3">
           <div 
-            className="w-10 h-10 rounded-full flex items-center justify-center font-serif text-2xl font-bold"
-            style={{ 
-              backgroundColor: "#B8956A",
-              color: "#FFFCF5"
-            }}
+            className="w-10 h-10 rounded-full flex items-center justify-center font-serif text-2xl font-bold bg-brand-brass text-brand-parchment"
           >
             M
           </div>
           <div>
-            <h3 className="font-serif text-lg font-semibold" style={{ color: darkMode ? "#FAFAFA" : "#1A1816" }}>
+            <h3 className="font-serif text-lg font-semibold" style={{ color: darkMode ? "#FAFAFA" : "var(--ink-black-hex)" }}>
               Madison
             </h3>
-            <p className="text-xs" style={{ color: darkMode ? "#A1A1AA" : "#6B6560" }}>Editorial Director</p>
+            <p className="text-xs" style={{ color: darkMode ? "#A1A1AA" : "#2F2A26" }}>Editorial Director</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -492,8 +488,8 @@ Be conversational, encouraging, and editorial in your tone.
                 <div 
                   className="w-6 h-6 rounded-full flex items-center justify-center font-serif text-sm font-bold"
                   style={{ 
-                    backgroundColor: message.role === "assistant" ? "#B8956A" : "#D4CFC8",
-                    color: message.role === "assistant" ? "#FFFCF5" : "#1A1816"
+                    backgroundColor: message.role === "assistant" ? "var(--aged-brass-hex)" : "#D4CFC8",
+                    color: message.role === "assistant" ? "var(--parchment-hex)" : "var(--ink-black-hex)"
                   }}
                 >
                   {message.role === "assistant" ? "M" : "U"}
@@ -514,7 +510,7 @@ Be conversational, encouraging, and editorial in your tone.
                   backgroundColor: message.role === "user" 
                     ? (darkMode ? "#27272A" : "#E8DCC8")
                     : (darkMode ? "#18181B" : "#F5EFE3"),
-                  color: darkMode ? "#FAFAFA" : "#1A1816",
+                  color: darkMode ? "#FAFAFA" : "var(--ink-black-hex)",
                   border: darkMode ? "1px solid #3F3F46" : "none"
                 }}
               >
@@ -522,7 +518,7 @@ Be conversational, encouraging, and editorial in your tone.
                   <ReactMarkdown
                     components={{
                       p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
-                      strong: ({ children }) => <strong className="font-semibold" style={{ color: "#1A1816" }}>{children}</strong>,
+                      strong: ({ children }) => <strong className="font-semibold" style={{ color: "var(--ink-black-hex)" }}>{children}</strong>,
                       em: ({ children }) => <em className="italic">{children}</em>,
                       ul: ({ children }) => <ul className="list-disc pl-4 mb-3 space-y-1">{children}</ul>,
                       ol: ({ children }) => <ol className="list-decimal pl-4 mb-3 space-y-1">{children}</ol>,
@@ -567,10 +563,9 @@ Be conversational, encouraging, and editorial in your tone.
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <div 
-                  className="w-6 h-6 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: "#B8956A" }}
+                  className="w-6 h-6 rounded-full flex items-center justify-center bg-brand-brass"
                 >
-                  <Loader2 className="w-3 h-3 animate-spin" style={{ color: "#FFFCF5" }} />
+                  <Loader2 className="w-3 h-3 animate-spin text-brand-parchment" />
                 </div>
                 <span className="text-xs" style={{ color: darkMode ? "#A1A1AA" : "#6B6560" }}>Madison is thinking...</span>
               </div>
@@ -636,7 +631,7 @@ Be conversational, encouraging, and editorial in your tone.
             style={{
               backgroundColor: darkMode ? "#18181B" : "#FFFFFF",
               borderColor: darkMode ? "#3F3F46" : "#D4CFC8",
-              color: darkMode ? "#FAFAFA" : "#1A1816"
+              color: darkMode ? "#FAFAFA" : "var(--ink-black-hex)"
             }}
             disabled={isGenerating}
           />

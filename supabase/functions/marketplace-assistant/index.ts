@@ -6,6 +6,7 @@ import {
   createOpenAISSEStream,
   OpenAIMessage,
 } from "../_shared/geminiClient.ts";
+import { buildAuthorProfilesSection } from "../_shared/authorProfiles.ts";
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -36,6 +37,15 @@ async function getMadisonSystemConfig() {
     if (data.voice_spectrum) configParts.push(`\nVOICE SPECTRUM: ${data.voice_spectrum}`);
     if (data.forbidden_phrases) configParts.push(`\nFORBIDDEN PHRASES: ${data.forbidden_phrases}`);
     if (data.quality_standards) configParts.push(`\nQUALITY STANDARDS: ${data.quality_standards}`);
+    
+    // ✨ Add author profiles directly from codebase
+    try {
+      const authorProfilesSection = buildAuthorProfilesSection();
+      configParts.push(authorProfilesSection);
+    } catch (error) {
+      console.error('Error loading author profiles:', error);
+      // Continue without author profiles if there's an error
+    }
     
     return configParts.join('\n');
   } catch (error) {

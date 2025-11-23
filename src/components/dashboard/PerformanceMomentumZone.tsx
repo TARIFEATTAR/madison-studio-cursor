@@ -126,8 +126,8 @@ export function PerformanceMomentumZone() {
             <Progress value={(1240 / 1500) * 100} className="h-2" />
           </div>
           <div className="flex gap-3 mt-4">
-            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-[#B8956A]/10 flex items-center justify-center">
-              <Zap className="w-5 h-5 md:w-6 md:h-6 text-[#B8956A]" />
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-brand-brass/10 flex items-center justify-center">
+              <Zap className="w-5 h-5 md:w-6 md:h-6 text-brand-brass" />
             </div>
             <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-[#A3C98D]/10 flex items-center justify-center">
               <Award className="w-5 h-5 md:w-6 md:h-6 text-[#A3C98D]" />

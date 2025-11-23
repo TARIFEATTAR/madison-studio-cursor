@@ -75,7 +75,7 @@ export function BrandPulseBar() {
                   cx="50%"
                   cy="50%"
                   r="45%"
-                  stroke="#B8956A"
+                  stroke="var(--aged-brass-hex)"
                   strokeWidth="6"
                   fill="none"
                   strokeDasharray={`${(brandScore / 100) * 226.2} 226.2`}
@@ -111,7 +111,7 @@ export function BrandPulseBar() {
           </div>
           <Button
             size="default"
-            className="bg-[#B8956A] hover:bg-[#A3865A] text-white mt-4 w-full md:w-fit min-h-[44px] touch-manipulation"
+            className="bg-brand-brass hover:bg-[#A3865A] text-white mt-4 w-full md:w-fit min-h-[44px] touch-manipulation"
             onClick={() => navigate("/create")}
           >
             Take Action
@@ -154,7 +154,7 @@ export function BrandPulseBar() {
                 <div
                   key={day}
                   className={`flex-1 h-2 rounded-full transition-all duration-300 ${
-                    day < currentStreak ? "bg-[#B8956A]" : "bg-[#E0E0E0]"
+                    day < currentStreak ? "bg-brand-brass" : "bg-[#E0E0E0]"
                   }`}
                 />
               ))}

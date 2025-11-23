@@ -1,7 +1,7 @@
 # PolyMet Export - Phase 2: Navigation Items & States
 
 ## Overview
-This document exports the Scriptora navigation items with their interaction states, icons, and behavior patterns. It builds upon Phase 1's layout structure.
+This document exports the Madison Studio navigation items with their interaction states, icons, and behavior patterns. It builds upon Phase 1's layout structure.
 
 ---
 

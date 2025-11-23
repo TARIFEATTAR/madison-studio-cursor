@@ -64,63 +64,63 @@ export default function Settings() {
               <TabsList className="bg-white border border-[#E0E0E0] p-1 flex md:flex-wrap gap-1 min-w-max md:w-full rounded-lg">
                 <TabsTrigger 
                   value="brand" 
-                  className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
+                  className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
                 >
                   <Building2 className="w-4 h-4" />
                   <span className="hidden sm:inline">Brand</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="madison"
-                  className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
+                  className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span className="hidden sm:inline">Madison</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="goals"
-                  className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
+                  className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
                 >
                   <Target className="w-4 h-4" />
                   <span className="hidden sm:inline">Goals</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="collections"
-                  className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
+                  className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
                 >
                   <FolderKanban className="w-4 h-4" />
                   <span className="hidden sm:inline">Collections</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="products"
-                  className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
+                  className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
                 >
                   <Package className="w-4 h-4" />
                   <span className="hidden sm:inline">Products</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="team"
-                  className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
+                  className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
                 >
                   <Users className="w-4 h-4" />
                   <span className="hidden sm:inline">Team</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="notifications"
-                  className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
+                  className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
                 >
                   <Bell className="w-4 h-4" />
                   <span className="hidden sm:inline">Alerts</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="billing"
-                  className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
+                  className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
                 >
                   <CreditCard className="w-4 h-4" />
                   <span className="hidden sm:inline">Billing</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="integrations"
-                  className="data-[state=active]:bg-[#B8956A] data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
+                  className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
                 >
                   <Plug className="w-4 h-4" />
                   <span className="hidden sm:inline">Apps</span>

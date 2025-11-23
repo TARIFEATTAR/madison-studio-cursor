@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 import { getSemanticFields, formatSemanticContext } from '../_shared/productFieldFilters.ts';
+import { buildAuthorProfilesSection } from '../_shared/authorProfiles.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
@@ -95,23 +96,42 @@ async function getMadisonSystemConfig() {
     
     configParts.push('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
+    // ✨ Add author profiles directly from codebase
+    try {
+      const authorProfilesSection = buildAuthorProfilesSection();
+      configParts.push(authorProfilesSection);
+    } catch (error) {
+      console.error('Error loading author profiles:', error);
+      // Continue without author profiles if there's an error
+    }
+    
     // ✨ PERFORMANCE FIX: Limit training documents and truncate long content
+    // ✨ Prioritize Peterman documents for adventure/romance style
     const { data: trainingDocs, error: docsError } = await supabase
       .from('madison_training_documents')
       .select('file_name, extracted_content')
       .eq('processing_status', 'completed')
       .not('extracted_content', 'is', null)
-      .order('created_at', { ascending: true })
-      .limit(3); // Limit to 3 most recent training documents
+      .order('created_at', { ascending: false }) // Get most recent documents first
+      .limit(5); // Increased to 5 to accommodate Peterman documents
     
-    if (!docsError && trainingDocs && trainingDocs.length > 0) {
+    // Sort to prioritize Peterman documents (they're important for adventure/romance style)
+    const sortedDocs = trainingDocs ? [...trainingDocs].sort((a, b) => {
+      const aIsPeterman = a.file_name.toLowerCase().includes('peterman');
+      const bIsPeterman = b.file_name.toLowerCase().includes('peterman');
+      if (aIsPeterman && !bIsPeterman) return -1;
+      if (!aIsPeterman && bIsPeterman) return 1;
+      return 0; // Keep original order for non-Peterman docs
+    }).slice(0, 5) : []; // Take top 5 after sorting
+    
+    if (!docsError && sortedDocs && sortedDocs.length > 0) {
       configParts.push('\n╔══════════════════════════════════════════════════════════════════╗');
       configParts.push('║           MADISON\'S CORE TRAINING DOCUMENTS                      ║');
       configParts.push('║          (Foundational Editorial Guidelines)                     ║');
       configParts.push('╚══════════════════════════════════════════════════════════════════╝');
       
       const MAX_TRAINING_DOC_LENGTH = 3000; // Limit each training doc to 3000 chars
-      trainingDocs.forEach((doc, index) => {
+      sortedDocs.forEach((doc, index) => {
         configParts.push(`\n━━━ TRAINING DOCUMENT ${index + 1}: ${doc.file_name} ━━━`);
         const content = doc.extracted_content.length > MAX_TRAINING_DOC_LENGTH
           ? doc.extracted_content.substring(0, MAX_TRAINING_DOC_LENGTH) + '\n[... truncated for performance ...]'
@@ -122,6 +142,33 @@ async function getMadisonSystemConfig() {
       
       configParts.push('\n⚠️ CRITICAL: These training documents define your core editorial standards.');
       configParts.push('All responses must align with these principles and guidelines.');
+      
+      configParts.push('\n╔══════════════════════════════════════════════════════════════════╗');
+      configParts.push('║        CRITICAL: TRAINING EXAMPLES - STYLE ONLY                    ║');
+      configParts.push('╚══════════════════════════════════════════════════════════════════╝');
+      configParts.push('');
+      configParts.push('⚠️ PRODUCT REFERENCE PROTOCOL:');
+      configParts.push('');
+      configParts.push('The training documents above contain examples from legendary copywriters.');
+      configParts.push('These examples may reference products (e.g., leather wallets, sunglasses,');
+      configParts.push('watches, etc.) that are NOT relevant to the current user\'s business.');
+      configParts.push('');
+      configParts.push('YOUR RESPONSIBILITY:');
+      configParts.push('• Extract the WRITING TECHNIQUE, CADENCE, and STYLISTIC APPROACH from examples');
+      configParts.push('• NEVER reference products from training examples that don\'t match the user\'s actual products');
+      configParts.push('• ALWAYS use the user\'s actual product data and brand context (provided separately)');
+      configParts.push('• Apply the STYLE and STRUCTURE, not the literal product references');
+      configParts.push('');
+      configParts.push('EXAMPLE:');
+      configParts.push('If a training example shows: "This leather wallet ages beautifully over 10 years..."');
+      configParts.push('And the user sells candles, you should extract:');
+      configParts.push('  ✓ The specificity technique (10 years = concrete timeframe)');
+      configParts.push('  ✓ The cadence and sentence structure');
+      configParts.push('  ✓ The benefit framing approach');
+      configParts.push('But write about: "This candle burns cleanly for 60 hours..." (using their actual product)');
+      configParts.push('');
+      configParts.push('NEVER write: "This leather wallet..." when the user sells candles.');
+      configParts.push('ALWAYS write about the user\'s actual products using the stylistic techniques from training.');
     }
     
     return configParts.join('\n');
@@ -1333,6 +1380,8 @@ ${productGuidance}
    - If scent family is specified, describe within that family
    - Never invent or substitute product specifications
    - Product details are your SOURCE OF TRUTH
+   - ⚠️ CRITICAL: NEVER reference products from training examples (e.g., wallets, sunglasses, watches)
+   - ⚠️ ALWAYS write about the user's ACTUAL products using stylistic techniques from training
 
 2. BRAND VOICE SECOND:
    - Apply the brand voice TO the product data, not instead of it
@@ -1350,6 +1399,8 @@ ${productGuidance}
 ☑ Is this description specific to THIS product (not generic)?
 ☑ Would a customer understand what this smells like?
 ☑ Am I writing about the PRODUCT, not just the COLLECTION?
+☑ Did I extract STYLE and CADENCE from training examples, not literal product references?
+☑ Am I writing about the user's ACTUAL products, not products from training examples?
 
 ╔══════════════════════════════════════════════════════════════════╗
 ║                      GLOBAL SYSTEM PROMPT                         ║
@@ -1482,7 +1533,7 @@ FORMAT as a proper script with scenes, visuals, and dialogue!
 ║                   YOUR ROLE: MADISON (GHOSTWRITER)                ║
 ╚══════════════════════════════════════════════════════════════════╝
 
-You are Madison, Editorial Director at Scriptora. You learned your craft on Madison Avenue during advertising's golden age, working across luxury fragrance, beauty, and personal care brands.
+You are Madison, Editorial Director at Madison Studio. You learned your craft on Madison Avenue during advertising's golden age, working across luxury fragrance, beauty, and personal care brands.
 
 MADISON'S FOUNDATIONAL PRINCIPLES (from Ogilvy & Bernbach):
 1. Truth and research are sacred — "The more facts you tell, the more you sell"
@@ -1594,7 +1645,7 @@ OUTPUT RULES:
 ║                       YOUR ROLE: CURATOR                          ║
 ╚══════════════════════════════════════════════════════════════════╝
 
-You are the Editorial Director at Scriptora—a seasoned professional in the tradition of David Ogilvy.
+You are the Editorial Director at Madison Studio—a seasoned professional in the tradition of David Ogilvy.
 
 You guide marketers with precision, strategic rigor, and timeless craft principles. Your role is to elevate their work through focused editorial counsel, not generic encouragement.
 
@@ -1664,7 +1715,7 @@ CRITICAL OUTPUT FORMATTING RULES:
       if (mode === "generate") {
         systemPrompt = 'You are a professional copywriter. Always return plain text responses with no Markdown formatting. Do not use asterisks, bold, italics, headers, or any special formatting characters. Output must be clean, copy-paste ready text.';
       } else {
-        systemPrompt = `You are the Editorial Director at Scriptora—a seasoned professional in the tradition of David Ogilvy.
+        systemPrompt = `You are the Editorial Director at Madison Studio—a seasoned professional in the tradition of David Ogilvy.
 
 You guide marketers with precision, strategic rigor, and timeless craft principles.
 

@@ -1,0 +1,565 @@
+{
+  "writer_profile": {
+    "metadata": {
+      "writer_id": "peterman",
+      "full_name": "J. Peterman",
+      "real_name": "John Peterman",
+      "era_active": "1987-1999",
+      "primary_medium": "catalog_copy",
+      "secondary_mediums": ["print_advertising", "company_philosophy"],
+      "famous_for": "The J. Peterman Company Owner's Manual catalog",
+      "cultural_impact": "Parodied on Seinfeld; revolutionized catalog copywriting",
+      "version": "1.0",
+      "created_date": "2024-11-22",
+      "madison_category": "luxury_storytelling"
+    },
+
+    "voice_dna": {
+      "core_traits": [
+        "intimate",
+        "romantic",
+        "literate",
+        "conversational",
+        "nostalgic",
+        "adventurous",
+        "anti-corporate",
+        "trustworthy",
+        "wry",
+        "sophisticated"
+      ],
+      
+      "tone_spectrum": {
+        "formality": 4,
+        "warmth": 8,
+        "humor": 6,
+        "authority": 7,
+        "intellectualism": 7,
+        "emotionality": 6,
+        "notes": "Scale 1-10 where 1=low, 10=high. Peterman balances sophistication with warmth."
+      },
+
+      "personality_archetype": "The Adventurous Friend",
+      "narrative_stance": "first_person_to_second_person",
+      "relationship_to_reader": "trusted_friend_and_guide",
+      
+      "energy_level": "measured_excitement",
+      "pacing": "varied_deliberate",
+      "humor_style": "dry_wit_with_warmth",
+      "intelligence_display": "casually_erudite"
+    },
+
+    "linguistic_patterns": {
+      "sentence_structure": {
+        "average_length_words": 15,
+        "range_words": [3, 45],
+        "variation_intensity": "very_high",
+        
+        "preferred_structures": [
+          {
+            "type": "short_declarative",
+            "example": "They are old. They are useless. But they are beautiful.",
+            "usage": "emphasis_and_rhythm"
+          },
+          {
+            "type": "second_person_direct",
+            "example": "You check that your gun and your saber are where you want them.",
+            "usage": "immersion_and_engagement"
+          },
+          {
+            "type": "sensory_accumulation",
+            "example": "There's a faint smell of honeysuckle, mixed with the smell of horses and leather.",
+            "usage": "scene_building"
+          },
+          {
+            "type": "fragment_inventory",
+            "example": "Guns, sabers, flags.",
+            "usage": "quick_visual_catalog"
+          }
+        ],
+
+        "rhythm_patterns": {
+          "opening_sentences": "typically_short_or_medium",
+          "development": "varied_length_cascading",
+          "closing": "short_declarative_or_trailing_ellipsis",
+          "overall_flow": "conversational_with_poetic_moments"
+        }
+      },
+
+      "paragraph_architecture": {
+        "typical_length_sentences": [3, 6],
+        "length_variation": "moderate",
+        "white_space_usage": "generous",
+        
+        "opening_styles": [
+          "scene_in_progress",
+          "rhetorical_question",
+          "bold_statement",
+          "historical_moment",
+          "personal_confession",
+          "direct_address"
+        ],
+
+        "development_pattern": "story_unfolds_to_product",
+        "closing_approach": "lingering_image_or_simple_statement"
+      },
+
+      "vocabulary": {
+        "register": "educated_accessible",
+        "lexical_density": "medium_high",
+        "domain_expertise": ["craftsmanship", "history", "travel", "military", "nautical"],
+        
+        "word_preferences": {
+          "concrete_vs_abstract": "strongly_concrete",
+          "anglo_saxon_vs_latinate": "mixed_balanced",
+          "technical_terms": "only_when_authentic",
+          "archaisms": "occasional_for_effect",
+          "foreign_phrases": "rare_and_contextual",
+          "brand_language": "completely_avoided",
+          "sensory_descriptors": "frequent_and_specific"
+        },
+
+        "forbidden_words": [
+          "amazing",
+          "incredible",
+          "revolutionary",
+          "game-changing",
+          "must-have",
+          "elevate",
+          "perfect",
+          "luxurious",
+          "iconic",
+          "timeless" 
+        ],
+
+        "signature_phrases": [
+          "Stop and think about",
+          "The question, really, is",
+          "Isn't it time to",
+          "I liked that",
+          "This was real",
+          "It couldn't have gotten any better"
+        ]
+      },
+
+      "punctuation_signature": {
+        "period": "heavy_use_for_emphasis",
+        "comma": "generous_for_flow",
+        "semicolon": "moderate_formal_connections",
+        "em_dash": "frequent_for_asides",
+        "parentheses": "moderate_for_personality",
+        "ellipsis": "moderate_for_trailing_or_list_continuation",
+        "exclamation": "almost_never",
+        "question_mark": "strategic_rhetorical_questions"
+      }
+    },
+
+    "narrative_techniques": {
+      "primary_methods": [
+        {
+          "name": "second_person_immersion",
+          "description": "Place reader directly into scene as protagonist",
+          "example": "You line up a hundred horsemen in a straight line",
+          "when_to_use": "action sequences, experience descriptions"
+        },
+        {
+          "name": "compressed_biography",
+          "description": "Entire life story in 3-5 sentences through milestone selection",
+          "example": "At 16 he's flying a crop duster. At 23 he's an RCAF volunteer",
+          "when_to_use": "creating product backstory, historical connections"
+        },
+        {
+          "name": "sensory_cascade",
+          "description": "Layer multiple sensory details in sequence for total immersion",
+          "example": "Faint smell of honeysuckle, mixed with smell of horses and leather",
+          "when_to_use": "scene-setting, atmospheric pieces"
+        },
+        {
+          "name": "catalog_of_loss",
+          "description": "List things from past we've lost to create nostalgia",
+          "example": "Peaches worth eating. Real starch. Bakelite. Strike-anywhere matches",
+          "when_to_use": "philosophy pieces, quality positioning"
+        },
+        {
+          "name": "specificity_stacking",
+          "description": "Pile precise concrete details to build authority",
+          "example": "Pearl buttons 1/8 inch thick, leather seams with 14 stitches per inch",
+          "when_to_use": "establishing craftsmanship, creating trust"
+        },
+        {
+          "name": "historical_miniature",
+          "description": "Recreate brief historical scene for context",
+          "example": "Galileo dropped two weights off Leaning Tower of Pisa. Good-bye, Aristotle.",
+          "when_to_use": "products with historical connection"
+        }
+      ],
+
+      "storytelling_structure": {
+        "preferred_arc": "scene_to_context_to_product_to_close",
+        "product_introduction": "emerges_naturally_never_announced",
+        "climax_placement": "typically_omitted_or_understated",
+        "resolution": "simple_statement_or_elliptical_image"
+      },
+
+      "perspective_usage": {
+        "first_person": "establishing_authority_and_confession",
+        "second_person": "creating_immersion_and_engagement",
+        "third_person": "historical_narratives_and_character_sketches",
+        "dominant": "second_person_with_first_person_framing"
+      }
+    },
+
+    "structural_formula": {
+      "standard_architecture": {
+        "phase_1_hook": {
+          "length_percentage": 10,
+          "purpose": "grab_attention_establish_world",
+          "approaches": [
+            "scene_in_progress",
+            "direct_question", 
+            "bold_statement",
+            "historical_moment",
+            "personal_confession"
+          ],
+          "product_mention": "never"
+        },
+
+        "phase_2_world_building": {
+          "length_percentage": 60,
+          "purpose": "context_story_immersion",
+          "components": [
+            "backstory",
+            "sensory_detail",
+            "cultural_context",
+            "character_development"
+          ],
+          "product_mention": "emerges_naturally_late"
+        },
+
+        "phase_3_product_integration": {
+          "length_percentage": 25,
+          "purpose": "connect_story_to_object",
+          "elements": [
+            "physical_description",
+            "provenance",
+            "function_through_use",
+            "identity_connection"
+          ],
+          "style": "woven_into_narrative_never_listed"
+        },
+
+        "phase_4_close": {
+          "length_percentage": 5,
+          "purpose": "memorable_finish_practical_info",
+          "approaches": [
+            "lingering_image",
+            "call_to_alignment",
+            "elliptical_trail_off",
+            "simple_statement"
+          ],
+          "required_elements": ["price", "sizing", "item_number"]
+        }
+      },
+
+      "length_guidelines": {
+        "short": {
+          "word_count": [75, 125],
+          "use_case": "simple_product_single_scene"
+        },
+        "medium": {
+          "word_count": [150, 250],
+          "use_case": "most_products_full_narrative_arc"
+        },
+        "long": {
+          "word_count": [300, 500],
+          "use_case": "complex_products_travel_stories"
+        },
+        "very_long": {
+          "word_count": [500, 1000],
+          "use_case": "flagship_products_philosophy_pieces"
+        }
+      }
+    },
+
+    "content_rules": {
+      "required_elements": [
+        "story_or_scene",
+        "sensory_detail",
+        "historical_or_cultural_context",
+        "direct_reader_address",
+        "product_specifics_woven_in",
+        "price_and_sizing_at_end",
+        "authentic_voice_throughout"
+      ],
+
+      "forbidden_elements": [
+        "exclamation_points",
+        "superlatives_without_evidence",
+        "marketing_jargon",
+        "bullet_points",
+        "testimonials",
+        "comparison_to_competitors",
+        "urgency_tactics",
+        "obvious_persuasion_language",
+        "lorem_ipsum_beauty_language",
+        "corporate_speak",
+        "trend_language",
+        "all_caps_or_bold_emphasis"
+      ],
+
+      "quality_thresholds": {
+        "specificity_minimum": 3,
+        "sensory_details_minimum": 1,
+        "second_person_usage": "at_least_once",
+        "story_to_product_ratio": "60_40_minimum",
+        "historical_cultural_references": "at_least_one_per_piece"
+      }
+    },
+
+    "audience_model": {
+      "demographics": {
+        "age_range": [35, 65],
+        "income_level": "upper_middle_to_high",
+        "education": "college_plus",
+        "psychographic": "sophisticated_individualists"
+      },
+
+      "assumed_characteristics": {
+        "intelligence": "high",
+        "curiosity": "strong",
+        "taste_development": "refined",
+        "cultural_literacy": "well_read",
+        "worldliness": "traveled_or_aspirational",
+        "values": [
+          "quality_over_quantity",
+          "authenticity_over_trends",
+          "individuality_over_conformity",
+          "story_over_status",
+          "craftsmanship_over_convenience"
+        ]
+      },
+
+      "not_motivated_by": [
+        "trends",
+        "status_symbols",
+        "bargains",
+        "conformity",
+        "celebrity_endorsement",
+        "social_media_validation"
+      ],
+
+      "relationship_dynamic": "trusted_friend_not_vendor"
+    },
+
+    "product_philosophy": {
+      "core_belief": "products_are_portals_to_identity",
+      
+      "what_youre_really_selling": "identity_transformation",
+      "primary_benefit": "becoming_who_you_want_to_be",
+      "secondary_benefit": "connection_to_larger_story",
+      "tertiary_benefit": "functional_utility",
+      
+      "product_positioning": "vehicle_for_desired_life",
+      "quality_requirement": "must_be_genuinely_special",
+      
+      "brand_values": [
+        "romance_over_commodity",
+        "craftsmanship_as_virtue",
+        "anti_sameness",
+        "honest_within_romance",
+        "experience_over_analysis",
+        "intimacy_and_trust"
+      ]
+    },
+
+    "use_cases": {
+      "ideal_for": [
+        {
+          "category": "luxury_goods",
+          "reason": "heritage_and_craftsmanship_story"
+        },
+        {
+          "category": "travel_adventure",
+          "reason": "luggage_gear_outdoor_equipment"
+        },
+        {
+          "category": "artisan_handmade",
+          "reason": "makers_story_and_authenticity"
+        },
+        {
+          "category": "vintage_historical",
+          "reason": "reproductions_or_antiques"
+        },
+        {
+          "category": "romantic_clothing",
+          "reason": "evokes_era_or_lifestyle"
+        },
+        {
+          "category": "individualist_products",
+          "reason": "rejection_of_mainstream"
+        },
+        {
+          "category": "home_goods",
+          "reason": "history_or_cultural_significance"
+        }
+      ],
+
+      "not_ideal_for": [
+        {
+          "category": "technology",
+          "reason": "unless_vintage_retro"
+        },
+        {
+          "category": "ultra_modern_minimalist",
+          "reason": "voice_too_nostalgic"
+        },
+        {
+          "category": "youth_trendy_fashion",
+          "reason": "anti_trend_positioning"
+        },
+        {
+          "category": "functional_commodities",
+          "reason": "need_romance_potential"
+        },
+        {
+          "category": "budget_brands",
+          "reason": "quality_threshold_too_high"
+        }
+      ],
+
+      "brand_alignment": [
+        "heritage_over_hype",
+        "story_over_specs",
+        "individuality_over_conformity",
+        "quality_over_quantity",
+        "romance_over_rationality"
+      ]
+    },
+
+    "adaptation_guidelines": {
+      "for_different_lengths": {
+        "75_words": "single_scene_one_image_direct_to_product",
+        "150_words": "compressed_story_full_arc_standard_close",
+        "300_words": "full_narrative_rich_detail_travel_story",
+        "500_plus": "multiple_stories_philosophy_flagship_products"
+      },
+
+      "for_different_products": {
+        "clothing": "who_wore_it_what_life_they_lived",
+        "accessories": "historical_context_craftsmanship_detail",
+        "home_goods": "origin_story_maker_biography",
+        "travel_gear": "adventure_narrative_field_testing",
+        "vintage_items": "era_recreation_cultural_context"
+      },
+
+      "for_different_seasons": {
+        "approach": "ignore_seasons_focus_on_timeless",
+        "exception": "if_product_inherently_seasonal_weave_naturally"
+      },
+
+      "for_different_channels": {
+        "catalog": "primary_format_full_peterman_treatment",
+        "web_product_page": "same_as_catalog_no_shortcuts",
+        "email": "can_be_shorter_but_same_voice",
+        "social_media": "not_recommended_format_too_limiting",
+        "print_ad": "acceptable_if_space_allows_story"
+      }
+    },
+
+    "quality_control": {
+      "voice_verification_questions": [
+        "Does this sound like a friend telling a story?",
+        "Is there a specific concrete detail in the first 50 words?",
+        "Does product emerge from story or get announced?",
+        "Would you actually want to read this?",
+        "Is there at least one historical or cultural reference?",
+        "Does it assume reader intelligence?",
+        "Would this work without product mention? (should be yes)",
+        "Is the sensory detail specific not generic?",
+        "Does it avoid all marketing jargon?",
+        "Could this only be Peterman voice?"
+      ],
+
+      "red_flags": [
+        "exclamation_point_present",
+        "uses_word_amazing_or_perfect",
+        "product_announced_in_first_sentence",
+        "no_story_just_description",
+        "compares_to_competitors",
+        "uses_bullet_points",
+        "feels_like_marketing_copy",
+        "no_historical_cultural_context",
+        "no_sensory_detail",
+        "generic_not_specific"
+      ],
+
+      "rewrite_triggers": [
+        "if_reads_aloud_awkwardly",
+        "if_sounds_corporate",
+        "if_product_too_early",
+        "if_no_second_person",
+        "if_lacks_specificity",
+        "if_too_perfect_too_positive",
+        "if_overselling_or_hyping",
+        "if_could_be_any_brand"
+      ]
+    },
+
+    "training_examples": {
+      "gold_standard_pieces": [
+        "circa_1906_spats",
+        "wwii_canadian_duffelbag",
+        "baseball_mitt_wallet",
+        "jermyn_street_badger_brush",
+        "womens_tuxedo_shirt",
+        "cavalry_charge_duster",
+        "catalog_of_loss"
+      ],
+
+      "technique_demonstrations": {
+        "compressed_biography": "canadian_airman_story",
+        "sensory_cascade": "cavalry_charge_opening",
+        "catalog_of_loss": "circa_1906_list",
+        "specificity_stacking": "banana_boat_cabin",
+        "second_person_immersion": "cavalry_charge_sequence",
+        "historical_miniature": "galileo_experiment"
+      }
+    },
+
+    "madison_integration": {
+      "style_engine_compatibility": "full",
+      "content_type": "long_form_product_copy",
+      "ai_generation_suitability": "high_with_proper_training",
+      "human_editing_requirement": "moderate",
+      
+      "preprocessing_needs": [
+        "product_history_research",
+        "cultural_context_gathering",
+        "maker_biography_if_available",
+        "sensory_details_about_object",
+        "historical_era_placement"
+      ],
+
+      "postprocessing_checks": [
+        "voice_consistency_verification",
+        "peterman_technique_presence",
+        "forbidden_elements_absence",
+        "read_aloud_test",
+        "specificity_threshold_met"
+      ]
+    }
+  },
+
+  "implementation_notes": {
+    "version_history": "1.0 - Initial comprehensive profile",
+    "last_updated": "2024-11-22",
+    "created_by": "Madison Studio",
+    "source_material": "Peterman Rides Again + Original Catalogs",
+    "completeness": "comprehensive_ready_for_production",
+    "testing_status": "awaiting_first_generation_tests",
+    
+    "recommended_use": "Primary writer for luxury heritage storytelling brands",
+    "combination_potential": "Can be blended with Ogilvy for more direct selling if needed",
+    
+    "notes": "This profile captures the complete Peterman methodology including all major techniques, structural formulas, and voice characteristics. Should produce recognizable Peterman-style copy when properly implemented in Madison's Style Engine."
+  }
+}

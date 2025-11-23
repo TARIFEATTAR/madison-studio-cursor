@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Lightbulb, FileText, PenTool, X, Send, Loader2, Upload, Search, ChevronDown, ChevronUp } from "lucide-react";
 import penNibIcon from "@/assets/pen-nib-icon-new.png";
 import { createRoot } from "react-dom/client";
-import ScriptoraLoadingAnimation from "@/components/forge/ScriptoraLoadingAnimation";
+import MadisonStudioLoadingAnimation from "@/components/forge/MadisonStudioLoadingAnimation";
 import { TransitionLoader } from "@/components/forge/TransitionLoader";
 import { BrandKnowledgeIndicator } from "@/components/forge/BrandKnowledgeIndicator";
 import { stripMarkdown } from "@/utils/forgeHelpers";
@@ -197,7 +197,7 @@ export default function Create() {
     
     // Render the loader component immediately
     const loaderRoot = createRoot(loadingDiv);
-    loaderRoot.render(<ScriptoraLoadingAnimation />);
+    loaderRoot.render(<MadisonStudioLoadingAnimation />);
 
     try {
       // Build AI prompt from brief fields
