@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Library, Upload, Star } from "lucide-react";
+import { Sparkles, Library, Upload, Star, Tag, FileText, Flame, Home, Droplets, Leaf, Mail, Instagram } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
@@ -24,7 +24,7 @@ interface TemplateData {
   keyElements: string;
   constraints: string;
   category?: string;
-  emoji: string;
+  icon: any;
   description: string;
 }
 
@@ -106,7 +106,7 @@ export function QuickStartModal({
                   <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-[hsl(var(--soft-ivory))]" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg sm:text-xl font-serif mb-1 sm:mb-2">🧙‍♀️ Guided Wizard (Recommended)</h3>
+                  <h3 className="text-lg sm:text-xl font-serif mb-1 sm:mb-2">Guided Wizard (Recommended)</h3>
                   <p className="text-xs sm:text-sm text-muted-foreground">
                     Answer 5 quick questions and Madison will build a custom prompt for you. Perfect for first-time users.
                   </p>
@@ -124,7 +124,7 @@ export function QuickStartModal({
                   <Library className="w-5 h-5 sm:w-6 sm:h-6 text-[hsl(var(--deep-charcoal))]" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg sm:text-xl font-serif mb-1 sm:mb-2">📚 Start from Template</h3>
+                  <h3 className="text-lg sm:text-xl font-serif mb-1 sm:mb-2">Start from Template</h3>
                   <p className="text-xs sm:text-sm text-muted-foreground">
                     Choose from pre-built templates and customize them to your needs.
                   </p>
@@ -142,7 +142,7 @@ export function QuickStartModal({
                   <Upload className="w-5 h-5 sm:w-6 sm:h-6 text-[hsl(var(--deep-charcoal))]" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg sm:text-xl font-serif mb-1 sm:mb-2">📊 Import from Spreadsheet</h3>
+                  <h3 className="text-lg sm:text-xl font-serif mb-1 sm:mb-2">Import from Spreadsheet</h3>
                   <p className="text-xs sm:text-sm text-muted-foreground">
                     Already have prompts in Excel or Google Sheets? Import them all at once.
                   </p>
@@ -229,7 +229,7 @@ export function QuickStartModal({
                   <div className="flex items-start gap-2 sm:gap-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xl sm:text-2xl">{template.emoji}</span>
+                        <template.icon className="w-5 h-5 text-[hsl(var(--deep-charcoal))]" />
                         {template.category && template.category !== 'universal' && (
                           <Badge variant="outline" className="text-[10px] sm:text-xs">
                             {template.category.replace('_', ' ')}
@@ -253,7 +253,7 @@ export function QuickStartModal({
 const QUICK_TEMPLATES: TemplateData[] = [
   // Personal Fragrance Templates
   {
-    emoji: "🌹",
+    icon: Tag,
     title: "Perfume Launch",
     description: "Introduce new attar with fragrance pyramid",
     category: "personal_fragrance",
@@ -264,7 +264,7 @@ const QUICK_TEMPLATES: TemplateData[] = [
     constraints: "Must reference product category: personal_fragrance. Use sensory language. Highlight the olfactory experience.",
   },
   {
-    emoji: "💌",
+    icon: FileText,
     title: "Scent Story",
     description: "Editorial piece about perfume inspiration",
     category: "personal_fragrance",
@@ -277,7 +277,7 @@ const QUICK_TEMPLATES: TemplateData[] = [
   
   // Home Fragrance Templates
   {
-    emoji: "🕯️",
+    icon: Flame,
     title: "Candle Description",
     description: "Product page for candles with burn time",
     category: "home_fragrance",
@@ -288,7 +288,7 @@ const QUICK_TEMPLATES: TemplateData[] = [
     constraints: "Must reference product category: home_fragrance. Include technical details (burn time, size). Focus on atmosphere creation.",
   },
   {
-    emoji: "🏡",
+    icon: Home,
     title: "Home Ambiance Guide",
     description: "How to use diffusers and room sprays",
     category: "home_fragrance",
@@ -301,7 +301,7 @@ const QUICK_TEMPLATES: TemplateData[] = [
   
   // Skincare Templates
   {
-    emoji: "✨",
+    icon: Droplets,
     title: "Serum Benefits",
     description: "Product page highlighting key ingredients",
     category: "skincare",
@@ -312,7 +312,7 @@ const QUICK_TEMPLATES: TemplateData[] = [
     constraints: "Must reference product category: skincare. Include ingredient transparency. Focus on efficacy and natural formulation.",
   },
   {
-    emoji: "🌿",
+    icon: Leaf,
     title: "Natural Beauty Routine",
     description: "Editorial about oil-based skincare",
     category: "skincare",
@@ -325,7 +325,7 @@ const QUICK_TEMPLATES: TemplateData[] = [
   
   // Universal Templates
   {
-    emoji: "📧",
+    icon: Mail,
     title: "Collection Newsletter",
     description: "Monthly newsletter across all categories",
     category: "universal",
@@ -336,7 +336,7 @@ const QUICK_TEMPLATES: TemplateData[] = [
     constraints: "Keep under 400 words. Include clear CTA. Balance promotional with editorial content.",
   },
   {
-    emoji: "📱",
+    icon: Instagram,
     title: "Instagram Caption",
     description: "Social media storytelling for any product",
     category: "universal",

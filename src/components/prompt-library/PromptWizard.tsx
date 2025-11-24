@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Sparkles, ArrowLeft, ArrowRight, Lightbulb, Bookmark, SkipForward } from "lucide-react";
+import { Sparkles, ArrowLeft, ArrowRight, Lightbulb, Bookmark, SkipForward, FileText, Mail, Share2, Tag, Image as ImageIcon, Zap, Clapperboard } from "lucide-react";
 import { useCollections } from "@/hooks/useCollections";
 import { getCollectionIcon } from "@/utils/collectionIcons";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,39 +27,55 @@ export interface WizardData {
   constraints: string;
   category?: string;
   refinedPrompt?: string;
+  visualMode?: "Essential" | "Director";
 }
 
 const CONTENT_TYPES = [
   { 
     value: "blog", 
     label: "Blog Post", 
-    icon: "FileText",
+    icon: FileText,
     description: "SEO-rich, long-form content (800-2000+ words)"
   },
   { 
     value: "email", 
     label: "Email", 
-    icon: "Mail",
+    icon: Mail,
     description: "Email campaigns, newsletters, sequences"
   },
   { 
     value: "social", 
     label: "Social Media", 
-    icon: "Share2",
+    icon: Share2,
     description: "Instagram, LinkedIn, Twitter/X posts"
   },
   { 
     value: "product", 
     label: "Product Description", 
-    icon: "Tag",
+    icon: Tag,
     description: "Product pages, descriptions, features"
   },
   { 
     value: "visual", 
     label: "Visual Asset", 
-    icon: "Image",
+    icon: ImageIcon,
     description: "Image prompts, graphics, visual content"
   },
+];
+
+const VISUAL_MODES = [
+  {
+    value: "Essential",
+    label: "Essential Mode",
+    icon: Zap,
+    description: "Quick, high-quality product shots. Perfect for e-commerce listings and social posts.",
+  },
+  {
+    value: "Director",
+    label: "Director Mode",
+    icon: Clapperboard,
+    description: "Advanced control over lighting, composition, and style. Ideal for campaigns and editorial.",
+  }
 ];
 
 const TONES = [
@@ -83,6 +99,7 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
     keyElements: "",
     constraints: "",
     category: "",
+    visualMode: undefined,
   });
   const [refinedPrompt, setRefinedPrompt] = useState<string>("");
   const [isRefining, setIsRefining] = useState(false);
@@ -98,11 +115,14 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
         keyElements: "", // Don't pre-fill, use as placeholder instead
         constraints: "", // Don't pre-fill, use as placeholder instead
         category: initialData.category || "",
+        visualMode: initialData.visualMode,
       });
 
       // Jump to first unanswered step
       if (initialData.purpose && !initialData.contentType) {
         setStep(2);
+      } else if (initialData.contentType === 'visual' && !initialData.visualMode) {
+        setStep(3); // Visual Mode selection
       } else if (initialData.contentType && !initialData.tone) {
         setStep(4);
       } else if (initialData.tone && !initialData.keyElements) {
@@ -123,24 +143,32 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
         keyElements: "",
         constraints: "",
         category: "",
+        visualMode: undefined,
       });
       setRefinedPrompt("");
       setIsRefining(false);
     }
   }, [open, initialData]);
 
-  const totalSteps = 7;
+  const totalSteps = data.contentType === 'visual' ? 8 : 7; // Extra step for visual mode
   const progress = (step / totalSteps) * 100;
   
   const getStepLabel = () => {
-    if (step === 7) return "Review & Refine";
-    if (step === 3) return "Optional: Collection";
-    if (step === 1) return "Step 1 of 5";
-    if (step === 2) return "Step 2 of 5";
-    if (step === 4) return "Step 3 of 5";
-    if (step === 5) return "Step 4 of 5";
-    if (step === 6) return "Step 5 of 5";
-    return "Build Your Template";
+    if (step === totalSteps) return "Review & Refine";
+    
+    // Adjust step count labels based on flow
+    let currentStep = step;
+    let totalLabelSteps = totalSteps - 2; // Subtract review and result steps roughly
+
+    if (data.contentType === 'visual') {
+       if (step === 3) return "Select Mode";
+       if (step === 4) return "Optional: Collection";
+       if (step > 3) currentStep--; 
+    }
+    
+    if (step === 3 && data.contentType !== 'visual') return "Optional: Collection";
+    
+    return `Step ${step} of ${totalSteps}`;
   };
 
   // Get smart tone default based on content type
@@ -162,14 +190,21 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
       case 2:
         return data.contentType.length > 0;
       case 3:
-        return true; // Collection is optional (can skip)
+        if (data.contentType === 'visual') return !!data.visualMode;
+        return true; // Collection is optional
       case 4:
+        if (data.contentType === 'visual') return true; // Collection is optional
         return data.tone.length > 0;
       case 5:
+         if (data.contentType === 'visual') return data.tone.length > 0;
         return data.keyElements.trim().length > 0;
       case 6:
+        if (data.contentType === 'visual') return data.keyElements.trim().length > 0;
         return true; // Constraints are optional
       case 7:
+        if (data.contentType === 'visual') return true; // Constraints are optional
+        return refinedPrompt.trim().length > 0 && !isRefining;
+      case 8:
         return refinedPrompt.trim().length > 0 && !isRefining;
       default:
         return false;
@@ -187,7 +222,8 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
           collection: wizardData.collection,
           tone: wizardData.tone,
           keyElements: wizardData.keyElements,
-          constraints: wizardData.constraints
+          constraints: wizardData.constraints,
+          visualMode: wizardData.visualMode
         }
       });
       
@@ -212,7 +248,11 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
 
   const generateFallbackPrompt = (wizardData: WizardData): string => {
     const parts = [];
-    parts.push(`Create ${wizardData.contentType} content with the following specifications:`);
+    if (wizardData.contentType === 'visual') {
+      parts.push(`Create a ${wizardData.visualMode} Mode image prompt for:`);
+    } else {
+      parts.push(`Create ${wizardData.contentType} content with the following specifications:`);
+    }
     parts.push(`\nPurpose: ${wizardData.purpose}`);
     parts.push(`\nTone: ${wizardData.tone}`);
     parts.push(`\nKey Elements: ${wizardData.keyElements}`);
@@ -226,18 +266,21 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
     // Auto-assign default collection
     const defaultCollection = collections?.[0]?.name || "humanities";
     setData({ ...data, collection: defaultCollection });
-    setStep(4); // Skip to tone step
+    // If visual, next is tone (step 5), otherwise tone is step 4
+    setStep(data.contentType === 'visual' ? 5 : 4);
   };
 
   const handleNext = async () => {
-    if (step === 6) {
-      // Before advancing to step 7, refine the prompt
+    const isLastStep = (data.contentType === 'visual' && step === 7) || (data.contentType !== 'visual' && step === 6);
+
+    if (isLastStep) {
+      // Before advancing to final step, refine the prompt
       await refinePromptWithAI(data);
-      setStep(7);
+      setStep(step + 1);
     } else if (step < totalSteps) {
       setStep(step + 1);
     } else {
-      // Step 7: Save with refined prompt
+      // Final Step: Save with refined prompt
       onComplete({
         ...data,
         refinedPrompt,
@@ -252,6 +295,8 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
         tone: "",
         keyElements: "",
         constraints: "",
+        category: "",
+        visualMode: undefined,
       });
       setRefinedPrompt("");
     }
@@ -331,8 +376,8 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
                   >
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl">{type.icon}</span>
-                        <span className="font-medium">{type.label.replace(/^.+ /, "")}</span>
+                        <type.icon className="w-6 h-6 text-[hsl(var(--deep-charcoal))]" />
+                        <span className="font-medium">{type.label}</span>
                       </div>
                       <p className="text-xs text-muted-foreground">{type.description}</p>
                     </div>
@@ -342,8 +387,41 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
             </div>
           )}
 
-          {/* Step 3: Collection (Optional) */}
-          {step === 3 && (
+          {/* Step 3: Visual Mode (Only if Content Type is Visual) */}
+          {step === 3 && data.contentType === 'visual' && (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-lg font-serif">Select Image Generation Mode</Label>
+                <p className="text-sm text-muted-foreground mt-1">Choose the level of control you need.</p>
+              </div>
+              <div className="grid grid-cols-1 gap-3">
+                {VISUAL_MODES.map((mode) => (
+                  <Card
+                    key={mode.value}
+                    className={`p-4 cursor-pointer transition-all ${
+                      data.visualMode === mode.value
+                        ? "border-[hsl(var(--saffron-gold))] bg-[hsl(var(--saffron-gold)/0.1)]"
+                        : "hover:border-[hsl(var(--stone-beige))]"
+                    }`}
+                    onClick={() => setData({ ...data, visualMode: mode.value as any })}
+                  >
+                    <div className="flex items-start gap-3">
+                      <mode.icon className="w-6 h-6 mt-1 text-[hsl(var(--deep-charcoal))]" />
+                      <div className="flex-1">
+                        <div className="font-medium">{mode.label}</div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {mode.description}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 3/4: Collection (Optional) */}
+          {((step === 3 && data.contentType !== 'visual') || (step === 4 && data.contentType === 'visual')) && (
             <div className="space-y-4">
               <div>
                 <Label className="text-lg font-serif">Which collection should this belong to?</Label>
@@ -404,8 +482,8 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
             </div>
           )}
 
-          {/* Step 4: Tone */}
-          {step === 4 && (
+          {/* Step 4/5: Tone */}
+          {((step === 4 && data.contentType !== 'visual') || (step === 5 && data.contentType === 'visual')) && (
             <div className="space-y-4">
               <div>
                 <Label className="text-lg font-serif">What tone should the content have?</Label>
@@ -428,8 +506,8 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
             </div>
           )}
 
-          {/* Step 5: Key Elements */}
-          {step === 5 && (
+          {/* Step 5/6: Key Elements */}
+          {((step === 5 && data.contentType !== 'visual') || (step === 6 && data.contentType === 'visual')) && (
             <div className="space-y-4">
               <div>
                 <Label className="text-lg font-serif">What key elements should always be included?</Label>
@@ -449,8 +527,8 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
             </div>
           )}
 
-          {/* Step 6: Constraints */}
-          {step === 6 && (
+          {/* Step 6/7: Constraints */}
+          {((step === 6 && data.contentType !== 'visual') || (step === 7 && data.contentType === 'visual')) && (
             <div className="space-y-4">
               <div>
                 <Label className="text-lg font-serif">Any constraints or guidelines?</Label>
@@ -471,8 +549,8 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
             </div>
           )}
 
-          {/* Step 7: AI Refined Preview */}
-          {step === 7 && (
+          {/* Final Step: AI Refined Preview */}
+          {step === totalSteps && (
             <div className="space-y-4">
               <div>
                 <Label className="text-lg font-serif">Review Your AI-Refined Template</Label>
