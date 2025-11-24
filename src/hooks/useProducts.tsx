@@ -27,6 +27,9 @@ export interface Product {
   format: string | null;
   burnTime: string | null;
   
+  // Bottle Type (explicit control: 'oil' | 'spray' | 'auto')
+  bottle_type: 'oil' | 'spray' | 'auto' | null;
+  
   // Skincare specific
   keyIngredients: string | null;
   benefits: string | null;

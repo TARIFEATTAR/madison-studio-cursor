@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { imageCategories } from "@/data/imageCategories";
+import { BROAD_IMAGE_CATEGORIES, getImageCategoryByKey } from "@/data/imageCategories";
 
 export const usePromptCounts = (organizationId: string | null) => {
   return useQuery({
@@ -42,17 +42,35 @@ export const usePromptCounts = (organizationId: string | null) => {
 
       // Categories count aligned with Image Studio options
       const categoryCounts: Record<string, number> = {};
-      imageCategories.forEach((category) => {
+      BROAD_IMAGE_CATEGORIES.forEach((category) => {
         categoryCounts[category.key] = 0;
       });
 
       prompts?.forEach((prompt) => {
-        const key =
-          (prompt as any).category ||
-          (prompt.additional_context as any)?.category ||
-          (prompt.additional_context as any)?.image_type;
-        if (key && key in categoryCounts) {
-          categoryCounts[key] += 1;
+        // 1. Try direct category column
+        let categoryKey = (prompt as any).category;
+        
+        // 2. Fallback to additional_context
+        if (!categoryKey) {
+          categoryKey = (prompt.additional_context as any)?.category || (prompt.additional_context as any)?.image_type;
+        }
+
+        if (categoryKey) {
+          // Check if it's already a broad category
+          const isBroad = BROAD_IMAGE_CATEGORIES.some(c => c.key === categoryKey);
+          
+          if (isBroad) {
+            categoryCounts[categoryKey] = (categoryCounts[categoryKey] || 0) + 1;
+          } else {
+            // Try to find the specific shot type and map it
+            const specificCategory = getImageCategoryByKey(categoryKey);
+            if (specificCategory) {
+              const broadKey = specificCategory.broadCategory;
+              if (broadKey in categoryCounts) {
+                categoryCounts[broadKey] += 1;
+              }
+            }
+          }
         }
       });
 

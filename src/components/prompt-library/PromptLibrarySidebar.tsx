@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { BROAD_IMAGE_CATEGORIES } from "@/data/imageCategories";
+import { BROAD_IMAGE_CATEGORIES, getImageCategoryByKey } from "@/data/imageCategories";
 
 interface PromptLibrarySidebarProps {
   onQuickAccessSelect: (type: "favorites" | "recently-used" | "most-used") => void;
@@ -37,7 +37,7 @@ const PromptLibrarySidebar = ({
     queryFn: async () => {
       const { data: prompts } = await supabase
         .from("prompts")
-        .select("times_used, is_archived, is_template, last_used_at, additional_context, deliverable_format")
+        .select("times_used, is_archived, is_template, last_used_at, additional_context, deliverable_format, category")
         .eq("organization_id", currentOrganizationId)
         .eq("is_archived", false)
         .eq("deliverable_format", "image_prompt");
@@ -46,12 +46,35 @@ const PromptLibrarySidebar = ({
 
       // Count prompts by image category
       const categoryCounts: Record<string, number> = {};
+      // Initialize counts for all broad categories
+      BROAD_IMAGE_CATEGORIES.forEach(cat => {
+        categoryCounts[cat.key] = 0;
+      });
 
       prompts.forEach((prompt) => {
-        // Use category field first, fallback to additional_context.image_type for backward compatibility
-        const category = (prompt as any).category || (prompt.additional_context as any)?.category || (prompt.additional_context as any)?.image_type;
-        if (category) {
-          categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+        // 1. Try direct category column
+        let categoryKey = (prompt as any).category;
+        
+        // 2. Fallback to additional_context
+        if (!categoryKey) {
+          categoryKey = (prompt.additional_context as any)?.category || (prompt.additional_context as any)?.image_type;
+        }
+
+        // 3. Resolve to broad category if it's a specific shot type
+        if (categoryKey) {
+          // Check if it's already a broad category
+          const isBroad = BROAD_IMAGE_CATEGORIES.some(c => c.key === categoryKey);
+          
+          if (isBroad) {
+            categoryCounts[categoryKey] = (categoryCounts[categoryKey] || 0) + 1;
+          } else {
+            // Try to find the specific shot type and map it
+            const specificCategory = getImageCategoryByKey(categoryKey);
+            if (specificCategory) {
+              const broadKey = specificCategory.broadCategory;
+              categoryCounts[broadKey] = (categoryCounts[broadKey] || 0) + 1;
+            }
+          }
         }
       });
 

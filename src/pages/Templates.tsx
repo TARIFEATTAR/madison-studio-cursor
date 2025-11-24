@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useToast } from "@/hooks/use-toast";
-import { HelpCircle, Plus, Filter, X, FileText } from "lucide-react";
+import { HelpCircle, Plus, Filter, X, FileText, Sparkles, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -16,6 +16,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ViewDensityToggle, ViewMode } from "@/components/library/ViewDensityToggle";
 
 import PromptLibrarySidebar from "@/components/prompt-library/PromptLibrarySidebar";
+import { getImageCategoryByKey } from "@/data/imageCategories";
 
 import { PromptCard } from "@/components/prompt-library/PromptCard";
 import PromptDetailModal from "@/components/prompt-library/PromptDetailModal";
@@ -119,7 +120,7 @@ const TemplatesContent = () => {
     queryKey: ["prompt-generated-images", currentOrganizationId, allPrompts],
     queryFn: async () => {
       const promptsWithGeneratedImages = allPrompts.filter(
-        (p) => (p as any).generated_image_id
+        (p) => (p as any).generated_image_id || (p.additional_context as any)?.generated_image_id
       );
 
       if (promptsWithGeneratedImages.length === 0) {
@@ -127,7 +128,7 @@ const TemplatesContent = () => {
       }
 
       const generatedImageIds = promptsWithGeneratedImages.map(
-        (p) => (p as any).generated_image_id
+        (p) => (p as any).generated_image_id || (p.additional_context as any)?.generated_image_id
       );
 
       const { data: generatedImages, error } = await supabase
@@ -143,7 +144,8 @@ const TemplatesContent = () => {
       const imageMap = new Map<string, string>();
       generatedImages?.forEach((img) => {
         promptsWithGeneratedImages.forEach((prompt) => {
-          if ((prompt as any).generated_image_id === img.id) {
+          const promptImageId = (prompt as any).generated_image_id || (prompt.additional_context as any)?.generated_image_id;
+          if (promptImageId === img.id) {
             imageMap.set(prompt.id, img.image_url);
           }
         });
@@ -175,7 +177,14 @@ const TemplatesContent = () => {
     // Category filter - use category field first, fallback to additional_context for backward compatibility
     if (selectedCategory) {
       filtered = filtered.filter(p => {
-        const category = p.category || (p.additional_context as any)?.category || (p.additional_context as any)?.image_type;
+        let category = p.category || (p.additional_context as any)?.category || (p.additional_context as any)?.image_type;
+        
+        // Map specific shot types to broad categories
+        const specificType = getImageCategoryByKey(category);
+        if (specificType) {
+          category = specificType.broadCategory;
+        }
+        
         return category === selectedCategory;
       });
     }
@@ -469,10 +478,10 @@ const TemplatesContent = () => {
             <div className="flex items-start justify-between mb-6">
               <div>
                 <h1 className="text-3xl font-serif text-foreground font-semibold mb-2">
-                  Image Recipe Library
+                  Image Library
                 </h1>
                 <p className="text-muted-foreground text-sm">
-                  Save and reuse your best image prompts for consistent visual content
+                  All images created in Image Studio, organized by use case
                 </p>
               </div>
               <div className="flex gap-3">
@@ -589,17 +598,33 @@ const TemplatesContent = () => {
             <div className="flex items-center justify-center py-12">
               <div className="text-center max-w-md">
                 <FileText className="w-16 h-16 mx-auto mb-4 text-border" />
-                <h3 className="text-xl font-semibold text-foreground mb-2">No image recipes saved yet</h3>
+                <h3 className="text-xl font-semibold text-foreground mb-2">No images saved yet</h3>
                 <p className="text-muted-foreground mb-6">
-                  {searchQuery ? "Try adjusting your search or filters" : "Generate images in the Image Studio to automatically save your prompts here"}
+                  {searchQuery ? (
+                    "Try adjusting your search or filters"
+                  ) : (
+                    <span>
+                      Generate images in the <button onClick={() => navigate("/image-editor")} className="text-aged-brass font-medium hover:underline underline-offset-4">Image Studio</button> to automatically save them here
+                    </span>
+                  )}
                 </p>
-                <Button
-                  onClick={() => setShowQuickStart(true)}
-                  className="bg-gradient-to-r from-brass to-brass-dark hover:from-brass-dark hover:to-brass text-white"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Your First Prompt
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                  <Button
+                    onClick={() => navigate("/image-editor")}
+                    className="bg-ink-black text-parchment-white hover:bg-charcoal shadow-md"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Open Image Studio
+                  </Button>
+                  <Button
+                    onClick={() => setShowQuickStart(true)}
+                    variant="outline"
+                    className="border-charcoal/20 hover:bg-charcoal/5"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Manual Prompt
+                  </Button>
+                </div>
               </div>
             </div>
           )}

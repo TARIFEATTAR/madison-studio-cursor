@@ -52,6 +52,119 @@ function categorizeReferences(
 
 /**
  * ------------------------------
+ * BOTTLE TYPE DETECTION (CRITICAL)
+ * ------------------------------
+ * This function determines if a product is an OIL (dropper/roller) or SPRAY (atomizer)
+ * This is CRITICAL for accurate product rendering - wrong bottle type breaks the workflow
+ */
+
+function detectBottleType(productData: any): {
+  isOil: boolean;
+  isSpray: boolean;
+  confidence: 'high' | 'medium' | 'low';
+} {
+  if (!productData) {
+    return { isOil: false, isSpray: false, confidence: 'low' };
+  }
+
+  // PRIORITY 1: Check explicit bottle_type field (user-set, highest priority)
+  const explicitBottleType = productData.bottle_type?.toLowerCase();
+  if (explicitBottleType === 'oil') {
+    return { isOil: true, isSpray: false, confidence: 'high' };
+  }
+  if (explicitBottleType === 'spray') {
+    return { isOil: false, isSpray: true, confidence: 'high' };
+  }
+  // If bottle_type is 'auto' or null, fall through to auto-detection
+
+  // PRIORITY 2: Auto-detection from product fields (only if bottle_type is 'auto' or null)
+  const productNameLower = (productData.name || '').toLowerCase();
+  const formatLower = (productData.format || '').toLowerCase();
+  const productTypeLower = (productData.product_type || '').toLowerCase();
+  const categoryLower = (productData.category || '').toLowerCase();
+  const descriptionLower = (productData.description || '').toLowerCase();
+  
+  // OIL INDICATORS (comprehensive list)
+  const oilIndicators = [
+    'oil',
+    'attar',
+    'concentrate',
+    'roller',
+    'dropper',
+    'roll-on',
+    'roll on',
+    'perfume oil',
+    'fragrance oil',
+    'essential oil',
+    'carrier oil',
+    'diluted oil',
+    'pure oil',
+    'oil-based',
+    'oil based',
+    'viscous',
+    'thick oil',
+    'dense oil',
+  ];
+  
+  // SPRAY INDICATORS (comprehensive list)
+  const sprayIndicators = [
+    'spray',
+    'atomizer',
+    'pump',
+    'mist',
+    'eau de',
+    'cologne',
+    'perfume spray',
+    'spray bottle',
+    'sprayer',
+    'atomizing',
+    'aerosol',
+  ];
+  
+  // Check all fields for oil indicators
+  const hasOilIndicator = oilIndicators.some(indicator => 
+    productNameLower.includes(indicator) ||
+    formatLower.includes(indicator) ||
+    productTypeLower.includes(indicator) ||
+    descriptionLower.includes(indicator)
+  );
+  
+  // Check all fields for spray indicators
+  const hasSprayIndicator = sprayIndicators.some(indicator =>
+    productNameLower.includes(indicator) ||
+    formatLower.includes(indicator) ||
+    productTypeLower.includes(indicator) ||
+    descriptionLower.includes(indicator)
+  );
+  
+  // Special case: "perfume oil" or "fragrance oil" = OIL (not spray)
+  const isPerfumeOil = 
+    productNameLower.includes('perfume oil') ||
+    productNameLower.includes('fragrance oil') ||
+    formatLower.includes('perfume oil') ||
+    formatLower.includes('fragrance oil');
+  
+  // Special case: category = 'skincare' usually means oil
+  const isSkincare = categoryLower === 'skincare';
+  
+  // Decision logic: OIL takes precedence if detected
+  let isOil = false;
+  let isSpray = false;
+  let confidence: 'high' | 'medium' | 'low' = 'low';
+  
+  if (isPerfumeOil || isSkincare || hasOilIndicator) {
+    isOil = true;
+    confidence = isPerfumeOil ? 'high' : hasOilIndicator ? 'medium' : 'low';
+  } else if (hasSprayIndicator && !hasOilIndicator) {
+    isSpray = true;
+    confidence = 'medium';
+  }
+  
+  return { isOil, isSpray, confidence };
+}
+
+/**
+ * ------------------------------
  * VIRTUAL ART DIRECTOR PROMPT CONSTRUCTION
  * ------------------------------
  */
@@ -66,16 +179,86 @@ function buildDirectorModePrompt(
 ): string {
   let prompt = "";
 
+  // === SECTION 0: CRITICAL BOTTLE TYPE SPECIFICATION (HIGHEST PRIORITY - MUST BE FIRST) ===
+  // This MUST come before ANY other instructions, including reference images
+  // Reference images might show wrong bottle type - this overrides them
+  if (productData) {
+    const bottleType = detectBottleType(productData);
+    
+    if (bottleType.isOil) {
+      prompt += "╔══════════════════════════════════════════════════════════════════╗\n";
+      prompt += "║  ⚠️ CRITICAL BOTTLE SPECIFICATION (MANDATORY - NO EXCEPTIONS)   ║\n";
+      prompt += "║  THIS OVERRIDES ALL REFERENCE IMAGES AND OTHER INSTRUCTIONS      ║\n";
+      prompt += "╚══════════════════════════════════════════════════════════════════╝\n\n";
+      prompt += "PRODUCT TYPE: OIL-BASED FRAGRANCE (NON-SPRAY)\n";
+      prompt += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
+      prompt += "✅ REQUIRED CLOSURE TYPES (ONLY THESE):\n";
+      prompt += "  • Glass dropper with pipette\n";
+      prompt += "  • Roller ball applicator\n";
+      prompt += "  • Screw cap (if dropper/roller is separate)\n";
+      prompt += "  • Glass wand (dipstick applicator)\n\n";
+      prompt += "❌ ABSOLUTELY FORBIDDEN (NEVER INCLUDE - EVEN IF IN REFERENCE IMAGES):\n";
+      prompt += "  • Perfume sprayer / atomizer / pump mechanism\n";
+      prompt += "  • Crimped metal spray neck\n";
+      prompt += "  • Spray nozzle / misting device\n";
+      prompt += "  • Dip tube / hose / straw (the tube inside spray bottles)\n";
+      prompt += "  • Any form of spray dispenser\n";
+      prompt += "  • Aerosol mechanism\n";
+      prompt += "  • ANY visible tube, hose, or pipe extending into the liquid\n\n";
+      prompt += "VISUAL CHARACTERISTICS:\n";
+      prompt += "  • The liquid is viscous oil (thicker, more dense)\n";
+      prompt += "  • Bottle designed for direct application (not spraying)\n";
+      prompt += "  • Closure is for controlled dispensing, not atomization\n";
+      prompt += "  • NO internal tubes, hoses, or dip sticks visible inside the bottle\n\n";
+      prompt += "⚠️ CRITICAL: If you render a spray mechanism, dip tube, hose, or ANY tube extending into the liquid, the image is INCORRECT and unusable.\n";
+      prompt += "⚠️ CRITICAL: Even if reference images show a spray mechanism, you MUST render an oil bottle with dropper/roller instead.\n";
+      prompt += "This is a fundamental product accuracy requirement. There are NO exceptions.\n\n";
+    } else if (bottleType.isSpray) {
+      prompt += "╔══════════════════════════════════════════════════════════════════╗\n";
+      prompt += "║  ⚠️ CRITICAL BOTTLE SPECIFICATION (MANDATORY - NO EXCEPTIONS)   ║\n";
+      prompt += "║  THIS OVERRIDES ALL REFERENCE IMAGES AND OTHER INSTRUCTIONS      ║\n";
+      prompt += "╚══════════════════════════════════════════════════════════════════╝\n\n";
+      prompt += "PRODUCT TYPE: SPRAY PERFUME (ALCOHOL-BASED)\n";
+      prompt += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
+      prompt += "✅ REQUIRED CLOSURE TYPE:\n";
+      prompt += "  • Spray pump mechanism with atomizer\n";
+      prompt += "  • Visible crimped metal neck\n";
+      prompt += "  • Spray nozzle for misting\n";
+      prompt += "  • Dip tube / hose extending into the liquid (for spray mechanism)\n\n";
+      prompt += "❌ ABSOLUTELY FORBIDDEN:\n";
+      prompt += "  • Dropper / pipette\n";
+      prompt += "  • Roller ball applicator\n";
+      prompt += "  • Glass wand / dipstick\n\n";
+      prompt += "VISUAL CHARACTERISTICS:\n";
+      prompt += "  • The liquid is alcohol-based (thinner, more fluid)\n";
+      prompt += "  • Bottle designed for atomization and misting\n";
+      prompt += "  • Closure includes spray mechanism with dip tube\n\n";
+    }
+  }
+
   // === SECTION 1: REFERENCE IMAGE INSTRUCTIONS ===
   prompt += "=== REFERENCE IMAGE DIRECTIVES ===\n\n";
 
   if (categorizedRefs.product.length > 0) {
     prompt += `PRODUCT REFERENCE (${categorizedRefs.product.length} image${categorizedRefs.product.length > 1 ? "s" : ""}):\n`;
-    prompt += "CRITICAL: Use the product reference image(s) EXACTLY as shown. Maintain:\n";
-    prompt += "- Exact product shape, proportions, and details\n";
+    prompt += "Use the product reference image(s) for visual guidance. Maintain:\n";
+    prompt += "- Product shape, proportions, and overall design\n";
     prompt += "- Product color accuracy (match hex values precisely)\n";
     prompt += "- Product texture and material finish\n";
-    prompt += "- Do NOT modify the product itself—only its placement and lighting\n\n";
+    prompt += "- Branding, labels, and decorative elements\n";
+    if (productData) {
+      const bottleType = detectBottleType(productData);
+      if (bottleType.isOil) {
+        prompt += "\n⚠️ IMPORTANT: If the reference image shows a spray mechanism, IGNORE IT.\n";
+        prompt += "You MUST render an oil bottle with dropper/roller instead (as specified in Section 0).\n";
+        prompt += "The bottle type specification in Section 0 takes absolute priority over reference images.\n";
+      } else if (bottleType.isSpray) {
+        prompt += "\n⚠️ IMPORTANT: If the reference image shows a dropper/roller, IGNORE IT.\n";
+        prompt += "You MUST render a spray bottle with atomizer instead (as specified in Section 0).\n";
+        prompt += "The bottle type specification in Section 0 takes absolute priority over reference images.\n";
+      }
+    }
+    prompt += "\n";
     
     categorizedRefs.product.forEach((ref, idx) => {
       if (ref.description) {
@@ -133,15 +316,39 @@ function buildDirectorModePrompt(
     prompt += ontologySpecs + "\n\n";
   } else {
     // Default specifications when Pro Mode is not active
+    // Add variety to prevent repetitive images
+    const lightingVariations = [
+      { setup: "Butterfly (Paramount)", quality: "Soft/Diffused", contrast: "3:1" },
+      { setup: "Rembrandt", quality: "Soft with subtle shadow", contrast: "4:1" },
+      { setup: "Loop", quality: "Soft directional", contrast: "3.5:1" },
+      { setup: "Split", quality: "Dramatic but controlled", contrast: "5:1" },
+      { setup: "Broad", quality: "Even and flattering", contrast: "2.5:1" },
+    ];
+    
+    // Randomly select a lighting variation (using timestamp for pseudo-randomness)
+    const lightingIndex = Date.now() % lightingVariations.length;
+    const selectedLighting = lightingVariations[lightingIndex];
+    
     if (categorizedRefs.style.length > 0) {
       prompt += "LIGHTING: Match the lighting style from the style reference(s)\n";
     } else {
-      prompt += "LIGHTING SETUP: Butterfly (Paramount) - Commercial standard\n";
-      prompt += "LIGHT QUALITY: Soft/Diffused (flattering, commercial look)\n";
-      prompt += "CONTRAST RATIO: 3:1 (balanced, professional)\n";
+      prompt += `LIGHTING SETUP: ${selectedLighting.setup} - Commercial standard\n`;
+      prompt += `LIGHT QUALITY: ${selectedLighting.quality} (flattering, commercial look)\n`;
+      prompt += `CONTRAST RATIO: ${selectedLighting.contrast} (balanced, professional)\n`;
     }
+    
+    // Add composition variety
+    const compositionStyles = [
+      "Rule of Thirds (classic, balanced)",
+      "Centered composition (symmetrical, bold)",
+      "Leading lines (dynamic, engaging)",
+      "Negative space (minimalist, elegant)",
+      "Diagonal composition (energetic, modern)",
+    ];
+    const compositionIndex = (Date.now() + 1) % compositionStyles.length;
+    prompt += `COMPOSITION: ${compositionStyles[compositionIndex]}\n`;
+    
     prompt += "LENS CHARACTER: Spherical (clean, modern commercial look)\n";
-    prompt += "COMPOSITION: Rule of Thirds (classic, balanced)\n";
   }
 
   // Technical defaults for high-end output
@@ -152,64 +359,66 @@ function buildDirectorModePrompt(
   prompt += "- Accurate material physics (glass refraction IOR 1.5, metal specular highlights, fabric diffuse reflection)\n";
   prompt += "- No distortion, artifacts, or watermarks\n\n";
 
-  // === SECTION 4: BRAND CONTEXT ===
+  // === SECTION 5: BRAND CONTEXT ===
   if (brandKnowledge?.visualStandards) {
     const vs = brandKnowledge.visualStandards;
-    prompt += "=== BRAND VISUAL STANDARDS ===\n";
+    prompt += "=== BRAND VISUAL STANDARDS (MANDATORY) ===\n";
+    
+    // GOLDEN RULE: Most important - the overarching visual philosophy
+    if (vs.golden_rule) {
+      prompt += `\n✨ GOLDEN RULE (HIGHEST PRIORITY): ${vs.golden_rule}\n`;
+      prompt += `This is the PRIMARY directive. All other specifications must align with this philosophy.\n\n`;
+    }
     
     if (vs.color_palette?.length > 0) {
-      prompt += `COLOR PALETTE: ${vs.color_palette.slice(0, 5).map((c: any) => `${c.name} (${c.hex})`).join(", ")}\n`;
+      prompt += `COLOR PALETTE (MANDATORY): ${vs.color_palette.slice(0, 5).map((c: any) => `${c.name} (${c.hex})`).join(", ")}\n`;
+      prompt += `Use these exact colors. Do not deviate from this palette.\n`;
     }
     if (vs.lighting_mandates) {
-      prompt += `LIGHTING MANDATE: ${vs.lighting_mandates}\n`;
+      prompt += `LIGHTING MANDATE (MANDATORY): ${vs.lighting_mandates}\n`;
+      prompt += `Override default lighting specifications with this mandate.\n`;
     }
     if (vs.approved_props?.length > 0) {
       prompt += `APPROVED PROPS: ${vs.approved_props.slice(0, 10).join(", ")}\n`;
+      prompt += `Only use props from this approved list.\n`;
     }
     if (vs.forbidden_elements?.length > 0) {
-      prompt += `FORBIDDEN ELEMENTS: ${vs.forbidden_elements.join(", ")} (DO NOT INCLUDE)\n`;
+      prompt += `FORBIDDEN ELEMENTS (NEVER INCLUDE): ${vs.forbidden_elements.join(", ")}\n`;
+      prompt += `These elements are explicitly prohibited. Do not include them under any circumstances.\n`;
     }
+    
+    // Add bottle type to forbidden elements if it's an oil product
+    if (productData) {
+      const bottleType = detectBottleType(productData);
+      if (bottleType.isOil && vs.forbidden_elements) {
+        // Ensure spray mechanisms are in forbidden list
+        const forbiddenList = Array.isArray(vs.forbidden_elements) ? vs.forbidden_elements : [];
+        if (!forbiddenList.some((el: string) => el.toLowerCase().includes('spray') || el.toLowerCase().includes('atomizer'))) {
+          prompt += `FORBIDDEN ELEMENTS (ADDITIONAL): Perfume sprayer, atomizer, pump, spray nozzle, misting device\n`;
+        }
+      }
+    }
+    
+    // Include raw document context if available (for AI to understand full context)
+    if (vs.raw_document) {
+      prompt += `\nADDITIONAL CONTEXT: Refer to the full visual standards document for complete brand guidelines.\n`;
+    }
+    
     prompt += "\n";
   }
 
-  // === SECTION 5: PRODUCT-SPECIFIC CONTEXT ===
+  // === SECTION 6: PRODUCT-SPECIFIC CONTEXT ===
   if (productData) {
     prompt += "=== PRODUCT VISUAL DNA ===\n";
     // This will be enhanced by formatVisualContext, but we add a header
     prompt += "Apply product-specific visual characteristics from the product data.\n\n";
   }
 
-  // === SECTION 6: ASPECT RATIO ===
+  // === SECTION 7: ASPECT RATIO ===
   if (aspectRatio) {
     prompt += `=== OUTPUT SPECIFICATIONS ===\n`;
     prompt += `ASPECT RATIO: ${aspectRatio}\n`;
     prompt += `Compose the image to work perfectly at this ratio.\n\n`;
-  }
-
-  // === SECTION 7: PRODUCT-SPECIFIC BOTTLE INSTRUCTIONS ===
-  // Detect if this is an oil product to prevent sprayers
-  if (productData) {
-    const productNameLower = (productData.name || '').toLowerCase();
-    const formatLower = (productData.format || '').toLowerCase();
-    const productTypeLower = (productData.product_type || '').toLowerCase();
-    const categoryLower = (productData.category || '').toLowerCase();
-    
-    const isOilProduct = 
-      productNameLower.includes('oil') ||
-      productNameLower.includes('fragrance oil') ||
-      formatLower.includes('oil') ||
-      formatLower.includes('roller') ||
-      formatLower.includes('dropper') ||
-      productTypeLower.includes('oil') ||
-      categoryLower === 'skincare';
-    
-    if (isOilProduct) {
-      prompt += "=== CRITICAL BOTTLE SPECIFICATION ===\n";
-      prompt += "This is an OIL FRAGRANCE or OIL BOTTLE product.\n";
-      prompt += "DO NOT include: Perfume sprayer, atomizer, pump, or any spray mechanism\n";
-      prompt += "MUST include: Dropper cap OR roller ball applicator ONLY\n";
-      prompt += "The bottle closure should be appropriate for oil products (dropper or roller), NOT a sprayer.\n\n";
-    }
   }
 
   // === SECTION 8: NEGATIVE PROMPT (What to Avoid) ===
@@ -223,19 +432,16 @@ function buildDirectorModePrompt(
   prompt += "- White borders, beige frames, or any background frame elements\n";
   prompt += "- The image should fill the entire canvas edge-to-edge with no visible frame\n";
   
-  // Add oil-specific negative prompts
+  // Add bottle-type-specific negative prompts (reinforce Section 0)
   if (productData) {
-    const productNameLower = (productData.name || '').toLowerCase();
-    const formatLower = (productData.format || '').toLowerCase();
-    const isOilProduct = 
-      productNameLower.includes('oil') ||
-      formatLower.includes('oil') ||
-      formatLower.includes('roller') ||
-      formatLower.includes('dropper');
-    
-    if (isOilProduct) {
-      prompt += "- Perfume sprayers, atomizers, pumps, or any spray dispenser mechanisms\n";
-      prompt += "- Spray nozzles or misting devices\n";
+    const bottleType = detectBottleType(productData);
+    if (bottleType.isOil) {
+      prompt += "- ⚠️ CRITICAL: Perfume sprayers, atomizers, pumps, spray nozzles, misting devices, or ANY spray mechanism\n";
+      prompt += "- ⚠️ CRITICAL: Crimped metal spray necks or aerosol mechanisms\n";
+      prompt += "- ⚠️ CRITICAL: Dip tubes, hoses, straws, or ANY tube extending into the liquid (these are ONLY for spray bottles)\n";
+      prompt += "- ⚠️ CRITICAL: Any visible internal tube, pipe, or hose inside the bottle\n";
+    } else if (bottleType.isSpray) {
+      prompt += "- ⚠️ CRITICAL: Droppers, pipettes, roller balls, glass wands, or ANY non-spray applicator\n";
     }
   }
 
@@ -248,25 +454,33 @@ function buildEssentialModePrompt(
   brandContext: any,
   productData?: any
 ): string {
-  let prompt = userPrompt;
+  let prompt = "";
+
+  // === CRITICAL BOTTLE TYPE SPECIFICATION (MUST BE FIRST) ===
+  if (productData) {
+    const bottleType = detectBottleType(productData);
+    
+    if (bottleType.isOil) {
+      prompt += "╔══════════════════════════════════════════════════════════════════╗\n";
+      prompt += "║     ⚠️ CRITICAL: OIL BOTTLE - NO SPRAY MECHANISM ALLOWED         ║\n";
+      prompt += "╚══════════════════════════════════════════════════════════════════╝\n\n";
+      prompt += "This is an OIL-BASED FRAGRANCE. REQUIRED: Dropper or roller ball ONLY.\n";
+      prompt += "FORBIDDEN: Perfume sprayer, atomizer, pump, spray nozzle, dip tube, hose, or ANY spray mechanism.\n";
+      prompt += "FORBIDDEN: ANY visible tube, hose, or pipe extending into the liquid (these are ONLY for spray bottles).\n";
+      prompt += "If you render a spray mechanism, dip tube, or any internal tube, the image is INCORRECT.\n\n";
+    } else if (bottleType.isSpray) {
+      prompt += "╔══════════════════════════════════════════════════════════════════╗\n";
+      prompt += "║     ⚠️ CRITICAL: SPRAY PERFUME - ATOMIZER REQUIRED               ║\n";
+      prompt += "╚══════════════════════════════════════════════════════════════════╝\n\n";
+      prompt += "This is a SPRAY PERFUME. REQUIRED: Spray pump with atomizer.\n";
+      prompt += "FORBIDDEN: Dropper, roller ball, or any non-spray applicator.\n\n";
+    }
+  }
+
+  prompt += userPrompt;
 
   if (productRef) {
     prompt += "\n\nUse the uploaded product image as the exact subject. Place it in the scene described above.";
-  }
-
-  // Check for oil products in Essential Mode too
-  if (productData) {
-    const productNameLower = (productData.name || '').toLowerCase();
-    const formatLower = (productData.format || '').toLowerCase();
-    const isOilProduct = 
-      productNameLower.includes('oil') ||
-      formatLower.includes('oil') ||
-      formatLower.includes('roller') ||
-      formatLower.includes('dropper');
-    
-    if (isOilProduct) {
-      prompt += "\n\nCRITICAL: This is an oil fragrance bottle. Use a dropper or roller ball closure, NOT a perfume sprayer or pump.";
-    }
   }
 
   if (brandContext?.colors?.length > 0) {
@@ -660,9 +874,14 @@ serve(async (req) => {
      * 9. Call Gemini Image Generation
      * -------------------------
      */
+    // Generate a random seed for variety (0-4294967295, max 32-bit integer)
+    // This ensures different images even with similar prompts
+    const randomSeed = Math.floor(Math.random() * 4294967295);
+    
     const geminiImage = await callGeminiImage({
       prompt: enhancedPrompt,
       aspectRatio,
+      seed: randomSeed, // Add seed for variety
       referenceImages: referenceImagesPayload.length > 0
         ? referenceImagesPayload
         : undefined,

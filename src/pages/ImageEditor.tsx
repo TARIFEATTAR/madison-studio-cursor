@@ -56,6 +56,7 @@ import { GeneratingLoader } from "@/components/forge/GeneratingLoader";
 import ThumbnailRibbon from "@/components/image-editor/ThumbnailRibbon";
 import MadisonPanel from "@/components/image-editor/MadisonPanel";
 import ShotTypeDropdown from "@/components/image-editor/ShotTypeDropdown";
+import UseCaseSelector from "@/components/image-editor/UseCaseSelector";
 import { ProductImageUpload } from "@/components/image-editor/ProductImageUpload";
 import MobileShotTypeSelector from "@/components/image-editor/MobileShotTypeSelector";
 import MobileAspectRatioSelector from "@/components/image-editor/MobileAspectRatioSelector";
@@ -69,6 +70,11 @@ import {
   DEFAULT_IMAGE_CATEGORY_KEY,
   type ImageCategoryDefinition,
   getImageCategoryByKey,
+  USE_CASES,
+  DEFAULT_USE_CASE,
+  type UseCaseKey,
+  getUseCaseByKey,
+  mapUseCaseToLibraryCategory,
 } from "@/data/imageCategories";
 
 // Prompt Formula Utilities
@@ -76,6 +82,34 @@ import { CAMERA_LENS, LIGHTING, ENVIRONMENTS } from "@/utils/promptFormula";
 
 const DEFAULT_PROMPT =
   "A clean studio product shot on a pure white background, soft shadow, high-resolution lighting.";
+
+// Helper function to build combined prompt from use case + style + bottle type
+function buildCombinedPrompt(
+  useCase: ReturnType<typeof getUseCaseByKey>,
+  style: ReturnType<typeof getImageCategoryByKey>,
+  product: Product | null
+): string {
+  if (!style) return DEFAULT_PROMPT;
+  
+  let prompt = style.prompt;
+  
+  // Add use case context
+  if (useCase) {
+    prompt += ` For ${useCase.label.toLowerCase()}: ${useCase.description}.`;
+  }
+  
+  // Add bottle type specification if product is selected
+  if (product) {
+    const bottleType = product.bottle_type?.toLowerCase();
+    if (bottleType === 'oil') {
+      prompt += ` IMPORTANT: This is an oil-based fragrance. Use a dropper or roller ball closure, NOT a spray pump or atomizer. NO dip tubes or hoses inside the bottle.`;
+    } else if (bottleType === 'spray') {
+      prompt += ` IMPORTANT: This is a spray perfume. Use a spray pump with atomizer and dip tube.`;
+    }
+  }
+  
+  return prompt;
+}
 
 type ApprovalStatus = "pending" | "flagged" | "rejected";
 
@@ -90,7 +124,8 @@ type GeneratedImage = {
   chainDepth: number;
   isChainOrigin: boolean;
   refinementInstruction?: string;
-  categoryKey?: string;
+  categoryKey?: string; // Style (e.g., "product_on_white")
+  useCaseKey?: UseCaseKey; // Use case (e.g., "product_shot") - PRIMARY for categorization
 };
 
 type ImageSession = {
@@ -113,10 +148,24 @@ export default function ImageEditor() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   const [marketplace, setMarketplace] = useState<string>("etsy");
-  const [aspectRatio, setAspectRatio] = useState<string>("5:4");
+  
+  // Use Case First: Primary selection
+  const [selectedUseCase, setSelectedUseCase] = useState<UseCaseKey>(DEFAULT_USE_CASE);
+  
+  // Aspect Ratio: Auto-set based on use case
+  const currentUseCase = getUseCaseByKey(selectedUseCase);
+  const [aspectRatio, setAspectRatio] = useState<string>(currentUseCase.defaultAspectRatio);
+  
   const [outputFormat, setOutputFormat] = useState<"png" | "jpeg" | "webp">("png");
   
-  const [mainPrompt, setMainPrompt] = useState(DEFAULT_PROMPT);
+  // Initialize prompt with default use case + style combination
+  const initialStyle = getImageCategoryByKey(DEFAULT_IMAGE_CATEGORY_KEY);
+  const initialUseCase = getUseCaseByKey(DEFAULT_USE_CASE);
+  const initialPrompt = initialStyle 
+    ? buildCombinedPrompt(initialUseCase, initialStyle, null)
+    : DEFAULT_PROMPT;
+  
+  const [mainPrompt, setMainPrompt] = useState(initialPrompt);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showProMode, setShowProMode] = useState(false);
@@ -156,6 +205,29 @@ export default function ImageEditor() {
   const [selectedImageCategory, setSelectedImageCategory] = useState<string>(
     DEFAULT_IMAGE_CATEGORY_KEY
   );
+  
+  // Auto-update aspect ratio and prompt when use case changes
+  useEffect(() => {
+    const useCase = getUseCaseByKey(selectedUseCase);
+    setAspectRatio(useCase.defaultAspectRatio);
+    
+    // Update prompt to combine use case + current style
+    const currentStyle = getImageCategoryByKey(selectedImageCategory);
+    if (currentStyle) {
+      const combinedPrompt = buildCombinedPrompt(useCase, currentStyle, selectedProduct);
+      setMainPrompt(combinedPrompt);
+    }
+  }, [selectedUseCase, selectedProduct]);
+  
+  // Update prompt when product changes (to add bottle type info)
+  useEffect(() => {
+    const useCase = getUseCaseByKey(selectedUseCase);
+    const currentStyle = getImageCategoryByKey(selectedImageCategory);
+    if (currentStyle) {
+      const combinedPrompt = buildCombinedPrompt(useCase, currentStyle, selectedProduct);
+      setMainPrompt(combinedPrompt);
+    }
+  }, [selectedProduct]);
   
   // Load prompt and image from navigation state if present
   useEffect(() => {
@@ -272,17 +344,30 @@ export default function ImageEditor() {
           .single();
 
         const categoryKey = resolveCategoryKey(image);
-        // Map specific shot type to broad category
-        const shotType = getImageCategoryByKey(categoryKey);
-        const broadCategory = shotType?.broadCategory || 'product'; // Fallback to product
+        // PRIMARY: Use the USE CASE to determine library category (what user selected)
+        // This ensures "Product Shot" → "E-commerce" in library, not style-based
+        const useCase = image.useCaseKey || selectedUseCase;
+        const broadCategory = mapUseCaseToLibraryCategory(useCase);
 
         const promptText =
           image.prompt ||
           (generatedImage as any)?.final_prompt ||
           mainPrompt;
 
-        const payload: any = {
-          title: `Image Recipe - ${new Date().toLocaleDateString()}`,
+        const baseContext = {
+          use_case: useCase, // PRIMARY: What the user selected (Product Shot, Hero Image, etc.)
+          shot_type: categoryKey, // Style (Product on White, Lifestyle Scene, etc.)
+          category: broadCategory, // Library category (ecommerce, social, etc.)
+          aspect_ratio: (generatedImage as any)?.aspect_ratio || aspectRatio,
+          output_format: (generatedImage as any)?.output_format || outputFormat,
+          image_type: (generatedImage as any)?.goal_type || 'product_photography',
+          model: 'nano-banana',
+          style: 'Photorealistic',
+        };
+
+        // Attempt 1: Try to save with relational columns
+        const primaryPayload: any = {
+          title: `${getUseCaseByKey(useCase).label} - ${new Date().toLocaleDateString()}`,
           prompt_text: promptText,
           content_type: 'visual',
           collection: 'General',
@@ -293,35 +378,62 @@ export default function ImageEditor() {
           generated_image_id: image.id,
           image_source: 'generated',
           category: broadCategory, // Use broad category for filtering
-          additional_context: {
-            shot_type: categoryKey, // Preserve specific shot type
-            category: broadCategory,
-            aspect_ratio: (generatedImage as any)?.aspect_ratio || aspectRatio,
-            output_format: (generatedImage as any)?.output_format || outputFormat,
-            image_type: (generatedImage as any)?.goal_type || 'product_photography',
-            model: 'nano-banana',
-            style: 'Photorealistic',
-          },
+          additional_context: baseContext,
         };
+
+        console.log('📦 Preparing to save recipe (attempt 1)', JSON.stringify(primaryPayload, null, 2));
 
         const { error: insertError } = await supabase
           .from('prompts')
           // @ts-ignore - Supabase TS infers deeply here
-          .insert([payload]);
+          .insert([primaryPayload]);
 
         if (insertError) {
-          console.error("Supabase insert error:", insertError);
-          throw insertError;
+          console.error("Supabase insert error details:", JSON.stringify(insertError, null, 2));
+          
+          // Check if error is due to missing column (PGRST204)
+          if (insertError.code === 'PGRST204' && insertError.message.includes('generated_image_id')) {
+            console.warn("⚠️ Schema mismatch detected. Falling back to legacy storage format.");
+            
+            // Attempt 2: Fallback payload (store ID in additional_context instead)
+            const fallbackPayload: any = {
+              title: `${getUseCaseByKey(useCase).label} - ${new Date().toLocaleDateString()}`,
+              prompt_text: promptText,
+              content_type: 'visual',
+              collection: 'General',
+              organization_id: orgId,
+              created_by: user.id,
+              is_template: true,
+              deliverable_format: 'image_prompt',
+              // Skip generated_image_id and image_source columns
+              category: broadCategory,
+              additional_context: {
+                ...baseContext,
+                generated_image_id: image.id, // Store ID here
+                image_source: 'generated'
+              },
+            };
+            
+            const { error: fallbackError } = await supabase
+              .from('prompts')
+              .insert([fallbackPayload]);
+              
+            if (fallbackError) throw fallbackError;
+            
+            console.log("✅ Recipe created successfully (fallback mode)");
+          } else {
+            throw insertError;
+          }
+        } else {
+          console.log("✅ Recipe created successfully for image:", image.id);
         }
 
         queryClient.invalidateQueries({ queryKey: ['templates', orgId] });
         queryClient.invalidateQueries({ queryKey: ['prompt-counts', orgId] });
-        
-        console.log("✅ Recipe created successfully for image:", image.id);
       } catch (error: any) {
-        console.error('Failed to ensure image recipe exists:', error);
-        toast.error("Failed to create image recipe", {
-          description: error.message || "Database error"
+        console.error('Failed to ensure image recipe exists. Full error:', JSON.stringify(error, null, 2));
+        toast.error("Failed to save to library", {
+          description: error.message || error.details || "Check console for details"
         });
       }
     },
@@ -522,7 +634,8 @@ export default function ImageEditor() {
         approvalStatus: "pending",
         chainDepth: 0,
         isChainOrigin: true,
-        categoryKey: selectedImageCategory
+        categoryKey: selectedImageCategory, // Style
+        useCaseKey: selectedUseCase, // Use Case (PRIMARY for categorization)
       };
 
       setCurrentSession(prev => ({
@@ -636,16 +749,16 @@ export default function ImageEditor() {
         .single();
       const categoryKey =
         image.categoryKey || selectedImageCategory || DEFAULT_IMAGE_CATEGORY_KEY;
-        
-      // Map specific shot type to broad category
-      const shotType = getImageCategoryByKey(categoryKey);
-      const broadCategory = shotType?.broadCategory || 'product';
+      
+      // PRIMARY: Use the USE CASE to determine library category
+      const useCase = image.useCaseKey || selectedUseCase;
+      const broadCategory = mapUseCaseToLibraryCategory(useCase);
 
       // Create prompt linked to the generated image
       const { error } = await supabase
         .from('prompts')
         .insert([{
-          title: `Image Recipe - ${new Date().toLocaleDateString()}`,
+          title: `${getUseCaseByKey(useCase).label} - ${new Date().toLocaleDateString()}`,
           prompt_text: image.prompt || mainPrompt,
           content_type: 'visual' as any,
           collection: 'General',
@@ -793,7 +906,8 @@ export default function ImageEditor() {
         chainDepth: selectedForRefinement.chainDepth + 1,
         isChainOrigin: false,
         refinementInstruction,
-        categoryKey: selectedForRefinement.categoryKey || selectedImageCategory
+        categoryKey: selectedForRefinement.categoryKey || selectedImageCategory,
+        useCaseKey: selectedForRefinement.useCaseKey || selectedUseCase,
       };
 
       setCurrentSession(prev => ({
@@ -1044,7 +1158,8 @@ export default function ImageEditor() {
           chainDepth: latestImage.chainDepth + 1,
           isChainOrigin: false,
           refinementInstruction: defaultInstruction,
-          categoryKey: latestImage.categoryKey || selectedImageCategory
+          categoryKey: latestImage.categoryKey || selectedImageCategory,
+          useCaseKey: latestImage.useCaseKey || selectedUseCase,
         };
 
         setCurrentSession(prev => ({
@@ -1207,7 +1322,7 @@ export default function ImageEditor() {
               <div className="space-y-4">
                 {/* Hero Image */}
                 {heroImage && (
-                  <div className="relative w-full rounded-lg overflow-hidden border border-studio-border bg-studio-card">
+                  <div className="relative w-full overflow-hidden border border-studio-border bg-studio-card">
                     <div className="relative w-full" style={{ aspectRatio: aspectRatio.replace(':', '/') }}>
                       <img
                         src={heroImage.imageUrl}
@@ -1400,12 +1515,44 @@ export default function ImageEditor() {
             buttonClassName="w-[200px] bg-charcoal/50 border-charcoal/70 text-parchment-white hover:bg-charcoal transition-colors justify-between"
           />
           
-          {/* Shot Type */}
+          {/* Use Case Selector (Primary) */}
+          <UseCaseSelector
+            value={selectedUseCase}
+            onSelect={(useCase) => {
+              setSelectedUseCase(useCase);
+              const useCaseDef = getUseCaseByKey(useCase);
+              setAspectRatio(useCaseDef.defaultAspectRatio);
+              
+              // Update prompt to combine use case + current style
+              const currentStyle = getImageCategoryByKey(selectedImageCategory);
+              if (currentStyle) {
+                const combinedPrompt = buildCombinedPrompt(useCaseDef, currentStyle, selectedProduct);
+                setMainPrompt(combinedPrompt);
+              }
+              
+              toast.success(`${useCaseDef.label} selected`);
+            }}
+            className="w-[160px] bg-charcoal/50 border-charcoal/70 text-parchment-white"
+          />
+          
+          {/* Shot Type (Secondary - Shows all, highlights recommended) */}
           <ShotTypeDropdown
+            useCase={selectedUseCase}
             onSelect={async (shotType) => {
               setSelectedImageCategory(shotType.key);
-              setMainPrompt(shotType.prompt);
-              toast.success(`${shotType.label} style applied`);
+              
+              // Combine use case + style prompts (both work together)
+              const useCaseDef = getUseCaseByKey(selectedUseCase);
+              const combinedPrompt = buildCombinedPrompt(useCaseDef, shotType, selectedProduct);
+              setMainPrompt(combinedPrompt);
+              
+              // Auto-switch to 1:1 for Flat Lay (Instagram standard)
+              if (shotType.key === "flat_lay" && aspectRatio !== "1:1") {
+                setAspectRatio("1:1");
+                toast.success(`${shotType.label} style applied - switched to 1:1 (Instagram)`);
+              } else {
+                toast.success(`${shotType.label} style applied`);
+              }
               
               // Log shot type selection to backend
               try {
@@ -1424,21 +1571,54 @@ export default function ImageEditor() {
                 console.error('Failed to log shot type:', error);
               }
             }}
-            className="w-[160px] bg-charcoal/50 border-charcoal/70 text-parchment-white"
+            className="w-[180px] bg-charcoal/50 border-charcoal/70 text-parchment-white"
           />
 
-          {/* Aspect Ratio */}
+          {/* Aspect Ratio (Filtered by Use Case + Style) */}
           <Select value={aspectRatio} onValueChange={setAspectRatio}>
             <SelectTrigger className="w-[140px] bg-charcoal/50 border-charcoal/70 text-parchment-white hover:bg-charcoal transition-colors">
               <SelectValue placeholder="Aspect ratio" />
             </SelectTrigger>
             <SelectContent className="bg-charcoal border-charcoal/70 text-parchment-white z-50 backdrop-blur-sm">
-              <SelectItem value="1:1" className="hover:bg-aged-brass/10">1:1 Square</SelectItem>
-              <SelectItem value="16:9" className="hover:bg-aged-brass/10">16:9 Landscape</SelectItem>
-              <SelectItem value="9:16" className="hover:bg-aged-brass/10">9:16 Portrait</SelectItem>
-              <SelectItem value="4:3" className="hover:bg-aged-brass/10">4:3 Classic</SelectItem>
-              <SelectItem value="4:5" className="hover:bg-aged-brass/10">4:5 Portrait</SelectItem>
-              <SelectItem value="5:4" className="hover:bg-aged-brass/10">5:4 Etsy</SelectItem>
+              {(() => {
+                // Get base options from use case
+                let availableRatios = [...currentUseCase.aspectRatioOptions];
+                
+                // If Flat Lay style is selected, ensure 1:1 is available (Instagram standard)
+                const isFlatLay = selectedImageCategory === "flat_lay";
+                if (isFlatLay && !availableRatios.includes("1:1")) {
+                  availableRatios = ["1:1", ...availableRatios];
+                }
+                
+                const labels: Record<string, string> = {
+                  "1:1": "1:1 Square",
+                  "16:9": "16:9 Landscape",
+                  "9:16": "9:16 Portrait",
+                  "4:3": "4:3 Classic",
+                  "4:5": "4:5 Portrait",
+                  "5:4": "5:4 Etsy",
+                  "21:9": "21:9 Ultra Wide",
+                  "3:2": "3:2 Classic",
+                };
+                
+                return availableRatios.map((ratio) => {
+                  const isDefault = ratio === currentUseCase.defaultAspectRatio;
+                  const isFlatLayRecommended = isFlatLay && ratio === "1:1";
+                  return (
+                    <SelectItem 
+                      key={ratio} 
+                      value={ratio} 
+                      className={cn(
+                        "hover:bg-aged-brass/10",
+                        isDefault && "font-semibold text-aged-brass",
+                        isFlatLayRecommended && !isDefault && "text-aged-brass/80"
+                      )}
+                    >
+                      {labels[ratio] || ratio} {isDefault && "⭐"} {isFlatLayRecommended && !isDefault && "📸"}
+                    </SelectItem>
+                  );
+                });
+              })()}
             </SelectContent>
           </Select>
 
@@ -1526,7 +1706,7 @@ export default function ImageEditor() {
               <div className="relative w-full h-full flex flex-col">
                 {/* Main Image Display */}
                 <div className="flex-1 flex items-center justify-center p-8 pb-24">
-                  <div className="relative w-full max-w-5xl max-h-full flex items-center justify-center rounded-[32px] border border-studio-border/70 bg-gradient-to-br from-ink-black via-charcoal to-ink-black shadow-[0_45px_120px_rgba(26,24,22,0.65)] overflow-hidden">
+                  <div className="relative w-full max-w-5xl max-h-full flex items-center justify-center border border-studio-border/70 bg-gradient-to-br from-ink-black via-charcoal to-ink-black shadow-[0_45px_120px_rgba(26,24,22,0.65)] overflow-hidden">
                     <div
                       className="absolute inset-0 pointer-events-none opacity-30"
                       style={{ background: "radial-gradient(circle at 50% 30%, rgba(255,255,255,0.12), transparent 60%)" }}
@@ -1544,15 +1724,17 @@ export default function ImageEditor() {
                         onClick={saveHeroImageToLibrary}
                         disabled={isSaving || heroImage.approvalStatus === 'flagged'}
                         className={cn(
-                          "bg-studio-card/90 backdrop-blur-sm h-9 px-3",
-                          heroImage.approvalStatus === 'flagged' && "text-aged-brass border-aged-brass/30"
+                          "bg-studio-card/90 backdrop-blur-sm h-9 px-3 transition-all",
+                          heroImage.approvalStatus === 'flagged' 
+                            ? "bg-green-500/20 border-green-500/50 hover:bg-green-500/30 text-green-500" 
+                            : "hover:bg-studio-card"
                         )}
-                        title="Save to Library"
+                        title={heroImage.approvalStatus === 'flagged' ? "Saved to Library" : "Save to Library"}
                       >
                         {isSaving ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : heroImage.approvalStatus === 'flagged' ? (
-                          <CheckCircle className="w-4 h-4" />
+                          <CheckCircle className="w-4 h-4 fill-green-500 text-green-500" />
                         ) : (
                           <Save className="w-4 h-4" />
                         )}
@@ -1684,33 +1866,49 @@ export default function ImageEditor() {
                 </div>
 
                 {/* Prompt Field */}
-                <Textarea
-                  ref={textareaRef}
-                  value={mainPrompt}
-                  onChange={(e) => setMainPrompt(e.target.value)}
-                  placeholder="Describe the image you want to create..."
-                  className="flex-1 resize-none bg-charcoal border border-stone/20 text-parchment-white placeholder:text-charcoal/60 focus-visible:ring-brass-glow/50"
-                  style={{ 
-                    color: '#F5F1E8',
-                    minHeight: '3rem',
-                    maxHeight: '250px',
-                    height: '3rem',
-                    transition: 'height 0.2s ease',
-                    overflowY: 'hidden'
-                  }}
-                  onInput={resizeTextarea}
-                  onPaste={() => {
-                    // Use setTimeout to allow paste content to render before measuring
-                    setTimeout(resizeTextarea, 0);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleGenerate();
-                    }
-                  }}
-                  disabled={isGenerating}
-                />
+                <div className="flex-1 relative">
+                  <Textarea
+                    ref={textareaRef}
+                    value={mainPrompt}
+                    onChange={(e) => setMainPrompt(e.target.value)}
+                    placeholder="Describe the image you want to create..."
+                    className="w-full resize-none bg-charcoal border border-stone/20 text-parchment-white placeholder:text-charcoal/60 focus-visible:ring-brass-glow/50"
+                    style={{ 
+                      color: '#F5F1E8',
+                      minHeight: '3rem',
+                      maxHeight: '250px',
+                      height: '3rem',
+                      transition: 'height 0.2s ease',
+                      overflowY: 'hidden'
+                    }}
+                    onInput={resizeTextarea}
+                    onPaste={() => {
+                      // Use setTimeout to allow paste content to render before measuring
+                      setTimeout(resizeTextarea, 0);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleGenerate();
+                      }
+                    }}
+                    disabled={isGenerating}
+                  />
+                  {/* Bottle Type Indicator */}
+                  {selectedProduct?.bottle_type && selectedProduct.bottle_type !== 'auto' && (
+                    <div className="absolute top-1 right-2 text-xs">
+                      <Badge 
+                        variant="outline" 
+                        className={selectedProduct.bottle_type === 'oil' 
+                          ? "bg-green-500/20 border-green-500/50 text-green-500" 
+                          : "bg-blue-500/20 border-blue-500/50 text-blue-500"
+                        }
+                      >
+                        {selectedProduct.bottle_type === 'oil' ? 'Oil Bottle' : 'Spray Bottle'}
+                      </Badge>
+                    </div>
+                  )}
+                </div>
 
                 {/* Generate Button */}
                 <Button

@@ -223,6 +223,7 @@ export interface GeminiImageRequest {
   prompt: string;
   aspectRatio?: string;
   negativePrompt?: string;
+  seed?: number; // For variety - different seeds produce different variations
   referenceImages?: Array<{
     data: string;
     mimeType: string;
@@ -258,18 +259,18 @@ export async function callGeminiImage(
     }],
   };
 
-  // Add generation config with aspect ratio if provided
-  if (request.aspectRatio || request.negativePrompt) {
-    body.generationConfig = {
-      responseModalities: ["IMAGE"],
-    };
-    if (request.negativePrompt) {
-      (body.generationConfig as any).negativePrompt = request.negativePrompt;
-    }
-  } else {
-    body.generationConfig = {
-      responseModalities: ["IMAGE"],
-    };
+  // Add generation config with aspect ratio, seed, and negative prompt if provided
+  body.generationConfig = {
+    responseModalities: ["IMAGE"],
+  };
+  
+  if (request.negativePrompt) {
+    (body.generationConfig as any).negativePrompt = request.negativePrompt;
+  }
+  
+  // Add seed for variety (if Gemini API supports it)
+  if (request.seed !== undefined) {
+    (body.generationConfig as any).seed = request.seed;
   }
 
   const response = await withTimeout(

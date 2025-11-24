@@ -85,6 +85,8 @@ export function ProductsTab() {
     description: "",
     usp: "",
     tone: "",
+    // Bottle Type (for image generation accuracy)
+    bottle_type: "auto" as "oil" | "spray" | "auto",
     // Personal Fragrance
     scent_family: "",
     top_notes: "",
@@ -122,6 +124,7 @@ export function ProductsTab() {
       description: "",
       usp: "",
       tone: "",
+      bottle_type: "auto",
       scent_family: "",
       top_notes: "",
       middle_notes: "",
@@ -150,6 +153,7 @@ export function ProductsTab() {
       description: product.description || "",
       usp: product.usp || "",
       tone: product.tone || "",
+      bottle_type: (product.bottle_type || "auto") as "oil" | "spray" | "auto",
       scent_family: product.scentFamily || "",
       top_notes: product.topNotes || "",
       middle_notes: product.middleNotes || "",
@@ -178,6 +182,7 @@ export function ProductsTab() {
         description: formData.description.trim() || null,
         usp: formData.usp.trim() || null,
         tone: formData.tone.trim() || null,
+        bottle_type: formData.bottle_type || "auto",
       };
 
       // Add category-specific fields
@@ -1225,6 +1230,32 @@ export function ProductsTab() {
                   }
                 />
               </div>
+              {(formData.category === 'personal_fragrance' || formData.category === 'skincare') && (
+                <div className="space-y-2">
+                  <Label htmlFor="bottle_type">
+                    Bottle Type
+                    <span className="text-xs text-muted-foreground ml-1">(for image accuracy)</span>
+                  </Label>
+                  <Select
+                    value={formData.bottle_type}
+                    onValueChange={(value: "oil" | "spray" | "auto") => 
+                      setFormData({ ...formData, bottle_type: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="auto">Auto-detect (from product name/format)</SelectItem>
+                      <SelectItem value="oil">Oil (Dropper/Roller - No Spray)</SelectItem>
+                      <SelectItem value="spray">Spray (Atomizer - No Dropper)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Ensures images show correct bottle closure. "Auto" uses smart detection.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">

@@ -1,21 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
   DEFAULT_IMAGE_CATEGORY_KEY,
   imageCategories,
   type ImageCategoryDefinition,
+  type UseCaseKey,
+  isStyleRecommended,
 } from "@/data/imageCategories";
 
 interface ShotTypeDropdownProps {
+  useCase: UseCaseKey;
   onSelect: (shotType: ImageCategoryDefinition) => void;
   className?: string;
 }
 
 export default function ShotTypeDropdown({
+  useCase,
   onSelect,
   className,
 }: ShotTypeDropdownProps) {
   const [selected, setSelected] = useState(DEFAULT_IMAGE_CATEGORY_KEY);
+
+  // Auto-select first recommended style when use case changes
+  useEffect(() => {
+    const recommended = imageCategories.find((style) =>
+      isStyleRecommended(style.key, useCase)
+    );
+    if (recommended) {
+      setSelected(recommended.key);
+      onSelect(recommended);
+    }
+  }, [useCase]);
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedType = imageCategories.find(
@@ -48,15 +63,23 @@ export default function ShotTypeDropdown({
         paddingRight: "2.5rem",
       }}
     >
-      {imageCategories.map((category) => (
-        <option
-          key={category.key}
-          value={category.key}
-          className="bg-studio-charcoal text-studio-text-primary"
-        >
-          {category.label}
-        </option>
-      ))}
+      {imageCategories.map((category) => {
+        const isRecommended = isStyleRecommended(category.key, useCase);
+        return (
+          <option
+            key={category.key}
+            value={category.key}
+            className={cn(
+              "bg-studio-charcoal text-studio-text-primary",
+              isRecommended && "font-semibold"
+            )}
+          >
+            {isRecommended ? "⭐ " : ""}
+            {category.label}
+            {isRecommended ? " (Recommended)" : ""}
+          </option>
+        );
+      })}
     </select>
   );
 }

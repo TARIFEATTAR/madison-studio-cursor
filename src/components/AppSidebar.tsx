@@ -107,7 +107,7 @@ export function AppSidebar() {
       setOpen: setLibraryOpen,
       items: [
         { title: "The Archives", url: "/library", icon: Archive },
-        { title: "Image Recipes", url: "/templates", icon: BookOpen },
+        { title: "Image Library", url: "/templates", icon: BookOpen },
       ]
     },
     ...(isEcommerce ? [{

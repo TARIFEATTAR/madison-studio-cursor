@@ -200,48 +200,106 @@ export function formatVisualContext(productData: any): string {
   if (productData.category) parts.push(`✦ Category: ${productData.category}`);
   
   // Bottle/Closure Type Detection (Critical for accurate rendering)
-  const productNameLower = (productData.name || '').toLowerCase();
-  const formatLower = (productData.format || '').toLowerCase();
-  const productTypeLower = (productData.product_type || '').toLowerCase();
-  const categoryLower = (productData.category || '').toLowerCase();
+  // PRIORITY 1: Check explicit bottle_type field (user-set, highest priority)
+  const explicitBottleType = productData.bottle_type?.toLowerCase();
+  let isOilProduct = false;
+  let isPerfumeSpray = false;
   
-  // STRICT RULE: "Perfume" keyword usually implies spray, BUT "Oil" overrides it.
-  // If it says "Perfume Oil", it is an OIL (no spray).
-  // If it says "Attar", it is an OIL (no spray).
-  
-  const isOilProduct = 
-    productNameLower.includes('oil') ||
-    productNameLower.includes('attar') ||
-    productNameLower.includes('concentrate') ||
-    formatLower.includes('oil') ||
-    formatLower.includes('roller') ||
-    formatLower.includes('dropper') ||
-    formatLower.includes('attar') ||
-    productTypeLower.includes('oil') ||
-    productTypeLower.includes('attar') ||
-    categoryLower === 'skincare';
-  
-  const isPerfumeSpray = 
-    !isOilProduct && (
-      productNameLower.includes('perfume') || 
-      productNameLower.includes('eau de') ||
-      productNameLower.includes('cologne') ||
-      formatLower.includes('spray') || 
-      formatLower.includes('atomizer')
+  if (explicitBottleType === 'oil') {
+    isOilProduct = true;
+  } else if (explicitBottleType === 'spray') {
+    isPerfumeSpray = true;
+  } else {
+    // PRIORITY 2: Auto-detection from product fields (only if bottle_type is 'auto' or null)
+    const productNameLower = (productData.name || '').toLowerCase();
+    const formatLower = (productData.format || '').toLowerCase();
+    const productTypeLower = (productData.product_type || '').toLowerCase();
+    const categoryLower = (productData.category || '').toLowerCase();
+    const descriptionLower = (productData.description || '').toLowerCase();
+    
+    // OIL INDICATORS (comprehensive list)
+    const oilIndicators = [
+      'oil', 'attar', 'concentrate', 'roller', 'dropper', 'roll-on', 'roll on',
+      'perfume oil', 'fragrance oil', 'essential oil', 'carrier oil',
+      'diluted oil', 'pure oil', 'oil-based', 'oil based', 'viscous',
+      'thick oil', 'dense oil'
+    ];
+    
+    // SPRAY INDICATORS (comprehensive list)
+    const sprayIndicators = [
+      'spray', 'atomizer', 'pump', 'mist', 'eau de', 'cologne',
+      'perfume spray', 'spray bottle', 'sprayer', 'atomizing', 'aerosol'
+    ];
+    
+    // Check all fields for oil indicators
+    const hasOilIndicator = oilIndicators.some(indicator => 
+      productNameLower.includes(indicator) ||
+      formatLower.includes(indicator) ||
+      productTypeLower.includes(indicator) ||
+      descriptionLower.includes(indicator)
     );
-
+    
+    // Check all fields for spray indicators
+    const hasSprayIndicator = sprayIndicators.some(indicator =>
+      productNameLower.includes(indicator) ||
+      formatLower.includes(indicator) ||
+      productTypeLower.includes(indicator) ||
+      descriptionLower.includes(indicator)
+    );
+    
+    // Special case: "perfume oil" or "fragrance oil" = OIL (not spray)
+    const isPerfumeOil = 
+      productNameLower.includes('perfume oil') ||
+      productNameLower.includes('fragrance oil') ||
+      formatLower.includes('perfume oil') ||
+      formatLower.includes('fragrance oil');
+    
+    // Special case: category = 'skincare' usually means oil
+    const isSkincare = categoryLower === 'skincare';
+    
+    // Decision logic: OIL takes precedence if detected
+    isOilProduct = isPerfumeOil || isSkincare || hasOilIndicator;
+    isPerfumeSpray = !isOilProduct && hasSprayIndicator;
+  }
+  
   if (isOilProduct) {
-    parts.push('\n━━━ BOTTLE SPECIFICATION (MANDATORY) ━━━');
-    parts.push('PRODUCT TYPE: OIL / ATTAR / CONCENTRATE (NON-SPRAY)');
-    parts.push('CLOSURE RULE: MUST be a screw cap, glass dropper, or roller ball.');
-    parts.push('FORBIDDEN: DO NOT render a spray pump, atomizer, nozzle, or crimped metal spray neck.');
-    parts.push('APPLICATOR: If visible, show a glass wand (dipstick) or dropper pipette.');
-    parts.push('VISUAL CUE: The liquid is viscous oil, not watery spray.');
+    parts.push('\n╔══════════════════════════════════════════════════════════════════╗');
+    parts.push('║     ⚠️ CRITICAL BOTTLE SPECIFICATION (MANDATORY)                  ║');
+    parts.push('╚══════════════════════════════════════════════════════════════════╝');
+    parts.push('\nPRODUCT TYPE: OIL / ATTAR / CONCENTRATE (NON-SPRAY)');
+    parts.push('\n✅ REQUIRED CLOSURE TYPES (ONLY THESE):');
+    parts.push('  • Glass dropper with pipette');
+    parts.push('  • Roller ball applicator');
+    parts.push('  • Screw cap (if dropper/roller is separate)');
+    parts.push('  • Glass wand (dipstick applicator)');
+    parts.push('\n❌ ABSOLUTELY FORBIDDEN (NEVER INCLUDE):');
+    parts.push('  • Perfume sprayer / atomizer / pump mechanism');
+    parts.push('  • Crimped metal spray neck');
+    parts.push('  • Spray nozzle / misting device');
+    parts.push('  • Any form of spray dispenser');
+    parts.push('  • Aerosol mechanism');
+    parts.push('\nVISUAL CHARACTERISTICS:');
+    parts.push('  • The liquid is viscous oil (thicker, more dense)');
+    parts.push('  • Bottle designed for direct application (not spraying)');
+    parts.push('  • Closure is for controlled dispensing, not atomization');
+    parts.push('\n⚠️ CRITICAL: If you render a spray mechanism, the image is INCORRECT and unusable.');
   } else if (isPerfumeSpray) {
-    parts.push('\n━━━ BOTTLE SPECIFICATION (MANDATORY) ━━━');
-    parts.push('PRODUCT TYPE: SPRAY PERFUME (ALCOHOL BASED)');
-    parts.push('CLOSURE RULE: MUST feature a spray pump mechanism with atomizer.');
-    parts.push('VISUAL CUE: Visible crimped metal neck and spray nozzle.');
+    parts.push('\n╔══════════════════════════════════════════════════════════════════╗');
+    parts.push('║     ⚠️ CRITICAL BOTTLE SPECIFICATION (MANDATORY)                  ║');
+    parts.push('╚══════════════════════════════════════════════════════════════════╝');
+    parts.push('\nPRODUCT TYPE: SPRAY PERFUME (ALCOHOL-BASED)');
+    parts.push('\n✅ REQUIRED CLOSURE TYPE:');
+    parts.push('  • Spray pump mechanism with atomizer');
+    parts.push('  • Visible crimped metal neck');
+    parts.push('  • Spray nozzle for misting');
+    parts.push('\n❌ ABSOLUTELY FORBIDDEN:');
+    parts.push('  • Dropper / pipette');
+    parts.push('  • Roller ball applicator');
+    parts.push('  • Glass wand / dipstick');
+    parts.push('\nVISUAL CHARACTERISTICS:');
+    parts.push('  • The liquid is alcohol-based (thinner, more fluid)');
+    parts.push('  • Bottle designed for atomization and misting');
+    parts.push('  • Closure includes spray mechanism');
   }
   
   // Visual world & aesthetic
