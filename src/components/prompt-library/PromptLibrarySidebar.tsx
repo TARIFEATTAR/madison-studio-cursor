@@ -2,22 +2,12 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
-import { Star, Clock, TrendingUp, ChevronDown, ChevronRight, Hash, Package, Sparkles, ShoppingBag, Users, Camera, Palette, Grid3x3 } from "lucide-react";
+import { Star, Clock, TrendingUp, ChevronDown, ChevronRight, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-
-// Image-specific categories for the prompt library
-const IMAGE_CATEGORIES = [
-  { key: "product", label: "Product Photography", icon: Package },
-  { key: "lifestyle", label: "Lifestyle", icon: Sparkles },
-  { key: "ecommerce", label: "E-commerce", icon: ShoppingBag },
-  { key: "social", label: "Social Media", icon: Users },
-  { key: "editorial", label: "Editorial", icon: Camera },
-  { key: "creative", label: "Creative & Artistic", icon: Palette },
-  { key: "flat_lay", label: "Flat Lay", icon: Grid3x3 },
-];
+import { BROAD_IMAGE_CATEGORIES } from "@/data/imageCategories";
 
 interface PromptLibrarySidebarProps {
   onQuickAccessSelect: (type: "favorites" | "recently-used" | "most-used") => void;
@@ -58,10 +48,10 @@ const PromptLibrarySidebar = ({
       const categoryCounts: Record<string, number> = {};
 
       prompts.forEach((prompt) => {
-        // Extract category from additional_context
-        const imageType = (prompt.additional_context as any)?.image_type;
-        if (imageType) {
-          categoryCounts[imageType] = (categoryCounts[imageType] || 0) + 1;
+        // Use category field first, fallback to additional_context.image_type for backward compatibility
+        const category = (prompt as any).category || (prompt.additional_context as any)?.category || (prompt.additional_context as any)?.image_type;
+        if (category) {
+          categoryCounts[category] = (categoryCounts[category] || 0) + 1;
         }
       });
 
@@ -209,15 +199,20 @@ const PromptLibrarySidebar = ({
                 )}
               >
                 <span>All Types</span>
-                <Badge variant="secondary" className={cn(
-                  "text-xs font-medium min-w-[36px] h-6 justify-center rounded-md",
-                  selectedCategory === null ? "bg-aged-brass/20 text-aged-brass" : "bg-charcoal/5 text-charcoal/60"
-                )}>
-                  {Object.values(counts?.categories || {}).reduce((a, b) => a + b, 0)}
+                <Badge
+                  variant="secondary"
+                  className={cn(
+                    "text-xs font-medium min-w-[36px] h-6 justify-center rounded-md",
+                    selectedCategory === null
+                      ? "bg-aged-brass/20 text-aged-brass"
+                      : "bg-charcoal/5 text-charcoal/60"
+                  )}
+                >
+                  {counts?.categories?.all ?? 0}
                 </Badge>
               </button>
 
-              {IMAGE_CATEGORIES.map((category) => {
+              {BROAD_IMAGE_CATEGORIES.map((category) => {
                 const count = counts?.categories?.[category.key] || 0;
                 const isSelected = selectedCategory === category.key;
                 const Icon = category.icon;
@@ -237,12 +232,15 @@ const PromptLibrarySidebar = ({
                       <Icon className="h-4 w-4" />
                       <span>{category.label}</span>
                     </span>
-                    <Badge variant="secondary" className={cn(
-                      "text-xs font-medium min-w-[36px] h-6 justify-center rounded-md",
-                      isSelected 
-                        ? "bg-aged-brass/20 text-aged-brass" 
-                        : "bg-charcoal/5 text-charcoal/60"
-                    )}>
+                    <Badge
+                      variant="secondary"
+                      className={cn(
+                        "text-xs font-medium min-w-[36px] h-6 justify-center rounded-md",
+                        isSelected
+                          ? "bg-aged-brass/20 text-aged-brass"
+                          : "bg-charcoal/5 text-charcoal/60"
+                      )}
+                    >
                       {count}
                     </Badge>
                   </button>

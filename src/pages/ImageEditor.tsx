@@ -1,6 +1,7 @@
 // React & Router
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
 // External Libraries
 import { toast } from "sonner";
@@ -25,7 +26,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 // Icons
-import { 
+import {
   Download, 
   Loader2, 
   Sparkles, 
@@ -43,7 +44,6 @@ import {
   X,
   MessageCircle,
   Menu,
-  Bookmark,
   CheckCircle
 } from "lucide-react";
 
@@ -64,6 +64,12 @@ import MobileGeneratedImageView from "@/components/image-editor/MobileGeneratedI
 import MobileCreateForm from "@/components/image-editor/MobileCreateForm";
 import { ProductSelector } from "@/components/forge/ProductSelector";
 import { Product } from "@/hooks/useProducts";
+import {
+  imageCategories,
+  DEFAULT_IMAGE_CATEGORY_KEY,
+  type ImageCategoryDefinition,
+  getImageCategoryByKey,
+} from "@/data/imageCategories";
 
 // Prompt Formula Utilities
 import { CAMERA_LENS, LIGHTING, ENVIRONMENTS } from "@/utils/promptFormula";
@@ -84,6 +90,7 @@ type GeneratedImage = {
   chainDepth: number;
   isChainOrigin: boolean;
   refinementInstruction?: string;
+  categoryKey?: string;
 };
 
 type ImageSession = {
@@ -101,6 +108,7 @@ export default function ImageEditor() {
   const { user } = useAuth();
   const { orgId } = useCurrentOrganizationId();
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
@@ -145,16 +153,49 @@ export default function ImageEditor() {
   const [productImage, setProductImage] = useState<{ url: string; file: File } | null>(null);
   const [showGeneratedView, setShowGeneratedView] = useState(false);
   const [latestGeneratedImage, setLatestGeneratedImage] = useState<string | null>(null);
+  const [selectedImageCategory, setSelectedImageCategory] = useState<string>(
+    DEFAULT_IMAGE_CATEGORY_KEY
+  );
   
-  // Load prompt from navigation state if present
+  // Load prompt and image from navigation state if present
   useEffect(() => {
-    if (location.state?.loadedPrompt) {
-      setMainPrompt(location.state.loadedPrompt);
-      if (location.state.aspectRatio) setAspectRatio(location.state.aspectRatio);
-      if (location.state.outputFormat) setOutputFormat(location.state.outputFormat);
-      toast.success("Image recipe loaded!");
-      window.history.replaceState({}, document.title);
-    }
+    const loadState = async () => {
+      if (location.state?.loadedPrompt) {
+        setMainPrompt(location.state.loadedPrompt);
+        if (location.state.aspectRatio) setAspectRatio(location.state.aspectRatio);
+        if (location.state.outputFormat) setOutputFormat(location.state.outputFormat);
+        
+        // Handle loaded image for editing
+        if (location.state.loadedImage) {
+          try {
+            const response = await fetch(location.state.loadedImage);
+            const blob = await response.blob();
+            const file = new File([blob], "original-image.png", { type: blob.type });
+            
+            // Convert to Base64 for compatibility with edge function
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              setProductImage({ 
+                file, 
+                url: reader.result as string 
+              });
+              toast.success("Image loaded for editing!");
+            };
+            reader.readAsDataURL(blob);
+          } catch (error) {
+            console.error("Failed to load image:", error);
+            toast.error("Failed to load image for editing");
+          }
+        } else {
+          toast.success("Image recipe loaded!");
+        }
+        
+        // Clear state but keep history
+        window.history.replaceState({}, document.title);
+      }
+    };
+
+    loadState();
   }, [location.state]);
   
   // Fetch brand context
@@ -204,6 +245,96 @@ export default function ImageEditor() {
     const words = prompt.split(' ').slice(0, 4).join(' ');
     return words.length > 30 ? words.substring(0, 30) + '...' : words;
   };
+
+  const resolveCategoryKey = useCallback(
+    (image?: GeneratedImage) =>
+      image?.categoryKey || selectedImageCategory || DEFAULT_IMAGE_CATEGORY_KEY,
+    [selectedImageCategory]
+  );
+
+  const ensureImageRecipeForImage = useCallback(
+    async (image?: GeneratedImage) => {
+      if (!image || !orgId || !user) return;
+      try {
+        // @ts-ignore
+        const { data: existingPrompt } = await (supabase
+          .from('prompts') as any)
+          .select('id')
+          .eq('generated_image_id', image.id)
+          .maybeSingle();
+
+        if (existingPrompt) return;
+
+        const { data: generatedImage } = await supabase
+          .from('generated_images')
+          .select('aspect_ratio, output_format, goal_type, final_prompt')
+          .eq('id', image.id)
+          .single();
+
+        const categoryKey = resolveCategoryKey(image);
+        // Map specific shot type to broad category
+        const shotType = getImageCategoryByKey(categoryKey);
+        const broadCategory = shotType?.broadCategory || 'product'; // Fallback to product
+
+        const promptText =
+          image.prompt ||
+          (generatedImage as any)?.final_prompt ||
+          mainPrompt;
+
+        const payload: any = {
+          title: `Image Recipe - ${new Date().toLocaleDateString()}`,
+          prompt_text: promptText,
+          content_type: 'visual',
+          collection: 'General',
+          organization_id: orgId,
+          created_by: user.id,
+          is_template: true,
+          deliverable_format: 'image_prompt',
+          generated_image_id: image.id,
+          image_source: 'generated',
+          category: broadCategory, // Use broad category for filtering
+          additional_context: {
+            shot_type: categoryKey, // Preserve specific shot type
+            category: broadCategory,
+            aspect_ratio: (generatedImage as any)?.aspect_ratio || aspectRatio,
+            output_format: (generatedImage as any)?.output_format || outputFormat,
+            image_type: (generatedImage as any)?.goal_type || 'product_photography',
+            model: 'nano-banana',
+            style: 'Photorealistic',
+          },
+        };
+
+        const { error: insertError } = await supabase
+          .from('prompts')
+          // @ts-ignore - Supabase TS infers deeply here
+          .insert([payload]);
+
+        if (insertError) {
+          console.error("Supabase insert error:", insertError);
+          throw insertError;
+        }
+
+        queryClient.invalidateQueries({ queryKey: ['templates', orgId] });
+        queryClient.invalidateQueries({ queryKey: ['prompt-counts', orgId] });
+        
+        console.log("✅ Recipe created successfully for image:", image.id);
+      } catch (error: any) {
+        console.error('Failed to ensure image recipe exists:', error);
+        toast.error("Failed to create image recipe", {
+          description: error.message || "Database error"
+        });
+      }
+    },
+    [
+      orgId,
+      user,
+      resolveCategoryKey,
+      mainPrompt,
+      aspectRatio,
+      outputFormat,
+      queryClient,
+    ]
+  );
 
   /**
    * Enhance user prompt with Pro Mode controls
@@ -390,7 +521,8 @@ export default function ImageEditor() {
         isHero: currentSession.images.length === 0,
         approvalStatus: "pending",
         chainDepth: 0,
-        isChainOrigin: true
+        isChainOrigin: true,
+        categoryKey: selectedImageCategory
       };
 
       setCurrentSession(prev => ({
@@ -402,42 +534,7 @@ export default function ImageEditor() {
       setAllPrompts(prev => [...prev, { role: 'user', content: effectivePrompt }]);
       
       // Automatically create a prompt/recipe linked to the generated image
-      try {
-        // Get the image's metadata from generated_images
-        const { data: generatedImage } = await supabase
-          .from('generated_images')
-          .select('aspect_ratio, output_format, goal_type, image_generator')
-          .eq('id', functionData.savedImageId)
-          .single();
-
-        // Create prompt linked to the generated image
-        await supabase
-          .from('prompts')
-          .insert([{
-            title: `Image Recipe - ${new Date().toLocaleDateString()}`,
-            prompt_text: effectivePrompt,
-            content_type: 'visual' as any,
-            collection: 'General',
-            organization_id: orgId!,
-            created_by: user.id,
-            is_template: true,
-            deliverable_format: 'image_prompt',
-            generated_image_id: functionData.savedImageId,
-            image_source: 'generated' as any,
-            additional_context: {
-              aspect_ratio: generatedImage?.aspect_ratio || aspectRatio,
-              output_format: generatedImage?.output_format || outputFormat,
-              image_type: generatedImage?.goal_type || 'product_photography',
-              model: generatedImage?.image_generator || 'nano-banana',
-              style: 'Photorealistic', // Default style for nano-banana
-            },
-          }]);
-        
-        // Silently fail - don't interrupt user experience if prompt creation fails
-      } catch (promptError) {
-        console.error('Error auto-creating prompt:', promptError);
-        // Don't show error to user - this is a background operation
-      }
+      ensureImageRecipeForImage(newImage);
       
       toast.success("Image generated successfully!");
       
@@ -537,6 +634,12 @@ export default function ImageEditor() {
         .select('aspect_ratio, output_format, goal_type')
         .eq('id', imageId)
         .single();
+      const categoryKey =
+        image.categoryKey || selectedImageCategory || DEFAULT_IMAGE_CATEGORY_KEY;
+        
+      // Map specific shot type to broad category
+      const shotType = getImageCategoryByKey(categoryKey);
+      const broadCategory = shotType?.broadCategory || 'product';
 
       // Create prompt linked to the generated image
       const { error } = await supabase
@@ -552,10 +655,13 @@ export default function ImageEditor() {
           deliverable_format: 'image_prompt',
           generated_image_id: imageId,
           image_source: 'generated' as any,
+          category: broadCategory,
           additional_context: {
+            shot_type: categoryKey,
             aspect_ratio: generatedImage?.aspect_ratio || aspectRatio,
             output_format: generatedImage?.output_format || outputFormat,
             image_type: generatedImage?.goal_type || 'product_photography',
+            category: broadCategory,
           },
         }]);
 
@@ -595,6 +701,12 @@ export default function ImageEditor() {
       }
 
       toast.success(`Saved ${flaggedImages.length} images to library!`);
+      for (const image of flaggedImages) {
+        await ensureImageRecipeForImage(image);
+      }
+      
+      // Invalidate library content cache
+      queryClient.invalidateQueries({ queryKey: ["library-content"] });
       
       // Reset session
       setCurrentSession({
@@ -680,7 +792,8 @@ export default function ImageEditor() {
         parentImageId: selectedForRefinement.id,
         chainDepth: selectedForRefinement.chainDepth + 1,
         isChainOrigin: false,
-        refinementInstruction
+        refinementInstruction,
+        categoryKey: selectedForRefinement.categoryKey || selectedImageCategory
       };
 
       setCurrentSession(prev => ({
@@ -746,6 +859,10 @@ export default function ImageEditor() {
         )
       }));
       
+      // Invalidate library content cache
+      queryClient.invalidateQueries({ queryKey: ["library-content"] });
+      await ensureImageRecipeForImage(latestImage);
+      
       toast.success("Image saved to library!");
       setShowGeneratedView(false);
       setActiveTab("gallery");
@@ -788,7 +905,7 @@ export default function ImageEditor() {
           await new Promise((r) => setTimeout(r, 400 * attempt));
         }
       }
-      
+
       // Update local state to mark as flagged
       setCurrentSession(prev => ({
         ...prev,
@@ -798,6 +915,10 @@ export default function ImageEditor() {
             : img
         )
       }));
+      
+      // Invalidate library content cache so new image appears immediately
+      queryClient.invalidateQueries({ queryKey: ["library-content"] });
+      await ensureImageRecipeForImage(heroImage);
       
       toast.success("Image saved to library!");
     } catch (error: any) {
@@ -922,7 +1043,8 @@ export default function ImageEditor() {
           parentImageId: latestImage.id,
           chainDepth: latestImage.chainDepth + 1,
           isChainOrigin: false,
-          refinementInstruction: defaultInstruction
+          refinementInstruction: defaultInstruction,
+          categoryKey: latestImage.categoryKey || selectedImageCategory
         };
 
         setCurrentSession(prev => ({
@@ -991,6 +1113,7 @@ export default function ImageEditor() {
           onPromptChange={setMainPrompt}
           onAspectRatioChange={setAspectRatio}
           onShotTypeSelect={async (shotType) => {
+            setSelectedImageCategory(shotType.key);
             setMainPrompt(shotType.prompt);
             toast.success(`${shotType.label} style applied`);
           }}
@@ -1047,6 +1170,7 @@ export default function ImageEditor() {
               aspectRatio={aspectRatio}
               onAspectRatioChange={setAspectRatio}
               onShotTypeSelect={async (shotType) => {
+                setSelectedImageCategory(shotType.key);
                 setMainPrompt(shotType.prompt);
                 toast.success(`${shotType.label} style applied`);
                 
@@ -1279,6 +1403,7 @@ export default function ImageEditor() {
           {/* Shot Type */}
           <ShotTypeDropdown
             onSelect={async (shotType) => {
+              setSelectedImageCategory(shotType.key);
               setMainPrompt(shotType.prompt);
               toast.success(`${shotType.label} style applied`);
               
@@ -1400,8 +1525,8 @@ export default function ImageEditor() {
             {heroImage ? (
               <div className="relative w-full h-full flex flex-col">
                 {/* Main Image Display */}
-                <div className="flex-1 flex items-center justify-center p-8">
-                  <div className="relative w-full max-w-5xl max-h-[90%] flex items-center justify-center rounded-[32px] border border-studio-border/70 bg-gradient-to-br from-ink-black via-charcoal to-ink-black shadow-[0_45px_120px_rgba(26,24,22,0.65)] overflow-hidden">
+                <div className="flex-1 flex items-center justify-center p-8 pb-24">
+                  <div className="relative w-full max-w-5xl max-h-full flex items-center justify-center rounded-[32px] border border-studio-border/70 bg-gradient-to-br from-ink-black via-charcoal to-ink-black shadow-[0_45px_120px_rgba(26,24,22,0.65)] overflow-hidden">
                     <div
                       className="absolute inset-0 pointer-events-none opacity-30"
                       style={{ background: "radial-gradient(circle at 50% 30%, rgba(255,255,255,0.12), transparent 60%)" }}
@@ -1409,68 +1534,41 @@ export default function ImageEditor() {
                     <img 
                       src={heroImage.imageUrl} 
                       alt="Generated" 
-                      className="relative z-10 max-w-[92%] max-h-[92%] object-contain rounded-[28px] border border-white/5 shadow-[0_25px_80px_rgba(0,0,0,0.65)]"
+                      className="relative z-10 max-w-full max-h-full object-contain"
                     />
                     {/* Quick Action Buttons (Top Right) */}
                     <div className="absolute top-6 right-6 z-20 flex gap-2">
                       <Button
                         size="sm"
-                        variant={heroImage.approvalStatus === 'flagged' ? 'default' : 'secondary'}
-                        onClick={() => handleToggleApproval(heroImage.id)}
-                        className="bg-studio-card/90 backdrop-blur-sm"
-                        title="Favorite"
+                        variant="secondary"
+                        onClick={saveHeroImageToLibrary}
+                        disabled={isSaving || heroImage.approvalStatus === 'flagged'}
+                        className={cn(
+                          "bg-studio-card/90 backdrop-blur-sm h-9 px-3",
+                          heroImage.approvalStatus === 'flagged' && "text-aged-brass border-aged-brass/30"
+                        )}
+                        title="Save to Library"
                       >
-                        <Heart className={cn("w-4 h-4", heroImage.approvalStatus === 'flagged' && "fill-current")} />
+                        {isSaving ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : heroImage.approvalStatus === 'flagged' ? (
+                          <CheckCircle className="w-4 h-4" />
+                        ) : (
+                          <Save className="w-4 h-4" />
+                        )}
+                        <span className="sr-only">Save to Library</span>
                       </Button>
+
                       <Button
                         size="sm"
                         variant="secondary"
-                        onClick={() => handleSaveRecipe(heroImage.id)}
-                        className="bg-studio-card/90 backdrop-blur-sm"
-                        title="Save as Recipe"
+                        onClick={handleDownloadHeroImage}
+                        className="bg-studio-card/90 backdrop-blur-sm h-9 w-9 p-0"
+                        title="Download"
                       >
-                        <Bookmark className="w-4 h-4" />
+                        <Download className="w-4 h-4" />
                       </Button>
                     </div>
-                  </div>
-                </div>
-                
-                {/* Prominent Action Buttons (Bottom Center) */}
-                <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
-                  <div className="flex gap-3 bg-studio-card/95 backdrop-blur-md border border-studio-border rounded-lg p-2 shadow-lg">
-                    <Button
-                      onClick={saveHeroImageToLibrary}
-                      disabled={isSaving || heroImage.approvalStatus === 'flagged'}
-                      variant="brass"
-                      size="lg"
-                      className="px-6"
-                    >
-                      {isSaving ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Saving...
-                        </>
-                      ) : heroImage.approvalStatus === 'flagged' ? (
-                        <>
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          Saved to Library
-                        </>
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4 mr-2" />
-                          Save to Library
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      onClick={handleDownloadHeroImage}
-                      variant="outline"
-                      size="lg"
-                      className="px-6 bg-studio-card/50 border-studio-border hover:bg-studio-card"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Download
-                    </Button>
                   </div>
                 </div>
               </div>
@@ -1517,12 +1615,27 @@ export default function ImageEditor() {
               }}
               onSave={async (img) => {
                 try {
+                  const imageToSave = currentSession.images.find(image => image.id === img.id);
                   const { data: serverData, error: serverError } = await supabase.functions.invoke(
                     'mark-generated-image-saved',
                     { body: { imageId: img.id, userId: user?.id } }
                   );
                   if (serverError) throw serverError;
                   if (!serverData?.success) throw new Error('Save failed');
+                  
+                  setCurrentSession(prev => ({
+                    ...prev,
+                    images: prev.images.map(image =>
+                      image.id === img.id
+                        ? { ...image, approvalStatus: 'flagged' as ApprovalStatus }
+                        : image
+                    )
+                  }));
+                  
+                  // Invalidate library content cache
+                  queryClient.invalidateQueries({ queryKey: ["library-content"] });
+                  await ensureImageRecipeForImage(imageToSave);
+                  
                   toast.success("Image saved to library!");
                 } catch (error) {
                   console.error('Error saving image:', error);
@@ -1700,8 +1813,8 @@ export default function ImageEditor() {
 
       {/* Refinement Modal Overlay */}
       {refinementMode && selectedForRefinement && (
-        <div className="fixed inset-0 bg-ink-black/90 backdrop-blur-sm z-30 flex items-center justify-center p-4">
-          <Card className="w-full max-w-2xl bg-charcoal border-stone/20">
+        <div className="fixed inset-0 bg-ink-black/80 backdrop-blur-md z-30 flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl">
             <RefinementPanel
               baseImage={selectedForRefinement}
               onRefine={handleRefine}
@@ -1710,7 +1823,7 @@ export default function ImageEditor() {
                 setSelectedForRefinement(null);
               }}
             />
-          </Card>
+          </div>
         </div>
       )}
 

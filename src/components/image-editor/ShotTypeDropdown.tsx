@@ -1,45 +1,28 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-
-const SHOT_TYPES = [
-  { 
-    label: "Product on White", 
-    prompt: "A clean studio product shot on a pure white background, soft shadow, high-resolution lighting." 
-  },
-  { 
-    label: "Lifestyle Scene", 
-    prompt: "A lifestyle product photo placed in a cozy real-world environment that matches the brand mood." 
-  },
-  { 
-    label: "Natural Setting", 
-    prompt: "Product displayed outdoors on natural surfaces like stone or wood with diffused daylight." 
-  },
-  { 
-    label: "Reflective Surface", 
-    prompt: "A luxury product photo on a glossy marble or mirrored surface with balanced reflections." 
-  },
-  { 
-    label: "Editorial Luxury", 
-    prompt: "High-end editorial perfume shot, dramatic lighting, deep contrast, cinematic tone." 
-  },
-  {
-    label: "Flat Lay",
-    prompt: "Flat lay arrangement shot from above, thoughtfully styled props, balanced composition, crisp diffused lighting."
-  },
-];
+import {
+  DEFAULT_IMAGE_CATEGORY_KEY,
+  imageCategories,
+  type ImageCategoryDefinition,
+} from "@/data/imageCategories";
 
 interface ShotTypeDropdownProps {
-  onSelect: (shotType: { label: string; prompt: string }) => void;
+  onSelect: (shotType: ImageCategoryDefinition) => void;
   className?: string;
 }
 
-export default function ShotTypeDropdown({ onSelect, className }: ShotTypeDropdownProps) {
-  const [selected, setSelected] = useState(SHOT_TYPES[0].label);
+export default function ShotTypeDropdown({
+  onSelect,
+  className,
+}: ShotTypeDropdownProps) {
+  const [selected, setSelected] = useState(DEFAULT_IMAGE_CATEGORY_KEY);
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedType = SHOT_TYPES.find(st => st.label === e.target.value);
+    const selectedType = imageCategories.find(
+      (st) => st.key === e.target.value
+    );
     if (selectedType) {
-      setSelected(e.target.value);
+      setSelected(selectedType.key);
       onSelect(selectedType);
     }
   };
@@ -62,12 +45,16 @@ export default function ShotTypeDropdown({ onSelect, className }: ShotTypeDropdo
         backgroundRepeat: "no-repeat",
         backgroundPosition: "right 0.75rem center",
         backgroundSize: "12px",
-        paddingRight: "2.5rem"
+        paddingRight: "2.5rem",
       }}
     >
-      {SHOT_TYPES.map(st => (
-        <option key={st.label} value={st.label} className="bg-studio-charcoal text-studio-text-primary">
-          {st.label}
+      {imageCategories.map((category) => (
+        <option
+          key={category.key}
+          value={category.key}
+          className="bg-studio-charcoal text-studio-text-primary"
+        >
+          {category.label}
         </option>
       ))}
     </select>

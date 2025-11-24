@@ -7,8 +7,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { LibraryFilters } from "@/components/library/LibraryFilters";
 import { ContentCard } from "@/components/library/ContentCard";
 import { ContentDetailModal } from "@/components/library/ContentDetailModal";
-import { ImageSessionCard } from "@/components/library/ImageSessionCard";
-import { ImageSessionModal } from "@/components/library/ImageSessionModal";
 import { EmptyState } from "@/components/library/EmptyState";
 import { SortOption } from "@/components/library/SortDropdown";
 import { useLibraryContent, LibraryContentItem } from "@/hooks/useLibraryContent";
@@ -26,11 +24,9 @@ export default function Library() {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [groupBySessions, setGroupBySessions] = useState(false);
-  const { data: libraryContent = [], isLoading, refetch } = useLibraryContent(groupBySessions);
+  const { data: libraryContent = [], isLoading, refetch } = useLibraryContent(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedContentType, setSelectedContentType] = useState("all");
-  const [selectedCollection, setSelectedCollection] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortOption>("recent");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -39,14 +35,6 @@ export default function Library() {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
-  
-  // Session modal state
-  const [selectedSession, setSelectedSession] = useState<{
-    sessionId: string;
-    sessionName: string;
-    images: any[];
-    archived: boolean;
-  } | null>(null);
   
   // Schedule modal states
   const [scheduleOpen, setScheduleOpen] = useState(false);
@@ -100,11 +88,6 @@ export default function Library() {
       filtered = filtered.filter(c => c.status === selectedStatus);
     }
 
-    // Filter by collection
-    if (selectedCollection !== "all") {
-      filtered = filtered.filter(c => c.collection === selectedCollection);
-    }
-
     // Sort
     filtered.sort((a, b) => {
       switch (sortBy) {
@@ -120,12 +103,11 @@ export default function Library() {
     });
 
     return filtered;
-  }, [libraryContent, searchQuery, selectedContentType, selectedCollection, sortBy, showArchived]);
+  }, [libraryContent, searchQuery, selectedContentType, sortBy, showArchived]);
 
   const handleClearFilters = () => {
     setSearchQuery("");
     setSelectedContentType("all");
-    setSelectedCollection("all");
     setSelectedStatus("all");
     setShowArchived(false);
   };
@@ -384,10 +366,9 @@ export default function Library() {
     }
   };
 
-  const hasFilters = !!searchQuery || selectedContentType !== "all" || selectedCollection !== "all" || selectedStatus !== "all" || showArchived;
+  const hasFilters = !!searchQuery || selectedContentType !== "all" || selectedStatus !== "all" || showArchived;
   const activeFilterCount = [
     selectedContentType !== "all",
-    selectedCollection !== "all",
     selectedStatus !== "all",
     showArchived
   ].filter(Boolean).length;
@@ -439,8 +420,6 @@ export default function Library() {
                       onSearchChange={setSearchQuery}
                       selectedContentType={selectedContentType}
                       onContentTypeChange={setSelectedContentType}
-                      selectedCollection={selectedCollection}
-                      onCollectionChange={setSelectedCollection}
                       sortBy={sortBy}
                       onSortChange={setSortBy}
                       viewMode={viewMode}
@@ -462,14 +441,6 @@ export default function Library() {
                 </SheetContent>
               </Sheet>
 
-              <Button
-                variant={groupBySessions ? "default" : "outline"}
-                size="sm"
-                onClick={() => setGroupBySessions(!groupBySessions)}
-                className="flex-shrink-0"
-              >
-                {groupBySessions ? "Sessions" : "Group"}
-              </Button>
             </div>
 
             {/* Active filters display */}
@@ -481,15 +452,6 @@ export default function Library() {
                     <X 
                       className="w-3 h-3 ml-1 cursor-pointer" 
                       onClick={() => setSelectedContentType("all")}
-                    />
-                  </Badge>
-                )}
-                {selectedCollection !== "all" && (
-                  <Badge variant="secondary" className="text-xs">
-                    {selectedCollection}
-                    <X 
-                      className="w-3 h-3 ml-1 cursor-pointer" 
-                      onClick={() => setSelectedCollection("all")}
                     />
                   </Badge>
                 )}
@@ -552,8 +514,6 @@ export default function Library() {
                 onSearchChange={setSearchQuery}
                 selectedContentType={selectedContentType}
                 onContentTypeChange={setSelectedContentType}
-                selectedCollection={selectedCollection}
-                onCollectionChange={setSelectedCollection}
                 sortBy={sortBy}
                 onSortChange={setSortBy}
                 viewMode={viewMode}
@@ -562,15 +522,6 @@ export default function Library() {
                 onShowArchivedChange={setShowArchived}
               />
               
-              {/* Group by Sessions Toggle */}
-              <Button
-                variant={groupBySessions ? "brass" : "outline"}
-                size="sm"
-                onClick={() => setGroupBySessions(!groupBySessions)}
-                className="flex-shrink-0"
-              >
-                {groupBySessions ? "Showing Sessions" : "Group by Session"}
-              </Button>
             </div>
           </div>
         </div>
@@ -668,65 +619,6 @@ export default function Library() {
             )}
           >
             {filteredContent.map((content) => {
-              // Render session card for grouped image sessions
-              if (groupBySessions && content.contentType === "image-session") {
-                return (
-                  <ImageSessionCard
-                    key={content.id}
-                    sessionId={content.id}
-                    sessionName={content.title}
-                    heroImageUrl={content.imageUrl || content.content}
-                    imageCount={content.wordCount || 0}
-                    createdAt={content.createdAt}
-                    archived={content.archived}
-                    onClick={async () => {
-                      // Fetch all images for this session
-                      logger.debug('[Library] Fetching session images for:', content.id);
-                      const { data: images, error } = await supabase
-                        .from('generated_images')
-                        .select('*')
-                        .eq('session_id', content.id)
-                        .eq('saved_to_library', true)
-                        .order('image_order', { ascending: true });
-                      
-                      if (error) {
-                        logger.error('[Library] Error fetching session images:', error);
-                        toast({
-                          title: "Error loading session",
-                          description: error.message,
-                          variant: "destructive"
-                        });
-                        return;
-                      }
-                      
-                      logger.debug('[Library] Fetched images:', images?.length || 0);
-                      
-                      if (images && images.length > 0) {
-                        setSelectedSession({
-                          sessionId: content.id,
-                          sessionName: content.title,
-                          images: images.map(img => ({
-                            id: img.id,
-                            imageUrl: img.image_url,
-                            finalPrompt: img.final_prompt,
-                            createdAt: new Date(img.created_at),
-                            isHero: img.is_hero_image || false
-                          })),
-                          archived: content.archived
-                        });
-                      } else {
-                        toast({
-                          title: "No images found",
-                          description: "This session doesn't have any saved images",
-                          variant: "destructive"
-                        });
-                      }
-                    }}
-                  />
-                );
-              }
-              
-              // Render regular content card
               return (
                 <ContentCard
                   key={content.id}
@@ -926,21 +818,6 @@ export default function Library() {
         />
       )}
       
-      {/* Image Session Modal */}
-      {selectedSession && (
-        <ImageSessionModal
-          sessionId={selectedSession.sessionId}
-          sessionName={selectedSession.sessionName}
-          images={selectedSession.images}
-          archived={selectedSession.archived}
-          open={!!selectedSession}
-          onClose={() => setSelectedSession(null)}
-          onUpdate={() => {
-            refetch();
-            setSelectedSession(null);
-          }}
-        />
-      )}
     </div>
   );
 }

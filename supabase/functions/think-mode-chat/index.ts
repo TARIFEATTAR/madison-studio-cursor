@@ -151,12 +151,63 @@ serve(async (req) => {
     };
 
     console.log(`Think Mode chat request (${mode}), messages:`, messages.length);
-    console.log('Last user message:', messages[messages.length - 1]?.content?.substring(0, 100));
+    const lastMessageContent = messages[messages.length - 1]?.content;
+    console.log('Last user message:', typeof lastMessageContent === 'string' ? lastMessageContent.substring(0, 100) : 'Non-string content');
 
     // Fetch Madison's system-wide training
     const madisonSystemConfig = await getMadisonSystemConfig();
     console.log('Madison system config loaded:', madisonSystemConfig ? `${madisonSystemConfig.length} chars` : 'none');
     
+    // Fetch User's Brand Context (Products, Knowledge, Config)
+    let brandContext = "No brand context available.";
+    let isBrandContextSparse = true;
+
+    try {
+      // 1. Fetch Brand Products
+      const { data: products, error: productsError } = await supabaseAuth
+        .from('brand_products')
+        .select('name, collection, scent_family, description')
+        .limit(5); // Fetch top 5 products for context
+
+      // 2. Fetch Brand Knowledge (Voice, Guidelines)
+      const { data: knowledge, error: knowledgeError } = await supabaseAuth
+        .from('brand_knowledge')
+        .select('knowledge_type, content')
+        .eq('is_active', true)
+        .limit(3);
+
+      // 3. Fetch Organization Brand Config
+      const { data: orgs, error: orgError } = await supabaseAuth
+        .from('organizations')
+        .select('brand_config')
+        .limit(1)
+        .maybeSingle();
+
+      if (!productsError && !knowledgeError && !orgError) {
+        const productList = products?.map(p => `- ${p.name} (${p.collection || 'No Collection'}): ${p.description || 'No Description'}`).join('\n') || "No products found.";
+        const knowledgeList = knowledge?.map(k => `- ${k.knowledge_type}: ${JSON.stringify(k.content).substring(0, 100)}...`).join('\n') || "No specific brand knowledge found.";
+        const brandConfig = orgs?.brand_config ? JSON.stringify(orgs.brand_config) : "No brand config found.";
+
+        brandContext = `
+=== CURRENT BRAND CONTEXT ===
+PRODUCTS:
+${productList}
+
+KNOWLEDGE BASE:
+${knowledgeList}
+
+BRAND CONFIGURATION:
+${brandConfig}
+`;
+        // Determine if context is sparse (simplistic check)
+        if (products && products.length > 0) isBrandContextSparse = false;
+        if (knowledge && knowledge.length > 0) isBrandContextSparse = false;
+        if (orgs?.brand_config && Object.keys(orgs.brand_config).length > 0) isBrandContextSparse = false;
+      }
+    } catch (err) {
+      console.error("Error fetching brand context:", err);
+    }
+
     let systemContent = "";
 
     if (mode === 'strategic') {
@@ -165,6 +216,21 @@ serve(async (req) => {
 
 === YOUR STRATEGIC KNOWLEDGE ===
 ${STRATEGIC_FRAMEWORKS}
+
+${brandContext}
+
+=== CONTEXT AWARENESS & MISSING INFO ===
+You have access to the User's "Current Brand Context" above.
+${isBrandContextSparse ? `
+WARNING: THE USER HAS SPARSE OR MISSING BRAND DOCUMENTATION.
+- They may have skipped onboarding or only provided a name.
+- BEFORE giving generic advice, you MUST Guide them to provide this info.
+- STRATEGY: Use this session to "Interview" them about their brand (Target Audience, Unique Mechanism, Offer).
+- INSTRUCTION: Encouragingly instruct them to add this data to the "Brand Knowledge Center" in Settings.
+- Tell them: "To give you the best strategy, I need to know more about your business. Let's define that now, and then you can save it to your Brand Knowledge Center."
+` : `
+- The user has provided brand context. Use the specific product names and details from the context above to make your examples concrete.
+`}
 
 === YOUR ROLE ===
 Your goal is to provide clear, actionable, framework-driven advice. You are helping users who need templates, clear directions, and immediate solutions to "massive fires" or growth challenges.
@@ -187,6 +253,14 @@ Analyze their business, product line, or situation using the frameworks above.
 - Use bullet points for steps.
 - Keep paragraphs concise.
 - NO markdown formatting (bold, italics) in the output text itself (the frontend renders plain text).
+- CRITICAL: ALWAYS end your response with "Choose Your Next Step" and provide 2-3 distinct actionable paths.
+- Format the options EXACTLY like this at the very end:
+<<ACTION: Short Label | The prompt for the user to send next>>
+<<ACTION: Another Label | Another prompt for the user>>
+
+Example:
+<<ACTION: Audit Assets | Help me audit my hidden assets>>
+<<ACTION: Save to Brand Profile | Please summarize the brand details we just discussed so I can save them to my Knowledge Center>>
 `;
 
     } else {

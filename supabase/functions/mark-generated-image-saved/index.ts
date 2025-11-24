@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageId, userId } = await req.json();
+    const { imageId, userId, createRecipe = true } = await req.json();
 
     if (!imageId || !userId) {
       return new Response(
@@ -21,7 +21,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('💾 Marking image as saved:', { imageId, userId });
+    console.log('💾 Marking image as saved:', { imageId, userId, createRecipe });
 
     // Create Supabase client with service role key (bypasses RLS)
     const supabaseClient = createClient(
@@ -33,7 +33,7 @@ serve(async (req) => {
     // (either owns it or is a member of the organization that owns it)
     const { data: imageCheck, error: checkError } = await supabaseClient
       .from('generated_images')
-      .select('user_id, organization_id')
+      .select('*')
       .eq('id', imageId)
       .single();
 
@@ -78,6 +78,86 @@ serve(async (req) => {
         JSON.stringify({ error: 'Failed to update image', details: updateError.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Automatically create recipe if requested
+    if (createRecipe) {
+      try {
+        // Check if prompt already exists
+        const { data: existingPrompt } = await supabaseClient
+          .from('prompts')
+          .select('id')
+          .eq('generated_image_id', imageId)
+          .maybeSingle();
+
+        if (!existingPrompt) {
+          console.log('📝 Creating recipe for saved image...');
+          
+          const promptText = imageCheck.final_prompt || imageCheck.prompt || "Generated Image";
+          const goalType = imageCheck.goal_type || 'product_photography';
+          
+          // Infer category logic (mirrored from generate-madison-image)
+          const categoryMap: Record<string, string> = {
+            'product_photography': 'product',
+            'lifestyle': 'lifestyle',
+            'ecommerce': 'ecommerce',
+            'social_media': 'social',
+            'editorial': 'editorial',
+            'creative': 'creative',
+            'flat_lay': 'flat_lay',
+          };
+
+          let inferredCategory = categoryMap[goalType] || 'product';
+          const promptLower = promptText.toLowerCase();
+          
+          if (!categoryMap[goalType]) {
+            if (promptLower.includes('flat lay') || promptLower.includes('flatlay')) inferredCategory = 'flat_lay';
+            else if (promptLower.includes('lifestyle')) inferredCategory = 'lifestyle';
+            else if (promptLower.includes('ecommerce')) inferredCategory = 'ecommerce';
+            else if (promptLower.includes('social')) inferredCategory = 'social';
+            else if (promptLower.includes('editorial')) inferredCategory = 'editorial';
+            else if (promptLower.includes('artistic')) inferredCategory = 'creative';
+          }
+
+          const recipeTitle = `Image Recipe - ${new Date().toLocaleDateString()}`;
+
+          const { error: promptError } = await supabaseClient
+            .from('prompts')
+            .insert([{
+              title: recipeTitle,
+              prompt_text: promptText,
+              content_type: 'visual',
+              collection: 'General',
+              organization_id: imageCheck.organization_id,
+              created_by: userId,
+              is_template: true,
+              deliverable_format: 'image_prompt',
+              generated_image_id: imageId,
+              image_source: 'generated',
+              category: inferredCategory,
+              image_url: imageCheck.image_url, // Important: Store the image URL on the prompt
+              additional_context: {
+                aspect_ratio: imageCheck.aspect_ratio,
+                output_format: imageCheck.output_format,
+                image_type: goalType,
+                category: inferredCategory,
+                model: 'nano-banana',
+                style: 'Photorealistic'
+              }
+            }]);
+
+          if (promptError) {
+            console.error('❌ Failed to create recipe:', promptError);
+            // We don't fail the whole request, but we log it
+          } else {
+            console.log('✅ Recipe created successfully');
+          }
+        } else {
+          console.log('ℹ️ Recipe already exists for this image');
+        }
+      } catch (recipeErr) {
+        console.error('❌ Error in recipe creation logic:', recipeErr);
+      }
     }
 
     console.log('✅ Image marked as saved:', imageId);

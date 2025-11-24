@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { imageCategories } from "@/data/imageCategories";
 
 export const usePromptCounts = (organizationId: string | null) => {
   return useQuery({
@@ -18,7 +19,7 @@ export const usePromptCounts = (organizationId: string | null) => {
 
       const { data: prompts } = await supabase
         .from("prompts")
-        .select("*")
+        .select("is_template, last_used_at, times_used, content_type, collection, created_at, additional_context, category")
         .eq("organization_id", organizationId)
         .eq("is_archived", false)
         .is("archived_at", null);
@@ -36,23 +37,28 @@ export const usePromptCounts = (organizationId: string | null) => {
       // Most used (usage count > 5)
       const mostUsed = prompts?.filter((p) => (p.times_used || 0) > 5).length || 0;
 
-      // Collections count - using collection field instead of collection_id
-      const collections: Record<string, number> = {
-        product_launches: 0,
-        social_media: 0,
-        email_campaigns: 0,
-        seasonal_content: 0,
-        customer_stories: 0,
-      };
+      // Collections count placeholder (collections not surfaced in UI currently)
+      const collections: Record<string, number> = {};
 
-      // Categories count
-      const categories: Record<string, number> = {
+      // Categories count aligned with Image Studio options
+      const categoryCounts: Record<string, number> = {};
+      imageCategories.forEach((category) => {
+        categoryCounts[category.key] = 0;
+      });
+
+      prompts?.forEach((prompt) => {
+        const key =
+          (prompt as any).category ||
+          (prompt.additional_context as any)?.category ||
+          (prompt.additional_context as any)?.image_type;
+        if (key && key in categoryCounts) {
+          categoryCounts[key] += 1;
+        }
+      });
+
+      const categories = {
         all: total,
-        product: prompts?.filter((p) => p.content_type === "product").length || 0,
-        blog: prompts?.filter((p) => p.content_type === "blog").length || 0,
-        email: prompts?.filter((p) => p.content_type === "email").length || 0,
-        social: prompts?.filter((p) => p.content_type === "social").length || 0,
-        visual: prompts?.filter((p) => p.content_type === "visual").length || 0,
+        ...categoryCounts,
       };
 
       return {

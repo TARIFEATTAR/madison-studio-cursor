@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { Send, Target, Zap, BarChart, RefreshCcw, Users, Flag, Info } from "lucide-react";
+import { Send, Target, Zap, BarChart, RefreshCcw, Users, Flag, Info, ArrowRight, BrainCircuit } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import "./thinkmode.css";
@@ -40,48 +40,70 @@ export default function ThinkModePage() {
     textareaRef.current?.focus();
   }, []);
 
+  const ACCESSIBILITY_INSTRUCTIONS = `
+CRITICAL FORMATTING FOR ACCESSIBILITY:
+1. Structure with clear, BOLD HEADINGS.
+2. Use clear spacing and formatting (no emojis).
+3. Keep paragraphs short and digestible (max 3 lines).
+4. Use bullet points for all lists.
+5. End with "Choose Your Next Step" and provide 2-3 distinct paths.
+6. Format the options EXACTLY like this at the end:
+<<ACTION: Action Label | The prompt for the user to send next>>
+
+Example:
+<<ACTION: Audit Assets | Help me audit my hidden assets>>
+<<ACTION: Create Offer | Help me create a risk-reversed offer>>
+`;
+
   const strategicOptions = [
     { 
       label: "Cash Injection", 
       icon: Zap,
-      prompt: "Using Jay Abraham's principles of leverage and asset reactivation, outline a strategy for a quick cash injection. Focus on the Strategy of Preeminence and risk reversal.",
-      framework: "Jay Abraham's Strategy of Preeminence",
+      prompt: "Using principles of leverage and asset reactivation, outline a strategy for a quick cash injection. Focus on the Strategy of Preeminence and risk reversal.",
+      framework: "Asset Reactivation Strategy",
       description: "Focuses on uncovering hidden assets, reactivating past clients, and risk-reversed offers."
     },
     { 
       label: "7-Day Turnaround", 
       icon: RefreshCcw,
-      prompt: "Acting as Mark Joyner, create a 7-day emergency turnaround plan focusing on radical simplification and execution. Identify open loops and the single highest-leverage action.",
-      framework: "Mark Joyner's Simpleology",
+      prompt: "Create a 7-day emergency turnaround plan focusing on radical simplification and execution. Identify open loops and the single highest-leverage action.",
+      framework: "Rapid Execution Protocol",
       description: "Rapidly clearing 'open loops' and focusing all energy on the single highest-leverage action."
     },
     { 
       label: "Product Launch", 
       icon: Target,
-      prompt: "Using Jeff Walker's Product Launch Formula, map out a campaign sequence that builds anticipation and scarcity. Include the 'Sideways Sales Letter' structure.",
-      framework: "Jeff Walker's Launch Formula",
+      prompt: "Map out a campaign sequence that builds anticipation and scarcity. Include the 'Sideways Sales Letter' structure.",
+      framework: "Strategic Launch Sequence",
       description: "The 'Sideways Sales Letter' sequence: Pre-Pre-Launch → Pre-Launch Content → Open Cart."
     },
     { 
       label: "Growth Strategy", 
       icon: BarChart,
-      prompt: "Applying Peter Drucker's management principles, help me diagnose growth bottlenecks and identify the 'right things' to focus on. Distinguish between efficiency and effectiveness.",
-      framework: "Peter Drucker's Effective Executive",
+      prompt: "Applying classic management principles, help me diagnose growth bottlenecks and identify the 'right things' to focus on. Distinguish between efficiency and effectiveness.",
+      framework: "Executive Effectiveness",
       description: "Distinguishing between efficiency and effectiveness to scale sustainable growth."
     },
     { 
       label: "Customer Retention", 
       icon: Users,
-      prompt: "Using Joey Coleman's 'First 100 Days' framework, design a post-purchase experience that turns customers into advocates. Map out the emotional phases of the customer journey.",
-      framework: "Joey Coleman's First 100 Days",
+      prompt: "Design a post-purchase experience that turns customers into advocates. Map out the emotional phases of the customer journey.",
+      framework: "The First 100 Days Model",
       description: "Choreographing the customer journey to eliminate buyer's remorse and foster loyalty."
     },
     { 
       label: "Brand Positioning", 
       icon: Flag,
-      prompt: "Using Marty Neumeier's 'Zag' framework, help me find my brand's 'only-ness' and radical differentiation. Identify where the market zigs so we can zag.",
-      framework: "Marty Neumeier's Brand Gap",
+      prompt: "Help me find my brand's 'only-ness' and radical differentiation. Identify where the market zigs so we can zag.",
+      framework: "Radical Differentiation",
       description: "Finding the whitespace in the market. When everyone zigs, your brand should zag."
+    },
+    { 
+      label: "Strategic Brainstorming", 
+      icon: BrainCircuit,
+      prompt: "I need to brainstorm a strategic issue. Guide me through a strategic analysis of my situation.",
+      framework: "Open Strategic Analysis",
+      description: "Free-form strategic brainstorming to diagnose issues and find solutions."
     }
   ];
 
@@ -137,7 +159,14 @@ export default function ThinkModePage() {
           Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
-          messages: [...messages, userMessage],
+          messages: [
+            ...messages, 
+            // Send user message with hidden instructions appended
+            { 
+              ...userMessage, 
+              content: userMessage.content + "\n\n" + ACCESSIBILITY_INSTRUCTIONS 
+            }
+          ],
           userName: userName || undefined,
           mode: 'strategic'
         }),
@@ -493,30 +522,70 @@ export default function ThinkModePage() {
 
           <ScrollArea className={cn("flex-1", isEmpty ? "hidden" : "flex")} ref={scrollRef}>
             <div className="space-y-8 w-full pb-4">
-              {messages.map((message, index) => (
-                <motion.div
-                  key={`${message.role}-${index}`}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="space-y-2"
-                >
-                  <p className="text-[0.65rem] uppercase tracking-[0.35em] text-aged-brass/60">
-                    {message.role === "user" ? userName || "You" : "Madison"}
-                  </p>
-                  <div className="think-mode-body text-[1rem] leading-relaxed text-parchment-white/90">
-                    <ReactMarkdown 
-                      remarkPlugins={[remarkGfm]}
-                      className="prose prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-white/10 prose-pre:text-parchment-white prose-code:text-aged-brass prose-headings:text-parchment-white prose-strong:text-parchment-white prose-a:text-aged-brass hover:prose-a:text-brass-glow"
-                      components={{
-                        p: ({node, ...props}) => <p className="mb-4 last:mb-0" {...props} />,
-                        a: ({node, ...props}) => <a target="_blank" rel="noopener noreferrer" {...props} />,
-                      }}
-                    >
-                      {message.content}
-                    </ReactMarkdown>
-                  </div>
-                </motion.div>
-              ))}
+              {messages.map((message, index) => {
+                // Only parse actions for assistant messages
+                const isAssistant = message.role === "assistant";
+                const actionRegex = /<<ACTION:\s*(.*?)\s*\|\s*(.*?)>>/g;
+                const actions: { label: string; prompt: string }[] = [];
+                
+                // Ensure message.content is always a string before processing
+                const contentToProcess = message.content || "";
+                
+                let cleanContent = contentToProcess;
+                
+                if (isAssistant) {
+                  cleanContent = contentToProcess.replace(actionRegex, (match, label, prompt) => {
+                    actions.push({ label: label.trim(), prompt: prompt.trim() });
+                    return ""; 
+                  }).trim();
+                }
+
+                return (
+                  <motion.div
+                    key={`${message.role}-${index}`}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-4"
+                  >
+                    <p className="text-[0.65rem] uppercase tracking-[0.35em] text-aged-brass/60">
+                      {message.role === "user" ? userName || "You" : "Madison"}
+                    </p>
+                    <div className="think-mode-body text-[1rem] leading-relaxed text-parchment-white/90 prose prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-white/10 prose-pre:text-parchment-white prose-code:text-aged-brass prose-headings:text-parchment-white prose-strong:text-parchment-white prose-a:text-aged-brass hover:prose-a:text-brass-glow">
+                      {isAssistant ? (
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            p: ({node, ...props}) => <p className="mb-4 last:mb-0" {...props} />,
+                            a: ({node, ...props}) => <a target="_blank" rel="noopener noreferrer" {...props} />,
+                          }}
+                        >
+                          {cleanContent}
+                        </ReactMarkdown>
+                      ) : (
+                        <p className="whitespace-pre-wrap">{cleanContent}</p>
+                      )}
+                    </div>
+
+                    {/* Render Action Buttons if present (Assistant only) */}
+                    {actions.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-4 pt-2 border-t border-white/10">
+                        {actions.map((action, i) => (
+                          <Button
+                            key={i}
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleSubmit(action.prompt)}
+                            className="bg-white/5 hover:bg-aged-brass/20 text-parchment-white border border-white/10 hover:border-aged-brass transition-all text-xs h-auto py-2 px-3"
+                          >
+                            {action.label}
+                            <ArrowRight className="w-3 h-3 ml-2 opacity-50" />
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
 
               {isLoading && (
                 <motion.div

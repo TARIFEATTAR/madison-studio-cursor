@@ -6,36 +6,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { Camera, Image, Sparkles, Upload, X, Wand2, Type, Palette } from "lucide-react";
 import MobileAspectRatioSelector from "./MobileAspectRatioSelector";
+import {
+  imageCategories,
+  type ImageCategoryDefinition,
+} from "@/data/imageCategories";
 
 const CREATION_OPTIONS = [
-  {
-    id: "product-white",
-    label: "Product on White",
-    icon: Camera,
-    prompt: "A clean studio product shot on a pure white background, soft shadow, high-resolution lighting.",
-    gradient: "from-slate-500 to-slate-700"
-  },
-  {
-    id: "lifestyle",
-    label: "Lifestyle Scene",
-    icon: Image,
-    prompt: "A lifestyle product photo placed in a cozy real-world environment that matches the brand mood.",
-    gradient: "from-amber-500 to-orange-600"
-  },
-  {
-    id: "flat-lay",
-    label: "Flat Lay",
-    icon: Palette,
-    prompt: "Flat lay product photography from directly above on a clean surface with organized styling.",
-    gradient: "from-pink-500 to-rose-600"
-  },
-  {
-    id: "influencer",
-    label: "Influencer Shot",
-    icon: Sparkles,
-    prompt: "Authentic influencer-style product photo with natural lighting and casual, relatable composition.",
-    gradient: "from-purple-500 to-indigo-600"
-  },
+  ...imageCategories.map((category) => ({
+    id: category.key,
+    label: category.label,
+    icon: category.icon || Camera,
+    prompt: category.prompt,
+    gradient: category.gradient,
+    categoryKey: category.key,
+  })),
   {
     id: "custom",
     label: "Custom Prompt",
@@ -57,7 +41,7 @@ interface MobileCreateFormProps {
   onPromptChange: (prompt: string) => void;
   aspectRatio: string;
   onAspectRatioChange: (ratio: string) => void;
-  onShotTypeSelect: (shotType: { label: string; prompt: string }) => void;
+  onShotTypeSelect: (shotType: ImageCategoryDefinition) => void;
   referenceImage: { file: File; url: string } | null;
   onReferenceUpload: (file: File, url: string) => void;
   onReferenceRemove: () => void;
@@ -91,7 +75,14 @@ export default function MobileCreateForm({
     setSelectedOption(option.id);
     setModalPrompt(option.prompt);
     onPromptChange(option.prompt);
-    onShotTypeSelect({ label: option.label, prompt: option.prompt });
+    if (option.categoryKey) {
+      const definition = imageCategories.find(
+        (category) => category.key === option.categoryKey
+      );
+      if (definition) {
+        onShotTypeSelect(definition);
+      }
+    }
   };
 
   const handleModalClose = () => {

@@ -7,17 +7,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-
-// Consistent with IMAGE_CATEGORIES from PromptLibrarySidebar
-const IMAGE_TYPES = [
-  { key: "product", label: "Product Photography", icon: Package },
-  { key: "lifestyle", label: "Lifestyle", icon: Sparkles },
-  { key: "ecommerce", label: "E-commerce", icon: ShoppingBag },
-  { key: "social", label: "Social Media", icon: Users },
-  { key: "editorial", label: "Editorial", icon: Camera },
-  { key: "creative", label: "Creative & Artistic", icon: Palette },
-  { key: "flat_lay", label: "Flat Lay", icon: Grid3x3 },
-];
+import { BROAD_IMAGE_CATEGORIES } from "@/data/imageCategories";
 
 interface ImageTypeSelectorProps {
   value: string;
@@ -25,7 +15,7 @@ interface ImageTypeSelectorProps {
 }
 
 export function ImageTypeSelector({ value, onChange }: ImageTypeSelectorProps) {
-  const selectedType = IMAGE_TYPES.find(t => t.key === value);
+  const selectedType = BROAD_IMAGE_CATEGORIES.find(t => t.key === value);
   const Icon = selectedType?.icon || Package;
 
   return (
@@ -36,7 +26,7 @@ export function ImageTypeSelector({ value, onChange }: ImageTypeSelectorProps) {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {IMAGE_TYPES.map((type) => {
+          {BROAD_IMAGE_CATEGORIES.map((type) => {
             const TypeIcon = type.icon;
             return (
               <SelectItem key={type.key} value={type.key}>

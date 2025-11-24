@@ -9,7 +9,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { libraryContentTypes } from "@/config/libraryContentTypes";
-import { collections } from "@/data/mockLibraryContent";
 import { SortOption } from "./SortDropdown";
 import { cn } from "@/lib/utils";
 
@@ -18,8 +17,6 @@ interface LibraryFiltersProps {
   onSearchChange: (value: string) => void;
   selectedContentType: string;
   onContentTypeChange: (value: string) => void;
-  selectedCollection: string;
-  onCollectionChange: (value: string) => void;
   sortBy: SortOption;
   onSortChange: (value: SortOption) => void;
   viewMode: "grid" | "list";
@@ -39,8 +36,6 @@ export function LibraryFilters({
   onSearchChange,
   selectedContentType,
   onContentTypeChange,
-  selectedCollection,
-  onCollectionChange,
   sortBy,
   onSortChange,
   viewMode,
@@ -84,21 +79,6 @@ export function LibraryFilters({
           </SelectContent>
         </Select>
 
-        {/* Collection */}
-        <Select value={selectedCollection} onValueChange={onCollectionChange}>
-          <SelectTrigger className="w-[180px] bg-card/50 border-border/20">
-            <SelectValue placeholder="All Collections" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Collections</SelectItem>
-            {collections.map((collection) => (
-              <SelectItem key={collection.id} value={collection.id}>
-                {collection.icon} {collection.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
         {/* Sort */}
         <Select value={sortBy} onValueChange={(value) => onSortChange(value as SortOption)}>
           <SelectTrigger className="w-[180px] bg-card/50 border-border/20">
@@ -113,44 +93,42 @@ export function LibraryFilters({
           </SelectContent>
         </Select>
 
-        <div className="flex items-center gap-2 ml-auto">
-          {/* View Mode Toggle */}
-          <div className="flex items-center border border-border/20 rounded-lg bg-card/50">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onViewModeChange("grid")}
-              className={cn(
-                "rounded-r-none",
-                viewMode === "grid" && "bg-brass/20 text-brass hover:bg-brass/30"
-              )}
-            >
-              <Grid3x3 className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onViewModeChange("list")}
-              className={cn(
-                "rounded-l-none border-l border-border/20",
-                viewMode === "list" && "bg-brass/20 text-brass hover:bg-brass/30"
-              )}
-            >
-              <List className="w-4 h-4" />
-            </Button>
-          </div>
-
-          {/* Show Archived */}
+        {/* View Mode Toggle */}
+        <div className="flex items-center border border-border/20 rounded-lg bg-card/50">
           <Button
-            variant={showArchived ? "secondary" : "outline"}
+            variant="ghost"
             size="sm"
-            onClick={() => onShowArchivedChange(!showArchived)}
-            className="gap-2"
+            onClick={() => onViewModeChange("grid")}
+            className={cn(
+              "rounded-r-none",
+              viewMode === "grid" && "bg-brass/20 text-brass hover:bg-brass/30"
+            )}
           >
-            <Archive className="w-4 h-4" />
-            Show Archived
+            <Grid3x3 className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onViewModeChange("list")}
+            className={cn(
+              "rounded-l-none border-l border-border/20",
+              viewMode === "list" && "bg-brass/20 text-brass hover:bg-brass/30"
+            )}
+          >
+            <List className="w-4 h-4" />
           </Button>
         </div>
+
+        {/* Show Archived */}
+        <Button
+          variant={showArchived ? "secondary" : "outline"}
+          size="sm"
+          onClick={() => onShowArchivedChange(!showArchived)}
+          className="gap-2"
+        >
+          <Archive className="w-4 h-4" />
+          Show Archived
+        </Button>
       </div>
     </div>
   );

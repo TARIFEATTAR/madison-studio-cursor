@@ -111,13 +111,14 @@ const PromptDetailModal = ({
       state: { 
         loadedPrompt: prompt.prompt_text,
         aspectRatio: prompt.additional_context?.aspect_ratio,
-        outputFormat: prompt.additional_context?.output_format
+        outputFormat: prompt.additional_context?.output_format,
+        loadedImage: imageUrl
       }
     });
     onClose();
     toast({
       title: "Loaded in Image Studio",
-      description: "Your image recipe is ready to use",
+      description: "Your image is ready for editing",
     });
   };
 
@@ -363,7 +364,7 @@ const PromptDetailModal = ({
                     className="flex-1 gap-2"
                   >
                     <ImageIcon className="w-4 h-4" />
-                    Load in Image Studio
+                    Edit in Studio
                   </Button>
                 </>
               )}

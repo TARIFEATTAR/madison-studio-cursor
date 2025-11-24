@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "High-End Commercial & Cinematic Photography Ontology",
+  "description": "Schema for training Gemini 3.0 on editorial, e-commerce, and cinematic visual physics.",
+  "type": "object",
+  "properties": {
+    "lighting_architecture": {
+      "type": "object",
+      "properties": {
+        "setup_name": {
+          "type": "string",
+          "enum": ["Rembrandt", "Butterfly (Paramount)", "Split", "Loop", "Clamshell", "Rim/Edge", "Badger", "Broad", "Short"]
+        },
+        "quality_of_light": {
+          "type": "string",
+          "enum": ["Hard/Specular", "Soft/Diffused", "Hybrid", "Available/Ambient"]
+        },
+        "contrast_ratio": {
+          "type": "string",
+          "description": "The measured difference between key and fill (e.g., '8:1' for Noir, '2:1' for High Key)."
+        },
+        "directionality": {
+          "type": "string",
+          "description": "Clock face position relative to subject (e.g., 'Key at 5 o'clock high')."
+        }
+      }
+    },
+    "material_physics": {
+      "type": "object",
+      "description": "How the subject interacts with photons.",
+      "properties": {
+        "surface_type": {
+          "type": "string",
+          "enum": ["Dielectric (Non-metal)", "Conductive (Metal)", "Translucent", "Transparent", "Emissive"]
+        },
+        "texture_response": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["Velvet/Light Absorption", "Matte/Lambertian", "Glossy/Specular", "Anisotropic (Brushed Metal)", "Subsurface Scattering (Skin/Wax)"]
+          }
+        },
+        "refraction_index": {
+          "type": "string",
+          "description": "Approximate IOR for transparent objects (e.g., '1.33 Water', '1.5 Glass')."
+        }
+      }
+    },
+    "cinematic_attributes": {
+      "type": "object",
+      "properties": {
+        "mood_palette": {
+          "type": "string",
+          "enum": ["Teal & Orange", "Bleach Bypass", "Monochromatic", "Neon/Cyberpunk", "Pastel/High-Key", "Chiaroscuro"]
+        },
+        "atmosphere": {
+          "type": "boolean",
+          "description": "Presence of haze, fog, or volumetric lighting beams."
+        },
+        "lens_character": {
+          "type": "string",
+          "enum": ["Spherical", "Anamorphic", "Vintage/Coated", "Macro/Probe"]
+        }
+      }
+    },
+    "composition_framework": {
+      "type": "object",
+      "properties": {
+        "rule_set": {
+          "type": "string",
+          "enum": ["Rule of Thirds", "Golden Ratio", "Center Punch", "Leading Lines", "Dynamic Tension"]
+        },
+        "negative_space_utility": {
+          "type": "string",
+          "enum": ["Copy Space Left", "Copy Space Right", "Copy Space Top", "Copy Space Bottom", "None"]
+        },
+        "camera_angle": {
+          "type": "string",
+          "enum": ["God's Eye (Top Down)", "Hero (Low Angle)", "Eye Level", "Dutch Angle", "Candid/Over-the-shoulder"]
+        }
+      }
+    }
+  }
+}
+
+

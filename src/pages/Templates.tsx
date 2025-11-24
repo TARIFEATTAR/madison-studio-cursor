@@ -47,6 +47,7 @@ export interface Prompt {
   effectiveness_score: number | null;
   meta_instructions?: any;
   additional_context?: any;
+  category?: string | null; // Image type category: product, lifestyle, ecommerce, social, editorial, creative, flat_lay
   // Image fields
   image_url?: string | null;
   image_source?: 'generated' | 'uploaded' | null;
@@ -171,11 +172,11 @@ const TemplatesContent = () => {
       );
     }
 
-    // Category filter - check additional_context.image_type
+    // Category filter - use category field first, fallback to additional_context for backward compatibility
     if (selectedCategory) {
       filtered = filtered.filter(p => {
-        const imageType = (p.additional_context as any)?.image_type;
-        return imageType === selectedCategory;
+        const category = p.category || (p.additional_context as any)?.category || (p.additional_context as any)?.image_type;
+        return category === selectedCategory;
       });
     }
 

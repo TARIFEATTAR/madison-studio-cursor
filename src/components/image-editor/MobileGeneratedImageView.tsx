@@ -3,8 +3,7 @@ import { Download, Share2, X, Sparkles } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import MobileAspectRatioSelector from "./MobileAspectRatioSelector";
-import MobileShotTypeSelector from "./MobileShotTypeSelector";
-import { useState } from "react";
+import type { ImageCategoryDefinition } from "@/data/imageCategories";
 
 interface MobileGeneratedImageViewProps {
   imageUrl: string;
@@ -15,7 +14,7 @@ interface MobileGeneratedImageViewProps {
   onRegenerate: (prompt: string) => void;
   onPromptChange: (prompt: string) => void;
   onAspectRatioChange: (ratio: string) => void;
-  onShotTypeSelect: (shotType: { label: string; prompt: string }) => void;
+  onShotTypeSelect: (shotType: ImageCategoryDefinition) => void;
   isGenerating: boolean;
   isSaving?: boolean;
 }
@@ -94,11 +93,11 @@ export default function MobileGeneratedImageView({
       </div>
 
       {/* Main Image Display */}
-      <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
+      <div className="flex-1 flex items-center justify-center p-4 pb-20 overflow-hidden">
         <img
           src={imageUrl}
           alt="Generated"
-          className="max-w-full max-h-full object-contain rounded-lg"
+          className="max-w-full max-h-full object-contain"
         />
       </div>
 
