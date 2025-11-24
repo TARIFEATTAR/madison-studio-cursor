@@ -1259,7 +1259,39 @@ TONE:
 
 INSPIRATION:
 Think Apple product copy, Kinfolk magazine, or Scandinavian design philosophy—
-beauty through reduction, meaning through precision.`
+beauty through reduction, meaning through precision.`,
+
+      EDUCATIONAL: `
+╔══════════════════════════════════════════════════════════════════╗
+║                  STYLE OVERLAY: EDUCATIONAL                       ║
+║                  (Reason-Why & Scientific)                        ║
+╚══════════════════════════════════════════════════════════════════╝
+
+EDUCATIONAL/REASON-WHY APPROACH (Claude Hopkins Style):
+• Lead with the mechanism of action—explain HOW and WHY it works
+• Treat the reader as intelligent but uninformed about this specific topic
+• Use "Pre-emptive Advantage"—describe standard processes as unique virtues
+• Demystify the product to build trust
+• Every claim must be supported by a reason ("because...")
+
+STRUCTURAL ELEMENTS:
+• Problem-Solution framing
+• "The Secret is..." or "How it works..." sections
+• Specific data points, percentages, or ingredient highlights
+• Logical progression: Fact A + Fact B = Conclusion C
+• Calm, expert tone—no shouting
+
+TONE:
+• Professor/Expert guide
+• Patient and explanatory
+• Transparent and honest
+• Confident through knowledge, not hype
+
+KEY PHRASES TO USE:
+• "The reason is simple..."
+• "Unlike standard methods..."
+• "This allows the..."
+• "We discovered that..."`
     };
     
     // Map UI values to system values
@@ -1267,8 +1299,10 @@ beauty through reduction, meaning through precision.`
       'brand-voice': 'BRAND_VOICE', // Generic, uses brand knowledge only
       'poetic': 'JAY_PETERMAN',
       'direct': 'OGILVY',
-      'story': 'HYBRID_JP_OGILVY',
+      'educational': 'EDUCATIONAL',
       'minimal': 'MINIMAL_MODERN',
+      // Legacy support
+      'story': 'HYBRID_JP_OGILVY',
     };
 
     const mappedStyle = styleMapping[styleOverlay] || 'BRAND_VOICE';

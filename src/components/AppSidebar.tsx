@@ -1,4 +1,4 @@
-import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu, ShoppingBag, Store, Image, Mail, ChevronDown, Palette, FolderOpen, BookOpen, HelpCircle, Sparkles } from "lucide-react";
+import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu, ShoppingBag, Store, Image, Mail, ChevronDown, Palette, FolderOpen, BookOpen, HelpCircle, Compass, Sparkles } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -84,7 +84,6 @@ export function AppSidebar() {
   const topLevelItems = [
     { title: "Dashboard", url: "/dashboard", icon: Home },
     { title: "Schedule", url: "/schedule", icon: Calendar },
-    { title: "Think Mode", url: "/think-mode", icon: Sparkles },
   ];
 
   // Grouped navigation structure
@@ -358,6 +357,62 @@ export function AppSidebar() {
                 </Collapsible>
               );
             })}
+        </div>
+        
+        {/* Think Mode - Bottom of Content */}
+        <div className="px-2 pb-4 mt-auto">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                className={`
+                  group relative overflow-hidden
+                  ${isActive("/think-mode")
+                    ? 'bg-gradient-to-r from-[hsl(38,33%,56%)]/20 to-transparent border border-[hsl(38,33%,56%)]/30 shadow-[0_0_15px_rgba(184,149,106,0.15)]' 
+                    : 'bg-white/5 border border-white/10 hover:border-[hsl(38,33%,56%)]/40 hover:bg-white/8'
+                  }
+                  ${open ? 'h-auto py-3 px-3' : 'h-12 justify-center'}
+                  transition-all duration-300 rounded-lg
+                `}
+              >
+                <NavLink 
+                  to="/think-mode" 
+                  onClick={() => {
+                    if (isMobile) toggleSidebar();
+                  }}
+                >
+                  <div className={`flex items-center ${open ? 'gap-3' : 'justify-center'}`}>
+                    <div className={`
+                      flex items-center justify-center rounded-md transition-all duration-300
+                      ${isActive("/think-mode") 
+                        ? 'text-[hsl(38,33%,56%)] bg-[hsl(38,33%,56%)]/10' 
+                        : 'text-white/70 bg-white/5 group-hover:text-[hsl(38,33%,56%)] group-hover:bg-[hsl(38,33%,56%)]/10'
+                      }
+                      ${open ? 'w-8 h-8' : 'w-6 h-6'}
+                    `}>
+                      <Compass 
+                        strokeWidth={1.5}
+                        className={`transition-all duration-300 ${open ? 'w-4 h-4' : 'w-4 h-4'}`} 
+                      />
+                    </div>
+                    
+                    {open && (
+                      <div className="flex flex-col text-left">
+                        <span className={`font-serif font-medium tracking-wide text-sm transition-colors duration-200 ${
+                          isActive("/think-mode") ? 'text-[hsl(38,33%,56%)]' : 'text-white/90 group-hover:text-white'
+                        }`}>
+                          Strategy Session
+                        </span>
+                        <span className="text-[10px] text-white/50 font-medium tracking-wider uppercase">
+                          Expert Guidance
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </div>
         </SidebarContent>
 

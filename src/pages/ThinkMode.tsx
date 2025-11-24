@@ -5,8 +5,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { Send } from "lucide-react";
+import { Send, Target, Zap, BarChart, RefreshCcw, Users, Flag, Info } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import "./thinkmode.css";
 
 interface Message {
@@ -36,13 +40,59 @@ export default function ThinkModePage() {
     textareaRef.current?.focus();
   }, []);
 
-  const handleSubmit = async () => {
-    if (!idea.trim() || isLoading) return;
+  const strategicOptions = [
+    { 
+      label: "Cash Injection", 
+      icon: Zap,
+      prompt: "Using Jay Abraham's principles of leverage and asset reactivation, outline a strategy for a quick cash injection. Focus on the Strategy of Preeminence and risk reversal.",
+      framework: "Jay Abraham's Strategy of Preeminence",
+      description: "Focuses on uncovering hidden assets, reactivating past clients, and risk-reversed offers."
+    },
+    { 
+      label: "7-Day Turnaround", 
+      icon: RefreshCcw,
+      prompt: "Acting as Mark Joyner, create a 7-day emergency turnaround plan focusing on radical simplification and execution. Identify open loops and the single highest-leverage action.",
+      framework: "Mark Joyner's Simpleology",
+      description: "Rapidly clearing 'open loops' and focusing all energy on the single highest-leverage action."
+    },
+    { 
+      label: "Product Launch", 
+      icon: Target,
+      prompt: "Using Jeff Walker's Product Launch Formula, map out a campaign sequence that builds anticipation and scarcity. Include the 'Sideways Sales Letter' structure.",
+      framework: "Jeff Walker's Launch Formula",
+      description: "The 'Sideways Sales Letter' sequence: Pre-Pre-Launch → Pre-Launch Content → Open Cart."
+    },
+    { 
+      label: "Growth Strategy", 
+      icon: BarChart,
+      prompt: "Applying Peter Drucker's management principles, help me diagnose growth bottlenecks and identify the 'right things' to focus on. Distinguish between efficiency and effectiveness.",
+      framework: "Peter Drucker's Effective Executive",
+      description: "Distinguishing between efficiency and effectiveness to scale sustainable growth."
+    },
+    { 
+      label: "Customer Retention", 
+      icon: Users,
+      prompt: "Using Joey Coleman's 'First 100 Days' framework, design a post-purchase experience that turns customers into advocates. Map out the emotional phases of the customer journey.",
+      framework: "Joey Coleman's First 100 Days",
+      description: "Choreographing the customer journey to eliminate buyer's remorse and foster loyalty."
+    },
+    { 
+      label: "Brand Positioning", 
+      icon: Flag,
+      prompt: "Using Marty Neumeier's 'Zag' framework, help me find my brand's 'only-ness' and radical differentiation. Identify where the market zigs so we can zag.",
+      framework: "Marty Neumeier's Brand Gap",
+      description: "Finding the whitespace in the market. When everyone zigs, your brand should zag."
+    }
+  ];
+
+  const handleSubmit = async (overrideContent?: string) => {
+    const contentToSubmit = overrideContent || idea;
+    if (!contentToSubmit.trim() || isLoading) return;
 
     const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     const userMessage: Message = {
       role: "user",
-      content: idea.trim(),
+      content: contentToSubmit.trim(),
       timestamp,
     };
 
@@ -89,6 +139,7 @@ export default function ThinkModePage() {
         body: JSON.stringify({
           messages: [...messages, userMessage],
           userName: userName || undefined,
+          mode: 'strategic'
         }),
       });
 
@@ -370,27 +421,78 @@ export default function ThinkModePage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="w-full max-w-4xl text-center pt-16 space-y-3"
+          className="w-full max-w-4xl text-center pt-16 space-y-3 relative"
         >
           <p className="think-mode-heading text-4xl sm:text-5xl text-parchment-white">
-            What would you like to explore?
+            Strategic Planning Session
           </p>
-          <p className="text-sm sm:text-base text-parchment-white/60">
-            Share a question, tension, or early idea.
-          </p>
+          <div className="flex items-center justify-center gap-2">
+            <p className="text-sm sm:text-base text-parchment-white/60">
+              Select a strategic focus or start a new conversation.
+            </p>
+            
+            {/* Strategy Guide Sheet Trigger */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <button className="inline-flex items-center gap-1 text-xs text-aged-brass hover:text-brass-glow transition-colors border border-aged-brass/20 rounded-full px-2 py-0.5 hover:bg-aged-brass/10">
+                  <Info className="w-3 h-3" />
+                  <span>Strategy Guide</span>
+                </button>
+              </SheetTrigger>
+              <SheetContent className="bg-ink-black border-aged-brass/20 text-parchment-white sm:max-w-md overflow-y-auto">
+                <SheetHeader className="mb-6">
+                  <SheetTitle className="text-2xl font-serif text-aged-brass">Strategic Frameworks</SheetTitle>
+                  <SheetDescription className="text-parchment-white/60">
+                    Our AI models are trained on these specific methodologies to give you expert-level guidance.
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="space-y-6">
+                  {strategicOptions.map((option) => (
+                    <div key={option.label} className="space-y-2 border-b border-white/5 pb-4 last:border-0">
+                      <div className="flex items-center gap-2 text-aged-brass">
+                        <option.icon className="w-4 h-4" />
+                        <h3 className="font-semibold">{option.label}</h3>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-wider text-white/40 mb-1">The Framework</p>
+                        <p className="text-sm font-medium text-parchment-white/90">{option.framework}</p>
+                      </div>
+                      <p className="text-sm text-parchment-white/60 leading-relaxed">
+                        {option.description}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </motion.div>
 
-        <div className="w-full max-w-3xl mt-16 space-y-6 flex-1 flex flex-col">
-          <ScrollArea className={cn("flex-1", isEmpty ? "flex" : "")} ref={scrollRef}>
-            <div
-              className={cn(
-                "space-y-8 w-full",
-                isEmpty
-                  ? "flex flex-col items-center justify-center text-center text-white/65 text-[1.05rem] leading-relaxed"
-                  : ""
-              )}
-            >
+        <div className="w-full max-w-3xl mt-8 space-y-6 flex-1 flex flex-col">
+          {isEmpty && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
+              {strategicOptions.map((option, index) => (
+                <motion.div
+                  key={option.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1, duration: 0.5 }}
+                >
+                  <Button
+                    variant="outline"
+                    className="w-full h-auto px-4 py-4 flex flex-col items-center justify-center gap-2 bg-white/5 border-white/10 hover:bg-white/10 hover:border-aged-brass transition-all text-parchment-white group"
+                    onClick={() => handleSubmit(option.prompt)}
+                  >
+                    <option.icon className="w-6 h-6 text-aged-brass group-hover:text-brass-glow transition-colors mb-1" strokeWidth={1.5} />
+                    <span className="text-sm font-medium text-center leading-tight">{option.label}</span>
+                  </Button>
+                </motion.div>
+              ))}
+            </div>
+          )}
 
+          <ScrollArea className={cn("flex-1", isEmpty ? "hidden" : "flex")} ref={scrollRef}>
+            <div className="space-y-8 w-full pb-4">
               {messages.map((message, index) => (
                 <motion.div
                   key={`${message.role}-${index}`}
@@ -401,9 +503,18 @@ export default function ThinkModePage() {
                   <p className="text-[0.65rem] uppercase tracking-[0.35em] text-aged-brass/60">
                     {message.role === "user" ? userName || "You" : "Madison"}
                   </p>
-                  <p className="think-mode-body text-[1rem] leading-relaxed text-parchment-white/90">
-                    {message.content}
-                  </p>
+                  <div className="think-mode-body text-[1rem] leading-relaxed text-parchment-white/90">
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]}
+                      className="prose prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-white/10 prose-pre:text-parchment-white prose-code:text-aged-brass prose-headings:text-parchment-white prose-strong:text-parchment-white prose-a:text-aged-brass hover:prose-a:text-brass-glow"
+                      components={{
+                        p: ({node, ...props}) => <p className="mb-4 last:mb-0" {...props} />,
+                        a: ({node, ...props}) => <a target="_blank" rel="noopener noreferrer" {...props} />,
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
                 </motion.div>
               ))}
 
@@ -439,7 +550,7 @@ export default function ThinkModePage() {
             disabled={isLoading}
           />
           <button
-            onClick={handleSubmit}
+            onClick={() => handleSubmit()}
             disabled={!idea.trim() || isLoading}
             className="rounded-full bg-aged-brass text-parchment-white px-6 py-3 text-sm font-semibold hover:bg-brass-glow transition-colors disabled:opacity-40"
           >

@@ -18,6 +18,7 @@ import { detectCategory } from "@/lib/promptCategorization";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -150,6 +151,16 @@ export default function Create() {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [formatPickerOpen, setFormatPickerOpen] = useState(false);
   const [advancedOptionsOpen, setAdvancedOptionsOpen] = useState(false);
+  
+  const [showThinkMode, setShowThinkMode] = useState(() => {
+    const saved = localStorage.getItem('madison-show-think-mode');
+    return saved !== 'false';
+  });
+
+  const toggleThinkMode = (checked: boolean) => {
+    setShowThinkMode(checked);
+    localStorage.setItem('madison-show-think-mode', String(checked));
+  };
 
   const handleSubmit = () => {
     // Only format is required
@@ -716,6 +727,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
           body: JSON.stringify({ 
             messages: [...thinkModeMessages, userMessage],
             userName: userName || undefined,
+            mode: 'creative'
           })
         }
       );
@@ -838,195 +850,204 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
   return (
     <div className="min-h-screen pb-20 bg-vellum-cream">
       <div className={`max-w-5xl mx-auto px-6 py-10 transition-opacity duration-300 ${isGenerating ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-          {/* Think Mode - Inline Expandable */}
-          {!thinkModeExpanded ? (
-            <div
-              onClick={() => setThinkModeExpanded(true)}
-              className="mb-8 rounded-xl cursor-pointer transition-all hover:opacity-90 bg-parchment-white border-2 border-dashed border-brass"
-            >
-              <div className="p-6 flex items-center gap-4">
-                <Lightbulb className="w-6 h-6 text-brass" />
-                <div>
-                  <h3 className="font-semibold text-lg text-ink-black">
-                    Not sure where to start? Ask Madison
-                  </h3>
-                  <p className="text-sm text-warm-gray">
-                    Brainstorm with your Editorial Director before filling out the brief. No pressure, just ideas.
-                  </p>
-                </div>
-              </div>
-            </div>
-        ) : (
-          <div className="mb-8 rounded-xl overflow-hidden border border-warm-gray/20">
-            {/* Header */}
-            <div className="p-4 flex items-center justify-between bg-gradient-to-r from-brass to-brass-glow">
-              <div className="flex items-center gap-3">
-                <Lightbulb className="w-5 h-5 text-white" />
-                <h3 className="font-semibold text-white">Think Mode with Madison</h3>
-              </div>
-              <button
-                onClick={() => setThinkModeExpanded(false)}
-                className="hover:opacity-80 transition-opacity"
-              >
-                <X className="w-5 h-5 text-white" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-8 bg-parchment-white">
-              <div className="text-center max-w-2xl mx-auto mb-6">
-                <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-brass/10">
-                  <Lightbulb className="w-8 h-8 text-brass" />
-                </div>
-                <h4 className="text-2xl font-serif mb-3 text-ink-black">
-                  Madison's here to help
-                </h4>
-                <p className="text-base text-warm-gray">
-                  Share your ideas, questions, or creative direction. Your Editorial Director will help you explore and refine them.
-                </p>
-              </div>
-
-              {/* Example Prompts */}
-              <div className="flex flex-wrap gap-3 justify-center mb-6">
-                <Button
-                  variant="outline"
-                  onClick={() => setThinkModeInput("I need a blog post about seasonal fragrance trends")}
-                  className="text-sm border-warm-gray/20 text-warm-gray hover:border-brass hover:text-brass"
-                >
-                  "I need a blog post about seasonal fragrance trends"
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setThinkModeInput("Help me describe our new product launch")}
-                  className="text-sm border-warm-gray/20 text-warm-gray hover:border-brass hover:text-brass"
-                >
-                  "Help me describe our new product launch"
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setThinkModeInput("What's the best way to tell our brand story?")}
-                  className="text-sm border-warm-gray/20 text-warm-gray hover:border-brass hover:text-brass"
-                >
-                  "What's the best way to tell our brand story?"
-                </Button>
-              </div>
-
-              {/* Input Area Wrapper */}
-              {thinkModeMessages.length > 0 && (
-                <div className="mb-6 space-y-4 max-h-96 overflow-y-auto">
-                  {thinkModeMessages.map((msg) => (
-                    <div 
-                      key={msg.id} 
-                      className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div 
-                        className={`max-w-[80%] p-4 rounded-lg ${
-                          msg.role === 'user' 
-                            ? 'bg-warm-gray/10 text-ink-black' 
-                            : 'bg-brass/10 text-ink-black'
-                        }`}
-                      >
-                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                      </div>
-                    </div>
-                  ))}
-                  {isThinking && (
-                    <div className="flex justify-start">
-                      <div className="bg-brass/10 p-4 rounded-lg">
-                        <div className="flex gap-1">
-                          <span className="w-2 h-2 bg-brass rounded-full animate-bounce" />
-                          <span className="w-2 h-2 bg-brass rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                          <span className="w-2 h-2 bg-brass rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {thinkModeMessages.length > 0 && (
-                <Button
-                  onClick={() => {
-                    setThinkModeExpanded(false);
-                    toast({
-                      title: "Fill out the brief below",
-                      description: "Use the form to finalize your content request"
-                    });
-                  }}
-                  variant="outline"
-                  className="w-full mb-4 border-brass text-brass hover:bg-brass/10"
-                >
-                  Ready to Fill Out the Brief
-                </Button>
-              )}
-
-              {/* Input Area */}
-              <div className="relative">
-                <Textarea
-                  value={thinkModeInput}
-                  onChange={(e) => setThinkModeInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleThinkModeSend();
-                    }
-                  }}
-                  placeholder="Type your thoughts here..."
-                  className="min-h-[120px] pr-12 bg-vellum-cream border-warm-gray/20 text-ink-black resize-none"
-                />
-                <Button
-                  onClick={handleThinkModeSend}
-                  disabled={!thinkModeInput.trim() || isThinking}
-                  variant="brass"
-                  className="absolute bottom-3 right-3"
-                  size="icon"
-                >
-                  {isThinking ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Send className="w-4 h-4" />
-                  )}
-                </Button>
-              </div>
-              <p className="text-xs text-warm-gray/70 mt-2">
-                Press Enter to send • Shift + Enter for new line
-              </p>
-            </div>
-          </div>
-        )}
-
-          {/* Main Form */}
+        {/* Main Form */}
         <div>
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center gap-4 mb-4">
-              <img 
-                src={penNibIcon} 
-                alt="Pen nib icon" 
-                className="w-12 h-12 md:w-16 md:h-16 object-contain"
-              />
-              <div className="flex-1">
-                <div className="flex items-center gap-3">
-                  <h1 className="text-3xl md:text-4xl font-serif font-medium text-ink-black">
-                    Create Content
-                  </h1>
-                  <VideoHelpTrigger videoId="creating-first-content" variant="icon" />
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+              <div className="flex items-center gap-4">
+                <img 
+                  src={penNibIcon} 
+                  alt="Pen nib icon" 
+                  className="w-12 h-12 md:w-16 md:h-16 object-contain"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-3xl md:text-4xl font-serif font-medium text-ink-black">
+                      Create Content
+                    </h1>
+                    <VideoHelpTrigger videoId="creating-first-content" variant="icon" />
+                  </div>
+                  <p className="text-base md:text-lg mt-1 text-warm-gray">
+                    Quick brief to generate your content
+                  </p>
                 </div>
-                <p className="text-base md:text-lg mt-1 text-warm-gray">
-                  Quick brief to generate your content
-                </p>
               </div>
-            </div>
-            
-            {/* Quick-fill dropdowns */}
-            <div className="flex flex-wrap gap-3 mb-4">
-{/* Quick-fill dropdowns moved to Advanced Options to reduce distraction */}
+
+              <div className="flex items-center gap-3 bg-white/50 px-3 py-2 rounded-lg border border-warm-gray/10 self-start md:self-auto">
+                <Label htmlFor="think-mode-toggle" className="text-sm text-warm-gray font-medium cursor-pointer select-none">Brainstorming Helper</Label>
+                <Switch 
+                  id="think-mode-toggle" 
+                  checked={showThinkMode} 
+                  onCheckedChange={toggleThinkMode} 
+                  className="data-[state=checked]:bg-brass"
+                />
+              </div>
             </div>
             
             <p className="text-base text-warm-gray">
               Fill out the brief below and Madison will craft the perfect content.
             </p>
           </div>
+
+          {/* Think Mode - Inline Expandable */}
+          {showThinkMode && (
+            !thinkModeExpanded ? (
+              <div
+                onClick={() => setThinkModeExpanded(true)}
+                className="mb-8 rounded-xl cursor-pointer transition-all hover:opacity-90 bg-parchment-white border-2 border-dashed border-brass"
+              >
+                <div className="p-6 flex items-center gap-4">
+                  <Lightbulb className="w-6 h-6 text-brass" />
+                  <div>
+                    <h3 className="font-semibold text-lg text-ink-black">
+                      Not sure where to start? Ask Madison
+                    </h3>
+                    <p className="text-sm text-warm-gray">
+                      Brainstorm with your Editorial Director before filling out the brief. No pressure, just ideas.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="mb-8 rounded-xl overflow-hidden border border-warm-gray/20">
+                {/* Header */}
+                <div className="p-4 flex items-center justify-between bg-gradient-to-r from-brass to-brass-glow">
+                  <div className="flex items-center gap-3">
+                    <Lightbulb className="w-5 h-5 text-white" />
+                    <h3 className="font-semibold text-white">Think Mode with Madison</h3>
+                  </div>
+                  <button
+                    onClick={() => setThinkModeExpanded(false)}
+                    className="hover:opacity-80 transition-opacity"
+                  >
+                    <X className="w-5 h-5 text-white" />
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="p-8 bg-parchment-white">
+                  <div className="text-center max-w-2xl mx-auto mb-6">
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-brass/10">
+                      <Lightbulb className="w-8 h-8 text-brass" />
+                    </div>
+                    <h4 className="text-2xl font-serif mb-3 text-ink-black">
+                      Madison's here to help
+                    </h4>
+                    <p className="text-base text-warm-gray">
+                      Share your ideas, questions, or creative direction. Your Editorial Director will help you explore and refine them.
+                    </p>
+                  </div>
+
+                  {/* Example Prompts */}
+                  <div className="flex flex-wrap gap-3 justify-center mb-6">
+                    <Button
+                      variant="outline"
+                      onClick={() => setThinkModeInput("I need a blog post about seasonal fragrance trends")}
+                      className="text-sm border-warm-gray/20 text-warm-gray hover:border-brass hover:text-brass"
+                    >
+                      "I need a blog post about seasonal fragrance trends"
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setThinkModeInput("Help me describe our new product launch")}
+                      className="text-sm border-warm-gray/20 text-warm-gray hover:border-brass hover:text-brass"
+                    >
+                      "Help me describe our new product launch"
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setThinkModeInput("What's the best way to tell our brand story?")}
+                      className="text-sm border-warm-gray/20 text-warm-gray hover:border-brass hover:text-brass"
+                    >
+                      "What's the best way to tell our brand story?"
+                    </Button>
+                  </div>
+
+                  {/* Input Area Wrapper */}
+                  {thinkModeMessages.length > 0 && (
+                    <div className="mb-6 space-y-4 max-h-96 overflow-y-auto">
+                      {thinkModeMessages.map((msg) => (
+                        <div 
+                          key={msg.id} 
+                          className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div 
+                            className={`max-w-[80%] p-4 rounded-lg ${
+                              msg.role === 'user' 
+                                ? 'bg-warm-gray/10 text-ink-black' 
+                                : 'bg-brass/10 text-ink-black'
+                            }`}
+                          >
+                            <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                          </div>
+                        </div>
+                      ))}
+                      {isThinking && (
+                        <div className="flex justify-start">
+                          <div className="bg-brass/10 p-4 rounded-lg">
+                            <div className="flex gap-1">
+                              <span className="w-2 h-2 bg-brass rounded-full animate-bounce" />
+                              <span className="w-2 h-2 bg-brass rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                              <span className="w-2 h-2 bg-brass rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {thinkModeMessages.length > 0 && (
+                    <Button
+                      onClick={() => {
+                        setThinkModeExpanded(false);
+                        toast({
+                          title: "Fill out the brief below",
+                          description: "Use the form to finalize your content request"
+                        });
+                      }}
+                      variant="outline"
+                      className="w-full mb-4 border-brass text-brass hover:bg-brass/10"
+                    >
+                      Ready to Fill Out the Brief
+                    </Button>
+                  )}
+
+                  {/* Input Area */}
+                  <div className="relative">
+                    <Textarea
+                      value={thinkModeInput}
+                      onChange={(e) => setThinkModeInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleThinkModeSend();
+                        }
+                      }}
+                      placeholder="Type your thoughts here..."
+                      className="min-h-[120px] pr-12 bg-vellum-cream border-warm-gray/20 text-ink-black resize-none"
+                    />
+                    <Button
+                      onClick={handleThinkModeSend}
+                      disabled={!thinkModeInput.trim() || isThinking}
+                      variant="brass"
+                      className="absolute bottom-3 right-3"
+                      size="icon"
+                    >
+                      {isThinking ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-warm-gray/70 mt-2">
+                    Press Enter to send • Shift + Enter for new line
+                  </p>
+                </div>
+              </div>
+            )
+          )}
 
           {/* Form Container */}
           <div className="p-8 rounded-xl border border-warm-gray/20 space-y-8 bg-parchment-white">
@@ -1250,10 +1271,10 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
               </CollapsibleTrigger>
               
               <CollapsibleContent className="space-y-6 pt-4">
-                {/* Style Overlay */}
+                {/* Writing Style - Updated 2024 */}
                 <div>
                   <Label htmlFor="style" className="text-base mb-2 text-ink-black">
-                    Style Overlay
+                    Select Writing Style
                   </Label>
                   <Select value={style} onValueChange={setStyle}>
                     <SelectTrigger
@@ -1273,26 +1294,26 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                       </SelectItem>
                       <SelectItem value="poetic">
                         <div className="flex flex-col">
-                          <span className="font-medium">J. Peterman Style</span>
-                          <span className="text-xs text-warm-gray">Narrative adventure, romantic</span>
+                          <span className="font-medium">Storytelling</span>
+                          <span className="text-xs text-warm-gray">Engaging narratives & romance</span>
                         </div>
                       </SelectItem>
                       <SelectItem value="direct">
                         <div className="flex flex-col">
-                          <span className="font-medium">Ogilvy Style</span>
-                          <span className="text-xs text-warm-gray">Sophisticated persuasion, factual</span>
+                          <span className="font-medium">Direct Sales</span>
+                          <span className="text-xs text-warm-gray">Conversion-focused & persuasive</span>
                         </div>
                       </SelectItem>
-                      <SelectItem value="story">
+                      <SelectItem value="educational">
                         <div className="flex flex-col">
-                          <span className="font-medium">Hybrid Narrative</span>
-                          <span className="text-xs text-warm-gray">Balanced elegance, versatile</span>
+                          <span className="font-medium">Educational</span>
+                          <span className="text-xs text-warm-gray">Explanatory & reason-why</span>
                         </div>
                       </SelectItem>
                       <SelectItem value="minimal">
                         <div className="flex flex-col">
-                          <span className="font-medium">Minimal & Modern</span>
-                          <span className="text-xs text-warm-gray">Clean, concise, contemporary</span>
+                          <span className="font-medium">Minimalist</span>
+                          <span className="text-xs text-warm-gray">Clean, modern & concise</span>
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -1350,12 +1371,14 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                 Cancel
               </Button>
               
-              <button
-                onClick={() => setThinkModeExpanded(true)}
-                className="w-full text-sm text-brass hover:underline mt-2"
-              >
-                Not sure what to write? Try Think Mode
-              </button>
+              {showThinkMode && (
+                <button
+                  onClick={() => setThinkModeExpanded(true)}
+                  className="w-full text-sm text-brass hover:underline mt-2"
+                >
+                  Not sure what to write? Try Think Mode
+                </button>
+              )}
               
               <p className="text-xs text-center mt-2 text-warm-gray/70">
                 {!format ? (
@@ -1389,12 +1412,14 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                   <PenTool className="w-5 h-5" />
                   <span className="text-base">Generate</span>
                 </Button>
-                <button
-                  onClick={() => setThinkModeExpanded(true)}
-                  className="block text-sm text-brass hover:underline mt-2 ml-auto"
-                >
-                  Not sure what to write? Try Think Mode
-                </button>
+                {showThinkMode && (
+                  <button
+                    onClick={() => setThinkModeExpanded(true)}
+                    className="block text-sm text-brass hover:underline mt-2 ml-auto"
+                  >
+                    Not sure what to write? Try Think Mode
+                  </button>
+                )}
                 <p className="text-xs mt-2 text-warm-gray/70">
                   {!format ? (
                     <span className="text-brass">Select a format to continue</span>

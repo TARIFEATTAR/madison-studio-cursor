@@ -20,7 +20,7 @@ import {
   Sparkles, Archive, Mail, MessageSquare, Tag,
   FileText, CheckCircle2, XCircle, ChevronDown, ChevronRight, Copy, 
   Calendar, Edit, Loader2, AlertCircle, Video, Bookmark,
-  Briefcase, Share2, ArrowLeft
+  Briefcase, Share2, ArrowLeft, Instagram
 } from "lucide-react";
 import { EditorialDirectorSplitScreen } from "@/components/multiply/EditorialDirectorSplitScreen";
 import { SavePromptDialog } from "@/components/prompt-library/SavePromptDialog";
@@ -31,9 +31,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { parseEmailSequence } from "@/lib/emailSequence";
 import fannedPagesImage from "@/assets/fanned-pages-new.png";
-import ticketIcon from "@/assets/ticket-icon.png";
-import envelopeIcon from "@/assets/envelope-icon.png";
-import instagramIcon from "@/assets/instagram-icon-clean.png";
 
 interface DerivativeType {
   id: string;
@@ -83,7 +80,6 @@ const TOP_DERIVATIVE_TYPES: DerivativeType[] = [
     name: "3-Part Email Series",
     description: "Sequential email nurture campaign",
     icon: Mail,
-    iconImage: envelopeIcon,
     iconColor: "#8B7355",
     isSequence: true,
   },
@@ -91,8 +87,7 @@ const TOP_DERIVATIVE_TYPES: DerivativeType[] = [
     id: "instagram",
     name: "Instagram",
     description: "Instagram posts and captions",
-    icon: null,
-    iconImage: instagramIcon,
+    icon: Instagram,
     iconColor: "#E4405F",
     charLimit: 2200,
   },
@@ -101,7 +96,6 @@ const TOP_DERIVATIVE_TYPES: DerivativeType[] = [
     name: "Product Description",
     description: "Product page descriptions",
     icon: Tag,
-    iconImage: ticketIcon,
     iconColor: "#3A4A3D",
     charLimit: 500,
   },
@@ -1035,11 +1029,9 @@ export default function Multiply() {
                                 className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
                               >
                                 <div className="flex items-center gap-3">
-                                  {type.iconImage ? (
-                                    <img src={type.iconImage} alt={type.name} className="w-6 h-6" />
-                                  ) : Icon ? (
-                                    <Icon className="w-6 h-6" style={{ color: type.iconColor }} />
-                                  ) : null}
+                                  {Icon && (
+                                    <Icon className="w-6 h-6" style={{ color: type.iconColor }} strokeWidth={1} />
+                                  )}
                                   <div className="text-left">
                                     <h3 className="font-medium">{type.name}</h3>
                                     <p className="text-sm text-muted-foreground">{derivs.length} generated</p>
@@ -1175,10 +1167,8 @@ export default function Multiply() {
                                 <div className="space-y-2">
                                   <div className="flex items-start justify-between">
                                     <Checkbox checked={selectedTypes.has(type.id)} className="mt-1" />
-                                    {type.iconImage ? (
-                                      <img src={type.iconImage} alt={type.name} className="w-8 h-8" />
-                                    ) : type.icon && (
-                                      <type.icon className="w-8 h-8" style={{ color: type.iconColor }} />
+                                    {type.icon && (
+                                      <type.icon className="w-8 h-8" style={{ color: type.iconColor }} strokeWidth={1} />
                                     )}
                                   </div>
                                   <div>
@@ -1211,10 +1201,8 @@ export default function Multiply() {
                                   <div className="space-y-2">
                                     <div className="flex items-start justify-between">
                                       <Checkbox checked={selectedTypes.has(type.id)} className="mt-1" />
-                                      {type.iconImage ? (
-                                        <img src={type.iconImage} alt={type.name} className="w-8 h-8" />
-                                      ) : type.icon && (
-                                        <type.icon className="w-8 h-8" style={{ color: type.iconColor }} />
+                                      {type.icon && (
+                                        <type.icon className="w-8 h-8" style={{ color: type.iconColor }} strokeWidth={1} />
                                       )}
                                     </div>
                                     <div>
@@ -1369,10 +1357,8 @@ export default function Multiply() {
                         className="w-full p-3 flex items-center justify-between hover:bg-muted/50"
                       >
                         <div className="flex items-center gap-2">
-                          {type.iconImage ? (
-                            <img src={type.iconImage} alt={type.name} className="w-5 h-5" />
-                          ) : type.icon && (
-                            <type.icon className="w-5 h-5" style={{ color: type.iconColor }} />
+                          {type.icon && (
+                            <type.icon className="w-5 h-5" style={{ color: type.iconColor }} strokeWidth={1} />
                           )}
                           <div className="text-left">
                             <p className="font-medium text-sm">{type.name}</p>
