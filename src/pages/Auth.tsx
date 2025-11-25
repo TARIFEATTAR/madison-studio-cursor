@@ -21,6 +21,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [resetMode, setResetMode] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
   const hasNavigated = useRef(false);
 
   // -------------------------------------------
@@ -68,7 +69,7 @@ const Auth = () => {
     }
 
     if (token_hash && type) {
-      supabase.auth.verifyOtp({ token_hash, type }).then(({ error }) => {
+      supabase.auth.verifyOtp({ token_hash, type: type as any }).then(({ error }) => {
         if (error) {
           toast({
             title: "Link invalid or expired",
@@ -79,7 +80,7 @@ const Auth = () => {
           toast({ title: "Signed in", description: "Welcome back." });
         }
       });
-    } 
+    }
     else if (code) {
       supabase.auth.exchangeCodeForSession(code).then(({ error, data }) => {
         if (error) {
@@ -92,7 +93,7 @@ const Auth = () => {
           redirectAfterLogin(data.session.user);
         }
       });
-    } 
+    }
     else {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session?.user) {
@@ -144,7 +145,7 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -156,7 +157,15 @@ const Auth = () => {
 
     if (error) {
       toast({ title: "Sign up error", description: error.message, variant: "destructive" });
+    } else if (data.user && !data.session) {
+      // User created but session is null -> Email confirmation required
+      setSignupSuccess(true);
+      toast({
+        title: "Check your email",
+        description: "Please confirm your email address to continue.",
+      });
     } else {
+      // User created and session exists -> Auto-confirmed or no confirmation needed
       toast({
         title: "Welcome to Madison",
         description: "Your account has been created successfully.",
@@ -325,21 +334,69 @@ const Auth = () => {
             </TabsContent>
 
             <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input id="signup-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              {signupSuccess ? (
+                <div className="space-y-6 text-center py-4">
+                  <div className="mx-auto w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="w-6 h-6 text-green-600"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground">Check your email</h3>
+                  <p className="text-muted-foreground">
+                    We've sent a confirmation link to <span className="font-medium text-foreground">{email}</span>.
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Please click the link to verify your account and get started.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full mt-4"
+                    onClick={() => setSignupSuccess(false)}
+                  >
+                    Back to Sign Up
+                  </Button>
                 </div>
+              ) : (
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <Input id="signup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
 
-                <Button type="submit" className="w-full btn-craft" disabled={loading}>
-                  {loading ? "Crafting..." : "Craft Account"}
-                </Button>
-              </form>
+                  <Button type="submit" className="w-full btn-craft" disabled={loading}>
+                    {loading ? "Crafting..." : "Craft Account"}
+                  </Button>
+                </form>
+              )}
             </TabsContent>
           </Tabs>
         </div>

@@ -1,6 +1,6 @@
 export const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 
-const DEFAULT_MODEL = "models/gemini-2.0-flash";
+const DEFAULT_MODEL = "models/gemini-1.5-flash";
 
 type OpenAIContentPart =
   | { type: "text"; text: string }
@@ -277,7 +277,7 @@ export async function streamGeminiTextResponse(
   // Use streaming API
   console.log(`[geminiClient] Calling Gemini API: ${model}:streamGenerateContent`);
   console.log(`[geminiClient] Request body size: ${JSON.stringify(body).length} chars`);
-  
+
   const response = await fetch(
     `${GEMINI_API_BASE}/${model}:streamGenerateContent?key=${apiKey}`,
     {
@@ -288,7 +288,7 @@ export async function streamGeminiTextResponse(
   );
 
   console.log(`[geminiClient] Gemini API response status: ${response.status} ${response.statusText}`);
-  
+
   if (!response.ok) {
     const errorText = await response.text();
     console.error(`[geminiClient] Gemini API error: ${errorText}`);
@@ -302,7 +302,7 @@ export async function streamGeminiTextResponse(
       throw new Error(`Gemini API error (${response.status}): ${errorText}`);
     }
   }
-  
+
   console.log(`[geminiClient] Starting to process stream...`);
 
   // Convert Gemini streaming format to OpenAI SSE format
@@ -322,7 +322,7 @@ export async function streamGeminiTextResponse(
         let chunkCount = 0;
         let textChunkCount = 0;
         let totalBytesReceived = 0;
-        
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
@@ -384,7 +384,7 @@ export async function streamGeminiTextResponse(
           const decoded = decoder.decode(value, { stream: true });
           totalBytesReceived += value.length;
           buffer += decoded;
-          
+
           // Log first few bytes to see what we're receiving
           if (chunkCount === 0 && totalBytesReceived < 1000) {
             console.log(`[geminiClient] First bytes received (${totalBytesReceived}):`, decoded.substring(0, 200));
@@ -397,7 +397,7 @@ export async function streamGeminiTextResponse(
             buffer = buffer.slice(newlineIndex + 1);
 
             if (!line) continue;
-            
+
             // Skip lines that are clearly incomplete JSON (start with partial tokens)
             if (line === '],' || line === '}' || line === ']' || line.startsWith('],')) {
               console.warn(`[geminiClient] Skipping incomplete JSON fragment: ${line}`);
@@ -409,10 +409,10 @@ export async function streamGeminiTextResponse(
               if (chunkCount === 0) {
                 console.log(`[geminiClient] Raw first line (first 500 chars):`, line.substring(0, 500));
               }
-              
+
               const geminiData = JSON.parse(line);
               chunkCount++;
-              
+
               // Log the full chunk structure for debugging (first chunk only to avoid spam)
               if (chunkCount === 1) {
                 console.log(`[geminiClient] First chunk structure:`, JSON.stringify(geminiData, null, 2));
@@ -427,12 +427,12 @@ export async function streamGeminiTextResponse(
               const extractTextFromObject = (obj: any): string => {
                 if (typeof obj === 'string' && obj.trim()) return obj;
                 if (typeof obj !== 'object' || obj === null) return "";
-                
+
                 // Check for text field (direct)
                 if (obj.text && typeof obj.text === 'string' && obj.text.trim()) {
                   return obj.text;
                 }
-                
+
                 // Check for parts array (Gemini's standard format)
                 if (Array.isArray(obj.parts)) {
                   const texts = obj.parts
@@ -450,12 +450,12 @@ export async function streamGeminiTextResponse(
                     .filter((t: string) => t && t.trim());
                   if (texts.length > 0) return texts.join("");
                 }
-                
+
                 // Check for inlineData (skip image data)
                 if (obj.inlineData) {
                   return ""; // Skip image data
                 }
-                
+
                 // Recursively search in common fields
                 const searchKeys = ['text', 'content', 'parts', 'delta'];
                 for (const key of searchKeys) {
@@ -464,18 +464,18 @@ export async function streamGeminiTextResponse(
                     if (found) return found;
                   }
                 }
-                
+
                 return "";
               };
 
               // Strategy 1: Standard candidates format with content.parts
               if (geminiData.candidates?.[0]) {
                 const candidate = geminiData.candidates[0];
-                
+
                 // IMPORTANT: In streaming mode, Gemini returns incremental text in content.parts
                 // Each chunk may contain only the NEW text since the last chunk (delta)
                 // OR it may contain the full accumulated content
-                
+
                 // Check content.parts (most common) - this is the standard format
                 if (candidate.content?.parts) {
                   extractedText = extractTextFromObject(candidate.content);
@@ -483,12 +483,12 @@ export async function streamGeminiTextResponse(
                     console.log(`[geminiClient] Debug - candidate.content.parts exists but no text extracted. Parts:`, JSON.stringify(candidate.content.parts, null, 2));
                   }
                 }
-                
+
                 // Check for content.text directly (some formats)
                 if (!extractedText && candidate.content?.text) {
                   extractedText = typeof candidate.content.text === 'string' ? candidate.content.text : '';
                 }
-                
+
                 // Check delta.content.parts (incremental updates - NEW in streaming)
                 if (!extractedText && candidate.delta) {
                   // Delta can have content.parts or just text
@@ -500,12 +500,12 @@ export async function streamGeminiTextResponse(
                     extractedText = typeof candidate.delta.content.text === 'string' ? candidate.delta.content.text : '';
                   }
                 }
-                
+
                 // Check direct content field
                 if (!extractedText && candidate.content) {
                   extractedText = extractTextFromObject(candidate.content);
                 }
-                
+
                 // Check if content exists but is empty (might be a metadata chunk)
                 if (!extractedText && candidate.content && !candidate.content.parts) {
                   console.log(`[geminiClient] Debug - candidate has content but no parts:`, JSON.stringify(candidate.content, null, 2));
@@ -547,7 +547,7 @@ export async function streamGeminiTextResponse(
                 } else {
                   // Log the full structure of chunks without text so we can see what we're missing
                   console.warn(`[geminiClient] Chunk ${chunkCount} without extractable text. Full structure:`, JSON.stringify(geminiData, null, 2));
-                  
+
                   // Also log what we checked
                   console.warn(`[geminiClient] Debug - Has candidates:`, !!geminiData.candidates);
                   if (geminiData.candidates?.[0]) {

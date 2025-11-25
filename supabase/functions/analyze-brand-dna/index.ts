@@ -27,38 +27,79 @@ serve(async (req) => {
 
     console.log("Analyzing Brand DNA for:", websiteUrl, "org:", organizationId);
 
-    // Fetch website content
-    const websiteResponse = await fetch(websiteUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; MadisonBrandDNA/1.0)",
-      },
-    });
+    console.log("Analyzing Brand DNA for:", websiteUrl, "org:", organizationId);
 
-    if (!websiteResponse.ok) {
-      throw new Error(`Failed to fetch website: ${websiteResponse.status}`);
+    let textContent = "";
+    let cssContent = "";
+    let fetchSuccess = false;
+
+    try {
+      // Fetch website content with better headers to avoid bot detection
+      // Add 10s timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const websiteResponse = await fetch(websiteUrl, {
+        signal: controller.signal,
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.5",
+        },
+      });
+
+      clearTimeout(timeoutId);
+
+      if (websiteResponse.ok) {
+        const htmlContent = await websiteResponse.text();
+
+        // Extract text content and preserve some structure
+        textContent = htmlContent
+          .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+          .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+          .replace(/<[^>]+>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .substring(0, 10000);
+
+        // Extract CSS for color/font analysis
+        const styleMatches = htmlContent.match(/<style[^>]*>([\s\S]*?)<\/style>/gi) || [];
+        cssContent = styleMatches.join("\n").substring(0, 5000);
+
+        fetchSuccess = true;
+        console.log("Extracted content lengths - text:", textContent.length, "css:", cssContent.length);
+      } else {
+        console.warn(`Failed to fetch website: ${websiteResponse.status} ${websiteResponse.statusText}`);
+      }
+    } catch (fetchError) {
+      console.warn("Error fetching website, falling back to AI knowledge:", fetchError);
     }
 
-    const htmlContent = await websiteResponse.text();
+    const userPrompt = fetchSuccess
+      ? `Analyze this website for Brand DNA:
 
-    // Extract text content and preserve some structure
-    const textContent = htmlContent
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-      .substring(0, 10000);
+TEXT CONTENT:
+${textContent}
 
-    // Extract CSS for color/font analysis
-    const styleMatches = htmlContent.match(/<style[^>]*>([\s\S]*?)<\/style>/gi) || [];
-    const cssContent = styleMatches.join("\n").substring(0, 5000);
+CSS CONTENT:
+${cssContent}
 
-    console.log("Extracted content lengths - text:", textContent.length, "css:", cssContent.length);
+Extract the visual brand identity as structured JSON.`
+      : `I could not access the website content directly (it may be protected). 
+      
+Please generate the Brand DNA for the brand at this URL: ${websiteUrl}
 
-    const aiData = await generateGeminiContent({
-      systemPrompt: `You are a brand DNA analyst specializing in extracting visual brand identity from websites.
+Rely on your internal knowledge about this brand. If you don't know the brand specifically, infer a likely brand identity based on the domain name and industry standards for that type of business.
 
-Analyze the provided website content and CSS to extract a comprehensive visual Brand DNA.
+Return the same JSON structure as requested.`;
+
+    let brandDNA;
+
+    try {
+      const aiData = await generateGeminiContent({
+        systemPrompt: `You are a brand DNA analyst specializing in extracting visual brand identity from websites.
+
+Analyze the provided website content (or URL) to extract a comprehensive visual Brand DNA.
 
 Return ONLY a valid JSON object (no markdown, no explanations) with this exact structure:
 {
@@ -83,59 +124,62 @@ Return ONLY a valid JSON object (no markdown, no explanations) with this exact s
 }
 
 Focus on extracting actual colors from CSS (hex, rgb values), real font families used, and observable visual patterns.`,
-      messages: [
-        {
-          role: "user",
-          content: `Analyze this website for Brand DNA:
+        messages: [
+          {
+            role: "user",
+            content: userPrompt,
+          },
+        ],
+        responseMimeType: "application/json",
+        maxOutputTokens: 2048,
+        temperature: 0.2,
+      });
 
-TEXT CONTENT:
-${textContent}
+      const analysisText = extractTextFromGeminiResponse(aiData);
+      console.log("AI Analysis received");
 
-CSS CONTENT:
-${cssContent}
+      // Parse AI response
+      try {
+        // Remove markdown code blocks if present
+        const cleanedText = analysisText
+          .replace(/```json\n?/g, "")
+          .replace(/```\n?/g, "")
+          .trim();
 
-Extract the visual brand identity as structured JSON.`,
-        },
-      ],
-      responseMimeType: "application/json",
-      maxOutputTokens: 2048,
-      temperature: 0.2,
-    });
+        brandDNA = JSON.parse(cleanedText);
+      } catch (parseError) {
+        console.error("Failed to parse AI response as JSON:", parseError);
+        throw new Error("Invalid JSON from AI");
+      }
 
-    const analysisText = extractTextFromGeminiResponse(aiData);
+    } catch (aiError) {
+      console.error("AI Generation failed, using basic fallback:", aiError);
 
-    console.log("AI Analysis received");
+      // Ultimate Fallback: Generate basic data from URL
+      const hostname = new URL(websiteUrl).hostname.replace('www.', '');
+      const brandName = hostname.split('.')[0].charAt(0).toUpperCase() + hostname.split('.')[0].slice(1);
 
-    // Parse AI response
-    let brandDNA;
-    try {
-      // Remove markdown code blocks if present
-      const cleanedText = analysisText
-        .replace(/```json\n?/g, "")
-        .replace(/```\n?/g, "")
-        .trim();
-      
-      brandDNA = JSON.parse(cleanedText);
-    } catch (parseError) {
-      console.error("Failed to parse AI response as JSON:", parseError);
-      // Create fallback structure
       brandDNA = {
-        brandName: "Brand",
-        primaryColor: "#B8956A",
+        brandName: brandName,
+        primaryColor: "#000000",
         colorPalette: [
-          { hex: "#B8956A", name: "Primary", usage: "Brand color" }
+          { hex: "#000000", name: "Primary", usage: "Main text" },
+          { hex: "#FFFFFF", name: "Background", usage: "Page background" }
         ],
         fonts: {
-          headline: "Serif",
-          body: "Sans-serif"
+          headline: "System UI, sans-serif",
+          body: "System UI, sans-serif"
         },
-        logo: { detected: false },
+        logo: {
+          detected: false,
+          description: "Logo extraction failed, please upload manually"
+        },
         visualStyle: {
-          mood: "Professional and modern",
-          photography: "Clean and minimal",
-          composition: "Balanced"
+          mood: "Clean and professional",
+          photography: "Standard web imagery",
+          composition: "Standard layout"
         },
-        rawAnalysis: analysisText
+        fallback: true
       };
     }
 
