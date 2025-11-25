@@ -40,17 +40,19 @@ import ImageEditor from "./pages/ImageEditor";
 import EmailBuilderV2 from "./pages/EmailBuilderV2";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import ComponentDemo from "./pages/ComponentDemo";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EcommerceGuard } from "./components/guards/EcommerceGuard";
+import { OnboardingTooltipProvider } from "./components/onboarding/OnboardingTooltipProvider";
 
 const queryClient = new QueryClient();
 
 const RouteErrorBoundary = ({ children, routeName }: { children: React.ReactNode; routeName: string }) => {
   const navigate = useNavigate();
-  
+
   return (
     <ErrorBoundary
       fallback={
@@ -153,7 +155,7 @@ const RootRoute = () => {
   const location = useLocation();
   const [redirectCount, setRedirectCount] = useState(0);
   const [isChecking, setIsChecking] = useState(false);
-  
+
   useEffect(() => {
     // Redirect loop protection
     if (redirectCount >= 3) {
@@ -220,8 +222,8 @@ const RootRoute = () => {
         }
 
         // If organization has brand info, consider onboarding complete
-        const hasBrandInfo = org?.brand_config && 
-          typeof org.brand_config === 'object' && 
+        const hasBrandInfo = org?.brand_config &&
+          typeof org.brand_config === 'object' &&
           'industry' in org.brand_config;
 
         if (!hasBrandInfo) {
@@ -279,7 +281,7 @@ const RootRoute = () => {
       </div>
     );
   }
-  
+
   return <DashboardNew />;
 };
 
@@ -291,7 +293,7 @@ const AppContent = () => {
 
   // Initialize onboarding for org creation only (no modals shown globally)
   useOnboarding();
-  
+
   // Show sidebar for authenticated users on all pages except /auth, /editor, and /onboarding
   const showSidebar = user && location.pathname !== "/auth" && location.pathname !== "/editor" && location.pathname !== "/onboarding";
 
@@ -327,6 +329,7 @@ const AppContent = () => {
                   <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/component-demo" element={<ProtectedRoute><RouteErrorBoundary routeName="Component Demo"><ComponentDemo /></RouteErrorBoundary></ProtectedRoute>} />
                   {/* Email Builder routes - Temporarily hidden for launch */}
                   {/* <Route path="/email-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Builder"><EmailBuilderV2 /></RouteErrorBoundary></ProtectedRoute>} /> */}
                   {/* Legacy redirects */}
@@ -366,6 +369,7 @@ const AppContent = () => {
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/component-demo" element={<ProtectedRoute><RouteErrorBoundary routeName="Component Demo"><ComponentDemo /></RouteErrorBoundary></ProtectedRoute>} />
             {/* Email Builder routes - Temporarily hidden for launch */}
             {/* <Route path="/email-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Builder"><EmailBuilderV2 /></RouteErrorBoundary></ProtectedRoute>} /> */}
             {/* Legacy redirects */}
@@ -375,13 +379,16 @@ const AppContent = () => {
           </Routes>
         </>
       )}
+
+      {/* Onboarding Tooltips - Show for authenticated users */}
+      {user && <OnboardingTooltipProvider />}
     </>
   );
 };
 
 const App = () => {
   logger.debug("[App] App component rendering...");
-  
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

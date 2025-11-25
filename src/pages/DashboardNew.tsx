@@ -9,6 +9,7 @@ import { BrandPulseBar } from "@/components/dashboard/BrandPulseBar";
 import { ContentFlowZone } from "@/components/dashboard/ContentFlowZone";
 import { PerformanceMomentumZone } from "@/components/dashboard/PerformanceMomentumZone";
 import { PostOnboardingGuide } from "@/components/onboarding/PostOnboardingGuide";
+import { GettingStartedChecklist } from "@/components/onboarding/GettingStartedChecklist";
 import { usePostOnboardingGuide } from "@/hooks/usePostOnboardingGuide";
 import { logger } from "@/lib/logger";
 
@@ -22,7 +23,20 @@ export default function DashboardNew() {
   const { data: stats, isLoading: statsLoading, error, isError } = useDashboardStats();
   const [showFallback, setShowFallback] = useState(false);
   const [madisonPanelOpen, setMadisonPanelOpen] = useState(false);
+  const [showChecklist, setShowChecklist] = useState(false);
   const { showGuide, dismissGuide } = usePostOnboardingGuide();
+
+  // Check if we should show the getting started checklist
+  useEffect(() => {
+    if (!user) return;
+    const checklistDismissed = localStorage.getItem(`checklist_dismissed_${user.id}`);
+    const checklistProgress = localStorage.getItem(`checklist_progress_${user.id}`);
+
+    // Show checklist if not dismissed and user has some activity (not brand new)
+    if (!checklistDismissed && stats && stats.totalContent < 10) {
+      setShowChecklist(true);
+    }
+  }, [user, stats]);
 
   // Safety timeout - show fallback after 3 seconds of loading
   useEffect(() => {
@@ -51,8 +65,8 @@ export default function DashboardNew() {
           <div className="text-charcoal text-sm">
             {isError ? "Welcome! Let's get started." : "Setting up your workspace…"}
           </div>
-          <Button 
-            onClick={() => navigate("/create")} 
+          <Button
+            onClick={() => navigate("/create")}
             className="bg-ink-black hover:bg-charcoal text-parchment-white"
           >
             Start Creating
@@ -106,6 +120,18 @@ export default function DashboardNew() {
             <BrandPulseBar />
           </div>
 
+          {/* Getting Started Checklist - Show for new users */}
+          {showChecklist && (
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
+              <div className="md:col-span-12">
+                <GettingStartedChecklist
+                  onDismiss={() => setShowChecklist(false)}
+                  compact={false}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Row 2: Content Flow */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
             <ContentFlowZone />
@@ -119,8 +145,8 @@ export default function DashboardNew() {
       </div>
 
       {/* Madison AI Assistant Panel */}
-      <MadisonPanel 
-        isOpen={madisonPanelOpen} 
+      <MadisonPanel
+        isOpen={madisonPanelOpen}
         onToggle={() => setMadisonPanelOpen(!madisonPanelOpen)}
         sessionCount={0}
         maxImages={10}

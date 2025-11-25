@@ -34,36 +34,36 @@ interface SavedSelection {
 const getNodePath = (node: Node, root: Node): number[] => {
   const path: number[] = [];
   let current = node;
-  
+
   while (current !== root && current.parentNode) {
     const parent = current.parentNode;
     const index = Array.from(parent.childNodes).indexOf(current as ChildNode);
     path.unshift(index);
     current = parent;
   }
-  
+
   return path;
 };
 
 const getNodeFromPath = (root: Node, path: number[]): Node | null => {
   let current: Node | null = root;
-  
+
   for (const index of path) {
     if (!current || !current.childNodes[index]) {
       return null;
     }
     current = current.childNodes[index];
   }
-  
+
   return current;
 };
 
 const saveSelection = (root: HTMLDivElement): SavedSelection | null => {
   const selection = window.getSelection();
   if (!selection || !selection.rangeCount) return null;
-  
+
   const range = selection.getRangeAt(0);
-  
+
   return {
     anchorPath: getNodePath(range.startContainer, root),
     anchorOffset: range.startOffset,
@@ -74,14 +74,14 @@ const saveSelection = (root: HTMLDivElement): SavedSelection | null => {
 
 const restoreSelection = (root: HTMLDivElement, saved: SavedSelection | null) => {
   if (!saved) return;
-  
+
   const anchorNode = getNodeFromPath(root, saved.anchorPath);
   const focusNode = getNodeFromPath(root, saved.focusPath);
-  
+
   if (anchorNode && focusNode) {
     const selection = window.getSelection();
     const range = document.createRange();
-    
+
     try {
       range.setStart(anchorNode, Math.min(saved.anchorOffset, anchorNode.textContent?.length || 0));
       range.setEnd(focusNode, Math.min(saved.focusOffset, focusNode.textContent?.length || 0));
@@ -100,7 +100,7 @@ export default function ContentEditorPage() {
   const isMobile = useIsMobile();
   const editableRef = useRef<HTMLDivElement>(null);
   const { currentOrganizationId } = useOnboarding();
-  
+
   // Load content from route state, DB, or localStorage
   const [isLoading, setIsLoading] = useState(true);
   const [isEditorReady, setIsEditorReady] = useState(false);
@@ -109,14 +109,14 @@ export default function ContentEditorPage() {
   const [title, setTitle] = useState("");
   const [contentType, setContentType] = useState("");
   const [productName, setProductName] = useState("");
-  
+
   // Editor state
   const [selectedFont, setSelectedFont] = useState('cormorant');
   const [wordCount, setWordCount] = useState(0);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [qualityRating, setQualityRating] = useState(0);
   const [isComposing, setIsComposing] = useState(false);
-  
+
   // History for undo/redo (now stores both HTML and selection)
   const historyRef = useRef<Array<{ html: string; selection: SavedSelection | null }>>([]);
   const historyIndexRef = useRef(0);
@@ -132,7 +132,7 @@ export default function ContentEditorPage() {
   const htmlToPlainText = useCallback((html: string): string => {
     const temp = document.createElement('div');
     temp.innerHTML = html;
-    
+
     // Convert block elements to proper line breaks
     // Convert <p> and <div> to double line breaks for paragraphs
     let text = temp.innerHTML
@@ -150,29 +150,29 @@ export default function ContentEditorPage() {
       .replace(/<li[^>]*>/gi, '• ')
       // Remove all other HTML tags
       .replace(/<[^>]+>/g, '');
-    
+
     // Clean up the text
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = text;
     text = tempDiv.textContent || tempDiv.innerText || '';
-    
+
     // Clean up excessive line breaks (more than 2 consecutive)
     text = text.replace(/\n{3,}/g, '\n\n');
-    
+
     return text.trim();
   }, []);
 
   const plainTextToHtml = useCallback((text: string): string => {
     if (!text) return '<p><br></p>';
-    
+
     // Split by double line breaks for paragraphs
     const paragraphs = text.split(/\n\n+/);
-    
+
     return paragraphs
       .map(para => {
         // Handle empty paragraphs
         if (!para.trim()) return '<p><br></p>';
-        
+
         // Replace single line breaks within paragraphs with <br>
         const content = para.replace(/\n/g, '<br>');
         return `<p>${content}</p>`;
@@ -206,7 +206,7 @@ export default function ContentEditorPage() {
       // Ensure editor keeps focus for uninterrupted typing
       element.focus();
     }
-    
+
     // Calculate word count after editor is hydrated
     requestAnimationFrame(() => {
       if (element) {
@@ -217,7 +217,7 @@ export default function ContentEditorPage() {
       }
     });
   }, [editableContent, plainTextToHtml]);
-  
+
   // Auto-save using ref content
   const getContentForSave = useCallback(() => {
     if (editableRef.current) {
@@ -225,7 +225,7 @@ export default function ContentEditorPage() {
     }
     return editableContent;
   }, [editableContent, htmlToPlainText]);
-  
+
   const { saveStatus, lastSavedAt, forceSave } = useAutoSave({
     content: getContentForSave(),
     contentId,
@@ -236,8 +236,8 @@ export default function ContentEditorPage() {
   // Load content on mount
   useEffect(() => {
     const loadContent = async () => {
-      console.log("[ContentEditor] Loading content...", { 
-        hasLocationState: !!location.state, 
+      console.log("[ContentEditor] Loading content...", {
+        hasLocationState: !!location.state,
         content: location.state?.content?.substring(0, 100)
       });
 
@@ -264,7 +264,7 @@ export default function ContentEditorPage() {
             .single();
 
           if (error) throw error;
-          
+
           const content = data.full_content || "";
           setEditableContent(content);
           setTitle(data.title || "Untitled Content");
@@ -360,15 +360,15 @@ export default function ContentEditorPage() {
 
   const updateContentFromEditable = () => {
     if (!editableRef.current || isComposing || isUndoRedoRef.current) return;
-    
+
     const html = editableRef.current.innerHTML;
     currentHtmlRef.current = html;
-    
+
     // Update word count with throttling to avoid excessive calculations
     if (wordCountTimeoutRef.current) {
       clearTimeout(wordCountTimeoutRef.current);
     }
-    
+
     wordCountTimeoutRef.current = setTimeout(() => {
       if (editableRef.current) {
         const text = editableRef.current.innerText;
@@ -376,18 +376,18 @@ export default function ContentEditorPage() {
         setWordCount(words.length);
       }
     }, 300); // Throttle word count updates
-    
+
     // Debounce history updates to avoid performance issues during rapid typing
     if (!isUndoRedoRef.current) {
       const lastEntry = historyRef.current[historyRef.current.length - 1];
-      
+
       // Only push if content actually changed
       if (!lastEntry || lastEntry.html !== html) {
         // Clear any pending history update
         if (historyTimeoutRef.current) {
           clearTimeout(historyTimeoutRef.current);
         }
-        
+
         // Debounce history updates to every 500ms during typing
         historyTimeoutRef.current = setTimeout(() => {
           if (editableRef.current && !isUndoRedoRef.current) {
@@ -395,7 +395,7 @@ export default function ContentEditorPage() {
             const saved = saveSelection(editableRef.current);
             const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
             newHistory.push({ html: currentHtml, selection: saved });
-            
+
             if (newHistory.length > 50) {
               newHistory.shift();
             } else {
@@ -413,10 +413,10 @@ export default function ContentEditorPage() {
       isUndoRedoRef.current = true;
       historyIndexRef.current--;
       const entry = historyRef.current[historyIndexRef.current];
-      
+
       // Undo - setting innerHTML
       editableRef.current.innerHTML = entry.html;
-      
+
       requestAnimationFrame(() => {
         if (editableRef.current && entry.selection) {
           // Restoring selection
@@ -432,10 +432,10 @@ export default function ContentEditorPage() {
       isUndoRedoRef.current = true;
       historyIndexRef.current++;
       const entry = historyRef.current[historyIndexRef.current];
-      
+
       // Redo - setting innerHTML
       editableRef.current.innerHTML = entry.html;
-      
+
       requestAnimationFrame(() => {
         if (editableRef.current && entry.selection) {
           // Restoring selection
@@ -458,7 +458,7 @@ export default function ContentEditorPage() {
       try {
         editor.focus();
         restoreSelection(editor, savedSelectionRef.current);
-      } catch {}
+      } catch { }
     } else {
       editor.focus();
     }
@@ -525,22 +525,22 @@ export default function ContentEditorPage() {
 
   const handleSave = async () => {
     const contentToSave = getContentForSave();
-    
+
     if (contentId) {
       const { error } = await supabase
         .from('master_content')
-        .update({ 
+        .update({
           full_content: contentToSave,
           quality_rating: qualityRating > 0 ? qualityRating : null,
           updated_at: new Date().toISOString()
         })
         .eq('id', contentId);
-      
+
       if (error) {
-        toast({ 
-          title: "Save failed", 
+        toast({
+          title: "Save failed",
           description: error.message,
-          variant: "destructive" 
+          variant: "destructive"
         });
       } else {
         toast({ title: "Saved successfully" });
@@ -557,7 +557,7 @@ export default function ContentEditorPage() {
   const handleNextToMultiply = async () => {
     console.log('[ContentEditor] Starting navigation to Multiply');
     console.log('[ContentEditor] Save status before navigation:', saveStatus);
-    
+
     try {
       // Force save and wait for completion (best-effort)
       if (saveStatus !== "saved") {
@@ -569,20 +569,20 @@ export default function ContentEditorPage() {
           console.warn('[ContentEditor] forceSave failed, proceeding with resolve-save fallback:', e);
         }
       }
-      
+
       const contentToSend = getContentForSave();
-      
+
       // Ensure we have a contentId - create master_content if needed
       let finalContentId = contentId;
-      
+
       if (!finalContentId) {
         console.info('[ContentEditor] No contentId - starting resolve-save routine');
-        
+
         const { data: userData } = await supabase.auth.getUser();
-        
+
         // Get organization ID using authoritative source
         let orgId = currentOrganizationId;
-        
+
         if (!orgId) {
           console.info('[ContentEditor] No currentOrganizationId from useOnboarding, fetching from organization_members');
           const { data: orgData } = await supabase
@@ -591,10 +591,10 @@ export default function ContentEditorPage() {
             .eq('user_id', userData?.user?.id)
             .limit(1)
             .maybeSingle();
-          
+
           orgId = orgData?.organization_id || null;
         }
-        
+
         if (!orgId) {
           console.error('[ContentEditor] Could not determine organization ID');
           toast({
@@ -604,9 +604,9 @@ export default function ContentEditorPage() {
           });
           return;
         }
-        
+
         console.info('[ContentEditor] Using organization ID:', orgId);
-        
+
         const normalizedTitle = (title || 'Untitled Content').trim();
         const payload = {
           full_content: contentToSend || '',
@@ -615,7 +615,7 @@ export default function ContentEditorPage() {
           updated_at: new Date().toISOString(),
           ...(qualityRating && { quality_rating: qualityRating })
         };
-        
+
         console.info('[ContentEditor] Normalized title:', normalizedTitle);
 
         // Try to find active row first
@@ -626,7 +626,7 @@ export default function ContentEditorPage() {
           .eq('title', normalizedTitle)
           .eq('is_archived', false)
           .maybeSingle();
-        
+
         if (activeErr) {
           console.error('[ContentEditor] Error checking for active row:', activeErr);
           toast({
@@ -644,7 +644,7 @@ export default function ContentEditorPage() {
             .from('master_content')
             .update(payload)
             .eq('id', activeRow.id);
-          
+
           if (updateErr) {
             console.error('[ContentEditor] Error updating active row:', updateErr);
             toast({
@@ -654,7 +654,7 @@ export default function ContentEditorPage() {
             });
             return;
           }
-          
+
           finalContentId = activeRow.id;
           console.info('[ContentEditor] Updated active row successfully');
         } else {
@@ -668,7 +668,7 @@ export default function ContentEditorPage() {
             .order('updated_at', { ascending: false })
             .limit(1)
             .maybeSingle();
-          
+
           if (archivedErr) {
             console.error('[ContentEditor] Error checking for archived row:', archivedErr);
             toast({
@@ -690,7 +690,7 @@ export default function ContentEditorPage() {
                 archived_at: null
               })
               .eq('id', archivedRow.id);
-            
+
             if (unarchiveErr) {
               console.error('[ContentEditor] Error unarchiving row:', unarchiveErr);
               toast({
@@ -700,7 +700,7 @@ export default function ContentEditorPage() {
               });
               return;
             }
-            
+
             finalContentId = archivedRow.id;
             console.info('[ContentEditor] Unarchived and updated row successfully');
           } else {
@@ -718,7 +718,7 @@ export default function ContentEditorPage() {
               })
               .select('id')
               .single();
-            
+
             if (insertErr) {
               // Check if it's a duplicate key error (race condition)
               if (insertErr.code === '23505') {
@@ -730,7 +730,7 @@ export default function ContentEditorPage() {
                   .eq('title', normalizedTitle)
                   .eq('is_archived', false)
                   .maybeSingle();
-                
+
                 if (recoveryErr || !recoveryRow) {
                   console.error('[ContentEditor] Recovery failed:', recoveryErr);
                   toast({
@@ -740,13 +740,13 @@ export default function ContentEditorPage() {
                   });
                   return;
                 }
-                
+
                 // Update the recovered row
                 const { error: recoveryUpdateErr } = await supabase
                   .from('master_content')
                   .update(payload)
                   .eq('id', recoveryRow.id);
-                
+
                 if (recoveryUpdateErr) {
                   console.error('[ContentEditor] Recovery update failed:', recoveryUpdateErr);
                   toast({
@@ -756,7 +756,7 @@ export default function ContentEditorPage() {
                   });
                   return;
                 }
-                
+
                 finalContentId = recoveryRow.id;
                 console.info('[ContentEditor] Recovered from race condition, updated id:', finalContentId);
               } else {
@@ -784,12 +784,12 @@ export default function ContentEditorPage() {
           updated_at: new Date().toISOString(),
           ...(qualityRating && { quality_rating: qualityRating })
         };
-        
+
         const { error: updateErr } = await supabase
           .from('master_content')
           .update(payload)
           .eq('id', contentId);
-        
+
         if (updateErr) {
           console.error('[ContentEditor] Error updating existing content:', updateErr);
           toast({
@@ -799,30 +799,30 @@ export default function ContentEditorPage() {
           });
           return;
         }
-        
+
         finalContentId = contentId;
         console.info('[ContentEditor] Updated existing content successfully');
       }
-      
+
       // Persist master ID to localStorage and URL for robust cross-device/reload tracking
       localStorage.setItem('lastEditedMasterId', finalContentId);
       localStorage.setItem('lastEditedMasterTitle', title);
-      
+
       console.log('[ContentEditor] Navigating to Multiply with content:', {
         id: finalContentId,
         title,
         contentLength: contentToSend?.length,
         preview: contentToSend?.substring(0, 100)
       });
-      
-      navigate(`/multiply?id=${finalContentId}`, { 
-        state: { 
+
+      navigate(`/multiply?id=${finalContentId}`, {
+        state: {
           content: contentToSend,
           title,
           contentType,
           productName,
           contentId: finalContentId
-        } 
+        }
       });
     } catch (error) {
       console.error('[ContentEditor] Error during navigation:', error);
@@ -892,7 +892,7 @@ export default function ContentEditorPage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-brand-vellum">
       {/* Top Toolbar - Clean & Minimal */}
-      <div 
+      <div
         className="border-b z-10 flex-shrink-0 bg-brand-parchment border-brand-stone"
       >
         <div className="flex items-center justify-between px-4 py-2 gap-2 overflow-x-auto scrollbar-hide">
@@ -913,29 +913,29 @@ export default function ContentEditorPage() {
             <div className="h-6 w-px bg-border/40 mx-1 hidden md:block" />
 
             <div className="hidden md:block">
-              <Select 
-                value={selectedFont} 
+              <Select
+                value={selectedFont}
                 onValueChange={(value) => {
                   const fontFamily = FONT_OPTIONS.find(f => f.value === value)?.family;
                   if (fontFamily && editableRef.current) {
                     const editor = editableRef.current;
                     const sel = window.getSelection();
                     const withinEditor = !!(sel && sel.rangeCount > 0 && sel.anchorNode && editor.contains(sel.anchorNode));
-                    
+
                     // If toolbar click blurred the editor, restore the last saved selection
                     if (!withinEditor && savedSelectionRef.current) {
                       try {
                         editor.focus();
                         restoreSelection(editor, savedSelectionRef.current);
-                      } catch {}
+                      } catch { }
                     } else {
                       editor.focus();
                     }
-                    
+
                     // Apply font to selected text only
                     if (sel && sel.rangeCount > 0) {
                       const range = sel.getRangeAt(0);
-                      
+
                       if (!range.collapsed) {
                         // Has selection - wrap selected text in span with font
                         try {
@@ -944,7 +944,7 @@ export default function ContentEditorPage() {
                           span.style.fontFamily = fontFamily;
                           span.appendChild(contents);
                           range.insertNode(span);
-                          
+
                           // Select the newly wrapped content
                           const newRange = document.createRange();
                           newRange.selectNodeContents(span);
@@ -967,7 +967,7 @@ export default function ContentEditorPage() {
                         sel.addRange(range);
                       }
                     }
-                    
+
                     setSelectedFont(value);
                     updateContentFromEditable();
                   }
@@ -1028,7 +1028,7 @@ export default function ContentEditorPage() {
 
             {/* List Formatting - Always visible */}
             <div className="h-6 w-px bg-border/40 mx-0.5 sm:mx-1" />
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -1056,7 +1056,7 @@ export default function ContentEditorPage() {
 
             {/* Undo/Redo - Always visible */}
             <div className="h-6 w-px bg-border/40 mx-0.5 sm:mx-1" />
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -1139,16 +1139,16 @@ export default function ContentEditorPage() {
 
             {/* Autosave Indicator - Hidden on mobile, responsive */}
             <div className="hidden md:block flex-shrink-0">
-              <AutosaveIndicator 
-                saveStatus={saveStatus} 
+              <AutosaveIndicator
+                saveStatus={saveStatus}
                 lastSavedAt={lastSavedAt}
               />
             </div>
 
             <div className="hidden xl:block flex-shrink-0">
-              <QualityRating 
-                rating={qualityRating} 
-                onRatingChange={setQualityRating} 
+              <QualityRating
+                rating={qualityRating}
+                onRatingChange={setQualityRating}
               />
             </div>
 
@@ -1167,7 +1167,7 @@ export default function ContentEditorPage() {
               )}
               <span className="hidden sm:inline">Save</span>
             </Button>
-            
+
             <Button
               onClick={handleNextToMultiply}
               disabled={saveStatus === "saving"}
@@ -1204,6 +1204,7 @@ export default function ContentEditorPage() {
                     ref={attachEditableRef}
                     contentEditable
                     data-testid="main-editor"
+                    data-tooltip-target="content-editor-area"
                     onInput={updateContentFromEditable}
                     onCompositionStart={() => setIsComposing(true)}
                     onCompositionEnd={() => setIsComposing(false)}
@@ -1214,18 +1215,18 @@ export default function ContentEditorPage() {
                 </div>
               </div>
             </ResizablePanel>
-            
+
             {/* Resizable Handle */}
-            <ResizableHandle 
+            <ResizableHandle
               className="w-1 hover:w-2 transition-all bg-brand-stone/20 hover:bg-brand-brass/40"
             />
-            
+
             {/* Madison Assistant Panel */}
             <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
-              <div 
+              <div
                 className="w-full h-full bg-brand-parchment"
               >
-                <EditorialAssistantPanel 
+                <EditorialAssistantPanel
                   onClose={handleToggleAssistant}
                   initialContent={getContentForSave()}
                 />
@@ -1240,6 +1241,7 @@ export default function ContentEditorPage() {
                 ref={attachEditableRef}
                 contentEditable
                 data-testid="main-editor"
+                data-tooltip-target="content-editor-area"
                 onInput={updateContentFromEditable}
                 onCompositionStart={() => setIsComposing(true)}
                 onCompositionEnd={() => setIsComposing(false)}
@@ -1273,7 +1275,7 @@ export default function ContentEditorPage() {
             >
               <div className="relative w-full h-full flex items-center justify-center">
                 {/* Engraved M */}
-                <span 
+                <span
                   className="font-serif text-3xl font-bold text-brand-parchment"
                   style={{
                     textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 -1px 2px rgba(255, 255, 255, 0.1)',
@@ -1283,7 +1285,7 @@ export default function ContentEditorPage() {
                   M
                 </span>
                 {/* Subtle shine effect */}
-                <div 
+                <div
                   className="absolute inset-0 rounded-[14px] opacity-20 pointer-events-none"
                   style={{
                     background: 'linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%)'
@@ -1292,9 +1294,9 @@ export default function ContentEditorPage() {
               </div>
             </button>
           )}
-          
+
           <Drawer open={assistantOpen} onOpenChange={setAssistantOpen}>
-            <DrawerContent 
+            <DrawerContent
               className="h-screen max-h-[100dvh] mt-0 rounded-t-none flex flex-col overflow-hidden bg-brand-parchment"
               style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
             >

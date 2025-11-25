@@ -49,6 +49,7 @@ export function LibraryFilters({
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
+          data-tooltip-target="library-search"
           placeholder="Search content by title or text..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
@@ -60,7 +61,10 @@ export function LibraryFilters({
       <div className="flex flex-wrap items-center gap-3">
         {/* Content Type */}
         <Select value={selectedContentType} onValueChange={onContentTypeChange}>
-          <SelectTrigger className="w-[180px] bg-card/50 border-border/20">
+          <SelectTrigger
+            data-tooltip-target="content-type-filter"
+            className="w-[180px] bg-card/50 border-border/20"
+          >
             <SelectValue placeholder="All Types" />
           </SelectTrigger>
           <SelectContent>

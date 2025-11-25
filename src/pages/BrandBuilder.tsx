@@ -129,12 +129,12 @@ export default function BrandBuilder() {
         field === "key_messages"
           ? { messages: value }
           : field === "brand_voice"
-          ? { voice_guidelines: value }
-          : field === "mission"
-          ? { mission: value }
-          : field === "usp"
-          ? { differentiator: value }
-          : { text: value };
+            ? { voice_guidelines: value }
+            : field === "mission"
+              ? { mission: value }
+              : field === "usp"
+                ? { differentiator: value }
+                : { text: value };
 
       if (existing) {
         // Update
@@ -259,18 +259,20 @@ export default function BrandBuilder() {
             placeholder="E.g., 'Wellness-conscious women aged 25-45 who value natural ingredients and sustainable luxury...'"
           />
 
-          <Essential5Card
-            title="Your Voice"
-            subtitle="Brand Voice & Tone"
-            description="How does your brand communicate? Describe your personality, tone, and style."
-            field="brand_voice"
-            value={essential5.brand_voice}
-            isCompleted={completedFields.has("brand_voice")}
-            onApprove={handleApprove}
-            organizationId={organizationId}
-            isSaving={isSaving}
-            placeholder="E.g., 'Warm, approachable, and knowledgeable. We use conversational language with occasional poetry...'"
-          />
+          <div data-tooltip-target="brand-voice">
+            <Essential5Card
+              title="Your Voice"
+              subtitle="Brand Voice & Tone"
+              description="How does your brand communicate? Describe your personality, tone, and style."
+              field="brand_voice"
+              value={essential5.brand_voice}
+              isCompleted={completedFields.has("brand_voice")}
+              onApprove={handleApprove}
+              organizationId={organizationId}
+              isSaving={isSaving}
+              placeholder="E.g., 'Warm, approachable, and knowledgeable. We use conversational language with occasional poetry...'"
+            />
+          </div>
 
           <Essential5Card
             title="Your Why"

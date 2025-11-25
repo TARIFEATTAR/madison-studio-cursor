@@ -35,7 +35,7 @@ const Calendar = () => {
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  
+
 
   useEffect(() => {
     fetchScheduledContent();
@@ -112,7 +112,7 @@ const Calendar = () => {
     if (!item) return;
 
     // Optimistic update - update UI immediately
-    setScheduledItems(prev => 
+    setScheduledItems(prev =>
       prev.map(i => i.id === itemId ? { ...i, scheduled_date: newDateStr } : i)
     );
 
@@ -159,10 +159,10 @@ const Calendar = () => {
       });
     } catch (error: any) {
       // Revert optimistic update on error
-      setScheduledItems(prev => 
+      setScheduledItems(prev =>
         prev.map(i => i.id === itemId ? { ...i, scheduled_date: item.scheduled_date } : i)
       );
-      
+
       toast({
         title: "Error",
         description: error.message,
@@ -192,7 +192,11 @@ const Calendar = () => {
           <div className="mt-6">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button onClick={handleNewSchedule} className="gap-2">
+                <Button
+                  onClick={handleNewSchedule}
+                  className="gap-2"
+                  data-tooltip-target="schedule-button"
+                >
                   <Plus className="w-4 h-4" />
                   Schedule Content
                 </Button>
