@@ -23,10 +23,10 @@ export function OnboardingProgressBar({ currentStep }: OnboardingProgressBarProp
                 className={cn(
                   "w-12 h-12 rounded-full flex items-center justify-center font-semibold transition-all",
                   currentStep > step.number
-                    ? "bg-brass text-white"
+                    ? "bg-green-600 text-white"
                     : currentStep === step.number
-                    ? "bg-brass text-white"
-                    : "border-2 border-charcoal/20 text-charcoal/40"
+                      ? "border-2 border-gray-400 text-gray-900 bg-white"
+                      : "border-2 border-charcoal/20 text-charcoal/40"
                 )}
               >
                 {currentStep > step.number ? (
@@ -38,11 +38,11 @@ export function OnboardingProgressBar({ currentStep }: OnboardingProgressBarProp
               <span
                 className={cn(
                   "text-sm mt-2 transition-colors whitespace-nowrap",
-                  currentStep === step.number 
-                    ? "text-foreground font-semibold" 
+                  currentStep === step.number
+                    ? "text-gray-900 font-semibold"
                     : currentStep > step.number
-                    ? "text-foreground"
-                    : "text-charcoal/40"
+                      ? "text-gray-900"
+                      : "text-charcoal/40"
                 )}
               >
                 {step.label}

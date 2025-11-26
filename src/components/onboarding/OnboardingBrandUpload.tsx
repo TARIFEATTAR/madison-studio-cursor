@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Upload, Globe, FileText, ArrowRight, ArrowLeft, Check } from "lucide-react";
+import { X, Upload, Globe, FileText, ArrowRight, ArrowLeft, Check, Lightbulb, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,8 +33,8 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && (
-      file.type === "application/pdf" || 
-      file.type === "text/plain" || 
+      file.type === "application/pdf" ||
+      file.type === "text/plain" ||
       file.type === "text/markdown" ||
       file.name.endsWith('.md') ||
       file.name.endsWith('.txt')
@@ -65,7 +65,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
 
       if (selectedMethod === "pdf" && uploadedFile) {
         // Upload file to Supabase Storage
-        const fileName = `${Date.now()}-${uploadedFile.name}`;
+        const fileName = `${Date.now()} -${uploadedFile.name} `;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('brand-documents')
           .upload(`${organizationId}/${fileName}`, uploadedFile);
@@ -95,7 +95,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
         uploadContent = uploadedFile.name;
       } else if (selectedMethod === "website") {
         const websiteUrlTrimmed = websiteUrl.trim();
-        
+
         toast({
           title: "Processing website...",
           description: "Analyzing your brand's website for voice and style."
@@ -112,7 +112,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
         );
 
         if (websiteError) throw websiteError;
-        
+
         // Show success toast with what was extracted
         toast({
           title: "✓ Website analyzed successfully",
@@ -162,8 +162,9 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
     const length = manualText.trim().length;
     if (length < 200) {
       return (
-        <p className="text-sm text-amber-600">
-          ⚠️ Add more details for better AI understanding ({length}/200 characters)
+        <p className="text-sm text-amber-600 flex items-center gap-1">
+          <AlertTriangle className="w-4 h-4" />
+          Add more details for better AI understanding ({length}/200 characters)
         </p>
       );
     }
@@ -183,9 +184,9 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
           <img src={madisonLogo} alt="MADISON" className="h-8" />
         </div>
         <div className="flex items-center gap-4">
-          <VideoHelpTrigger 
-            videoId="understanding-brand-guidelines" 
-            variant="button" 
+          <VideoHelpTrigger
+            videoId="understanding-brand-guidelines"
+            variant="button"
           />
           <button
             onClick={onSkip}
@@ -206,24 +207,26 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
               {brandData.brandDNA ? "Now let's go deeper" : "Brand Guidelines"}
             </h1>
             <p className="text-lg text-muted-foreground">
-              {brandData.brandDNA 
-                ? "Upload documents to teach Madison your unique brand voice and messaging" 
+              {brandData.brandDNA
+                ? "Upload documents to teach Madison your unique brand voice and messaging"
                 : "Help our AI understand your brand's unique voice"}
             </p>
             {brandData.brandDNA && (
               <div className="mt-6 p-4 rounded-lg border border-brass/30 bg-brass/5 max-w-2xl mx-auto">
-                <p className="text-sm text-foreground">
-                  ✅ <strong>Visual Brand DNA captured</strong> from your website
+                <p className="text-sm text-gray-900 flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-600" />
+                  <strong>Visual Brand DNA captured</strong> from your website
                 </p>
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="text-xs text-gray-700 mt-2">
                   Now add documents to help Madison understand your brand voice, tone, and messaging pillars
                 </p>
               </div>
             )}
-            <p className="text-sm text-muted-foreground mt-4 max-w-2xl mx-auto leading-relaxed">
-              <strong>💡 What to upload:</strong> Brand guidelines, style guides, or product catalogs help Madison learn your brand voice, tone, and visual style. This ensures all generated content sounds authentically like your brand.
+            <p className="text-sm text-gray-700 mt-4 max-w-2xl mx-auto leading-relaxed flex items-start gap-2">
+              <Lightbulb className="w-4 h-4 text-[hsl(var(--aged-brass))] mt-0.5 flex-shrink-0" />
+              <span><strong>What to upload:</strong> Brand guidelines, style guides, or product catalogs help Madison learn your brand voice, tone, and visual style. This ensures all generated content sounds authentically like your brand.</span>
             </p>
-            <p className="text-xs text-muted-foreground/80 mt-2">
+            <p className="text-xs text-gray-600 mt-2">
               You can always add or update these later in Settings.
             </p>
           </div>
@@ -232,56 +235,53 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             <button
               onClick={() => setSelectedMethod("pdf")}
-              className={`p-6 rounded-lg border-2 transition-all text-left ${
-                selectedMethod === "pdf"
-                  ? "border-brass bg-brass/5"
-                  : "border-border/40 hover:border-border"
-              }`}
+              className={`p-6 rounded-lg border-2 transition-all text-left ${selectedMethod === "pdf"
+                ? "border-brass bg-brass/5"
+                : "border-border/40 hover:border-border"
+                }`}
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[hsl(var(--aged-brass))] to-[hsl(var(--antique-gold))]/80 flex items-center justify-center">
-                  <Upload className="w-6 h-6 text-white" />
+                <div className="w-12 h-12 rounded-full bg-brass/10 border-2 border-[hsl(var(--aged-brass))]/30 flex items-center justify-center">
+                  <Upload className="w-6 h-6 text-[hsl(var(--aged-brass))]" />
                 </div>
-                <Badge variant="secondary" className="bg-gradient-to-r from-[hsl(var(--aged-brass))] to-[hsl(var(--antique-gold))] text-white">
+                <Badge variant="secondary" className="bg-green-600 text-white border-0">
                   Recommended
                 </Badge>
               </div>
-              <h3 className="font-semibold text-foreground mb-2">Upload PDF</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="font-semibold text-gray-900 mb-2">Upload PDF</h3>
+              <p className="text-sm text-gray-700">
                 Drag & drop your brand guidelines document
               </p>
             </button>
 
             <button
               onClick={() => setSelectedMethod("website")}
-              className={`p-6 rounded-lg border-2 transition-all text-left ${
-                selectedMethod === "website"
-                  ? "border-brass bg-brass/5"
-                  : "border-border/40 hover:border-border"
-              }`}
+              className={`p-6 rounded-lg border-2 transition-all text-left ${selectedMethod === "website"
+                ? "border-brass bg-brass/5"
+                : "border-border/40 hover:border-border"
+                }`}
             >
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[hsl(var(--aged-brass))] to-[hsl(var(--antique-gold))]/80 flex items-center justify-center mb-4">
-                <Globe className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-full bg-brass/10 border-2 border-[hsl(var(--aged-brass))]/30 flex items-center justify-center mb-4">
+                <Globe className="w-6 h-6 text-[hsl(var(--aged-brass))]" />
               </div>
-              <h3 className="font-semibold text-foreground mb-2">Scrape Website</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="font-semibold text-gray-900 mb-2">Scrape Website</h3>
+              <p className="text-sm text-gray-700">
                 We'll analyze your website for brand voice
               </p>
             </button>
 
             <button
               onClick={() => setSelectedMethod("manual")}
-              className={`p-6 rounded-lg border-2 transition-all text-left ${
-                selectedMethod === "manual"
-                  ? "border-brass bg-brass/5"
-                  : "border-border/40 hover:border-border"
-              }`}
+              className={`p-6 rounded-lg border-2 transition-all text-left ${selectedMethod === "manual"
+                ? "border-brass bg-brass/5"
+                : "border-border/40 hover:border-border"
+                }`}
             >
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[hsl(var(--aged-brass))] to-[hsl(var(--antique-gold))]/80 flex items-center justify-center mb-4">
-                <FileText className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-full bg-brass/10 border-2 border-[hsl(var(--aged-brass))]/30 flex items-center justify-center mb-4">
+                <FileText className="w-6 h-6 text-[hsl(var(--aged-brass))]" />
               </div>
-              <h3 className="font-semibold text-foreground mb-2">Manual Entry</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="font-semibold text-gray-900 mb-2">Manual Entry</h3>
+              <p className="text-sm text-gray-700">
                 Type your brand guidelines directly
               </p>
             </button>

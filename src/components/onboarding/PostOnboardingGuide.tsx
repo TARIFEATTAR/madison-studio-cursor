@@ -82,13 +82,12 @@ export function PostOnboardingGuide({ onDismiss, userName }: PostOnboardingGuide
             {steps.map((_, idx) => (
               <div
                 key={idx}
-                className={`h-1.5 rounded-full transition-all ${
-                  idx === currentStep
+                className={`h-1.5 rounded-full transition-all ${idx === currentStep
                     ? "w-8 bg-primary"
                     : idx < currentStep
-                    ? "w-1.5 bg-primary/50"
-                    : "w-1.5 bg-border"
-                }`}
+                      ? "w-1.5 bg-primary/50"
+                      : "w-1.5 bg-border"
+                  }`}
               />
             ))}
           </div>
@@ -102,10 +101,10 @@ export function PostOnboardingGuide({ onDismiss, userName }: PostOnboardingGuide
 
           {/* Content */}
           <div className="text-center space-y-3">
-            <h2 className="font-serif text-2xl text-foreground">
+            <h2 className="font-serif text-2xl text-gray-900">
               {currentStepData.title}
             </h2>
-            <p className="text-muted-foreground leading-relaxed">
+            <p className="text-gray-700 leading-relaxed">
               {currentStepData.description}
             </p>
           </div>
@@ -122,7 +121,7 @@ export function PostOnboardingGuide({ onDismiss, userName }: PostOnboardingGuide
             <Button
               onClick={handleSkip}
               variant="ghost"
-              className="w-full text-muted-foreground hover:text-foreground"
+              className="w-full text-gray-700 hover:text-gray-900"
               size="sm"
             >
               Skip Tour
@@ -130,7 +129,7 @@ export function PostOnboardingGuide({ onDismiss, userName }: PostOnboardingGuide
           </div>
 
           {/* Step Counter */}
-          <p className="text-xs text-muted-foreground text-center">
+          <p className="text-xs text-gray-600 text-center">
             Step {currentStep + 1} of {steps.length}
           </p>
         </div>

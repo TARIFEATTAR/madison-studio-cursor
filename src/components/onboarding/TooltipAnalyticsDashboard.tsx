@@ -74,10 +74,10 @@ export function TooltipAnalyticsDashboard() {
         <div className="space-y-6">
             {/* Header */}
             <div>
-                <h2 className="text-2xl font-serif font-bold text-foreground mb-2">
+                <h2 className="text-2xl font-serif font-bold text-gray-900 mb-2">
                     Tooltip Analytics
                 </h2>
-                <p className="text-muted-foreground">
+                <p className="text-gray-700">
                     Track how users interact with onboarding tooltips
                 </p>
                 {abVariant && (
@@ -94,7 +94,7 @@ export function TooltipAnalyticsDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Card>
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
                             <Eye className="w-4 h-4" />
                             Total Views
                         </CardTitle>
@@ -162,7 +162,7 @@ export function TooltipAnalyticsDashboard() {
                 </CardHeader>
                 <CardContent>
                     {sortedTooltips.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground">
+                        <div className="text-center py-8 text-gray-700">
                             No tooltip data yet. Tooltips will appear here once users interact with them.
                         </div>
                     ) : (
@@ -176,10 +176,10 @@ export function TooltipAnalyticsDashboard() {
                                     <div key={tooltipId} className="space-y-3">
                                         <div className="flex items-start justify-between">
                                             <div>
-                                                <h4 className="font-medium text-foreground">
+                                                <h4 className="font-medium text-gray-900">
                                                     {tooltipNames[tooltipId] || tooltipId}
                                                 </h4>
-                                                <p className="text-sm text-muted-foreground">
+                                                <p className="text-sm text-gray-700">
                                                     {tooltipStats.viewed || 0} views
                                                 </p>
                                             </div>
@@ -203,7 +203,7 @@ export function TooltipAnalyticsDashboard() {
 
                                         <div className="space-y-2">
                                             <div className="flex items-center justify-between text-xs">
-                                                <span className="text-muted-foreground">Completion Rate</span>
+                                                <span className="text-gray-700">Completion Rate</span>
                                                 <span className="font-medium">{completionRate}%</span>
                                             </div>
                                             <Progress value={completionRate} className="h-2" />
@@ -211,7 +211,7 @@ export function TooltipAnalyticsDashboard() {
 
                                         <div className="grid grid-cols-4 gap-4 pt-2 border-t">
                                             <div className="text-center">
-                                                <div className="text-xs text-muted-foreground">Viewed</div>
+                                                <div className="text-xs text-gray-700">Viewed</div>
                                                 <div className="text-lg font-semibold">{tooltipStats.viewed || 0}</div>
                                             </div>
                                             <div className="text-center">

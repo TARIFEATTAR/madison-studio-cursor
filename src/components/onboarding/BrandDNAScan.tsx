@@ -76,7 +76,7 @@ export function BrandDNAScan({ onContinue, onBack, onSkip, brandData }: BrandDNA
 
       // Call the analyze-brand-dna function
       const normalizedUrl = websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`;
-      
+
       const { data: dnaData, error: dnaError } = await supabase.functions.invoke(
         'analyze-brand-dna',
         {
@@ -272,7 +272,7 @@ export function BrandDNAScan({ onContinue, onBack, onSkip, brandData }: BrandDNA
                     {getProgressIcon(scanProgress)}
                     <span className="text-white font-serif text-sm ml-2">{progressPercent}%</span>
                   </div>
-                  
+
                   <h1 className="font-serif text-4xl text-foreground mb-3">
                     Analyzing {new URL(websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`).hostname}
                   </h1>
@@ -394,7 +394,7 @@ export function BrandDNAScan({ onContinue, onBack, onSkip, brandData }: BrandDNA
                   <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-[hsl(var(--aged-brass))] to-[hsl(var(--antique-gold))]/80 mb-6">
                     <Check className="w-10 h-10 text-white" />
                   </div>
-                  
+
                   <h1 className="font-serif text-4xl text-foreground mb-3">
                     Your Brand DNA is Ready!
                   </h1>
@@ -410,9 +410,9 @@ export function BrandDNAScan({ onContinue, onBack, onSkip, brandData }: BrandDNA
                     <div className="p-6 rounded-lg border border-border/40 bg-card">
                       <h3 className="font-semibold text-foreground mb-3">Brand Logo</h3>
                       <div className="flex items-center gap-4">
-                        <img 
-                          src={brandDNA.logo.url} 
-                          alt="Brand logo" 
+                        <img
+                          src={brandDNA.logo.url}
+                          alt="Brand logo"
                           className="h-12 object-contain"
                         />
                       </div>
@@ -426,7 +426,7 @@ export function BrandDNAScan({ onContinue, onBack, onSkip, brandData }: BrandDNA
                       <div className="flex gap-2 flex-wrap">
                         {brandDNA.colorPalette.slice(0, 5).map((color: any, idx: number) => (
                           <div key={idx} className="flex items-center gap-2">
-                            <div 
+                            <div
                               className="w-12 h-12 rounded border border-border/40"
                               style={{ backgroundColor: color.hex }}
                             />
@@ -463,6 +463,26 @@ export function BrandDNAScan({ onContinue, onBack, onSkip, brandData }: BrandDNA
                       <h3 className="font-semibold text-foreground mb-3">Visual Mood</h3>
                       <p className="text-sm text-muted-foreground italic">
                         "{brandDNA.visualStyle.mood}"
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Brand Mission */}
+                  {brandDNA.brandMission && (
+                    <div className="p-6 rounded-lg border border-border/40 bg-card">
+                      <h3 className="font-semibold text-foreground mb-3">Brand Mission</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {brandDNA.brandMission}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Brand Essence */}
+                  {brandDNA.brandEssence && (
+                    <div className="p-6 rounded-lg border border-border/40 bg-card">
+                      <h3 className="font-semibold text-foreground mb-3">Brand Essence</h3>
+                      <p className="text-sm text-muted-foreground italic">
+                        {brandDNA.brandEssence}
                       </p>
                     </div>
                   )}

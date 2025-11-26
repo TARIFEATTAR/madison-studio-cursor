@@ -41,8 +41,8 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
         // This overrides any name from Google OAuth or email
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({ 
-            full_name: userName.trim() 
+          .update({
+            full_name: userName.trim()
           })
           .eq('id', user.id);
 
@@ -108,9 +108,9 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
           <img src={madisonLogo} alt="Madison" className="h-8" />
         </div>
         <div className="flex items-center gap-4">
-          <VideoHelpTrigger 
-            videoId="setting-up-brand-identity" 
-            variant="button" 
+          <VideoHelpTrigger
+            videoId="setting-up-brand-identity"
+            variant="button"
           />
           <button
             onClick={onSkip}
@@ -130,8 +130,8 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-brass to-gold/80 mb-6">
               <Sparkles className="w-8 h-8 text-white" />
             </div>
-            <h1 className="font-serif text-4xl text-foreground mb-3">Welcome to Madison</h1>
-            <p className="text-lg text-muted-foreground">
+            <h1 className="font-serif text-4xl text-gray-900 mb-3">Welcome to Madison</h1>
+            <p className="text-lg text-gray-700">
               Let's set up your brand profile to create on-brand content at scale
             </p>
             <p className="text-sm text-muted-foreground mt-4">

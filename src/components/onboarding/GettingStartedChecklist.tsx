@@ -218,10 +218,10 @@ export function GettingStartedChecklist({ onDismiss, compact = false }: GettingS
 
                 <div className="mt-4 space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">
+                        <span className="text-gray-700">
                             {completedCount} of {totalCount} completed
                         </span>
-                        <span className="font-medium text-foreground">
+                        <span className="font-medium text-gray-900">
                             {Math.round(progressPercentage)}%
                         </span>
                     </div>
@@ -261,16 +261,16 @@ export function GettingStartedChecklist({ onDismiss, compact = false }: GettingS
                                         <div className="flex items-center gap-2 mb-1">
                                             <Icon className={cn(
                                                 "w-4 h-4",
-                                                item.completed ? "text-primary" : "text-muted-foreground"
+                                                item.completed ? "text-primary" : "text-gray-700"
                                             )} />
                                             <h4 className={cn(
                                                 "font-medium text-sm",
-                                                item.completed ? "text-muted-foreground line-through" : "text-foreground"
+                                                item.completed ? "text-gray-700 line-through" : "text-gray-900"
                                             )}>
                                                 {item.title}
                                             </h4>
                                         </div>
-                                        <p className="text-xs text-muted-foreground">
+                                        <p className="text-xs text-gray-700">
                                             {item.description}
                                         </p>
                                     </div>

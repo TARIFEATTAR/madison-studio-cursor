@@ -193,7 +193,7 @@ export function ContextualTooltip({
                 <div className="p-4 space-y-3">
                     {/* Header */}
                     <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-semibold text-foreground text-base leading-tight">
+                        <h3 className="font-semibold text-gray-900 text-base leading-tight">
                             {title}
                         </h3>
                         <button
@@ -206,7 +206,7 @@ export function ContextualTooltip({
                     </div>
 
                     {/* Description */}
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                    <p className="text-sm text-gray-700 leading-relaxed">
                         {description}
                     </p>
 
@@ -230,7 +230,7 @@ export function ContextualTooltip({
                             onClick={handleComplete}
                             variant="ghost"
                             size="sm"
-                            className="text-muted-foreground"
+                            className="text-gray-700"
                         >
                             <Check className="w-3 h-3 mr-1" />
                             Got it
