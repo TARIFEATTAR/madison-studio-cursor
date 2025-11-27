@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 import { getSemanticFields, formatSemanticContext } from '../_shared/productFieldFilters.ts';
 import { buildAuthorProfilesSection } from '../_shared/authorProfiles.ts';
+import { buildBrandAuthoritiesSection } from '../_shared/brandAuthorities.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
@@ -103,6 +104,15 @@ async function getMadisonSystemConfig() {
     } catch (error) {
       console.error('Error loading author profiles:', error);
       // Continue without author profiles if there's an error
+    }
+    
+    // ✨ Add brand intelligence authorities directly from codebase
+    try {
+      const brandAuthoritiesSection = buildBrandAuthoritiesSection();
+      configParts.push(brandAuthoritiesSection);
+    } catch (error) {
+      console.error('Error loading brand authorities:', error);
+      // Continue without brand authorities if there's an error
     }
     
     // ✨ PERFORMANCE FIX: Limit training documents and truncate long content

@@ -7,6 +7,7 @@ import {
   OpenAIMessage,
 } from "../_shared/geminiClient.ts";
 import { buildAuthorProfilesSection } from "../_shared/authorProfiles.ts";
+import { buildBrandAuthoritiesSection } from "../_shared/brandAuthorities.ts";
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -45,6 +46,15 @@ async function getMadisonSystemConfig() {
     } catch (error) {
       console.error('Error loading author profiles:', error);
       // Continue without author profiles if there's an error
+    }
+    
+    // ✨ Add brand intelligence authorities directly from codebase
+    try {
+      const brandAuthoritiesSection = buildBrandAuthoritiesSection();
+      configParts.push(brandAuthoritiesSection);
+    } catch (error) {
+      console.error('Error loading brand authorities:', error);
+      // Continue without brand authorities if there's an error
     }
     
     return configParts.join('\n');

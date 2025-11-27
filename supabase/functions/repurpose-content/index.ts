@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { generateGeminiContent, extractTextFromGeminiResponse } from "../_shared/geminiClient.ts";
 import { buildAuthorProfilesSection } from "../_shared/authorProfiles.ts";
+import { buildBrandAuthoritiesSection } from "../_shared/brandAuthorities.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -52,6 +53,15 @@ async function getMadisonSystemConfig(supabaseClient: any) {
     } catch (error) {
       console.error('Error loading author profiles:', error);
       // Continue without author profiles if there's an error
+    }
+    
+    // ✨ Add brand intelligence authorities directly from codebase
+    try {
+      const brandAuthoritiesSection = buildBrandAuthoritiesSection();
+      configParts.push(brandAuthoritiesSection);
+    } catch (error) {
+      console.error('Error loading brand authorities:', error);
+      // Continue without brand authorities if there's an error
     }
     
     console.log('[BRAND CONTEXT] Madison system config loaded');
