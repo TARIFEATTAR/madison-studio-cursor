@@ -317,6 +317,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
                   placeholder="https://yourbrand.com"
                   value={websiteUrl}
                   onChange={(e) => setWebsiteUrl(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleContinue()}
                   className="h-11 border-0 bg-transparent focus-visible:ring-0 text-base"
                 />
               </div>
@@ -328,10 +329,14 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
                   placeholder="Describe your brand voice, tone, values, and style guidelines..."
                   value={manualText}
                   onChange={(e) => setManualText(e.target.value)}
+                  onKeyDown={(e) => (e.metaKey || e.ctrlKey) && e.key === 'Enter' && handleContinue()}
                   rows={6}
                   className="resize-none bg-white border-charcoal/10 focus:border-brass/50 transition-colors"
                 />
-                {getCharacterFeedback()}
+                <div className="flex justify-between items-start">
+                  {getCharacterFeedback()}
+                  <p className="text-[10px] text-muted-foreground pt-1">Press {navigator.platform.includes('Mac') ? 'Cmd' : 'Ctrl'} + Enter to continue</p>
+                </div>
               </div>
             )}
             

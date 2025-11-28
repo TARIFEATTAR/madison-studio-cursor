@@ -37,17 +37,38 @@ serve(async (req) => {
 
     console.log("Scraping website:", url, "for organization:", organizationId);
 
+    // Check for API Key
+    const geminiKey = Deno.env.get('GEMINI_API_KEY');
+    if (!geminiKey) {
+      console.error("GEMINI_API_KEY is not set");
+      return new Response(
+        JSON.stringify({ error: "Server configuration error: Missing AI API key" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // 1. Fetch Homepage
+    // Use a standard browser User-Agent to avoid 403 Forbidden errors
+    const userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+    
     const homeResponse = await fetch(url, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; BrandScraper/1.0; +https://madison.ai)",
+        "User-Agent": userAgent,
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
       },
     });
 
     if (!homeResponse.ok) {
       console.error(`Failed to fetch homepage: ${homeResponse.status} ${homeResponse.statusText}`);
-      throw new Error(`Failed to fetch website: ${homeResponse.status}`);
+      // Return a 400-level error to client instead of crashing
+      return new Response(
+        JSON.stringify({ 
+          error: `Could not access website (${homeResponse.status}). It may be blocking automated access.`,
+          details: homeResponse.statusText 
+        }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const homeHtml = await homeResponse.text();
@@ -109,7 +130,7 @@ serve(async (req) => {
       try {
         const aboutResponse = await fetch(aboutUrl, {
             headers: { 
-              "User-Agent": "Mozilla/5.0 (compatible; BrandScraper/1.0; +https://madison.ai)",
+              "User-Agent": userAgent,
               "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8" 
             },
         });
