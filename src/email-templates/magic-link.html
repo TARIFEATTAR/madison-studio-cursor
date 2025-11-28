@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - Madison Studio</title>
+    <!-- Import Brand Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Reset & Client-Specific Styles */
+        body { margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; background-color: #F5F1E8; color: #1A1816; font-family: 'Lato', sans-serif; }
+        img { border: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
+        a { color: #B8956A; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        
+        /* Brand Typography */
+        h1, h2, h3 { font-family: 'Cormorant Garamond', serif; font-weight: 600; margin: 0; }
+        p { font-family: 'Lato', sans-serif; font-weight: 400; line-height: 1.6; margin-bottom: 20px; color: #2F2A26; }
+        
+        /* Utilities */
+        .wrapper { width: 100%; table-layout: fixed; background-color: #F5F1E8; padding-bottom: 40px; }
+        .main-content { background-color: #FFFFFF; margin: 0 auto; width: 100%; max-width: 600px; border: 1px solid #E5DFD1; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .button { background-color: #B8956A; color: #FFFFFF !important; padding: 14px 32px; border-radius: 2px; display: inline-block; font-family: 'Lato', sans-serif; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; font-size: 14px; text-decoration: none; transition: background-color 0.3s ease; }
+        .button:hover { background-color: #A6855E; }
+        
+        /* Mobile Responsive */
+        @media screen and (max-width: 600px) {
+            .main-content { width: 100% !important; border-left: 0 !important; border-right: 0 !important; }
+            .mobile-padding { padding-left: 20px !important; padding-right: 20px !important; }
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #F5F1E8;">
+    <center class="wrapper">
+        <table class="main-content" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 40px; margin-bottom: 40px; background-color: #FFFCF5; border: 1px solid #E5DFD1;">
+            <!-- HEADER -->
+            <tr>
+                <td align="center" style="padding: 40px 0 30px 0; border-bottom: 1px solid #E5DFD1;">
+                    <h2 style="font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 600; letter-spacing: 2px; color: #1A1816; margin: 0; text-transform: uppercase;">
+                        Madison Studio
+                    </h2>
+                </td>
+            </tr>
+
+            <!-- BODY CONTENT -->
+            <tr>
+                <td class="mobile-padding" style="padding: 40px 50px;">
+                    <h1 style="font-family: 'Cormorant Garamond', serif; color: #1A1816; font-size: 32px; margin-bottom: 24px; text-align: center;">Sign In to Madison</h1>
+                    
+                    <p style="font-size: 16px; color: #2F2A26; text-align: center;">
+                        Click the button below to sign in to your account securely.
+                    </p>
+                    
+                    <p style="font-size: 16px; color: #2F2A26; text-align: center;">
+                        This link is valid for one-time use and will expire soon.
+                    </p>
+
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                        <tr>
+                            <td align="center" style="padding: 30px 0;">
+                                <!-- MAGIC LINK -->
+                                <a href="{{ .ConfirmationURL }}" class="button" style="background-color: #B8956A; color: #FFFFFF; padding: 14px 32px; text-decoration: none; border-radius: 2px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; font-size: 13px;">
+                                    Sign In Now
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <p style="font-size: 14px; color: #8B9474; text-align: center; margin-top: 20px;">
+                        If you did not request this sign-in link, you can safely ignore this email.
+                    </p>
+                </td>
+            </tr>
+
+            <!-- FOOTER -->
+            <tr>
+                <td style="background-color: #F9F7F2; padding: 30px 40px; border-top: 1px solid #E5DFD1;">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                        <tr>
+                            <td align="center" style="padding-bottom: 20px;">
+                                <p style="font-family: 'Cormorant Garamond', serif; font-size: 18px; color: #1A1816; margin-bottom: 10px; font-style: italic;">
+                                    Madison Studio
+                                </p>
+                                <p style="font-size: 12px; color: #888888; line-height: 1.6; margin: 0;">
+                                    31080 Union City Blvd. Suite 211<br>
+                                    Union City, CA 94587
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td align="center">
+                                <p style="font-size: 12px; color: #B8956A; margin: 0;">
+                                    <a href="https://madisonstudio.io/help" style="color: #B8956A; margin: 0 10px;">Help Center</a> • 
+                                    <a href="https://madisonstudio.io/privacy" style="color: #B8956A; margin: 0 10px;">Privacy Policy</a> • 
+                                    <a href="https://madisonstudio.io/terms" style="color: #B8956A; margin: 0 10px;">Terms of Service</a>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- UNSUBSCRIBE / METADATA -->
+        <table width="100%" max-width="600" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+                <td align="center">
+                    <p style="font-size: 11px; color: #9CA3AF; font-family: 'Lato', sans-serif;">
+                        &copy; 2025 Madison Studio. All rights reserved.
+                    </p>
+                </td>
+            </tr>
+        </table>
+    </center>
+</body>
+</html>

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Sparkles, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useBrandHealth } from "@/hooks/useBrandHealth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Essential5Card } from "@/components/brand-builder/Essential5Card";
@@ -19,6 +20,7 @@ interface Essential5Data {
 export default function BrandBuilder() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { brandHealth } = useBrandHealth();
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -170,6 +172,12 @@ export default function BrandBuilder() {
   };
 
   const calculateScore = () => {
+    // Use real score from database if available
+    if (brandHealth?.completeness_score !== undefined) {
+      return brandHealth.completeness_score;
+    }
+    
+    // Fallback estimation
     const baseScore = 40; // From basic onboarding
     const perFieldScore = 9; // 9% per Essential 5 field (5 * 9 = 45%, total 85%)
     return Math.min(baseScore + completedFields.size * perFieldScore, 85);

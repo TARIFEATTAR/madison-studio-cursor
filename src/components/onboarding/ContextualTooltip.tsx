@@ -34,6 +34,7 @@ export function ContextualTooltip({
 }: ContextualTooltipProps) {
     const [targetElement, setTargetElement] = useState<HTMLElement | null>(null);
     const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+    const [effectivePosition, setEffectivePosition] = useState(position);
     const [isVisible, setIsVisible] = useState(false);
     const { trackView, trackDismiss, trackComplete, trackActionClick } = useTooltipAnalytics();
 
@@ -59,7 +60,12 @@ export function ContextualTooltip({
             if (element) {
                 setTargetElement(element);
                 setIsVisible(true);
+                // Initial calculation
                 calculatePosition(element);
+                
+                // Re-calculate on resize
+                window.addEventListener('resize', () => element && calculatePosition(element));
+                window.addEventListener('scroll', () => element && calculatePosition(element));
 
                 // Track that tooltip was viewed
                 trackView(id, { targetSelector, position });
@@ -74,6 +80,8 @@ export function ContextualTooltip({
 
         return () => {
             clearTimeout(initialDelay);
+            window.removeEventListener('resize', () => {});
+            window.removeEventListener('scroll', () => {});
         };
     }, [targetSelector, id, showOnce]);
 
@@ -81,11 +89,27 @@ export function ContextualTooltip({
         const rect = element.getBoundingClientRect();
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-
+        const viewportWidth = window.innerWidth;
+        
         let top = 0;
         let left = 0;
+        let currentPos = position;
 
-        switch (position) {
+        // Smart flip logic
+        const tooltipWidth = 384; // Max width approx (max-w-sm)
+        
+        // Flip if off screen
+        if (position === 'right' && rect.right + tooltipWidth > viewportWidth) {
+             currentPos = 'left';
+        } else if (position === 'left' && rect.left - tooltipWidth < 0) {
+             currentPos = 'right';
+        } else if (position === 'top' && rect.top - 200 < 0) { // Approx height check
+             currentPos = 'bottom';
+        }
+
+        setEffectivePosition(currentPos);
+
+        switch (currentPos) {
             case "bottom":
                 top = rect.bottom + scrollTop + 12;
                 left = rect.left + scrollLeft + rect.width / 2;
@@ -102,6 +126,13 @@ export function ContextualTooltip({
                 top = rect.top + scrollTop + rect.height / 2;
                 left = rect.right + scrollLeft + 12;
                 break;
+        }
+        
+        // Clamp left/right to viewport for top/bottom positions to ensure it stays on screen
+        if (currentPos === 'top' || currentPos === 'bottom') {
+            const minLeft = tooltipWidth / 2 + 20;
+            const maxLeft = viewportWidth - tooltipWidth / 2 - 20;
+            left = Math.max(minLeft, Math.min(left, maxLeft));
         }
 
         setTooltipPosition({ top, left });
@@ -171,21 +202,17 @@ export function ContextualTooltip({
             <Card
                 className={cn(
                     "fixed z-[1001] max-w-sm bg-card border-primary/40 shadow-2xl animate-in fade-in-0 zoom-in-95 duration-300",
-                    position === "bottom" && "slide-in-from-top-4",
-                    position === "top" && "slide-in-from-bottom-4",
-                    position === "left" && "slide-in-from-right-4",
-                    position === "right" && "slide-in-from-left-4"
+                    effectivePosition === "bottom" && "slide-in-from-top-4",
+                    effectivePosition === "top" && "slide-in-from-bottom-4",
+                    effectivePosition === "left" && "slide-in-from-right-4",
+                    effectivePosition === "right" && "slide-in-from-left-4"
                 )}
                 style={{
-                    top: position === "bottom" || position === "top"
-                        ? `${tooltipPosition.top}px`
-                        : `${tooltipPosition.top}px`,
-                    left: position === "bottom" || position === "top"
-                        ? `${tooltipPosition.left}px`
-                        : `${tooltipPosition.left}px`,
-                    transform: position === "bottom" || position === "top"
+                    top: `${tooltipPosition.top}px`,
+                    left: `${tooltipPosition.left}px`,
+                    transform: effectivePosition === "bottom" || effectivePosition === "top"
                         ? "translateX(-50%)"
-                        : position === "left"
+                        : effectivePosition === "left"
                             ? "translateX(-100%) translateY(-50%)"
                             : "translateY(-50%)",
                 }}
@@ -242,10 +269,10 @@ export function ContextualTooltip({
                 <div
                     className={cn(
                         "absolute w-3 h-3 bg-card border-primary/40 rotate-45",
-                        position === "bottom" && "-top-1.5 left-1/2 -translate-x-1/2 border-t border-l",
-                        position === "top" && "-bottom-1.5 left-1/2 -translate-x-1/2 border-b border-r",
-                        position === "left" && "-right-1.5 top-1/2 -translate-y-1/2 border-t border-r",
-                        position === "right" && "-left-1.5 top-1/2 -translate-y-1/2 border-b border-l"
+                        effectivePosition === "bottom" && "-top-1.5 left-1/2 -translate-x-1/2 border-t border-l",
+                        effectivePosition === "top" && "-bottom-1.5 left-1/2 -translate-x-1/2 border-b border-r",
+                        effectivePosition === "left" && "-right-1.5 top-1/2 -translate-y-1/2 border-t border-r",
+                        effectivePosition === "right" && "-left-1.5 top-1/2 -translate-y-1/2 border-b border-l"
                     )}
                 />
             </Card>

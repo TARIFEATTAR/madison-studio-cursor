@@ -116,7 +116,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: "https://app.madisonstudio.io/auth/v1/callback",
+          redirectTo: `${window.location.origin}`,
         },
       });
 
@@ -149,7 +149,7 @@ const Auth = () => {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth`,
+        emailRedirectTo: `${window.location.origin}/onboarding`,
       },
     });
 
@@ -220,7 +220,7 @@ const Auth = () => {
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth` },
+      options: { emailRedirectTo: `${window.location.origin}/onboarding` },
     });
 
     setLoading(false);

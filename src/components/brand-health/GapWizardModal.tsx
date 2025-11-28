@@ -41,6 +41,21 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
     contentTemplate: "",
   });
 
+  // Helper to strip markdown for cleaner display in textareas
+  const stripMarkdown = (text: string) => {
+    if (!text) return "";
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Bold
+      .replace(/\*(.*?)\*/g, '$1') // Italic
+      .replace(/__(.*?)__/g, '$1') // Bold alt
+      .replace(/_(.*?)_/g, '$1') // Italic alt
+      .replace(/^\s*[-*]\s+/gm, '• ') // List items to bullets
+      .replace(/^#+\s+/gm, '') // Remove headers
+      .replace(/`/g, '') // Remove code ticks
+      .replace(/\n{3,}/g, '\n\n') // Normalize newlines
+      .trim();
+  };
+
   const getKnowledgeType = () => {
     // Priority 1: Use fix_type if provided
     if (recommendation.fix_type) return recommendation.fix_type;
@@ -53,14 +68,24 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
       return "target_audience";
     }
     
-    // Voice and tone keywords
-    if (text.match(/\b(voice|tone|style guide|tone spectrum|writing style)\b/)) {
-      return "voice_tone";
-    }
-    
     // Core identity keywords
     if (text.match(/\b(mission|vision|values|identity|personality|core)\b/)) {
       return "core_identity";
+    }
+    
+    // Content strategy keywords
+    if (text.match(/\b(content marketing strategy|content strategy|marketing strategy|content plan)\b/)) {
+      return "content_strategy";
+    }
+
+    // Product development keywords
+    if (text.match(/\b(develop|launch|create|new) products?\b/) || text.match(/\b(product development|launch strategy)\b/)) {
+      return "product_development";
+    }
+
+    // Product description keywords
+    if (text.match(/\b(product descriptions?|descriptions?|copy)\b/) && text.match(/\b(products?|items?|sku)\b/)) {
+      return "product_descriptions";
     }
     
     // Content guidelines keywords
@@ -68,7 +93,12 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
       return "content_guidelines";
     }
     
-    // Collections transparency keywords (more forgiving)
+    // Voice and tone keywords (Low priority as "voice" is often mentioned in descriptions)
+    if (text.match(/\b(voice|tone|style guide|tone spectrum|writing style)\b/)) {
+      return "voice_tone";
+    }
+    
+    // Collections transparency keywords
     if (text.match(/\b(collection transparency|transparency statements?|collection description|collections?)\b/) && text.includes('transparency')) {
       return "collections_transparency";
     }
@@ -135,13 +165,16 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
           }
         }
         if (suggestions.personality) next.personality = suggestions.personality;
-        if (suggestions.voice_guidelines) next.voiceGuidelines = suggestions.voice_guidelines;
-        if (suggestions.tone_spectrum) next.toneSpectrum = suggestions.tone_spectrum;
+        if (suggestions.voice_guidelines) next.voiceGuidelines = stripMarkdown(suggestions.voice_guidelines);
+        if (suggestions.tone_spectrum) next.toneSpectrum = stripMarkdown(suggestions.tone_spectrum);
+        
         // Handle different response formats for contentTemplate
-        if (suggestions.content) next.contentTemplate = suggestions.content;
-        if (suggestions.target_audience) next.contentTemplate = suggestions.target_audience;
-        if (suggestions.differentiator) next.contentTemplate = suggestions.differentiator;
+        // Always strip markdown for the general content field
+        if (suggestions.content) next.contentTemplate = stripMarkdown(suggestions.content);
+        if (suggestions.target_audience) next.contentTemplate = stripMarkdown(suggestions.target_audience);
+        if (suggestions.differentiator) next.contentTemplate = stripMarkdown(suggestions.differentiator);
         if (suggestions.messages) next.contentTemplate = Array.isArray(suggestions.messages) ? suggestions.messages.join('\n') : suggestions.messages;
+        
         return next;
       });
 
@@ -403,6 +436,51 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
               className="mt-2 min-h-[120px]"
             />
           </div>
+        </div>
+      );
+    }
+
+    if (knowledgeType === "product_descriptions") {
+      return (
+        <div>
+          <Label htmlFor="content" className="text-ink-black">Product Description Guidelines</Label>
+          <Textarea
+            id="content"
+            value={formData.contentTemplate}
+            onChange={(e) => setFormData({ ...formData, contentTemplate: e.target.value })}
+            placeholder="Structure, key features, and style for product descriptions..."
+            className="mt-2 min-h-[200px]"
+          />
+        </div>
+      );
+    }
+
+    if (knowledgeType === "product_development") {
+      return (
+        <div>
+          <Label htmlFor="content" className="text-ink-black">Product Launch Strategy</Label>
+          <Textarea
+            id="content"
+            value={formData.contentTemplate}
+            onChange={(e) => setFormData({ ...formData, contentTemplate: e.target.value })}
+            placeholder="Product development roadmap and launch steps..."
+            className="mt-2 min-h-[200px]"
+          />
+        </div>
+      );
+    }
+
+    if (knowledgeType === "content_strategy") {
+      return (
+        <div>
+          <Label htmlFor="content" className="text-ink-black">Content Strategy</Label>
+          <Textarea
+            id="content"
+            value={formData.contentTemplate}
+            onChange={(e) => setFormData({ ...formData, contentTemplate: e.target.value })}
+            placeholder="Goals, pillars, channels, and cadence..."
+            className="mt-2 min-h-[200px]"
+          />
         </div>
       );
     }

@@ -40,45 +40,78 @@ serve(async (req) => {
     // 1. Fetch Homepage
     const homeResponse = await fetch(url, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; BrandScraper/1.0)",
+        "User-Agent": "Mozilla/5.0 (compatible; BrandScraper/1.0; +https://madison.ai)",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
       },
     });
 
     if (!homeResponse.ok) {
+      console.error(`Failed to fetch homepage: ${homeResponse.status} ${homeResponse.statusText}`);
       throw new Error(`Failed to fetch website: ${homeResponse.status}`);
     }
 
     const homeHtml = await homeResponse.text();
     let combinedText = cleanHtml(homeHtml);
+    console.log("Homepage text length:", combinedText.length);
 
     // 2. Look for "About" page
-    // Simple regex to find hrefs containing "about", "story", "mission"
+    let aboutUrl = null;
+    const baseUrl = new URL(url);
+
+    // Strategy A: Regex match in HTML
     const aboutMatch = homeHtml.match(/<a[^>]+href=["']([^"']*(?:about|story|mission|brand)[^"']*)["'][^>]*>/i);
-    
     if (aboutMatch && aboutMatch[1]) {
-      let aboutPath = aboutMatch[1];
+      aboutUrl = aboutMatch[1];
+    }
+
+    // Strategy B: Common paths fallback
+    if (!aboutUrl) {
+      const commonPaths = [
+        "/pages/about-us",
+        "/pages/our-story",
+        "/about-us",
+        "/about",
+        "/our-story",
+        "/mission"
+      ];
+      
+      // Try to find a valid About page by checking HEAD first? No, too slow. 
+      // We'll just guess the most likely one based on platform hints or just try the first few.
+      // For now, let's try to see if any of these strings exist in the HTML as hrefs even if our regex missed them
+      for (const path of commonPaths) {
+        if (homeHtml.includes(path)) {
+          aboutUrl = path;
+          break;
+        }
+      }
+      
+      // If still nothing, force try /pages/about-us (common Shopify) if it looks like Shopify
+      if (!aboutUrl && homeHtml.includes("shopify")) {
+        aboutUrl = "/pages/about-us";
+      }
+    }
+
+    if (aboutUrl) {
       // Resolve relative URL
-      if (!aboutPath.startsWith('http')) {
-        try {
-          const baseUrl = new URL(url);
-          if (aboutPath.startsWith('/')) {
-            aboutPath = `${baseUrl.origin}${aboutPath}`;
-          } else {
-            // Handle relative paths without leading slash
-            const pathParts = baseUrl.pathname.split('/');
-            pathParts.pop(); // Remove filename
-            aboutPath = `${baseUrl.origin}${pathParts.join('/')}/${aboutPath}`;
-          }
-        } catch (e) {
-          console.warn("Error resolving URL:", e);
+      if (!aboutUrl.startsWith('http')) {
+        if (aboutUrl.startsWith('/')) {
+          aboutUrl = `${baseUrl.origin}${aboutUrl}`;
+        } else {
+          // Handle relative paths without leading slash
+          const pathParts = baseUrl.pathname.split('/');
+          pathParts.pop(); // Remove filename
+          aboutUrl = `${baseUrl.origin}${pathParts.join('/')}/${aboutUrl}`;
         }
       }
 
-      console.log("Found potential About page:", aboutPath);
+      console.log("Fetching About page:", aboutUrl);
       
       try {
-        const aboutResponse = await fetch(aboutPath, {
-            headers: { "User-Agent": "Mozilla/5.0 (compatible; BrandScraper/1.0)" },
+        const aboutResponse = await fetch(aboutUrl, {
+            headers: { 
+              "User-Agent": "Mozilla/5.0 (compatible; BrandScraper/1.0; +https://madison.ai)",
+              "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8" 
+            },
         });
         
         if (aboutResponse.ok) {
@@ -87,10 +120,14 @@ serve(async (req) => {
             // Prioritize About text by putting it first
             combinedText = `ABOUT PAGE CONTENT:\n${aboutText}\n\nHOMEPAGE CONTENT:\n${combinedText}`;
             console.log("Added About page content length:", aboutText.length);
+        } else {
+          console.warn(`About page fetch failed: ${aboutResponse.status}`);
         }
       } catch (e) {
           console.warn("Failed to fetch About page:", e);
       }
+    } else {
+      console.log("No About page found via regex or common paths.");
     }
 
     // Limit to 12000 chars for AI processing

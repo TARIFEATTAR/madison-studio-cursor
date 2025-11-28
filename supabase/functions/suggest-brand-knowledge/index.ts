@@ -5,6 +5,7 @@ import {
   generateGeminiContent,
   extractTextFromGeminiResponse,
 } from "../_shared/geminiClient.ts";
+import { buildAuthorProfilesSection } from "../_shared/authorProfiles.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -158,12 +159,16 @@ serve(async (req) => {
       });
     }
 
+    // Add ALL Legendary Copywriter Context using the shared builder
+    // This ensures all 8 authors (Halbert, Ogilvy, Hopkins, Schwartz, Collier, Peterman, Joyner, Caples) are included
+    contextParts.push(buildAuthorProfilesSection());
+
     let context = contextParts.join('\n');
     
-    // Limit context to ~8000 chars to stay within token limits
-    if (context.length > 8000) {
-      console.log(`[suggest-brand-knowledge] Context too long (${context.length} chars), truncating to 8000`);
-      context = context.substring(0, 8000) + '\n...[context truncated for length]';
+    // Limit context to ~60000 chars to stay within token limits (increased for all 8 profiles)
+    if (context.length > 60000) {
+      console.log(`[suggest-brand-knowledge] Context too long (${context.length} chars), truncating to 60000`);
+      context = context.substring(0, 60000) + '\n...[context truncated for length]';
     }
     
     console.log(`[suggest-brand-knowledge] Context built: ${brandDocuments?.length || 0} docs, ${existingKnowledge?.length || 0} knowledge items, ${products?.length || 0} products, ${context.length} chars`);
@@ -176,6 +181,10 @@ serve(async (req) => {
     switch (knowledge_type) {
       case 'target_audience':
         systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, create a clear, specific target audience description.
+
+ADVISOR STRATEGY:
+- Consult Eugene Schwartz's "Awareness Levels" to define what they already know/feel.
+- Use Robert Collier's principle of "entering the conversation already in their mind."
 
 CONTEXT:
 ${context}
@@ -196,6 +205,10 @@ GUIDELINES:
       case 'voice_tone':
         systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, define their brand voice and tone.
 
+ADVISOR STRATEGY:
+- Channel David Ogilvy's "Authority without Arrogance" and class.
+- Blend with J. Peterman's "Narrative Identity" to ensure it feels human, not corporate.
+
 CONTEXT:
 ${context}
 
@@ -215,6 +228,10 @@ GUIDELINES:
 
       case 'core_identity':
         systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, craft the core brand identity elements: mission, vision, values, and personality.
+
+ADVISOR STRATEGY:
+- Adopt Mark Joyner's "Simplicity is Power" to cut through noise.
+- Use J. Peterman's "Origin Story" approach to find the soul of the brand.
 
 CONTEXT:
 ${context}
@@ -239,6 +256,10 @@ GUIDELINES:
       case 'mission':
         systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, craft a clear mission statement.
 
+ADVISOR STRATEGY:
+- Use Mark Joyner's "Irresistible Offer" mindset: What is the high-level value?
+- Keep it simple enough for Leo Burnett ("Big Idea").
+
 CONTEXT:
 ${context}
 
@@ -256,6 +277,10 @@ GUIDELINES:
 
       case 'usp':
         systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, identify what makes this brand unique.
+
+ADVISOR STRATEGY:
+- Apply Claude Hopkins' "Pre-emptive Advantage" (claim the common process if others haven't).
+- Use David Ogilvy's "Specificity" (facts/numbers) to prove it.
 
 CONTEXT:
 ${context}
@@ -275,6 +300,10 @@ GUIDELINES:
       case 'key_messages':
         systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, identify 3-5 core messages.
 
+ADVISOR STRATEGY:
+- Use John Caples' "Tested Hooks" mindset to ensure messages grab attention.
+- Use Gary Halbert's "Punchiness" to keep them memorable and direct.
+
 CONTEXT:
 ${context}
 
@@ -293,8 +322,113 @@ GUIDELINES:
         };
         break;
 
+      case 'content_strategy':
+        systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, create a comprehensive content marketing strategy.
+
+ADVISOR STRATEGY:
+- Adopt Leo Burnett's "Big Idea" approach to themes (keep them simple/visual).
+- Use David Ogilvy's "Research-First" structure for credibility.
+
+CONTEXT:
+${context}
+
+RECOMMENDATION CONTEXT: ${recommendation ? `${recommendation.title} - ${recommendation.description}` : 'Develop a content marketing strategy focused on engaging the target audience and promoting products.'}
+
+GUIDELINES:
+- Define primary content goals (e.g. awareness, education, conversion)
+- Outline 3-4 content pillars or themes specific to this brand
+- Suggest key channels and formats (blog, social, email, video)
+- Recommend a high-level publication cadence
+- Keep it actionable and strategic
+- Do NOT use bolding (**) or heavy markdown headers
+- Use simple bullet points (•) or plain text lists
+- Return a structured strategy document in clean text format`;
+
+        userPrompt = "Generate a content marketing strategy for this brand.";
+        schemaExample = {
+          content: "Content Strategy\n\nGoals: ...\n\nContent Pillars:\n• Pillar 1...\n• Pillar 2...\n\nChannels & Formats:..."
+        };
+        break;
+
+      case 'product_development':
+        systemPrompt = `You are Madison, a product strategy expert. Create a product development and launch roadmap.
+
+ADVISOR STRATEGY:
+- Follow Claude Hopkins' "Reason Why" logic: Build the marketing INTO the product process.
+- Use Gary Halbert's "Starving Crowd" concept: Verify demand first.
+
+CONTEXT:
+${context}
+
+GUIDELINES:
+- Create a practical roadmap for product development and launch
+- Focus on steps from concept to market
+- Include sourcing, manufacturing considerations, and marketing launch tactics
+- Do NOT use markdown formatting like **bold**, # headers, or *italics*
+- Use simple bullet points (•) or numbered lists
+- Keep it clean, plain text style`;
+        
+        userPrompt = "Create a product development and launch strategy.";
+        schemaExample = {
+          content: "Phase 1: Concept & Sourcing\n• Define product specs...\n\nPhase 2: Production..."
+        };
+        break;
+
+      case 'product_descriptions':
+        systemPrompt = `You are Madison, an expert copywriter. Create guidelines for writing product descriptions.
+
+ADVISOR STRATEGY:
+- Blend David Ogilvy's "Factual Specificity" (count the stitches, name the origin).
+- With J. Peterman's "Romance & Identity" (who does the user become?).
+
+CONTEXT:
+${context}
+
+GUIDELINES:
+- Define the structure for a product description (e.g. Hook, Benefits, Features, Sensory Details)
+- Specify tone and vocabulary to use
+- Highlight key benefits relevant to the target audience
+- Do NOT use markdown formatting like **bold**, # headers, or *italics*
+- Use simple bullet points (•)
+- Keep it clean, plain text style`;
+
+        userPrompt = "Create guidelines for writing product descriptions.";
+        schemaExample = {
+          content: "Structure:\n1. Opening Hook...\n2. Sensory Experience...\n\nKey Benefits to Highlight:\n• ..."
+        };
+        break;
+
+      case 'content_guidelines':
+        systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, create comprehensive content guidelines for various channels.
+
+ADVISOR STRATEGY:
+- Social Media: Channel John Caples (curiosity) and J. Peterman (visuals).
+- Email: Channel Gary Halbert (personal/urgent) and Robert Collier (hooks).
+- Website: Channel David Ogilvy (clarity/proof).
+
+CONTEXT:
+${context}
+
+GUIDELINES:
+- Create guidelines for Social Media (Instagram, LinkedIn, etc.) - focusing on tone, caption length, and hashtag strategy
+- Create guidelines for Email Marketing - subject line style, body structure
+- Create guidelines for Website Copy - headlines, CTAs
+- Do NOT use markdown formatting like **bold**, # headers, or *italics*
+- Use simple bullet points (•) or numbered lists
+- Keep it clean, plain text style`;
+
+        userPrompt = "Generate content guidelines for social media, email, and website.";
+        schemaExample = {
+          content: "Social Media Guidelines:\n• Tone: ...\n• Captions: ...\n\nEmail Marketing:\n• Subject Lines: ...\n\nWebsite Copy:\n• ..."
+        };
+        break;
+
       case 'collections_transparency':
         systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, write a transparency statement for a product collection.
+
+ADVISOR STRATEGY:
+- Use David Ogilvy's "Radical Transparency" - facts build trust.
+- Use Claude Hopkins' "Process Reveal" - explain how it's made to prove value.
 
 CONTEXT:
 ${context}
@@ -314,8 +448,13 @@ GUIDELINES:
         break;
 
       default:
-        // Fallback for old knowledge types
+        // Fallback for dynamic knowledge types
         systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, create suggestions.
+
+ADVISOR STRATEGY:
+- Review the specific 'knowledge_type' requested (${knowledge_type}).
+- DYNAMICALLY SELECT the 1-2 Legendary Copywriters from your knowledge base who are most authoritative on this specific topic.
+- Explicitly apply their frameworks to this task.
 
 CONTEXT:
 ${context}
