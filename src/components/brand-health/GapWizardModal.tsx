@@ -121,11 +121,27 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
         const next = { ...prev };
         if (suggestions.mission) next.mission = suggestions.mission;
         if (suggestions.vision) next.vision = suggestions.vision;
-        if (suggestions.values) next.values = suggestions.values;
+        // Handle values - can be string, array, or object
+        if (suggestions.values) {
+          if (typeof suggestions.values === 'string') {
+            next.values = suggestions.values;
+          } else if (Array.isArray(suggestions.values)) {
+            next.values = suggestions.values.join('\n• ');
+          } else if (typeof suggestions.values === 'object') {
+            // Convert object to formatted string
+            next.values = Object.entries(suggestions.values)
+              .map(([key, val]) => `${key}: ${val}`)
+              .join('\n');
+          }
+        }
         if (suggestions.personality) next.personality = suggestions.personality;
         if (suggestions.voice_guidelines) next.voiceGuidelines = suggestions.voice_guidelines;
         if (suggestions.tone_spectrum) next.toneSpectrum = suggestions.tone_spectrum;
+        // Handle different response formats for contentTemplate
         if (suggestions.content) next.contentTemplate = suggestions.content;
+        if (suggestions.target_audience) next.contentTemplate = suggestions.target_audience;
+        if (suggestions.differentiator) next.contentTemplate = suggestions.differentiator;
+        if (suggestions.messages) next.contentTemplate = Array.isArray(suggestions.messages) ? suggestions.messages.join('\n') : suggestions.messages;
         return next;
       });
 
@@ -135,10 +151,41 @@ export function GapWizardModal({ isOpen, onClose, recommendation }: GapWizardMod
       }
 
       toast.success("Madison has generated suggestions based on your existing content!");
-    } catch (error) {
+    } catch (error: any) {
       clearTimeout(timeoutId);
+      // Try to extract more details from the error
+      let errorMessage = "Failed to generate suggestions. Please try again.";
+      
+      // For Supabase function errors, try to get the response body
+      if (error?.context) {
+        try {
+          // If it's a ReadableStream, read it
+          if (error.context.body && typeof error.context.body.getReader === 'function') {
+            const reader = error.context.body.getReader();
+            const decoder = new TextDecoder();
+            let result = '';
+            let done = false;
+            while (!done) {
+              const { value, done: readerDone } = await reader.read();
+              done = readerDone;
+              if (value) {
+                result += decoder.decode(value);
+              }
+            }
+            console.error("Error response body:", result);
+            const errorBody = JSON.parse(result);
+            errorMessage = errorBody.error || errorBody.message || errorMessage;
+          } else if (typeof error.context.body === 'string') {
+            const errorBody = JSON.parse(error.context.body);
+            console.error("Error generating - full error body:", errorBody);
+            errorMessage = errorBody.error || errorBody.message || errorMessage;
+          }
+        } catch (parseError) {
+          console.error("Error parsing response:", parseError);
+        }
+      }
       console.error("Error generating:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to generate suggestions. Please try again.");
+      toast.error(errorMessage);
     } finally {
       setIsGenerating(false);
     }

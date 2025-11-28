@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { X, Sparkles, ArrowRight, FileText } from "lucide-react";
+import { X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { OnboardingProgressBar } from "./OnboardingProgressBar";
 import { getIndustryOptions } from "@/config/industryTemplates";
@@ -29,16 +28,15 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
   const [brandName, setBrandName] = useState(initialData?.brandName || "");
   const [industry, setIndustry] = useState(initialData?.industry || "");
   const [primaryColor, setPrimaryColor] = useState(initialData?.primaryColor || "#B8956A");
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleContinue = async (options?: { useBrandDNAScan?: boolean }) => {
+  const handleContinue = async () => {
     if (!userName.trim() || !brandName.trim()) return;
+    setIsSaving(true);
     let organizationId: string | null = null;
 
-    // Update organization with brand config AND user profile
     if (user) {
       try {
-        // ALWAYS update user profile with the name they enter during onboarding
-        // This overrides any name from Google OAuth or email
         const { error: profileError } = await supabase
           .from('profiles')
           .update({
@@ -48,13 +46,6 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
 
         if (profileError) {
           logger.error('[Onboarding] Error updating profile:', profileError);
-          toast({
-            title: "Warning",
-            description: "Your profile name may not have been saved. You can update it in Settings.",
-            variant: "destructive"
-          });
-        } else {
-          logger.debug('[Onboarding] Profile updated successfully with name:', userName.trim());
         }
 
         organizationId = await getOrCreateOrganizationId(user.id);
@@ -84,100 +75,93 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
           description: "Failed to save brand information. Please try again.",
           variant: "destructive"
         });
+        setIsSaving(false);
         return;
       }
     }
 
+    // Default to NOT using Quick Scan flag, as user will choose method in next step
     onContinue({
       userName: userName.trim(),
       brandName: brandName.trim(),
       industry: industry || null,
       primaryColor,
-      useBrandDNAScan: options?.useBrandDNAScan || false,
+      useBrandDNAScan: false, 
       organizationId
     });
+    setIsSaving(false);
   };
 
   const isValid = userName.trim() && brandName.trim();
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden bg-[#FDFBF7]">
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-border/20">
-        <div className="flex items-center gap-3">
-          <img src={madisonLogo} alt="Madison" className="h-8" />
-        </div>
+      <header className="flex items-center justify-between px-8 py-4 shrink-0">
+        <img src={madisonLogo} alt="Madison" className="h-6 opacity-90" />
         <div className="flex items-center gap-4">
-          <VideoHelpTrigger
-            videoId="setting-up-brand-identity"
-            variant="button"
-          />
+          <VideoHelpTrigger videoId="setting-up-brand-identity" variant="link" />
           <button
             onClick={onSkip}
-            className="p-2 rounded-sm opacity-70 hover:opacity-100 transition-opacity"
+            className="text-charcoal/40 hover:text-charcoal transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-xl">
-          <OnboardingProgressBar currentStep={1} />
-
-          <div className="mt-12 text-center mb-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-brass to-gold/80 mb-6">
-              <Sparkles className="w-8 h-8 text-white" />
+      <main className="flex-1 flex flex-col items-center justify-center px-6 pb-8 overflow-y-auto">
+        <div className="w-full max-w-2xl space-y-8">
+          {/* Progress & Header */}
+          <div className="text-center space-y-6">
+            <OnboardingProgressBar currentStep={1} />
+            
+            <div className="space-y-2">
+              <h1 className="font-serif text-4xl text-ink-black">Welcome to Madison</h1>
+              <p className="text-lg text-charcoal/70 font-light max-w-md mx-auto">
+                Let's set up your brand profile to create on-brand content at scale.
+              </p>
             </div>
-            <h1 className="font-serif text-4xl text-gray-900 mb-3">Welcome to Madison</h1>
-            <p className="text-lg text-gray-700">
-              Let's set up your brand profile to create on-brand content at scale
-            </p>
-            <p className="text-sm text-muted-foreground mt-4">
-              We'll help Madison learn your brand in two ways: <strong>Quick Scan</strong> for visual identity, and <strong>Deep Dive</strong> for brand voice
-            </p>
           </div>
 
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="userName" className="text-foreground text-base">
-                Your First Name <span className="text-destructive">*</span>
+          {/* Form Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <Label htmlFor="userName" className="text-xs uppercase tracking-wider text-charcoal/60 font-medium">
+                First Name *
               </Label>
               <Input
                 id="userName"
-                placeholder="e.g., Jordan"
+                placeholder="e.g. Jordan"
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
-                className="bg-input border-border/40 h-12 text-base"
+                className="h-11 bg-white border-charcoal/10 focus:border-brass/50 transition-colors"
               />
-              <p className="text-sm text-muted-foreground">
-                This is how Madison will address you throughout the platform
-              </p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="brandName" className="text-foreground text-base">
-                Brand Name <span className="text-destructive">*</span>
+            <div className="space-y-1.5">
+              <Label htmlFor="brandName" className="text-xs uppercase tracking-wider text-charcoal/60 font-medium">
+                Brand Name *
               </Label>
               <Input
                 id="brandName"
-                placeholder="e.g., Maison Lumière"
+                placeholder="e.g. Maison Lumière"
                 value={brandName}
                 onChange={(e) => setBrandName(e.target.value)}
-                className="bg-input border-border/40 h-12 text-base"
+                className="h-11 bg-white border-charcoal/10 focus:border-brass/50 transition-colors"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="industry" className="text-foreground text-base">
-                Industry <span className="text-muted-foreground text-sm">(optional)</span>
+            <div className="space-y-1.5">
+              <Label htmlFor="industry" className="text-xs uppercase tracking-wider text-charcoal/60 font-medium">
+                Industry <span className="normal-case opacity-50 font-normal">(Optional)</span>
               </Label>
               <Select value={industry} onValueChange={setIndustry}>
-                <SelectTrigger className="bg-input border-border/40 h-12">
-                  <SelectValue placeholder="Select your industry" />
+                <SelectTrigger className="h-11 bg-white border-charcoal/10 focus:border-brass/50 transition-colors">
+                  <SelectValue placeholder="Select industry" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover border-border/20">
+                <SelectContent>
                   {INDUSTRY_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
@@ -187,93 +171,57 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="primaryColor" className="text-foreground text-base">
-                Primary Brand Color <span className="text-muted-foreground text-sm">(optional)</span>
+            <div className="space-y-1.5">
+              <Label htmlFor="primaryColor" className="text-xs uppercase tracking-wider text-charcoal/60 font-medium">
+                Brand Color <span className="normal-case opacity-50 font-normal">(Optional)</span>
               </Label>
-              <div className="flex gap-3 items-center">
-                <input
-                  type="color"
-                  id="primaryColor"
-                  value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
-                  className="h-12 w-24 rounded border border-border/40 cursor-pointer"
-                />
+              <div className="flex gap-2">
+                <div className="relative">
+                  <input
+                    type="color"
+                    value={primaryColor}
+                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    className="h-11 w-11 rounded-md border border-charcoal/10 p-1 bg-white cursor-pointer"
+                  />
+                </div>
                 <Input
                   value={primaryColor}
                   onChange={(e) => setPrimaryColor(e.target.value)}
-                  placeholder="#B8956A"
-                  className="bg-input border-border/40 h-12 flex-1"
+                  placeholder="#000000"
+                  className="h-11 bg-white border-charcoal/10 focus:border-brass/50 transition-colors font-mono text-sm"
                 />
               </div>
-              <p className="text-sm text-muted-foreground">
-                This color will be used in your generated content and brand materials
-              </p>
             </div>
           </div>
 
-          {/* Two-Track Approach Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 mt-12">
-            <div className="p-6 rounded-lg border-2 border-brass/30 bg-gradient-to-br from-brass/5 to-transparent">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[hsl(var(--aged-brass))] to-[hsl(var(--antique-gold))]/80 flex items-center justify-center mb-4">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="font-semibold text-foreground mb-2">Quick Scan</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Enter your website URL and we'll extract your visual identity — colors, fonts, logo, and style
+          {/* Validation & Continue */}
+          <div className="pt-8 flex flex-col items-center space-y-4">
+            {!isValid && (
+              <p className="text-sm text-amber-600 bg-amber-50 px-4 py-2 rounded-full border border-amber-100 animate-in fade-in slide-in-from-bottom-2">
+                Please enter your first name and brand name to continue
               </p>
-              <Badge variant="secondary" className="bg-brass/10 text-brass text-xs">
-                Takes 2-3 minutes
-              </Badge>
-            </div>
-
-            <div className="p-6 rounded-lg border border-border/40 bg-card">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[hsl(var(--aged-brass))] to-[hsl(var(--antique-gold))]/80 flex items-center justify-center mb-4">
-                <FileText className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="font-semibold text-foreground mb-2">Deep Dive</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Upload brand documents to teach Madison your unique voice, tone, and messaging
-              </p>
-              <Badge variant="secondary" className="text-xs">
-                Optional but recommended
-              </Badge>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4">
+            )}
+            
             <Button
-              onClick={() => handleContinue({ useBrandDNAScan: true })}
-              disabled={!isValid}
+              onClick={handleContinue}
+              disabled={!isValid || isSaving}
               variant="brass"
-              className="flex-1 h-12 text-base"
+              size="lg"
+              className="w-full md:w-1/2 h-12 text-base shadow-lg shadow-brass/10 hover:shadow-brass/20 transition-all"
             >
-              Start with Quick Scan
+              {isSaving ? "Saving..." : "Continue to Brand Guidelines"}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
 
-            <Button
-              onClick={() => handleContinue({ useBrandDNAScan: false })}
-              disabled={!isValid}
-              variant="outline"
-              className="flex-1 h-12 text-base"
-            >
-              <FileText className="mr-2 h-5 w-5" />
-              Upload Documents
-            </Button>
-          </div>
-
-          <div className="text-center mt-4">
             <button
               onClick={onSkip}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-xs text-charcoal/40 hover:text-charcoal transition-colors border-b border-transparent hover:border-charcoal"
             >
-              Skip onboarding
+              Skip onboarding for now
             </button>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

@@ -10,6 +10,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Helper to clean HTML
+const cleanHtml = (html: string) => {
+  return html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -27,29 +37,66 @@ serve(async (req) => {
 
     console.log("Scraping website:", url, "for organization:", organizationId);
 
-    // Fetch website content
-    const websiteResponse = await fetch(url, {
+    // 1. Fetch Homepage
+    const homeResponse = await fetch(url, {
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; BrandScraper/1.0)",
       },
     });
 
-    if (!websiteResponse.ok) {
-      throw new Error(`Failed to fetch website: ${websiteResponse.status}`);
+    if (!homeResponse.ok) {
+      throw new Error(`Failed to fetch website: ${homeResponse.status}`);
     }
 
-    const htmlContent = await websiteResponse.text();
+    const homeHtml = await homeResponse.text();
+    let combinedText = cleanHtml(homeHtml);
 
-    // Extract text content from HTML (simple approach - strip tags)
-    const textContent = htmlContent
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-      .substring(0, 8000); // Limit to first 8000 chars for AI processing
+    // 2. Look for "About" page
+    // Simple regex to find hrefs containing "about", "story", "mission"
+    const aboutMatch = homeHtml.match(/<a[^>]+href=["']([^"']*(?:about|story|mission|brand)[^"']*)["'][^>]*>/i);
+    
+    if (aboutMatch && aboutMatch[1]) {
+      let aboutPath = aboutMatch[1];
+      // Resolve relative URL
+      if (!aboutPath.startsWith('http')) {
+        try {
+          const baseUrl = new URL(url);
+          if (aboutPath.startsWith('/')) {
+            aboutPath = `${baseUrl.origin}${aboutPath}`;
+          } else {
+            // Handle relative paths without leading slash
+            const pathParts = baseUrl.pathname.split('/');
+            pathParts.pop(); // Remove filename
+            aboutPath = `${baseUrl.origin}${pathParts.join('/')}/${aboutPath}`;
+          }
+        } catch (e) {
+          console.warn("Error resolving URL:", e);
+        }
+      }
 
-    console.log("Extracted text length:", textContent.length);
+      console.log("Found potential About page:", aboutPath);
+      
+      try {
+        const aboutResponse = await fetch(aboutPath, {
+            headers: { "User-Agent": "Mozilla/5.0 (compatible; BrandScraper/1.0)" },
+        });
+        
+        if (aboutResponse.ok) {
+            const aboutHtml = await aboutResponse.text();
+            const aboutText = cleanHtml(aboutHtml);
+            // Prioritize About text by putting it first
+            combinedText = `ABOUT PAGE CONTENT:\n${aboutText}\n\nHOMEPAGE CONTENT:\n${combinedText}`;
+            console.log("Added About page content length:", aboutText.length);
+        }
+      } catch (e) {
+          console.warn("Failed to fetch About page:", e);
+      }
+    }
+
+    // Limit to 12000 chars for AI processing
+    const textContent = combinedText.substring(0, 12000);
+
+    console.log("Final extracted text length:", textContent.length);
 
     const analysisPrompt = `You are a brand voice analyst. Analyze the website content and extract:
 1. Brand voice characteristics (tone, personality)

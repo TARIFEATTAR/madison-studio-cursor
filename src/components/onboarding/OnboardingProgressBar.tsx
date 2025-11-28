@@ -13,15 +13,15 @@ export function OnboardingProgressBar({ currentStep }: OnboardingProgressBarProp
   ];
 
   return (
-    <div className="w-full max-w-3xl mx-auto mb-8">
-      <div className="flex items-center justify-center gap-4">
+    <div className="w-full max-w-2xl mx-auto">
+      <div className="flex items-center justify-center gap-2">
         {steps.map((step, index) => (
           <div key={step.number} className="flex items-center">
             {/* Step Circle */}
             <div className="flex flex-col items-center">
               <div
                 className={cn(
-                  "w-12 h-12 rounded-full flex items-center justify-center font-semibold transition-all",
+                  "w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all",
                   currentStep > step.number
                     ? "bg-green-600 text-white"
                     : currentStep === step.number
@@ -30,14 +30,14 @@ export function OnboardingProgressBar({ currentStep }: OnboardingProgressBarProp
                 )}
               >
                 {currentStep > step.number ? (
-                  <Check className="w-6 h-6" />
+                  <Check className="w-4 h-4" />
                 ) : (
                   <span>{step.number}</span>
                 )}
               </div>
               <span
                 className={cn(
-                  "text-sm mt-2 transition-colors whitespace-nowrap",
+                  "text-xs mt-1.5 transition-colors whitespace-nowrap",
                   currentStep === step.number
                     ? "text-gray-900 font-semibold"
                     : currentStep > step.number
@@ -53,7 +53,7 @@ export function OnboardingProgressBar({ currentStep }: OnboardingProgressBarProp
             {index < steps.length - 1 && (
               <div
                 className={cn(
-                  "h-[2px] w-16 sm:w-24 mx-2 sm:mx-4 transition-colors",
+                  "h-[2px] w-12 sm:w-20 mx-1.5 sm:mx-3 transition-colors",
                   currentStep > step.number ? "bg-brass" : "bg-charcoal/20"
                 )}
               />

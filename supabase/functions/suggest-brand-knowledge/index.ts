@@ -14,6 +14,8 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('[suggest-brand-knowledge] Function invoked, method:', req.method);
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       status: 200,
@@ -156,9 +158,15 @@ serve(async (req) => {
       });
     }
 
-    const context = contextParts.join('\n');
+    let context = contextParts.join('\n');
     
-    console.log(`[suggest-brand-knowledge] Context built: ${brandDocuments?.length || 0} docs, ${existingKnowledge?.length || 0} knowledge items, ${products?.length || 0} products`);
+    // Limit context to ~8000 chars to stay within token limits
+    if (context.length > 8000) {
+      console.log(`[suggest-brand-knowledge] Context too long (${context.length} chars), truncating to 8000`);
+      context = context.substring(0, 8000) + '\n...[context truncated for length]';
+    }
+    
+    console.log(`[suggest-brand-knowledge] Context built: ${brandDocuments?.length || 0} docs, ${existingKnowledge?.length || 0} knowledge items, ${products?.length || 0} products, ${context.length} chars`);
 
     // Build tool definition based on knowledge_type
     let systemPrompt: string;
@@ -285,6 +293,26 @@ GUIDELINES:
         };
         break;
 
+      case 'collections_transparency':
+        systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, write a transparency statement for a product collection.
+
+CONTEXT:
+${context}
+
+RECOMMENDATION CONTEXT: ${recommendation ? `${recommendation.title} - ${recommendation.description}` : 'Create a transparency statement regarding sourcing and impact.'}
+
+GUIDELINES:
+- Focus on ethical sourcing, manufacturing, and environmental impact
+- Be transparent and authentic
+- Use the brand's voice
+- 2-3 paragraphs maximum`;
+
+        userPrompt = "Generate a transparency statement for the collection based on the context.";
+        schemaExample = {
+          content: "Transparency statement detailing sourcing, manufacturing, and environmental impact."
+        };
+        break;
+
       default:
         // Fallback for old knowledge types
         systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, create suggestions.
@@ -304,37 +332,98 @@ ${recommendation ? `\nRECOMMENDATION CONTEXT: ${recommendation.title} - ${recomm
       ? schemaExample
       : JSON.stringify(schemaExample, null, 2);
 
-    const geminiResponse = await generateGeminiContent({
-      systemPrompt,
-      messages: [
-        {
-          role: 'user',
-          content: `${userPrompt}
+    console.log('[suggest-brand-knowledge] Calling Gemini API for knowledge_type:', knowledge_type);
+    console.log('[suggest-brand-knowledge] Context length:', context.length, 'chars');
+    
+    // If context is empty, provide a fallback message
+    if (!context || context.length < 10) {
+      console.log('[suggest-brand-knowledge] Context is empty, returning empty suggestions with guidance');
+      return new Response(JSON.stringify({ 
+        suggestions: {
+          mission: "Please upload brand documents or add products to help Madison generate suggestions.",
+          vision: "Once you provide brand materials, Madison can analyze your brand and suggest appropriate content.",
+          values: "Upload your brand guide, product information, or existing content to get started.",
+          personality: "Madison needs brand context to generate personalized suggestions."
+        }
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    let geminiResponse;
+    try {
+      geminiResponse = await generateGeminiContent({
+        systemPrompt,
+        messages: [
+          {
+            role: 'user',
+            content: `${userPrompt}
 
 Respond ONLY with valid JSON matching this structure:
 ${jsonInstruction}`,
+          },
+        ],
+        // Note: responseMimeType removed for compatibility with gemini-2.0-flash-exp
+        temperature: 0.4,
+        maxOutputTokens: 1024,
+      });
+      console.log('[suggest-brand-knowledge] Gemini response received');
+    } catch (geminiError) {
+      console.error('[suggest-brand-knowledge] Gemini API error:', geminiError);
+      // Return a helpful fallback instead of failing completely
+      return new Response(JSON.stringify({ 
+        suggestions: {
+          mission: "Madison couldn't generate suggestions at this time. Please try again later.",
+          vision: "Try uploading more brand content to improve suggestions.",
+          values: "",
+          personality: ""
         },
-      ],
-      // Note: responseMimeType removed for compatibility with gemini-2.0-flash-exp
-      temperature: 0.4,
-      maxOutputTokens: 1024,
-    });
+        error: geminiError instanceof Error ? geminiError.message : 'AI generation failed'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     let rawSuggestions = extractTextFromGeminiResponse(geminiResponse);
     if (!rawSuggestions) {
       const fallbackPart = geminiResponse?.candidates?.[0]?.content?.parts?.[0]?.text;
       rawSuggestions = typeof fallbackPart === 'string' ? fallbackPart : '';
     }
+    
+    console.log('[suggest-brand-knowledge] Raw Gemini response:', rawSuggestions?.substring(0, 500));
 
     let suggestions;
     try {
-      suggestions = rawSuggestions ? JSON.parse(rawSuggestions) : {};
+      // Try to extract JSON from markdown code blocks or raw text
+      let jsonStr = rawSuggestions;
+      
+      // Remove markdown code blocks if present
+      if (jsonStr) {
+        // Match ```json ... ``` or ``` ... ``` blocks
+        const codeBlockMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (codeBlockMatch) {
+          jsonStr = codeBlockMatch[1].trim();
+        }
+        
+        // Try to find JSON object/array if wrapped in other text
+        const jsonMatch = jsonStr.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+        if (jsonMatch) {
+          jsonStr = jsonMatch[1];
+        }
+      }
+      
+      suggestions = jsonStr ? JSON.parse(jsonStr) : {};
     } catch (parseError) {
       console.error('Failed to parse Gemini response:', parseError, rawSuggestions);
+      // Return a helpful fallback instead of error
       return new Response(JSON.stringify({ 
-        error: 'Failed to parse AI response' 
+        suggestions: {
+          mission: rawSuggestions?.substring(0, 500) || "Unable to generate suggestion. Please try again.",
+          vision: "",
+          values: "",
+          personality: ""
+        }
       }), {
-        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
