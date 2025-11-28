@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { VideoHelpTrigger } from "@/components/help/VideoHelpTrigger";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
-import { PDFDownloadLink } from "@react-pdf/renderer";
+import { pdf } from "@react-pdf/renderer";
 import { BrandBookPDF } from "@/components/pdf/BrandBookPDF";
 
 interface OnboardingSuccessProps {
@@ -17,6 +17,7 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
   const [sampleContent, setSampleContent] = useState<string | null>(null);
   const [isGeneratingSample, setIsGeneratingSample] = useState(false);
   const [scrapedData, setScrapedData] = useState<any>(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,6 +74,68 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
     if (brandData.organizationId) fetchData();
   }, [brandData]);
 
+  const handleDownloadPDF = async () => {
+    setIsGeneratingPDF(true);
+    try {
+      console.log('Starting PDF generation...');
+      console.log('Brand name:', brandData.brandName);
+      console.log('Brand data:', scrapedData);
+      
+      const doc = <BrandBookPDF brandName={brandData.brandName} brandData={scrapedData || {}} />;
+      
+      // Generate PDF - try toBlob first, fallback to buffer
+      console.log('Generating PDF blob...');
+      let blob: Blob;
+      
+      try {
+        blob = await pdf(doc).toBlob();
+      } catch (blobError) {
+        console.warn('toBlob failed, trying toBuffer:', blobError);
+        // Fallback: use toBuffer and convert to blob
+        const buffer = await pdf(doc).toBuffer();
+        blob = new Blob([buffer], { type: 'application/pdf' });
+      }
+      
+      if (!blob || blob.size === 0) {
+        throw new Error('PDF blob is empty or invalid');
+      }
+      
+      console.log('PDF blob generated successfully, size:', blob.size, 'bytes');
+      
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${brandData.brandName.replace(/\s+/g, '_')}_Brand_Audit.pdf`;
+      link.style.display = 'none';
+      
+      document.body.appendChild(link);
+      
+      // Trigger download
+      link.click();
+      
+      // Cleanup after a short delay
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 100);
+      
+      console.log('PDF download initiated successfully');
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      logger.error('PDF generation error:', error);
+      
+      // Show more detailed error message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const fullError = error instanceof Error ? error.stack : String(error);
+      console.error('Full error details:', fullError);
+      
+      alert(`Failed to generate PDF: ${errorMessage}\n\nPlease check the browser console for more details.`);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
       {/* Animated Background */}
@@ -94,31 +157,34 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
         </div>
 
         {/* DOWNLOAD AUDIT BUTTON - HERO PLACEMENT */}
-        {/* DEBUG: Removed condition to force show button */}
-        <div className="flex justify-center mb-8 animate-fade-in">
-          <PDFDownloadLink
-            document={<BrandBookPDF brandName={brandData.brandName} brandData={scrapedData || {}} />}
-            fileName={`${brandData.brandName.replace(/\s+/g, '_')}_Brand_Audit.pdf`}
-            className="no-underline"
+        <div className="flex flex-col items-center gap-4 mb-8 animate-fade-in">
+          <Button 
+            onClick={handleDownloadPDF}
+            disabled={isGeneratingPDF}
+            className="bg-white border-2 border-brass text-brass hover:bg-brass hover:text-white h-12 px-8 text-base font-medium shadow-lg shadow-brass/10 transition-all hover:shadow-brass/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {({ loading }) => (
-              <Button 
-                className="bg-white border-2 border-brass text-brass hover:bg-brass hover:text-white h-12 px-8 text-base font-medium shadow-lg shadow-brass/10 transition-all hover:shadow-brass/20"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating Audit...
-                  </>
-                ) : (
-                  <>
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Initial Brand Audit (PDF)
-                  </>
-                )}
-              </Button>
+            {isGeneratingPDF ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generating Audit...
+              </>
+            ) : (
+              <>
+                <Download className="mr-2 h-4 w-4" />
+                Download Initial Brand Audit (PDF)
+              </>
             )}
-          </PDFDownloadLink>
+          </Button>
+          
+          {/* Living Report Link */}
+          {brandData.organizationId && (
+            <a
+              href={`/reports/${encodeURIComponent(brandData.brandName || 'your-brand')}?scanId=latest`}
+              className="text-sm text-brass hover:text-brass/80 underline"
+            >
+              View Living Report →
+            </a>
+          )}
         </div>
 
         {/* What We've Set Up */}

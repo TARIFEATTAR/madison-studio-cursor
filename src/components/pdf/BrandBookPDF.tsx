@@ -1,24 +1,32 @@
 import React from 'react';
 import { Page, Text, View, Document, StyleSheet, Font, Image } from '@react-pdf/renderer';
 
-// Register Fonts (using Google Fonts via CDN usually, but here using standard fallbacks for safety first)
-// Ideally, download the .ttf files into your public/fonts folder for reliable PDF rendering
-Font.register({
-  family: 'Cormorant Garamond',
-  fonts: [
-    { src: 'https://fonts.gstatic.com/s/cormorantgaramond/v16/co3BmX5slCNuHLi8bLeY9MK7whWMhyjYpHtK.ttf' }, // Regular
-    { src: 'https://fonts.gstatic.com/s/cormorantgaramond/v16/co3YmX5slCNuHLi8bLeY9MK7whWMhyjYpHtKky2F.ttf', fontWeight: 700 }, // Bold
-    { src: 'https://fonts.gstatic.com/s/cormorantgaramond/v16/co3ZmX5slCNuHLi8bLeY9MK7whWMhyjYpHtKkyaTjg.ttf', fontStyle: 'italic' }, // Italic
-  ],
-});
+// Register Fonts with error handling
+// Using standard fallbacks if font loading fails
+try {
+  Font.register({
+    family: 'Cormorant Garamond',
+    fonts: [
+      { src: 'https://fonts.gstatic.com/s/cormorantgaramond/v16/co3BmX5slCNuHLi8bLeY9MK7whWMhyjYpHtK.ttf' }, // Regular
+      { src: 'https://fonts.gstatic.com/s/cormorantgaramond/v16/co3YmX5slCNuHLi8bLeY9MK7whWMhyjYpHtKky2F.ttf', fontWeight: 700 }, // Bold
+      { src: 'https://fonts.gstatic.com/s/cormorantgaramond/v16/co3ZmX5slCNuHLi8bLeY9MK7whWMhyjYpHtKkyaTjg.ttf', fontStyle: 'italic' }, // Italic
+    ],
+  });
+} catch (e) {
+  console.warn('Failed to register Cormorant Garamond font:', e);
+}
 
-Font.register({
-  family: 'Lato',
-  fonts: [
-    { src: 'https://fonts.gstatic.com/s/lato/v24/S6uyw4BMUTPHjx4wXg.ttf' }, // Regular
-    { src: 'https://fonts.gstatic.com/s/lato/v24/S6u9w4BMUTPHh6UVSwiPHA.ttf', fontWeight: 700 }, // Bold
-  ],
-});
+try {
+  Font.register({
+    family: 'Lato',
+    fonts: [
+      { src: 'https://fonts.gstatic.com/s/lato/v24/S6uyw4BMUTPHjx4wXg.ttf' }, // Regular
+      { src: 'https://fonts.gstatic.com/s/lato/v24/S6u9w4BMUTPHh6UVSwiPHA.ttf', fontWeight: 700 }, // Bold
+    ],
+  });
+} catch (e) {
+  console.warn('Failed to register Lato font:', e);
+}
 
 const styles = StyleSheet.create({
   page: {
@@ -136,9 +144,13 @@ export const BrandBookPDF = ({ brandName, brandData }: BrandBookProps) => (
 
         <Text style={styles.subHeader}>Core Values</Text>
         <View style={styles.tagsRow}>
-          {brandData.brand_identity?.values?.map((val: string, i: number) => (
-            <View key={i} style={styles.tag}><Text>{val}</Text></View>
-          ))}
+          {brandData.brand_identity?.values && Array.isArray(brandData.brand_identity.values) && brandData.brand_identity.values.length > 0 ? (
+            brandData.brand_identity.values.map((val: string, i: number) => (
+              <View key={i} style={styles.tag}><Text>{val}</Text></View>
+            ))
+          ) : (
+            <Text style={styles.text}>Not defined</Text>
+          )}
         </View>
 
         <Text style={styles.subHeader}>Target Audience</Text>
@@ -152,9 +164,13 @@ export const BrandBookPDF = ({ brandName, brandData }: BrandBookProps) => (
         
         <Text style={styles.subHeader}>Tone Characteristics</Text>
         <View style={styles.tagsRow}>
-          {brandData.brand_voice?.tone?.map((t: string, i: number) => (
-            <View key={i} style={[styles.tag, { backgroundColor: '#F0EBE0' }]}><Text>{t}</Text></View>
-          ))}
+          {brandData.brand_voice?.tone && Array.isArray(brandData.brand_voice.tone) && brandData.brand_voice.tone.length > 0 ? (
+            brandData.brand_voice.tone.map((t: string, i: number) => (
+              <View key={i} style={[styles.tag, { backgroundColor: '#F0EBE0' }]}><Text>{t}</Text></View>
+            ))
+          ) : (
+            <Text style={styles.text}>Not defined</Text>
+          )}
         </View>
 
         <Text style={styles.subHeader}>Writing Style</Text>
@@ -202,17 +218,25 @@ export const BrandBookPDF = ({ brandName, brandData }: BrandBookProps) => (
         
         <Text style={styles.subHeader}>Keywords to Use</Text>
         <View style={styles.tagsRow}>
-          {brandData.vocabulary?.keywords?.map((word: string, i: number) => (
-            <View key={i} style={[styles.tag, { backgroundColor: '#E6F4EA', color: '#166534' }]}><Text>✓ {word}</Text></View>
-          ))}
+          {brandData.vocabulary?.keywords && Array.isArray(brandData.vocabulary.keywords) && brandData.vocabulary.keywords.length > 0 ? (
+            brandData.vocabulary.keywords.map((word: string, i: number) => (
+              <View key={i} style={[styles.tag, { backgroundColor: '#E6F4EA', color: '#166534' }]}><Text>✓ {word}</Text></View>
+            ))
+          ) : (
+            <Text style={styles.text}>Not defined</Text>
+          )}
         </View>
 
         <Text style={styles.subHeader}>Key Phrases</Text>
-        {brandData.vocabulary?.phrases?.map((phrase: string, i: number) => (
-          <Text key={i} style={styles.text}>• "{phrase}"</Text>
-        ))}
+        {brandData.vocabulary?.phrases && Array.isArray(brandData.vocabulary.phrases) && brandData.vocabulary.phrases.length > 0 ? (
+          brandData.vocabulary.phrases.map((phrase: string, i: number) => (
+            <Text key={i} style={styles.text}>• "{phrase}"</Text>
+          ))
+        ) : (
+          <Text style={styles.text}>Not defined</Text>
+        )}
 
-        {brandData.vocabulary?.forbidden_inferred && (
+        {brandData.vocabulary?.forbidden_inferred && Array.isArray(brandData.vocabulary.forbidden_inferred) && brandData.vocabulary.forbidden_inferred.length > 0 && (
           <>
             <Text style={styles.subHeader}>Avoid These (Off-Brand)</Text>
             <View style={styles.tagsRow}>

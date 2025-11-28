@@ -4,11 +4,35 @@ import {
   generateGeminiContent,
   extractTextFromGeminiResponse,
 } from "../_shared/geminiClient.ts";
+import { extractBrandAssets } from "../_shared/brandAssetsExtractor.ts";
+import { extractColorPalette } from "../_shared/colorPaletteExtractor.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+/**
+ * Infer a color name from hex value (basic helper)
+ */
+function inferColorName(hex: string): string {
+  // Basic color name inference - can be enhanced
+  const hexNum = parseInt(hex.replace('#', ''), 16);
+  const r = (hexNum >> 16) & 0xff;
+  const g = (hexNum >> 8) & 0xff;
+  const b = hexNum & 0xff;
+  
+  // Simple color categorization
+  if (r > 200 && g > 200 && b > 200) return "Light/White";
+  if (r < 50 && g < 50 && b < 50) return "Dark/Black";
+  if (r > g && r > b) return "Red/Pink";
+  if (g > r && g > b) return "Green";
+  if (b > r && b > g) return "Blue";
+  if (r > 200 && g > 150 && b < 100) return "Orange/Yellow";
+  if (r > 150 && g < 100 && b > 150) return "Purple";
+  
+  return "Brand Color";
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -114,6 +138,7 @@ serve(async (req) => {
 
     let textContent = "";
     let cssContent = "";
+    let htmlContent = "";
     let fetchSuccess = false;
 
     try {
@@ -134,7 +159,7 @@ serve(async (req) => {
       clearTimeout(timeoutId);
 
       if (websiteResponse.ok) {
-        const htmlContent = await websiteResponse.text();
+        htmlContent = await websiteResponse.text();
 
         // Extract text content and preserve some structure
         textContent = htmlContent
@@ -159,37 +184,46 @@ serve(async (req) => {
     }
 
     // ------------------------------------------------------------------
-    // 2. LOGO EXTRACTION (Clearbit → Google Favicon fallback)
+    // 2. LOGO EXTRACTION (Brandfetch → Logo.dev → HTML Scraping → Favicon)
     // ------------------------------------------------------------------
-    let logoUrl = "";
     const hostname = new URL(websiteUrl).hostname.replace('www.', '');
+    const brandAssets = await extractBrandAssets(hostname);
+    
+    // Use primary logo URL, or fallback to favicon/OG image
+    const logoUrl = brandAssets.primaryLogoUrl || brandAssets.faviconUrl || brandAssets.ogImageUrl || "";
+    
+    if (logoUrl) {
+      console.log(`✅ Logo found via ${brandAssets.source}: ${logoUrl}`);
+    } else {
+      console.warn("No logo found, will use placeholder");
+    }
 
-    try {
-      // Try Clearbit first (best quality)
-      const clearbitUrl = `https://logo.clearbit.com/${hostname}`;
-      console.log(`Attempting Clearbit logo fetch: ${clearbitUrl}`);
-
-      const clearbitResponse = await fetch(clearbitUrl, { method: 'HEAD' });
-      if (clearbitResponse.ok) {
-        logoUrl = clearbitUrl;
-        console.log("✅ Clearbit logo found");
-      } else {
-        throw new Error("Clearbit logo not found");
-      }
-    } catch (clearbitError) {
-      console.log("Clearbit failed, trying Google Favicon...");
-
+    // ------------------------------------------------------------------
+    // 3. COLOR PALETTE EXTRACTION (Brandfetch → Colorize → CSS Parsing → HTML Analysis)
+    // ------------------------------------------------------------------
+    let extractedColors: any = null;
+    
+    // Try Brandfetch colors first (if available from brandAssets)
+    if (brandAssets.colors && (brandAssets.colors.primary?.length || brandAssets.colors.secondary?.length)) {
+      extractedColors = {
+        primary: brandAssets.colors.primary || [],
+        secondary: brandAssets.colors.secondary || [],
+        neutrals: brandAssets.colors.neutrals || [],
+        accent: brandAssets.colors.accent || [],
+        source: 'brandfetch',
+        confidenceScore: 0.95,
+      };
+      console.log(`✅ Colors found via Brandfetch`);
+    } else {
+      // Try dedicated color palette extraction
       try {
-        // Fallback to Google Favicon (lower quality but more reliable)
-        const faviconUrl = `https://www.google.com/s2/favicons?domain=${hostname}&sz=256`;
-        const faviconResponse = await fetch(faviconUrl, { method: 'HEAD' });
-
-        if (faviconResponse.ok) {
-          logoUrl = faviconUrl;
-          console.log("✅ Google Favicon found");
+        const colorPalette = await extractColorPalette(hostname, htmlContent);
+        if (colorPalette.primary.length > 0 || colorPalette.neutrals.length > 0) {
+          extractedColors = colorPalette;
+          console.log(`✅ Colors found via ${colorPalette.source}`);
         }
-      } catch (faviconError) {
-        console.warn("Both logo services failed, will use placeholder");
+      } catch (colorError) {
+        console.warn("Color extraction failed:", colorError);
       }
     }
 
@@ -270,12 +304,75 @@ For brandEssence, identify the core personality traits of the brand.`,
 
         brandDNA = JSON.parse(cleanedText);
 
-        // Add the extracted logo URL
+        // Merge extracted colors with AI-generated colors (prioritize extracted)
+        if (extractedColors) {
+          // Build color palette array from extracted colors
+          const colorPaletteArray: any[] = [];
+          
+          // Add primary colors
+          if (extractedColors.primary && extractedColors.primary.length > 0) {
+            extractedColors.primary.forEach((hex: string) => {
+              colorPaletteArray.push({
+                hex: hex,
+                name: inferColorName(hex),
+                usage: "Primary brand color"
+              });
+            });
+          }
+          
+          // Add secondary colors
+          if (extractedColors.secondary && extractedColors.secondary.length > 0) {
+            extractedColors.secondary.forEach((hex: string) => {
+              colorPaletteArray.push({
+                hex: hex,
+                name: inferColorName(hex),
+                usage: "Secondary/accent color"
+              });
+            });
+          }
+          
+          // Add neutrals
+          if (extractedColors.neutrals && extractedColors.neutrals.length > 0) {
+            extractedColors.neutrals.forEach((hex: string) => {
+              colorPaletteArray.push({
+                hex: hex,
+                name: inferColorName(hex),
+                usage: "Neutral/background color"
+              });
+            });
+          }
+          
+          // Add accents
+          if (extractedColors.accent && extractedColors.accent.length > 0) {
+            extractedColors.accent.forEach((hex: string) => {
+              colorPaletteArray.push({
+                hex: hex,
+                name: inferColorName(hex),
+                usage: "Accent/highlight color"
+              });
+            });
+          }
+          
+          // Update brandDNA with extracted colors
+          if (colorPaletteArray.length > 0) {
+            brandDNA.colorPalette = colorPaletteArray;
+            brandDNA.primaryColor = colorPaletteArray[0]?.hex || brandDNA.primaryColor;
+            brandDNA.colorSource = extractedColors.source;
+            brandDNA.colorConfidenceScore = extractedColors.confidenceScore;
+          }
+        }
+
+        // Add the extracted logo URL and alternative logos
         if (logoUrl) {
           brandDNA.logo = {
             ...brandDNA.logo,
             url: logoUrl,
-            detected: true
+            detected: true,
+            source: brandAssets.source,
+            confidenceScore: brandAssets.confidenceScore,
+            ...(brandAssets.alternativeLogos && brandAssets.alternativeLogos.length > 0 && {
+              alternatives: brandAssets.alternativeLogos
+            })
           };
         }
       } catch (parseError) {
@@ -321,12 +418,41 @@ Return ONLY valid JSON with this structure:
         const cleanedFallbackText = fallbackText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
         brandDNA = JSON.parse(cleanedFallbackText);
 
+        // Merge extracted colors if available
+        if (extractedColors) {
+          const colorPaletteArray: any[] = [];
+          if (extractedColors.primary?.length) {
+            extractedColors.primary.forEach((hex: string) => {
+              colorPaletteArray.push({ hex, name: inferColorName(hex), usage: "Primary" });
+            });
+          }
+          if (extractedColors.secondary?.length) {
+            extractedColors.secondary.forEach((hex: string) => {
+              colorPaletteArray.push({ hex, name: inferColorName(hex), usage: "Secondary" });
+            });
+          }
+          if (extractedColors.neutrals?.length) {
+            extractedColors.neutrals.forEach((hex: string) => {
+              colorPaletteArray.push({ hex, name: inferColorName(hex), usage: "Neutral" });
+            });
+          }
+          if (colorPaletteArray.length > 0) {
+            brandDNA.colorPalette = colorPaletteArray;
+            brandDNA.primaryColor = colorPaletteArray[0]?.hex || brandDNA.primaryColor;
+          }
+        }
+
         // Add logo URL if we found one
         if (logoUrl) {
           brandDNA.logo = {
             ...brandDNA.logo,
             url: logoUrl,
-            detected: true
+            detected: true,
+            source: brandAssets.source,
+            confidenceScore: brandAssets.confidenceScore,
+            ...(brandAssets.alternativeLogos && brandAssets.alternativeLogos.length > 0 && {
+              alternatives: brandAssets.alternativeLogos
+            })
           };
         }
 
@@ -353,8 +479,13 @@ Return ONLY valid JSON with this structure:
           },
           logo: {
             detected: logoUrl ? true : false,
-            description: logoUrl ? "Logo fetched from external service" : "Logo extraction failed, please upload manually",
-            url: logoUrl || undefined
+            description: logoUrl ? `Logo fetched from ${brandAssets.source}` : "Logo extraction failed, please upload manually",
+            url: logoUrl || undefined,
+            source: brandAssets.source,
+            confidenceScore: brandAssets.confidenceScore,
+            ...(brandAssets.alternativeLogos && brandAssets.alternativeLogos.length > 0 && {
+              alternatives: brandAssets.alternativeLogos
+            })
           },
           visualStyle: {
             mood: "Clean and professional",
@@ -373,7 +504,28 @@ Return ONLY valid JSON with this structure:
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Update organization with brand_config
+    // Extract domain from website URL
+    const domain = new URL(websiteUrl).hostname.replace('www.', '');
+
+    // Save scan to brand_scans table (source of truth)
+    const { error: scanError } = await supabase
+      .from("brand_scans")
+      .insert({
+        organization_id: organizationId,
+        domain: domain,
+        scan_type: 'brand_dna',
+        scan_data: brandDNA,
+        status: 'completed'
+      });
+
+    if (scanError) {
+      console.error("Error saving scan:", scanError);
+      // Don't throw - continue with organization update
+    } else {
+      console.log("✅ Scan saved to brand_scans table");
+    }
+
+    // Update organization with brand_config (for backward compatibility)
     const { error: updateError } = await supabase
       .from("organizations")
       .update({

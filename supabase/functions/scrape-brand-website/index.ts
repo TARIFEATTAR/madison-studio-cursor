@@ -13,12 +13,12 @@ const corsHeaders = {
 // Helper to clean HTML
 const cleanHtml = (html: string) => {
   return html
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-    .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, "") // Remove nav bars to reduce noise
-    .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, "") // Remove footers
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gim, "")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gim, "")
+    .replace(/<nav\b[^>]*>[\s\S]*?<\/nav>/gim, "") 
+    .replace(/<footer\b[^>]*>[\s\S]*?<\/footer>/gim, "")
+    .replace(/<[^>]+>/g, " ") // Remove tags
+    .replace(/\s+/g, " ") // Collapse whitespace
     .trim();
 };
 
@@ -147,6 +147,16 @@ serve(async (req) => {
     // Limit to 25,000 chars (Gemini Pro can handle large contexts)
     fullContent = fullContent.substring(0, 25000);
     console.log("Total scraped content length:", fullContent.length);
+    
+    if (fullContent.length < 200) {
+       return new Response(
+        JSON.stringify({ 
+          error: "Website content is too sparse to analyze. Please try uploading a brand PDF instead.",
+          details: "Less than 200 characters of text found."
+        }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // 5. Analyze with Madison's Board of Advisors (Gemini 1.5 Pro)
     const analysisPrompt = `You are Madison, a strategic brand consultant backed by a "Board of Advisors" consisting of Peter Drucker, Jay Abraham, and David Ogilvy.

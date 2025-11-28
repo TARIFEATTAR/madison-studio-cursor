@@ -41,6 +41,7 @@ import EmailBuilderV2 from "./pages/EmailBuilderV2";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import ComponentDemo from "./pages/ComponentDemo";
+import BrandReport from "./pages/BrandReport";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { AlertCircle } from "lucide-react";
@@ -329,6 +330,7 @@ const AppContent = () => {
                   <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/reports/:domainId" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Report"><BrandReport /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/component-demo" element={<ProtectedRoute><RouteErrorBoundary routeName="Component Demo"><ComponentDemo /></RouteErrorBoundary></ProtectedRoute>} />
                   {/* Email Builder routes - Temporarily hidden for launch */}
                   {/* <Route path="/email-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Builder"><EmailBuilderV2 /></RouteErrorBoundary></ProtectedRoute>} /> */}
@@ -369,6 +371,7 @@ const AppContent = () => {
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/reports/:domainId" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Report"><BrandReport /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/component-demo" element={<ProtectedRoute><RouteErrorBoundary routeName="Component Demo"><ComponentDemo /></RouteErrorBoundary></ProtectedRoute>} />
             {/* Email Builder routes - Temporarily hidden for launch */}
             {/* <Route path="/email-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Builder"><EmailBuilderV2 /></RouteErrorBoundary></ProtectedRoute>} /> */}
