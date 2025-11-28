@@ -94,33 +94,32 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
         </div>
 
         {/* DOWNLOAD AUDIT BUTTON - HERO PLACEMENT */}
-        {scrapedData && (
-          <div className="flex justify-center mb-8 animate-fade-in">
-            <PDFDownloadLink
-              document={<BrandBookPDF brandName={brandData.brandName} brandData={scrapedData} />}
-              fileName={`${brandData.brandName.replace(/\s+/g, '_')}_Brand_Audit.pdf`}
-              className="no-underline"
-            >
-              {({ loading }) => (
-                <Button 
-                  className="bg-white border-2 border-brass text-brass hover:bg-brass hover:text-white h-12 px-8 text-base font-medium shadow-lg shadow-brass/10 transition-all hover:shadow-brass/20"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating Audit...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="mr-2 h-4 w-4" />
-                      Download Initial Brand Audit (PDF)
-                    </>
-                  )}
-                </Button>
-              )}
-            </PDFDownloadLink>
-          </div>
-        )}
+        {/* DEBUG: Removed condition to force show button */}
+        <div className="flex justify-center mb-8 animate-fade-in">
+          <PDFDownloadLink
+            document={<BrandBookPDF brandName={brandData.brandName} brandData={scrapedData || {}} />}
+            fileName={`${brandData.brandName.replace(/\s+/g, '_')}_Brand_Audit.pdf`}
+            className="no-underline"
+          >
+            {({ loading }) => (
+              <Button 
+                className="bg-white border-2 border-brass text-brass hover:bg-brass hover:text-white h-12 px-8 text-base font-medium shadow-lg shadow-brass/10 transition-all hover:shadow-brass/20"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating Audit...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Initial Brand Audit (PDF)
+                  </>
+                )}
+              </Button>
+            )}
+          </PDFDownloadLink>
+        </div>
 
         {/* What We've Set Up */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
