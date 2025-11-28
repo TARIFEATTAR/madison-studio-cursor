@@ -8,6 +8,7 @@ import { BrandReportTemplate } from "@/components/reports/BrandReportTemplate";
 import { useToast } from "@/hooks/use-toast";
 import { logger } from "@/lib/logger";
 import { normalizeDomain, type BrandReport } from "@/types/brandReport";
+import { buildBrandAuditReport } from "@/lib/buildBrandAuditReport";
 
 export default function BrandReport() {
   const { domainId } = useParams<{ domainId: string }>();
@@ -16,6 +17,7 @@ export default function BrandReport() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const supabaseAny = supabase as any;
 
   const [scanData, setScanData] = useState<BrandReport | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,7 +65,7 @@ export default function BrandReport() {
         let scan;
         if (scanId === 'latest') {
           // First try: exact domain match (completed scans only)
-          const { data: domainScan, error: domainError } = await supabase
+        const { data: domainScan, error: domainError } = await supabaseAny
             .from('brand_scans')
             .select('*')
             .eq('organization_id', orgData.organization_id)
@@ -86,7 +88,7 @@ export default function BrandReport() {
           // Fallback: latest scan for organization (if domain match failed)
           if (!scan) {
             logger.debug('[BrandReport] No domain match, fetching latest scan for organization');
-            const { data: latestScan, error: latestError } = await supabase
+            const { data: latestScan, error: latestError } = await supabaseAny
               .from('brand_scans')
               .select('*')
               .eq('organization_id', orgData.organization_id)
@@ -108,7 +110,7 @@ export default function BrandReport() {
           }
         } else {
           // Get specific scan by ID
-          const { data: specificScan, error: specificError } = await supabase
+          const { data: specificScan, error: specificError } = await supabaseAny
             .from('brand_scans')
             .select('*')
             .eq('id', scanId)
@@ -126,7 +128,7 @@ export default function BrandReport() {
 
         if (!scan) {
           // Debug: Check what scans actually exist
-          const { data: allScans, error: debugError } = await supabase
+          const { data: allScans, error: debugError } = await supabaseAny
             .from('brand_scans')
             .select('id, domain, status, created_at, organization_id')
             .eq('organization_id', orgData.organization_id)
@@ -202,18 +204,45 @@ export default function BrandReport() {
     setGeneratingPDF(true);
     try {
       const normalizedDomain = normalizeDomain(decodeURIComponent(domainId));
-      const { data, error } = await supabase.functions.invoke<Blob>('generate-report-pdf', {
+      const clientName =
+        (user?.user_metadata?.full_name as string | undefined) ||
+        user?.email ||
+        scanData.brandProfile.brandName ||
+        normalizedDomain;
+
+      const reportPayload = buildBrandAuditReport(scanData, {
+        clientName,
+        domain: normalizedDomain,
+      });
+
+      const { data, error } = await supabase.functions.invoke("generate-report-pdf", {
         body: {
           domain: normalizedDomain,
+          reportData: reportPayload,
           scanId,
           storeInSupabase: false,
         },
         headers: { Accept: "application/pdf" },
+        // @ts-ignore responseType is supported by the implementation but missing in types
         responseType: "blob",
       });
 
-      if (error || !data) {
-        throw error || new Error("No PDF returned");
+      if (error) {
+        throw error;
+      }
+
+      if (!data) {
+        throw new Error("No data received from PDF generation service");
+      }
+
+      if (!(data instanceof Blob)) {
+        console.error("Received data is not a Blob:", data);
+        // Try to parse as JSON to see if it's an error message
+        if (typeof data === 'object') {
+           const errorMsg = (data as any).error || JSON.stringify(data);
+           throw new Error(`PDF generation failed: ${errorMsg}`);
+        }
+        throw new Error("Invalid response format from PDF service");
       }
 
       const blobUrl = URL.createObjectURL(data);
@@ -229,12 +258,39 @@ export default function BrandReport() {
         title: "Success",
         description: "PDF downloaded successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating PDF:', error);
+      
+      let errorMessage = error.message || "Failed to generate PDF. Please try again.";
+      
+      // Try to parse detailed error from Supabase FunctionsHttpError context
+      if (error && typeof error === 'object' && 'context' in error) {
+        try {
+          // Clone the response because it might have been read already
+          const response = (error as any).context;
+          if (response && typeof response.text === 'function') {
+            const text = await response.text();
+            try {
+              const json = JSON.parse(text);
+              if (json.error) errorMessage = json.error;
+            } catch {
+              if (text) errorMessage = text;
+            }
+          }
+        } catch (e) {
+          logger.debug('Failed to parse error context:', e);
+        }
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error?.error) {
+        errorMessage = error.error;
+      }
+
       toast({
-        title: "PDF Generation",
-        description: "Failed to generate PDF. Please try again.",
+        title: "PDF Generation Failed",
+        description: errorMessage,
         variant: "destructive",
+        duration: 5000,
       });
     } finally {
       setGeneratingPDF(false);
@@ -366,7 +422,7 @@ export default function BrandReport() {
               <Button
                 onClick={handleDownloadPDF}
                 disabled={generatingPDF || !scanData}
-                className="bg-brass text-white hover:bg-brass/90"
+                className="bg-brass text-[#1C150D] hover:bg-brass/90 font-medium"
               >
                 {generatingPDF ? (
                   <>
@@ -386,7 +442,7 @@ export default function BrandReport() {
       </div>
 
       {/* Report Content */}
-      <div className="w-full">
+      <div className="w-full" id="brand-report-content">
         <BrandReportTemplate
           report={scanData}
           domain={domainId}

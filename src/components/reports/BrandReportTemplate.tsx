@@ -9,7 +9,7 @@ interface BrandReportTemplateProps {
 /**
  * Agency-Quality Brand Report Template
  * 
- * Uses mapsystem.io design tokens as base.
+ * Uses Madison Studio design tokens as base.
  * Scanned brand colors used as accents/swatches only.
  * Consistent spacing, type scale, and layout.
  */
@@ -63,7 +63,7 @@ export function BrandReportTemplate({ report, domain }: BrandReportTemplateProps
           {/* Divider */}
           <div className="w-24 h-0.5 bg-brass mx-auto mb-12" />
           
-          {/* mapsystem.io Branding */}
+          {/* Madison Studio Branding */}
           <div className="space-y-2">
             <p className="text-sm font-serif text-ink-black tracking-widest uppercase">
               Brand Audit Report
@@ -490,9 +490,6 @@ export function BrandReportTemplate({ report, domain }: BrandReportTemplateProps
       {/* Print Styles */}
       <style>{`
         @media print {
-          .brand-report {
-            background: white;
-          }
           .print\\:page-break-after-always {
             page-break-after: always;
           }

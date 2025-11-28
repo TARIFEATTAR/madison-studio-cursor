@@ -49,7 +49,7 @@ serve(async (req) => {
       );
     }
 
-    const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://mapsystem.io";
+    const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://app.madisonstudio.io";
     const displayBrandName = brandName || domain;
     
     // Generate email HTML

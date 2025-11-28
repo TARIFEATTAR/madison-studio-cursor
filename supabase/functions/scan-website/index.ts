@@ -397,7 +397,7 @@ serve(async (req) => {
             const userEmail = userData?.user?.email;
 
             if (userEmail) {
-              const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://mapsystem.io";
+              const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://app.madisonstudio.io";
               const reportUrl = `${frontendUrl}/reports/${encodeURIComponent(normalizedDomain)}?scanId=latest`;
               
               // Call email function (don't await - fire and forget)

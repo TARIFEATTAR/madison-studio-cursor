@@ -1,5 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  BrandAuditReport,
+  renderBrandAuditReport,
+} from "../_shared/brandAuditReportTemplate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +15,7 @@ interface RequestPayload {
   domain?: string;
   scanId?: string;
   html?: string;
+  reportData?: BrandAuditReport;
   storeInSupabase?: boolean;
 }
 
@@ -20,12 +25,18 @@ serve(async (req) => {
   }
 
   try {
-    const { domain, scanId = "latest", html, storeInSupabase = false }: RequestPayload =
+    const {
+      domain,
+      scanId = "latest",
+      html,
+      reportData,
+      storeInSupabase = false,
+    }: RequestPayload =
       await req.json();
 
-    if (!domain && !html) {
+    if (!domain && !html && !reportData) {
       return new Response(
-        JSON.stringify({ error: "Either domain or html is required" }),
+        JSON.stringify({ error: "Either domain, html, or reportData is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -43,7 +54,7 @@ serve(async (req) => {
       throw new Error("BROWSERLESS_API_KEY is not configured");
     }
 
-    const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://mapsystem.io";
+    const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://app.madisonstudio.io";
 
     let reportUrl: string | undefined;
     if (domain) {
@@ -51,6 +62,10 @@ serve(async (req) => {
     }
 
     let htmlContent = html || "";
+    if (!htmlContent && reportData) {
+      htmlContent = renderBrandAuditReport(reportData);
+    }
+
     if (!htmlContent && reportUrl) {
       console.log(`[generate-pdf] Fetching HTML from ${reportUrl}`);
       const pageResponse = await fetch(reportUrl, {
@@ -67,24 +82,22 @@ serve(async (req) => {
     }
 
     const payload: Record<string, unknown> = {
-      pdf: {
+      options: {
         format: "A4",
         printBackground: true,
         margin: {
-          top: "1cm",
-          right: "1cm",
-          bottom: "1cm",
-          left: "1cm",
+          top: "0cm",
+          right: "0cm",
+          bottom: "0cm",
+          left: "0cm",
         },
       },
-      timeout: 30000,
-      close: true,
     };
 
     if (htmlContent.trim()) {
       payload.html = htmlContent;
-    }
-    if (reportUrl) {
+    } else if (reportUrl) {
+      // Only use URL navigation if HTML is not provided
       payload.url = reportUrl;
       payload.gotoOptions = { waitUntil: "networkidle0", timeout: 30000 };
     }
