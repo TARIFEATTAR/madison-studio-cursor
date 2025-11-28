@@ -172,12 +172,14 @@ export default function BrandBuilder() {
   };
 
   const calculateScore = () => {
-    // Use real score from database if available
+    // Always use comprehensive brand health score from database
+    // This ensures consistency across the app
     if (brandHealth?.completeness_score !== undefined) {
       return brandHealth.completeness_score;
     }
     
-    // Fallback estimation
+    // If no comprehensive score exists yet, estimate based on Essential 5
+    // But note: this is just an estimate until comprehensive analysis runs
     const baseScore = 40; // From basic onboarding
     const perFieldScore = 9; // 9% per Essential 5 field (5 * 9 = 45%, total 85%)
     return Math.min(baseScore + completedFields.size * perFieldScore, 85);
@@ -211,8 +213,17 @@ export default function BrandBuilder() {
             </Button>
             <div className="flex items-center gap-4">
               <div className="text-right hidden md:block">
-                <p className="text-xs text-charcoal/60">Brand Health Score</p>
+                <p className="text-xs text-charcoal/60">
+                  {brandHealth?.completeness_score !== undefined 
+                    ? "Brand Health Score" 
+                    : "Essential 5 Progress"}
+                </p>
                 <p className="text-2xl font-serif text-brass">{score}%</p>
+                {brandHealth?.completeness_score === undefined && (
+                  <p className="text-xs text-charcoal/50 mt-1">
+                    Run analysis for full score
+                  </p>
+                )}
               </div>
               {isComplete && (
                 <Button
@@ -247,7 +258,10 @@ export default function BrandBuilder() {
           <div className="max-w-md mx-auto">
             <Progress value={(completedFields.size / 5) * 100} className="h-2" />
             <p className="text-sm text-charcoal/60 mt-2">
-              {completedFields.size} of 5 complete • {score}% Brand Health
+              {completedFields.size} of 5 Essential fields complete
+              {brandHealth?.completeness_score !== undefined && (
+                <> • {score}% Brand Health</>
+              )}
             </p>
           </div>
         </div>
@@ -328,12 +342,22 @@ export default function BrandBuilder() {
           <div className="mt-12 bg-gradient-to-r from-brass/10 to-antique-gold/10 border border-brass/20 p-8 text-center">
             <CheckCircle2 className="w-12 h-12 text-brass mx-auto mb-4" />
             <h2 className="font-serif text-3xl text-ink-black mb-3">
-              You're at 85% Brand Health! 🎉
+              Essential 5 Complete! 🎉
             </h2>
-            <p className="text-charcoal/70 mb-6 max-w-2xl mx-auto">
-              You've completed the Essential 5! Madison now has everything needed to create quality,
-              on-brand content. Ready to create your first piece?
+            <p className="text-charcoal/70 mb-4 max-w-2xl mx-auto">
+              You've completed the Essential 5! Madison now has the core information needed to create quality,
+              on-brand content.
             </p>
+            {brandHealth?.completeness_score !== undefined && (
+              <div className="mb-6">
+                <p className="text-sm text-charcoal/60 mb-2">Your Comprehensive Brand Health Score:</p>
+                <p className="text-4xl font-serif text-brass mb-2">{brandHealth.completeness_score}%</p>
+                <p className="text-xs text-charcoal/50 max-w-xl mx-auto">
+                  This score includes products, collections, transparency, and content beyond the Essential 5.
+                  Continue building your brand to increase your score!
+                </p>
+              </div>
+            )}
             <Button
               onClick={() => navigate("/create")}
               size="lg"

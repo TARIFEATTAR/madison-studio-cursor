@@ -16,3 +16,48 @@
 .think-mode textarea::-webkit-scrollbar {
   display: none;
 }
+
+/* Light theme overrides - ensure consistent styling */
+.think-mode .prose {
+  color: #2D2D2D; /* ink-black */
+}
+
+.think-mode .prose h1,
+.think-mode .prose h2,
+.think-mode .prose h3,
+.think-mode .prose h4 {
+  color: #1C150D; /* ink-black */
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.think-mode .prose strong {
+  color: #1C150D; /* ink-black */
+  font-weight: 600;
+}
+
+.think-mode .prose a {
+  color: #C4A962; /* brass */
+}
+
+.think-mode .prose a:hover {
+  color: #B8956A; /* brass/80 */
+}
+
+.think-mode .prose code {
+  background-color: #F5F1E8; /* vellum-cream */
+  color: #C4A962; /* brass */
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+.think-mode .prose pre {
+  background-color: #F5F1E8; /* vellum-cream */
+  border: 1px solid rgba(45, 45, 45, 0.1); /* charcoal/10 */
+  color: #1C150D; /* ink-black */
+}
+
+.think-mode .prose blockquote {
+  border-left-color: #C4A962; /* brass */
+  color: #666; /* charcoal/70 */
+}

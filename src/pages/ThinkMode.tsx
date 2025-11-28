@@ -444,7 +444,7 @@ Example:
   const isEmpty = messages.length === 0;
 
   return (
-    <div className="think-mode bg-ink-black min-h-screen flex flex-col text-parchment-white">
+    <div className="think-mode bg-vellum-cream min-h-screen flex flex-col text-ink-black">
       <div className="grow flex flex-col items-center px-4 sm:px-6 pb-48">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -452,41 +452,41 @@ Example:
           transition={{ duration: 0.6 }}
           className="w-full max-w-4xl text-center pt-16 space-y-3 relative"
         >
-          <p className="think-mode-heading text-4xl sm:text-5xl text-parchment-white">
+          <p className="think-mode-heading text-4xl sm:text-5xl font-serif text-ink-black">
             Strategic Planning Session
           </p>
           <div className="flex items-center justify-center gap-2">
-            <p className="text-sm sm:text-base text-parchment-white/60">
+            <p className="text-sm sm:text-base text-charcoal/70">
               Select a strategic focus or start a new conversation.
             </p>
             
             {/* Strategy Guide Sheet Trigger */}
             <Sheet>
               <SheetTrigger asChild>
-                <button className="inline-flex items-center gap-1 text-xs text-aged-brass hover:text-brass-glow transition-colors border border-aged-brass/20 rounded-full px-2 py-0.5 hover:bg-aged-brass/10">
+                <button className="inline-flex items-center gap-1 text-xs text-brass hover:text-brass/80 transition-colors border border-brass/30 rounded-full px-2 py-0.5 hover:bg-brass/10 bg-parchment-white">
                   <Info className="w-3 h-3" />
                   <span>Strategy Guide</span>
                 </button>
               </SheetTrigger>
-              <SheetContent className="bg-ink-black border-aged-brass/20 text-parchment-white sm:max-w-md overflow-y-auto">
+              <SheetContent className="bg-parchment-white border-charcoal/10 text-ink-black sm:max-w-md overflow-y-auto">
                 <SheetHeader className="mb-6">
-                  <SheetTitle className="text-2xl font-serif text-aged-brass">Strategic Frameworks</SheetTitle>
-                  <SheetDescription className="text-parchment-white/60">
+                  <SheetTitle className="text-2xl font-serif text-ink-black">Strategic Frameworks</SheetTitle>
+                  <SheetDescription className="text-charcoal/70">
                     Our AI models are trained on these specific methodologies to give you expert-level guidance.
                   </SheetDescription>
                 </SheetHeader>
                 <div className="space-y-6">
                   {strategicOptions.map((option) => (
-                    <div key={option.label} className="space-y-2 border-b border-white/5 pb-4 last:border-0">
-                      <div className="flex items-center gap-2 text-aged-brass">
+                    <div key={option.label} className="space-y-2 border-b border-charcoal/10 pb-4 last:border-0">
+                      <div className="flex items-center gap-2 text-brass">
                         <option.icon className="w-4 h-4" />
-                        <h3 className="font-semibold">{option.label}</h3>
+                        <h3 className="font-semibold text-ink-black">{option.label}</h3>
                       </div>
                       <div>
-                        <p className="text-xs uppercase tracking-wider text-white/40 mb-1">The Framework</p>
-                        <p className="text-sm font-medium text-parchment-white/90">{option.framework}</p>
+                        <p className="text-xs uppercase tracking-wider text-charcoal/50 mb-1">The Framework</p>
+                        <p className="text-sm font-medium text-ink-black">{option.framework}</p>
                       </div>
-                      <p className="text-sm text-parchment-white/60 leading-relaxed">
+                      <p className="text-sm text-charcoal/70 leading-relaxed">
                         {option.description}
                       </p>
                     </div>
@@ -509,10 +509,10 @@ Example:
                 >
                   <Button
                     variant="outline"
-                    className="w-full h-auto px-4 py-4 flex flex-col items-center justify-center gap-2 bg-white/5 border-white/10 hover:bg-white/10 hover:border-aged-brass transition-all text-parchment-white group"
+                    className="w-full h-auto px-4 py-4 flex flex-col items-center justify-center gap-2 bg-parchment-white border-charcoal/10 hover:bg-vellum-cream hover:border-brass/30 transition-all text-ink-black group shadow-sm"
                     onClick={() => handleSubmit(option.prompt)}
                   >
-                    <option.icon className="w-6 h-6 text-aged-brass group-hover:text-brass-glow transition-colors mb-1" strokeWidth={1.5} />
+                    <option.icon className="w-6 h-6 text-brass group-hover:text-brass/80 transition-colors mb-1" strokeWidth={1.5} />
                     <span className="text-sm font-medium text-center leading-tight">{option.label}</span>
                   </Button>
                 </motion.div>
@@ -547,10 +547,10 @@ Example:
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-4"
                   >
-                    <p className="text-[0.65rem] uppercase tracking-[0.35em] text-aged-brass/60">
+                    <p className="text-[0.65rem] uppercase tracking-[0.35em] text-brass/70">
                       {message.role === "user" ? userName || "You" : "Madison"}
                     </p>
-                    <div className="think-mode-body text-[1rem] leading-relaxed text-parchment-white/90 prose prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-white/10 prose-pre:text-parchment-white prose-code:text-aged-brass prose-headings:text-parchment-white prose-strong:text-parchment-white prose-a:text-aged-brass hover:prose-a:text-brass-glow">
+                    <div className="think-mode-body text-[1rem] leading-relaxed text-charcoal prose max-w-none prose-p:leading-relaxed prose-pre:bg-charcoal/5 prose-pre:text-ink-black prose-code:text-brass prose-headings:text-ink-black prose-strong:text-ink-black prose-a:text-brass hover:prose-a:text-brass/80">
                       {isAssistant ? (
                         <ReactMarkdown 
                           remarkPlugins={[remarkGfm]}
@@ -568,17 +568,17 @@ Example:
 
                     {/* Render Action Buttons if present (Assistant only) */}
                     {actions.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-4 pt-2 border-t border-white/10">
+                      <div className="flex flex-wrap gap-2 mt-4 pt-2 border-t border-charcoal/10">
                         {actions.map((action, i) => (
                           <Button
                             key={i}
                             variant="secondary"
                             size="sm"
                             onClick={() => handleSubmit(action.prompt)}
-                            className="bg-white/5 hover:bg-aged-brass/20 text-parchment-white border border-white/10 hover:border-aged-brass transition-all text-xs h-auto py-2 px-3"
+                            className="bg-vellum-cream hover:bg-brass/10 text-ink-black border border-charcoal/10 hover:border-brass/30 transition-all text-xs h-auto py-2 px-3"
                           >
                             {action.label}
-                            <ArrowRight className="w-3 h-3 ml-2 opacity-50" />
+                            <ArrowRight className="w-3 h-3 ml-2 text-charcoal/50" />
                           </Button>
                         ))}
                       </div>
@@ -591,10 +591,10 @@ Example:
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="flex items-center gap-3 text-sm text-aged-brass/70"
+                  className="flex items-center gap-3 text-sm text-brass/70"
                 >
                   <motion.span
-                    className="inline-block h-2 w-2 rounded-full bg-brass-glow"
+                    className="inline-block h-2 w-2 rounded-full bg-brass"
                     animate={{ opacity: [0.2, 1, 0.2] }}
                     transition={{ repeat: Infinity, duration: 1.6 }}
                   />
@@ -606,7 +606,7 @@ Example:
         </div>
       </div>
 
-      <footer className="think-mode-footer sticky bottom-0 left-0 right-0 bg-ink-black border-t border-aged-brass/10">
+      <footer className="think-mode-footer sticky bottom-0 left-0 right-0 bg-parchment-white border-t border-charcoal/10 shadow-lg">
         <div className="max-w-4xl mx-auto px-4 sm:px-0 py-6 flex items-center gap-3">
           <Textarea
             ref={textareaRef}
@@ -614,14 +614,14 @@ Example:
             onChange={(e) => setIdea(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Write a thought, question, or hypothesis…"
-            className="flex-1 resize-none border-0 bg-transparent text-parchment-white placeholder:text-charcoal/60 focus-visible:ring-0 focus-visible:outline-none text-base"
+            className="flex-1 resize-none border border-charcoal/20 bg-vellum-cream text-ink-black placeholder:text-charcoal/50 focus-visible:ring-2 focus-visible:ring-brass/20 focus-visible:outline-none text-base rounded-lg"
             rows={2}
             disabled={isLoading}
           />
           <button
             onClick={() => handleSubmit()}
             disabled={!idea.trim() || isLoading}
-            className="rounded-full bg-aged-brass text-parchment-white px-6 py-3 text-sm font-semibold hover:bg-brass-glow transition-colors disabled:opacity-40"
+            className="rounded-lg bg-brass text-ink-black px-6 py-3 text-sm font-semibold hover:bg-brass/90 transition-colors disabled:opacity-40 shadow-sm"
           >
             Send
           </button>
