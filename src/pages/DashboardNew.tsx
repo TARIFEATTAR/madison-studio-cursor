@@ -5,10 +5,14 @@ import { Button } from "@/components/ui/button";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useAuth } from "@/hooks/useAuth";
 import { useOrganization } from "@/hooks/useOrganization";
-import { BrandPulseBar } from "@/components/dashboard/BrandPulseBar";
-import { ContentFlowZone } from "@/components/dashboard/ContentFlowZone";
+import { BrandHealthCard } from "@/components/dashboard/BrandHealthCard";
+import { YourProgressCard } from "@/components/dashboard/YourProgressCard";
+import { YourNextMoveCard } from "@/components/dashboard/YourNextMoveCard";
+import { ContentPipelineCard } from "@/components/dashboard/ContentPipelineCard";
+import { ThisWeekCard } from "@/components/dashboard/ThisWeekCard";
 import { PerformanceMomentumZone } from "@/components/dashboard/PerformanceMomentumZone";
 import { LivingReportCard } from "@/components/dashboard/LivingReportCard";
+import { DraftNudge } from "@/components/dashboard/DraftNudge";
 import { PostOnboardingGuide } from "@/components/onboarding/PostOnboardingGuide";
 import { GettingStartedChecklist } from "@/components/onboarding/GettingStartedChecklist";
 import { usePostOnboardingGuide } from "@/hooks/usePostOnboardingGuide";
@@ -115,36 +119,47 @@ export default function DashboardNew() {
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-auto px-4 md:px-8 py-4 md:py-6 pb-24 md:pb-6 main-content">
-        <div className="max-w-[1600px] mx-auto space-y-4 md:space-y-6 animate-fade-in">
-          {/* Row 1: Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
-            <BrandPulseBar />
-          </div>
-
-          {/* Living Report Card */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
+        <div className="max-w-[1600px] mx-auto space-y-3 md:space-y-4 animate-fade-in">
+          {/* Row 1: Brand Health, Your Progress, Living Brand Report */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
+            <BrandHealthCard />
+            <YourProgressCard />
             <LivingReportCard />
           </div>
 
-          {/* Getting Started Checklist - Show for new users */}
-          {showChecklist && (
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
-              <div className="md:col-span-12">
+          {/* Row 2: Your Next Move, Content Pipeline, and Getting Started */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
+            {/* Left Column: Next Move + Content Pipeline */}
+            <div className={showChecklist ? "col-span-1 md:col-span-6 space-y-3 md:space-y-4" : "col-span-1 md:col-span-12 space-y-3 md:space-y-4"}>
+              <YourNextMoveCard />
+              <ContentPipelineCard />
+            </div>
+
+            {/* Right Column: Getting Started */}
+            {showChecklist && (
+              <div className="col-span-1 md:col-span-6">
                 <GettingStartedChecklist
                   onDismiss={() => setShowChecklist(false)}
                   compact={false}
                 />
               </div>
+            )}
+          </div>
+
+          {/* Draft Nudge - Full Width (if needed) */}
+          {stats && stats.totalDrafts >= 10 && (
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
+              <DraftNudge draftCount={stats.totalDrafts} />
             </div>
           )}
 
-          {/* Row 2: Content Flow */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
-            <ContentFlowZone />
+          {/* Row 4: This Week - Full Width */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
+            <ThisWeekCard />
           </div>
 
-          {/* Row 3: Performance Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
+          {/* Row 5: Performance Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
             <PerformanceMomentumZone />
           </div>
         </div>

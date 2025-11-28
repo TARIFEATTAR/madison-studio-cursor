@@ -67,10 +67,12 @@ export function LivingReportCard() {
 
   if (loading) {
     return (
-      <Card className="col-span-1 md:col-span-4 p-4 md:p-6 bg-white border border-[#E0E0E0] rounded-xl min-h-[180px] md:min-h-[200px]">
-        <Skeleton className="h-6 w-32 mb-4" />
-        <Skeleton className="h-20 w-full" />
-      </Card>
+      <div className="col-span-1 md:col-span-4">
+        <Card className="p-4 md:p-6 bg-white border border-[#E0E0E0] rounded-xl min-h-[180px] md:min-h-[200px]">
+          <Skeleton className="h-6 w-32 mb-4" />
+          <Skeleton className="h-20 w-full" />
+        </Card>
+      </div>
     );
   }
 
@@ -81,7 +83,8 @@ export function LivingReportCard() {
   const reportUrl = domain ? `/reports/${encodeURIComponent(domain)}?scanId=latest` : null;
 
   return (
-    <Card className="col-span-1 md:col-span-4 p-4 md:p-6 bg-gradient-to-br from-brass/5 to-transparent border border-brass/20 rounded-xl min-h-[180px] md:min-h-[200px] hover:shadow-lg transition-all hover:-translate-y-0.5">
+    <div className="col-span-1 md:col-span-4">
+      <Card className="p-4 md:p-6 bg-gradient-to-br from-brass/5 to-transparent border border-brass/20 rounded-xl min-h-[180px] md:min-h-[200px] hover:shadow-lg transition-all hover:-translate-y-0.5">
       <div className="flex flex-col h-full">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -111,7 +114,7 @@ export function LivingReportCard() {
           {reportUrl ? (
             <Button
               onClick={() => navigate(reportUrl)}
-              className="w-full bg-brass hover:bg-aged-brass text-white min-h-[44px] touch-manipulation"
+              className="w-full bg-brand-brass hover:bg-[#A3865A] text-white font-medium min-h-[44px] touch-manipulation shadow-sm"
             >
               <FileText className="mr-2 h-4 w-4" />
               View Report
@@ -121,7 +124,7 @@ export function LivingReportCard() {
             <Button
               onClick={() => navigate('/onboarding')}
               variant="outline"
-              className="w-full border-brass/30 hover:bg-brass/5 text-brass min-h-[44px] touch-manipulation"
+              className="w-full border-brand-brass/40 hover:bg-brass/10 text-brand-brass font-medium min-h-[44px] touch-manipulation"
             >
               <Sparkles className="mr-2 h-4 w-4" />
               Create Report
@@ -130,6 +133,7 @@ export function LivingReportCard() {
         </div>
       </div>
     </Card>
+    </div>
   );
 }
 

@@ -16,7 +16,14 @@ export default function Onboarding() {
   const [scanningBrandDNA, setScanningBrandDNA] = useState(false);
 
   const resetProgress = () => {
+    if (!user) return;
+    
+    // Clear ALL onboarding-related localStorage keys
     localStorage.removeItem('madison-onboarding-progress');
+    localStorage.removeItem(`onboarding_step_${user.id}`);
+    localStorage.removeItem(`onboarding_completed_${user.id}`);
+    localStorage.removeItem(`post_onboarding_guide_shown_${user.id}`);
+    
     setOnboardingData({});
     setCurrentStep(1);
     setScanningBrandDNA(false);
@@ -25,7 +32,20 @@ export default function Onboarding() {
   const isValidStep = currentStep >= 1 && currentStep <= 4;
 
   // Load saved progress on mount and align storage keys
+  // Check for ?reset=true URL parameter to force restart
   useEffect(() => {
+    if (!user) return;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const shouldReset = urlParams.get('reset') === 'true';
+    
+    if (shouldReset) {
+      resetProgress();
+      // Clean up URL
+      window.history.replaceState({}, '', '/onboarding');
+      return;
+    }
+    
     try {
       const savedProgress = localStorage.getItem('madison-onboarding-progress');
       if (savedProgress) {
@@ -35,6 +55,14 @@ export default function Onboarding() {
         const safeStep = [1, 2, 3, 4].includes(rawStep) ? rawStep : 1;
         const shouldScan = progressData.useBrandDNAScan === true;
 
+        // If step is 4 (success page), don't auto-load it - start fresh instead
+        // This allows users to restart onboarding even if they completed it before
+        if (safeStep === 4) {
+          console.log('[Onboarding] Previous step was success page - starting fresh');
+          resetProgress();
+          return;
+        }
+
         setOnboardingData(progressData);
         setScanningBrandDNA(shouldScan);
 
@@ -43,13 +71,21 @@ export default function Onboarding() {
         } else {
           setCurrentStep(safeStep);
         }
+      } else {
+        // No saved progress - always start from step 1
+        setCurrentStep(1);
+        setOnboardingData({});
+        setScanningBrandDNA(false);
       }
     } catch (error) {
       console.error('Error loading saved onboarding progress:', error);
-      // Clear corrupted data
+      // Clear corrupted data and start fresh
       localStorage.removeItem('madison-onboarding-progress');
+      setCurrentStep(1);
+      setOnboardingData({});
+      setScanningBrandDNA(false);
     }
-  }, []);
+  }, [user]);
 
   // Save progress whenever data changes
   useEffect(() => {
@@ -172,7 +208,10 @@ export default function Onboarding() {
           <p className="text-muted-foreground">
             We couldn't resume your previous onboarding progress. Click below to start over.
           </p>
-          <Button onClick={resetProgress} className="px-6">
+          <Button onClick={() => {
+            resetProgress();
+            window.location.reload();
+          }} className="px-6">
             Restart Onboarding
           </Button>
         </div>

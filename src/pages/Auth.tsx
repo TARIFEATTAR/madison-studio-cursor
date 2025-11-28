@@ -82,6 +82,7 @@ const Auth = () => {
       });
     }
     else if (code) {
+      // Handle email confirmation callback
       supabase.auth.exchangeCodeForSession(code).then(({ error, data }) => {
         if (error) {
           toast({
@@ -90,7 +91,14 @@ const Auth = () => {
             variant: "destructive",
           });
         } else if (data?.session?.user) {
-          redirectAfterLogin(data.session.user);
+          logger.debug('[Auth] Email confirmation successful, redirecting...', {
+            userId: data.session.user.id,
+            email: data.session.user.email,
+          });
+          // Small delay to ensure session is fully established
+          setTimeout(() => {
+            redirectAfterLogin(data.session.user);
+          }, 100);
         }
       });
     }
@@ -145,11 +153,16 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Use explicit Vercel URL if available, otherwise use current origin
+    const redirectUrl = import.meta.env.VITE_FRONTEND_URL 
+      ? `${import.meta.env.VITE_FRONTEND_URL}/onboarding`
+      : `${window.location.origin}/onboarding`;
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/onboarding`,
+        emailRedirectTo: redirectUrl,
       },
     });
 
@@ -218,9 +231,14 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Use explicit Vercel URL if available, otherwise use current origin
+    const redirectUrl = import.meta.env.VITE_FRONTEND_URL 
+      ? `${import.meta.env.VITE_FRONTEND_URL}/onboarding`
+      : `${window.location.origin}/onboarding`;
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/onboarding` },
+      options: { emailRedirectTo: redirectUrl },
     });
 
     setLoading(false);

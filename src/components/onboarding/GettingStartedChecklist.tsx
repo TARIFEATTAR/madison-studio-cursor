@@ -184,7 +184,7 @@ export function GettingStartedChecklist({ onDismiss, compact = false }: GettingS
 
     return (
         <Card className={cn(
-            "border-border/40 bg-gradient-to-br from-card to-card/50 shadow-lg",
+            "border-border/40 bg-gradient-to-br from-card to-card/50 shadow-lg rounded-xl",
             compact && "hover:shadow-xl transition-shadow"
         )}>
             <CardHeader className="pb-3">

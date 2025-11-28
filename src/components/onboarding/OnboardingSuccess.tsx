@@ -381,6 +381,17 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
           >
             Go to Dashboard
           </Button>
+          {/* Development/Testing: Restart Onboarding Button */}
+          {import.meta.env.DEV && (
+            <Button
+              onClick={() => window.location.href = '/onboarding?reset=true'}
+              variant="ghost"
+              className="text-xs text-charcoal/40 hover:text-charcoal"
+              size="sm"
+            >
+              Restart Onboarding (Dev)
+            </Button>
+          )}
         </div>
       </div>
     </div>
