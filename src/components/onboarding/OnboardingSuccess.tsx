@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { Check, Sparkles, ArrowRight, BookOpen, Loader2, Video } from "lucide-react";
+import { Check, Sparkles, ArrowRight, BookOpen, Loader2, Video, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { VideoHelpTrigger } from "@/components/help/VideoHelpTrigger";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { BrandBookPDF } from "@/components/pdf/BrandBookPDF";
 
 interface OnboardingSuccessProps {
   brandData: any;
@@ -14,9 +16,10 @@ interface OnboardingSuccessProps {
 export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessProps) {
   const [sampleContent, setSampleContent] = useState<string | null>(null);
   const [isGeneratingSample, setIsGeneratingSample] = useState(false);
+  const [scrapedData, setScrapedData] = useState<any>(null);
 
   useEffect(() => {
-    const generateSample = async () => {
+    const fetchData = async () => {
       setIsGeneratingSample(true);
       try {
         // Fetch any brand knowledge from website scrape
@@ -28,6 +31,10 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
+
+        if (knowledgeData?.content) {
+          setScrapedData(knowledgeData.content);
+        }
 
         let enhancedPrompt = `Write a 100-word brand introduction for ${brandData.brandName}`;
         
@@ -63,7 +70,7 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
         setIsGeneratingSample(false);
       }
     };
-    if (brandData.organizationId) generateSample();
+    if (brandData.organizationId) fetchData();
   }, [brandData]);
 
   return (
@@ -85,6 +92,35 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
             Welcome to Madison, <strong>{brandData.brandName}</strong>! Your brand intelligence platform is ready to create content that truly reflects your voice.
           </p>
         </div>
+
+        {/* DOWNLOAD AUDIT BUTTON - HERO PLACEMENT */}
+        {scrapedData && (
+          <div className="flex justify-center mb-8 animate-fade-in">
+            <PDFDownloadLink
+              document={<BrandBookPDF brandName={brandData.brandName} brandData={scrapedData} />}
+              fileName={`${brandData.brandName.replace(/\s+/g, '_')}_Brand_Audit.pdf`}
+              className="no-underline"
+            >
+              {({ loading }) => (
+                <Button 
+                  className="bg-white border-2 border-brass text-brass hover:bg-brass hover:text-white h-12 px-8 text-base font-medium shadow-lg shadow-brass/10 transition-all hover:shadow-brass/20"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating Audit...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-2 h-4 w-4" />
+                      Download Initial Brand Audit (PDF)
+                    </>
+                  )}
+                </Button>
+              )}
+            </PDFDownloadLink>
+          </div>
+        )}
 
         {/* What We've Set Up */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
