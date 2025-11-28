@@ -8,6 +8,8 @@ import {
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 };
 
 // Simple, best-effort PDF text extractor (no OCR)
@@ -53,7 +55,10 @@ function simplePdfExtract(buffer: ArrayBuffer): string {
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      status: 200,
+      headers: corsHeaders 
+    });
   }
 
   let documentId: string | null = null;
@@ -62,11 +67,31 @@ serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
-    const body = await req.json();
-    documentId = body.documentId;
+    // Parse request body with error handling
+    let body;
+    try {
+      body = await req.json();
+    } catch (parseError) {
+      console.error('[ERROR] Failed to parse request body:', parseError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid request body. Expected JSON with documentId.' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    documentId = body?.documentId;
 
     if (!documentId) {
-      throw new Error('documentId is required');
+      return new Response(
+        JSON.stringify({ error: 'documentId is required in request body' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
     console.log(`[CHECKPOINT] Processing document: ${documentId}`);
@@ -185,10 +210,18 @@ serve(async (req) => {
           }
           console.warn('PDF processing had errors but continuing with extracted text');
         }
-    } else if (document.file_type.includes('text') || document.file_type.includes('markdown')) {
+    } else if (
+      document.file_type.includes('text') || 
+      document.file_type.includes('markdown') ||
+      document.file_name.toLowerCase().endsWith('.txt') ||
+      document.file_name.toLowerCase().endsWith('.md') ||
+      document.file_name.toLowerCase().endsWith('.markdown')
+    ) {
+      console.log('[CHECKPOINT] Processing text/markdown file...');
       extractedText = await fileData.text();
+      console.log(`[CHECKPOINT] Text file read successfully: ${extractedText.length} characters`);
     } else {
-      throw new Error(`Unsupported file type: ${document.file_type}`);
+      throw new Error(`Unsupported file type: ${document.file_type}. Supported: PDF, TXT, MD, Markdown`);
     }
 
     console.log(`Extracted ${extractedText.length} characters`);

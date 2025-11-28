@@ -97,3 +97,6 @@ When developing brand positioning:
 - Does the brand zag when competitors zig?
 - Is the brand gap bridged between strategy and execution?
 
+
+
+

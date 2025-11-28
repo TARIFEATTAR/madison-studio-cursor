@@ -151,3 +151,6 @@ SELECT * FROM madison_training_documents WHERE processing_status = 'completed';
 
 **That's it!** Just copy, paste, run, and copy the results.
 
+
+
+

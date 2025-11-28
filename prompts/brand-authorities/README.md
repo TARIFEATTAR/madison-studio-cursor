@@ -69,3 +69,6 @@ The profiles are loaded via `supabase/functions/_shared/brandAuthorities.ts` and
 - **Film Directors** (future) - For video/film direction
 - **Strategy Thinkers** (future) - For business strategy (Drucker, etc.)
 
+
+
+

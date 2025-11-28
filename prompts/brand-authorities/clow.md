@@ -99,3 +99,6 @@ When analyzing brand for campaign development:
 - Does it make people feel something about the brand?
 - Will it become part of brand identity long-term?
 
+
+
+

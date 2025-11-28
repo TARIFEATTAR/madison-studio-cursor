@@ -1021,16 +1021,17 @@ Our brand voice is warm, elegant, and poetic. We use sensory language and evocat
               {uploadedDocuments.map((doc) => (
                 <div
                   key={doc.id}
-                  className="flex items-center justify-between p-4 border border-border/30 rounded-lg hover:bg-accent/50 transition-colors"
+                  className="flex flex-col gap-2 p-4 border border-border/30 rounded-lg hover:bg-accent/50 transition-colors"
                 >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <FileText className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate text-foreground">{doc.file_name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatFileSize(doc.file_size)} • {formatDistanceToNow(new Date(doc.created_at), { addSuffix: true })}
-                      </p>
-                    </div>
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <FileText className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate text-foreground">{doc.file_name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatFileSize(doc.file_size)} • {formatDistanceToNow(new Date(doc.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
                     
                     {/* Processing Status Badge */}
                     {doc.processing_status === 'pending' && (
@@ -1089,6 +1090,14 @@ Our brand voice is warm, elegant, and poetic. We use sensory language and evocat
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
+                  </div>
+                  {/* Error message for failed documents */}
+                  {doc.processing_status === 'failed' && doc.content_preview && (
+                    <div className="ml-8 mt-1 p-2 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded text-xs text-red-700 dark:text-red-300">
+                      <p className="font-medium mb-1">Error:</p>
+                      <p className="whitespace-pre-wrap">{doc.content_preview}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

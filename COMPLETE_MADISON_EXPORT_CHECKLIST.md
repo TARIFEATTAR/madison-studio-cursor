@@ -112,3 +112,6 @@ These show HOW to build the system prompt:
 
 The complete training doc has everything summarized, but the individual files have more detail if you need it.
 
+
+
+

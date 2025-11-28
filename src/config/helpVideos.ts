@@ -57,12 +57,12 @@ export const helpVideos: HelpVideo[] = [
   {
     id: 'setting-up-brand-identity',
     title: 'Setting Up Your Brand Identity',
-    description: 'Learn how to upload brand documents and configure your brand voice for consistent content.',
-    duration: '5:00',
+    description: 'Complete brand setup journey: from onboarding quick start through deep brand configuration in Settings.',
+    duration: '6:30',
     category: 'getting-started',
     videoUrl: 'https://www.loom.com/embed/placeholder',
     order: 2,
-    keywords: ['brand', 'setup', 'identity', 'guidelines', 'voice'],
+    keywords: ['brand', 'setup', 'identity', 'guidelines', 'voice', 'onboarding', 'brand dna scan'],
   },
   {
     id: 'understanding-brand-guidelines',

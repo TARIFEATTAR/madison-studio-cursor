@@ -185,3 +185,6 @@ ${buildBrandAuthoritiesSection(brandAuthorities)}
 
 **Yes, you can paste this directly into Emergent!** Just extract the object from the array and use the fields to build your system prompt.
 
+
+
+

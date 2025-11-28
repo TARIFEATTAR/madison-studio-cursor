@@ -96,3 +96,6 @@ When creating brand guidelines:
 - Is the system flexible enough to evolve while maintaining consistency?
 - Are brand assets organized and easily accessible?
 
+
+
+

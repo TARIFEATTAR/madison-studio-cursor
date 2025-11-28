@@ -132,3 +132,6 @@ All of Madison's training data is in these files.
 - Brand Authorities: `prompts/brand-authorities/`
 - Core Training: `prompts/` and `src/knowledge/`
 
+
+
+
