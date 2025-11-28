@@ -162,19 +162,19 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
             onClick={handleDownloadPDF}
             disabled={isGeneratingPDF}
             className="bg-white border-2 border-brass text-brass hover:bg-brass hover:text-white h-12 px-8 text-base font-medium shadow-lg shadow-brass/10 transition-all hover:shadow-brass/20 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+              >
             {isGeneratingPDF ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating Audit...
-              </>
-            ) : (
-              <>
-                <Download className="mr-2 h-4 w-4" />
-                Download Initial Brand Audit (PDF)
-              </>
-            )}
-          </Button>
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating Audit...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Initial Brand Audit (PDF)
+                  </>
+                )}
+              </Button>
           
           {/* Living Report Link */}
           {brandData.organizationId && (

@@ -194,9 +194,9 @@ serve(async (req) => {
     
     if (logoUrl) {
       console.log(`✅ Logo found via ${brandAssets.source}: ${logoUrl}`);
-    } else {
+      } else {
       console.warn("No logo found, will use placeholder");
-    }
+      }
 
     // ------------------------------------------------------------------
     // 3. COLOR PALETTE EXTRACTION (Brandfetch → Colorize → CSS Parsing → HTML Analysis)

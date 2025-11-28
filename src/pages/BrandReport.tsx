@@ -109,69 +109,45 @@ export default function BrandReport() {
   }, [user, domainId, scanId, toast]);
 
   const handleDownloadPDF = async () => {
-    if (!organizationId || !domainId) return;
+    if (!domainId) return;
 
     setGeneratingPDF(true);
     try {
-      // Call PDF generation endpoint
       const normalizedDomain = decodeURIComponent(domainId).replace(/^www\./, '');
-      
-      const { data, error } = await supabase.functions.invoke('generate-report-pdf', {
+      const { data, error } = await supabase.functions.invoke<Blob>('generate-report-pdf', {
         body: {
           domain: normalizedDomain,
-          scanId: scanId,
+          scanId,
+          storeInSupabase: false,
         },
+        headers: { Accept: "application/pdf" },
+        responseType: "blob",
       });
 
-      if (error) throw error;
-
-      // Handle PDF download
-      if (data?.pdfUrl) {
-        // Direct PDF URL
-        const link = document.createElement('a');
-        link.href = data.pdfUrl;
-        link.download = `${normalizedDomain}_Brand_Audit_${new Date().toISOString().split('T')[0]}.pdf`;
-        link.click();
-        
-        toast({
-          title: "Success",
-          description: "PDF downloaded successfully",
-        });
-      } else if (data?.latestPdfUrl) {
-        // Latest PDF URL
-        const link = document.createElement('a');
-        link.href = data.latestPdfUrl;
-        link.download = `${normalizedDomain}_Brand_Audit_latest.pdf`;
-        link.click();
-        
-        toast({
-          title: "Success",
-          description: "Latest PDF downloaded successfully",
-        });
-      } else if (data?.reportUrl) {
-        // Fallback: Open report page for browser print-to-PDF
-        toast({
-          title: "PDF Generation",
-          description: "Opening report page. Use browser print (Cmd/Ctrl + P) to save as PDF.",
-        });
-        window.open(data.reportUrl, '_blank');
-      } else {
-        // Fallback: Use browser print-to-PDF
-        toast({
-          title: "PDF Generation",
-          description: "Use browser print (Cmd/Ctrl + P) to save as PDF.",
-        });
-        window.print();
+      if (error || !data) {
+        throw error || new Error("No PDF returned");
       }
+
+      const blobUrl = URL.createObjectURL(data);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `${normalizedDomain}_Brand_Audit_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+
+      toast({
+        title: "Success",
+        description: "PDF downloaded successfully",
+      });
     } catch (error) {
       logger.error('Error generating PDF:', error);
-      
-      // Fallback to browser print
       toast({
         title: "PDF Generation",
-        description: "Using browser print. Press Cmd/Ctrl + P to save as PDF.",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive",
       });
-      setTimeout(() => window.print(), 500);
     } finally {
       setGeneratingPDF(false);
     }

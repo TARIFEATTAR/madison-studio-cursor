@@ -1,39 +1,24 @@
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Font, Image } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet, Image } from '@react-pdf/renderer';
 
-// Register Fonts with error handling
-// Using standard fallbacks if font loading fails
-try {
-  Font.register({
-    family: 'Cormorant Garamond',
-    fonts: [
-      { src: 'https://fonts.gstatic.com/s/cormorantgaramond/v16/co3BmX5slCNuHLi8bLeY9MK7whWMhyjYpHtK.ttf' }, // Regular
-      { src: 'https://fonts.gstatic.com/s/cormorantgaramond/v16/co3YmX5slCNuHLi8bLeY9MK7whWMhyjYpHtKky2F.ttf', fontWeight: 700 }, // Bold
-      { src: 'https://fonts.gstatic.com/s/cormorantgaramond/v16/co3ZmX5slCNuHLi8bLeY9MK7whWMhyjYpHtKkyaTjg.ttf', fontStyle: 'italic' }, // Italic
-    ],
-  });
-} catch (e) {
-  console.warn('Failed to register Cormorant Garamond font:', e);
-}
+// Use built-in PDF fonts to avoid remote loading failures
+const serifFonts = {
+  regular: 'Times-Roman',
+  bold: 'Times-Bold',
+  italic: 'Times-Italic',
+};
 
-try {
-  Font.register({
-    family: 'Lato',
-    fonts: [
-      { src: 'https://fonts.gstatic.com/s/lato/v24/S6uyw4BMUTPHjx4wXg.ttf' }, // Regular
-      { src: 'https://fonts.gstatic.com/s/lato/v24/S6u9w4BMUTPHh6UVSwiPHA.ttf', fontWeight: 700 }, // Bold
-    ],
-  });
-} catch (e) {
-  console.warn('Failed to register Lato font:', e);
-}
+const sansFonts = {
+  regular: 'Helvetica',
+  bold: 'Helvetica-Bold',
+};
 
 const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     backgroundColor: '#FDFBF7', // Madison "Vellum"
     padding: 40,
-    fontFamily: 'Lato',
+    fontFamily: sansFonts.regular,
   },
   section: {
     margin: 10,
@@ -46,40 +31,38 @@ const styles = StyleSheet.create({
     backgroundColor: '#FDFBF7',
   },
   logoText: {
-    fontFamily: 'Cormorant Garamond',
+    fontFamily: serifFonts.bold,
     fontSize: 40,
-    fontWeight: 700,
     letterSpacing: 2,
     textTransform: 'uppercase',
     color: '#1A1816', // Ink Black
     marginBottom: 20,
   },
   subtitle: {
-    fontFamily: 'Lato',
+    fontFamily: sansFonts.regular,
     fontSize: 12,
     letterSpacing: 3,
     textTransform: 'uppercase',
     color: '#B8956A', // Aged Brass
   },
   header: {
-    fontFamily: 'Cormorant Garamond',
+    fontFamily: serifFonts.bold,
     fontSize: 24,
-    fontWeight: 700,
     marginBottom: 10,
     color: '#1A1816',
     borderBottom: '1px solid #E5DFD1',
     paddingBottom: 5,
   },
   subHeader: {
-    fontFamily: 'Lato',
+    fontFamily: sansFonts.bold,
     fontSize: 10,
-    fontWeight: 700,
     textTransform: 'uppercase',
     color: '#B8956A',
     marginTop: 15,
     marginBottom: 5,
   },
   text: {
+    fontFamily: sansFonts.regular,
     fontSize: 11,
     lineHeight: 1.6,
     color: '#2F2A26', // Charcoal
@@ -136,7 +119,7 @@ export const BrandBookPDF = ({ brandName, brandData }: BrandBookProps) => (
         {brandData.brand_identity?.mission && (
           <>
             <Text style={styles.subHeader}>Mission Statement</Text>
-            <Text style={[styles.text, { fontFamily: 'Cormorant Garamond', fontSize: 14, fontStyle: 'italic' }]}>
+            <Text style={[styles.text, { fontFamily: serifFonts.italic, fontSize: 14 }]}>
               "{brandData.brand_identity.mission}"
             </Text>
           </>
