@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Eye, FileText, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Filter } from "lucide-react";
+import { Eye, FileText, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Filter, PlayCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
 interface BrandKnowledgeDebugPanelProps {
   organizationId: string;
@@ -44,10 +45,56 @@ export function BrandKnowledgeDebugPanel({ organizationId }: BrandKnowledgeDebug
   const [aiContext, setAiContext] = useState<string>("");
   const [filterView, setFilterView] = useState<"all" | "active" | "inactive">("all");
   const [expandedDocs, setExpandedDocs] = useState<Set<string>>(new Set());
+  
+  // Test Extraction State
+  const [testText, setTestText] = useState("Our brand voice is sophisticated and warm. We use sensory language to describe our fragrances. Never use words like 'cheap' or 'bargain'.");
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState<any>(null);
 
   useEffect(() => {
     loadKnowledgeEntries();
   }, [organizationId]);
+
+  const handleTestExtraction = async () => {
+    if (!testText) return;
+    setIsTesting(true);
+    setTestResult(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('extract-brand-knowledge', {
+        body: {
+          extractedText: testText,
+          organizationId: organizationId,
+          documentName: 'Test Extraction',
+          detectVisualStandards: true
+        }
+      });
+
+      if (error) {
+        // Parse the error body if possible
+        let details = error.message;
+        try {
+            // If error has a context with response, try to read it
+            if (error.context && error.context.json) {
+                const json = await error.context.json();
+                details = JSON.stringify(json, null, 2);
+            }
+        } catch (e) {
+            console.log("Could not parse error details", e);
+        }
+        throw new Error(details);
+      }
+
+      setTestResult(data);
+      toast({ title: "Extraction Complete", description: "Check the raw JSON result below." });
+    } catch (error: any) {
+      console.error('Test failed:', error);
+      setTestResult({ error: error.message || 'Unknown error' });
+      toast({ title: "Extraction Failed", description: error.message, variant: "destructive" });
+    } finally {
+      setIsTesting(false);
+    }
+  };
 
   const loadKnowledgeEntries = async () => {
     try {
@@ -267,165 +314,224 @@ export function BrandKnowledgeDebugPanel({ organizationId }: BrandKnowledgeDebug
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Filter Tabs */}
-          <Tabs value={filterView} onValueChange={(v) => setFilterView(v as any)} className="mb-4">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="all">
-                All ({entries.length})
-              </TabsTrigger>
-              <TabsTrigger value="active">
-                Active ({entries.filter(e => e.is_active).length})
-              </TabsTrigger>
-              <TabsTrigger value="inactive">
-                Inactive ({entries.filter(e => !e.is_active).length})
-              </TabsTrigger>
+          {/* Main Tabs */}
+          <Tabs defaultValue="inspector" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="inspector">Knowledge Inspector</TabsTrigger>
+              <TabsTrigger value="test">Test AI Extraction</TabsTrigger>
             </TabsList>
-          </Tabs>
 
-          <div className="space-y-3">
-            {entries.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <AlertCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>No brand knowledge entries found</p>
-              </div>
-            ) : filteredGroupedEntries.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Filter className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>No {filterView} entries found</p>
-              </div>
-            ) : (
-              filteredGroupedEntries.map(([docName, group]) => {
-                const isExpanded = expandedDocs.has(docName);
-                const activeCount = group.entries.filter(e => e.is_active).length;
-                
-                return (
-                  <Collapsible
-                    key={docName}
-                    open={isExpanded}
-                    onOpenChange={() => toggleDocumentExpanded(docName)}
-                  >
-                    <div className="border rounded-lg">
-                      {/* Document Header */}
-                      <CollapsibleTrigger className="w-full">
-                        <div className="flex items-center justify-between p-4 hover:bg-accent/5 transition-colors">
-                          <div className="flex items-center gap-3">
-                            {isExpanded ? (
-                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                            )}
-                            <div className="text-left">
-                              <div className="flex items-center gap-2">
-                                <FileText className="h-4 w-4" />
-                                <span className="font-medium text-sm">{docName}</span>
-                              </div>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Badge 
-                                  variant={group.allActive ? "default" : group.someActive ? "secondary" : "outline"}
-                                  className="text-xs"
-                                >
-                                  {activeCount} / {group.entries.length} Active
-                                </Badge>
-                                <span className="text-xs text-muted-foreground">
-                                  {group.entries.length} knowledge {group.entries.length === 1 ? 'type' : 'types'}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {!isExpanded && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleDocumentExpanded(docName);
-                              }}
-                            >
-                              View Details
-                            </Button>
-                          )}
-                        </div>
-                      </CollapsibleTrigger>
+            <TabsContent value="inspector">
+              {/* Filter Tabs */}
+              <Tabs value={filterView} onValueChange={(v) => setFilterView(v as any)} className="mb-4">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="all">
+                    All ({entries.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="active">
+                    Active ({entries.filter(e => e.is_active).length})
+                  </TabsTrigger>
+                  <TabsTrigger value="inactive">
+                    Inactive ({entries.filter(e => !e.is_active).length})
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
 
-                      {/* Document Entries */}
-                      <CollapsibleContent>
-                        <div className="border-t">
-                          <div className="p-3 bg-muted/30 flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">
-                              Knowledge entries from this document:
-                            </span>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => toggleAllEntriesInDocument(group.documentId, true)}
-                                disabled={group.allActive}
-                              >
-                                Activate All
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => toggleAllEntriesInDocument(group.documentId, false)}
-                                disabled={!group.someActive}
-                              >
-                                Deactivate All
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="p-3 space-y-2">
-                            {group.entries.map((entry) => (
-                              <div
-                                key={entry.id}
-                                className="flex items-center justify-between p-3 border rounded hover:bg-accent/5 transition-colors"
-                              >
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    {entry.is_active ? (
-                                      <CheckCircle className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
-                                    ) : (
-                                      <AlertCircle className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                                    )}
-                                    <span className="text-sm font-medium">
-                                      {formatKnowledgeType(entry.knowledge_type)}
+              <div className="space-y-3">
+                {entries.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <AlertCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No brand knowledge entries found</p>
+                  </div>
+                ) : filteredGroupedEntries.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Filter className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No {filterView} entries found</p>
+                  </div>
+                ) : (
+                  filteredGroupedEntries.map(([docName, group]) => {
+                    const isExpanded = expandedDocs.has(docName);
+                    const activeCount = group.entries.filter(e => e.is_active).length;
+                    
+                    return (
+                      <Collapsible
+                        key={docName}
+                        open={isExpanded}
+                        onOpenChange={() => toggleDocumentExpanded(docName)}
+                      >
+                        <div className="border rounded-lg">
+                          {/* Document Header */}
+                          <CollapsibleTrigger className="w-full">
+                            <div className="flex items-center justify-between p-4 hover:bg-accent/5 transition-colors">
+                              <div className="flex items-center gap-3">
+                                {isExpanded ? (
+                                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                )}
+                                <div className="text-left">
+                                  <div className="flex items-center gap-2">
+                                    <FileText className="h-4 w-4" />
+                                    <span className="font-medium text-sm">{docName}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Badge 
+                                      variant={group.allActive ? "default" : group.someActive ? "secondary" : "outline"}
+                                      className="text-xs"
+                                    >
+                                      {activeCount} / {group.entries.length} Active
+                                    </Badge>
+                                    <span className="text-xs text-muted-foreground">
+                                      {group.entries.length} knowledge {group.entries.length === 1 ? 'type' : 'types'}
                                     </span>
                                   </div>
-                                  <div className="flex items-center gap-2 text-xs text-muted-foreground ml-5">
-                                    <span>v{entry.version}</span>
-                                    <span>•</span>
-                                    <span>{formatBytes(JSON.stringify(entry.content).length)}</span>
-                                  </div>
                                 </div>
-                                
-                                <div className="flex items-center gap-2">
+                              </div>
+                              
+                              {!isExpanded && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleDocumentExpanded(docName);
+                                  }}
+                                >
+                                  View Details
+                                </Button>
+                              )}
+                            </div>
+                          </CollapsibleTrigger>
+
+                          {/* Document Entries */}
+                          <CollapsibleContent>
+                            <div className="border-t">
+                              <div className="p-3 bg-muted/30 flex items-center justify-between">
+                                <span className="text-xs text-muted-foreground">
+                                  Knowledge entries from this document:
+                                </span>
+                                <div className="flex gap-2">
                                   <Button
-                                    variant="ghost"
+                                    variant="outline"
                                     size="sm"
-                                    onClick={() => handlePreviewContext(entry)}
+                                    onClick={() => toggleAllEntriesInDocument(group.documentId, true)}
+                                    disabled={group.allActive}
                                   >
-                                    <Eye className="h-3.5 w-3.5 mr-1" />
-                                    Preview
+                                    Activate All
                                   </Button>
                                   <Button
-                                    variant={entry.is_active ? "outline" : "default"}
+                                    variant="outline"
                                     size="sm"
-                                    onClick={() => toggleActive(entry.id, entry.is_active)}
+                                    onClick={() => toggleAllEntriesInDocument(group.documentId, false)}
+                                    disabled={!group.someActive}
                                   >
-                                    {entry.is_active ? 'Deactivate' : 'Activate'}
+                                    Deactivate All
                                   </Button>
                                 </div>
                               </div>
-                            ))}
-                          </div>
+                              <div className="p-3 space-y-2">
+                                {group.entries.map((entry) => (
+                                  <div
+                                    key={entry.id}
+                                    className="flex items-center justify-between p-3 border rounded hover:bg-accent/5 transition-colors"
+                                  >
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        {entry.is_active ? (
+                                          <CheckCircle className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
+                                        ) : (
+                                          <AlertCircle className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                                        )}
+                                        <span className="text-sm font-medium">
+                                          {formatKnowledgeType(entry.knowledge_type)}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-2 text-xs text-muted-foreground ml-5">
+                                        <span>v{entry.version}</span>
+                                        <span>•</span>
+                                        <span>{formatBytes(JSON.stringify(entry.content).length)}</span>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-2">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handlePreviewContext(entry)}
+                                      >
+                                        <Eye className="h-3.5 w-3.5 mr-1" />
+                                        Preview
+                                      </Button>
+                                      <Button
+                                        variant={entry.is_active ? "outline" : "default"}
+                                        size="sm"
+                                        onClick={() => toggleActive(entry.id, entry.is_active)}
+                                      >
+                                        {entry.is_active ? 'Deactivate' : 'Activate'}
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </CollapsibleContent>
                         </div>
-                      </CollapsibleContent>
-                    </div>
-                  </Collapsible>
-                );
-              })
-            )}
-          </div>
+                      </Collapsible>
+                    );
+                  })
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="test">
+              <div className="space-y-4">
+                <div className="p-4 border rounded-lg bg-muted/20">
+                  <h3 className="font-medium mb-2">Test Brand Extraction Logic</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Paste sample text here to test if Madison's AI can successfully extract brand guidelines.
+                    This calls the exact same function as the document uploader.
+                  </p>
+                  
+                  <div className="space-y-2">
+                    <Textarea
+                      value={testText}
+                      onChange={(e) => setTestText(e.target.value)}
+                      placeholder="Paste brand text here..."
+                      className="min-h-[150px] font-mono text-sm"
+                    />
+                    <Button 
+                      onClick={handleTestExtraction} 
+                      disabled={isTesting || !testText}
+                      className="w-full"
+                    >
+                      {isTesting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Extracting...
+                        </>
+                      ) : (
+                        <>
+                          <PlayCircle className="w-4 h-4 mr-2" />
+                          Test Extraction
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                {testResult && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm">Raw AI Response:</h4>
+                    <ScrollArea className="h-[300px] w-full rounded-md border p-4 bg-slate-950 text-slate-50">
+                      <pre className="text-xs font-mono whitespace-pre-wrap">
+                        {JSON.stringify(testResult, null, 2)}
+                      </pre>
+                    </ScrollArea>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 

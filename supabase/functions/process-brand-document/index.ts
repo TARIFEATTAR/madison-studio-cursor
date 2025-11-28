@@ -239,26 +239,47 @@ serve(async (req) => {
       .update({ processing_stage: 'extracting_knowledge' })
       .eq('id', documentId);
 
-    // NEW: Extract structured brand knowledge using Claude
+    // NEW: Extract structured brand knowledge using AI
     console.log('[CHECKPOINT] Extracting structured brand knowledge with AI...');
     
     // Detect if this is a visual standards document
     const isVisualStandards = /visual|photo|image|lighting|color palette|aspect ratio|template|composition|forbidden element/i.test(extractedText.slice(0, 2000));
     
-    const { data: extractionData, error: extractionError } = await supabase.functions.invoke(
-      'extract-brand-knowledge',
-      {
-        body: { 
-          extractedText,
-          organizationId: document.organization_id,
-          documentName: document.file_name,
-          detectVisualStandards: isVisualStandards
+    let extractionData: any = null;
+    let extractionError: any = null;
+    
+    // Wrap extraction in try-catch with timeout protection
+    try {
+      // Add timeout wrapper (60 seconds max)
+      const extractionPromise = supabase.functions.invoke(
+        'extract-brand-knowledge',
+        {
+          body: { 
+            extractedText,
+            organizationId: document.organization_id,
+            documentName: document.file_name,
+            detectVisualStandards: isVisualStandards
+          }
         }
-      }
-    );
+      );
+      
+      // Race between extraction and timeout
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Extraction timeout after 60 seconds')), 60000)
+      );
+      
+      const result = await Promise.race([extractionPromise, timeoutPromise]) as any;
+      extractionData = result.data;
+      extractionError = result.error;
+    } catch (err) {
+      console.error('Brand knowledge extraction failed with exception:', err);
+      extractionError = err;
+      // Continue with basic save, don't fail entire process
+    }
 
     if (extractionError) {
       console.error('Brand knowledge extraction failed:', extractionError);
+      console.log('Continuing with document processing despite extraction failure');
       // Continue with basic save, don't fail entire process
     } else if (extractionData?.success) {
       console.log('Successfully extracted structured brand knowledge');

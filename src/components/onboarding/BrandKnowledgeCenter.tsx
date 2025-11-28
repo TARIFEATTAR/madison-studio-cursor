@@ -52,6 +52,30 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
     fetchUploadedDocuments();
   }, [organizationId]);
 
+  // Auto-hide Quick Start when documents exist
+  useEffect(() => {
+    if (uploadedDocuments.length > 0) {
+      setShowQuickStart(false);
+    }
+  }, [uploadedDocuments]);
+
+  // Auto-poll for status updates when documents are pending/processing
+  useEffect(() => {
+    const hasPendingDocs = uploadedDocuments.some(
+      doc => doc.processing_status === 'pending' || doc.processing_status === 'processing'
+    );
+
+    if (!hasPendingDocs) return;
+
+    // Poll every 3 seconds while there are pending documents
+    const pollInterval = setInterval(() => {
+      logger.debug('🔄 Polling for document status updates...');
+      fetchUploadedDocuments();
+    }, 3000);
+
+    return () => clearInterval(pollInterval);
+  }, [uploadedDocuments, organizationId]);
+
   const fetchUploadedDocuments = async () => {
     setLoadingDocuments(true);
     try {
@@ -253,32 +277,44 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
           throw insertError;
         }
 
-        // Trigger document processing in background
+        // Trigger document processing in background (fire-and-forget)
+        // Don't await - processing happens asynchronously and we don't want to block
         if (docData) {
-          const { error: invokeError } = await supabase.functions.invoke('process-brand-document', {
+          // Fire and forget - don't await to avoid blocking or triggering auth checks
+          supabase.functions.invoke('process-brand-document', {
             body: { documentId: docData.id }
+          }).then(({ error: invokeError }) => {
+            if (invokeError) {
+              logger.error('Edge function invocation failed:', invokeError);
+              
+              // Mark as failed in background - don't block user
+              supabase
+                .from('brand_documents')
+                .update({ 
+                  processing_status: 'failed',
+                  content_preview: `Invocation error: ${invokeError.message}`
+                })
+                .eq('id', docData.id)
+                .then(() => {
+                  // Only show toast if user is still on the page
+                  toast({
+                    title: "Processing Failed",
+                    description: `Failed to start processing ${file.name}. You can retry from the document list.`,
+                    variant: "destructive"
+                  });
+                })
+                .catch((updateError) => {
+                  logger.error('Failed to update document status:', updateError);
+                });
+            } else {
+              logger.debug('Processing started for', file.name);
+            }
+          }).catch((invokeError) => {
+            // Catch any unexpected errors in the invocation
+            logger.error('Unexpected error invoking function:', invokeError);
+            // Don't show error to user - processing might still succeed
+            // The document will show as "pending" and can be retried if needed
           });
-          
-          if (invokeError) {
-            logger.error('Edge function invocation failed:', invokeError);
-            
-            // Mark as failed immediately so user can retry
-            await supabase
-              .from('brand_documents')
-              .update({ 
-                processing_status: 'failed',
-                content_preview: `Invocation error: ${invokeError.message}`
-              })
-              .eq('id', docData.id);
-            
-            toast({
-              title: "Processing Failed",
-              description: `Failed to start processing ${file.name}. Please retry.`,
-              variant: "destructive"
-            });
-          } else {
-            logger.debug('Processing started for', file.name);
-          }
         }
       }
 
@@ -296,11 +332,24 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
     } catch (error) {
       logger.error("Error uploading documents:", error);
       setUploadStatus("error");
+      
+      // Extract user-friendly error message
+      let errorMessage = "Failed to upload documents.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        // Don't show technical auth errors to user
+        if (error.message.includes('JWT') || error.message.includes('token') || error.message.includes('authentication')) {
+          errorMessage = "Authentication error. Please refresh the page and try again.";
+        }
+      }
+      
       toast({
         title: "Upload Failed",
-        description: error instanceof Error ? error.message : "Failed to upload documents.",
+        description: errorMessage,
         variant: "destructive",
       });
+      
+      // Don't throw or navigate - just show error and let user retry
     } finally {
       setIsProcessing(false);
     }
@@ -1005,7 +1054,12 @@ Our brand voice is warm, elegant, and poetic. We use sensory language and evocat
 
         {/* Uploaded Documents List */}
         <div className="mt-8 pt-6 border-t border-border/20">
-          <h3 className="text-lg font-semibold mb-4 text-foreground">Uploaded Documents</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-foreground">Uploaded Documents</h3>
+            <p className="text-xs text-muted-foreground hidden sm:block">
+              Extracted knowledge appears in the <span className="font-medium text-primary">Inspector</span> below ↓
+            </p>
+          </div>
           
           {loadingDocuments ? (
             <div className="flex items-center justify-center py-8">

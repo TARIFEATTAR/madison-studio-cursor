@@ -9,21 +9,39 @@ import {
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 };
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      status: 200,
+      headers: corsHeaders 
+    });
   }
 
   try {
+    console.log('[suggest-brand-knowledge] Starting request...');
+    
+    // Check for required environment variables
+    const geminiKey = Deno.env.get('GEMINI_API_KEY');
+    if (!geminiKey) {
+      console.error('[suggest-brand-knowledge] GEMINI_API_KEY is not configured!');
+      throw new Error('GEMINI_API_KEY is not configured. Please set it in Supabase Edge Function secrets.');
+    }
+    
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get user from auth header
-    const authHeader = req.headers.get('Authorization')!;
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('[suggest-brand-knowledge] No Authorization header');
+      throw new Error('No Authorization header provided');
+    }
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
@@ -31,7 +49,10 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { knowledge_type, recommendation, organizationId: passedOrgId } = await req.json();
+    const body = await req.json();
+    const { knowledge_type, recommendation, organizationId: passedOrgId } = body;
+    
+    console.log('[suggest-brand-knowledge] Request body:', { knowledge_type, hasRecommendation: !!recommendation, passedOrgId });
 
     // Get organization ID
     let organizationId = passedOrgId;
@@ -48,12 +69,36 @@ serve(async (req) => {
       organizationId = orgMember.organization_id;
     }
 
+    console.log('[suggest-brand-knowledge] Fetching data for org:', organizationId);
+    
     // Fetch existing brand knowledge
-    const { data: existingKnowledge } = await supabase
+    const { data: existingKnowledge, error: knowledgeError } = await supabase
       .from('brand_knowledge')
       .select('*')
       .eq('organization_id', organizationId)
       .eq('is_active', true);
+    
+    if (knowledgeError) {
+      console.error('[suggest-brand-knowledge] Error fetching brand_knowledge:', knowledgeError);
+    }
+
+    // Fetch uploaded brand documents with extracted content
+    const { data: brandDocuments, error: docsError } = await supabase
+      .from('brand_documents')
+      .select('file_name, extracted_content, content_preview')
+      .eq('organization_id', organizationId)
+      .eq('processing_status', 'completed')
+      .order('created_at', { ascending: false });
+    
+    if (docsError) {
+      console.error('[suggest-brand-knowledge] Error fetching brand_documents:', docsError);
+    }
+    
+    console.log('[suggest-brand-knowledge] Found:', {
+      brandDocuments: brandDocuments?.length || 0,
+      existingKnowledge: existingKnowledge?.length || 0,
+      docsWithContent: brandDocuments?.filter(d => d.extracted_content)?.length || 0
+    });
 
     // Fetch sample content (limited to recent items)
     const { data: masterContent } = await supabase
@@ -73,8 +118,24 @@ serve(async (req) => {
     // Build context for AI
     const contextParts = [];
     
+    // PRIORITY: Include uploaded brand documents first (most valuable source)
+    if (brandDocuments && brandDocuments.length > 0) {
+      contextParts.push('UPLOADED BRAND DOCUMENTS:');
+      brandDocuments.forEach(doc => {
+        if (doc.extracted_content) {
+          // Limit each document to ~2000 chars to avoid token limits
+          const content = doc.extracted_content.substring(0, 2000);
+          contextParts.push(`\n--- ${doc.file_name} ---`);
+          contextParts.push(content);
+          if (doc.extracted_content.length > 2000) {
+            contextParts.push('...[content truncated]');
+          }
+        }
+      });
+    }
+    
     if (existingKnowledge && existingKnowledge.length > 0) {
-      contextParts.push('EXISTING BRAND KNOWLEDGE:');
+      contextParts.push('\nEXISTING BRAND KNOWLEDGE:');
       existingKnowledge.forEach(kb => {
         contextParts.push(`${kb.knowledge_type}: ${JSON.stringify(kb.content)}`);
       });
@@ -96,6 +157,8 @@ serve(async (req) => {
     }
 
     const context = contextParts.join('\n');
+    
+    console.log(`[suggest-brand-knowledge] Context built: ${brandDocuments?.length || 0} docs, ${existingKnowledge?.length || 0} knowledge items, ${products?.length || 0} products`);
 
     // Build tool definition based on knowledge_type
     let systemPrompt: string;
@@ -122,6 +185,7 @@ GUIDELINES:
         break;
 
       case 'brand_voice':
+      case 'voice_tone':
         systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, define their brand voice and tone.
 
 CONTEXT:
@@ -131,11 +195,36 @@ GUIDELINES:
 - Describe personality traits and communication style
 - Be specific about tone (warm, professional, playful, etc.)
 - Include do's and don'ts if patterns are clear
-- Keep it 3-4 sentences, actionable`;
+- Voice guidelines should be 3-4 sentences
+- Tone spectrum should describe how tone varies across contexts`;
 
-        userPrompt = "Generate brand voice guidelines based on the context.";
+        userPrompt = "Generate brand voice guidelines and tone spectrum based on the context.";
         schemaExample = {
-          voice_guidelines: "3-4 sentence description covering personality traits, tone, do's and don'ts."
+          voice_guidelines: "3-4 sentence description covering personality traits, tone, do's and don'ts.",
+          tone_spectrum: "Description of how tone varies across different contexts (educational, promotional, support, etc.)"
+        };
+        break;
+
+      case 'core_identity':
+        systemPrompt = `You are Madison, an expert editorial director. Based on the brand context below, craft the core brand identity elements: mission, vision, values, and personality.
+
+CONTEXT:
+${context}
+
+GUIDELINES:
+- Mission: Answer "Why does this brand exist?" (2-3 sentences)
+- Vision: What future is the brand working towards? (2-3 sentences)
+- Values: What principles guide brand decisions? (3-5 core values with brief explanations)
+- Personality: If the brand were a person, describe their character (2-3 sentences)
+- Be specific and grounded in the context provided
+- Reference patterns you observe in their existing content/products`;
+
+        userPrompt = "Generate mission, vision, values, and personality based on the context.";
+        schemaExample = {
+          mission: "2-3 sentence mission statement explaining why this brand exists.",
+          vision: "2-3 sentence vision statement describing the future the brand is working towards.",
+          values: "3-5 core values with brief explanations of each.",
+          personality: "2-3 sentence description of the brand's character and personality traits."
         };
         break;
 
@@ -226,7 +315,7 @@ Respond ONLY with valid JSON matching this structure:
 ${jsonInstruction}`,
         },
       ],
-      responseMimeType: 'application/json',
+      // Note: responseMimeType removed for compatibility with gemini-2.0-flash-exp
       temperature: 0.4,
       maxOutputTokens: 1024,
     });

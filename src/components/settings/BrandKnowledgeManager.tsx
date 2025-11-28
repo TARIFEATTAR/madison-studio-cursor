@@ -455,12 +455,23 @@ export function BrandKnowledgeManager() {
   return (
     <Card className="bg-paper-light border-cream-dark">
       <CardHeader>
-        <CardTitle className="text-charcoal flex items-center gap-2">
-          <History className="w-5 h-5" />
-          Your Brand Knowledge Base
-        </CardTitle>
+        <div className="flex items-center gap-2">
+          <CardTitle className="text-charcoal flex items-center gap-2">
+            <History className="w-5 h-5" />
+            Extracted Brand Knowledge
+          </CardTitle>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-6 w-6 p-0 rounded-full hover:bg-black/5"
+            onClick={loadBrandKnowledge}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
         <CardDescription>
-          Madison uses only <strong>your brand's active knowledge</strong> when creating content. Other organizations cannot see or access this information.
+          This is the <strong>structured data</strong> Madison extracted from your uploaded documents. She uses this "brain" to write in your voice.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -480,38 +491,47 @@ export function BrandKnowledgeManager() {
             documentGroups[docKey].items.push(item);
           });
 
-          return Object.entries(documentGroups).map(([docKey, group]) => (
-            <Card key={docKey} className="bg-white border-brass/20">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-base text-charcoal flex items-center gap-2">
-                      📄 {group.fileName}
-                    </CardTitle>
-                    <p className="text-xs text-warm-gray mt-1">
-                      {group.items.length} active knowledge {group.items.length === 1 ? 'type' : 'types'}
-                    </p>
-                  </div>
-                  <Badge className="bg-green-100 text-green-800 border-green-200">
-                    Active
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {group.items.map(item => (
-                    <Badge 
-                      key={item.id} 
-                      variant="outline" 
-                      className="bg-brass/5 text-charcoal border-brass/20"
-                    >
-                      {formatKnowledgeType(item.knowledge_type)}
+          return Object.entries(documentGroups).map(([docKey, group]) => {
+            // Extract brand name from filename (remove extension and common suffixes)
+            const brandName = group.fileName
+              .replace(/\.(txt|pdf|md|docx?)$/i, '')
+              .replace(/brand\s*guidelines?/i, '')
+              .replace(/\(\d+\)/g, '')
+              .trim() || 'your brand';
+            
+            return (
+              <Card key={docKey} className="bg-gradient-to-br from-green-50/50 to-emerald-50/30 border-green-200/50">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-base text-charcoal flex items-center gap-2">
+                        <span className="text-lg">✨</span> Madison learned {group.items.length} things about {brandName}!
+                      </CardTitle>
+                      <p className="text-xs text-warm-gray mt-1">
+                        From: {group.fileName}
+                      </p>
+                    </div>
+                    <Badge className="bg-green-100 text-green-800 border-green-200">
+                      Active
                     </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ));
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {group.items.map(item => (
+                      <Badge 
+                        key={item.id} 
+                        variant="outline" 
+                        className="bg-white/80 text-charcoal border-green-200/50"
+                      >
+                        {formatKnowledgeType(item.knowledge_type)}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          });
         })()}
 
         {/* Maintenance Tools - Collapsed by default */}
@@ -544,11 +564,14 @@ export function BrandKnowledgeManager() {
                   <div className="flex items-center gap-2">
                     <RefreshCw className="w-4 h-4 text-slate-600" />
                     <CardTitle className="text-sm text-slate-700">
-                      Advanced Knowledge Tools
+                      Inspector & Tools
                     </CardTitle>
                   </div>
                   <ChevronRight className="w-4 h-4 text-slate-400" />
                 </div>
+                <CardDescription className="text-xs mt-1">
+                  Deep dive into the raw data Madison sees (for advanced users)
+                </CardDescription>
               </CardHeader>
             </CollapsibleTrigger>
             <CollapsibleContent>

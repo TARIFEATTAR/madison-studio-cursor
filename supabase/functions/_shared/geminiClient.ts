@@ -1,6 +1,6 @@
 export const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 
-const DEFAULT_MODEL = "models/gemini-1.5-flash";
+const DEFAULT_MODEL = "models/gemini-2.0-flash-exp";
 
 type OpenAIContentPart =
   | { type: "text"; text: string }
@@ -145,9 +145,10 @@ export async function generateGeminiContent(options: GeminiRequestOptions) {
     body.systemInstruction = { parts: [{ text: systemPrompt }] };
   }
 
-  if (rest.responseMimeType) {
-    body.responseMimeType = rest.responseMimeType;
-  }
+  // DISABLED: responseMimeType causes 400/500 errors with some models/API versions
+  // if (rest.responseMimeType) {
+  //   body.generationConfig.responseMimeType = rest.responseMimeType;
+  // }
 
   if (rest.safetySettings) {
     body.safetySettings = rest.safetySettings;
@@ -260,9 +261,10 @@ export async function streamGeminiTextResponse(
     body.systemInstruction = { parts: [{ text: systemPrompt }] };
   }
 
-  if (rest.responseMimeType) {
-    body.responseMimeType = rest.responseMimeType;
-  }
+  // DISABLED: responseMimeType causes 400/500 errors with some models/API versions
+  // if (rest.responseMimeType) {
+  //   body.generationConfig.responseMimeType = rest.responseMimeType;
+  // }
 
   if (rest.safetySettings) {
     body.safetySettings = rest.safetySettings;
@@ -539,7 +541,6 @@ export async function streamGeminiTextResponse(
                 controller.enqueue(
                   encoder.encode(`data: ${JSON.stringify(openAIPayload)}\n\n`),
                 );
-                console.log(`[geminiClient] Extracted and sent text chunk ${textChunkCount}: "${extractedText.substring(0, 50)}..."`);
               } else {
                 // Log chunks without text for debugging
                 if (geminiData.candidates?.[0]?.finishReason) {
@@ -618,4 +619,3 @@ export function convertContentToGeminiParts(
 ) {
   return toArrayContent(content).map(convertPart);
 }
-

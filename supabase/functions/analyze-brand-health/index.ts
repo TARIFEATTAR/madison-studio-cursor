@@ -8,11 +8,16 @@ import {
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 };
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      status: 200,
+      headers: corsHeaders 
+    });
   }
 
   try {
@@ -274,7 +279,7 @@ Be specific and prioritize recommendations by impact.`;
     const aiData = await generateGeminiContent({
       systemPrompt: 'You are a brand health expert. Always respond with valid JSON only.',
       messages: [{ role: 'user', content: prompt }],
-      responseMimeType: 'application/json',
+      // Note: responseMimeType removed for compatibility with gemini-2.0-flash-exp
       temperature: 0.3,
       maxOutputTokens: 2048,
     });

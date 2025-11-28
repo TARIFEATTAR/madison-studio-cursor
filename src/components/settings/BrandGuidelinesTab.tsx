@@ -132,27 +132,33 @@ export function BrandGuidelinesTab() {
 
   return (
     <div className="space-y-8">
+      {/* 1. Industry & Core Settings */}
       <IndustrySelector />
 
-      {/* Brand Knowledge Status - Real-time visibility */}
+      <Separator className="my-8" />
+
+      {/* 2. Brand Knowledge Center - Primary Action (Upload) */}
       {currentOrganizationId && (
-        <BrandKnowledgeStatus organizationId={currentOrganizationId} />
+        <div className="space-y-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-xl font-serif text-charcoal">Brand Knowledge Center</h2>
+            <p className="text-sm text-muted-foreground">
+              Upload your brand guidelines, style guides, and product documents. Madison analyzes these to learn your unique voice and style.
+            </p>
+          </div>
+          <BrandKnowledgeCenter organizationId={currentOrganizationId} />
+        </div>
       )}
 
-      {/* Brand Knowledge Manager - New Section */}
+      {/* 3. Advanced Knowledge Inspector - Secondary Action (Deep Dive) */}
       {currentOrganizationId && (
         <>
-          <BrandKnowledgeManager />
           <Separator className="my-8" />
+          <BrandKnowledgeManager />
         </>
       )}
 
-      {/* Brand Knowledge Center - AI-Powered Document Processing */}
-      {currentOrganizationId && (
-        <BrandKnowledgeCenter organizationId={currentOrganizationId} />
-      )}
-
-      {/* Brand Knowledge Debug Panel - Developer Tools */}
+      {/* 4. Developer Tools (Bottom) */}
       {currentOrganizationId && (
         <>
           <Separator className="my-8" />

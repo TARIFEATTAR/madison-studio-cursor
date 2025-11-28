@@ -18,6 +18,12 @@ serve(async (req) => {
   try {
     const { extractedText, organizationId, documentName, detectVisualStandards } = await req.json();
 
+    // DEBUG: Check API Key existence
+    const apiKey = Deno.env.get('GEMINI_API_KEY');
+    if (!apiKey) {
+      throw new Error('CRITICAL: GEMINI_API_KEY secret is missing or empty in Supabase.');
+    }
+
     if (!extractedText || !organizationId) {
       throw new Error('extractedText and organizationId are required');
     }
