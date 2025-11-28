@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Check, Sparkles, ArrowRight, BookOpen, Loader2, Video, Download } from "lucide-react";
+import { Check, Sparkles, ArrowRight, BookOpen, Loader2, Video, Download, Calendar, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { VideoHelpTrigger } from "@/components/help/VideoHelpTrigger";
@@ -7,6 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { pdf } from "@react-pdf/renderer";
 import { BrandBookPDF } from "@/components/pdf/BrandBookPDF";
+import { BrandSummaryPreview } from "./BrandSummaryPreview";
+import { useToast } from "@/hooks/use-toast";
+import { normalizeDomain } from "@/types/brandReport";
 
 interface OnboardingSuccessProps {
   brandData: any;
@@ -14,12 +17,27 @@ interface OnboardingSuccessProps {
 }
 
 export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessProps) {
+  const { toast } = useToast();
   const [sampleContent, setSampleContent] = useState<string | null>(null);
   const [isGeneratingSample, setIsGeneratingSample] = useState(false);
   const [scrapedData, setScrapedData] = useState<any>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [domain, setDomain] = useState<string | null>(null);
+
+  // Get calendar link from env or use default
+  const CALENDAR_LINK = import.meta.env.VITE_CALENDAR_LINK || "https://cal.com/team/madison-studio/demo";
 
   useEffect(() => {
+    // Extract domain from websiteUrl if available
+    if (brandData.websiteUrl) {
+      try {
+        const url = new URL(brandData.websiteUrl.startsWith('http') ? brandData.websiteUrl : `https://${brandData.websiteUrl}`);
+        setDomain(normalizeDomain(url.hostname));
+      } catch {
+        // Invalid URL, skip
+      }
+    }
+
     const fetchData = async () => {
       setIsGeneratingSample(true);
       try {
@@ -77,6 +95,47 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
     try {
+      // If we have a domain and scan, use the new PDF generation endpoint
+      if (domain && brandData.organizationId) {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        const response = await fetch(`${supabaseUrl}/functions/v1/generate-report-pdf`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({
+            domain: domain,
+            scanId: 'latest',
+            storeInSupabase: false, // Direct download
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Failed to generate PDF' }));
+          throw new Error(errorData.error || "Failed to generate PDF");
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${brandData.brandName.replace(/\s+/g, '_')}_Brand_Audit.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        toast({
+          title: "Success",
+          description: "PDF downloaded successfully",
+        });
+        return;
+      }
+
+      // Fallback to old method if no scan
       console.log('Starting PDF generation...');
       console.log('Brand name:', brandData.brandName);
       console.log('Brand data:', scrapedData);
@@ -125,12 +184,11 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
       console.error('PDF generation error:', error);
       logger.error('PDF generation error:', error);
       
-      // Show more detailed error message
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      const fullError = error instanceof Error ? error.stack : String(error);
-      console.error('Full error details:', fullError);
-      
-      alert(`Failed to generate PDF: ${errorMessage}\n\nPlease check the browser console for more details.`);
+      toast({
+        title: "Error",
+        description: `Failed to generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -156,6 +214,17 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
           </p>
         </div>
 
+        {/* Brand Summary Preview */}
+        {brandData.organizationId && (
+          <div className="mb-8">
+            <BrandSummaryPreview
+              organizationId={brandData.organizationId}
+              brandName={brandData.brandName}
+              websiteUrl={brandData.websiteUrl}
+            />
+          </div>
+        )}
+
         {/* DOWNLOAD AUDIT BUTTON - HERO PLACEMENT */}
         <div className="flex flex-col items-center gap-4 mb-8 animate-fade-in">
           <Button 
@@ -171,7 +240,7 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
                 ) : (
                   <>
                     <Download className="mr-2 h-4 w-4" />
-                    Download Initial Brand Audit (PDF)
+                    Download Brand Guide PDF
                   </>
                 )}
               </Button>
@@ -179,12 +248,39 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
           {/* Living Report Link */}
           {brandData.organizationId && (
             <a
-              href={`/reports/${encodeURIComponent(brandData.brandName || 'your-brand')}?scanId=latest`}
-              className="text-sm text-brass hover:text-brass/80 underline"
+              href={`/reports/${encodeURIComponent(domain || brandData.brandName || 'your-brand')}?scanId=latest`}
+              className="text-sm text-brass hover:text-brass/80 underline flex items-center gap-1"
             >
-              View Living Report →
+              View Living Report
+              <ExternalLink className="w-3 h-3" />
             </a>
           )}
+        </div>
+
+        {/* Schedule Walkthrough CTA */}
+        <div className="mb-12 p-6 rounded-lg border-2 border-brass/30 bg-gradient-to-br from-brass/5 to-transparent">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brass to-gold/80 flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Schedule a Walkthrough</h3>
+                  <p className="text-sm text-muted-foreground">Get personalized guidance on maximizing Madison for your brand</p>
+                </div>
+              </div>
+            </div>
+            <Button
+              onClick={() => window.open(CALENDAR_LINK, '_blank')}
+              variant="outline"
+              className="border-brass/30 hover:bg-brass/5 text-brass whitespace-nowrap"
+            >
+              <Calendar className="mr-2 h-4 w-4" />
+              Book a Call
+              <ExternalLink className="ml-2 h-3 w-3" />
+            </Button>
+          </div>
         </div>
 
         {/* What We've Set Up */}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, ArrowRight } from "lucide-react";
+import { X, ArrowRight, Globe, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,10 +28,83 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
   const [brandName, setBrandName] = useState(initialData?.brandName || "");
   const [industry, setIndustry] = useState(initialData?.industry || "");
   const [primaryColor, setPrimaryColor] = useState(initialData?.primaryColor || "#B8956A");
+  const [websiteUrl, setWebsiteUrl] = useState(initialData?.websiteUrl || "");
   const [isSaving, setIsSaving] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+
+  const isValidUrl = (url: string) => {
+    if (!url.trim()) return false;
+    try {
+      new URL(url.startsWith('http') ? url : `https://${url}`);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleWebsiteScan = async () => {
+    if (!isValidUrl(websiteUrl)) {
+      toast({
+        title: "Invalid URL",
+        description: "Please enter a valid website URL",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsScanning(true);
+    try {
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      const organizationId = await getOrCreateOrganizationId(user.id);
+      const normalizedUrl = websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`;
+
+      // Call the scan-website function
+      const { data: scanData, error: scanError } = await supabase.functions.invoke(
+        'scan-website',
+        {
+          body: {
+            url: normalizedUrl,
+            forceRescan: false
+          }
+        }
+      );
+
+      if (scanError) throw scanError;
+
+      toast({
+        title: "Website scanned!",
+        description: "We've extracted your brand's visual identity and colors.",
+      });
+
+      // Continue with scan data
+      onContinue({
+        userName: userName.trim(),
+        brandName: brandName.trim(),
+        industry: industry || null,
+        primaryColor,
+        websiteUrl: normalizedUrl,
+        hasWebsiteScan: true,
+        scanData: scanData?.report || scanData?.scan?.scan_data,
+        organizationId
+      });
+    } catch (error) {
+      logger.error('Error scanning website:', error);
+      toast({
+        title: "Scan failed",
+        description: "Unable to scan your website. You can continue without it.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   const handleContinue = async () => {
     if (!userName.trim() || !brandName.trim()) return;
+    
     setIsSaving(true);
     let organizationId: string | null = null;
 
@@ -80,13 +153,13 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
       }
     }
 
-    // Default to NOT using Quick Scan flag, as user will choose method in next step
     onContinue({
       userName: userName.trim(),
       brandName: brandName.trim(),
       industry: industry || null,
       primaryColor,
-      useBrandDNAScan: false, 
+      websiteUrl: websiteUrl.trim() || null,
+      useBrandDNAScan: false,
       organizationId
     });
     setIsSaving(false);
@@ -192,6 +265,51 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
                 />
               </div>
             </div>
+          </div>
+
+          {/* Website Scan Section */}
+          <div className="space-y-3">
+            <Label className="text-xs uppercase tracking-wider text-charcoal/60 font-medium">
+              Website Scan <span className="normal-case opacity-50 font-normal">(Optional)</span>
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                placeholder="https://yourbrand.com"
+                value={websiteUrl}
+                onChange={(e) => setWebsiteUrl(e.target.value)}
+                className="h-11 bg-white border-charcoal/10 focus:border-brass/50 transition-colors"
+                disabled={isScanning}
+              />
+              {websiteUrl.trim() && isValidUrl(websiteUrl) && !initialData?.hasWebsiteScan && (
+                <Button
+                  onClick={handleWebsiteScan}
+                  disabled={isScanning || !isValidUrl(websiteUrl)}
+                  variant="outline"
+                  className="h-11 px-6 border-brass/30 hover:bg-brass/5"
+                >
+                  {isScanning ? (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4 animate-spin" />
+                      Scanning...
+                    </>
+                  ) : (
+                    <>
+                      <Globe className="mr-2 h-4 w-4" />
+                      Scan
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-charcoal/50">
+              We'll extract your logo, colors, fonts, and visual style automatically
+            </p>
+            {initialData?.hasWebsiteScan && (
+              <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 px-3 py-2 rounded-md">
+                <Sparkles className="w-3 h-3" />
+                Website scanned successfully
+              </div>
+            )}
           </div>
 
           {/* Validation & Continue */}

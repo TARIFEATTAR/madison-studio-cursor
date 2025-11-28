@@ -8,6 +8,7 @@ import { useOrganization } from "@/hooks/useOrganization";
 import { BrandPulseBar } from "@/components/dashboard/BrandPulseBar";
 import { ContentFlowZone } from "@/components/dashboard/ContentFlowZone";
 import { PerformanceMomentumZone } from "@/components/dashboard/PerformanceMomentumZone";
+import { LivingReportCard } from "@/components/dashboard/LivingReportCard";
 import { PostOnboardingGuide } from "@/components/onboarding/PostOnboardingGuide";
 import { GettingStartedChecklist } from "@/components/onboarding/GettingStartedChecklist";
 import { usePostOnboardingGuide } from "@/hooks/usePostOnboardingGuide";
@@ -118,6 +119,11 @@ export default function DashboardNew() {
           {/* Row 1: Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
             <BrandPulseBar />
+          </div>
+
+          {/* Living Report Card */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
+            <LivingReportCard />
           </div>
 
           {/* Getting Started Checklist - Show for new users */}

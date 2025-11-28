@@ -86,17 +86,35 @@ export default function Onboarding() {
     const updatedData = { ...onboardingData, ...stepData };
     setOnboardingData(updatedData);
 
-    // Check if user chose Brand DNA scan
-    if (stepData.useBrandDNAScan) {
+    // Step 1: Brand Basics (with optional website scan)
+    if (currentStep === 1) {
+      // If user scanned website on Step 1, they can go to deep knowledge or skip
+      if (stepData.hasWebsiteScan) {
+        // User scanned website, offer deep knowledge step (optional)
+        setCurrentStep(3); // Go to deep knowledge (document upload/Essential 5)
+      } else {
+        // No website scan, go to deep knowledge step
+        setCurrentStep(3);
+      }
+    }
+    // Step 2: Brand DNA Scan (legacy - kept for backward compatibility)
+    else if (stepData.useBrandDNAScan) {
       setScanningBrandDNA(true);
-      setCurrentStep(2); // Go to Brand DNA scan
+      setCurrentStep(2);
     } else if (stepData.skipDeepDive) {
       // User scanned DNA but wants to skip document upload
       setCurrentStep(4); // Go directly to success
     } else if (stepData.useBrandDNAScan === false) {
       // User chose to upload documents, skip Brand DNA scan
-      setCurrentStep(3); // Go directly to document upload step
-    } else if (currentStep < 4) {
+      setCurrentStep(3);
+    }
+    // Step 3: Deep Knowledge (document upload/Essential 5)
+    else if (currentStep === 3) {
+      // After deep knowledge, go to success/summary
+      setCurrentStep(4);
+    }
+    // Step 4: Success/Summary
+    else if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     }
   };
