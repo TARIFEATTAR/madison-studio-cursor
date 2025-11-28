@@ -213,11 +213,11 @@ export function BrandReportTemplate({ report, domain }: BrandReportTemplateProps
                 Tone & Voice
               </h3>
               
-              {report.brandVoice?.toneTraits && report.brandVoice.toneTraits.length > 0 && (
+              {report.brandVoice?.tone && report.brandVoice.tone.length > 0 && (
                 <div className="mb-6">
                   <p className="text-xs text-charcoal/60 mb-3">Tone Traits</p>
                   <div className="flex flex-wrap gap-2">
-                    {report.brandVoice.toneTraits.map((trait, i) => (
+                    {report.brandVoice.tone.map((trait, i) => (
                       <span
                         key={i}
                         className="px-3 py-1.5 bg-parchment-white text-charcoal rounded-full text-xs font-medium border border-charcoal/10"
@@ -614,7 +614,7 @@ function calculateBrandConsistency(report: BrandReport): number {
   if (report.brandProfile.mission) { score += 15; factors++; }
   if (report.brandProfile.values && report.brandProfile.values.length > 0) { score += 15; factors++; }
   if (report.brandProfile.primaryAudience && report.brandProfile.primaryAudience.length > 0) { score += 15; factors++; }
-  if (report.brandVoice?.toneTraits && report.brandVoice.toneTraits.length > 0) { score += 15; factors++; }
+  if (report.brandVoice?.tone && report.brandVoice.tone.length > 0) { score += 15; factors++; }
   
   return factors > 0 ? Math.round(score / factors) : 50;
 }

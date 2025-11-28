@@ -195,226 +195,190 @@ export function OnboardingSuccess({ brandData, onComplete }: OnboardingSuccessPr
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-brass/5 via-background to-gold/5">
-        <div className="absolute top-20 left-20 w-64 h-64 bg-brass/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-gold/10 rounded-full blur-3xl animate-pulse delay-1000" />
+    <div className="min-h-screen bg-[#FDFBF7] flex flex-col">
+      {/* Header Area */}
+      <div className="border-b border-[#E5E5E5] bg-white px-6 py-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="font-serif text-3xl text-ink-black">
+                You're All Set, {brandData.brandName}!
+              </h1>
+              <Badge className="bg-green-600 text-white border-0 text-xs px-2 py-0.5">
+                <Check className="w-3 h-3 mr-1" />
+                Ready
+              </Badge>
+            </div>
+            <p className="text-sm text-charcoal/70">
+              Your brand profile is ready.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <Button 
+              onClick={handleDownloadPDF}
+              disabled={isGeneratingPDF}
+              className="bg-white border border-[#E5E5E5] text-ink-black hover:bg-charcoal/5 h-10 px-6 text-sm font-medium"
+            >
+              {isGeneratingPDF ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Download className="mr-2 h-4 w-4" />
+                  Download PDF
+                </>
+              )}
+            </Button>
+            {brandData.organizationId && (
+              <a
+                href={`/reports/${encodeURIComponent(domain || brandData.brandName || 'your-brand')}?scanId=latest`}
+                className="inline-flex items-center justify-center text-sm text-brass hover:text-brass/80 underline h-10"
+              >
+                View Report
+                <ExternalLink className="ml-1.5 h-3 w-3" />
+              </a>
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="relative z-10 w-full max-w-3xl">
-        {/* Success Icon */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-brass to-gold/80 mb-6 animate-zoom-in">
-            <Check className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="font-serif text-5xl text-foreground mb-4">You're All Set!</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Welcome to Madison, <strong>{brandData.brandName}</strong>! Your brand intelligence platform is ready to create content that truly reflects your voice.
-          </p>
-        </div>
-
-        {/* Brand Summary Preview */}
-        {brandData.organizationId && (
-          <div className="mb-8">
-            <BrandSummaryPreview
-              organizationId={brandData.organizationId}
-              brandName={brandData.brandName}
-              websiteUrl={brandData.websiteUrl}
-            />
-          </div>
-        )}
-
-        {/* DOWNLOAD AUDIT BUTTON - HERO PLACEMENT */}
-        <div className="flex flex-col items-center gap-4 mb-8 animate-fade-in">
-          <Button 
-            onClick={handleDownloadPDF}
-            disabled={isGeneratingPDF}
-            className="bg-white border-2 border-brass text-brass hover:bg-brass hover:text-white h-12 px-8 text-base font-medium shadow-lg shadow-brass/10 transition-all hover:shadow-brass/20 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-            {isGeneratingPDF ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating Audit...
-                  </>
+      {/* Main Content - Two Column Layout */}
+      <div className="flex-1 max-w-7xl mx-auto w-full px-6 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-6">
+          {/* Left Column: Results (60%) */}
+          <div className="space-y-6">
+            {/* Status Badges */}
+            <div className="flex flex-wrap gap-3">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-[#E5E5E5] rounded text-xs">
+                {brandData.uploadContent ? (
+                  <Check className="w-3 h-3 text-green-600" />
                 ) : (
-                  <>
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Brand Guide PDF
-                  </>
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: brandData.primaryColor || '#B8956A' }} />
                 )}
-              </Button>
-          
-          {/* Living Report Link */}
-          {brandData.organizationId && (
-            <a
-              href={`/reports/${encodeURIComponent(domain || brandData.brandName || 'your-brand')}?scanId=latest`}
-              className="text-sm text-brass hover:text-brass/80 underline flex items-center gap-1"
-            >
-              View Living Report
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          )}
-        </div>
-
-        {/* Schedule Walkthrough CTA */}
-        <div className="mb-12 p-6 rounded-lg border-2 border-brass/30 bg-gradient-to-br from-brass/5 to-transparent">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brass to-gold/80 flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">Schedule a Walkthrough</h3>
-                  <p className="text-sm text-muted-foreground">Get personalized guidance on maximizing Madison for your brand</p>
-                </div>
+                <span className="text-charcoal/80">Identity</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-[#E5E5E5] rounded text-xs">
+                {brandData.uploadContent && <Check className="w-3 h-3 text-green-600" />}
+                <span className="text-charcoal/80">Knowledge</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-[#E5E5E5] rounded text-xs">
+                <span className="text-charcoal/80">Library</span>
               </div>
             </div>
-            <Button
-              onClick={() => window.open(CALENDAR_LINK, '_blank')}
-              variant="outline"
-              className="border-brass/30 hover:bg-brass/5 text-brass whitespace-nowrap"
-            >
-              <Calendar className="mr-2 h-4 w-4" />
-              Book a Call
-              <ExternalLink className="ml-2 h-3 w-3" />
-            </Button>
-          </div>
-        </div>
 
-        {/* What We've Set Up */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {brandData.brandDNA && (
-            <div className="p-6 rounded-lg border-2 border-brass/30 bg-gradient-to-br from-brass/5 to-transparent">
-              <div className="flex items-center gap-3 mb-3">
-                <Check className="w-4 h-4 text-brass" />
-                <h3 className="font-semibold text-foreground">Brand DNA Extracted</h3>
+            {/* Sample Output Card */}
+            <div className="bg-white border border-[#E5E5E5] rounded p-6">
+              <div className="flex items-start justify-between mb-4">
+                <Badge variant="secondary" className="bg-brass/10 text-brass border-0 text-xs">
+                  {isGeneratingSample ? "Generating Sample..." : "Sample Output"}
+                </Badge>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Logo, colors, fonts, and visual style captured
-              </p>
-            </div>
-          )}
-
-          <div className="p-6 rounded-lg border border-border/40 bg-card">
-            <div className="flex items-center gap-3 mb-3">
-              {brandData.uploadContent ? (
-                <Check className="w-4 h-4 text-brass" />
+              <h2 className="font-serif text-2xl text-ink-black mb-3">
+                {brandData.brandName}
+              </h2>
+              
+              {isGeneratingSample ? (
+                <div className="flex items-center gap-2 py-4 text-charcoal/60">
+                  <Loader2 className="w-4 h-4 animate-spin text-brass" />
+                  <span className="text-sm">Generating sample content with your brand voice...</span>
+                </div>
               ) : (
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: brandData.primaryColor || '#B8956A' }} />
+                <>
+                  <p className="text-sm text-charcoal/70 leading-relaxed mb-3">
+                    {sampleContent || `Your brand's story begins here. With Madison's AI-powered platform, you'll create content that captures the essence of ${brandData.brandName}, maintaining consistency across every channel.`}
+                  </p>
+                  <p className="text-xs text-charcoal/50">
+                    {sampleContent ? `Generated using ${brandData.brandName}'s brand guidelines and voice` : 'Sample content'}
+                  </p>
+                </>
               )}
-              <h3 className="font-semibold text-foreground">Brand Identity</h3>
             </div>
-            <p className="text-sm text-muted-foreground">
-              {brandData.brandName}'s unique voice and style
-            </p>
           </div>
 
-          <div className="p-6 rounded-lg border border-border/40 bg-card">
-            <div className="flex items-center gap-3 mb-3">
-              {brandData.uploadContent && <Check className="w-4 h-4 text-brass" />}
-              <h3 className="font-semibold text-foreground">Brand Knowledge</h3>
+          {/* Right Column: Onboarding (40%) */}
+          <div className="space-y-6">
+            {/* Video Card */}
+            <div className="bg-white border border-[#E5E5E5] rounded p-4">
+              <div className="aspect-video bg-charcoal/5 rounded mb-3 flex items-center justify-center">
+                <Video className="w-8 h-8 text-charcoal/30" />
+              </div>
+              <h3 className="font-semibold text-ink-black text-sm mb-1">Welcome to Madison</h3>
+              <p className="text-xs text-charcoal/60 mb-3">4 min overview</p>
+              <VideoHelpTrigger 
+                videoId="welcome-to-madison" 
+                variant="button"
+                className="w-full text-xs"
+              />
             </div>
-            <p className="text-sm text-muted-foreground">
-              {brandData.uploadContent ? "AI trained on your brand voice" : "Ready to add documents"}
-            </p>
-          </div>
 
-          <div className="p-6 rounded-lg border border-border/40 bg-card">
-            <h3 className="font-semibold text-foreground mb-3">Content Library</h3>
-            <p className="text-sm text-muted-foreground">
-              Ready to store your content
-            </p>
+            {/* Quick Tips Card */}
+            <div className="bg-white border border-[#E5E5E5] rounded p-4">
+              <h3 className="font-semibold text-ink-black mb-3 text-sm">
+                Quick Tips
+              </h3>
+              <ul className="space-y-3 text-xs text-charcoal/70">
+                <li className="flex items-start gap-2">
+                  <span className="text-brass mt-0.5 font-bold">•</span>
+                  <div>
+                    <span className="font-semibold text-ink-black">Create Content</span>
+                    <span className="text-charcoal/60"> — Go to the Create page to write your first piece with AI assistance</span>
+                  </div>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-brass mt-0.5 font-bold">•</span>
+                  <div>
+                    <span className="font-semibold text-ink-black">Multiply Content</span>
+                    <span className="text-charcoal/60"> — Use the Multiply page to repurpose content across channels</span>
+                  </div>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-brass mt-0.5 font-bold">•</span>
+                  <div>
+                    <span className="font-semibold text-ink-black">Schedule Posts</span>
+                    <span className="text-charcoal/60"> — Visit the Calendar to plan and schedule your content</span>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            {/* Need Help Card */}
+            <div className="bg-white border border-[#E5E5E5] rounded p-4">
+              <h3 className="font-semibold text-ink-black mb-2 text-sm">
+                Need Help?
+              </h3>
+              <Button
+                onClick={() => window.open(CALENDAR_LINK, '_blank')}
+                variant="outline"
+                className="w-full border-brass/30 hover:bg-brass/5 text-brass text-xs h-9"
+              >
+                <Calendar className="mr-2 h-3.5 w-3.5 text-brass scale-x-[-1]" />
+                Book a Walkthrough
+                <ArrowRight className="ml-2 h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Quick Start Video */}
-        <div className="mb-12 p-6 rounded-lg border-2 border-brass/30 bg-gradient-to-br from-brass/5 to-transparent">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brass to-gold/80 flex items-center justify-center">
-              <Video className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-foreground">Welcome to Madison</h3>
-              <p className="text-sm text-muted-foreground">4-minute overview to get you started</p>
-            </div>
-          </div>
-          <VideoHelpTrigger 
-            videoId="welcome-to-madison" 
-            variant="button"
-            className="w-full"
-          />
-        </div>
-
-        {/* Sample Content Preview */}
-        <div className="mb-12 p-8 rounded-lg border border-border/40 bg-card paper-texture">
-          <div className="flex items-start justify-between mb-4">
-            <Badge variant="secondary" className="bg-brass/10 text-brass">
-              {isGeneratingSample ? "Generating Sample..." : "Sample Output"}
-            </Badge>
-          </div>
-          <h2 className="font-serif text-2xl text-foreground mb-3">
-            {brandData.brandName}
-          </h2>
-          
-          {isGeneratingSample ? (
-            <div className="flex items-center gap-2 py-4 text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin text-brass" />
-              <span className="text-sm">Generating sample content with your brand voice...</span>
-            </div>
-          ) : (
-            <>
-              <p className="text-muted-foreground leading-relaxed mb-4">
-                {sampleContent || `Your brand's story begins here. With Madison's AI-powered platform, you'll create content that captures the essence of ${brandData.brandName}, maintaining consistency across every channel.`}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {sampleContent ? `Generated using ${brandData.brandName}'s brand guidelines and voice` : 'Sample content'}
-              </p>
-            </>
-          )}
-        </div>
-
-        {/* Quick Tips */}
-        <div className="mb-12 p-6 rounded-lg border border-border/40 bg-card/50">
-          <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-            Quick Tips to Get Started
-          </h3>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <span className="text-brass">•</span>
-              <span>Visit <strong>The Editorial Desk</strong> to create your first piece of content with AI assistance</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-brass">•</span>
-              <span>Use <strong>The Syndicate</strong> to repurpose content across multiple channels</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-brass">•</span>
-              <span>Schedule posts in <strong>The Planner</strong> to maintain consistent publishing</span>
-            </li>
-          </ul>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4">
+      {/* Footer / Sticky Bar */}
+      <div className="sticky bottom-0 border-t border-[#E5E5E5] bg-white px-6 py-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row gap-3">
           <Button
             onClick={() => onComplete('/create')}
-            className="flex-1 h-14 bg-gradient-to-r from-brass to-gold text-white hover:opacity-90 text-base"
+            className="flex-1 bg-ink-black hover:bg-charcoal text-white h-11 text-sm font-medium"
             size="lg"
           >
-            <Sparkles className="mr-2 h-5 w-5" />
-            Create Your First Content
-            <ArrowRight className="ml-2 h-5 w-5" />
+            Create First Content
+            <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
-
           <Button
             onClick={() => onComplete('/')}
             variant="outline"
-            className="flex-1 h-14 text-base"
+            className="flex-1 border-[#E5E5E5] text-ink-black hover:bg-charcoal/5 h-11 text-sm"
             size="lg"
           >
-            <BookOpen className="mr-2 h-5 w-5" />
             Go to Dashboard
           </Button>
         </div>

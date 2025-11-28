@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Upload, Globe, FileText, ArrowRight, ArrowLeft, Check, Lightbulb, AlertTriangle } from "lucide-react";
+import { X, Upload, FileText, ArrowRight, ArrowLeft, Check, Lightbulb, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,13 +20,12 @@ interface OnboardingBrandUploadProps {
   brandData: any;
 }
 
-type UploadMethod = "pdf" | "website" | "manual" | null;
+type UploadMethod = "pdf" | "manual" | null;
 
 export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }: OnboardingBrandUploadProps) {
   const { user } = useAuth();
   const [selectedMethod, setSelectedMethod] = useState<UploadMethod>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [websiteUrl, setWebsiteUrl] = useState("");
   const [manualText, setManualText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -93,33 +92,6 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
         if (docError) throw docError;
 
         uploadContent = uploadedFile.name;
-      } else if (selectedMethod === "website") {
-        const websiteUrlTrimmed = websiteUrl.trim();
-
-        toast({
-          title: "Processing website...",
-          description: "Analyzing your brand's website for voice and style."
-        });
-
-        const { data: websiteData, error: websiteError } = await supabase.functions.invoke(
-          'scrape-brand-website',
-          {
-            body: {
-              url: websiteUrlTrimmed,
-              organizationId
-            }
-          }
-        );
-
-        if (websiteError) throw websiteError;
-
-        // Show success toast with what was extracted
-        toast({
-          title: "✓ Website analyzed successfully",
-          description: "Brand voice, vocabulary, and writing style have been captured."
-        });
-
-        uploadContent = websiteUrlTrimmed;
       } else if (selectedMethod === "manual") {
         uploadContent = manualText;
 
@@ -153,7 +125,6 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
 
   const isValid = () => {
     if (selectedMethod === "pdf") return !!uploadedFile;
-    if (selectedMethod === "website") return websiteUrl.trim().length > 0;
     if (selectedMethod === "manual") return manualText.trim().length >= 200;
     return false;
   };
@@ -219,7 +190,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
           </div>
 
           {/* Upload Method Cards - More Compact */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button
               onClick={() => setSelectedMethod("pdf")}
               className={`group relative p-4 rounded-xl border transition-all text-left ${selectedMethod === "pdf"
@@ -238,24 +209,6 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
               <h3 className="font-medium text-gray-900 mb-1">Upload Files</h3>
               <p className="text-xs text-charcoal/60 leading-relaxed">
                 PDF, TXT, or Markdown files
-              </p>
-            </button>
-
-            <button
-              onClick={() => setSelectedMethod("website")}
-              className={`group relative p-4 rounded-xl border transition-all text-left ${selectedMethod === "website"
-                ? "border-brass bg-white shadow-md shadow-brass/5"
-                : "border-charcoal/10 bg-white/50 hover:border-brass/40 hover:bg-white"
-                }`}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className={`p-2 rounded-lg ${selectedMethod === "website" ? "bg-brass/10 text-brass" : "bg-charcoal/5 text-charcoal/60 group-hover:text-brass group-hover:bg-brass/5"} transition-colors`}>
-                  <Globe className="w-5 h-5" />
-                </div>
-              </div>
-              <h3 className="font-medium text-gray-900 mb-1">Scrape Website</h3>
-              <p className="text-xs text-charcoal/60 leading-relaxed">
-                Analyze website for brand voice
               </p>
             </button>
 
@@ -309,18 +262,6 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
                   className="hidden"
                 />
               </label>
-            )}
-
-            {selectedMethod === "website" && (
-              <div className="bg-white p-1 rounded-xl border border-charcoal/10">
-                <Input
-                  placeholder="https://yourbrand.com"
-                  value={websiteUrl}
-                  onChange={(e) => setWebsiteUrl(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleContinue()}
-                  className="h-11 border-0 bg-transparent focus-visible:ring-0 text-base"
-                />
-              </div>
             )}
 
             {selectedMethod === "manual" && (

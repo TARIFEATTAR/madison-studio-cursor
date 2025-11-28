@@ -302,6 +302,16 @@ serve(async (req) => {
             } : undefined,
           },
         },
+        brandVoice: {
+          tone: brandProfile.toneTraits || [],
+          style: brandProfile.writingStyle,
+          perspective: brandProfile.perspective,
+          vocabulary: brandProfile.vocabulary,
+        },
+        typography: {
+          headlineFont: brandProfile.fonts?.headline,
+          bodyFont: brandProfile.fonts?.body,
+        },
         scanMeta: {
           scannedAt: new Date().toISOString(),
           version: '1.0.0',

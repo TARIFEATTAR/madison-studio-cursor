@@ -24,23 +24,27 @@ export default function BrandReport() {
 
   useEffect(() => {
     const fetchReport = async () => {
-      if (!user || !domainId) return;
+      if (!user || !domainId) {
+        setLoading(false);
+        return;
+      }
 
       try {
         setLoading(true);
 
         // Get organization ID from user's memberships
-        const { data: orgData } = await supabase
+        const { data: orgData, error: orgError } = await supabase
           .from('organization_members')
           .select('organization_id')
           .eq('user_id', user.id)
           .limit(1)
-          .single();
+          .maybeSingle();
 
-        if (!orgData) {
+        if (orgError || !orgData) {
+          logger.error('Error fetching organization:', orgError);
           toast({
             title: "Error",
-            description: "Organization not found",
+            description: "Organization not found or access denied.",
             variant: "destructive",
           });
           setLoading(false);
@@ -49,14 +53,17 @@ export default function BrandReport() {
 
         setOrganizationId(orgData.organization_id);
 
-        // Normalize domain (decode URL-encoded domain)
-        const normalizedDomain = decodeURIComponent(domainId).replace(/^www\./, '');
+        // Normalize domain using the same function as scan-website
+        const decodedDomain = decodeURIComponent(domainId);
+        const normalizedDomain = normalizeDomain(decodedDomain);
+        
+        logger.debug(`[BrandReport] Fetching report for domain: ${normalizedDomain}, scanId: ${scanId}`);
         
         // Fetch scan data
         let scan;
         if (scanId === 'latest') {
-          // Get latest scan for domain
-          const { data, error } = await supabase
+          // First try: exact domain match
+          const { data: domainScan, error: domainError } = await supabase
             .from('brand_scans')
             .select('*')
             .eq('organization_id', orgData.organization_id)
@@ -66,40 +73,105 @@ export default function BrandReport() {
             .limit(1)
             .maybeSingle();
 
-          if (error) throw error;
-          scan = data;
+          if (domainError) {
+            logger.warn('[BrandReport] Domain query error:', domainError);
+          }
+          
+          scan = domainScan;
+          
+          // Fallback: latest scan for organization (if domain match failed)
+          if (!scan) {
+            logger.debug('[BrandReport] No domain match, fetching latest scan for organization');
+            const { data: latestScan, error: latestError } = await supabase
+              .from('brand_scans')
+              .select('*')
+              .eq('organization_id', orgData.organization_id)
+              .eq('status', 'completed')
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (latestError) {
+              logger.error('[BrandReport] Latest scan query error:', latestError);
+              throw latestError;
+            }
+            
+            scan = latestScan;
+          }
         } else {
-          // Get specific scan
-          const { data, error } = await supabase
+          // Get specific scan by ID
+          const { data: specificScan, error: specificError } = await supabase
             .from('brand_scans')
             .select('*')
             .eq('id', scanId)
             .eq('organization_id', orgData.organization_id)
             .maybeSingle();
 
-          if (error) throw error;
-          scan = data;
+          if (specificError) throw specificError;
+          scan = specificScan;
         }
 
-        if (!scan || !scan.scan_data) {
+        if (!scan) {
+          // Debug: Check what scans actually exist
+          const { data: allScans, error: debugError } = await supabase
+            .from('brand_scans')
+            .select('id, domain, status, created_at, organization_id')
+            .eq('organization_id', orgData.organization_id)
+            .order('created_at', { ascending: false })
+            .limit(10);
+          
+          logger.warn('[BrandReport] No scan found', {
+            normalizedDomain,
+            scanId,
+            allScans: allScans || [],
+            debugError,
+            organizationId: orgData.organization_id,
+          });
+          
+          setLoading(false);
+          return;
+        }
+
+        if (!scan.scan_data || Object.keys(scan.scan_data).length === 0) {
+          logger.warn('[BrandReport] Scan found but scan_data is empty', scan);
           toast({
-            title: "No scan found",
-            description: "No brand scan found for this domain. Please run a scan first.",
+            title: "Incomplete Scan",
+            description: "This scan is still processing or incomplete. Please try again in a moment.",
             variant: "destructive",
           });
           setLoading(false);
           return;
         }
 
-        // scan.scan_data is already a BrandReport
-        setScanData(scan.scan_data);
-      } catch (error) {
-        logger.error('Error fetching report:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load report",
-          variant: "destructive",
+        logger.debug('[BrandReport] ✅ Scan data loaded successfully', {
+          scanId: scan.id,
+          domain: scan.domain,
+          normalizedDomain,
+          status: scan.status,
+          hasScanData: !!scan.scan_data,
+          scanDataKeys: Object.keys(scan.scan_data || {}),
+          scanDataType: typeof scan.scan_data,
         });
+
+        // scan.scan_data is already a BrandReport
+        setScanData(scan.scan_data as BrandReport);
+      } catch (error: any) {
+        logger.error('[BrandReport] Error fetching report:', error);
+        
+        // Check if it's a 404 or table doesn't exist
+        if (error?.code === 'PGRST116' || error?.message?.includes('does not exist')) {
+          toast({
+            title: "Database Setup Required",
+            description: "The brand scans table may not be set up. Please contact support.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: error?.message || "Failed to load report. Please try again.",
+            variant: "destructive",
+          });
+        }
       } finally {
         setLoading(false);
       }
@@ -109,11 +181,11 @@ export default function BrandReport() {
   }, [user, domainId, scanId, toast]);
 
   const handleDownloadPDF = async () => {
-    if (!domainId) return;
+    if (!domainId || !scanData) return;
 
     setGeneratingPDF(true);
     try {
-      const normalizedDomain = decodeURIComponent(domainId).replace(/^www\./, '');
+      const normalizedDomain = normalizeDomain(decodeURIComponent(domainId));
       const { data, error } = await supabase.functions.invoke<Blob>('generate-report-pdf', {
         body: {
           domain: normalizedDomain,
@@ -153,6 +225,45 @@ export default function BrandReport() {
     }
   };
 
+  const handleRescan = async () => {
+    if (!domainId || !organizationId) return;
+
+    try {
+      toast({
+        title: "Starting Rescan",
+        description: "Scanning your website for the latest brand data...",
+      });
+
+      // Get the URL from scan data or use domain
+      const urlToScan = scanData?.site?.url || `https://${normalizeDomain(decodeURIComponent(domainId))}`;
+      
+      const { data, error } = await supabase.functions.invoke('scan-website', {
+        body: {
+          url: urlToScan,
+          organizationId: organizationId,
+          forceRescan: true,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Rescan Complete",
+        description: "Your brand report has been updated with the latest data.",
+      });
+
+      // Reload the page to show new data
+      window.location.reload();
+    } catch (error) {
+      logger.error('Error rescanning:', error);
+      toast({
+        title: "Rescan Failed",
+        description: error instanceof Error ? error.message : "Failed to rescan. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -170,12 +281,20 @@ export default function BrandReport() {
         <div className="text-center max-w-md">
           <h1 className="text-2xl font-serif mb-4">Report Not Found</h1>
           <p className="text-muted-foreground mb-6">
-            No brand scan found for this domain. Please run a brand scan first.
+            No brand scan found for this domain or organization. Please run a brand scan first.
           </p>
-          <Button onClick={() => navigate('/onboarding')}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Go to Brand Scan
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button onClick={() => navigate('/onboarding')}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Run Brand Scan
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/dashboard')}
+            >
+              Go to Dashboard
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -205,14 +324,22 @@ export default function BrandReport() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.location.reload()}
+                onClick={handleRescan}
+                disabled={!organizationId}
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
+                Rescan Website
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.location.reload()}
+              >
                 Refresh
               </Button>
               <Button
                 onClick={handleDownloadPDF}
-                disabled={generatingPDF}
+                disabled={generatingPDF || !scanData}
                 className="bg-brass text-white hover:bg-brass/90"
               >
                 {generatingPDF ? (

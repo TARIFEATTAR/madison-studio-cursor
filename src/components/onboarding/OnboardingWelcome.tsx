@@ -67,6 +67,7 @@ export function OnboardingWelcome({ onContinue, onSkip, initialData }: Onboardin
         {
           body: {
             url: normalizedUrl,
+            organizationId: organizationId,
             forceRescan: false
           }
         }
