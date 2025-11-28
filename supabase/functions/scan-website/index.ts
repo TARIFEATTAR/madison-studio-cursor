@@ -342,18 +342,76 @@ serve(async (req) => {
         .eq('domain', normalizedDomain)
         .eq('status', 'completed');
 
+      const scanCount = domainScans?.length || 0;
+      const isFirstScan = scanCount === 1;
+
       await supabase
         .from('domains')
         .update({
           metadata: {
             ...domainRecord.metadata,
             lastScannedAt: new Date().toISOString(),
-            scanCount: domainScans?.length || 0,
+            scanCount: scanCount,
           },
         })
         .eq('id', domainRecord.id);
 
       console.log(`[scan] ✅ Scan completed successfully in ${duration}ms`);
+
+      // Send email on first scan
+      if (isFirstScan) {
+        try {
+          // Get user email from organization
+          const { data: orgData } = await supabase
+            .from('organizations')
+            .select('id, name')
+            .eq('id', organizationId)
+            .single();
+
+          // Get organization owner/member email
+          const { data: memberData } = await supabase
+            .from('organization_members')
+            .select('user_id, role')
+            .eq('organization_id', organizationId)
+            .eq('role', 'owner')
+            .limit(1)
+            .maybeSingle();
+
+          if (memberData) {
+            const { data: userData } = await supabase.auth.admin.getUserById(memberData.user_id);
+            const userEmail = userData?.user?.email;
+
+            if (userEmail) {
+              const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://mapsystem.io";
+              const reportUrl = `${frontendUrl}/reports/${encodeURIComponent(normalizedDomain)}?scanId=latest`;
+              
+              // Call email function (don't await - fire and forget)
+              fetch(`${supabaseUrl}/functions/v1/send-report-email`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${supabaseKey}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  userEmail,
+                  domain: normalizedDomain,
+                  reportUrl,
+                  brandName: brandReport.brandProfile.brandName,
+                  // pdfUrl will be added when PDF generation is implemented
+                }),
+              }).catch(err => {
+                console.warn('[scan] Failed to send report email:', err);
+                // Don't fail the scan if email fails
+              });
+              
+              console.log(`[scan] 📧 Report email queued for ${userEmail}`);
+            }
+          }
+        } catch (emailError) {
+          console.warn('[scan] Error sending report email:', emailError);
+          // Don't fail the scan if email fails
+        }
+      }
 
       return new Response(
         JSON.stringify({
@@ -364,6 +422,7 @@ serve(async (req) => {
           },
           report: brandReport,
           cached: false,
+          isFirstScan,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );

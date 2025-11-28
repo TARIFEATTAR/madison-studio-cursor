@@ -113,49 +113,65 @@ export default function BrandReport() {
 
     setGeneratingPDF(true);
     try {
-      // Call PDF rendering function
-      const reportUrl = `${window.location.origin}/reports/${domainId}?scanId=${scanId}`;
+      // Call PDF generation endpoint
+      const normalizedDomain = decodeURIComponent(domainId).replace(/^www\./, '');
       
-      const { data, error } = await supabase.functions.invoke('render-pdf-from-url', {
+      const { data, error } = await supabase.functions.invoke('generate-report-pdf', {
         body: {
-          url: reportUrl,
-          options: {
-            format: 'A4',
-            printBackground: true,
-          }
-        }
+          domain: normalizedDomain,
+          scanId: scanId,
+        },
       });
 
       if (error) throw error;
 
-      // Download the PDF
+      // Handle PDF download
       if (data?.pdfUrl) {
+        // Direct PDF URL
         const link = document.createElement('a');
         link.href = data.pdfUrl;
-        link.download = `${domainId}_Brand_Audit_${new Date().toISOString().split('T')[0]}.pdf`;
+        link.download = `${normalizedDomain}_Brand_Audit_${new Date().toISOString().split('T')[0]}.pdf`;
         link.click();
-      } else if (data?.pdfBlob) {
-        // If PDF is returned as blob
-        const blob = new Blob([data.pdfBlob], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
+        
+        toast({
+          title: "Success",
+          description: "PDF downloaded successfully",
+        });
+      } else if (data?.latestPdfUrl) {
+        // Latest PDF URL
         const link = document.createElement('a');
-        link.href = url;
-        link.download = `${domainId}_Brand_Audit_${new Date().toISOString().split('T')[0]}.pdf`;
+        link.href = data.latestPdfUrl;
+        link.download = `${normalizedDomain}_Brand_Audit_latest.pdf`;
         link.click();
-        URL.revokeObjectURL(url);
+        
+        toast({
+          title: "Success",
+          description: "Latest PDF downloaded successfully",
+        });
+      } else if (data?.reportUrl) {
+        // Fallback: Open report page for browser print-to-PDF
+        toast({
+          title: "PDF Generation",
+          description: "Opening report page. Use browser print (Cmd/Ctrl + P) to save as PDF.",
+        });
+        window.open(data.reportUrl, '_blank');
+      } else {
+        // Fallback: Use browser print-to-PDF
+        toast({
+          title: "PDF Generation",
+          description: "Use browser print (Cmd/Ctrl + P) to save as PDF.",
+        });
+        window.print();
       }
-
-      toast({
-        title: "Success",
-        description: "PDF downloaded successfully",
-      });
     } catch (error) {
       logger.error('Error generating PDF:', error);
+      
+      // Fallback to browser print
       toast({
-        title: "Error",
-        description: "Failed to generate PDF",
-        variant: "destructive",
+        title: "PDF Generation",
+        description: "Using browser print. Press Cmd/Ctrl + P to save as PDF.",
       });
+      setTimeout(() => window.print(), 500);
     } finally {
       setGeneratingPDF(false);
     }
@@ -231,7 +247,7 @@ export default function BrandReport() {
                 ) : (
                   <>
                     <Download className="w-4 h-4 mr-2" />
-                    Download PDF
+                    Download Latest PDF
                   </>
                 )}
               </Button>
