@@ -62,7 +62,7 @@ export default function BrandReport() {
         // Fetch scan data
         let scan;
         if (scanId === 'latest') {
-          // First try: exact domain match
+          // First try: exact domain match (completed scans only)
           const { data: domainScan, error: domainError } = await supabase
             .from('brand_scans')
             .select('*')
@@ -75,6 +75,10 @@ export default function BrandReport() {
 
           if (domainError) {
             logger.warn('[BrandReport] Domain query error:', domainError);
+            // If table doesn't exist, this will help debug
+            if (domainError.code === 'PGRST116' || domainError.message?.includes('does not exist')) {
+              throw new Error('brand_scans table does not exist. Please run the migration.');
+            }
           }
           
           scan = domainScan;
@@ -93,6 +97,10 @@ export default function BrandReport() {
 
             if (latestError) {
               logger.error('[BrandReport] Latest scan query error:', latestError);
+              // If table doesn't exist, throw helpful error
+              if (latestError.code === 'PGRST116' || latestError.message?.includes('does not exist')) {
+                throw new Error('brand_scans table does not exist. Please run the migration.');
+              }
               throw latestError;
             }
             
@@ -107,7 +115,12 @@ export default function BrandReport() {
             .eq('organization_id', orgData.organization_id)
             .maybeSingle();
 
-          if (specificError) throw specificError;
+          if (specificError) {
+            if (specificError.code === 'PGRST116' || specificError.message?.includes('does not exist')) {
+              throw new Error('brand_scans table does not exist. Please run the migration.');
+            }
+            throw specificError;
+          }
           scan = specificScan;
         }
 
@@ -159,13 +172,16 @@ export default function BrandReport() {
         logger.error('[BrandReport] Error fetching report:', error);
         
         // Check if it's a 404 or table doesn't exist
-        if (error?.code === 'PGRST116' || error?.message?.includes('does not exist')) {
+        if (error?.code === 'PGRST116' || error?.message?.includes('does not exist') || error?.message?.includes('brand_scans table')) {
+          logger.error('[BrandReport] Table does not exist - migration needed');
           toast({
             title: "Database Setup Required",
-            description: "The brand scans table may not be set up. Please contact support.",
+            description: "The brand scans table needs to be created. Please run the migration: supabase/migrations/20250101000000_create_brand_scans.sql",
             variant: "destructive",
+            duration: 10000, // Show longer so user can read it
           });
         } else {
+          logger.error('[BrandReport] Unexpected error:', error);
           toast({
             title: "Error",
             description: error?.message || "Failed to load report. Please try again.",
@@ -280,9 +296,19 @@ export default function BrandReport() {
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="text-center max-w-md">
           <h1 className="text-2xl font-serif mb-4">Report Not Found</h1>
-          <p className="text-muted-foreground mb-6">
-            No brand scan found for this domain or organization. Please run a brand scan first.
+          <p className="text-muted-foreground mb-4">
+            No brand scan found for this domain or organization. 
           </p>
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 max-w-md mx-auto">
+            <p className="text-sm text-amber-900">
+              <strong>Possible reasons:</strong>
+            </p>
+            <ul className="text-sm text-amber-800 mt-2 space-y-1 list-disc list-inside">
+              <li>No scan has been run yet</li>
+              <li>The scan is still processing</li>
+              <li>The database migration hasn't been run</li>
+            </ul>
+          </div>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button onClick={() => navigate('/onboarding')}>
               <ArrowLeft className="w-4 h-4 mr-2" />
