@@ -15,9 +15,49 @@ const cleanHtml = (html: string) => {
   return html
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, "") // Remove nav bars to reduce noise
+    .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, "") // Remove footers
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+};
+
+// Helper to extract links
+const extractLinks = (html: string, baseUrl: string) => {
+  const links = new Set<string>();
+  const regex = /<a[^>]+href=["']([^"']+)["'][^>]*>/gi;
+  let match;
+  
+  while ((match = regex.exec(html)) !== null) {
+    let href = match[1];
+    
+    // Normalize URL
+    if (href.startsWith("/")) {
+      href = `${new URL(baseUrl).origin}${href}`;
+    } else if (!href.startsWith("http")) {
+      continue;
+    }
+
+    // Only keep internal links
+    if (href.includes(new URL(baseUrl).hostname)) {
+      links.add(href);
+    }
+  }
+  return Array.from(links);
+};
+
+// Helper to score link relevance
+const scoreLink = (url: string) => {
+  const lower = url.toLowerCase();
+  if (lower.includes("about")) return 10;
+  if (lower.includes("story")) return 9;
+  if (lower.includes("mission")) return 9;
+  if (lower.includes("ethos")) return 8;
+  if (lower.includes("values")) return 8;
+  if (lower.includes("blog")) return 5;
+  if (lower.includes("journal")) return 5;
+  if (lower.includes("news")) return 4;
+  return 0;
 };
 
 serve(async (req) => {
@@ -47,10 +87,9 @@ serve(async (req) => {
       );
     }
 
-    // 1. Fetch Homepage
-    // Use a standard browser User-Agent to avoid 403 Forbidden errors
     const userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
     
+    // 1. Fetch Homepage
     const homeResponse = await fetch(url, {
       headers: {
         "User-Agent": userAgent,
@@ -60,8 +99,6 @@ serve(async (req) => {
     });
 
     if (!homeResponse.ok) {
-      console.error(`Failed to fetch homepage: ${homeResponse.status} ${homeResponse.statusText}`);
-      // Return a 400-level error to client instead of crashing
       return new Response(
         JSON.stringify({ 
           error: `Could not access website (${homeResponse.status}). It may be blocking automated access.`,
@@ -72,142 +109,123 @@ serve(async (req) => {
     }
 
     const homeHtml = await homeResponse.text();
-    let combinedText = cleanHtml(homeHtml);
-    console.log("Homepage text length:", combinedText.length);
+    const homeText = cleanHtml(homeHtml);
+    
+    // 2. Find high-value subpages
+    const allLinks = extractLinks(homeHtml, url);
+    const relevantLinks = allLinks
+      .map(link => ({ link, score: scoreLink(link) }))
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3) // Top 3 pages
+      .map(item => item.link);
 
-    // 2. Look for "About" page
-    let aboutUrl = null;
-    const baseUrl = new URL(url);
+    console.log("Found relevant pages:", relevantLinks);
 
-    // Strategy A: Regex match in HTML
-    const aboutMatch = homeHtml.match(/<a[^>]+href=["']([^"']*(?:about|story|mission|brand)[^"']*)["'][^>]*>/i);
-    if (aboutMatch && aboutMatch[1]) {
-      aboutUrl = aboutMatch[1];
+    // 3. Fetch subpages in parallel
+    const subPageContents = await Promise.all(
+      relevantLinks.map(async (link) => {
+        try {
+          const res = await fetch(link, {
+            headers: { "User-Agent": userAgent }
+          });
+          if (res.ok) {
+            const html = await res.text();
+            return `\n\n--- SOURCE: ${link} ---\n${cleanHtml(html)}`;
+          }
+        } catch (e) {
+          console.warn(`Failed to fetch ${link}`, e);
+        }
+        return "";
+      })
+    );
+
+    // 4. Combine all text
+    let fullContent = `--- SOURCE: HOMEPAGE (${url}) ---\n${homeText}`;
+    fullContent += subPageContents.join("");
+
+    // Limit to 25,000 chars (Gemini Pro can handle large contexts)
+    fullContent = fullContent.substring(0, 25000);
+    console.log("Total scraped content length:", fullContent.length);
+
+    // 5. Analyze with Madison's Board of Advisors (Gemini 1.5 Pro)
+    const analysisPrompt = `You are Madison, a strategic brand consultant backed by a "Board of Advisors" consisting of Peter Drucker, Jay Abraham, and David Ogilvy.
+
+    Your goal is to perform a "Strategic Brand Audit" based on the scraped website content below.
+
+    ADVISOR FRAMEWORKS TO APPLY:
+    1.  **Peter Drucker (The Fundamentals):**
+        -   "What is our business?" (The true value provided, not just the product)
+        -   "Who is the customer?" (Not demographics, but psychographics and values)
+        -   "What does the customer consider value?"
+
+    2.  **Jay Abraham (The Leverage):**
+        -   Identify the "Unique Selling Proposition" (USP).
+        -   Look for "Risk Reversal" (Guarantees, trust signals).
+        -   Identify "Hidden Assets" or underutilized leverage points in their copy.
+
+    3.  **David Ogilvy (The Brand Image):**
+        -   Analyze the "Brand Image" (Personality, Class, Authority).
+        -   Evaluate the "Big Idea" (Is there a core concept, or just noise?).
+        -   Check for "Specifics" vs. "Generalities" (Ogilvy hates empty adjectives).
+
+    EXTRACT AND SYNTHESIZE THE FOLLOWING JSON STRUCTURE:
+
+    {
+      "brand_voice": {
+         "tone": ["adj1", "adj2", "adj3"],
+         "style": "Description of writing style (e.g., punchy, academic, poetic)",
+         "perspective": "1st person (We) vs 3rd person (The Brand)"
+      },
+      "brand_identity": {
+         "mission": "Inferred mission statement (Drucker: What is the business?)",
+         "values": ["Value 1", "Value 2", "Value 3"],
+         "target_audience": "Drucker-style audience definition (Who is the customer?)"
+      },
+      "vocabulary": {
+         "keywords": ["word1", "word2", "word3"],
+         "phrases": ["phrase 1", "phrase 2"],
+         "forbidden_inferred": ["Words they avoid (e.g., slang, jargon, passive voice)"]
+      },
+      "strategic_audit": {
+         "summary": "A 2-3 sentence executive summary of the brand's health.",
+         "strengths": ["Strength 1 (e.g., Strong risk reversal)", "Strength 2"],
+         "weaknesses": ["Weakness 1 (e.g., Vague value proposition)", "Weakness 2"],
+         "opportunities": ["Opportunity 1 (e.g., Jay Abraham: Add a stronger guarantee)", "Opportunity 2"]
+      },
+      "content_strategy": {
+         "themes": ["Theme 1", "Theme 2"],
+         "hooks": ["Example hook 1", "Example hook 2"]
+      }
     }
 
-    // Strategy B: Common paths fallback
-    if (!aboutUrl) {
-      const commonPaths = [
-        "/pages/about-us",
-        "/pages/our-story",
-        "/about-us",
-        "/about",
-        "/our-story",
-        "/mission"
-      ];
-      
-      // Try to find a valid About page by checking HEAD first? No, too slow. 
-      // We'll just guess the most likely one based on platform hints or just try the first few.
-      // For now, let's try to see if any of these strings exist in the HTML as hrefs even if our regex missed them
-      for (const path of commonPaths) {
-        if (homeHtml.includes(path)) {
-          aboutUrl = path;
-          break;
-        }
-      }
-      
-      // If still nothing, force try /pages/about-us (common Shopify) if it looks like Shopify
-      if (!aboutUrl && homeHtml.includes("shopify")) {
-        aboutUrl = "/pages/about-us";
-      }
-    }
-
-    if (aboutUrl) {
-      // Resolve relative URL
-      if (!aboutUrl.startsWith('http')) {
-        if (aboutUrl.startsWith('/')) {
-          aboutUrl = `${baseUrl.origin}${aboutUrl}`;
-        } else {
-          // Handle relative paths without leading slash
-          const pathParts = baseUrl.pathname.split('/');
-          pathParts.pop(); // Remove filename
-          aboutUrl = `${baseUrl.origin}${pathParts.join('/')}/${aboutUrl}`;
-        }
-      }
-
-      console.log("Fetching About page:", aboutUrl);
-      
-      try {
-        const aboutResponse = await fetch(aboutUrl, {
-            headers: { 
-              "User-Agent": userAgent,
-              "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8" 
-            },
-        });
-        
-        if (aboutResponse.ok) {
-            const aboutHtml = await aboutResponse.text();
-            const aboutText = cleanHtml(aboutHtml);
-            // Prioritize About text by putting it first
-            combinedText = `ABOUT PAGE CONTENT:\n${aboutText}\n\nHOMEPAGE CONTENT:\n${combinedText}`;
-            console.log("Added About page content length:", aboutText.length);
-        } else {
-          console.warn(`About page fetch failed: ${aboutResponse.status}`);
-        }
-      } catch (e) {
-          console.warn("Failed to fetch About page:", e);
-      }
-    } else {
-      console.log("No About page found via regex or common paths.");
-    }
-
-    // Limit to 12000 chars for AI processing
-    const textContent = combinedText.substring(0, 12000);
-
-    console.log("Final extracted text length:", textContent.length);
-
-    const analysisPrompt = `You are a brand voice analyst. Analyze the website content and extract:
-1. Brand voice characteristics (tone, personality)
-2. Common vocabulary and key phrases
-3. Writing style patterns
-4. Brand values and messaging themes
-
-Return your analysis as a structured JSON object with these fields:
-- tone: array of 3-5 tone descriptors (e.g., "warm", "professional", "playful")
-- vocabulary: array of 10-15 commonly used brand-specific words
-- writingStyle: string describing the writing style
-- brandValues: array of 3-5 core brand values or themes
-- recommendations: array of 3-5 content guidelines based on the analysis`;
+    Return ONLY valid JSON.`;
 
     const aiData = await generateGeminiContent({
       systemPrompt: analysisPrompt,
       messages: [
         {
           role: "user",
-          content: `Analyze this website content and extract brand voice:\n\n${textContent}\n\nRespond ONLY with JSON.`,
+          content: `Analyze this scraped content:\n\n${fullContent}`,
         },
       ],
       responseMimeType: "application/json",
-      maxOutputTokens: 1536,
-      temperature: 0.35,
+      temperature: 0.2,
     });
 
     const analysisText = extractTextFromGeminiResponse(aiData);
-
-    console.log("AI Analysis:", analysisText);
-
-    // Parse AI response (try to extract JSON if present)
     let brandAnalysis;
+    
     try {
-      // Try to find JSON in the response
       const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         brandAnalysis = JSON.parse(jsonMatch[0]);
       } else {
-        // If no JSON, structure the text response
-        brandAnalysis = {
-          rawAnalysis: analysisText,
-          sourceUrl: url,
-          extractedAt: new Date().toISOString(),
-        };
+        throw new Error("No JSON found");
       }
-    } catch (parseError) {
-      console.error("Failed to parse AI response as JSON:", parseError);
-      brandAnalysis = {
-        rawAnalysis: analysisText,
-        sourceUrl: url,
-        extractedAt: new Date().toISOString(),
-      };
+    } catch (e) {
+      console.error("Failed to parse AI JSON", e);
+      brandAnalysis = { raw: analysisText };
     }
 
     // Save to Supabase
@@ -218,26 +236,23 @@ Return your analysis as a structured JSON object with these fields:
     const { error: insertError } = await supabase.from("brand_knowledge").insert({
       organization_id: organizationId,
       knowledge_type: "website_scrape",
-      content: brandAnalysis,
+      content: {
+        ...brandAnalysis,
+        scraped_pages: [url, ...relevantLinks]
+      },
     });
 
-    if (insertError) {
-      console.error("Error saving to database:", insertError);
-      throw insertError;
-    }
-
-    console.log("Brand knowledge saved successfully");
+    if (insertError) throw insertError;
 
     return new Response(
       JSON.stringify({ success: true, analysis: brandAnalysis }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+
   } catch (error) {
-    console.error("Error in scrape-brand-website:", error);
+    console.error("Error:", error);
     return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : "Unknown error occurred",
-      }),
+      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
