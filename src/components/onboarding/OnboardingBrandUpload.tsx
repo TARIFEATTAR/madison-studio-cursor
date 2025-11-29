@@ -64,7 +64,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
     }
   };
 
-  const handleDrop = useCallback((e: React.DragEvent<HTMLLabelElement>) => {
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
@@ -75,13 +75,13 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
     }
   }, []);
 
-  const handleDragOver = useCallback((e: React.DragEvent<HTMLLabelElement>) => {
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
   }, []);
 
-  const handleDragLeave = useCallback((e: React.DragEvent<HTMLLabelElement>) => {
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
@@ -302,17 +302,25 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
           {/* Method-specific Input Area - Compact */}
           <div className="min-h-[140px]">
             {selectedMethod === "pdf" && (
-              <label
-                htmlFor="file-upload"
+              <div
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
-                className={`block w-full p-8 border-2 border-dashed rounded-xl cursor-pointer transition-all text-center group bg-white/30 ${
+                onClick={() => !isProcessing && document.getElementById('file-upload')?.click()}
+                className={`relative w-full p-8 border-2 border-dashed rounded-xl cursor-pointer transition-all text-center group bg-white/30 ${
                   isDragging
                     ? "border-brass bg-brass/5 scale-[1.02]"
                     : "border-charcoal/10 hover:border-brass/50 hover:bg-white"
                 } ${isProcessing ? "opacity-50 pointer-events-none" : ""}`}
               >
+                <input
+                  id="file-upload"
+                  type="file"
+                  accept=".pdf,.txt,.md,.markdown,application/pdf,text/plain,text/markdown"
+                  onChange={handleFileUpload}
+                  disabled={isProcessing}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
                 <div className="w-10 h-10 rounded-full bg-charcoal/5 mx-auto mb-3 flex items-center justify-center group-hover:bg-brass/10 group-hover:text-brass transition-colors">
                   <Upload className="w-5 h-5 text-charcoal/40 group-hover:text-brass" />
                 </div>
@@ -331,15 +339,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
                     <p className="text-xs text-charcoal/50 mt-0.5">PDF, TXT, or Markdown files</p>
                   </div>
                 )}
-                <input
-                  id="file-upload"
-                  type="file"
-                  accept=".pdf,.txt,.md,.markdown,application/pdf,text/plain,text/markdown"
-                  onChange={handleFileUpload}
-                  disabled={isProcessing}
-                  className="hidden"
-                />
-              </label>
+              </div>
             )}
 
             {selectedMethod === "manual" && (
