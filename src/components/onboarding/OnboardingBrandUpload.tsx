@@ -139,7 +139,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
         const { data: bucketTest, error: bucketError } = await supabase.storage
           .from('brand-documents')
           .list(organizationId, { limit: 1 });
-        
+
         if (bucketError && !bucketError.message?.includes('not found')) {
           logger.warn('Bucket test returned error (may be normal if folder is empty):', bucketError);
         }
@@ -148,7 +148,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
         let uploadData, uploadError;
         try {
           const uploadResult = await supabase.storage
-            .from('brand-documents')
+          .from('brand-documents')
             .upload(filePath, uploadedFile, {
               cacheControl: '3600',
               upsert: true // Allow overwriting if file exists

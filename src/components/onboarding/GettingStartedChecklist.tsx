@@ -83,25 +83,25 @@ export function GettingStartedChecklist({ onDismiss, compact = false }: GettingS
                 // Check for actual content creation
                 const [masterContentResult, outputsResult, scheduledContentResult, derivativesResult] = await Promise.all([
                     supabase
-                        .from("master_content")
-                        .select("id")
-                        .eq("organization_id", organizationId)
+                    .from("master_content")
+                    .select("id")
+                    .eq("organization_id", organizationId)
                         .limit(1),
                     supabase
-                        .from("outputs")
-                        .select("id")
-                        .eq("organization_id", organizationId)
+                    .from("outputs")
+                    .select("id")
+                    .eq("organization_id", organizationId)
                         .limit(1),
                     supabase
-                        .from("outputs")
-                        .select("id")
-                        .eq("organization_id", organizationId)
-                        .not("scheduled_for", "is", null)
+                    .from("outputs")
+                    .select("id")
+                    .eq("organization_id", organizationId)
+                    .not("scheduled_for", "is", null)
                         .limit(1),
                     supabase
-                        .from("derivative_content")
-                        .select("id")
-                        .eq("organization_id", organizationId)
+                    .from("derivative_content")
+                    .select("id")
+                    .eq("organization_id", organizationId)
                         .limit(1)
                 ]);
 
@@ -144,7 +144,7 @@ export function GettingStartedChecklist({ onDismiss, compact = false }: GettingS
             } catch (error) {
                 // Silently ignore errors if user logged out
                 if (!cancelled && user) {
-                    console.error("Error loading checklist progress:", error);
+                console.error("Error loading checklist progress:", error);
                 }
             }
         };
