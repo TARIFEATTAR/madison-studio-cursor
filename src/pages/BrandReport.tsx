@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { logger } from "@/lib/logger";
 import { normalizeDomain, type BrandReport } from "@/types/brandReport";
 import { buildBrandAuditReport } from "@/lib/buildBrandAuditReport";
+import { Tables } from "@/integrations/supabase/types";
 
 export default function BrandReport() {
   const { domainId } = useParams<{ domainId: string }>();
@@ -23,6 +24,10 @@ export default function BrandReport() {
   const [loading, setLoading] = useState(true);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [organizationProfile, setOrganizationProfile] = useState<Tables<"organizations"> | null>(null);
+  const [brandKnowledge, setBrandKnowledge] = useState<Tables<"brand_knowledge">[]>([]);
+  const [brandDocuments, setBrandDocuments] = useState<Tables<"brand_documents">[]>([]);
+  const [brandHealth, setBrandHealth] = useState<Tables<"brand_health"> | null>(null);
 
   useEffect(() => {
     const fetchReport = async () => {
@@ -54,6 +59,39 @@ export default function BrandReport() {
         }
 
         setOrganizationId(orgData.organization_id);
+        try {
+          const [orgRecord, knowledgeRes, documentsRes, healthRes] = await Promise.all([
+            supabase
+              .from('organizations')
+              .select('id, name, brand_config, settings')
+              .eq('id', orgData.organization_id)
+              .maybeSingle(),
+            supabase
+              .from('brand_knowledge')
+              .select('*')
+              .eq('organization_id', orgData.organization_id)
+              .eq('is_active', true)
+              .order('updated_at', { ascending: false }),
+            supabase
+              .from('brand_documents')
+              .select('id, file_name, file_type, file_url, content_preview, created_at')
+              .eq('organization_id', orgData.organization_id)
+              .order('created_at', { ascending: false })
+              .limit(50),
+            supabase
+              .from('brand_health')
+              .select('organization_id, completeness_score, gap_analysis, recommendations, last_analyzed_at')
+              .eq('organization_id', orgData.organization_id)
+              .maybeSingle(),
+          ]);
+
+          if (orgRecord?.data) setOrganizationProfile(orgRecord.data);
+          if (knowledgeRes?.data) setBrandKnowledge(knowledgeRes.data);
+          if (documentsRes?.data) setBrandDocuments(documentsRes.data);
+          if (healthRes?.data) setBrandHealth(healthRes.data);
+        } catch (metaError) {
+          logger.warn('[BrandReport] Supplemental data fetch warning:', metaError);
+        }
 
         // Normalize domain using the same function as scan-website
         const decodedDomain = decodeURIComponent(domainId);
@@ -213,6 +251,10 @@ export default function BrandReport() {
       const reportPayload = buildBrandAuditReport(scanData, {
         clientName,
         domain: normalizedDomain,
+        organization: organizationProfile,
+        knowledge: brandKnowledge,
+        documents: brandDocuments,
+        brandHealth,
       });
 
       const { data, error } = await supabase.functions.invoke("generate-report-pdf", {

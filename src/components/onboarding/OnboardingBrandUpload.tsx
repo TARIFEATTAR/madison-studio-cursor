@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { X, Upload, FileText, ArrowRight, ArrowLeft, Check, Lightbulb, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,25 +28,64 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [manualText, setManualText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && (
+  const isValidFile = (file: File): boolean => {
+    return (
       file.type === "application/pdf" ||
       file.type === "text/plain" ||
       file.type === "text/markdown" ||
       file.name.endsWith('.md') ||
-      file.name.endsWith('.txt')
-    )) {
-      setUploadedFile(file);
-    } else {
+      file.name.endsWith('.txt') ||
+      file.name.endsWith('.markdown')
+    );
+  };
+
+  const handleFilesAdded = (files: FileList | File[]) => {
+    const fileArray = Array.from(files);
+    const validFile = fileArray.find(file => isValidFile(file));
+
+    if (!validFile) {
       toast({
         title: "Invalid file",
         description: "Please upload a PDF, TXT, or Markdown file",
         variant: "destructive"
       });
+      return;
+    }
+
+    setUploadedFile(validFile);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFilesAdded([file]);
     }
   };
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      handleFilesAdded(files);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
 
   const handleContinue = async () => {
     if (!isValid()) return;
@@ -63,33 +102,61 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
       let uploadContent = "";
 
       if (selectedMethod === "pdf" && uploadedFile) {
+        // Generate unique file path
+        const timestamp = Date.now();
+        const sanitizedFileName = uploadedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const filePath = `${organizationId}/${timestamp}_${sanitizedFileName}`;
+
         // Upload file to Supabase Storage
-        const fileName = `${Date.now()} -${uploadedFile.name} `;
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('brand-documents')
-          .upload(`${organizationId}/${fileName}`, uploadedFile);
+          .upload(filePath, uploadedFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          logger.error('Storage upload error:', uploadError);
+          throw new Error(`Upload failed: ${uploadError.message}`);
+        }
 
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('brand-documents')
-          .getPublicUrl(uploadData.path);
+        // Detect file type properly
+        let fileType = uploadedFile.type || 'application/pdf';
+        if (uploadedFile.name.endsWith('.md') || uploadedFile.name.endsWith('.markdown')) {
+          fileType = 'text/markdown';
+        } else if (uploadedFile.name.endsWith('.txt')) {
+          fileType = 'text/plain';
+        }
 
         // Create document record
-        const { error: docError } = await supabase
+        const { data: docData, error: docError } = await supabase
           .from('brand_documents')
           .insert({
             organization_id: organizationId,
             uploaded_by: user?.id,
             file_name: uploadedFile.name,
-            file_type: 'pdf',
-            file_url: publicUrl,
+            file_type: fileType,
             file_size: uploadedFile.size,
+            file_url: filePath,
             processing_status: 'pending'
-          });
+          })
+          .select()
+          .single();
 
-        if (docError) throw docError;
+        if (docError) {
+          logger.error('Document insert error:', docError);
+          throw new Error(`Failed to save document: ${docError.message}`);
+        }
+
+        // Trigger document processing in background
+        if (docData) {
+          supabase.functions.invoke('process-brand-document', {
+            body: { documentId: docData.id }
+          }).catch(err => {
+            logger.error('Failed to trigger processing:', err);
+            // Don't throw - processing can happen async
+          });
+        }
 
         uploadContent = uploadedFile.name;
       } else if (selectedMethod === "manual") {
@@ -113,9 +180,10 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
       });
     } catch (error) {
       logger.error('Error processing brand upload:', error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to process your brand guidelines. Please try again.";
       toast({
         title: "Error",
-        description: "Failed to process your brand guidelines. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -236,7 +304,14 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
             {selectedMethod === "pdf" && (
               <label
                 htmlFor="file-upload"
-                className="block w-full p-8 border-2 border-dashed border-charcoal/10 rounded-xl cursor-pointer hover:border-brass/50 hover:bg-white transition-all text-center group bg-white/30"
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                className={`block w-full p-8 border-2 border-dashed rounded-xl cursor-pointer transition-all text-center group bg-white/30 ${
+                  isDragging
+                    ? "border-brass bg-brass/5 scale-[1.02]"
+                    : "border-charcoal/10 hover:border-brass/50 hover:bg-white"
+                } ${isProcessing ? "opacity-50 pointer-events-none" : ""}`}
               >
                 <div className="w-10 h-10 rounded-full bg-charcoal/5 mx-auto mb-3 flex items-center justify-center group-hover:bg-brass/10 group-hover:text-brass transition-colors">
                   <Upload className="w-5 h-5 text-charcoal/40 group-hover:text-brass" />
@@ -250,15 +325,18 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
                   </div>
                 ) : (
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Click to upload or drag and drop</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {isDragging ? "Drop file here" : "Click to upload or drag and drop"}
+                    </p>
                     <p className="text-xs text-charcoal/50 mt-0.5">PDF, TXT, or Markdown files</p>
                   </div>
                 )}
                 <input
                   id="file-upload"
                   type="file"
-                  accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown"
+                  accept=".pdf,.txt,.md,.markdown,application/pdf,text/plain,text/markdown"
                   onChange={handleFileUpload}
+                  disabled={isProcessing}
                   className="hidden"
                 />
               </label>
