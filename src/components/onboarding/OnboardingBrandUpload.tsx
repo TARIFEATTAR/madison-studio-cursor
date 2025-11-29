@@ -94,10 +94,21 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
 
     try {
       if (!user?.id) {
-        throw new Error('User not authenticated');
+        throw new Error('User not authenticated. Please refresh the page and try again.');
+      }
+
+      // Verify authentication session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        logger.error('Session error:', sessionError);
+        throw new Error('Session expired. Please refresh the page and try again.');
       }
 
       const organizationId = await getOrCreateOrganizationId(user.id);
+      
+      if (!organizationId) {
+        throw new Error('Failed to get organization. Please try again.');
+      }
 
       let uploadContent = "";
 
@@ -108,7 +119,9 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
         const filePath = `${organizationId}/${timestamp}_${sanitizedFileName}`;
 
         // Upload file to Supabase Storage
-        const { error: uploadError } = await supabase.storage
+        logger.debug('Uploading file to storage:', { filePath, fileName: uploadedFile.name, size: uploadedFile.size });
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
           .from('brand-documents')
           .upload(filePath, uploadedFile, {
             cacheControl: '3600',
@@ -117,8 +130,21 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
 
         if (uploadError) {
           logger.error('Storage upload error:', uploadError);
-          throw new Error(`Upload failed: ${uploadError.message}`);
+          
+          // Provide more helpful error messages
+          let errorMessage = uploadError.message;
+          if (uploadError.message?.includes('Failed to fetch') || uploadError.message?.includes('network')) {
+            errorMessage = 'Network error. Please check your connection and try again.';
+          } else if (uploadError.message?.includes('JWT') || uploadError.message?.includes('auth')) {
+            errorMessage = 'Authentication error. Please refresh the page and try again.';
+          } else if (uploadError.message?.includes('permission') || uploadError.message?.includes('policy')) {
+            errorMessage = 'Permission denied. Please ensure you have access to upload documents.';
+          }
+          
+          throw new Error(`Upload failed: ${errorMessage}`);
         }
+
+        logger.debug('File uploaded successfully:', uploadData);
 
         // Detect file type properly
         let fileType = uploadedFile.type || 'application/pdf';
