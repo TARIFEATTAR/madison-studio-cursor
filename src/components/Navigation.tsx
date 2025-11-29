@@ -111,7 +111,13 @@ const Navigation = () => {
             
             {user && (
               <Button
-                onClick={signOut}
+                onClick={async () => {
+                  try {
+                    await signOut();
+                  } catch (error) {
+                    console.error("Error signing out:", error);
+                  }
+                }}
                 variant="outline"
                 size="sm"
                 className="gap-2 ml-2"
@@ -176,9 +182,13 @@ const Navigation = () => {
                   </nav>
 
                   <Button
-                    onClick={() => {
+                    onClick={async () => {
                       setMobileMenuOpen(false);
-                      signOut();
+                      try {
+                        await signOut();
+                      } catch (error) {
+                        console.error("Error signing out:", error);
+                      }
                     }}
                     variant="outline"
                     className="w-full gap-2 mt-4 border-aged-brass/30 text-parchment-white hover:bg-aged-brass/10"

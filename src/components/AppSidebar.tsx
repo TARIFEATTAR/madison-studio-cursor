@@ -29,7 +29,7 @@ export function AppSidebar() {
   const { open, toggleSidebar, isMobile, openMobile } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
   const { isEcommerce, loading: isEcommerceLoading } = useIsEcommerceOrg();
 
@@ -132,22 +132,9 @@ export function AppSidebar() {
     },
   ];
 
-  const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      toast({
-        title: "Signed out successfully",
-        description: "You have been logged out of your account",
-      });
-      navigate("/auth");
-    } catch (error) {
-      console.error("Error signing out:", error);
-      toast({
-        title: "Error signing out",
-        description: "There was a problem signing you out. Please try again.",
-        variant: "destructive",
-      });
-    }
+  const handleSignOut = () => {
+    // Use the signOut from AuthContext which handles everything properly
+    signOut();
   };
 
   // Get user display info

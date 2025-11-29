@@ -134,12 +134,36 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
           throw new Error('Session expired. Please refresh the page and try again.');
         }
 
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        // Test bucket accessibility first
+        logger.debug('Testing bucket accessibility...');
+        const { data: bucketTest, error: bucketError } = await supabase.storage
           .from('brand-documents')
-          .upload(filePath, uploadedFile, {
-            cacheControl: '3600',
-            upsert: true // Allow overwriting if file exists
-          });
+          .list(organizationId, { limit: 1 });
+        
+        if (bucketError && !bucketError.message?.includes('not found')) {
+          logger.warn('Bucket test returned error (may be normal if folder is empty):', bucketError);
+        }
+
+        // Attempt upload with detailed error handling
+        let uploadData, uploadError;
+        try {
+          const uploadResult = await supabase.storage
+            .from('brand-documents')
+            .upload(filePath, uploadedFile, {
+              cacheControl: '3600',
+              upsert: true // Allow overwriting if file exists
+            });
+          uploadData = uploadResult.data;
+          uploadError = uploadResult.error;
+        } catch (err: any) {
+          // Catch any unexpected errors during upload
+          logger.error('Upload exception caught:', err);
+          uploadError = {
+            message: err.message || 'Unexpected upload error',
+            statusCode: err.status || 0,
+            error: err.name || 'UploadException'
+          } as any;
+        }
 
         if (uploadError) {
           logger.error('Storage upload error details:', {
@@ -161,7 +185,21 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
           const errorCode = (uploadError as any).error;
           
           if (uploadError.message?.includes('Failed to fetch') || statusCode === 0 || !statusCode) {
-            errorMessage = 'Network error. This could be a CORS issue or the storage endpoint is unreachable. Please check your Supabase project settings.';
+            // Log detailed info for debugging
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+            logger.error('Failed to fetch - Network diagnostics:', {
+              supabaseUrl: supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : 'NOT SET',
+              hasSession: !!currentSession,
+              fileSize: uploadedFile.size,
+              fileName: uploadedFile.name,
+              organizationId
+            });
+            
+            errorMessage = 'Network error: Unable to reach Supabase Storage. This could be:\n' +
+              '1. CORS configuration issue - Check Supabase Dashboard → Settings → API → CORS\n' +
+              '2. Storage service not enabled - Verify in Supabase Dashboard\n' +
+              '3. Network connectivity issue\n\n' +
+              'Please check the browser Console (F12) → Network tab for the failed request details.';
           } else if (uploadError.message?.includes('JWT') || uploadError.message?.includes('auth') || statusCode === 401) {
             errorMessage = 'Authentication error. Your session may have expired. Please refresh the page and try again.';
           } else if (uploadError.message?.includes('permission') || uploadError.message?.includes('policy') || statusCode === 403) {

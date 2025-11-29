@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +16,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,6 +29,9 @@ const Auth = () => {
   // NEW REDIRECT LOGIC
   // -------------------------------------------
   const redirectAfterLogin = (user: User) => {
+    if (hasNavigated.current) return;
+    hasNavigated.current = true;
+
     const created = new Date(user.created_at).getTime();
     const signedIn = new Date(user.last_sign_in_at || 0).getTime();
     const isNewUser = created === signedIn;
@@ -40,20 +44,19 @@ const Auth = () => {
   };
 
   // -------------------------------------------
-  // AUTH STATE + CALLBACK HANDLING
+  // AUTH STATE HANDLING
   // -------------------------------------------
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session?.user) {
-          setUser(session.user);
-          redirectAfterLogin(session.user);
-        } else {
-          setUser(null);
-        }
-      }
-    );
+    if (!authLoading && user) {
+      logger.debug("[Auth] User already authenticated, redirecting...");
+      redirectAfterLogin(user);
+    }
+  }, [user, authLoading]);
 
+  // -------------------------------------------
+  // CALLBACK & URL PARAM HANDLING
+  // -------------------------------------------
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token_hash = params.get("token_hash");
     const type = params.get("type");
@@ -78,6 +81,7 @@ const Auth = () => {
           });
         } else {
           toast({ title: "Signed in", description: "Welcome back." });
+          // AuthContext will pick up the session change and trigger the redirect effect above
         }
       });
     }
@@ -91,27 +95,14 @@ const Auth = () => {
             variant: "destructive",
           });
         } else if (data?.session?.user) {
-          logger.debug('[Auth] Email confirmation successful, redirecting...', {
+          logger.debug('[Auth] Email confirmation successful', {
             userId: data.session.user.id,
             email: data.session.user.email,
           });
-          // Small delay to ensure session is fully established
-          setTimeout(() => {
-            redirectAfterLogin(data.session.user);
-          }, 100);
+          // AuthContext will pick up the session change
         }
       });
     }
-    else {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) {
-          setUser(session.user);
-          redirectAfterLogin(session.user);
-        }
-      });
-    }
-
-    return () => subscription.unsubscribe();
   }, []);
 
   // -------------------------------------------

@@ -57,20 +57,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const signOut = async () => {
+  const signOut = () => {
+    // Make this synchronous and bulletproof - redirect MUST happen
     logger.debug("[AuthProvider] Signing out and clearing all data...");
     
-    await supabase.auth.signOut();
+    // IMMEDIATELY clear session state to stop components from making API calls
+    setSession(null);
+    setUser(null);
     
-    const keysToRemove = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key) keysToRemove.push(key);
+    // Sign out from Supabase (fire and forget - don't wait)
+    supabase.auth.signOut().catch(() => {
+      // Silently ignore errors - we're redirecting anyway
+    });
+    
+    // Clear all localStorage (wrap in try-catch to ensure we continue)
+    try {
+      localStorage.clear(); // Simpler and more reliable than looping
+    } catch (err) {
+      // Ignore errors - we're redirecting anyway
     }
-    keysToRemove.forEach(key => localStorage.removeItem(key));
     
-    logger.debug("[AuthProvider] Cleared all localStorage and session data");
-    window.location.href = '/';
+    // CRITICAL: Force immediate redirect - this MUST execute
+    // Use both replace and href as fallback, and ensure it's synchronous
+    try {
+      if (window.location.pathname === '/auth') {
+        // If already on auth page, reload to clear any lingering React state
+        window.location.reload();
+      } else {
+        window.location.replace('/auth');
+      }
+      
+      // Fallback in case replace doesn't work immediately
+      setTimeout(() => {
+        if (window.location.pathname !== '/auth') {
+          window.location.href = '/auth';
+        }
+      }, 100);
+    } catch (err) {
+      // Last resort: try href
+      try {
+        window.location.href = '/auth';
+      } catch (finalErr) {
+        // If all else fails, reload the page
+        window.location.reload();
+      }
+    }
   };
 
   return (

@@ -76,33 +76,42 @@ export function GettingStartedChecklist({ onDismiss, compact = false }: GettingS
     useEffect(() => {
         if (!user || !organizationId) return;
 
+        let cancelled = false;
+
         const loadProgress = async () => {
             try {
                 // Check for actual content creation
-                const { data: masterContent } = await supabase
-                    .from("master_content")
-                    .select("id")
-                    .eq("organization_id", organizationId)
-                    .limit(1);
+                const [masterContentResult, outputsResult, scheduledContentResult, derivativesResult] = await Promise.all([
+                    supabase
+                        .from("master_content")
+                        .select("id")
+                        .eq("organization_id", organizationId)
+                        .limit(1),
+                    supabase
+                        .from("outputs")
+                        .select("id")
+                        .eq("organization_id", organizationId)
+                        .limit(1),
+                    supabase
+                        .from("outputs")
+                        .select("id")
+                        .eq("organization_id", organizationId)
+                        .not("scheduled_for", "is", null)
+                        .limit(1),
+                    supabase
+                        .from("derivative_content")
+                        .select("id")
+                        .eq("organization_id", organizationId)
+                        .limit(1)
+                ]);
 
-                const { data: outputs } = await supabase
-                    .from("outputs")
-                    .select("id")
-                    .eq("organization_id", organizationId)
-                    .limit(1);
+                // Check if component was unmounted or user logged out during API calls
+                if (cancelled || !user || !organizationId) return;
 
-                const { data: scheduledContent } = await supabase
-                    .from("outputs")
-                    .select("id")
-                    .eq("organization_id", organizationId)
-                    .not("scheduled_for", "is", null)
-                    .limit(1);
-
-                const { data: derivatives } = await supabase
-                    .from("derivative_content")
-                    .select("id")
-                    .eq("organization_id", organizationId)
-                    .limit(1);
+                const { data: masterContent } = masterContentResult;
+                const { data: outputs } = outputsResult;
+                const { data: scheduledContent } = scheduledContentResult;
+                const { data: derivatives } = derivativesResult;
 
                 // Get stored progress
                 const storedProgress = localStorage.getItem(`checklist_progress_${user.id}`);
@@ -133,11 +142,18 @@ export function GettingStartedChecklist({ onDismiss, compact = false }: GettingS
                     })
                 );
             } catch (error) {
-                console.error("Error loading checklist progress:", error);
+                // Silently ignore errors if user logged out
+                if (!cancelled && user) {
+                    console.error("Error loading checklist progress:", error);
+                }
             }
         };
 
         loadProgress();
+
+        return () => {
+            cancelled = true;
+        };
     }, [user, organizationId]);
 
     const completedCount = items.filter((item) => item.completed).length;
