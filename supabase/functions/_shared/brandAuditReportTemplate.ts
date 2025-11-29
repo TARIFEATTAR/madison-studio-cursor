@@ -196,427 +196,488 @@ export const renderBrandAuditReport = (report: BrandAuditReport): string => {
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Madison Studio – Brand Audit & Identity Analysis</title>
+  <title>Madison Studio – Brand Audit</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  
   <style>
     :root {
-      --soft-white: #FAF9F7;
-      --stone-beige: #E8E4DF;
-      --umber-sand: #C9B8A7;
-      --aged-brass: #C29B5C;
-      --deep-charcoal: #1A1A1A;
+      --bg-bone: #F0E5D3;
+      --text-black: #1a1a1a;
+      --text-header: #000000;
+      --border-color: #bfaea8; /* or rgba(0,0,0,0.1) */
+      --accent-gold: #C29B5C;
     }
+
     * { box-sizing: border-box; }
+
     body {
-      margin: 60px 45px;
-      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-      background: var(--soft-white);
-      color: var(--deep-charcoal);
+      margin: 0;
+      padding: 60px; /* "Breathing room" around the page */
+      background-color: var(--bg-bone);
+      color: var(--text-black);
+      font-family: "Lato", "Inter", sans-serif;
+      font-weight: 400;
       font-size: 13px;
-      line-height: 1.6;
+      line-height: 1.7;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
-    h1, h2, h3, h4 {
-      font-family: Georgia, "Times New Roman", serif;
-      color: var(--deep-charcoal);
-      margin: 0 0 12px 0;
+
+    @page {
+      margin: 0;
+      size: auto;
     }
-    h1 { font-size: 40px; }
-    h2 { font-size: 28px; margin-top: 40px; }
-    h3 { font-size: 20px; margin-top: 24px; }
-    h4 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.14em; margin-top: 24px; }
-    p { margin: 0 0 10px 0; }
-    .section { margin-bottom: 64px; }
-    .section-title {
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      font-size: 11px;
-      color: #6a6a6a;
-      margin-bottom: 6px;
+
+    /* --- TYPOGRAPHY --- */
+    h1, h2, h3, h4, h5 {
+      font-family: "Playfair Display", serif;
+      color: var(--text-header);
+      margin: 0;
     }
-    .brass-rule { height: 1px; background: var(--aged-brass); margin: 16px 0 24px 0; }
-    .tagline {
-      font-size: 12px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #666;
-      margin-bottom: 8px;
-    }
-    .hero-quote {
-      font-family: Georgia, "Times New Roman", serif;
+
+    /* Big Editorial Headers */
+    .display-header {
+      font-size: 48px;
       font-style: italic;
-      font-size: 18px;
-      margin-top: 20px;
+      font-weight: 500;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 24px;
     }
-    .meta-grid {
-      margin-top: 20px;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px 40px;
-      font-size: 12px;
+    
+    .section-header {
+      font-size: 32px;
+      font-weight: 400;
+      margin-bottom: 24px;
     }
-    .two-col {
-      display: grid;
-      grid-template-columns: 2fr 1.1fr;
-      gap: 32px;
-    }
-    .pull-quote {
-      font-family: Georgia, "Times New Roman", serif;
-      font-style: italic;
-      font-size: 18px;
-      border-left: 2px solid var(--aged-brass);
-      padding-left: 18px;
-      margin-top: 8px;
-    }
-    ul { margin: 6px 0 12px 0; padding-left: 18px; }
-    li { margin-bottom: 4px; }
-    .pill-row { margin-top: 6px; }
-    .pill {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: var(--stone-beige);
-      font-size: 11px;
-      margin: 0 6px 6px 0;
-    }
-    .card-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
-      margin-top: 12px;
-    }
-    .card {
-      padding: 14px 16px;
-      border-radius: 6px;
-      background: var(--stone-beige);
-    }
-    .card-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: #555;
-      margin-bottom: 4px;
-    }
-    .card-value { font-size: 13px; }
-    .color-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      margin-top: 10px;
-    }
-    .swatch-block { width: 90px; font-size: 11px; }
-    .swatch {
-      width: 100%;
-      height: 50px;
-      border-radius: 4px;
-      border: 1px solid rgba(0,0,0,0.06);
-      margin-bottom: 6px;
-    }
-    .moodboard-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .moodboard-item {
-      width: 100%;
-      height: 90px;
-      border-radius: 6px;
-      background-color: var(--stone-beige);
-      background-size: cover;
-      background-position: center;
-    }
-    .screenshot-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 10px;
-      margin: 10px 0 16px 0;
-    }
-    .screenshot {
-      width: 100%;
-      height: 100px;
-      border-radius: 6px;
-      background-color: var(--stone-beige);
-      background-size: cover;
-      background-position: top center;
-    }
-    .issue-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 10px;
-      border-radius: 4px;
-      background: #f0ece6;
-      font-size: 12px;
-      margin-bottom: 6px;
-    }
-    .severity-badge {
-      padding: 3px 8px;
-      border-radius: 999px;
+
+    /* Overlines (The "Luxury" small caps) */
+    .overline {
+      font-family: "Inter", sans-serif;
       font-size: 10px;
       text-transform: uppercase;
-      letter-spacing: 0.09em;
-      background: var(--deep-charcoal);
-      color: #fff;
+      letter-spacing: 0.2em;
+      color: #555;
+      margin-bottom: 16px;
+      display: block;
     }
-    .score-cards {
+
+    /* --- DNA GRID (2x2) --- */
+    .dna-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 12px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 32px;
+      margin-top: 24px;
     }
-    .score-card {
-      padding: 14px 16px;
-      border-radius: 6px;
-      background: var(--stone-beige);
+    .dna-item {
+      margin-bottom: 16px;
+    }
+    .dna-value {
+      font-family: "Playfair Display", serif;
+      font-size: 20px;
+      font-style: italic;
+      color: var(--text-black);
+      margin-top: 8px;
+    }
+
+    /* --- STYLE GUIDE CARD --- */
+    .style-card {
+      background: #F8F4EC;
+      border: 1px solid var(--border-color);
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    
+    /* --- CIRCULAR LOADER (CSS only) --- */
+    .circular-loader {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .loader-value {
+      font-family: "Inter", sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+    }
+    .score-label-small {
+      font-family: "Inter", sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 12px;
+      text-align: center;
+    }
+
+    p { margin-bottom: 16px; max-width: 65ch; }
+
+    /* --- BENTO GRID LAYOUT SYSTEM --- */
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 32px; /* Increased from 24px */
+      margin-bottom: 48px;
+    }
+
+    .col-12 { grid-column: span 12; }
+    .col-8 { grid-column: span 8; }
+    .col-6 { grid-column: span 6; }
+    .col-4 { grid-column: span 4; }
+    .col-3 { grid-column: span 3; }
+
+    /* Prevent page breaks inside boxes */
+    .editorial-box, .grid-container, .style-card {
+      break-inside: avoid;
+      -webkit-column-break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /* Editorial Box: 1px border, padding, no shadow */
+    .editorial-box {
+      border: 1px solid var(--border-color);
+      padding: 40px; /* Increased from 32px */
+      background: transparent; /* Let the bone color shine through */
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start; /* Align top */
+    }
+
+    /* --- COVER / HERO SECTION --- */
+    .hero-section {
+      min-height: 60vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 80px; /* Increased from 60px */
+      padding-bottom: 60px;
+      page-break-after: always; /* Force page break after hero to start fresh */
+    }
+
+    .hero-logo {
+      font-family: "Inter", sans-serif;
+      font-size: 14px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+
+    .hero-sub {
+      font-family: "Playfair Display", serif;
+      font-style: italic;
+      font-size: 18px;
+      color: #666;
+      margin-bottom: 40px;
+    }
+
+    .hero-quote {
+      font-family: "Playfair Display", serif;
+      font-size: 42px;
+      line-height: 1.2;
+      max-width: 800px;
+      margin: 0 auto;
+      font-style: italic;
+    }
+
+    /* --- COMPONENTS --- */
+    
+    /* Transparent Pills / Lists for Tone Traits */
+    .trait-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .trait-pill {
+      border: 1px solid var(--border-color);
+      padding: 6px 16px;
+      border-radius: 100px; /* Full pill */
+      font-family: "Playfair Display", serif;
+      font-style: italic;
+      font-size: 14px;
+      color: var(--text-black);
+      background: transparent;
+    }
+
+    /* Swatches */
+    .swatch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+      gap: 12px;
+    }
+    .swatch-circle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.1);
+      margin-bottom: 8px;
+    }
+
+    /* Scorecard */
+    .score-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      padding-bottom: 12px;
     }
     .score-label {
+      font-family: "Inter", sans-serif;
       font-size: 11px;
-      letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: #555;
-      margin-bottom: 4px;
+      letter-spacing: 0.1em;
     }
-    .score-value {
-      font-size: 22px;
-      font-weight: 600;
-      font-family: Georgia, "Times New Roman", serif;
+    .score-bar-bg {
+      width: 100px;
+      height: 2px;
+      background: rgba(0,0,0,0.1);
+      position: relative;
     }
-    .bar-chart { margin-top: 18px; }
-    .bar-row {
-      display: flex;
-      align-items: center;
-      margin-bottom: 8px;
-      font-size: 11px;
-    }
-    .bar-label {
-      width: 130px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .bar-track {
-      flex: 1;
-      height: 6px;
-      border-radius: 999px;
-      background: #ded9d0;
-      margin: 0 8px;
-      overflow: hidden;
-    }
-    .bar-fill {
+    .score-bar-fill {
       height: 100%;
-      border-radius: 999px;
-      background: var(--aged-brass);
+      background: var(--text-black);
     }
-    .timeline {
-      margin-top: 10px;
-      border-left: 1px solid var(--aged-brass);
-      padding-left: 16px;
+    .score-num {
+      font-family: "Playfair Display", serif;
+      font-size: 16px;
+      width: 30px;
+      text-align: right;
     }
-    .timeline-item { margin-bottom: 14px; }
-    .timeline-phase {
-      font-weight: 600;
-      font-size: 13px;
-    }
-    .timeline-time {
-      font-size: 11px;
-      color: #666;
-      margin-bottom: 4px;
-    }
-    .small-label {
-      font-size: 11px;
-      color: #666;
-    }
+
+    /* Footer */
     footer {
-      margin-top: 60px;
-      padding-top: 12px;
-      border-top: 1px solid var(--aged-brass);
-      font-size: 11px;
+      margin-top: 80px;
+      border-top: 1px solid var(--border-color);
+      padding-top: 24px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #666;
     }
+
+    /* Utilities */
+    .text-large { font-size: 18px; line-height: 1.5; }
+    .mb-0 { margin-bottom: 0; }
+    .mt-4 { margin-top: 24px; }
+
   </style>
 </head>
 <body>
-  <section class="section">
-    <div class="section-title">Brand Audit</div>
-    <h1>Brand Audit &amp; Identity Analysis</h1>
-    <div class="tagline">${escapeHtml(coreIdentifiers.tagline)}</div>
-    <p>${escapeHtml(coreIdentifiers.brandDescription)}</p>
-    <div class="hero-quote">“${escapeHtml(coreIdentifiers.heroQuote)}”</div>
-    <div class="brass-rule"></div>
-    <div class="meta-grid">
-      <div>
-        <span class="small-label">Client</span><br />
-        ${escapeHtml(coreIdentifiers.clientName)}
-      </div>
-      <div>
-        <span class="small-label">Brand</span><br />
-        ${escapeHtml(coreIdentifiers.brandName)}
-      </div>
-      <div>
-        <span class="small-label">Domain</span><br />
-        ${escapeHtml(coreIdentifiers.domain)}
-      </div>
-      <div>
-        <span class="small-label">Date Generated</span><br />
-        ${escapeHtml(coreIdentifiers.dateGenerated)}
+
+  <!-- A. HERO SECTION -->
+  <div class="hero-section">
+    <div class="hero-logo">${escapeHtml(coreIdentifiers.brandName).toUpperCase()}</div>
+    <div class="hero-sub">Brand Audit Report // ${escapeHtml(coreIdentifiers.dateGenerated.split('-')[0])}</div>
+    <div class="hero-quote">
+      “${escapeHtml(coreIdentifiers.heroQuote || "Intimacy, memory, craft, personal, evolving.")}”
+    </div>
+  </div>
+
+  <!-- B. BRAND IDENTITY (The Lover) -->
+  <div style="height: 40px; width: 100%; display: block;"></div> <!-- Safe Zone Spacer -->
+  <div class="grid-container">
+    <!-- Left: Positioning Statement -->
+    <div class="col-6 editorial-box">
+      <span class="overline">Positioning</span>
+      <div class="display-header" style="font-size: 28px; margin-bottom: 0; line-height: 1.4;">
+        ${escapeHtml(brandIdentityDetails.positioningStatement || "Tarife Attar reclaims the intimacy of fragrance by offering concentrated, precious oils designed to interact with the skin.")}
       </div>
     </div>
-  </section>
 
-  <section class="section">
-    <div class="section-title">Overview</div>
-    <h2>Executive Summary</h2>
-    <div class="two-col">
+    <!-- Right: Brand DNA Grid -->
+    <div class="col-6 editorial-box">
+      <span class="overline">Brand DNA</span>
+      <div class="dna-grid">
+        <div class="dna-item">
+          <span class="overline" style="margin-bottom: 4px;">Archetype</span>
+          <div class="dna-value">${escapeHtml(brandIdentityDetails.brandArchetype || "The Lover")}</div>
+        </div>
+        <div class="dna-item">
+          <span class="overline" style="margin-bottom: 4px;">Values</span>
+          <div class="dna-value" style="font-size: 16px; font-style: normal; font-family: 'Inter'; text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px;">
+            ${(brandIdentityDetails.brandValues.length ? brandIdentityDetails.brandValues : ["Intimacy", "Memory", "Craft", "Authenticity"]).join(" • ")}
+          </div>
+        </div>
+        <div class="dna-item col-12" style="grid-column: span 2;">
+          <span class="overline" style="margin-bottom: 4px;">Audience</span>
+          <div class="dna-value" style="font-size: 14px; font-family: 'Inter'; font-style: normal; margin-top: 4px;">
+            Individuals seeking personal, intimate fragrance experiences.
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-4" style="border-top: 1px solid rgba(0,0,0,0.05); padding-top: 20px;">
+        <span class="overline">Tone Traits</span>
+        <div style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 16px; color: #444;">
+          ${(brandIdentityDetails.toneTraits.length ? brandIdentityDetails.toneTraits : ["Intimate", "Sensual", "Sophisticated", "Artisanal"]).join(", ")}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C. VISUAL SYSTEM & SCORES -->
+  <div class="grid-container">
+    <!-- Visual System (Style Card) -->
+    <div class="col-4 style-card">
+      <span class="overline">Visual System</span>
+      
+      <!-- Colors -->
       <div>
-        <p>${escapeHtml(executiveSummaryData.executiveSummary)}</p>
-        <h3>Top Strengths</h3>
-        <ul>${renderList(executiveSummaryData.topStrengths)}</ul>
-        <h3>Top Risks</h3>
-        <ul>${renderList(executiveSummaryData.topRisks)}</ul>
+        <div class="overline" style="margin-bottom: 8px;">Palette</div>
+        <div style="display: flex; gap: 12px;">
+           ${visualLanguage.colorPalette.length > 0 ? visualLanguage.colorPalette.slice(0,3).map(c => `
+             <div style="width: 40px; height: 40px; background: ${c.hex}; border: 1px solid rgba(0,0,0,0.1); border-radius: 50%;"></div>
+           `).join('') : 
+           `<div style="width: 40px; height: 40px; background: #000000; border-radius: 50%;"></div>
+            <div style="width: 40px; height: 40px; background: #F0E5D3; border: 1px solid rgba(0,0,0,0.1); border-radius: 50%;"></div>`
+           }
+        </div>
       </div>
+
+      <!-- Typography -->
       <div>
-        <div class="pull-quote">“${escapeHtml(executiveSummaryData.pullQuote)}”</div>
+        <div class="overline" style="margin-bottom: 8px;">Typography</div>
+        <div style="font-family: 'Playfair Display', serif; font-size: 24px; margin-bottom: 4px;">Ag <span style="font-size: 12px; font-family: 'Inter'; text-transform: uppercase; letter-spacing: 0.1em; margin-left: 8px;">Playfair</span></div>
+        <div style="font-family: 'Inter', sans-serif; font-size: 24px;">Aa <span style="font-size: 12px; font-family: 'Inter'; text-transform: uppercase; letter-spacing: 0.1em; margin-left: 8px;">Inter</span></div>
       </div>
     </div>
-  </section>
 
-  <section class="section">
-    <div class="section-title">Identity</div>
-    <h2>Brand Identity</h2>
-    <h3>Mission</h3>
-    <p>${escapeHtml(brandIdentityDetails.mission)}</p>
-    <h3>Vision</h3>
-    <p>${escapeHtml(brandIdentityDetails.vision)}</p>
-    <h3>Positioning Statement</h3>
-    <p>${escapeHtml(brandIdentityDetails.positioningStatement)}</p>
-    <div class="card-row">
-      <div class="card">
-        <div class="card-label">Brand Archetype</div>
-        <div class="card-value">${escapeHtml(brandIdentityDetails.brandArchetype)}</div>
+    <!-- Scorecard (Circular Loaders) -->
+    <div class="col-8 editorial-box" style="align-items: center; justify-content: center;">
+      <div style="width: 100%; text-align: center; margin-bottom: 24px;">
+        <span class="overline">Baseline Analysis</span>
       </div>
-      <div class="card">
-        <div class="card-label">Primary Audience</div>
-        <div class="card-value">${renderList(brandIdentityDetails.primaryAudience, "div")}</div>
-      </div>
-      <div class="card">
-        <div class="card-label">Tone Traits</div>
-        <div class="pill-row">${renderPills(brandIdentityDetails.toneTraits)}</div>
+      <div style="display: flex; justify-content: space-around; width: 100%; padding: 0 40px;">
+        ${[
+          { label: "Brand Consistency", val: 0 },
+          { label: "Visual Consistency", val: 0 },
+          { label: "Message Clarity", val: 0 }
+        ].map(item => `
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <div class="circular-loader">
+              <div class="loader-value">PENDING</div>
+            </div>
+            <div class="score-label-small">${item.label}</div>
+          </div>
+        `).join('')}
       </div>
     </div>
-    <h3>Brand Values</h3>
-    <div class="pill-row">${renderPills(brandIdentityDetails.brandValues)}</div>
-    <h3>Voice &amp; Essence</h3>
-    <p>${escapeHtml(brandIdentityDetails.voiceDescription)}</p>
-  </section>
+  </div>
 
-  <section class="section">
-    <div class="section-title">Visual System</div>
-    <h2>Visual Language</h2>
-    <h3>Color Palette</h3>
-    <div class="color-row">${renderColorPalette(visualLanguage.colorPalette)}</div>
-    <h3>Typography</h3>
-    <p><strong>Headline Font:</strong> ${escapeHtml(visualLanguage.typography.headlineFont)}</p>
-    <p><strong>Body Font:</strong> ${escapeHtml(visualLanguage.typography.bodyFont)}</p>
-    <p>${escapeHtml(visualLanguage.typography.usageNotes)}</p>
-    <h3>Moodboard</h3>
-    <div class="moodboard-grid">${renderImages(visualLanguage.moodboardImages)}</div>
-    <h3>Iconography Style</h3>
-    <p>${escapeHtml(visualLanguage.iconographyStyle)}</p>
-  </section>
-
-  <section class="section">
-    <div class="section-title">Digital</div>
-    <h2>Website &amp; Digital Presence</h2>
-    <h3>Captured Screens</h3>
-    <div class="screenshot-row">${renderScreenshots(websiteDigitalScan.websiteScreenshots)}</div>
-    <h3>Findings</h3>
-    <p>${escapeHtml(websiteDigitalScan.websiteFindings)}</p>
-    <h3>Content Observations</h3>
-    <ul>${renderList(websiteDigitalScan.contentObservations)}</ul>
-    <h3>Priority Issues</h3>
-    <div class="issue-row">${renderIssues(websiteDigitalScan.priorityIssues)}</div>
-  </section>
-
-  <section class="section">
-    <div class="section-title">Scoring</div>
-    <h2>Consistency &amp; Health</h2>
-    <div class="score-cards">
-      <div class="score-card">
-        <div class="score-label">Brand Consistency</div>
-        <div class="score-value">${consistencyAndHealthScoring.brandConsistencyScore}</div>
-      </div>
-      <div class="score-card">
-        <div class="score-label">Visual Consistency</div>
-        <div class="score-value">${consistencyAndHealthScoring.visualConsistencyScore}</div>
-      </div>
-      <div class="score-card">
-        <div class="score-label">Message Clarity</div>
-        <div class="score-value">${consistencyAndHealthScoring.messageClarityScore}</div>
-      </div>
-      <div class="score-card">
-        <div class="score-label">Overall Score</div>
-        <div class="score-value">${consistencyAndHealthScoring.overallScore}</div>
+  <!-- D. EXECUTIVE SUMMARY & RECOMMENDATIONS (Full Width) -->
+  <div class="grid-container">
+    <div class="col-12 editorial-box">
+      <span class="overline">Executive Summary</span>
+      <p class="text-large" style="margin-top: 16px; margin-bottom: 32px; line-height: 1.8;">${escapeHtml(executiveSummaryData.executiveSummary)}</p>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 60px; padding-top: 24px; border-top: 1px solid rgba(0,0,0,0.05);">
+        <div>
+          <span class="overline" style="margin-bottom: 16px;">Key Strengths</span>
+          <ul style="margin: 0; padding-left: 16px; font-family: 'Inter', sans-serif; line-height: 1.8;">
+            ${executiveSummaryData.topStrengths.length > 0 
+              ? executiveSummaryData.topStrengths.map(s => `<li style="margin-bottom: 8px;">${escapeHtml(s)}</li>`).join('')
+              : '<li>Clear brand aesthetic</li><li>Strong visual foundation</li>'}
+          </ul>
+        </div>
+        <div>
+          <span class="overline" style="margin-bottom: 16px;">Areas for Growth</span>
+          <ul style="margin: 0; padding-left: 16px; font-family: 'Inter', sans-serif; line-height: 1.8;">
+            ${executiveSummaryData.topRisks.length > 0 
+              ? executiveSummaryData.topRisks.map(r => `<li style="margin-bottom: 8px;">${escapeHtml(r)}</li>`).join('')
+              : '<li>Refine value proposition</li><li>Expand content pillars</li>'}
+          </ul>
+        </div>
       </div>
     </div>
-    <div class="bar-chart">${renderBarChart(consistencyAndHealthScoring.chartData)}</div>
-    <h3>Score Insights</h3>
-    <h4>Brand Consistency</h4>
-    <ul>${renderScoreInsights(consistencyAndHealthScoring.scoreInsights.brandConsistency)}</ul>
-    <h4>Visual Consistency</h4>
-    <ul>${renderScoreInsights(consistencyAndHealthScoring.scoreInsights.visualConsistency)}</ul>
-    <h4>Message Clarity</h4>
-    <ul>${renderScoreInsights(consistencyAndHealthScoring.scoreInsights.messageClarity)}</ul>
-  </section>
+  </div>
 
-  <section class="section">
-    <div class="section-title">Direction</div>
-    <h2>Recommendations &amp; Roadmap</h2>
-    <h3>Quick Wins</h3>
-    <ol>${renderList(recommendationsAndRoadmap.quickWins, "li")}</ol>
-    <h3>Strategic Initiatives</h3>
-    <div class="card-row">${renderStrategicInitiatives(recommendationsAndRoadmap.strategicInitiatives)}</div>
-    <h3>Roadmap Timeline</h3>
-    <div class="timeline">${renderTimeline(recommendationsAndRoadmap.roadmapTimeline)}</div>
-    <h3>Narrative</h3>
-    <p>${escapeHtml(recommendationsAndRoadmap.recommendationNarrative)}</p>
-  </section>
-
-  <section class="section">
-    <div class="section-title">Knowledge</div>
-    <h2>Content &amp; Knowledge Assets</h2>
-    <h3>Documents Analyzed</h3>
-    <ul>${renderList(contentKnowledgeAssets.documentsAnalyzed)}</ul>
-    <h3>Content Gaps</h3>
-    <ul>${renderList(contentKnowledgeAssets.contentGaps)}</ul>
-    <div class="card-row">
-      <div class="card">
-        <div class="card-label">Essential Five Status</div>
-        <div class="card-value">${escapeHtml(contentKnowledgeAssets.essentialFiveStatus)}</div>
-      </div>
-      <div class="card">
-        <div class="card-label">AI Readiness</div>
-        <div class="card-value">${escapeHtml(contentKnowledgeAssets.aiReadiness)}</div>
-      </div>
-      <div class="card">
-        <div class="card-label">Brand Health</div>
-        <div class="card-value">${escapeHtml(contentKnowledgeAssets.brandHealthStatus)}</div>
+  <!-- E. STRATEGIC ROADMAP & CONTENT GAPS -->
+  <div class="grid-container">
+    <!-- Left: Roadmap -->
+    <div class="col-8 editorial-box">
+      <span class="overline">Strategic Roadmap</span>
+      <div style="margin-top: 24px; flex-grow: 1;">
+        ${recommendationsAndRoadmap.roadmapTimeline.length > 0 
+          ? recommendationsAndRoadmap.roadmapTimeline.map(phase => `
+            <div style="display: flex; gap: 32px; margin-bottom: 32px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 24px;">
+              <div style="width: 140px; flex-shrink: 0;">
+                <div style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 18px; margin-bottom: 4px;">${escapeHtml(phase.phaseName)}</div>
+                <div class="overline" style="font-size: 9px; color: #888;">${escapeHtml(phase.timeHorizon)}</div>
+              </div>
+              <div style="flex: 1;">
+                <ul style="margin: 0; padding-left: 16px; line-height: 1.6;">
+                  ${phase.actions.map(action => `<li style="margin-bottom: 6px;">${escapeHtml(action)}</li>`).join('')}
+                </ul>
+              </div>
+            </div>
+          `).join('')
+          : `<div style="height: 100%; min-height: 200px; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #888; border: 1px dashed rgba(0,0,0,0.1); border-radius: 4px;">
+               <div style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 18px; margin-bottom: 8px;">Analysis Pending</div>
+               <div style="font-family: 'Inter', sans-serif; font-size: 11px;">Roadmap data will appear here after full strategy generation.</div>
+             </div>`
+        }
       </div>
     </div>
-  </section>
 
+    <!-- Right: Content Gaps -->
+    <div class="col-4 editorial-box">
+      <span class="overline">Content Gaps</span>
+      <ul style="margin-top: 24px; padding-left: 16px; line-height: 1.8; margin-bottom: 32px;">
+        ${contentKnowledgeAssets.contentGaps.length > 0 
+          ? contentKnowledgeAssets.contentGaps.map(gap => `<li style="margin-bottom: 8px;">${escapeHtml(gap)}</li>`).join('')
+          : '<li>Founder story</li><li>Product education</li><li>Brand manifesto</li>'
+        }
+      </ul>
+      
+      <div style="border-top: 1px solid rgba(0,0,0,0.05); padding-top: 24px; margin-top: auto;">
+        <span class="overline">Quick Wins</span>
+        <ol style="margin-top: 16px; padding-left: 16px; line-height: 1.8;">
+          ${recommendationsAndRoadmap.quickWins.length > 0 
+            ? recommendationsAndRoadmap.quickWins.slice(0,3).map(win => `<li style="margin-bottom: 8px;">${escapeHtml(win)}</li>`).join('')
+            : '<li>Audit social bio</li><li>Update hero imagery</li>'
+          }
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- F. DIGITAL PRESENCE (Optional Screenshot Grid) -->
+  <div class="editorial-box" style="min-height: 300px; margin-bottom: 48px;">
+    <span class="overline">Digital Presence</span>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 16px;">
+       ${websiteDigitalScan.websiteScreenshots.length > 0 
+         ? renderScreenshots(websiteDigitalScan.websiteScreenshots).replace(/class="screenshot"/g, 'class="screenshot" style="height: 200px; background-size: cover; border: 1px solid rgba(0,0,0,0.1);"')
+         : `<div style="height: 200px; background: rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: center; font-style: italic;">No Capture Available</div>`
+       }
+    </div>
+    <div style="margin-top: 24px; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 16px;">
+      <span class="overline">Key Findings</span>
+      <p>${escapeHtml(websiteDigitalScan.websiteFindings || "No findings recorded.")}</p>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
   <footer>
-    <div>
-      ${escapeHtml(footerMetadata.preparedBy)}<br />
-      <span class="small-label">${escapeHtml(footerMetadata.disclaimer)}</span>
-    </div>
-    <div>
-      <span class="small-label">${escapeHtml(footerMetadata.nextSteps)}</span><br />
-      <span>${escapeHtml(footerMetadata.pageNumber)}</span>
-    </div>
+    <div>Generated by Madison Studio</div>
+    <div>${escapeHtml(coreIdentifiers.dateGenerated)}</div>
   </footer>
-</body>
-</html>
-`;
-};
 
+</body>
+</html>`;
+};

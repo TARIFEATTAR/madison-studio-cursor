@@ -20,7 +20,7 @@ export function BrandHealthCard() {
     );
   }
 
-  return (
+    return (
     <button 
       className="col-span-1 md:col-span-4 p-4 md:p-6 bg-white border border-[#E0E0E0] cursor-pointer hover:shadow-lg transition-all hover:-translate-y-0.5 rounded-xl min-h-[180px] md:min-h-[200px] text-left w-full touch-manipulation"
       onClick={() => navigate("/brand-health")}

@@ -69,9 +69,9 @@ export function LivingReportCard() {
     return (
       <div className="col-span-1 md:col-span-4">
         <Card className="p-4 md:p-6 bg-white border border-[#E0E0E0] rounded-xl min-h-[180px] md:min-h-[200px]">
-          <Skeleton className="h-6 w-32 mb-4" />
-          <Skeleton className="h-20 w-full" />
-        </Card>
+        <Skeleton className="h-6 w-32 mb-4" />
+        <Skeleton className="h-20 w-full" />
+      </Card>
       </div>
     );
   }

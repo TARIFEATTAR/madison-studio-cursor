@@ -136,7 +136,7 @@ export default function DashboardNew() {
             </div>
 
             {/* Right Column: Getting Started */}
-            {showChecklist && (
+          {showChecklist && (
               <div className="col-span-1 md:col-span-6">
                 <GettingStartedChecklist
                   onDismiss={() => setShowChecklist(false)}
