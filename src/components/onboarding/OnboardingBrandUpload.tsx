@@ -113,32 +113,63 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
       let uploadContent = "";
 
       if (selectedMethod === "pdf" && uploadedFile) {
-        // Generate unique file path
+        // Generate unique file path with random component to avoid conflicts
         const timestamp = Date.now();
+        const randomId = Math.random().toString(36).substring(2, 9);
         const sanitizedFileName = uploadedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const filePath = `${organizationId}/${timestamp}_${sanitizedFileName}`;
+        const filePath = `${organizationId}/${timestamp}_${randomId}_${sanitizedFileName}`;
 
         // Upload file to Supabase Storage
-        logger.debug('Uploading file to storage:', { filePath, fileName: uploadedFile.name, size: uploadedFile.size });
+        logger.debug('Uploading file to storage:', { 
+          filePath, 
+          fileName: uploadedFile.name, 
+          size: uploadedFile.size,
+          organizationId,
+          userId: user?.id
+        });
         
+        // Verify we have a valid session before uploading
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (!currentSession) {
+          throw new Error('Session expired. Please refresh the page and try again.');
+        }
+
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('brand-documents')
           .upload(filePath, uploadedFile, {
             cacheControl: '3600',
-            upsert: false
+            upsert: true // Allow overwriting if file exists
           });
 
         if (uploadError) {
-          logger.error('Storage upload error:', uploadError);
+          logger.error('Storage upload error details:', {
+            error: uploadError,
+            message: uploadError.message,
+            statusCode: (uploadError as any).statusCode,
+            errorCode: (uploadError as any).error,
+            filePath,
+            fileName: uploadedFile.name,
+            hasSession: !!currentSession,
+            organizationId
+          });
           
-          // Provide more helpful error messages
-          let errorMessage = uploadError.message;
-          if (uploadError.message?.includes('Failed to fetch') || uploadError.message?.includes('network')) {
-            errorMessage = 'Network error. Please check your connection and try again.';
-          } else if (uploadError.message?.includes('JWT') || uploadError.message?.includes('auth')) {
-            errorMessage = 'Authentication error. Please refresh the page and try again.';
-          } else if (uploadError.message?.includes('permission') || uploadError.message?.includes('policy')) {
-            errorMessage = 'Permission denied. Please ensure you have access to upload documents.';
+          // Provide more helpful error messages based on error type
+          let errorMessage = uploadError.message || 'Unknown upload error';
+          
+          // Check for specific error codes
+          const statusCode = (uploadError as any).statusCode;
+          const errorCode = (uploadError as any).error;
+          
+          if (uploadError.message?.includes('Failed to fetch') || statusCode === 0 || !statusCode) {
+            errorMessage = 'Network error. This could be a CORS issue or the storage endpoint is unreachable. Please check your Supabase project settings.';
+          } else if (uploadError.message?.includes('JWT') || uploadError.message?.includes('auth') || statusCode === 401) {
+            errorMessage = 'Authentication error. Your session may have expired. Please refresh the page and try again.';
+          } else if (uploadError.message?.includes('permission') || uploadError.message?.includes('policy') || statusCode === 403) {
+            errorMessage = 'Permission denied. Please check that the storage bucket RLS policies allow uploads for authenticated users.';
+          } else if (statusCode === 404) {
+            errorMessage = 'Storage bucket not found. Please verify the "brand-documents" bucket exists in your Supabase Storage.';
+          } else if (statusCode === 409) {
+            errorMessage = 'File already exists. This should not happen with unique file paths. Please try again.';
           }
           
           throw new Error(`Upload failed: ${errorMessage}`);
@@ -247,7 +278,7 @@ export function OnboardingBrandUpload({ onContinue, onBack, onSkip, brandData }:
       <header className="flex items-center justify-between px-8 py-4 shrink-0 border-b border-border/10">
         <img src={madisonLogo} alt="MADISON" className="h-6 opacity-90" />
         <div className="flex items-center gap-4">
-          <VideoHelpTrigger videoId="understanding-brand-guidelines" variant="link" />
+          <VideoHelpTrigger videoId="understanding-brand-guidelines" variant="icon" />
           <button
             onClick={onSkip}
             className="text-charcoal/40 hover:text-charcoal transition-colors"
