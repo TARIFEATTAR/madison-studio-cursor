@@ -93,3 +93,4 @@ After updates:
 - Keep both domains in Supabase redirect URLs for flexibility
 - Production should use `app.madisonstudio.io` for all user-facing links
 
+
