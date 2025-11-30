@@ -6,19 +6,22 @@ export function usePostOnboardingGuide() {
   const [showGuide, setShowGuide] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    // Disabled: Post-onboarding guide modal is redundant
+    // To re-enable, uncomment the code below
 
-    // Check if onboarding was just completed and guide hasn't been shown
-    const onboardingCompleted = localStorage.getItem(`onboarding_completed_${user.id}`);
-    const guideShown = localStorage.getItem(`post_onboarding_guide_shown_${user.id}`);
+    // if (!user) return;
 
-    if (onboardingCompleted === "true" && !guideShown) {
-      // Small delay to let dashboard load
-      const timer = setTimeout(() => {
-        setShowGuide(true);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
+    // // Check if onboarding was just completed and guide hasn't been shown
+    // const onboardingCompleted = localStorage.getItem(`onboarding_completed_${user.id}`);
+    // const guideShown = localStorage.getItem(`post_onboarding_guide_shown_${user.id}`);
+
+    // if (onboardingCompleted === "true" && !guideShown) {
+    //   // Small delay to let dashboard load
+    //   const timer = setTimeout(() => {
+    //     setShowGuide(true);
+    //   }, 500);
+    //   return () => clearTimeout(timer);
+    // }
   }, [user]);
 
   const dismissGuide = () => {
