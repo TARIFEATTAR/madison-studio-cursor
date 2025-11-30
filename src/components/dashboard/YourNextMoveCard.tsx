@@ -24,7 +24,7 @@ export function YourNextMoveCard() {
   }, []);
 
   return (
-    <Card className="w-full p-4 md:p-6 bg-white border border-[#E0E0E0] rounded-xl min-h-[190px] md:min-h-[210px]">
+    <Card className="w-full p-4 md:p-6 bg-white border border-[#E0E0E0] rounded-xl min-h-[200px] md:min-h-[220px]">
       <div className="flex flex-col h-full justify-between">
         <div>
           <h3 className="text-sm font-medium text-[#1C150D]/60 mb-3">Your Next Move</h3>
