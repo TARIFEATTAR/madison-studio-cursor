@@ -28,15 +28,32 @@ const Auth = () => {
   // -------------------------------------------
   // NEW REDIRECT LOGIC
   // -------------------------------------------
-  const redirectAfterLogin = (user: User) => {
+  const redirectAfterLogin = async (user: User) => {
     if (hasNavigated.current) return;
     hasNavigated.current = true;
 
     const created = new Date(user.created_at).getTime();
     const signedIn = new Date(user.last_sign_in_at || 0).getTime();
-    const isNewUser = created === signedIn;
+    const confirmed = user.email_confirmed_at ? new Date(user.email_confirmed_at).getTime() : 0;
+
+    // Check if user was created OR confirmed at the same time as sign in (within 30 seconds)
+    // This handles both "Auto-confirm" (created ~= signedIn) and "Email Confirm" (confirmed ~= signedIn)
+    const isNewUser = (Math.abs(created - signedIn) < 30000) || (Math.abs(confirmed - signedIn) < 30000);
 
     if (isNewUser) {
+      // Send welcome email to new users
+      try {
+        logger.debug("[Auth] Sending welcome email to new user...");
+        await supabase.functions.invoke('send-welcome-email', {
+          body: {
+            userEmail: user.email,
+            userName: user.user_metadata?.full_name || user.email?.split('@')[0],
+          },
+        });
+      } catch (err) {
+        console.error("[Auth] Failed to send welcome email:", err);
+      }
+
       navigate("/onboarding", { replace: true });
     } else {
       navigate("/", { replace: true });
@@ -81,7 +98,13 @@ const Auth = () => {
           });
         } else {
           toast({ title: "Signed in", description: "Welcome back." });
-          // AuthContext will pick up the session change and trigger the redirect effect above
+
+          // Send welcome email immediately upon verification
+          supabase.functions.invoke('send-welcome-email', {
+            body: {
+              userEmail: user?.email, // User might not be set yet, but session is
+            },
+          }).catch(err => console.error("Failed to send welcome email:", err));
         }
       });
     }
@@ -99,7 +122,14 @@ const Auth = () => {
             userId: data.session.user.id,
             email: data.session.user.email,
           });
-          // AuthContext will pick up the session change
+
+          // Send welcome email immediately upon confirmation
+          supabase.functions.invoke('send-welcome-email', {
+            body: {
+              userEmail: data.session.user.email,
+              userName: data.session.user.user_metadata?.full_name,
+            },
+          }).catch(err => console.error("Failed to send welcome email:", err));
         }
       });
     }
@@ -145,7 +175,7 @@ const Auth = () => {
     setLoading(true);
 
     // Use explicit Vercel URL if available, otherwise use current origin
-    const redirectUrl = import.meta.env.VITE_FRONTEND_URL 
+    const redirectUrl = import.meta.env.VITE_FRONTEND_URL
       ? `${import.meta.env.VITE_FRONTEND_URL}/onboarding`
       : `${window.location.origin}/onboarding`;
 
@@ -223,7 +253,7 @@ const Auth = () => {
     setLoading(true);
 
     // Use explicit Vercel URL if available, otherwise use current origin
-    const redirectUrl = import.meta.env.VITE_FRONTEND_URL 
+    const redirectUrl = import.meta.env.VITE_FRONTEND_URL
       ? `${import.meta.env.VITE_FRONTEND_URL}/onboarding`
       : `${window.location.origin}/onboarding`;
 

@@ -2,7 +2,11 @@
 -- This allows prompts to be linked to generated images or uploaded images
 
 -- Create enum for image source
-CREATE TYPE image_source_type AS ENUM ('generated', 'uploaded');
+DO $$ BEGIN
+    CREATE TYPE image_source_type AS ENUM ('generated', 'uploaded');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Add image fields to prompts table
 ALTER TABLE prompts 

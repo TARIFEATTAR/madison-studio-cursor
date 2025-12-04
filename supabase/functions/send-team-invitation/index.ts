@@ -25,7 +25,9 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Sending team invitation to ${email} for organization ${organizationName}`);
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    
+    // Use custom domain email instead of resend.dev to avoid spam filters
+    const EMAIL_FROM = Deno.env.get("EMAIL_FROM") || "Madison Studio <hello@madisonstudio.io>";
+
     if (!RESEND_API_KEY) {
       throw new Error("RESEND_API_KEY not configured");
     }
@@ -37,9 +39,10 @@ const handler = async (req: Request): Promise<Response> => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Madison Studio <onboarding@resend.dev>",
+        from: EMAIL_FROM,
         to: [email],
         subject: `You've been invited to join ${organizationName} on Madison Studio`,
+        reply_to: EMAIL_FROM, // Ensure replies go to your domain
         html: `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
             <h1 style="color: #2D2D2D; font-size: 24px; margin-bottom: 24px;">You've been invited to join ${organizationName}</h1>

@@ -19,12 +19,12 @@ serve(async (req) => {
   }
 
   try {
-    const { 
-      userEmail, 
-      domain, 
-      reportUrl, 
+    const {
+      userEmail,
+      domain,
+      reportUrl,
       pdfUrl,
-      brandName 
+      brandName
     } = await req.json();
 
     if (!userEmail || !domain || !reportUrl) {
@@ -37,13 +37,15 @@ serve(async (req) => {
     console.log(`[send-report-email] Sending report email to ${userEmail} for ${domain}`);
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    
+    // Use custom domain email instead of resend.dev to avoid spam filters
+    const EMAIL_FROM = Deno.env.get("EMAIL_FROM") || "Madison Studio <hello@madisonstudio.io>";
+
     if (!RESEND_API_KEY) {
       console.warn("[send-report-email] RESEND_API_KEY not configured, skipping email");
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           message: "Email service not configured",
-          skipped: true 
+          skipped: true
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -51,7 +53,7 @@ serve(async (req) => {
 
     const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://app.madisonstudio.io";
     const displayBrandName = brandName || domain;
-    
+
     // Generate email HTML
     const emailHtml = `
       <!DOCTYPE html>
@@ -127,10 +129,11 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Madison Studio <onboarding@resend.dev>",
+        from: EMAIL_FROM,
         to: [userEmail],
         subject: `Your Brand Audit for ${displayBrandName} is Ready`,
         html: emailHtml,
+        reply_to: EMAIL_FROM, // Ensure replies go to your domain
       }),
     });
 
