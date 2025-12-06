@@ -118,7 +118,7 @@ export function BillingTab() {
 
   // Convert TIER_LIMITS to plan format for fallback
   const convertTiersToPlans = useCallback(() => {
-    const tierIds: TierId[] = ['atelier', 'studio', 'maison'];
+    const tierIds: TierId[] = ['essentials', 'studio', 'signature'];
     return tierIds.map((tierId, index) => {
       const tier = TIER_LIMITS[tierId];
       // Generate features array from tier limits
@@ -498,8 +498,8 @@ export function BillingTab() {
               {availablePlans.map((plan) => {
                 const isCurrentPlan = currentPlan?.slug === plan.slug;
                 const isHigherTier = currentPlan && 
-                  ['atelier', 'studio', 'maison'].indexOf(plan.slug) > 
-                  ['atelier', 'studio', 'maison'].indexOf(currentPlan.slug);
+                  ['essentials', 'studio', 'signature'].indexOf(plan.slug) > 
+                  ['essentials', 'studio', 'signature'].indexOf(currentPlan.slug);
                 
                 // Handle orphaned subscription - don't disable buttons if plan is missing
                 const shouldDisable = isCurrentPlan && !!currentPlan;
