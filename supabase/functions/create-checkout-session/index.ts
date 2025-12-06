@@ -36,13 +36,20 @@ serve(async (req) => {
     }
 
     // Extract token from header
-    const token = authHeader.replace('Bearer ', '');
+    const token = authHeader.replace('Bearer ', '').trim();
+    
+    console.log('[create-checkout-session] Token received, length:', token?.length);
+    console.log('[create-checkout-session] SUPABASE_URL:', SUPABASE_URL ? 'set' : 'NOT SET');
+    console.log('[create-checkout-session] SUPABASE_SERVICE_ROLE_KEY:', SUPABASE_SERVICE_ROLE_KEY ? 'set' : 'NOT SET');
     
     // Create Supabase client with service role for database operations
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Verify the user's JWT token
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    
+    console.log('[create-checkout-session] Auth result - user:', user?.id, 'error:', userError?.message);
+    
     if (userError || !user) {
       console.error('[create-checkout-session] Auth error:', userError?.message || 'No user found');
       return new Response(
@@ -86,20 +93,43 @@ serve(async (req) => {
 
     const organizationId = orgMember.organization_id;
 
-    // Get plan details
-    const { data: plan, error: planError } = await supabase
-      .from('subscription_plans')
-      .select('*')
-      .eq('id', planId)
-      .eq('is_active', true)
-      .single();
+    // Get plan details - try by ID first, then by slug (for fallback tier IDs)
+    let plan = null;
+    let planError = null;
+    
+    // Check if planId looks like a UUID
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(planId);
+    
+    if (isUUID) {
+      const result = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .eq('id', planId)
+        .eq('is_active', true)
+        .single();
+      plan = result.data;
+      planError = result.error;
+    } else {
+      // Try by slug (for fallback tier IDs like 'essentials', 'studio', 'signature')
+      const result = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .eq('slug', planId)
+        .eq('is_active', true)
+        .single();
+      plan = result.data;
+      planError = result.error;
+    }
 
     if (planError || !plan) {
+      console.error('[create-checkout-session] Plan not found:', planId, planError?.message);
       return new Response(
-        JSON.stringify({ error: 'Plan not found' }),
+        JSON.stringify({ error: `Plan not found: ${planId}` }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    
+    console.log('[create-checkout-session] Found plan:', plan.name, plan.id);
 
     // Get organization details
     const { data: organization } = await supabase
@@ -111,7 +141,7 @@ serve(async (req) => {
     // Get or create Stripe customer
     let stripeCustomerId: string;
 
-    // Check for existing subscription
+    // Check for existing subscription in our database
     const { data: existingSubscription } = await supabase
       .from('subscriptions')
       .select('stripe_customer_id')
@@ -120,17 +150,45 @@ serve(async (req) => {
 
     if (existingSubscription?.stripe_customer_id) {
       stripeCustomerId = existingSubscription.stripe_customer_id;
+      console.log('[create-checkout-session] Using existing customer from subscription:', stripeCustomerId);
     } else {
-      // Create new Stripe customer
-      const customer = await stripe.customers.create({
-        email: user.email,
-        name: organization?.name || 'Organization',
-        metadata: {
-          organization_id: organizationId,
-          user_id: user.id,
-        },
-      });
-      stripeCustomerId = customer.id;
+      // No subscription record - check if customer already exists in Stripe by email
+      try {
+        const existingCustomers = await stripe.customers.list({
+          email: user.email,
+          limit: 1,
+        });
+        
+        if (existingCustomers.data.length > 0) {
+          stripeCustomerId = existingCustomers.data[0].id;
+          console.log('[create-checkout-session] Found existing Stripe customer by email:', stripeCustomerId);
+        } else {
+          // Create new Stripe customer
+          const customer = await stripe.customers.create({
+            email: user.email,
+            name: organization?.name || 'Organization',
+            metadata: {
+              organization_id: organizationId,
+              user_id: user.id,
+            },
+          });
+          stripeCustomerId = customer.id;
+          console.log('[create-checkout-session] Created new Stripe customer:', stripeCustomerId);
+        }
+      } catch (stripeError) {
+        console.error('[create-checkout-session] Error checking/creating Stripe customer:', stripeError);
+        // Fallback: create new customer
+        const customer = await stripe.customers.create({
+          email: user.email,
+          name: organization?.name || 'Organization',
+          metadata: {
+            organization_id: organizationId,
+            user_id: user.id,
+          },
+        });
+        stripeCustomerId = customer.id;
+        console.log('[create-checkout-session] Created new Stripe customer (fallback):', stripeCustomerId);
+      }
     }
 
     // Determine price ID based on billing interval
@@ -158,9 +216,6 @@ serve(async (req) => {
       mode: 'subscription',
       success_url: `${APP_URL}/settings?tab=billing&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${APP_URL}/settings?tab=billing&canceled=true`,
-      payment_intent_data: {
-        statement_descriptor: 'MADISON STUDIO',
-      },
       metadata: {
         organization_id: organizationId,
         plan_id: planId,

@@ -91,7 +91,7 @@ export function UpcomingSchedule() {
         </p>
         <button
           onClick={() => navigate("/schedule")}
-          className="text-xs px-4 py-2 bg-ink-black text-parchment-white hover:bg-charcoal transition-colors"
+          className="text-xs px-4 py-2 bg-brand-brass text-brand-parchment hover:bg-brand-brass/90 shadow-md hover:shadow-brass-glow transition-all duration-300 rounded-md"
         >
           Schedule Content
         </button>

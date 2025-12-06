@@ -96,19 +96,19 @@ const PromptLibrarySidebar = ({
   };
 
   return (
-    <div className={cn("h-screen overflow-y-auto bg-white", className)}>
+    <div className={cn("h-screen overflow-y-auto bg-brand-parchment", className)}>
       <div className="p-6 space-y-6">
         {/* Active Filters Summary */}
       {(selectedQuickAccess || selectedCategory) && (
-        <div className="flex items-center justify-between p-4 bg-warm-gray/5 rounded-md border border-charcoal/10">
-          <span className="text-sm font-medium text-charcoal/70">
+        <div className="flex items-center justify-between p-4 bg-brand-vellum rounded-md border border-brand-stone/30">
+          <span className="text-sm font-medium text-muted-foreground">
             {[selectedQuickAccess, selectedCategory].filter(Boolean).length} filter(s) active
           </span>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClearFilters}
-            className="h-8 text-xs text-charcoal/70 hover:text-charcoal hover:bg-charcoal/5"
+            className="h-8 text-xs text-muted-foreground hover:text-brand-brass hover:bg-brand-brass/5"
           >
             Clear All
           </Button>
@@ -116,20 +116,20 @@ const PromptLibrarySidebar = ({
       )}
 
       {/* Quick Access Card */}
-      <Card className="border border-charcoal/10 bg-card shadow-sm rounded-lg">
+      <Card className="border border-brand-stone/30 bg-card shadow-level-1 rounded-lg">
         <CardContent className="p-6">
           <div className="flex items-center gap-3 mb-5">
-            <Star className="h-5 w-5 text-aged-brass" />
-            <h3 className="font-semibold text-base text-foreground">Quick Access</h3>
+            <Star className="h-5 w-5 text-brand-brass" />
+            <h3 className="font-serif text-lg font-semibold text-foreground">Quick Access</h3>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1">
             <button
               onClick={() => onQuickAccessSelect("favorites")}
               className={cn(
-                "w-full flex items-center justify-between px-4 py-3 rounded-md text-sm transition-all",
+                "w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm transition-all duration-200",
                 selectedQuickAccess === "favorites"
-                  ? "bg-aged-brass/10 text-aged-brass font-medium border border-aged-brass/20"
-                  : "hover:bg-charcoal/5 text-charcoal/70 border border-transparent"
+                  ? "bg-brand-brass/10 text-brand-brass font-medium border-l-2 border-brand-brass"
+                  : "hover:bg-brand-vellum text-muted-foreground hover:text-brand-brass"
               )}
             >
               <span className="flex items-center gap-3">
@@ -137,10 +137,10 @@ const PromptLibrarySidebar = ({
                 Favorites
               </span>
               <Badge variant="secondary" className={cn(
-                "text-xs font-medium min-w-[36px] h-6 justify-center rounded-md",
+                "text-xs font-medium min-w-[32px] h-5 justify-center rounded-full",
                 selectedQuickAccess === "favorites" 
-                  ? "bg-aged-brass/20 text-aged-brass" 
-                  : "bg-charcoal/5 text-charcoal/60"
+                  ? "bg-brand-brass/20 text-brand-brass" 
+                  : "bg-muted text-muted-foreground"
               )}>
                 {counts?.favorites || 0}
               </Badge>
@@ -148,10 +148,10 @@ const PromptLibrarySidebar = ({
             <button
               onClick={() => onQuickAccessSelect("recently-used")}
               className={cn(
-                "w-full flex items-center justify-between px-4 py-3 rounded-md text-sm transition-all",
+                "w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm transition-all duration-200",
                 selectedQuickAccess === "recently-used"
-                  ? "bg-aged-brass/10 text-aged-brass font-medium border border-aged-brass/20"
-                  : "hover:bg-charcoal/5 text-charcoal/70 border border-transparent"
+                  ? "bg-brand-brass/10 text-brand-brass font-medium border-l-2 border-brand-brass"
+                  : "hover:bg-brand-vellum text-muted-foreground hover:text-brand-brass"
               )}
             >
               <span className="flex items-center gap-3">
@@ -159,10 +159,10 @@ const PromptLibrarySidebar = ({
                 Recently Used
               </span>
               <Badge variant="secondary" className={cn(
-                "text-xs font-medium min-w-[36px] h-6 justify-center rounded-md",
+                "text-xs font-medium min-w-[32px] h-5 justify-center rounded-full",
                 selectedQuickAccess === "recently-used" 
-                  ? "bg-aged-brass/20 text-aged-brass" 
-                  : "bg-charcoal/5 text-charcoal/60"
+                  ? "bg-brand-brass/20 text-brand-brass" 
+                  : "bg-muted text-muted-foreground"
               )}>
                 {counts?.recentlyUsed || 0}
               </Badge>
@@ -170,10 +170,10 @@ const PromptLibrarySidebar = ({
             <button
               onClick={() => onQuickAccessSelect("most-used")}
               className={cn(
-                "w-full flex items-center justify-between px-4 py-3 rounded-md text-sm transition-all",
+                "w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm transition-all duration-200",
                 selectedQuickAccess === "most-used"
-                  ? "bg-aged-brass/10 text-aged-brass font-medium border border-aged-brass/20"
-                  : "hover:bg-charcoal/5 text-charcoal/70 border border-transparent"
+                  ? "bg-brand-brass/10 text-brand-brass font-medium border-l-2 border-brand-brass"
+                  : "hover:bg-brand-vellum text-muted-foreground hover:text-brand-brass"
               )}
             >
               <span className="flex items-center gap-3">
@@ -181,10 +181,10 @@ const PromptLibrarySidebar = ({
                 Most Used
               </span>
               <Badge variant="secondary" className={cn(
-                "text-xs font-medium min-w-[36px] h-6 justify-center rounded-md",
+                "text-xs font-medium min-w-[32px] h-5 justify-center rounded-full",
                 selectedQuickAccess === "most-used" 
-                  ? "bg-aged-brass/20 text-aged-brass" 
-                  : "bg-charcoal/5 text-charcoal/60"
+                  ? "bg-brand-brass/20 text-brand-brass" 
+                  : "bg-muted text-muted-foreground"
               )}>
                 {counts?.mostUsed || 0}
               </Badge>
@@ -194,41 +194,41 @@ const PromptLibrarySidebar = ({
       </Card>
 
       {/* Image Categories Card */}
-      <Card className="border border-charcoal/10 bg-card shadow-sm rounded-lg">
+      <Card className="border border-brand-stone/30 bg-card shadow-level-1 rounded-lg">
         <CardContent className="p-6">
           <button
             onClick={() => toggleSection("categories")}
             className="w-full flex items-center justify-between hover:opacity-80 transition-opacity group"
           >
             <div className="flex items-center gap-3">
-              <Hash className="h-5 w-5 text-aged-brass" />
-              <h3 className="font-semibold text-base text-foreground">Image Types</h3>
+              <Hash className="h-5 w-5 text-brand-brass" />
+              <h3 className="font-serif text-lg font-semibold text-foreground">Image Types</h3>
             </div>
             {expandedSections.categories ? (
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
             ) : (
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
             )}
           </button>
           {expandedSections.categories && (
-            <div className="space-y-2 mt-4">
+            <div className="space-y-1 mt-4">
               <button
                 onClick={() => onCategorySelect(null)}
                 className={cn(
-                  "w-full flex items-center justify-between px-4 py-3 rounded-md text-sm transition-all",
+                  "w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm transition-all duration-200",
                   selectedCategory === null
-                    ? "bg-aged-brass/10 text-aged-brass font-medium border border-aged-brass/20"
-                    : "hover:bg-charcoal/5 text-charcoal/70 border border-transparent"
+                    ? "bg-brand-brass/10 text-brand-brass font-medium border-l-2 border-brand-brass"
+                    : "hover:bg-brand-vellum text-muted-foreground hover:text-brand-brass"
                 )}
               >
                 <span>All Types</span>
                 <Badge
                   variant="secondary"
                   className={cn(
-                    "text-xs font-medium min-w-[36px] h-6 justify-center rounded-md",
+                    "text-xs font-medium min-w-[32px] h-5 justify-center rounded-full",
                     selectedCategory === null
-                      ? "bg-aged-brass/20 text-aged-brass"
-                      : "bg-charcoal/5 text-charcoal/60"
+                      ? "bg-brand-brass/20 text-brand-brass"
+                      : "bg-muted text-muted-foreground"
                   )}
                 >
                   {counts?.categories?.all ?? 0}
@@ -245,10 +245,10 @@ const PromptLibrarySidebar = ({
                     key={category.key}
                     onClick={() => onCategorySelect(isSelected ? null : category.key)}
                     className={cn(
-                      "w-full flex items-center justify-between px-4 py-3 rounded-md text-sm transition-all",
+                      "w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm transition-all duration-200",
                       isSelected
-                        ? "bg-aged-brass/10 text-aged-brass font-medium border border-aged-brass/20"
-                        : "hover:bg-charcoal/5 text-charcoal/70 border border-transparent"
+                        ? "bg-brand-brass/10 text-brand-brass font-medium border-l-2 border-brand-brass"
+                        : "hover:bg-brand-vellum text-muted-foreground hover:text-brand-brass"
                     )}
                   >
                     <span className="flex items-center gap-3">
@@ -258,10 +258,10 @@ const PromptLibrarySidebar = ({
                     <Badge
                       variant="secondary"
                       className={cn(
-                        "text-xs font-medium min-w-[36px] h-6 justify-center rounded-md",
+                        "text-xs font-medium min-w-[32px] h-5 justify-center rounded-full",
                         isSelected
-                          ? "bg-aged-brass/20 text-aged-brass"
-                          : "bg-charcoal/5 text-charcoal/60"
+                          ? "bg-brand-brass/20 text-brand-brass"
+                          : "bg-muted text-muted-foreground"
                       )}
                     >
                       {count}

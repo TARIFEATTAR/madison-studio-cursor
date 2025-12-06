@@ -222,17 +222,21 @@ const RootRoute = () => {
           return;
         }
 
-        // If organization has brand info, consider onboarding complete
+        // If organization has brand info OR user has completed onboarding before, consider it complete
         const hasBrandInfo = org?.brand_config &&
           typeof org.brand_config === 'object' &&
-          'industry' in org.brand_config;
+          Object.keys(org.brand_config).length > 0 &&
+          ('industry' in org.brand_config || 'brandName' in org.brand_config);
+        
+        // Also check localStorage as a fallback
+        const hasCompletedBefore = localStorage.getItem(`onboarding_completed_${user.id}`) === "true";
 
-        if (!hasBrandInfo) {
-          logger.warn("[RootRoute] Redirect → /onboarding (reason: missing brand_config.industry)");
+        if (!hasBrandInfo && !hasCompletedBefore) {
+          logger.warn("[RootRoute] Redirect → /onboarding (reason: missing brand_config and no completion flag)");
           setRedirectCount(prev => prev + 1);
           navigate('/onboarding', { replace: true });
         } else {
-          logger.debug("[RootRoute] Onboarding OK (has brand info). Staying on dashboard.");
+          logger.debug("[RootRoute] Onboarding OK (has brand info or completed before). Staying on dashboard.");
           localStorage.setItem(`onboarding_completed_${user.id}`, "true");
         }
 

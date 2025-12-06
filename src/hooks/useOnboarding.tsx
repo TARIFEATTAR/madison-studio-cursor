@@ -37,27 +37,28 @@ export function useOnboarding() {
         setOnboardingStep(currentStep);
 
         // Run organization queries in parallel for faster loading
+        // Use .order().limit(1) to get the FIRST organization (oldest) to enforce one-per-user
         const [existingMemberResult, existingOrgResult] = await Promise.all([
           supabase
             .from("organization_members")
             .select("organization_id")
             .eq("user_id", user.id)
-            .limit(1)
-            .maybeSingle(),
+            .order("created_at", { ascending: true })
+            .limit(1),
           supabase
             .from("organizations")
             .select("id")
             .eq("created_by", user.id)
+            .order("created_at", { ascending: true })
             .limit(1)
-            .maybeSingle()
         ]);
 
-        const existingOrgs = existingMemberResult.data;
-        const userOrgs = existingOrgResult.data;
+        const existingMember = existingMemberResult.data?.[0];
+        const userOrg = existingOrgResult.data?.[0];
         let orgId: string;
 
-        if (existingOrgs?.organization_id) {
-          orgId = existingOrgs.organization_id;
+        if (existingMember?.organization_id) {
+          orgId = existingMember.organization_id;
           setCurrentOrganizationId(orgId);
           
           // Check brand knowledge in background (non-blocking)
@@ -74,9 +75,9 @@ export function useOnboarding() {
               })
               .catch(err => logger.error("Error checking brand knowledge:", err));
           }
-        } else if (userOrgs) {
-          // User already has an organization, use it
-          orgId = userOrgs.id;
+        } else if (userOrg) {
+          // User already has an organization, use it (always use the first/oldest one)
+          orgId = userOrg.id;
           logger.debug("Found existing organization:", orgId);
           setCurrentOrganizationId(orgId);
           

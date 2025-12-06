@@ -5,16 +5,21 @@ import { Button } from "@/components/ui/button";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useAuth } from "@/hooks/useAuth";
 import { useOrganization } from "@/hooks/useOrganization";
+
+// New Dashboard Components (Phase 2)
+import { DashboardHero } from "@/components/dashboard/DashboardHero";
+import { SmartMomentumTracker } from "@/components/dashboard/SmartMomentumTracker";
+
+// Existing Components (Updated in Phase 1)
 import { BrandHealthCard } from "@/components/dashboard/BrandHealthCard";
-import { YourProgressCard } from "@/components/dashboard/YourProgressCard";
-import { YourNextMoveCard } from "@/components/dashboard/YourNextMoveCard";
 import { ContentPipelineCard } from "@/components/dashboard/ContentPipelineCard";
 import { ThisWeekCard } from "@/components/dashboard/ThisWeekCard";
-import { PerformanceMomentumZone } from "@/components/dashboard/PerformanceMomentumZone";
-import { LivingReportCard } from "@/components/dashboard/LivingReportCard";
+import { DashboardRecentActivity } from "@/components/dashboard/DashboardRecentActivity";
+
+// Supporting Components
+import { GettingStartedChecklist } from "@/components/onboarding/GettingStartedChecklist";
 import { DraftNudge } from "@/components/dashboard/DraftNudge";
 import { PostOnboardingGuide } from "@/components/onboarding/PostOnboardingGuide";
-import { GettingStartedChecklist } from "@/components/onboarding/GettingStartedChecklist";
 import { usePostOnboardingGuide } from "@/hooks/usePostOnboardingGuide";
 import { logger } from "@/lib/logger";
 
@@ -35,10 +40,9 @@ export default function DashboardNew() {
   useEffect(() => {
     if (!user) return;
     const checklistDismissed = localStorage.getItem(`checklist_dismissed_${user.id}`);
-    const checklistProgress = localStorage.getItem(`checklist_progress_${user.id}`);
 
-    // Show checklist if not dismissed and user has some activity (not brand new)
-    if (!checklistDismissed && stats && stats.totalContent < 10) {
+    // Show checklist if not dismissed and user has less than 5 completed tasks
+    if (!checklistDismissed && stats && stats.totalContent < 5) {
       setShowChecklist(true);
     }
   }, [user, stats]);
@@ -64,15 +68,15 @@ export default function DashboardNew() {
   // Show fallback if loading too long or error occurred
   if ((statsLoading && showFallback) || isError) {
     return (
-      <div className="min-h-screen bg-vellum-cream flex items-center justify-center">
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
         <div className="text-center space-y-4">
-          {statsLoading && !isError && <Loader2 className="w-8 h-8 animate-spin text-brass mx-auto" />}
-          <div className="text-charcoal text-sm">
+          {statsLoading && !isError && <Loader2 className="w-8 h-8 animate-spin text-[#B8956A] mx-auto" />}
+          <div className="text-[#1C150D]/60 text-sm">
             {isError ? "Welcome! Let's get started." : "Setting up your workspace…"}
           </div>
           <Button
             onClick={() => navigate("/create")}
-            className="bg-ink-black hover:bg-charcoal text-parchment-white"
+            className="bg-[#1C150D] hover:bg-[#2C251D] text-white"
           >
             Start Creating
           </Button>
@@ -84,8 +88,8 @@ export default function DashboardNew() {
   // Show brief initial spinner
   if (statsLoading) {
     return (
-      <div className="min-h-screen bg-vellum-cream flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-brass" />
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#B8956A]" />
       </div>
     );
   }
@@ -98,7 +102,7 @@ export default function DashboardNew() {
         <Button
           size="sm"
           onClick={() => setMadisonPanelOpen(true)}
-          className="bg-brand-brass hover:bg-[#A3865A] text-white flex items-center gap-2 shadow-sm"
+          className="bg-[#B8956A] hover:bg-[#A3865A] text-white flex items-center gap-2 shadow-sm"
         >
           <Sparkles className="w-4 h-4" />
           Ask Madison
@@ -111,7 +115,7 @@ export default function DashboardNew() {
         <Button
           size="sm"
           onClick={() => setMadisonPanelOpen(true)}
-          className="bg-brand-brass hover:bg-[#A3865A] text-white px-3 py-2"
+          className="bg-[#B8956A] hover:bg-[#A3865A] text-white px-3 py-2"
         >
           <Sparkles className="w-4 h-4" />
         </Button>
@@ -119,49 +123,59 @@ export default function DashboardNew() {
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-auto px-4 md:px-8 py-4 md:py-6 pb-24 md:pb-6 main-content">
-        <div className="max-w-[1600px] mx-auto space-y-3 md:space-y-4 animate-fade-in">
-          {/* Row 1: Brand Health, Your Progress, Living Brand Report */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
-            <BrandHealthCard />
-            <YourProgressCard />
-            <LivingReportCard />
+        <div className="max-w-[1400px] mx-auto space-y-4 md:space-y-6">
+          
+          {/* 1. HERO SECTION + BRAND HEALTH SIDE BY SIDE */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 animate-slide-up stagger-1">
+            {/* Hero takes 9 columns (3/4 width) */}
+            <div className="col-span-1 md:col-span-9">
+              <DashboardHero />
+            </div>
+            {/* Brand Health takes 3 columns (1/4 width) */}
+            <div className="col-span-1 md:col-span-3">
+              <BrandHealthCard compact />
+            </div>
           </div>
 
-          {/* Row 2: Your Next Move, Content Pipeline, and Getting Started */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
-            {/* Left Column: Next Move + Content Pipeline */}
-            <div className={showChecklist ? "col-span-1 md:col-span-6 space-y-3 md:space-y-4" : "col-span-1 md:col-span-12 space-y-3 md:space-y-4"}>
-              <YourNextMoveCard />
+          {/* 2. CONTENT PIPELINE + SMART MOMENTUM TRACKER */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 animate-slide-up stagger-2">
+            <div className="col-span-1 md:col-span-6">
               <ContentPipelineCard />
             </div>
+            <SmartMomentumTracker />
+          </div>
 
-            {/* Right Column: Getting Started */}
+          {/* 3. THIS WEEK'S SCHEDULE */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 animate-slide-up stagger-3">
+            <ThisWeekCard />
+          </div>
+
+          {/* 5. GETTING STARTED (New users only - <5 content pieces) */}
           {showChecklist && (
-              <div className="col-span-1 md:col-span-6">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 animate-slide-up stagger-5">
+              <div className="col-span-1 md:col-span-12">
                 <GettingStartedChecklist
                   onDismiss={() => setShowChecklist(false)}
                   compact={false}
                 />
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          {/* Draft Nudge - Full Width (if needed) */}
+          {/* Draft Nudge - Only show if 10+ drafts */}
           {stats && stats.totalDrafts >= 10 && (
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 animate-slide-up stagger-5">
               <DraftNudge draftCount={stats.totalDrafts} />
             </div>
           )}
 
-          {/* Row 4: This Week - Full Width */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
-            <ThisWeekCard />
+          {/* 6. RECENT ACTIVITY (Collapsed by default, hidden on mobile) */}
+          <div className="hidden md:grid grid-cols-1 md:grid-cols-12 gap-4 animate-slide-up stagger-6">
+            <div className="col-span-1 md:col-span-12">
+              <DashboardRecentActivity collapsible={true} defaultExpanded={false} />
+            </div>
           </div>
 
-          {/* Row 5: Performance Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
-            <PerformanceMomentumZone />
-          </div>
         </div>
       </div>
 

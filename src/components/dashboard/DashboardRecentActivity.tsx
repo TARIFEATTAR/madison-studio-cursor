@@ -1,4 +1,5 @@
-import { FileText, Image, Video, Calendar, FileOutput, Boxes, Clock, CheckCircle2, Edit3, Eye } from "lucide-react";
+import { useState } from "react";
+import { FileText, Image, Video, Calendar, FileOutput, Boxes, Clock, CheckCircle2, Edit3, Eye, ChevronDown } from "lucide-react";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -26,92 +27,138 @@ const getStatusBadge = (action: string, type: string) => {
   return { text: action, color: "bg-warm-gray/10 text-warm-gray border-warm-gray/20", icon: Clock };
 };
 
-export function DashboardRecentActivity() {
+interface DashboardRecentActivityProps {
+  collapsible?: boolean;
+  defaultExpanded?: boolean;
+}
+
+export function DashboardRecentActivity({ 
+  collapsible = true, 
+  defaultExpanded = false 
+}: DashboardRecentActivityProps) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const { data: stats } = useDashboardStats();
   const recentActivity = stats?.recentActivity || [];
   const navigate = useNavigate();
 
   const handleContentClick = (activity: any) => {
-    // Navigate to Library with the content selected
     navigate(`/library?contentId=${activity.id}`);
   };
 
+  // If not collapsible, always show content
+  const showContent = !collapsible || isExpanded;
+
   if (recentActivity.length === 0) {
     return (
-      <div className="text-center py-8">
-        <div className="w-16 h-16 mx-auto mb-4 bg-vellum-cream border border-charcoal/10 flex items-center justify-center">
-          <FileText className="w-8 h-8 text-charcoal/30" />
+      <div className="bg-white border border-[#E0E0E0] rounded-xl overflow-hidden">
+        {/* Header */}
+        <div className="p-4 md:p-6">
+          <h3 className="text-sm font-medium text-[#1C150D]/60 mb-4">Recent Activity</h3>
+          <div className="text-center py-4">
+            <div className="w-12 h-12 mx-auto mb-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg flex items-center justify-center">
+              <FileText className="w-6 h-6 text-[#1C150D]/30" />
+            </div>
+            <p className="text-sm font-medium text-[#1C150D] mb-1">No content yet</p>
+            <p className="text-xs text-[#1C150D]/50 mb-3">
+              Start creating to see your activity
+            </p>
+            <button
+              onClick={() => navigate("/create")}
+              className="text-xs px-4 py-2 bg-[#1C150D] text-white hover:bg-[#2C251D] transition-colors rounded-md"
+            >
+              Create Your First Piece
+            </button>
+          </div>
         </div>
-        <p className="text-sm font-medium text-ink-black mb-1">No content yet</p>
-        <p className="text-xs text-charcoal/60 mb-4">
-          Start creating content to see your activity here
-        </p>
-        <button
-          onClick={() => navigate("/create")}
-          className="text-xs px-4 py-2 bg-ink-black text-parchment-white hover:bg-charcoal transition-colors"
-        >
-          Create Your First Piece
-        </button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
-      {recentActivity.map((activity) => {
-        const Icon = getIconForType(activity.type);
-        const statusBadge = getStatusBadge(activity.action, activity.type);
-        const StatusIcon = statusBadge.icon;
-        
-        return (
-          <div
-            key={activity.id}
-            onClick={() => handleContentClick(activity)}
-            className="group p-4 border border-charcoal/10 hover:border-aged-brass/40 transition-all cursor-pointer bg-parchment-white hover:bg-vellum-cream/30"
-          >
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-vellum-cream border border-charcoal/10 flex items-center justify-center shrink-0 group-hover:border-aged-brass/40 transition-colors">
-                <Icon className="w-5 h-5 text-charcoal group-hover:text-aged-brass transition-colors" />
-              </div>
-              
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <p className="text-sm font-semibold text-ink-black truncate group-hover:text-aged-brass transition-colors">
-                    {activity.title}
-                  </p>
-                  <Badge variant="outline" className={`shrink-0 ${statusBadge.color} text-[10px] px-2`}>
-                    <StatusIcon className="w-3 h-3 mr-1" />
-                    {statusBadge.text}
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center gap-2 text-xs text-charcoal/60">
-                  <span className="capitalize">{activity.type.replace(/_/g, ' ')}</span>
-                  <span>•</span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {activity.time}
-                  </span>
-                </div>
-                
-                {/* Action hint */}
-                <div className="mt-2 flex items-center gap-1 text-[10px] text-aged-brass opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Eye className="w-3 h-3" />
-                  <span>Click to view details</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-      
-      {recentActivity.length >= 5 && (
+    <div className="bg-white border border-[#E0E0E0] rounded-xl overflow-hidden transition-all duration-300">
+      {/* Collapsible Header */}
+      {collapsible ? (
         <button
-          onClick={() => navigate("/library")}
-          className="w-full py-2 text-xs text-charcoal hover:text-aged-brass transition-colors border-t border-charcoal/10 mt-2 pt-4"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full p-4 md:p-6 text-left flex items-center justify-between hover:bg-[#FAFAFA] transition-colors"
         >
-          View All Activity →
+          <div>
+            <h3 className="text-sm font-medium text-[#1C150D]/60 mb-1">Recent Activity</h3>
+            <p className="text-xs text-[#1C150D]/40">
+              {recentActivity.length} recent item{recentActivity.length !== 1 ? 's' : ''} · Click to expand
+            </p>
+          </div>
+          <ChevronDown 
+            className={`w-5 h-5 text-[#1C150D]/40 transition-transform duration-200 ${
+              isExpanded ? 'rotate-180' : ''
+            }`}
+          />
         </button>
+      ) : (
+        <div className="p-4 md:p-6 pb-2">
+          <h3 className="text-sm font-medium text-[#1C150D]/60">Recent Activity</h3>
+        </div>
+      )}
+
+      {/* Content (Collapsible) */}
+      {showContent && (
+        <div className={`space-y-2 px-4 md:px-6 pb-4 md:pb-6 ${collapsible ? 'pt-0' : ''} animate-in slide-in-from-top-2 duration-200`}>
+          {recentActivity.map((activity) => {
+            const Icon = getIconForType(activity.type);
+            const statusBadge = getStatusBadge(activity.action, activity.type);
+            const StatusIcon = statusBadge.icon;
+            
+            return (
+              <div
+                key={activity.id}
+                onClick={() => handleContentClick(activity)}
+                className="group p-3 border border-[#E0E0E0] hover:border-[#B8956A]/40 transition-all cursor-pointer bg-white hover:bg-[#FAFAFA] rounded-lg"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md flex items-center justify-center shrink-0 group-hover:border-[#B8956A]/40 transition-colors">
+                    <Icon className="w-4 h-4 text-[#1C150D]/60 group-hover:text-[#B8956A] transition-colors" />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <p className="text-sm font-medium text-[#1C150D] truncate group-hover:text-[#B8956A] transition-colors">
+                        {activity.title}
+                      </p>
+                      <Badge variant="outline" className={`shrink-0 ${statusBadge.color} text-[10px] px-2`}>
+                        <StatusIcon className="w-3 h-3 mr-1" />
+                        {statusBadge.text}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-xs text-[#1C150D]/50">
+                      <span className="capitalize">{activity.type.replace(/_/g, ' ')}</span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {activity.time}
+                      </span>
+                    </div>
+                    
+                    {/* Action hint */}
+                    <div className="mt-2 flex items-center gap-1 text-[10px] text-[#B8956A] opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Eye className="w-3 h-3" />
+                      <span>Click to view details</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          
+          {recentActivity.length >= 5 && (
+            <button
+              onClick={() => navigate("/library")}
+              className="w-full py-2 text-xs text-[#B8956A] hover:text-[#A3865A] transition-colors border-t border-[#E0E0E0] mt-2 pt-4"
+            >
+              View All Activity →
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

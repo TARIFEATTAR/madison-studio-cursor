@@ -194,6 +194,7 @@ const Calendar = () => {
               <TooltipTrigger asChild>
                 <Button
                   onClick={handleNewSchedule}
+                  variant="brass"
                   className="gap-2"
                   data-tooltip-target="schedule-button"
                 >

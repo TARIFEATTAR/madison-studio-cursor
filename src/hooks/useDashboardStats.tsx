@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
-interface DashboardStats {
+export interface DashboardStats {
   totalContent: number;
   piecesCreatedThisWeek: number;
   piecesPublished: number;
@@ -14,9 +14,29 @@ interface DashboardStats {
   createdWeekChange: number;
   publishedWeekChange: number;
   scheduledWeekChange: number;
+  // NEW: Dashboard redesign fields
+  weeklyGoal: number;
+  scheduledDays: Record<string, number>; // date string (yyyy-MM-dd) -> count
+  recentMaster: RecentMasterContent | null;
+  aiSuggestion: AISuggestion | null;
+  weekEndsIn: number; // days until end of week
 }
 
-interface RecentActivityItem {
+export interface RecentMasterContent {
+  id: string;
+  title: string;
+  derivativeCount: number;
+  createdAt: string;
+}
+
+export interface AISuggestion {
+  text: string;
+  cta: string;
+  route: string;
+  priority: 'multiply' | 'schedule' | 'brand' | 'create';
+}
+
+export interface RecentActivityItem {
   id: string;
   title: string;
   type: string;
@@ -44,6 +64,12 @@ export function useDashboardStats() {
         createdWeekChange: 0,
         publishedWeekChange: 0,
         scheduledWeekChange: 0,
+        // NEW: Dashboard redesign defaults
+        weeklyGoal: 5, // Default goal
+        scheduledDays: {},
+        recentMaster: null,
+        aiSuggestion: null,
+        weekEndsIn: 0,
       };
 
       try {
@@ -107,12 +133,26 @@ export function useDashboardStats() {
           .eq("organization_id", organizationId)
           .eq("is_archived", false);
 
-        // Fetch scheduled content
+        // Fetch scheduled content with dates for calendar
         const { data: scheduled } = await supabase
           .from("scheduled_content")
-          .select("id")
+          .select("id, scheduled_for")
           .eq("organization_id", organizationId)
           .eq("status", "scheduled");
+
+        // Fetch organization settings for weeklyGoal
+        const { data: orgData } = await supabase
+          .from("organizations")
+          .select("settings")
+          .eq("id", organizationId)
+          .maybeSingle();
+
+        // Fetch derivative counts for recent master content
+        const { data: derivativeCounts } = await supabase
+          .from("derivative_assets")
+          .select("master_content_id")
+          .eq("organization_id", organizationId)
+          .eq("is_archived", false);
 
         // Calculate stats
         const totalContent = 
@@ -220,6 +260,103 @@ export function useDashboardStats() {
           return Math.round(((current - previous) / previous) * 100);
         };
 
+        // NEW: Calculate weeklyGoal from organization settings
+        const weeklyGoal = (orgData?.settings as any)?.weeklyGoal ?? 5;
+
+        // NEW: Calculate scheduledDays (group scheduled content by date)
+        const scheduledDays: Record<string, number> = {};
+        (scheduled || []).forEach(item => {
+          if (item.scheduled_for) {
+            const dateKey = new Date(item.scheduled_for).toISOString().split('T')[0];
+            scheduledDays[dateKey] = (scheduledDays[dateKey] || 0) + 1;
+          }
+        });
+
+        // NEW: Calculate weekEndsIn (days until Sunday)
+        const daysUntilSunday = 7 - now.getUTCDay();
+        const weekEndsIn = daysUntilSunday === 7 ? 0 : daysUntilSunday;
+
+        // NEW: Get most recent master content with derivative count
+        let recentMaster: RecentMasterContent | null = null;
+        if (masterContent && masterContent.length > 0) {
+          // Sort by created_at descending and get most recent
+          const sortedMaster = [...masterContent].sort(
+            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+          const latestMaster = sortedMaster[0];
+          
+          // Count derivatives for this master content
+          const derivativeCount = (derivativeCounts || []).filter(
+            d => d.master_content_id === latestMaster.id
+          ).length;
+
+          recentMaster = {
+            id: latestMaster.id,
+            title: latestMaster.title,
+            derivativeCount,
+            createdAt: latestMaster.created_at,
+          };
+        }
+
+        // NEW: Generate AI suggestion based on stats
+        const generateAISuggestion = (): AISuggestion | null => {
+          // Priority 1: If recent master has no derivatives, suggest multiply
+          if (recentMaster && recentMaster.derivativeCount === 0) {
+            return {
+              text: `Turn "${recentMaster.title}" into an Instagram carousel`,
+              cta: 'Multiply Now',
+              route: `/multiply?master=${recentMaster.id}`,
+              priority: 'multiply',
+            };
+          }
+
+          // Priority 2: If no scheduled content this week, suggest scheduling
+          const thisWeekScheduled = Object.entries(scheduledDays).filter(([date]) => {
+            const d = new Date(date);
+            return d >= startOfWeek;
+          }).reduce((sum, [, count]) => sum + count, 0);
+
+          if (thisWeekScheduled === 0) {
+            return {
+              text: 'You have no content scheduled this week. Plan ahead?',
+              cta: 'Schedule Content',
+              route: '/calendar',
+              priority: 'schedule',
+            };
+          }
+
+          // Priority 3: If brand health < 85%, suggest improving it
+          if (onBrandScore < 85) {
+            return {
+              text: `Improve your Brand Health to 85%+ for better content quality`,
+              cta: 'Review Gaps',
+              route: '/brand-health',
+              priority: 'brand',
+            };
+          }
+
+          // Priority 4: If behind on weekly goal, encourage creation
+          const deficit = weeklyGoal - piecesCreatedThisWeek;
+          if (deficit > 0 && weekEndsIn <= 3) {
+            return {
+              text: `Create ${deficit} more piece${deficit > 1 ? 's' : ''} to hit your weekly goal`,
+              cta: 'Start Creating',
+              route: '/create',
+              priority: 'create',
+            };
+          }
+
+          // Default: Encourage creation
+          return {
+            text: 'Ready to write your next masterpiece?',
+            cta: 'Start Creating',
+            route: '/create',
+            priority: 'create',
+          };
+        };
+
+        const aiSuggestion = generateAISuggestion();
+
         return {
           totalContent,
           piecesCreatedThisWeek,
@@ -232,6 +369,12 @@ export function useDashboardStats() {
           createdWeekChange: calculateChange(piecesCreatedThisWeek, piecesCreatedLastWeek),
           publishedWeekChange: calculateChange(piecesPublished, piecesPublishedLastWeek),
           scheduledWeekChange: calculateChange(piecesScheduled, scheduledLastWeek),
+          // NEW: Dashboard redesign fields
+          weeklyGoal,
+          scheduledDays,
+          recentMaster,
+          aiSuggestion,
+          weekEndsIn,
         };
       } catch (e) {
         // Any failure should not block UI

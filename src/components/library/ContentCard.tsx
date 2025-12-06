@@ -93,21 +93,15 @@ export function ContentCard({
         }
       }}
       className={cn(
-        "cursor-pointer transition-all duration-300 hover:border-brass hover:shadow-lg bg-card/50 backdrop-blur-sm",
-        "border-border/20 relative",
+        "cursor-pointer transition-all duration-300 bg-card border border-border/30",
+        "hover:border-brand-brass hover:shadow-level-2 relative group",
         viewMode === "list" && "flex flex-row items-start gap-6",
         content.archived && "opacity-60",
-        selected && "ring-2 ring-brass border-brass"
+        selected && "ring-2 ring-brand-brass border-brand-brass"
       )}
-      style={{
-        backgroundImage: `
-          repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.02) 2px, rgba(0,0,0,.02) 4px),
-          repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,.02) 2px, rgba(0,0,0,.02) 4px)
-        `
-      }}
     >
       {/* Action buttons - top right */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onClick={(e) => e.stopPropagation()}>
         <Button
           variant="ghost"
           size="sm"
@@ -115,10 +109,10 @@ export function ContentCard({
             e.stopPropagation();
             setPublishDrawerOpen(true);
           }}
-          className="h-8 px-2 hover:bg-brass/10"
+          className="h-8 px-2 hover:bg-brand-brass/10"
           title={content.status === "published" ? "Update Publishing" : "Mark as Published"}
         >
-          <Send className="w-4 h-4 text-muted-foreground hover:text-brass" />
+          <Send className="w-4 h-4 text-muted-foreground hover:text-brand-brass transition-colors" />
         </Button>
         {onArchive && (
           <Button
@@ -128,13 +122,13 @@ export function ContentCard({
               e.stopPropagation();
               onArchive();
             }}
-            className="h-8 px-2 hover:bg-brass/10"
+            className="h-8 px-2 hover:bg-brand-brass/10"
             title={content.archived ? "Unarchive" : "Archive"}
           >
             {content.archived ? (
-              <ArchiveRestore className="w-4 h-4 text-muted-foreground hover:text-brass" />
+              <ArchiveRestore className="w-4 h-4 text-muted-foreground hover:text-brand-brass transition-colors" />
             ) : (
-              <Archive className="w-4 h-4 text-muted-foreground hover:text-brass" />
+              <Archive className="w-4 h-4 text-muted-foreground hover:text-brand-brass transition-colors" />
             )}
           </Button>
         )}
@@ -146,14 +140,14 @@ export function ContentCard({
               e.stopPropagation();
               onToggleSelect?.();
             }}
-            className="w-5 h-5 rounded border-border text-brass focus:ring-brass cursor-pointer"
+            className="w-5 h-5 rounded border-border text-brand-brass focus:ring-brand-brass cursor-pointer"
           />
         )}
       </div>
 
       <div className="p-6 space-y-4">
         <div className="space-y-3">
-          <h3 className="font-serif text-xl text-foreground group-hover:text-brass transition-colors line-clamp-2">
+          <h3 className="font-serif text-xl text-foreground group-hover:text-brand-brass transition-colors duration-200 line-clamp-2">
             {content.title}
           </h3>
           
@@ -173,7 +167,7 @@ export function ContentCard({
             {content.sourceTable === "master_content" && !isEmailComposer && (
               <Badge 
                 variant="default"
-                className="text-xs font-semibold bg-brass/90 hover:bg-brass text-white border-0"
+                className="text-xs font-semibold bg-brand-brass hover:bg-brand-brass/90 text-brand-parchment border-0"
               >
                 Master Content
               </Badge>
@@ -349,7 +343,7 @@ export function ContentCard({
                   key={i}
                   className={cn(
                     "w-3 h-3",
-                    i < content.rating! ? "fill-brass text-brass" : "text-muted-foreground/20"
+                    i < content.rating! ? "fill-brand-brass text-brand-brass" : "text-muted-foreground/20"
                   )}
                 />
               ))}

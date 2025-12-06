@@ -161,6 +161,17 @@ export function GettingStartedChecklist({ onDismiss, compact = false }: GettingS
     const progressPercentage = (completedCount / totalCount) * 100;
     const isComplete = completedCount === totalCount;
 
+    // Auto-hide when all tasks complete
+    useEffect(() => {
+        if (isComplete && onDismiss) {
+            // Delay slightly so user can see the completion
+            const timeout = setTimeout(() => {
+                handleDismiss();
+            }, 2000);
+            return () => clearTimeout(timeout);
+        }
+    }, [isComplete]);
+
     const handleItemClick = (item: ChecklistItem) => {
         if (item.completed) return;
 
@@ -295,15 +306,27 @@ export function GettingStartedChecklist({ onDismiss, compact = false }: GettingS
                         );
                     })}
 
-                    {isComplete && onDismiss && (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleDismiss}
-                            className="w-full mt-4"
-                        >
-                            Dismiss Checklist
-                        </Button>
+                    {/* Always show dismiss option */}
+                    {onDismiss && (
+                        <div className="mt-4 pt-4 border-t border-[#E0E0E0]">
+                            {isComplete ? (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleDismiss}
+                                    className="w-full"
+                                >
+                                    🎉 Dismiss Checklist
+                                </Button>
+                            ) : (
+                                <button
+                                    onClick={handleDismiss}
+                                    className="w-full text-xs text-[#1C150D]/50 hover:text-[#1C150D]/70 transition-colors py-2"
+                                >
+                                    Hide This — I Know What I'm Doing
+                                </button>
+                            )}
+                        </div>
                     )}
                 </CardContent>
             )}

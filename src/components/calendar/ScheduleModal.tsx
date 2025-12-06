@@ -9,8 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TimePicker } from "@/components/ui/time-picker";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Clock, AlertCircle, Trash2 } from "lucide-react";
+import { Calendar as CalendarIcon, AlertCircle, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -340,19 +341,12 @@ export const ScheduleModal = ({
 
           <div className="space-y-2">
             <Label htmlFor="time" className={isMobile ? "text-base" : ""}>Time (optional)</Label>
-            <div className="relative">
-              <Clock className={cn(
-                "absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground",
-                isMobile ? "h-5 w-5" : "h-4 w-4"
-              )} />
-              <Input
-                id="time"
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className={cn("pl-10", isMobile && "h-12 text-base")}
-              />
-            </div>
+            <TimePicker
+              value={time}
+              onChange={setTime}
+              placeholder="--:-- --"
+              className={cn(isMobile && "h-12 text-base")}
+            />
           </div>
         </div>
 
@@ -363,12 +357,13 @@ export const ScheduleModal = ({
             <SelectTrigger className={isMobile ? "h-12 text-base" : ""}>
               <SelectValue placeholder="Select platform" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-[1200]" position="popper" sideOffset={4}>
               <SelectItem value="Email">Email</SelectItem>
               <SelectItem value="Instagram">Instagram</SelectItem>
               <SelectItem value="Twitter">Twitter</SelectItem>
               <SelectItem value="Blog">Blog</SelectItem>
               <SelectItem value="LinkedIn">LinkedIn</SelectItem>
+              <SelectItem value="SMS">SMS</SelectItem>
             </SelectContent>
           </Select>
         </div>

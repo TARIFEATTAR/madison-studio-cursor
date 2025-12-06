@@ -16,8 +16,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ScheduleModal } from "@/components/calendar/ScheduleModal";
 import { MadisonSplitEditor } from "@/components/library/MadisonSplitEditor";
+import { EmailSequenceEditor } from "@/components/library/EmailSequenceEditor";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { logger } from "@/lib/logger";
+
+// Helper to detect if content type is an email sequence
+const isEmailSequenceType = (contentType: string | undefined): boolean => {
+  if (!contentType) return false;
+  const lowerType = contentType.toLowerCase();
+  // Match patterns like: email_3part, email_5part, email_7part, 3-part email, etc.
+  return (
+    /email.*\d+.*part/i.test(lowerType) ||
+    /\d+.*part.*email/i.test(lowerType) ||
+    lowerType.includes('email_3part') ||
+    lowerType.includes('email_5part') ||
+    lowerType.includes('email_7part')
+  );
+};
 
 export default function Library() {
   const navigate = useNavigate();
@@ -48,6 +63,16 @@ export default function Library() {
     category: "master" | "output" | "derivative";
     initialText: string;
     title?: string;
+  } | null>(null);
+
+  // Email sequence editor state
+  const [emailSequenceOpen, setEmailSequenceOpen] = useState(false);
+  const [emailSequenceContext, setEmailSequenceContext] = useState<{
+    id: string;
+    category: "master" | "output" | "derivative";
+    initialText: string;
+    title?: string;
+    contentType?: string;
   } | null>(null);
 
   // Read status filter from URL params on mount
@@ -742,13 +767,29 @@ export default function Library() {
               initialText = content.generated_content;
             }
             
-            // Navigate to ContentEditor with full context
+            // Get content type from the content object
+            const contentType = content.content_type || content.asset_type || 'Content';
+            
+            // Check if this is an email sequence - open specialized editor
+            if (isEmailSequenceType(contentType)) {
+              setEmailSequenceContext({
+                id: content.id,
+                category: category,
+                initialText: initialText,
+                title: content.title,
+                contentType: contentType,
+              });
+              setEmailSequenceOpen(true);
+              return;
+            }
+            
+            // Navigate to ContentEditor with full context for regular content
             navigate('/editor', {
               state: {
                 contentId: content.id,
                 content: initialText,
                 contentName: content.title,
-                contentType: content.content_type || 'Content',
+                contentType: contentType,
                 category: category
               }
             });
@@ -814,6 +855,56 @@ export default function Library() {
           onClose={() => {
             setMadisonOpen(false);
             setMadisonContext(null);
+          }}
+        />
+      )}
+
+      {/* Email Sequence Editor */}
+      {emailSequenceContext && (
+        <EmailSequenceEditor
+          open={emailSequenceOpen}
+          title={emailSequenceContext.title || "Email Sequence"}
+          initialContent={emailSequenceContext.initialText}
+          contentId={emailSequenceContext.id}
+          contentType={emailSequenceContext.contentType}
+          onSave={async (newContent) => {
+            try {
+              const table = emailSequenceContext.category === 'master' 
+                ? 'master_content' 
+                : emailSequenceContext.category === 'derivative'
+                ? 'derivative_assets'
+                : 'outputs';
+              
+              const field = emailSequenceContext.category === 'master' 
+                ? 'full_content' 
+                : 'generated_content';
+
+              const { error } = await supabase
+                .from(table)
+                .update({ [field]: newContent })
+                .eq('id', emailSequenceContext.id);
+
+              if (error) throw error;
+
+              toast({
+                title: "Email sequence saved",
+                description: "Your email sequence has been saved successfully.",
+              });
+              
+              setEmailSequenceOpen(false);
+              setEmailSequenceContext(null);
+              refetch();
+            } catch (error: any) {
+              toast({
+                title: "Save failed",
+                description: error.message,
+                variant: "destructive",
+              });
+            }
+          }}
+          onClose={() => {
+            setEmailSequenceOpen(false);
+            setEmailSequenceContext(null);
           }}
         />
       )}

@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import maddiLogo from "@/assets/madison-auth-logo.png";
 import { logger } from "@/lib/logger";
+import { LogIn, UserPlus, Sparkles, ArrowLeft, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 const Auth = () => {
   logger.debug("[Auth] Rendering Auth page...");
@@ -23,6 +23,8 @@ const Auth = () => {
   const [resetMode, setResetMode] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'magic'>('signin');
+  const [showPassword, setShowPassword] = useState(false);
   const hasNavigated = useRef(false);
 
   // -------------------------------------------
@@ -80,12 +82,20 @@ const Auth = () => {
     const code = params.get("code");
     const error_description = params.get("error_description");
 
+    // Clean up URL params after processing
+    const cleanUrl = () => {
+      if (token_hash || code || error_description) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    };
+
     if (error_description) {
       toast({
         title: "Authentication error",
         description: decodeURIComponent(error_description),
         variant: "destructive",
       });
+      cleanUrl();
     }
 
     if (token_hash && type) {
@@ -109,10 +119,12 @@ const Auth = () => {
             },
           }).catch(err => console.error("Failed to send welcome email:", err));
         }
+        cleanUrl();
       });
     }
     else if (code) {
-      // Handle email confirmation callback
+      // Handle email confirmation or OAuth callback
+      logger.debug('[Auth] Processing callback code...');
       supabase.auth.exchangeCodeForSession(code).then(({ error, data }) => {
         if (error) {
           toast({
@@ -121,28 +133,32 @@ const Auth = () => {
             variant: "destructive",
           });
         } else if (data?.session?.user) {
-          logger.debug('[Auth] Email confirmation successful', {
+          logger.debug('[Auth] Session established successfully', {
             userId: data.session.user.id,
             email: data.session.user.email,
           });
           
           // Show clear success toast
           toast({ 
-            title: "✓ Account Created Successfully!", 
-            description: "Your email has been verified. Let's set up your brand." 
+            title: "✓ Sign In Successful!", 
+            description: "Welcome back to Madison Studio." 
           });
 
-          // Send welcome email immediately upon confirmation
-          supabase.functions.invoke('send-welcome-email', {
-            body: {
-              userEmail: data.session.user.email,
-              userName: data.session.user.user_metadata?.full_name,
-            },
-          }).catch(err => console.error("Failed to send welcome email:", err));
+          // Send welcome email for new users
+          const isNewUser = new Date(data.session.user.created_at).getTime() > Date.now() - 60000; // Created in last minute
+          if (isNewUser) {
+            supabase.functions.invoke('send-welcome-email', {
+              body: {
+                userEmail: data.session.user.email,
+                userName: data.session.user.user_metadata?.full_name,
+              },
+            }).catch(err => console.error("Failed to send welcome email:", err));
+          }
         }
+        cleanUrl();
       });
     }
-  }, []);
+  }, [user]);
 
   // -------------------------------------------
   // GOOGLE SIGN-IN — FIXED VERSION
@@ -151,25 +167,38 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      // Always redirect back to /auth to avoid Index.tsx redirect loop
+      const redirectUrl = `${window.location.origin}/auth`;
+      logger.debug('[Auth] Starting Google OAuth', { redirectUrl, origin: window.location.origin });
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}`,
+          redirectTo: redirectUrl,
         },
       });
 
       if (error) {
+        logger.error('[Auth] Google OAuth error', error);
         toast({
           title: "Google sign-in error",
-          description: error.message || "Failed to initiate Google sign-in.",
+          description: error.message || "Failed to initiate Google sign-in. Make sure localhost is added to Supabase redirect URLs.",
           variant: "destructive",
         });
         setLoading(false);
+      } else if (data?.url) {
+        logger.debug('[Auth] Google OAuth redirect URL generated', { url: data.url });
+        // Supabase will handle the redirect automatically
+        // User will go to Google, then come back to redirectUrl
+      } else {
+        logger.warn('[Auth] Google OAuth returned no URL and no error');
+        setLoading(false);
       }
     } catch (err: any) {
+      logger.error('[Auth] Google OAuth exception', err);
       toast({
         title: "Google sign-in error",
-        description: err.message || "Unexpected error.",
+        description: err.message || "Unexpected error. Check browser console for details.",
         variant: "destructive",
       });
       setLoading(false);
@@ -293,95 +322,183 @@ const Auth = () => {
   // -------------------------------------------
   // UI
   // -------------------------------------------
+
+  // Mode selection buttons component
+  const AuthModeSelector = () => (
+    <div className="flex gap-2 mb-6">
+      <button
+        type="button"
+        onClick={() => { setAuthMode('signin'); setResetMode(false); }}
+        className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
+          authMode === 'signin'
+            ? 'bg-foreground text-background shadow-sm'
+            : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
+        }`}
+      >
+        <LogIn className="w-4 h-4" />
+        Sign In
+      </button>
+      <button
+        type="button"
+        onClick={() => { setAuthMode('signup'); setSignupSuccess(false); }}
+        className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
+          authMode === 'signup'
+            ? 'bg-foreground text-background shadow-sm'
+            : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
+        }`}
+      >
+        <UserPlus className="w-4 h-4" />
+        Create Account
+      </button>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen flex items-center justify-center px-6">
+    <div className="min-h-screen flex items-center justify-center px-6 bg-gradient-to-b from-background to-muted/20">
       <div className="w-full max-w-md">
+        {/* Logo & Tagline */}
         <div className="text-center mb-8 fade-enter">
-          <img src={maddiLogo} alt="Madison" className="h-48 w-auto mx-auto mb-6" />
-          <p className="text-muted-foreground text-lg">
-            Where brands craft and multiply their narrative
+          <img src={maddiLogo} alt="Madison" className="h-40 w-auto mx-auto mb-4" />
+          <p className="text-muted-foreground">
+            Where brands craft their narrative
           </p>
         </div>
 
-        <div className="card-matte p-8 rounded-lg border border-border/40 fade-enter">
-          <Button onClick={handleGoogleSignIn} variant="outline" className="w-full mb-6 gap-2" disabled={loading}>
+        <div className="card-matte p-8 rounded-xl border border-border/40 shadow-lg fade-enter">
+          {/* Google Sign In - Always visible at top */}
+          <Button 
+            onClick={handleGoogleSignIn} 
+            variant="outline" 
+            className="w-full mb-6 h-12 gap-3 text-base font-medium hover:bg-muted/50 transition-colors" 
+            disabled={loading}
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
             Continue with Google
           </Button>
 
+          {/* Divider */}
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border/40" />
+              <span className="w-full border-t border-border/60" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Or continue with email</span>
+              <span className="bg-card px-3 text-muted-foreground tracking-wider">or</span>
             </div>
           </div>
 
-          <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6">
-              <TabsTrigger value="signin">Begin</TabsTrigger>
-              <TabsTrigger value="signup">Craft Account</TabsTrigger>
-              <TabsTrigger value="magic">Magic Link</TabsTrigger>
-            </TabsList>
+          {/* Auth Mode Selector */}
+          <AuthModeSelector />
 
-            <TabsContent value="signin">
+          {/* Sign In Form */}
+          {authMode === 'signin' && (
+            <div className="animate-in fade-in-0 slide-in-from-left-2 duration-200">
               {resetMode ? (
                 <form onSubmit={handleResetPassword} className="space-y-4">
+                  <button
+                    type="button"
+                    onClick={() => setResetMode(false)}
+                    className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-2"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to sign in
+                  </button>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Enter your email and we'll send you a link to reset your password.
+                  </p>
                   <div className="space-y-2">
-                    <Label htmlFor="reset-email">Email</Label>
-                    <Input id="reset-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                    <Label htmlFor="reset-email" className="text-sm font-medium">Email address</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input 
+                        id="reset-email" 
+                        type="email" 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)} 
+                        required 
+                        className="pl-10 h-11"
+                        placeholder="you@example.com"
+                      />
+                    </div>
                   </div>
-                  <Button type="submit" className="w-full btn-craft" disabled={loading}>
+                  <Button type="submit" className="w-full h-11 btn-craft" disabled={loading}>
                     {loading ? "Sending..." : "Send Reset Link"}
-                  </Button>
-                  <Button type="button" variant="ghost" className="w-full" onClick={() => setResetMode(false)}>
-                    Back to Sign In
                   </Button>
                 </form>
               ) : (
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
-                    <Input id="signin-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                    <Label htmlFor="signin-email" className="text-sm font-medium">Email address</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input 
+                        id="signin-email" 
+                        type="email" 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)} 
+                        required 
+                        className="pl-10 h-11"
+                        placeholder="you@example.com"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
-                    <Input id="signin-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                    <Label htmlFor="signin-password" className="text-sm font-medium">Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input 
+                        id="signin-password" 
+                        type={showPassword ? "text" : "password"} 
+                        value={password} 
+                        onChange={(e) => setPassword(e.target.value)} 
+                        required 
+                        className="pl-10 pr-10 h-11"
+                        placeholder="••••••••"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
 
-                  <Button type="submit" className="w-full btn-craft" disabled={loading}>
-                    {loading ? "Entering..." : "Begin"}
+                  <Button type="submit" className="w-full h-11 btn-craft" disabled={loading}>
+                    {loading ? "Signing in..." : "Sign In"}
                   </Button>
-                  <Button type="button" variant="link" className="w-full text-sm text-muted-foreground" onClick={() => setResetMode(true)}>
-                    Forgot password?
-                  </Button>
-                </form>
-              )}
-            </TabsContent>
 
-            <TabsContent value="magic">
-              {magicLinkSent ? (
-                <div className="space-y-4 text-center">
-                  <p className="text-muted-foreground">Check your email for a magic link.</p>
-                  <Button type="button" variant="outline" className="w-full" onClick={() => setMagicLinkSent(false)}>
-                    Send Another Link
-                  </Button>
-                </div>
-              ) : (
-                <form onSubmit={handleMagicLink} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="magic-email">Email</Label>
-                    <Input id="magic-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  <div className="flex items-center justify-between pt-2">
+                    <button 
+                      type="button" 
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors" 
+                      onClick={() => setResetMode(true)}
+                    >
+                      Forgot password?
+                    </button>
+                    <button 
+                      type="button" 
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1" 
+                      onClick={() => setAuthMode('magic')}
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Use magic link
+                    </button>
                   </div>
-                  <Button type="submit" className="w-full btn-craft" disabled={loading}>
-                    {loading ? "Sending..." : "Send Magic Link"}
-                  </Button>
                 </form>
               )}
-            </TabsContent>
+            </div>
+          )}
 
-            <TabsContent value="signup">
+          {/* Sign Up Form */}
+          {authMode === 'signup' && (
+            <div className="animate-in fade-in-0 slide-in-from-right-2 duration-200">
               {signupSuccess ? (
                 <div className="space-y-5 text-center py-4">
                   {/* Success Checkmark */}
@@ -434,35 +551,123 @@ const Auth = () => {
               ) : (
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
+                    <Label htmlFor="signup-email" className="text-sm font-medium">Email address</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="pl-10 h-11"
+                        placeholder="you@example.com"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
+                    <Label htmlFor="signup-password" className="text-sm font-medium">Create password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="signup-password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="pl-10 pr-10 h-11"
+                        placeholder="8+ characters"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
 
-                  <Button type="submit" className="w-full btn-craft" disabled={loading}>
-                    {loading ? "Crafting..." : "Craft Account"}
+                  <Button type="submit" className="w-full h-11 btn-craft" disabled={loading}>
+                    {loading ? "Creating account..." : "Create Account"}
+                  </Button>
+
+                  <p className="text-xs text-center text-muted-foreground pt-2">
+                    By creating an account, you agree to our{" "}
+                    <a href="/terms" className="underline hover:text-foreground">Terms</a>
+                    {" "}and{" "}
+                    <a href="/privacy" className="underline hover:text-foreground">Privacy Policy</a>
+                  </p>
+                </form>
+              )}
+            </div>
+          )}
+
+          {/* Magic Link Form */}
+          {authMode === 'magic' && (
+            <div className="animate-in fade-in-0 slide-in-from-bottom-2 duration-200">
+              <button
+                type="button"
+                onClick={() => setAuthMode('signin')}
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to sign in
+              </button>
+              
+              {magicLinkSent ? (
+                <div className="space-y-4 text-center py-4">
+                  <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                    <Sparkles className="w-7 h-7 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-semibold">Check your email</h3>
+                  <p className="text-sm text-muted-foreground">
+                    We've sent a magic link to <span className="font-medium text-foreground">{email}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Click the link in your email to sign in instantly — no password needed.
+                  </p>
+                  <Button type="button" variant="outline" className="w-full mt-4" onClick={() => setMagicLinkSent(false)}>
+                    Send Another Link
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handleMagicLink} className="space-y-4">
+                  <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg mb-4">
+                    <Sparkles className="w-5 h-5 text-primary shrink-0" />
+                    <p className="text-sm text-muted-foreground">
+                      Sign in with a magic link — no password needed!
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="magic-email" className="text-sm font-medium">Email address</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input 
+                        id="magic-email" 
+                        type="email" 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)} 
+                        required 
+                        className="pl-10 h-11"
+                        placeholder="you@example.com"
+                      />
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full h-11 btn-craft" disabled={loading}>
+                    {loading ? "Sending..." : "Send Magic Link"}
                   </Button>
                 </form>
               )}
-            </TabsContent>
-          </Tabs>
+            </div>
+          )}
         </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-muted-foreground mt-6">
+          © {new Date().getFullYear()} Madison Studio. All rights reserved.
+        </p>
       </div>
     </div>
   );

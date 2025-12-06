@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useToast } from "@/hooks/use-toast";
-import { HelpCircle, Plus, Filter, X, FileText, Sparkles, Image as ImageIcon } from "lucide-react";
+import { HelpCircle, Plus, Filter, X, FileText, Sparkles, Image as ImageIcon, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -459,7 +459,7 @@ const TemplatesContent = () => {
     <div className="flex h-screen bg-vellum-cream overflow-hidden">
       {/* MIDDLE PANEL - Collections & Categories (Fixed width: 280px) */}
       {!isMobile && (
-        <aside className="w-[280px] border-r border-charcoal/10 bg-parchment-white flex-shrink-0 overflow-y-auto">
+        <aside className="w-[280px] border-r border-brand-stone/30 bg-brand-parchment flex-shrink-0 overflow-y-auto">
           <PromptLibrarySidebar
             onQuickAccessSelect={setSelectedQuickAccess}
             onCategorySelect={setSelectedCategory}
@@ -473,14 +473,14 @@ const TemplatesContent = () => {
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* HEADER SECTION */}
-        <header className="bg-parchment-white border-b border-charcoal/10 px-8 py-6 flex-shrink-0">
+        <header className="bg-brand-parchment border-b border-brand-stone/30 px-8 py-6 flex-shrink-0">
           <div className="max-w-full">
             <div className="flex items-start justify-between mb-6">
               <div>
-                <h1 className="text-3xl font-serif text-foreground font-semibold mb-2">
+                <h1 className="font-serif text-4xl font-semibold text-foreground mb-2 tracking-tight">
                   Image Library
                 </h1>
-                <p className="text-muted-foreground text-sm">
+                <p className="font-sans text-base text-muted-foreground">
                   All images created in Image Studio, organized by use case
                 </p>
               </div>
@@ -531,7 +531,8 @@ const TemplatesContent = () => {
                 </Button>
                 <Button
                   onClick={() => setShowQuickStart(true)}
-                  className="gap-2 bg-ink-black hover:bg-charcoal text-parchment-white border-0"
+                  variant="brass"
+                  className="gap-2"
                 >
                   <Plus className="w-4 h-4" />
                   New Prompt
@@ -539,14 +540,15 @@ const TemplatesContent = () => {
               </div>
             </div>
             
-            {/* Search Bar */}
-            <div className="flex gap-4">
+            {/* Search Bar - Enhanced with animated icon */}
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground transition-colors duration-300 group-focus-within:text-brand-brass" />
               <Input
                 type="text"
                 placeholder="Search prompts by title, description, tags, or content..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-white border border-charcoal/10 focus:border-aged-brass px-4 py-2.5 text-ink-black placeholder:text-charcoal/50 transition-all"
+                className="w-full pl-10 pr-4 py-2.5 bg-brand-parchment border border-brand-stone rounded-md font-sans text-base text-foreground placeholder:text-muted-foreground/50 transition-all duration-300 ease-in-out shadow-sm focus:border-brand-brass focus:ring-2 focus:ring-brand-brass/20 focus:shadow-level-2 hover:border-brand-brass/40 hover:ring-1 hover:ring-brand-brass/10"
               />
             </div>
           </div>
@@ -611,7 +613,7 @@ const TemplatesContent = () => {
                 <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                   <Button
                     onClick={() => navigate("/image-editor")}
-                    className="bg-ink-black text-parchment-white hover:bg-charcoal shadow-md"
+                    variant="brass"
                   >
                     <Sparkles className="w-4 h-4 mr-2" />
                     Open Image Studio

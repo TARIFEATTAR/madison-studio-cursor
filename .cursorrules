@@ -1,0 +1,186 @@
+# MADISON STUDIO - BRAND CONSISTENCY RULES
+
+> Philosophy: "Black Books & Cream Paper" - museum-quality luxury
+> Reference: src/design/tokens.ts and src/design/component-standards.md
+
+---
+
+## 🎨 COLORS
+
+### DO:
+- Use semantic Tailwind classes: `bg-background`, `text-foreground`, `border-border`
+- Use brand tokens: `bg-card`, `text-muted-foreground`, `bg-primary`
+- Reference src/design/tokens.ts for approved values
+
+### DON'T:
+- ❌ Hardcode hex colors (#XXXXXX) - use tokens instead
+- ❌ Use arbitrary values like `bg-[#123456]`
+- ❌ Use non-Madison colors (gray-*, blue-*, etc.)
+
+### Color Mapping:
+| Semantic | Actual Color |
+|----------|--------------|
+| `bg-background` | Vellum Cream (#F5F1E8) |
+| `bg-card` | Parchment White (#FFFCF5) |
+| `text-foreground` | Ink Black (#1A1816) |
+| `text-muted-foreground` | Charcoal (#2F2A26) |
+| `bg-primary` | Aged Brass (#B8956A) |
+| `border-border` | Stone (#E5DFD1) |
+
+---
+
+## ✍️ TYPOGRAPHY
+
+### Font Families:
+- **Headlines (H1, H2)**: `font-serif` (Cormorant Garamond)
+- **Body & UI text**: `font-sans` (Lato)
+- **Quotes/Accents**: `font-accent` (Crimson Text)
+
+### DO:
+- Use semantic size classes: `text-sm`, `text-base`, `text-lg`, `text-xl`, `text-2xl`, `text-3xl`
+- Apply proper font weights: `font-medium`, `font-semibold`
+
+### DON'T:
+- ❌ Use arbitrary font sizes like `text-[17px]`
+- ❌ Use fonts outside the approved set
+- ❌ Mix font families inconsistently
+
+---
+
+## 📐 SPACING
+
+### Use 4px-based scale ONLY:
+`0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24`
+
+### Standard Patterns:
+- Card padding: `p-6`
+- Section gaps: `gap-8` or `space-y-8`
+- Form fields: `space-y-4`
+- Button groups: `gap-2` or `gap-3`
+
+### DON'T:
+- ❌ Use arbitrary spacing: `p-[18px]`, `m-[22px]`
+- ❌ Use inline styles for spacing
+
+---
+
+## 🔘 BUTTONS
+
+### Always use Button component with variants:
+```tsx
+<Button variant="default">Primary Action</Button>
+<Button variant="secondary">Secondary</Button>
+<Button variant="outline">Tertiary</Button>
+<Button variant="ghost">Subtle</Button>
+<Button variant="destructive">Danger</Button>
+```
+
+### DON'T:
+- ❌ Create custom button styles
+- ❌ Override Button with hardcoded colors
+
+---
+
+## 📦 CARDS
+
+### Standard Pattern:
+```tsx
+<Card className="bg-card border border-border">
+  <CardHeader>
+    <CardTitle>Title</CardTitle>
+  </CardHeader>
+  <CardContent>
+    {/* Content */}
+  </CardContent>
+</Card>
+```
+
+### Interactive cards add:
+`hover:border-primary hover:shadow-level-2 transition-all cursor-pointer`
+
+---
+
+## 📝 FORMS
+
+### Standard Input:
+```tsx
+<Input 
+  className="bg-background"
+  placeholder="Enter value..."
+/>
+```
+
+### Focus states use `ring` system (built into components)
+
+---
+
+## 🌊 TRANSITIONS
+
+### All interactive elements should have:
+- Buttons: `transition-colors` (built-in)
+- Cards: `transition-all duration-300`
+- Links/hovers: `transition-colors`
+
+### Duration scale:
+- Fast (buttons): `duration-150`
+- Normal (cards): `duration-300`
+- Slow (modals): `duration-500`
+
+---
+
+## 🔲 SHADOWS
+
+### Use shadow tokens:
+- Resting: `shadow-level-1`
+- Hover: `shadow-level-2`
+- Modals: `shadow-level-3`
+- Focus: `shadow-brass-glow`
+
+### DON'T:
+- ❌ Use arbitrary shadows
+- ❌ Use default Tailwind shadows (shadow-sm, shadow-md, etc.)
+
+---
+
+## 📚 Z-INDEX
+
+### Standard layers (from tokens.ts):
+- Dropdowns: `z-[1000]`
+- Modals: `z-[1101]`
+- Popovers: `z-[1200]`
+- Tooltips: `z-[1300]`
+
+---
+
+## ✅ CHECKLIST FOR EVERY COMPONENT
+
+When generating or modifying code:
+
+1. [ ] Colors use semantic tokens (not hex)
+2. [ ] Typography uses `font-serif` or `font-sans`
+3. [ ] Spacing uses 4px scale only
+4. [ ] Interactive elements have transitions
+5. [ ] Buttons use variant system
+6. [ ] Cards use standard border/padding
+7. [ ] Shadows use level system
+8. [ ] No inline styles (except truly dynamic values)
+
+---
+
+## 📁 KEY FILES TO REFERENCE
+
+- `src/design/tokens.ts` - All design values
+- `src/design/component-standards.md` - Component patterns
+- `tailwind.config.ts` - Tailwind mappings
+- `src/index.css` - CSS variables
+
+---
+
+## 🚫 NEVER DO
+
+1. Use Bootstrap, Material UI, or other design systems
+2. Add new colors without updating tokens.ts
+3. Create one-off component styles
+4. Skip transitions on interactive elements
+5. Use px values for spacing (use Tailwind scale)
+6. Hardcode shadows or colors

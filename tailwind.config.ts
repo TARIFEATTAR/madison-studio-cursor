@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import { DesignTokens } from "./src/design/tokens";
 
 export default {
   darkMode: ["class"],
@@ -13,18 +14,11 @@ export default {
       },
     },
     extend: {
-      fontSize: {
-        'xxs': '0.625rem',    // 10px
-        'tiny': '0.6875rem',  // 11px
-      },
+      // ═══════════════════════════════════════════════════════════════
+      // COLORS - Imported from Design Tokens + Shadcn/UI CSS Variables
+      // ═══════════════════════════════════════════════════════════════
       colors: {
-        // ═══════════════════════════════════════════════════════════════
-        // MADISON STUDIO - THE CODEX DESIGN SYSTEM
-        // Core Palette: 6 colors + 3 functional + minimal platform badges
-        // Philosophy: Elegant restraint, Madison Avenue sophistication
-        // ═══════════════════════════════════════════════════════════════
-        
-        // Shadcn/UI semantic tokens (mapped to Madison palette)
+        // Shadcn/UI semantic tokens (mapped via CSS variables in index.css)
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -60,100 +54,112 @@ export default {
         },
 
         // ───────────────────────────────────────────────────────────────
-        // BRAND PALETTE (Semantic Aliases)
+        // BRAND PALETTE - From Design Tokens (Single Source of Truth)
         // ───────────────────────────────────────────────────────────────
         brand: {
-          ink: '#1A1816',           // Primary text, headers, high contrast
-          charcoal: '#2F2A26',      // Secondary text, supporting elements
-          vellum: '#F5F1E8',        // Primary background (the "paper")
-          parchment: '#FFFCF5',     // Cards, elevated surfaces
-          brass: '#B8956A',         // Primary interactive elements, borders on hover
-          stone: '#C4B5A0',         // Tertiary elements, borders, dividers
+          ink: DesignTokens.colors.neutral.ink,
+          charcoal: DesignTokens.colors.neutral.charcoal,
+          vellum: DesignTokens.colors.neutral.vellum,
+          parchment: DesignTokens.colors.neutral.parchment,
+          brass: DesignTokens.colors.brand.brass,
+          stone: DesignTokens.colors.support.stone,
         },
 
         // ───────────────────────────────────────────────────────────────
-        // LEGACY / COMPATIBILITY ALIASES (To be deprecated eventually)
+        // LEGACY / COMPATIBILITY ALIASES (For existing code)
         // ───────────────────────────────────────────────────────────────
         'ink-black': {
-          DEFAULT: '#1A1816',
-          hsl: '30 3% 10%',
+          DEFAULT: DesignTokens.colors.neutral.ink,
         },
         'charcoal': {
-          DEFAULT: '#2F2A26',
-          hsl: '20 8% 17%',
+          DEFAULT: DesignTokens.colors.neutral.charcoal,
         },
         'vellum-cream': {
-          DEFAULT: '#F5F1E8',
-          hsl: '42 38% 93%',
+          DEFAULT: DesignTokens.colors.neutral.vellum,
         },
         'parchment-white': {
-          DEFAULT: '#FFFCF5',
-          hsl: '48 100% 98%',
+          DEFAULT: DesignTokens.colors.neutral.parchment,
         },
         'aged-brass': {
-          DEFAULT: '#B8956A',
-          hsl: '38 33% 56%',
+          DEFAULT: DesignTokens.colors.brand.brass,
         },
-        // DEPRECATED: Mapped to aged-brass for safety during migration
         'brass-glow': {
-          DEFAULT: '#B8956A', 
-          hsl: '38 33% 56%',
+          DEFAULT: DesignTokens.colors.brand.brass,
+        },
+        'brass': {
+          DEFAULT: DesignTokens.colors.brand.brass,
+          light: DesignTokens.colors.brand['brass-light'],
         },
 
         // ───────────────────────────────────────────────────────────────
-        // FUNCTIONAL COLORS (3 colors - Minimal Use)
+        // FUNCTIONAL COLORS - From Design Tokens
         // ───────────────────────────────────────────────────────────────
         'muted-sage': {
-          DEFAULT: '#8B9474',           // Success/Approval (not bright green)
-          hsl: '90 13% 52%',
+          DEFAULT: DesignTokens.colors.semantic.success,
         },
         'aged-amber': {
-          DEFAULT: '#C4975C',           // Warning/Attention (not bright orange)
-          hsl: '38 48% 56%',
+          DEFAULT: DesignTokens.colors.semantic.warning,
         },
         'faded-rust': {
-          DEFAULT: '#A85C5C',           // Error/Deletion (not bright red)
-          hsl: '0 30% 51%',
+          DEFAULT: DesignTokens.colors.semantic.error,
         },
 
         // ───────────────────────────────────────────────────────────────
-        // FORM/UI SUPPORT COLOR (1 color)
+        // FORM/UI SUPPORT COLOR - From Design Tokens
         // ───────────────────────────────────────────────────────────────
         'stone': {
-          DEFAULT: '#E5DFD1',           // Default input borders, subtle dividers
-          hsl: '40 31% 85%',
+          DEFAULT: DesignTokens.colors.support.stone,
+          dark: DesignTokens.colors.support['stone-dark'],
         },
 
         // ───────────────────────────────────────────────────────────────
-        // PLATFORM BADGES (Derivative types ONLY - Small badges/icons)
-        // Use sparingly: Never for large UI elements, only tiny indicators
+        // PLATFORM BADGES - From Design Tokens
         // ───────────────────────────────────────────────────────────────
         'derivative-email': {
-          DEFAULT: '#4A90E2',           // Muted blue (not bright)
-          hsl: '210 71% 58%',
+          DEFAULT: DesignTokens.colors.platform.email,
         },
         'derivative-instagram': {
-          DEFAULT: '#8B5CF6',           // Muted purple (not bright)
-          hsl: '258 90% 66%',
+          DEFAULT: DesignTokens.colors.platform.instagram,
         },
         'derivative-twitter': {
-          DEFAULT: '#38BDF8',           // Sky blue (muted)
-          hsl: '199 89% 60%',
+          DEFAULT: DesignTokens.colors.platform.twitter,
         },
         'derivative-product': {
-          DEFAULT: '#F97316',           // Muted orange (not neon)
-          hsl: '25 95% 53%',
+          DEFAULT: DesignTokens.colors.platform.product,
         },
         'derivative-sms': {
-          DEFAULT: '#10B981',           // Muted green (not bright)
-          hsl: '160 84% 39%',
+          DEFAULT: DesignTokens.colors.platform.sms,
         },
+        'derivative-blog': {
+          DEFAULT: DesignTokens.colors.platform.blog,
+        },
+        'derivative-linkedin': {
+          DEFAULT: DesignTokens.colors.platform.linkedin,
+        },
+        
+        // Platform colors object for direct access
+        platform: DesignTokens.colors.platform,
       },
+
+      // ═══════════════════════════════════════════════════════════════
+      // TYPOGRAPHY - From Design Tokens
+      // ═══════════════════════════════════════════════════════════════
       fontFamily: {
-        serif: ['Cormorant Garamond', 'serif'],
-        sans: ['Lato', 'sans-serif'],
-        accent: ['Crimson Text', 'serif'],
+        serif: ['Cormorant Garamond', 'Georgia', 'serif'],
+        sans: ['Lato', '-apple-system', 'system-ui', 'sans-serif'],
+        accent: ['Crimson Text', 'Georgia', 'serif'],
       },
+      fontSize: {
+        'xxs': DesignTokens.typography.sizes.xxs,
+        'tiny': '0.6875rem', // 11px - legacy
+        ...DesignTokens.typography.sizes,
+      },
+      fontWeight: DesignTokens.typography.weights,
+      lineHeight: DesignTokens.typography.leading,
+
+      // ═══════════════════════════════════════════════════════════════
+      // SHADOWS - From Design Tokens (via CSS variables for complex shadows)
+      // ═══════════════════════════════════════════════════════════════
       boxShadow: {
         'level-1': 'var(--shadow-level-1)',
         'level-2': 'var(--shadow-level-2)',
@@ -161,11 +167,37 @@ export default {
         'level-4': 'var(--shadow-level-4)',
         'brass-glow': 'var(--shadow-brass-glow)',
       },
+
+      // ═══════════════════════════════════════════════════════════════
+      // BORDERS - From Design Tokens
+      // ═══════════════════════════════════════════════════════════════
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        ...DesignTokens.borders.radius,
       },
+      borderWidth: DesignTokens.borders.width,
+
+      // ═══════════════════════════════════════════════════════════════
+      // SPACING - From Design Tokens
+      // ═══════════════════════════════════════════════════════════════
+      spacing: DesignTokens.spacing,
+
+      // ═══════════════════════════════════════════════════════════════
+      // ANIMATIONS - From Design Tokens
+      // ═══════════════════════════════════════════════════════════════
+      transitionDuration: DesignTokens.animations.duration,
+      transitionTimingFunction: DesignTokens.animations.easing,
+
+      // ═══════════════════════════════════════════════════════════════
+      // Z-INDEX - From Design Tokens
+      // ═══════════════════════════════════════════════════════════════
+      zIndex: DesignTokens.zIndex,
+
+      // ═══════════════════════════════════════════════════════════════
+      // KEYFRAMES & ANIMATIONS (Component-specific)
+      // ═══════════════════════════════════════════════════════════════
       keyframes: {
         "accordion-down": {
           from: { height: "0", opacity: "0" },
@@ -204,6 +236,13 @@ export default {
         "scale-in": "scale-in 200ms cubic-bezier(0.4, 0, 0.2, 1)",
         "modal-enter": "modal-fade-in 300ms cubic-bezier(0.4, 0, 0.2, 1)",
         "shimmer": "shimmer 1.5s infinite",
+      },
+
+      // ═══════════════════════════════════════════════════════════════
+      // BACKGROUND IMAGES
+      // ═══════════════════════════════════════════════════════════════
+      backgroundImage: {
+        'brass-gradient': DesignTokens.colors.brand['brass-gradient'],
       },
     },
   },

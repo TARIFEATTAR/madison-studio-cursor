@@ -45,25 +45,25 @@ export function LibraryFilters({
 }: LibraryFiltersProps) {
   return (
     <div className="space-y-4">
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      {/* Search Bar - Enhanced with animated icon */}
+      <div className="relative group">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground transition-colors duration-300 group-focus-within:text-brand-brass" />
         <Input
           data-tooltip-target="library-search"
           placeholder="Search content by title or text..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10 bg-card/50 border-border/20"
+          className="w-full pl-10 pr-4 py-2.5 bg-brand-parchment border border-brand-stone rounded-md font-sans text-base text-foreground placeholder:text-muted-foreground/50 transition-all duration-300 ease-in-out shadow-sm focus:border-brand-brass focus:ring-2 focus:ring-brand-brass/20 focus:shadow-level-2 hover:border-brand-brass/40 hover:ring-1 hover:ring-brand-brass/10"
         />
       </div>
 
       {/* Filters Row */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* Content Type */}
+        {/* Content Type - Enhanced dropdown */}
         <Select value={selectedContentType} onValueChange={onContentTypeChange}>
           <SelectTrigger
             data-tooltip-target="content-type-filter"
-            className="w-[180px] bg-card/50 border-border/20"
+            className="w-[180px] bg-brand-parchment border border-brand-stone rounded-md font-sans text-base transition-all duration-300 ease-in-out shadow-sm focus:border-brand-brass focus:ring-2 focus:ring-brand-brass/20 focus:shadow-level-2 hover:border-brand-brass/40 hover:ring-1 hover:ring-brand-brass/10"
           >
             <SelectValue placeholder="All Types" />
           </SelectTrigger>
@@ -83,9 +83,9 @@ export function LibraryFilters({
           </SelectContent>
         </Select>
 
-        {/* Sort */}
+        {/* Sort - Enhanced dropdown */}
         <Select value={sortBy} onValueChange={(value) => onSortChange(value as SortOption)}>
-          <SelectTrigger className="w-[180px] bg-card/50 border-border/20">
+          <SelectTrigger className="w-[180px] bg-brand-parchment border border-brand-stone rounded-md font-sans text-base transition-all duration-300 ease-in-out shadow-sm focus:border-brand-brass focus:ring-2 focus:ring-brand-brass/20 focus:shadow-level-2 hover:border-brand-brass/40 hover:ring-1 hover:ring-brand-brass/10">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

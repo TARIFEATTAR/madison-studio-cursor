@@ -50,8 +50,8 @@ export function ContentPipelineCard() {
   }
 
   return (
-    <Card className="p-4 md:p-6 bg-white border border-[#E0E0E0] overflow-hidden rounded-xl min-h-[240px] w-full">
-        <div className="mb-4 md:mb-5">
+    <Card className="p-6 bg-white border border-[#E0E0E0] overflow-hidden rounded-xl h-full hover-lift transition-all duration-200">
+        <div className="mb-5">
           <h3 className="text-sm font-medium text-[#1C150D]/60">Content Pipeline</h3>
           <p className="text-xs text-[#1C150D]/40 mt-0.5">Master content pieces (blog posts, social posts, etc.)</p>
         </div>
@@ -60,18 +60,18 @@ export function ContentPipelineCard() {
             <button
               key={stage.id}
               onClick={() => handleStageClick(stage.status)}
-              className="group flex flex-col items-center justify-center p-3 md:p-4 rounded-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-md touch-manipulation"
+              className="group flex flex-col items-center justify-center p-4 rounded-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-md touch-manipulation"
               style={{
                 background: `linear-gradient(to bottom right, ${stage.color}20, ${stage.color}10)`,
               }}
             >
               <div 
-                className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mb-2 transition-transform group-hover:scale-110"
+                className="w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-transform group-hover:scale-110"
                 style={{ backgroundColor: stage.color }}
               >
-                <stage.icon className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                <stage.icon className="w-6 h-6 text-white" />
               </div>
-              <div className="text-xl md:text-2xl font-bold text-[#1C150D] mb-1">
+              <div className="text-2xl font-bold text-[#1C150D] mb-1">
                 {stage.count}
               </div>
               <div className="text-xs font-medium text-[#1C150D]/70 text-center">
@@ -79,6 +79,16 @@ export function ContentPipelineCard() {
               </div>
             </button>
           ))}
+        </div>
+        
+        {/* View Library Link */}
+        <div className="mt-5 pt-4 border-t border-[#E0E0E0] text-center">
+          <button
+            onClick={() => navigate("/library")}
+            className="text-xs text-[#B8956A] hover:text-[#A3865A] transition-colors"
+          >
+            View Full Library →
+          </button>
         </div>
       </Card>
   );

@@ -11,8 +11,14 @@ const Index = () => {
   useEffect(() => {
     if (loading) return;
 
-    // Redirect unauthenticated users to the marketing site
+    // Redirect unauthenticated users to the marketing site (production only)
     if (!user) {
+      // Don't redirect on localhost - go to auth instead
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        logger.debug("[Index] User not authenticated on localhost - redirecting to /auth");
+        window.location.href = "/auth";
+        return;
+      }
       logger.debug("[Index] User not authenticated - redirecting to marketing site");
       window.location.href = "https://madisonstudio.io";
       return;
