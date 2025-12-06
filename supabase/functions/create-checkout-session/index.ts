@@ -28,25 +28,30 @@ serve(async (req) => {
     // Get authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      console.error('[create-checkout-session] Missing authorization header');
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Create Supabase client
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    // Extract token from header
+    const token = authHeader.replace('Bearer ', '');
+    
+    // Create Supabase client with service role for database operations
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Get authenticated user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    // Verify the user's JWT token
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     if (userError || !user) {
+      console.error('[create-checkout-session] Auth error:', userError?.message || 'No user found');
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Unauthorized', details: userError?.message }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    
+    console.log('[create-checkout-session] User authenticated:', user.id);
 
     // Parse request body
     const { planId, billingInterval = 'month' } = await req.json();
@@ -153,6 +158,9 @@ serve(async (req) => {
       mode: 'subscription',
       success_url: `${APP_URL}/settings?tab=billing&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${APP_URL}/settings?tab=billing&canceled=true`,
+      payment_intent_data: {
+        statement_descriptor: 'MADISON STUDIO',
+      },
       metadata: {
         organization_id: organizationId,
         plan_id: planId,

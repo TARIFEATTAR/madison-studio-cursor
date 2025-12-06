@@ -97,7 +97,10 @@ const Auth = () => {
             variant: "destructive",
           });
         } else {
-          toast({ title: "Signed in", description: "Welcome back." });
+          toast({ 
+            title: "✓ Account Verified!", 
+            description: "Your account is ready. Welcome to Madison Studio." 
+          });
 
           // Send welcome email immediately upon verification
           supabase.functions.invoke('send-welcome-email', {
@@ -121,6 +124,12 @@ const Auth = () => {
           logger.debug('[Auth] Email confirmation successful', {
             userId: data.session.user.id,
             email: data.session.user.email,
+          });
+          
+          // Show clear success toast
+          toast({ 
+            title: "✓ Account Created Successfully!", 
+            description: "Your email has been verified. Let's set up your brand." 
           });
 
           // Send welcome email immediately upon confirmation
@@ -374,34 +383,49 @@ const Auth = () => {
 
             <TabsContent value="signup">
               {signupSuccess ? (
-                <div className="space-y-6 text-center py-4">
-                  <div className="mx-auto w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                <div className="space-y-5 text-center py-4">
+                  {/* Success Checkmark */}
+                  <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-green-400/20 to-emerald-500/20 border border-green-500/30 flex items-center justify-center mb-2 animate-in zoom-in-50 duration-300">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
-                      strokeWidth={1.5}
+                      strokeWidth={2}
                       stroke="currentColor"
-                      className="w-6 h-6 text-green-600"
+                      className="w-8 h-8 text-green-500"
                     >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+                        d="M4.5 12.75l6 6 9-13.5"
                       />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-semibold text-foreground">Check your email</h3>
-                  <p className="text-muted-foreground">
-                    We've sent a confirmation link to <span className="font-medium text-foreground">{email}</span>.
-                  </p>
+                  
+                  {/* Clear Success Message */}
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-semibold text-foreground">Account Created!</h3>
+                    <p className="text-sm text-green-600 font-medium">
+                      Welcome to Madison Studio
+                    </p>
+                  </div>
+                  
+                  {/* Email Verification Info */}
+                  <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      We've sent a confirmation link to:
+                    </p>
+                    <p className="font-medium text-foreground">{email}</p>
+                  </div>
+                  
                   <p className="text-sm text-muted-foreground">
-                    Please click the link to verify your account and get started.
+                    Click the link in your email to verify your account and start creating.
                   </p>
+                  
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full mt-4"
+                    className="w-full mt-2"
                     onClick={() => setSignupSuccess(false)}
                   >
                     Back to Sign Up

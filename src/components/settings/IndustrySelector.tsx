@@ -6,13 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { toast } from "@/hooks/use-toast";
 import { getIndustryOptions } from "@/config/industryTemplates";
-import { Check } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Pencil } from "lucide-react";
 
 export const IndustrySelector = () => {
   const { currentOrganizationId } = useOnboarding();
   const [selectedIndustry, setSelectedIndustry] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false); // Collapsed by default when industry is set
 
   const industries = getIndustryOptions();
 
@@ -89,6 +90,13 @@ export const IndustrySelector = () => {
     }
   };
 
+  // Get the display label for the selected industry
+  const getIndustryLabel = (value: string | null) => {
+    if (!value) return null;
+    const industry = industries.find(i => i.value === value);
+    return industry?.label || value;
+  };
+
   if (loading) {
     return (
       <Card className="bg-paper border-cream-dark">
@@ -99,13 +107,57 @@ export const IndustrySelector = () => {
     );
   }
 
+  // If industry is already set, show a compact view by default
+  if (selectedIndustry && !isExpanded) {
+    return (
+      <Card className="bg-paper border-cream-dark">
+        <CardContent className="py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-brass/10 flex items-center justify-center">
+                <Check className="w-4 h-4 text-brass" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-charcoal">Industry</p>
+                <p className="text-sm text-muted-foreground">{getIndustryLabel(selectedIndustry)}</p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsExpanded(true)}
+              className="text-muted-foreground hover:text-charcoal"
+            >
+              <Pencil className="w-4 h-4 mr-1" />
+              Change
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="bg-paper border-cream-dark">
-      <CardHeader>
-        <CardTitle className="text-charcoal font-serif">Industry Type</CardTitle>
-        <CardDescription>
-          Select your primary industry to customize collections and content templates
-        </CardDescription>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-charcoal font-serif">Industry Type</CardTitle>
+            <CardDescription>
+              Select your primary industry to customize collections and content templates
+            </CardDescription>
+          </div>
+          {selectedIndustry && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsExpanded(false)}
+              className="text-muted-foreground"
+            >
+              <ChevronUp className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -132,13 +184,23 @@ export const IndustrySelector = () => {
           </div>
         </div>
 
-        <Button
-          onClick={handleSave}
-          disabled={saving || !selectedIndustry}
-          className="bg-brass hover:bg-brass/90 text-charcoal"
-        >
-          {saving ? "Saving..." : "Save Industry Selection"}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleSave}
+            disabled={saving || !selectedIndustry}
+            className="bg-brass hover:bg-brass/90 text-charcoal"
+          >
+            {saving ? "Saving..." : "Save Industry Selection"}
+          </Button>
+          {selectedIndustry && (
+            <Button
+              variant="outline"
+              onClick={() => setIsExpanded(false)}
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

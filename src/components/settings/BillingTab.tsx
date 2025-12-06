@@ -164,19 +164,19 @@ export function BillingTab() {
         features.push('Full white-label included');
       }
       
-      // Stripe Price IDs from Stripe Dashboard (test mode)
+      // Stripe Price IDs from environment variables
       const priceIds: Record<TierId, { monthly: string; yearly: string }> = {
-        atelier: {
-          monthly: 'price_1SQKzID9l7wPFqooVHalDG2R',
-          yearly: 'price_1SQLepD9l7wPFqooLEeJ92JN',
+        essentials: {
+          monthly: import.meta.env.VITE_STRIPE_PRICE_ESSENTIALS_MONTHLY || 'price_1SbA3SRcevBEPUM5Dtsbo4l5',
+          yearly: import.meta.env.VITE_STRIPE_PRICE_ESSENTIALS_YEARLY || 'price_1SbA5hRcevBEPUM5vrXYq02Q',
         },
         studio: {
-          monthly: 'price_1SQLg8D9l7wPFqoodEyzyrE8',
-          yearly: 'price_1SQLgjD9l7wPFqooCaYOejpK',
+          monthly: import.meta.env.VITE_STRIPE_PRICE_STUDIO_MONTHLY || 'price_1SbA7JRcevBEPUM5YjQM4JGR',
+          yearly: import.meta.env.VITE_STRIPE_PRICE_STUDIO_YEARLY || 'price_1SbA7sRcevBEPUM5Gk3cRoS8',
         },
-        maison: {
-          monthly: 'price_1SQLiKD9l7wPFqooNhmlAOB7',
-          yearly: 'price_1SQLigD9l7wPFqooiVrldrhF',
+        signature: {
+          monthly: import.meta.env.VITE_STRIPE_PRICE_SIGNATURE_MONTHLY || 'price_1SbA8oRcevBEPUM5fwfcuTk0',
+          yearly: import.meta.env.VITE_STRIPE_PRICE_SIGNATURE_YEARLY || 'price_1SbA9ERcevBEPUM5PEPa3icy',
         },
       };
 

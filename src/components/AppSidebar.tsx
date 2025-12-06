@@ -403,13 +403,31 @@ export function AppSidebar() {
         </div>
         </SidebarContent>
 
-        {/* Footer */}
+        {/* Footer - User Account Section */}
         <SidebarFooter className="border-t border-white/5 p-4">
           <TooltipProvider>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-aged-brass rounded-full flex items-center justify-center text-ink-black font-bold text-sm shrink-0">
-                {getUserInitials()}
+            {/* Account Label - Clear indicator this is their profile */}
+            {open && (
+              <div className="mb-3">
+                <span className="text-[10px] text-white/40 font-semibold uppercase tracking-widest">
+                  Your Account
+                </span>
               </div>
+            )}
+            <div className="flex items-center gap-3">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="w-10 h-10 bg-aged-brass rounded-full flex items-center justify-center text-ink-black font-bold text-sm shrink-0 cursor-pointer hover:ring-2 hover:ring-[hsl(38,33%,56%)]/50 transition-all duration-200">
+                    {getUserInitials()}
+                  </div>
+                </TooltipTrigger>
+                {!open && (
+                  <TooltipContent side="right">
+                    <p className="font-medium">{getUserDisplay()}</p>
+                    <p className="text-xs text-muted-foreground">{user?.email}</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
               {open && (
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-sm font-semibold truncate">{getUserDisplay()}</p>

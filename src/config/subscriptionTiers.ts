@@ -1,7 +1,7 @@
 // Madison Studio Subscription Tiers Configuration
 // Version 2.0 - Updated Pricing (November 2025)
 
-export type TierId = 'atelier' | 'studio' | 'maison';
+export type TierId = 'essentials' | 'studio' | 'signature';
 export type AddonId = 'whitelabel' | 'images_50' | 'images_100' | 'images_500' | 'brand_slot' | 'team_5pack';
 
 export interface TierLimits {
@@ -35,9 +35,9 @@ export interface AddonConfig {
 }
 
 export const TIER_LIMITS: Record<TierId, TierLimits> = {
-  atelier: {
-    id: 'atelier',
-    name: 'Atelier',
+  essentials: {
+    id: 'essentials',
+    name: 'Essentials',
     displayName: 'Your Personal Creative Director',
     masterContent: 50,
     derivatives: 200,
@@ -51,7 +51,7 @@ export const TIER_LIMITS: Record<TierId, TierLimits> = {
     whiteLabel: false,
     support: 'email_48h',
     monthlyPrice: 4900, // $49.00
-    annualPrice: 47000, // $470.00
+    annualPrice: 49000, // $490.00
   },
   studio: {
     id: 'studio',
@@ -68,12 +68,12 @@ export const TIER_LIMITS: Record<TierId, TierLimits> = {
     apiAccess: false,
     whiteLabel: false, // available as add-on
     support: 'priority_email_24h',
-    monthlyPrice: 19900, // $199.00 (increased from $149)
-    annualPrice: 199000, // $1,990.00 (increased from $1,490)
+    monthlyPrice: 14900, // $149.00
+    annualPrice: 149000, // $1,490.00
   },
-  maison: {
-    id: 'maison',
-    name: 'Maison',
+  signature: {
+    id: 'signature',
+    name: 'Signature',
     displayName: 'Your Brand Operating System',
     masterContent: -1, // unlimited
     derivatives: -1, // unlimited
@@ -86,8 +86,8 @@ export const TIER_LIMITS: Record<TierId, TierLimits> = {
     apiAccess: true,
     whiteLabel: true, // included
     support: 'phone_slack_4h',
-    monthlyPrice: 59900, // $599.00 (increased from $399)
-    annualPrice: 599000, // $5,990.00 (increased from $3,990)
+    monthlyPrice: 34900, // $349.00
+    annualPrice: 349000, // $3,490.00
   },
 };
 
