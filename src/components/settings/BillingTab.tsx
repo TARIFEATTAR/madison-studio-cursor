@@ -121,6 +121,13 @@ export function BillingTab() {
     const tierIds: TierId[] = ['essentials', 'studio', 'signature'];
     return tierIds.map((tierId, index) => {
       const tier = TIER_LIMITS[tierId];
+
+      // Safety guard: if a tier is misconfigured or missing, avoid runtime crash
+      if (!tier) {
+        console.error("[BillingTab] Missing tier configuration for", tierId, "in TIER_LIMITS");
+        return null;
+      }
+
       // Generate features array from tier limits
       const features: string[] = [];
       
@@ -193,7 +200,7 @@ export function BillingTab() {
         stripe_price_id_monthly: priceIds[tierId]?.monthly || null,
         stripe_price_id_yearly: priceIds[tierId]?.yearly || null,
       };
-    });
+    }).filter((plan): plan is NonNullable<typeof plan> => plan !== null);
   }, []);
 
   // Initialize with fallback plans immediately so they show right away
