@@ -11,6 +11,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
+import { Image, Sparkles } from "lucide-react";
 
 // Supabase & Auth
 import { supabase } from "@/integrations/supabase/client";
@@ -24,8 +25,24 @@ import {
   CenterCanvas,
   RightPanel,
   DarkRoomHeader,
+  MobileBottomSheet,
+  MobileTabBar,
 } from "@/components/darkroom";
-import type { ProModeSettings } from "@/components/darkroom";
+import type { ProModeSettings, MobileTab } from "@/components/darkroom";
+
+// Hook to detect mobile
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 1024);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+  
+  return isMobile;
+}
 
 // Styles
 import "@/styles/darkroom.css";
@@ -123,6 +140,12 @@ export default function DarkRoom() {
   const { user } = useAuth();
   const { orgId } = useCurrentOrganizationId();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
+
+  // Mobile state
+  const [mobileTab, setMobileTab] = useState<MobileTab>("canvas");
+  const [inputsSheetOpen, setInputsSheetOpen] = useState(false);
+  const [madisonSheetOpen, setMadisonSheetOpen] = useState(false);
 
   // Session
   const [sessionId] = useState(() => uuidv4());
@@ -406,8 +429,36 @@ export default function DarkRoom() {
     }
   }, [images]);
 
+  // Handle mobile tab changes
+  const handleMobileTabChange = useCallback((tab: MobileTab) => {
+    if (tab === "inputs") {
+      setInputsSheetOpen(true);
+      setMadisonSheetOpen(false);
+    } else if (tab === "madison") {
+      setMadisonSheetOpen(true);
+      setInputsSheetOpen(false);
+    } else {
+      setInputsSheetOpen(false);
+      setMadisonSheetOpen(false);
+    }
+    setMobileTab(tab);
+  }, []);
+
+  // Close sheets
+  const handleCloseInputsSheet = useCallback(() => {
+    setInputsSheetOpen(false);
+    setMobileTab("canvas");
+  }, []);
+
+  const handleCloseMadisonSheet = useCallback(() => {
+    setMadisonSheetOpen(false);
+    setMobileTab("canvas");
+  }, []);
+
+  const hasInputs = !!productImage || !!backgroundImage || !!styleReference;
+
   return (
-    <div className="dark-room-container">
+    <div className={`dark-room-container ${(inputsSheetOpen || madisonSheetOpen) ? 'sheet-open' : ''}`}>
       {/* Header */}
       <DarkRoomHeader
         sessionCount={images.length}
@@ -418,24 +469,26 @@ export default function DarkRoom() {
 
       {/* Main Grid */}
       <div className="dark-room-grid">
-        {/* Left Rail: Inputs & Controls */}
-        <LeftRail
-          selectedProduct={selectedProduct}
-          onProductSelect={setSelectedProduct}
-          productImage={productImage}
-          onProductImageUpload={setProductImage}
-          backgroundImage={backgroundImage}
-          onBackgroundImageUpload={setBackgroundImage}
-          styleReference={styleReference}
-          onStyleReferenceUpload={setStyleReference}
-          proSettings={proSettings}
-          onProSettingsChange={setProSettings}
-          isGenerating={isGenerating}
-          canGenerate={canGenerate}
-          onGenerate={handleGenerate}
-          sessionCount={images.length}
-          maxImages={MAX_IMAGES_PER_SESSION}
-        />
+        {/* Left Rail: Inputs & Controls (Desktop only) */}
+        {!isMobile && (
+          <LeftRail
+            selectedProduct={selectedProduct}
+            onProductSelect={setSelectedProduct}
+            productImage={productImage}
+            onProductImageUpload={setProductImage}
+            backgroundImage={backgroundImage}
+            onBackgroundImageUpload={setBackgroundImage}
+            styleReference={styleReference}
+            onStyleReferenceUpload={setStyleReference}
+            proSettings={proSettings}
+            onProSettingsChange={setProSettings}
+            isGenerating={isGenerating}
+            canGenerate={canGenerate}
+            onGenerate={handleGenerate}
+            sessionCount={images.length}
+            maxImages={MAX_IMAGES_PER_SESSION}
+          />
+        )}
 
         {/* Center Canvas: Preview & Results */}
         <CenterCanvas
@@ -456,20 +509,97 @@ export default function DarkRoom() {
           maxImages={MAX_IMAGES_PER_SESSION}
         />
 
-        {/* Right Panel: Madison Assistant */}
-        <RightPanel
-          suggestions={suggestions}
-          onUseSuggestion={handleUseSuggestion}
-          presets={DEFAULT_PRESETS}
-          onApplyPreset={handleApplyPreset}
-          history={history}
-          onRestoreFromHistory={handleRestoreFromHistory}
-          hasProduct={!!productImage}
-          hasBackground={!!backgroundImage}
-          hasStyle={!!styleReference}
-          proSettingsCount={proSettingsCount}
-        />
+        {/* Right Panel: Madison Assistant (Desktop only) */}
+        {!isMobile && (
+          <RightPanel
+            suggestions={suggestions}
+            onUseSuggestion={handleUseSuggestion}
+            presets={DEFAULT_PRESETS}
+            onApplyPreset={handleApplyPreset}
+            history={history}
+            onRestoreFromHistory={handleRestoreFromHistory}
+            hasProduct={!!productImage}
+            hasBackground={!!backgroundImage}
+            hasStyle={!!styleReference}
+            proSettingsCount={proSettingsCount}
+          />
+        )}
       </div>
+
+      {/* Mobile Tab Bar */}
+      {isMobile && (
+        <MobileTabBar
+          activeTab={mobileTab}
+          onTabChange={handleMobileTabChange}
+          hasInputs={hasInputs}
+          isGenerating={isGenerating}
+        />
+      )}
+
+      {/* Mobile Inputs Sheet */}
+      {isMobile && (
+        <MobileBottomSheet
+          isOpen={inputsSheetOpen}
+          onClose={handleCloseInputsSheet}
+          title="Inputs"
+          icon={<Image className="w-5 h-5 text-[var(--darkroom-accent)]" />}
+          className="mobile-inputs-sheet"
+        >
+          <LeftRail
+            selectedProduct={selectedProduct}
+            onProductSelect={setSelectedProduct}
+            productImage={productImage}
+            onProductImageUpload={setProductImage}
+            backgroundImage={backgroundImage}
+            onBackgroundImageUpload={setBackgroundImage}
+            styleReference={styleReference}
+            onStyleReferenceUpload={setStyleReference}
+            proSettings={proSettings}
+            onProSettingsChange={setProSettings}
+            isGenerating={isGenerating}
+            canGenerate={canGenerate}
+            onGenerate={() => {
+              handleGenerate();
+              handleCloseInputsSheet();
+            }}
+            sessionCount={images.length}
+            maxImages={MAX_IMAGES_PER_SESSION}
+          />
+        </MobileBottomSheet>
+      )}
+
+      {/* Mobile Madison Sheet */}
+      {isMobile && (
+        <MobileBottomSheet
+          isOpen={madisonSheetOpen}
+          onClose={handleCloseMadisonSheet}
+          title="Madison"
+          icon={<Sparkles className="w-5 h-5 text-[var(--darkroom-accent)]" />}
+          className="mobile-madison-sheet"
+        >
+          <RightPanel
+            suggestions={suggestions}
+            onUseSuggestion={(suggestion) => {
+              handleUseSuggestion(suggestion);
+              handleCloseMadisonSheet();
+            }}
+            presets={DEFAULT_PRESETS}
+            onApplyPreset={(preset) => {
+              handleApplyPreset(preset);
+              handleCloseMadisonSheet();
+            }}
+            history={history}
+            onRestoreFromHistory={(item) => {
+              handleRestoreFromHistory(item);
+              handleCloseMadisonSheet();
+            }}
+            hasProduct={!!productImage}
+            hasBackground={!!backgroundImage}
+            hasStyle={!!styleReference}
+            proSettingsCount={proSettingsCount}
+          />
+        </MobileBottomSheet>
+      )}
     </div>
   );
 }

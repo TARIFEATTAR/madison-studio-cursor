@@ -7,3 +7,5 @@ export { CenterCanvas } from './CenterCanvas';
 export { ThumbnailCarousel } from './ThumbnailCarousel';
 export { RightPanel } from './RightPanel';
 export { DarkRoomHeader } from './DarkRoomHeader';
+export { MobileBottomSheet } from './MobileBottomSheet';
+export { MobileTabBar, type MobileTab } from './MobileTabBar';
