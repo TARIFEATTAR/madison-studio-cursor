@@ -5,6 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { formatVisualContext } from "../_shared/productFieldFilters.ts";
 import { callGeminiImage } from "../_shared/aiProviders.ts";
 import { enhancePromptWithOntology } from "../_shared/photographyOntology.ts";
+import { generateImage as generateFreepikImage, type FreepikModel, type FreepikResolution } from "../_shared/freepikProvider.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -607,6 +608,11 @@ serve(async (req) => {
       sessionId,
 
       product_id,
+
+      // Provider selection (new)
+      provider = "auto", // "auto" | "gemini" | "freepik"
+      freepikModel, // "mystic" | "flux-dev" | "flux-pro-v1-1"
+      freepikResolution, // "1k" | "2k" | "4k"
     } = body;
 
     console.log("🎨 Incoming Request", {
@@ -871,57 +877,113 @@ serve(async (req) => {
 
     /**
      * -------------------------
-     * 9. Call Gemini Image Generation
+     * 9. Determine Provider & Generate Image
      * -------------------------
      */
     // Generate a random seed for variety (0-4294967295, max 32-bit integer)
-    // This ensures different images even with similar prompts
     const randomSeed = Math.floor(Math.random() * 4294967295);
+
+    // Determine which provider to use
+    let selectedProvider: "gemini" | "freepik" = "gemini";
     
-    const geminiImage = await callGeminiImage({
-      prompt: enhancedPrompt,
-      aspectRatio,
-      seed: randomSeed, // Add seed for variety
-      referenceImages: referenceImagesPayload.length > 0
-        ? referenceImagesPayload
-        : undefined,
-    });
-
-    const base64Image = geminiImage?.data ?? geminiImage?.bytesBase64 ?? geminiImage?.base64;
-
-    if (!base64Image) {
-      throw new Error("Gemini returned no image. Check prompt and reference images.");
+    if (provider === "freepik") {
+      selectedProvider = "freepik";
+    } else if (provider === "auto") {
+      // Auto-selection logic:
+      // - Use Freepik for 4K resolution requests
+      // - Use Freepik if explicitly requested via freepikModel
+      // - Default to Gemini (better for reference image composition)
+      if (freepikResolution === "4k" || freepikModel) {
+        selectedProvider = "freepik";
+      }
     }
 
-    console.log(`✅ Image Generated Successfully`, {
+    let imageUrl: string;
+    let usedProvider: string = selectedProvider;
+
+    if (selectedProvider === "freepik") {
+      /**
+       * FREEPIK GENERATION PATH
+       */
+      console.log("🎨 Using Freepik for image generation...", {
+        model: freepikModel || "mystic",
+        resolution: freepikResolution || "2k",
+      });
+
+      try {
+        const freepikResult = await generateFreepikImage({
+          prompt: enhancedPrompt,
+          model: (freepikModel as FreepikModel) || "mystic",
+          resolution: (freepikResolution as FreepikResolution) || "2k",
+          aspectRatio: aspectRatio as any,
+          seed: randomSeed,
+        });
+
+        imageUrl = freepikResult.imageUrl;
+        usedProvider = `freepik-${freepikResult.model}`;
+
+        console.log(`✅ Freepik Image Generated:`, {
+          taskId: freepikResult.taskId,
+          model: freepikResult.model,
+        });
+      } catch (freepikError) {
+        console.error("❌ Freepik generation failed, falling back to Gemini:", freepikError);
+        // Fall back to Gemini
+        selectedProvider = "gemini";
+      }
+    }
+
+    if (selectedProvider === "gemini") {
+      /**
+       * GEMINI GENERATION PATH (default)
+       */
+      console.log("🎨 Using Gemini for image generation...");
+
+      const geminiImage = await callGeminiImage({
+        prompt: enhancedPrompt,
+        aspectRatio,
+        seed: randomSeed,
+        referenceImages: referenceImagesPayload.length > 0
+          ? referenceImagesPayload
+          : undefined,
+      });
+
+      const base64Image = geminiImage?.data ?? geminiImage?.bytesBase64 ?? geminiImage?.base64;
+
+      if (!base64Image) {
+        throw new Error("Gemini returned no image. Check prompt and reference images.");
+      }
+
+      // Upload Gemini's base64 image to Supabase Storage
+      const filename = `${resolvedOrgId}/${Date.now()}-${crypto.randomUUID()}.png`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from("generated-images")
+        .upload(filename, decode(base64Image), {
+          contentType: "image/png",
+        });
+
+      if (uploadErr) {
+        console.error("Storage upload error", uploadErr);
+        throw uploadErr;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from("generated-images")
+        .getPublicUrl(filename);
+
+      imageUrl = urlData.publicUrl;
+      usedProvider = "gemini";
+
+      console.log(`✅ Gemini Image Generated Successfully`);
+    }
+
+    console.log(`✅ Image Generation Complete`, {
+      provider: usedProvider,
       mode: isDirectorMode ? "Director Mode" : "Essential Mode",
       promptLength: enhancedPrompt.length,
       referencesUsed: referenceImagesPayload.length,
     });
-
-    /**
-     * -------------------------
-     * 9. Upload image to Supabase Storage
-     * -------------------------
-     */
-    const filename = `${resolvedOrgId}/${Date.now()}-${crypto.randomUUID()}.png`;
-
-    const { data: uploadData, error: uploadErr } = await supabase.storage
-      .from("generated-images")
-      .upload(filename, decode(base64Image), {
-        contentType: "image/png",
-      });
-
-    if (uploadErr) {
-      console.error("Storage upload error", uploadErr);
-      throw uploadErr;
-    }
-
-    const { data: urlData } = supabase.storage
-      .from("generated-images")
-      .getPublicUrl(filename);
-
-    const imageUrl = urlData.publicUrl;
 
     /**
      * -------------------------
@@ -937,9 +999,11 @@ serve(async (req) => {
       output_format: outputFormat,
       final_prompt: enhancedPrompt,
       image_url: imageUrl,
+      generation_provider: usedProvider,
+      media_type: "image",
       description: isDirectorMode 
-        ? "Gemini 2.5 generated image (Director Mode - Pro Photography)" 
-        : "Gemini 2.5 generated image (Essential Mode)",
+        ? `${usedProvider} generated image (Director Mode - Pro Photography)` 
+        : `${usedProvider} generated image (Essential Mode)`,
     };
 
     if (selectedTemplate) insertPayload.selected_template = selectedTemplate;
