@@ -68,28 +68,70 @@ export function useCurrentOrganizationId() {
       logger.debug("🔍 Looking for org for user:", user.id);
 
       try {
-        const { data, error } = await supabase
+        // Step 1: Check organization_members
+        const { data: memberData, error: memberError } = await supabase
           .from("organization_members")
           .select("organization_id")
           .eq("user_id", user.id)
           .maybeSingle();
 
-        if (error) {
-          logger.error("❌ Error loading organization ID:", error);
+        if (memberError && memberError.code !== 'PGRST116') {
+          logger.error("❌ Error checking organization_members:", memberError);
+        }
+
+        if (memberData?.organization_id) {
+          logger.debug("✅ Found organization via membership:", memberData.organization_id);
+          setOrgId(memberData.organization_id);
+          localStorage.setItem('current_org_id', memberData.organization_id);
           setLoading(false);
           return;
         }
 
-        if (data?.organization_id) {
-          logger.debug("✅ Found organization:", data.organization_id);
-          setOrgId(data.organization_id);
-          localStorage.setItem('current_org_id', data.organization_id);
-        } else {
-          logger.debug("⚠️ No organization found for user");
-          // Clear cache if no org found
-          localStorage.removeItem('current_org_id');
-          setOrgId(null);
+        // Step 2: Fallback - check if user created an organization
+        logger.debug("🔍 No membership found, checking organizations created by user...");
+        const { data: orgData, error: orgError } = await supabase
+          .from("organizations")
+          .select("id")
+          .eq("created_by", user.id)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (orgError && orgError.code !== 'PGRST116') {
+          logger.error("❌ Error checking organizations:", orgError);
         }
+
+        if (orgData?.id) {
+          logger.debug("✅ Found organization via created_by:", orgData.id);
+          
+          // Auto-create the missing membership entry
+          const { error: upsertError } = await supabase
+            .from("organization_members")
+            .upsert({
+              organization_id: orgData.id,
+              user_id: user.id,
+              role: "owner",
+            }, {
+              onConflict: "organization_id,user_id",
+              ignoreDuplicates: true
+            });
+
+          if (upsertError) {
+            logger.warn("⚠️ Could not auto-create membership:", upsertError);
+          } else {
+            logger.debug("✅ Auto-created missing organization membership");
+          }
+
+          setOrgId(orgData.id);
+          localStorage.setItem('current_org_id', orgData.id);
+          setLoading(false);
+          return;
+        }
+
+        // Step 3: No organization exists - user needs onboarding
+        logger.debug("⚠️ No organization found for user - needs onboarding");
+        localStorage.removeItem('current_org_id');
+        setOrgId(null);
       } catch (error) {
         logger.error("❌ Error loading organization ID:", error);
       } finally {

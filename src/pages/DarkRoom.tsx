@@ -302,6 +302,14 @@ export default function DarkRoom() {
           toast.error("AI credits depleted", {
             description: "Please add credits in Settings.",
           });
+        } else if (errorMsg.includes("organization") || errorMsg.includes("onboarding")) {
+          toast.error("Setup incomplete", {
+            description: "Please complete onboarding to start generating images.",
+            action: {
+              label: "Go to Dashboard",
+              onClick: () => navigate("/dashboard"),
+            },
+          });
         } else {
           toast.error("Generation failed", {
             description: errorMsg.substring(0, 100),
