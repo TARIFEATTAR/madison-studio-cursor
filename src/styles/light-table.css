@@ -57,6 +57,16 @@
   color: rgba(245, 240, 230, 0.5);
 }
 
+.light-table-clear-btn {
+  color: rgba(245, 240, 230, 0.5) !important;
+  font-size: 0.75rem;
+}
+
+.light-table-clear-btn:hover {
+  color: rgba(239, 68, 68, 0.8) !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+
 /* Main Content Layout */
 .light-table-content {
   display: grid;
@@ -231,6 +241,15 @@
   font-size: 0.8rem;
   font-weight: 500;
   color: rgba(245, 240, 230, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.light-table-hint {
+  font-size: 0.65rem;
+  font-weight: 400;
+  color: rgba(184, 149, 106, 0.6);
 }
 
 .light-table-textarea {

@@ -7,11 +7,14 @@
  * Flow: Dark Room (generate) → Light Table (review/refine) → Library (save) or Video Project (create video)
  */
 
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo, KeyboardEvent } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
+
+// Session persistence key
+const LIGHT_TABLE_SESSION_KEY = "madison-light-table-session";
 import {
   ArrowLeft,
   Wand2,
@@ -72,14 +75,62 @@ export default function LightTable() {
   // Get data from navigation state
   const locationState = location.state as LocationState | undefined;
 
+  // Load session from localStorage or navigation state
+  const loadSession = useCallback(() => {
+    // First check navigation state (coming from Dark Room)
+    if (locationState?.sessionImages && locationState.sessionImages.length > 0) {
+      return {
+        images: locationState.sessionImages,
+        selectedId: locationState.selectedImageId || locationState.sessionImages[0]?.id || null,
+        sessionId: locationState.sessionId || uuidv4(),
+      };
+    }
+    
+    // Then check localStorage (returning to Light Table)
+    try {
+      const saved = localStorage.getItem(LIGHT_TABLE_SESSION_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.images && parsed.images.length > 0) {
+          return {
+            images: parsed.images as SessionImage[],
+            selectedId: parsed.selectedImageId || parsed.images[0]?.id || null,
+            sessionId: parsed.sessionId || uuidv4(),
+          };
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load session from localStorage:", e);
+    }
+    
+    return { images: [], selectedId: null, sessionId: uuidv4() };
+  }, [locationState]);
+
+  const initialSession = useMemo(() => loadSession(), []);
+  
   // Images state
-  const [images, setImages] = useState<SessionImage[]>(
-    locationState?.sessionImages || []
-  );
-  const [selectedImageId, setSelectedImageId] = useState<string | null>(
-    locationState?.selectedImageId || (images[0]?.id ?? null)
-  );
-  const sessionId = locationState?.sessionId || uuidv4();
+  const [images, setImages] = useState<SessionImage[]>(initialSession.images);
+  const [selectedImageId, setSelectedImageId] = useState<string | null>(initialSession.selectedId);
+  const [sessionId] = useState<string>(initialSession.sessionId);
+
+  // Save session to localStorage whenever images change
+  useEffect(() => {
+    if (images.length > 0) {
+      try {
+        localStorage.setItem(
+          LIGHT_TABLE_SESSION_KEY,
+          JSON.stringify({
+            images,
+            selectedImageId,
+            sessionId,
+            savedAt: Date.now(),
+          })
+        );
+      } catch (e) {
+        console.error("Failed to save session to localStorage:", e);
+      }
+    }
+  }, [images, selectedImageId, sessionId]);
 
   // UI state
   const [activeTab, setActiveTab] = useState<"refine" | "text" | "variations">("refine");
@@ -112,22 +163,51 @@ export default function LightTable() {
     }
   }, [selectedImage?.id]);
 
-  // Handle no images - redirect back
+  // Handle no images - redirect back only if no saved session either
   useEffect(() => {
-    if (!locationState?.sessionImages || locationState.sessionImages.length === 0) {
+    if (images.length === 0) {
       toast.error("No images to review");
       navigate("/darkroom");
     }
-  }, [locationState, navigate]);
+  }, [images.length, navigate]);
+
+  // Clear session from localStorage
+  const handleClearSession = useCallback(() => {
+    localStorage.removeItem(LIGHT_TABLE_SESSION_KEY);
+    toast.success("Session cleared");
+    navigate("/darkroom");
+  }, [navigate]);
 
   // Generate refinement
   const handleRefine = useCallback(async () => {
-    if (!selectedImage || !user || !orgId || !refinementPrompt.trim()) {
+    if (!selectedImage) {
+      toast.error("No image selected");
+      return;
+    }
+    
+    if (!user) {
+      toast.error("Please sign in to generate images");
+      return;
+    }
+    
+    if (!orgId) {
+      toast.error("Organization not found. Please complete onboarding.");
+      return;
+    }
+    
+    if (!refinementPrompt.trim()) {
       toast.error("Please enter a refinement prompt");
       return;
     }
 
     setIsGenerating(true);
+    
+    console.log("🎨 Starting refinement:", {
+      prompt: refinementPrompt.substring(0, 50) + "...",
+      referenceImage: selectedImage.imageUrl.substring(0, 50) + "...",
+      userId: user.id,
+      orgId,
+    });
 
     try {
       const { data, error } = await supabase.functions.invoke("generate-madison-image", {
@@ -140,7 +220,12 @@ export default function LightTable() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("❌ Refinement API error:", error);
+        throw error;
+      }
+
+      console.log("✅ Refinement response:", data);
 
       if (data?.imageUrl) {
         const newImage: SessionImage = {
@@ -148,7 +233,7 @@ export default function LightTable() {
           imageUrl: data.imageUrl,
           prompt: refinementPrompt,
           timestamp: Date.now(),
-          isSaved: true,
+          isSaved: data.savedToLibrary || false,
         };
 
         // Add to images and select it
@@ -156,14 +241,31 @@ export default function LightTable() {
         setSelectedImageId(newImage.id);
 
         toast.success("Refinement generated!");
+      } else {
+        console.error("❌ No imageUrl in response:", data);
+        toast.error("No image returned from generation");
       }
-    } catch (error) {
-      console.error("Refinement error:", error);
-      toast.error("Failed to generate refinement");
+    } catch (error: any) {
+      console.error("❌ Refinement error:", error);
+      const errorMsg = error?.message || "Failed to generate refinement";
+      toast.error(errorMsg.substring(0, 100));
     } finally {
       setIsGenerating(false);
     }
   }, [selectedImage, user, orgId, refinementPrompt]);
+
+  // Handle Enter key in textarea
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        if (!isGenerating && refinementPrompt.trim()) {
+          handleRefine();
+        }
+      }
+    },
+    [handleRefine, isGenerating, refinementPrompt]
+  );
 
   // Generate variations
   const handleGenerateVariations = useCallback(async () => {
@@ -373,6 +475,15 @@ export default function LightTable() {
           <span className="light-table-session-count">
             {images.length} image{images.length !== 1 ? "s" : ""} in session
           </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleClearSession}
+            className="light-table-clear-btn"
+          >
+            <Trash2 className="w-4 h-4 mr-1" />
+            Clear
+          </Button>
         </div>
       </header>
 
@@ -478,10 +589,13 @@ export default function LightTable() {
             <div className="light-table-tab-content">
               {activeTab === "refine" && (
                 <div className="light-table-refine">
-                  <label className="light-table-label">Describe changes</label>
+                  <label className="light-table-label">
+                    Describe changes <span className="light-table-hint">(Press Enter to generate)</span>
+                  </label>
                   <Textarea
                     value={refinementPrompt}
                     onChange={(e) => setRefinementPrompt(e.target.value)}
+                    onKeyDown={handleKeyDown}
                     placeholder="e.g., Make the lighting warmer, add shadows..."
                     className="light-table-textarea"
                     rows={3}
