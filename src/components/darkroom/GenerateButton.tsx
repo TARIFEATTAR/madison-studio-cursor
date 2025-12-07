@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Camera, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface GenerateButtonProps {
@@ -40,16 +40,16 @@ export function GenerateButton({
       return `Session limit reached (${maxImages} images). Save to continue.`;
     }
     if (!hasProduct && !hasBackground) {
-      return "💡 Upload a product image to begin";
+      return "Upload a product image to begin";
     }
     if (hasProduct && !hasBackground) {
-      return "💡 Try adding a background scene for composition";
+      return "Try adding a background scene for composition";
     }
     if (hasProduct && hasBackground && !hasStyle) {
-      return "💡 Add a style reference for matching lighting";
+      return "Add a style reference for matching lighting";
     }
     if (proSettingsCount === 0 && (hasProduct || hasBackground)) {
-      return "💡 Expand Pro Settings for camera & lighting control";
+      return "Expand Pro Settings for camera & lighting control";
     }
     return null;
   };
@@ -93,7 +93,7 @@ export function GenerateButton({
               exit={{ opacity: 0 }}
               className="button-content"
             >
-              <Sparkles size={18} />
+              <Camera size={18} />
               <span>
                 {hasProduct ? "Enhance Image" : "Generate Image"}
               </span>

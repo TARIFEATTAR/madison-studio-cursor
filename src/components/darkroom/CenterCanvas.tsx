@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Sparkles,
+  Camera,
   Download,
   Save,
   CheckCircle,
   Loader2,
   Wand2,
+  Send,
 } from "lucide-react";
 import { ThumbnailCarousel } from "./ThumbnailCarousel";
 import { DevelopingAnimation, useDevelopingAnimation } from "./DevelopingAnimation";
@@ -237,7 +238,7 @@ function EmptyState() {
       className="empty-state"
     >
       <div className="empty-frame">
-        <Sparkles className="center-canvas__empty-icon" strokeWidth={1} />
+        <Camera className="center-canvas__empty-icon" strokeWidth={1} />
         <h3 className="center-canvas__empty-title">Your canvas awaits</h3>
         <p className="center-canvas__empty-description">
           Describe your vision below and watch Madison bring it to life
@@ -328,7 +329,6 @@ export function CenterCanvas({
             animate={{ opacity: 1, y: 0 }}
             className="prompt-bar__pro-indicator"
           >
-            <span>🎛️</span>
             <span>
               Pro Mode: {proSettingsCount} setting
               {proSettingsCount > 1 ? "s" : ""} active
@@ -364,7 +364,7 @@ export function CenterCanvas({
             {isGenerating ? (
               <Loader2 size={18} className="animate-spin" />
             ) : (
-              <Sparkles size={18} />
+              <Send size={18} />
             )}
           </motion.button>
         </div>

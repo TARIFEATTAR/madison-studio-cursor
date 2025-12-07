@@ -1,4 +1,4 @@
-import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu, ShoppingBag, Store, Image, Mail, ChevronDown, Palette, FolderOpen, BookOpen, HelpCircle, Compass, Sparkles, Camera } from "lucide-react";
+import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu, ShoppingBag, Store, Image, Mail, ChevronDown, Palette, FolderOpen, BookOpen, HelpCircle, Compass, Camera } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";

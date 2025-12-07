@@ -21,7 +21,6 @@ import {
   Play,
   Pause,
   Download,
-  Sparkles,
   Plus,
   GripVertical,
   Trash2,
@@ -35,6 +34,9 @@ import {
   Settings2,
   Check,
   Loader2,
+  Video,
+  Layers,
+  LayoutTemplate,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -94,7 +96,7 @@ const VIDEO_TEMPLATES: VideoTemplate[] = [
     id: "product-reveal",
     name: "Product Reveal",
     description: "Hero shot → Detail → CTA. Perfect for product launches.",
-    icon: <Sparkles className="w-5 h-5" />,
+    icon: <Video className="w-5 h-5" />,
     sceneCount: 3,
     defaultDuration: 30,
     scenes: [
@@ -120,7 +122,7 @@ const VIDEO_TEMPLATES: VideoTemplate[] = [
     id: "brand-story",
     name: "Brand Story",
     description: "Slow, elegant reveal for brand awareness.",
-    icon: <Wand2 className="w-5 h-5" />,
+    icon: <Layers className="w-5 h-5" />,
     sceneCount: 4,
     defaultDuration: 45,
     scenes: [
@@ -134,7 +136,7 @@ const VIDEO_TEMPLATES: VideoTemplate[] = [
     id: "custom",
     name: "Custom",
     description: "Start from scratch. You design the structure.",
-    icon: <Plus className="w-5 h-5" />,
+    icon: <LayoutTemplate className="w-5 h-5" />,
     sceneCount: 1,
     defaultDuration: 15,
     scenes: [

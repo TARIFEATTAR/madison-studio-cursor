@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Sparkles, Loader2 } from "lucide-react";
+import { ArrowLeft, Play, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface VideoProjectHeaderProps {
@@ -97,7 +97,7 @@ export function VideoProjectHeader({
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 mr-2" />
+                  <Play className="w-4 h-4 mr-2" />
                   Generate Video
                 </>
               )}
