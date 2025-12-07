@@ -118,12 +118,12 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                   <SelectTrigger className="h-9 bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
                     <SelectValue placeholder="Select camera..." />
                   </SelectTrigger>
-                  <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)]">
-                    <SelectItem value="none" className="text-[var(--darkroom-text-muted)]">
+                  <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] z-50">
+                    <SelectItem value="none" className="text-[#a09080] focus:bg-[#2a2520] focus:text-[#f5f0e6] data-[highlighted]:bg-[#2a2520] data-[highlighted]:text-[#f5f0e6]">
                       None
                     </SelectItem>
                     {cameraOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
+                      <SelectItem key={option.value} value={option.value} className="text-[#f5f0e6] focus:bg-[#2a2520] focus:text-[#f5f0e6] data-[highlighted]:bg-[#2a2520] data-[highlighted]:text-[#f5f0e6]">
                         {option.label}
                       </SelectItem>
                     ))}
@@ -145,12 +145,12 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                   <SelectTrigger className="h-9 bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
                     <SelectValue placeholder="Select lighting..." />
                   </SelectTrigger>
-                  <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)]">
-                    <SelectItem value="none" className="text-[var(--darkroom-text-muted)]">
+                  <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] z-50">
+                    <SelectItem value="none" className="text-[#a09080] focus:bg-[#2a2520] focus:text-[#f5f0e6] data-[highlighted]:bg-[#2a2520] data-[highlighted]:text-[#f5f0e6]">
                       None
                     </SelectItem>
                     {lightingOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
+                      <SelectItem key={option.value} value={option.value} className="text-[#f5f0e6] focus:bg-[#2a2520] focus:text-[#f5f0e6] data-[highlighted]:bg-[#2a2520] data-[highlighted]:text-[#f5f0e6]">
                         {option.label}
                       </SelectItem>
                     ))}
@@ -187,12 +187,12 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                   <SelectTrigger className="h-9 bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
                     <SelectValue placeholder="Select environment..." />
                   </SelectTrigger>
-                  <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)]">
-                    <SelectItem value="none" className="text-[var(--darkroom-text-muted)]">
+                  <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] z-50">
+                    <SelectItem value="none" className="text-[#a09080] focus:bg-[#2a2520] focus:text-[#f5f0e6] data-[highlighted]:bg-[#2a2520] data-[highlighted]:text-[#f5f0e6]">
                       None
                     </SelectItem>
                     {environmentOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
+                      <SelectItem key={option.value} value={option.value} className="text-[#f5f0e6] focus:bg-[#2a2520] focus:text-[#f5f0e6] data-[highlighted]:bg-[#2a2520] data-[highlighted]:text-[#f5f0e6]">
                         {option.label}
                       </SelectItem>
                     ))}
