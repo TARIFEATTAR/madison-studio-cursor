@@ -115,7 +115,7 @@
    ----------------------------------------------------------------------------- */
 .dark-room-grid {
   display: grid;
-  grid-template-columns: 280px 1fr 360px;
+  grid-template-columns: 280px 1fr auto;
   gap: 0;
   height: calc(100vh - 64px);
   overflow: hidden;
@@ -124,7 +124,7 @@
 /* Responsive: Tablet */
 @media (max-width: 1280px) {
   .dark-room-grid {
-    grid-template-columns: 260px 1fr 320px;
+    grid-template-columns: 260px 1fr auto;
   }
 }
 
@@ -514,6 +514,32 @@
   color: var(--darkroom-text-muted);
   margin-top: var(--space-xs);
   font-style: italic;
+}
+
+/* Divider for AI Settings */
+.pro-settings__divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: var(--space-lg) 0 var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--darkroom-border);
+}
+
+.pro-settings__divider-text {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--darkroom-accent);
+  white-space: nowrap;
+}
+
+.pro-settings__divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--darkroom-border), transparent);
 }
 
 /* Glow Accent (Left Border During Expansion) */
@@ -1413,7 +1439,9 @@
   overflow: hidden;
   min-width: 280px;
   max-width: 320px;
+  width: 300px;
   transition: all 0.3s ease-in-out;
+  margin-left: auto; /* Push to right edge */
 }
 
 .right-panel--collapsed {
@@ -2323,7 +2351,7 @@
 /* Tablet adjustments */
 @media (max-width: 1280px) and (min-width: 1025px) {
   .dark-room-grid {
-    grid-template-columns: 260px 1fr 320px;
+    grid-template-columns: 260px 1fr auto;
   }
 }
 
