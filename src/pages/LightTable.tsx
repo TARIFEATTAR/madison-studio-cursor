@@ -266,7 +266,16 @@ export default function LightTable() {
       const { data, error } = await supabase.functions.invoke("generate-madison-image", {
         body: {
           prompt: refinementPrompt,
-          referenceImageUrl: selectedImage.imageUrl,
+          referenceImages: [
+            {
+              url: selectedImage.imageUrl,
+              label: "style",
+              description: "Base image to refine",
+            },
+          ],
+          isRefinement: true,
+          refinementInstruction: refinementPrompt,
+          parentPrompt: selectedImage.prompt,
           userId: user.id,
           organizationId: orgId,
           goalType: "refinement",
@@ -366,7 +375,13 @@ export default function LightTable() {
           const { data, error } = await supabase.functions.invoke("generate-madison-image", {
             body: {
               prompt,
-              referenceImageUrl: selectedImage.imageUrl,
+              referenceImages: [
+                {
+                  url: selectedImage.imageUrl,
+                  label: "style",
+                  description: "Reference for variation",
+                },
+              ],
               userId: user.id,
               organizationId: orgId,
               goalType: "variation",
