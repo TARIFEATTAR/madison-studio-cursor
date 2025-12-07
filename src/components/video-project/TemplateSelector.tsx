@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Clock, ChevronRight } from "lucide-react";
+import { Clock, ChevronRight, Lightbulb } from "lucide-react";
 import type { VideoTemplate } from "@/pages/VideoProject";
 
 interface TemplateSelectorProps {
@@ -54,7 +54,7 @@ export function TemplateSelector({ templates, onSelect }: TemplateSelectorProps)
       </div>
 
       <div className="template-tip">
-        <span className="tip-icon">💡</span>
+        <Lightbulb className="tip-icon-svg" />
         <span className="tip-text">
           Most users choose <strong>Product Reveal</strong> for their first video
         </span>

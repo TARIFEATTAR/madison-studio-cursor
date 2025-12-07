@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Check, AlertCircle } from "lucide-react";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PlatformBadgesProps {
@@ -9,17 +9,51 @@ interface PlatformBadgesProps {
 
 interface PlatformSpec {
   name: string;
-  icon: string;
+  icon: React.ReactNode;
   aspectRatios: string[];
   maxDuration: number;
   minDuration: number;
   idealDuration: number[];
 }
 
-const PLATFORM_SPECS: Record<string, PlatformSpec> = {
+// Elegant brass SVG icons with glow effect
+const IconWrapper = ({ children, compatible }: { children: React.ReactNode; compatible?: boolean }) => (
+  <div className={cn("platform-icon-wrapper", compatible && "platform-icon-wrapper--glow")}>
+    {children}
+  </div>
+);
+
+const InstagramIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" className="platform-svg-icon">
+    <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" strokeWidth="1.5" />
+    <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5" />
+    <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" />
+  </svg>
+);
+
+const TikTokIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="platform-svg-icon">
+    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+  </svg>
+);
+
+const FacebookIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="platform-svg-icon">
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+  </svg>
+);
+
+const YouTubeIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="platform-svg-icon">
+    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/>
+    <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="currentColor" className="youtube-play" />
+  </svg>
+);
+
+const PLATFORM_SPECS: Record<string, Omit<PlatformSpec, 'icon'> & { iconComponent: React.FC }> = {
   instagram_reels: {
     name: "Instagram Reels",
-    icon: "📸",
+    iconComponent: InstagramIcon,
     aspectRatios: ["9:16", "1:1"],
     maxDuration: 90,
     minDuration: 3,
@@ -27,7 +61,7 @@ const PLATFORM_SPECS: Record<string, PlatformSpec> = {
   },
   tiktok: {
     name: "TikTok",
-    icon: "🎵",
+    iconComponent: TikTokIcon,
     aspectRatios: ["9:16"],
     maxDuration: 180,
     minDuration: 5,
@@ -35,7 +69,7 @@ const PLATFORM_SPECS: Record<string, PlatformSpec> = {
   },
   facebook_reels: {
     name: "Facebook Reels",
-    icon: "👥",
+    iconComponent: FacebookIcon,
     aspectRatios: ["9:16", "1:1"],
     maxDuration: 90,
     minDuration: 3,
@@ -43,7 +77,7 @@ const PLATFORM_SPECS: Record<string, PlatformSpec> = {
   },
   youtube_shorts: {
     name: "YouTube Shorts",
-    icon: "▶️",
+    iconComponent: YouTubeIcon,
     aspectRatios: ["9:16"],
     maxDuration: 60,
     minDuration: 15,
@@ -52,7 +86,7 @@ const PLATFORM_SPECS: Record<string, PlatformSpec> = {
 };
 
 function getPlatformCompatibility(
-  platform: PlatformSpec,
+  platform: Omit<PlatformSpec, 'icon'>,
   duration: number,
   aspectRatio: string
 ): { compatible: boolean; issue?: string } {
@@ -87,28 +121,33 @@ export function PlatformBadges({ duration, aspectRatio }: PlatformBadgesProps) {
       </div>
 
       <div className="platform-badges-list">
-        {platforms.map((platform, index) => (
-          <motion.div
-            key={platform.key}
-            className={cn(
-              "platform-badge",
-              platform.compatible
-                ? "platform-badge--compatible"
-                : "platform-badge--incompatible"
-            )}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
-          >
-            <span className="platform-icon">{platform.icon}</span>
-            <span className="platform-name">{platform.name}</span>
-            {platform.compatible ? (
-              <Check className="w-3 h-3 platform-status-icon" />
-            ) : (
-              <span className="platform-issue">{platform.issue}</span>
-            )}
-          </motion.div>
-        ))}
+        {platforms.map((platform, index) => {
+          const IconComponent = platform.iconComponent;
+          return (
+            <motion.div
+              key={platform.key}
+              className={cn(
+                "platform-badge",
+                platform.compatible
+                  ? "platform-badge--compatible"
+                  : "platform-badge--incompatible"
+              )}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+            >
+              <IconWrapper compatible={platform.compatible}>
+                <IconComponent />
+              </IconWrapper>
+              <span className="platform-name">{platform.name}</span>
+              {platform.compatible ? (
+                <Check className="w-3 h-3 platform-status-icon" />
+              ) : (
+                <span className="platform-issue">{platform.issue}</span>
+              )}
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );

@@ -235,6 +235,24 @@
   font-size: 1rem;
 }
 
+.tip-icon-svg {
+  width: 16px;
+  height: 16px;
+  color: #b8956a;
+  filter: drop-shadow(0 0 4px rgba(184, 149, 106, 0.5));
+  animation: tipGlow 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes tipGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 3px rgba(184, 149, 106, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(184, 149, 106, 0.7));
+  }
+}
+
 .tip-text strong {
   color: #b8956a;
 }
@@ -896,12 +914,47 @@
   opacity: 0.6;
 }
 
-.platform-icon {
+/* Platform Icon with Glow Animation */
+.platform-icon-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
+  position: relative;
+}
+
+.platform-svg-icon {
+  width: 14px;
+  height: 14px;
+  color: rgba(184, 149, 106, 0.5);
+  transition: all 0.3s ease;
+}
+
+/* Glow effect for compatible platforms */
+.platform-icon-wrapper--glow .platform-svg-icon {
+  color: #b8956a;
+  filter: drop-shadow(0 0 3px rgba(184, 149, 106, 0.4));
+  animation: iconGlow 2s ease-in-out infinite;
+}
+
+@keyframes iconGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 2px rgba(184, 149, 106, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 6px rgba(184, 149, 106, 0.6));
+  }
+}
+
+/* YouTube play button contrast fix */
+.platform-svg-icon .youtube-play {
+  fill: #1a1816;
+}
+
+.platform-icon-wrapper--glow .platform-svg-icon .youtube-play {
+  fill: #1a1816;
 }
 
 .platform-name {
