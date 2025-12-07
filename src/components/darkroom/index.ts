@@ -9,3 +9,8 @@ export { RightPanel } from './RightPanel';
 export { DarkRoomHeader } from './DarkRoomHeader';
 export { MobileBottomSheet } from './MobileBottomSheet';
 export { MobileTabBar, type MobileTab } from './MobileTabBar';
+export { 
+  DevelopingAnimation, 
+  useDevelopingAnimation, 
+  DEVELOPING_PRESETS 
+} from './DevelopingAnimation';

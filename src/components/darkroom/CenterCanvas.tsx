@@ -9,6 +9,7 @@ import {
   Wand2,
 } from "lucide-react";
 import { ThumbnailCarousel } from "./ThumbnailCarousel";
+import { DevelopingAnimation, useDevelopingAnimation } from "./DevelopingAnimation";
 import { cn } from "@/lib/utils";
 
 interface GeneratedImage {
@@ -45,10 +46,13 @@ interface CenterCanvasProps {
 
   // Session
   maxImages: number;
+  
+  // Track newly generated images for developing animation
+  newlyGeneratedId?: string | null;
 }
 
-// Generating State with Scanline Animation
-function GeneratingState() {
+// Generating State with Chemical Bath Animation
+function GeneratingState({ pendingImageUrl }: { pendingImageUrl?: string }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -56,157 +60,169 @@ function GeneratingState() {
       exit={{ opacity: 0 }}
       className="generating-state"
     >
-      {/* Empty Frame with Pulsing Border */}
-      <motion.div
-        className="generating-frame"
-        animate={{
-          borderColor: [
-            "rgba(184, 149, 106, 0.2)",
-            "rgba(184, 149, 106, 0.5)",
-            "rgba(184, 149, 106, 0.2)",
-          ],
-        }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      >
-        {/* Scanline Effect */}
-        <motion.div
-          className="scanline"
-          animate={{
-            y: ["-100%", "100%"],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-          style={{ position: "absolute", left: 0, right: 0, top: 0 }}
-        />
-
-        <p className="generating-text">Exposing image...</p>
-      </motion.div>
+      <DevelopingAnimation
+        imageUrl={pendingImageUrl}
+        phase="submerged"
+        developingText="Exposing image..."
+      />
     </motion.div>
   );
 }
 
-// Image Reveal with Flash Effect
+// Image Reveal with Chemical Bath Developing Effect
 function ImageReveal({
   image,
   onSave,
   onDownload,
   onRefine,
   isSaving,
+  isNewlyGenerated = false,
 }: {
   image: GeneratedImage;
   onSave: () => void;
   onDownload: () => void;
   onRefine: () => void;
   isSaving: boolean;
+  isNewlyGenerated?: boolean;
 }) {
-  const [showFlash, setShowFlash] = useState(true);
-  const [showGlow, setShowGlow] = useState(true);
+  const [showActions, setShowActions] = useState(!isNewlyGenerated);
+  
+  // Use the developing animation for newly generated images
+  const { phase, isComplete } = useDevelopingAnimation(
+    isNewlyGenerated ? image.imageUrl : null,
+    {
+      autoStart: isNewlyGenerated,
+      developDuration: 2500, // 2.5 seconds for the full reveal
+      onComplete: () => setShowActions(true),
+    }
+  );
 
-  useEffect(() => {
-    // Flash effect duration
-    const flashTimer = setTimeout(() => setShowFlash(false), 100);
-    // Glow effect duration
-    const glowTimer = setTimeout(() => setShowGlow(false), 1200);
-    return () => {
-      clearTimeout(flashTimer);
-      clearTimeout(glowTimer);
-    };
-  }, [image.id]);
+  // If not newly generated, show directly
+  if (!isNewlyGenerated) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="image-reveal image-reveal--direct"
+      >
+        <img
+          src={image.imageUrl}
+          alt="Generated"
+          className="hero-image"
+        />
+        
+        {/* Action Buttons - always visible for non-new images */}
+        <motion.div
+          className="hero-actions"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.3 }}
+        >
+          <motion.button
+            className="hero-action-btn"
+            onClick={onDownload}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Download size={18} />
+            <span>Download</span>
+          </motion.button>
 
+          <motion.button
+            className={cn("hero-action-btn", image.isSaved && "primary")}
+            onClick={onSave}
+            disabled={isSaving || image.isSaved}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {isSaving ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : image.isSaved ? (
+              <CheckCircle size={18} />
+            ) : (
+              <Save size={18} />
+            )}
+            <span>{image.isSaved ? "Saved" : "Save to Library"}</span>
+          </motion.button>
+
+          <motion.button
+            className="hero-action-btn"
+            onClick={onRefine}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Wand2 size={18} />
+            <span>Refine</span>
+          </motion.button>
+        </motion.div>
+      </motion.div>
+    );
+  }
+
+  // Newly generated image - show developing animation
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="image-reveal"
+      className="image-reveal image-reveal--developing"
     >
-      {/* Flash Effect */}
-      <AnimatePresence>
-        {showFlash && (
-          <motion.div
-            className="flash-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 1, 0] }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.1 }}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Image Fade In */}
-      <motion.img
-        src={image.imageUrl}
-        alt="Generated"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="hero-image hero-image--revealing"
+      {/* Chemical Bath Developing Animation */}
+      <DevelopingAnimation
+        imageUrl={image.imageUrl}
+        phase={phase}
+        developDuration={2500}
       />
 
-      {/* Radial Glow from Center */}
+      {/* Action Buttons - appear after reveal completes */}
       <AnimatePresence>
-        {showGlow && (
+        {showActions && (
           <motion.div
-            className="reveal-glow"
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: [0, 0.6, 0], scale: [0.5, 1.5, 2] }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
-          />
+            className="hero-actions"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4, ease: "easeOut" }}
+          >
+            <motion.button
+              className="hero-action-btn"
+              onClick={onDownload}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Download size={18} />
+              <span>Download</span>
+            </motion.button>
+
+            <motion.button
+              className={cn("hero-action-btn", image.isSaved && "primary")}
+              onClick={onSave}
+              disabled={isSaving || image.isSaved}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {isSaving ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : image.isSaved ? (
+                <CheckCircle size={18} />
+              ) : (
+                <Save size={18} />
+              )}
+              <span>{image.isSaved ? "Saved" : "Save to Library"}</span>
+            </motion.button>
+
+            <motion.button
+              className="hero-action-btn"
+              onClick={onRefine}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Wand2 size={18} />
+              <span>Refine</span>
+            </motion.button>
+          </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Action Buttons */}
-      <motion.div
-        className="hero-actions"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.3 }}
-      >
-        <motion.button
-          className="hero-action-btn"
-          onClick={onDownload}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Download size={18} />
-          <span>Download</span>
-        </motion.button>
-
-        <motion.button
-          className={cn("hero-action-btn", image.isSaved && "primary")}
-          onClick={onSave}
-          disabled={isSaving || image.isSaved}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          {isSaving ? (
-            <Loader2 size={18} className="animate-spin" />
-          ) : image.isSaved ? (
-            <CheckCircle size={18} />
-          ) : (
-            <Save size={18} />
-          )}
-          <span>{image.isSaved ? "Saved" : "Save to Library"}</span>
-        </motion.button>
-
-        <motion.button
-          className="hero-action-btn"
-          onClick={onRefine}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Wand2 size={18} />
-          <span>Refine</span>
-        </motion.button>
-      </motion.div>
     </motion.div>
   );
 }
@@ -247,6 +263,7 @@ export function CenterCanvas({
   canGenerate,
   proSettingsCount,
   maxImages,
+  newlyGeneratedId,
 }: CenterCanvasProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -284,6 +301,7 @@ export function CenterCanvas({
               onDownload={() => onDownloadImage(heroImage)}
               onRefine={() => onRefineImage(heroImage)}
               isSaving={isSaving}
+              isNewlyGenerated={heroImage.id === newlyGeneratedId}
             />
           ) : (
             <EmptyState key="empty" />

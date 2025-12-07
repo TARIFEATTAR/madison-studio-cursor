@@ -138,9 +138,12 @@ export default function DarkRoom() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { orgId } = useCurrentOrganizationId();
+  const { orgId, loading: orgLoading } = useCurrentOrganizationId();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  
+  // Debug: Log org resolution
+  console.log("🏢 Organization state:", { orgId, orgLoading, userId: user?.id });
 
   // Mobile state
   const [mobileTab, setMobileTab] = useState<MobileTab>("canvas");
@@ -151,6 +154,7 @@ export default function DarkRoom() {
   const [sessionId] = useState(() => uuidv4());
   const [images, setImages] = useState<GeneratedImage[]>([]);
   const [heroImageId, setHeroImageId] = useState<string | null>(null);
+  const [newlyGeneratedId, setNewlyGeneratedId] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
 
   // Inputs
@@ -186,8 +190,10 @@ export default function DarkRoom() {
     // Not at session limit
     const hasCapacity = images.length < MAX_IMAGES_PER_SESSION;
     // Not already generating
-    return hasInput && hasCapacity && !isGenerating;
-  }, [prompt, productImage, images.length, isGenerating]);
+    // Must have organization loaded
+    const hasOrg = !!orgId && !orgLoading;
+    return hasInput && hasCapacity && !isGenerating && hasOrg;
+  }, [prompt, productImage, images.length, isGenerating, orgId, orgLoading]);
 
   const suggestions = useMemo(
     () => generateSuggestions(!!productImage, !!backgroundImage, prompt),
@@ -206,6 +212,15 @@ export default function DarkRoom() {
   // Handlers
   const handleGenerate = useCallback(async () => {
     if (!user || !canGenerate) return;
+
+    // Check if organization is resolved
+    if (!orgId) {
+      console.error("❌ No organization ID found - user may need to complete onboarding");
+      toast.error("Organization not found", {
+        description: "Please refresh the page or complete onboarding.",
+      });
+      return;
+    }
 
     const effectivePrompt = prompt.trim() || "Professional product photography";
     
@@ -247,6 +262,8 @@ export default function DarkRoom() {
         referenceImages: referenceImages.length,
         proMode: proModePayload,
         product: selectedProduct?.name,
+        organizationId: orgId,
+        userId: user.id,
       });
 
       // Call the edge function
@@ -312,6 +329,10 @@ export default function DarkRoom() {
 
       setImages((prev) => [...prev, newImage]);
       setHeroImageId(newImage.id);
+      setNewlyGeneratedId(newImage.id); // Track for developing animation
+      
+      // Clear newly generated after animation completes (3 seconds)
+      setTimeout(() => setNewlyGeneratedId(null), 3000);
 
       // Add to history
       setHistory((prev) => [
@@ -507,6 +528,7 @@ export default function DarkRoom() {
           canGenerate={canGenerate}
           proSettingsCount={proSettingsCount}
           maxImages={MAX_IMAGES_PER_SESSION}
+          newlyGeneratedId={newlyGeneratedId}
         />
 
         {/* Right Panel: Madison Assistant (Desktop only) */}

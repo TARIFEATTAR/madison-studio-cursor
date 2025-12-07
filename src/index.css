@@ -689,3 +689,275 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DEVELOPING ANIMATION - Chemical Bath Photo Development Effect
+   Darkroom-inspired animation for image generation reveal
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.developing-animation {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: linear-gradient(
+    180deg,
+    rgba(26, 24, 22, 0.95) 0%,
+    rgba(47, 42, 38, 0.98) 100%
+  );
+}
+
+.developing-animation--compact {
+  min-height: 120px;
+}
+
+/* Chemical Bath Container */
+.chemical-bath {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Developing Image */
+.developing-image-container {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.developing-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   CAUSTIC LIGHT PATTERNS - Underwater light refraction effect
+   ─────────────────────────────────────────────────────────────────────── */
+
+.caustic-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+.caustic-pattern {
+  position: absolute;
+  inset: 0;
+  background-size: 200% 200%;
+}
+
+.caustic-1 {
+  background-image: 
+    radial-gradient(ellipse 60% 40% at 30% 40%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 50% at 70% 60%, rgba(255, 255, 255, 0.12) 0%, transparent 45%),
+    radial-gradient(ellipse 40% 60% at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 55%);
+}
+
+.caustic-2 {
+  background-image: 
+    radial-gradient(ellipse 45% 55% at 60% 35%, rgba(184, 149, 106, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse 55% 45% at 40% 65%, rgba(184, 149, 106, 0.1) 0%, transparent 45%);
+}
+
+.caustic-3 {
+  background-image: 
+    radial-gradient(ellipse 70% 30% at 50% 50%, rgba(255, 255, 255, 0.06) 0%, transparent 60%);
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   LIQUID SURFACE - Chemical bath surface with ripples
+   ─────────────────────────────────────────────────────────────────────── */
+
+.liquid-surface-container {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.liquid-surface {
+  position: absolute;
+  inset: 0;
+  background: 
+    linear-gradient(
+      0deg,
+      rgba(139, 90, 43, 0.15) 0%,
+      rgba(139, 90, 43, 0.08) 30%,
+      transparent 60%
+    ),
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(184, 149, 106, 0.05) 25%,
+      rgba(184, 149, 106, 0.08) 50%,
+      rgba(184, 149, 106, 0.05) 75%,
+      transparent 100%
+    );
+  background-size: 100% 100%, 200% 100%;
+}
+
+/* Ripple rings radiating from center */
+.ripple-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100px;
+  height: 100px;
+  margin: -50px 0 0 -50px;
+  border: 1px solid rgba(184, 149, 106, 0.3);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   FILM GRAIN OVERLAY - Authentic darkroom texture
+   ─────────────────────────────────────────────────────────────────────── */
+
+.film-grain-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  animation: grain-shift 0.5s steps(10) infinite;
+}
+
+@keyframes grain-shift {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-1%, -1%); }
+  20% { transform: translate(1%, 1%); }
+  30% { transform: translate(-1%, 1%); }
+  40% { transform: translate(1%, -1%); }
+  50% { transform: translate(-1%, 0); }
+  60% { transform: translate(1%, 0); }
+  70% { transform: translate(0, 1%); }
+  80% { transform: translate(0, -1%); }
+  90% { transform: translate(1%, 1%); }
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   DRIP EFFECT - Water droplets when image rises
+   ─────────────────────────────────────────────────────────────────────── */
+
+.drips-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.drip {
+  position: absolute;
+  bottom: 100%;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    rgba(184, 149, 106, 0.4) 0%,
+    rgba(184, 149, 106, 0.2) 50%,
+    transparent 100%
+  );
+  border-radius: 0 0 2px 2px;
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   SAFE LIGHT GLOW - Red darkroom ambient light
+   ─────────────────────────────────────────────────────────────────────── */
+
+.safelight-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 30%,
+    rgba(168, 92, 92, 0.08) 0%,
+    transparent 70%
+  );
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   DEVELOPING TEXT - Status indicator
+   ─────────────────────────────────────────────────────────────────────── */
+
+.developing-text {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  font-family: 'Lato', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(184, 149, 106, 0.8);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.developing-animation--compact .developing-text {
+  font-size: 11px;
+  bottom: 12px;
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   FRAME BORDER - Brass-accented container
+   ─────────────────────────────────────────────────────────────────────── */
+
+.developing-frame-border {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: 2px solid rgba(184, 149, 106, 0.2);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   PHASE-SPECIFIC STYLES
+   ─────────────────────────────────────────────────────────────────────── */
+
+.developing-animation--submerged .chemical-bath {
+  background: linear-gradient(
+    180deg,
+    rgba(47, 42, 38, 0.4) 0%,
+    rgba(139, 90, 43, 0.15) 100%
+  );
+}
+
+.developing-animation--emerging .chemical-bath {
+  background: linear-gradient(
+    180deg,
+    rgba(47, 42, 38, 0.2) 0%,
+    transparent 100%
+  );
+}
+
+.developing-animation--revealed .chemical-bath {
+  background: transparent;
+}
+
+/* Revealed state - clean image display */
+.developing-animation--revealed .developing-image {
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.3),
+    0 0 40px rgba(184, 149, 106, 0.1);
+}

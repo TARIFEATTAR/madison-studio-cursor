@@ -637,35 +637,82 @@ serve(async (req) => {
      */
     let resolvedOrgId = organizationId;
 
+    console.log("🔍 Organization Resolution:", {
+      providedOrgId: organizationId,
+      userId,
+      parentImageId,
+    });
+
     if (!resolvedOrgId && parentImageId) {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("generated_images")
         .select("organization_id")
         .eq("id", parentImageId)
         .single();
 
-      if (data?.organization_id) resolvedOrgId = data.organization_id;
+      if (error) {
+        console.log("⚠️ Could not fetch from generated_images:", error.message);
+      }
+      if (data?.organization_id) {
+        resolvedOrgId = data.organization_id;
+        console.log("✅ Resolved org from parent image:", resolvedOrgId);
+      }
     }
 
     if (!resolvedOrgId && userId) {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("organization_members")
         .select("organization_id")
         .eq("user_id", userId)
         .limit(1)
         .single();
 
-      if (data?.organization_id) resolvedOrgId = data.organization_id;
+      if (error) {
+        console.log("⚠️ Could not fetch from organization_members:", error.message, { userId });
+      }
+      if (data?.organization_id) {
+        resolvedOrgId = data.organization_id;
+        console.log("✅ Resolved org from membership:", resolvedOrgId);
+      }
+    }
+
+    // Last resort: check if user created any organizations
+    if (!resolvedOrgId && userId) {
+      const { data, error } = await supabase
+        .from("organizations")
+        .select("id")
+        .eq("created_by", userId)
+        .limit(1)
+        .single();
+
+      if (error) {
+        console.log("⚠️ Could not fetch from organizations:", error.message);
+      }
+      if (data?.id) {
+        resolvedOrgId = data.id;
+        console.log("✅ Resolved org from created_by:", resolvedOrgId);
+        
+        // Auto-create the missing membership
+        await supabase.from("organization_members").upsert({
+          organization_id: resolvedOrgId,
+          user_id: userId,
+        }, { onConflict: "organization_id,user_id" });
+        console.log("✅ Auto-created missing organization membership");
+      }
     }
 
     if (!resolvedOrgId) {
+      console.error("❌ Could not resolve organization for user:", userId);
       return new Response(
         JSON.stringify({
-          error: "Could not resolve organization.",
+          error: "Could not resolve organization. Please ensure you have completed onboarding.",
+          debug: { userId, providedOrgId: organizationId, parentImageId }
         }),
         { status: 400, headers: corsHeaders }
       );
     }
+    
+    console.log("✅ Final resolved organization:", resolvedOrgId);
 
     /**
      * 4. Load Brand Knowledge
@@ -931,8 +978,9 @@ serve(async (req) => {
       requestedProvider: provider,
     });
 
-    // Generate a random seed for variety (0-4294967295, max 32-bit integer)
-    const randomSeed = Math.floor(Math.random() * 4294967295);
+    // Generate a random seed for variety (0-2147483647, max signed 32-bit integer)
+    // Gemini API requires INT32, which is signed and maxes at 2147483647
+    const randomSeed = Math.floor(Math.random() * 2147483647);
 
     // Determine which provider to use based on tier and request
     let selectedProvider: "gemini" | "freepik" = "gemini";
