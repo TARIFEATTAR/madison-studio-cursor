@@ -75,32 +75,44 @@ export default function LightTable() {
   // Get data from navigation state
   const locationState = location.state as LocationState | undefined;
 
-  // Load session from localStorage or navigation state
+  // Load session from navigation state ONLY (localStorage is for persistence during the session)
   const loadSession = useCallback(() => {
-    // First check navigation state (coming from Dark Room)
+    // Check navigation state (coming from Dark Room) - this is the primary source
     if (locationState?.sessionImages && locationState.sessionImages.length > 0) {
+      console.log("📷 Loading session from navigation state:", locationState.sessionImages.length, "images");
+      // Clear any old localStorage session when coming fresh from Dark Room
+      localStorage.removeItem(LIGHT_TABLE_SESSION_KEY);
       return {
         images: locationState.sessionImages,
         selectedId: locationState.selectedImageId || locationState.sessionImages[0]?.id || null,
         sessionId: locationState.sessionId || uuidv4(),
       };
     }
-    
-    // Then check localStorage (returning to Light Table)
+
+    // Only check localStorage if we're returning to an active session (e.g., page refresh)
+    // This is checked by looking at the session age - only load if less than 30 minutes old
     try {
       const saved = localStorage.getItem(LIGHT_TABLE_SESSION_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.images && parsed.images.length > 0) {
+        const sessionAge = Date.now() - (parsed.savedAt || 0);
+        const MAX_SESSION_AGE = 30 * 60 * 1000; // 30 minutes
+        
+        if (parsed.images && parsed.images.length > 0 && sessionAge < MAX_SESSION_AGE) {
+          console.log("📷 Restoring session from localStorage:", parsed.images.length, "images, age:", Math.round(sessionAge / 1000), "seconds");
           return {
             images: parsed.images as SessionImage[],
             selectedId: parsed.selectedImageId || parsed.images[0]?.id || null,
             sessionId: parsed.sessionId || uuidv4(),
           };
+        } else if (sessionAge >= MAX_SESSION_AGE) {
+          console.log("📷 Session expired, clearing localStorage");
+          localStorage.removeItem(LIGHT_TABLE_SESSION_KEY);
         }
       }
     } catch (e) {
       console.error("Failed to load session from localStorage:", e);
+      localStorage.removeItem(LIGHT_TABLE_SESSION_KEY);
     }
     
     return { images: [], selectedId: null, sessionId: uuidv4() };
@@ -216,13 +228,16 @@ export default function LightTable() {
     }
   }, [selectedImage?.id]);
 
-  // Handle no images - redirect back only if no saved session either
+  // Handle no images - redirect back to Dark Room
   useEffect(() => {
     if (images.length === 0) {
-      toast.error("No images to review");
-      navigate("/darkroom");
+      // Don't show error toast if we're just loading the page fresh
+      if (locationState?.sessionImages) {
+        toast.error("No images to review");
+      }
+      navigate("/darkroom", { replace: true });
     }
-  }, [images.length, navigate]);
+  }, [images.length, navigate, locationState]);
 
   // Clear session from localStorage
   const handleClearSession = useCallback(() => {
