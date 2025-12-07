@@ -5,3 +5,5 @@ export { SceneCard } from './SceneCard';
 export { VideoPreview } from './VideoPreview';
 export { PlatformBadges } from './PlatformBadges';
 export { ImagePickerDialog } from './ImagePickerDialog';
+export { VariationsGrid } from './VariationsGrid';
+export type { VideoVariation } from './VariationsGrid';

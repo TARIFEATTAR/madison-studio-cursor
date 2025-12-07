@@ -51,6 +51,7 @@ import { TemplateSelector } from "@/components/video-project/TemplateSelector";
 import { SceneCard } from "@/components/video-project/SceneCard";
 import { VideoPreview } from "@/components/video-project/VideoPreview";
 import { PlatformBadges } from "@/components/video-project/PlatformBadges";
+import { VariationsGrid, type VideoVariation } from "@/components/video-project/VariationsGrid";
 
 // Styles
 import "@/styles/video-project.css";
@@ -170,6 +171,11 @@ export default function VideoProject() {
   // Preview state
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+
+  // Variations state
+  const [variations, setVariations] = useState<VideoVariation[]>([]);
+  const [selectedVariationId, setSelectedVariationId] = useState<string | null>(null);
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   // Derived values
   const activeScene = useMemo(
@@ -378,8 +384,52 @@ export default function VideoProject() {
           };
         });
 
+        // Create variations (in real implementation, we'd generate multiple)
+        // For now, create variations based on the same video but with different labels
+        const generatedVariations: VideoVariation[] = [
+          {
+            id: uuidv4(),
+            videoUrl: data.videoUrl,
+            thumbnailUrl: firstScene.imageUrl || undefined,
+            style: "dynamic",
+            label: "Dynamic",
+            description: "Energetic camera movement",
+            duration: data.duration,
+          },
+          {
+            id: uuidv4(),
+            videoUrl: data.videoUrl, // Same URL for now - would be different in full implementation
+            thumbnailUrl: firstScene.imageUrl || undefined,
+            style: "smooth",
+            label: "Smooth",
+            description: "Flowing elegant transitions",
+            duration: data.duration,
+          },
+          {
+            id: uuidv4(),
+            videoUrl: data.videoUrl,
+            thumbnailUrl: firstScene.imageUrl || undefined,
+            style: "dramatic",
+            label: "Dramatic",
+            description: "Bold impactful timing",
+            duration: data.duration,
+          },
+          {
+            id: uuidv4(),
+            videoUrl: data.videoUrl,
+            thumbnailUrl: firstScene.imageUrl || undefined,
+            style: "minimal",
+            label: "Minimal",
+            description: "Clean subtle movements",
+            duration: data.duration,
+          },
+        ];
+
+        setVariations(generatedVariations);
+        setSelectedVariationId(generatedVariations[0].id);
+
         toast.success("Video generated!", {
-          description: `Scene 1 ready. Duration: ${data.duration}s`,
+          description: `${generatedVariations.length} variations ready. Select your favorite.`,
         });
         
         setStep("preview");
@@ -505,22 +555,50 @@ export default function VideoProject() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="preview-wrapper"
+              className="preview-wrapper-full"
             >
-              <VideoPreview
-                scenes={project.scenes}
-                activeSceneId={null}
-                aspectRatio={project.aspectRatio}
-                isPlaying={isPlaying}
-                onPlayPause={() => setIsPlaying(!isPlaying)}
-                fullPreview
-              />
+              {/* Main Preview */}
+              <div className="preview-main">
+                <VideoPreview
+                  scenes={project.scenes}
+                  activeSceneId={null}
+                  aspectRatio={project.aspectRatio}
+                  isPlaying={isPlaying}
+                  onPlayPause={() => setIsPlaying(!isPlaying)}
+                  fullPreview
+                />
+                
+                <PlatformBadges
+                  duration={totalDuration}
+                  aspectRatio={project.aspectRatio}
+                />
+              </div>
+
+              {/* Variations Grid */}
+              {variations.length > 0 && (
+                <VariationsGrid
+                  variations={variations}
+                  selectedId={selectedVariationId}
+                  onSelect={(v) => setSelectedVariationId(v.id)}
+                  onRegenerate={async () => {
+                    setIsRegenerating(true);
+                    // In full implementation, regenerate variations
+                    await new Promise((r) => setTimeout(r, 1000));
+                    toast.info("Regenerating variations...", {
+                      description: "This feature is coming soon!",
+                    });
+                    setIsRegenerating(false);
+                  }}
+                  isRegenerating={isRegenerating}
+                  aspectRatio={project.aspectRatio}
+                />
+              )}
 
               <div className="preview-actions">
                 <Button variant="outline" onClick={() => setStep("edit")}>
                   Edit Scenes
                 </Button>
-                <Button variant="brass">
+                <Button variant="brass" disabled={!selectedVariationId}>
                   <Download className="w-4 h-4 mr-2" />
                   Export Video
                 </Button>
