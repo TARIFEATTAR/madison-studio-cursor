@@ -74,25 +74,40 @@ export default function ImageLibrary() {
 
   // Fetch images from generated_images table
   const { data: images = [], isLoading, refetch } = useQuery({
-    queryKey: ["image-library", currentOrganizationId],
+    queryKey: ["image-library", currentOrganizationId, user?.id],
     queryFn: async () => {
-      if (!currentOrganizationId) return [];
+      if (!user) return [];
 
-      const { data, error } = await supabase
+      console.log("📸 Image Library fetching...", { 
+        organizationId: currentOrganizationId,
+        userId: user.id 
+      });
+
+      // Try fetching by organization first, then fall back to user_id
+      let query = supabase
         .from("generated_images")
         .select("*")
-        .eq("organization_id", currentOrganizationId)
         .eq("is_archived", false)
         .order("created_at", { ascending: false });
 
+      // Filter by organization if available, otherwise by user
+      if (currentOrganizationId) {
+        query = query.eq("organization_id", currentOrganizationId);
+      } else {
+        query = query.eq("user_id", user.id);
+      }
+
+      const { data, error } = await query;
+
       if (error) {
-        console.error("Error fetching images:", error);
+        console.error("❌ Error fetching images:", error);
         return [];
       }
 
+      console.log(`✅ Image Library loaded ${data?.length || 0} images`);
       return data as GeneratedImage[];
     },
-    enabled: !!currentOrganizationId,
+    enabled: !!user,
   });
 
   // Filter and sort images
