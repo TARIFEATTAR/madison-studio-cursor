@@ -41,12 +41,12 @@ export const useLibraryContent = (groupBySessions = false, page = 1, limit = 30)
 
       const items: LibraryContentItem[] = [];
 
-      // Fetch all content in parallel using Promise.all
+      // Fetch TEXT content only (images are in dedicated Image Library)
+      // No longer fetching generated_images - those go to /image-library
       const [
         { data: masterContent, error: masterError },
         { data: outputs, error: outputsError },
-        { data: derivatives, error: derivativesError },
-        { data: generatedImages, error: imagesError }
+        { data: derivatives, error: derivativesError }
       ] = await Promise.all([
         supabase
           .from("master_content")
@@ -63,13 +63,6 @@ export const useLibraryContent = (groupBySessions = false, page = 1, limit = 30)
         supabase
           .from("derivative_assets")
           .select("id, asset_type, generated_content, created_at, quality_rating, is_archived, approval_status, published_to, external_urls, publish_notes, published_at, platform_specs, master_content(title, collection), brand_consistency_score, brand_analysis, last_brand_check_at")
-          .order("created_at", { ascending: false })
-          .range(offset, offset + limit - 1),
-        
-        supabase
-          .from("generated_images")
-          .select("id, session_id, session_name, image_url, created_at, is_archived, library_category, goal_type, aspect_ratio, final_prompt, is_hero_image, image_order")
-          .eq("saved_to_library", true)
           .order("created_at", { ascending: false })
           .range(offset, offset + limit - 1)
       ]);
@@ -162,103 +155,8 @@ export const useLibraryContent = (groupBySessions = false, page = 1, limit = 30)
         );
       }
 
-      // Fetch generated images (from Madison Image Studio)
-      if (imagesError) {
-        logger.error("Error fetching generated images:", imagesError);
-      } else if (generatedImages) {
-        items.push(
-          ...generatedImages.map((item) => {
-            // Parse library_category to determine where to show
-            const categories = item.library_category?.split(',') || ['content'];
-            const isContentLibrary = categories.includes('content');
-            const isMarketplace = categories.includes('marketplace');
-            
-            return {
-              id: item.id,
-              title: item.session_name || "Generated Image",
-              contentType: "visual-asset", // Use existing visual asset type
-              collection: null,
-              content: item.image_url, // Store image URL as content
-              createdAt: new Date(item.created_at),
-              updatedAt: new Date(item.created_at),
-              rating: null,
-              wordCount: 0,
-              archived: item.is_archived || false,
-              status: "published",
-              sourceTable: "generated_images" as any,
-              imageUrl: item.image_url, // Add explicit imageUrl field
-              goalType: item.goal_type,
-              aspectRatio: item.aspect_ratio,
-              finalPrompt: item.final_prompt,
-            };
-          })
-        );
-      }
-
-      // If grouping by sessions, aggregate generated_images
-      if (groupBySessions && generatedImages) {
-        const sessionMap = new Map<string, {
-          sessionId: string;
-          sessionName: string;
-          heroImage: string;
-          images: typeof generatedImages;
-          createdAt: Date;
-          archived: boolean;
-        }>();
-
-        generatedImages.forEach(img => {
-          const sessionId = img.session_id || img.id;
-          
-          if (!sessionMap.has(sessionId)) {
-            sessionMap.set(sessionId, {
-              sessionId,
-              sessionName: img.session_name || 'Generated Image',
-              heroImage: '',
-              images: [],
-              createdAt: new Date(img.created_at),
-              archived: img.is_archived || false
-            });
-          }
-          
-          const session = sessionMap.get(sessionId)!;
-          session.images.push(img);
-          
-          // Update hero image - prioritize hero flag, then first image (order 0), then fallback to first in array
-          if (img.is_hero_image) {
-            session.heroImage = img.image_url;
-          } else if (img.image_order === 0 && !session.heroImage) {
-            session.heroImage = img.image_url;
-          } else if (!session.heroImage) {
-            // Fallback: use first image if no hero defined yet
-            session.heroImage = img.image_url;
-          }
-          
-          // Keep earliest creation date
-          const imgDate = new Date(img.created_at);
-          if (imgDate < session.createdAt) {
-            session.createdAt = imgDate;
-          }
-        });
-
-        // Convert sessions to library items
-        sessionMap.forEach(session => {
-          items.push({
-            id: session.sessionId,
-            title: session.sessionName,
-            contentType: "image-session",
-            collection: null,
-            content: session.heroImage,
-            createdAt: session.createdAt,
-            updatedAt: session.createdAt,
-            rating: null,
-            wordCount: session.images.length,
-            archived: session.archived,
-            status: "published",
-            sourceTable: "generated_images" as any,
-            imageUrl: session.heroImage,
-          });
-        });
-      }
+      // NOTE: Generated images are no longer fetched here
+      // They now live in the dedicated Image Library (/image-library)
 
       // Sort all items by date (most recent first)
       items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
