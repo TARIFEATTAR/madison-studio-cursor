@@ -38,6 +38,7 @@ import BrandHealth from "./pages/BrandHealth";
 import BrandBuilder from "./pages/BrandBuilder";
 import ImageEditor from "./pages/ImageEditor";
 import DarkRoom from "./pages/DarkRoom";
+import LightTable from "./pages/LightTable";
 import VideoProject from "./pages/VideoProject";
 import EmailBuilderV2 from "./pages/EmailBuilderV2";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -302,7 +303,7 @@ const AppContent = () => {
   useOnboarding();
 
   // Show sidebar for authenticated users on all pages except /auth, /editor, /onboarding, and /darkroom
-  const showSidebar = user && location.pathname !== "/auth" && location.pathname !== "/editor" && location.pathname !== "/onboarding" && location.pathname !== "/darkroom";
+  const showSidebar = user && location.pathname !== "/auth" && location.pathname !== "/editor" && location.pathname !== "/onboarding" && location.pathname !== "/darkroom" && location.pathname !== "/light-table";
 
   return (
     <>
@@ -327,6 +328,7 @@ const AppContent = () => {
                   <Route path="/templates" element={<ProtectedRoute><RouteErrorBoundary routeName="Templates"><Templates /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/image-editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Editor"><ImageEditor /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/darkroom" element={<ProtectedRoute><RouteErrorBoundary routeName="Dark Room"><DarkRoom /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/light-table" element={<ProtectedRoute><RouteErrorBoundary routeName="Light Table"><LightTable /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/video-project" element={<ProtectedRoute><RouteErrorBoundary routeName="Video Project"><VideoProject /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/calendar" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
@@ -370,6 +372,7 @@ const AppContent = () => {
             <Route path="/templates" element={<ProtectedRoute><RouteErrorBoundary routeName="Templates"><Templates /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/image-editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Editor"><ImageEditor /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/darkroom" element={<ProtectedRoute><RouteErrorBoundary routeName="Dark Room"><DarkRoom /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/light-table" element={<ProtectedRoute><RouteErrorBoundary routeName="Light Table"><LightTable /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/video-project" element={<ProtectedRoute><RouteErrorBoundary routeName="Video Project"><VideoProject /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/calendar" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />

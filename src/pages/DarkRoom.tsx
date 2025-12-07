@@ -27,12 +27,8 @@ import {
   DarkRoomHeader,
   MobileBottomSheet,
   MobileTabBar,
-  LightTable,
 } from "@/components/darkroom";
 import type { ProModeSettings, MobileTab } from "@/components/darkroom";
-
-// Image Editor Modal
-import { ImageEditorModal, type ImageEditorImage } from "@/components/image-editor/ImageEditorModal";
 
 // Hook to detect mobile
 function useIsMobile() {
@@ -153,13 +149,6 @@ export default function DarkRoom() {
   const [mobileTab, setMobileTab] = useState<MobileTab>("canvas");
   const [inputsSheetOpen, setInputsSheetOpen] = useState(false);
   const [madisonSheetOpen, setMadisonSheetOpen] = useState(false);
-
-  // Light Table state
-  const [lightTableCollapsed, setLightTableCollapsed] = useState(false);
-
-  // Image Editor Modal state
-  const [editorModalOpen, setEditorModalOpen] = useState(false);
-  const [editorImage, setEditorImage] = useState<ImageEditorImage | null>(null);
 
   // Session
   const [sessionId] = useState(() => uuidv4());
@@ -429,58 +418,17 @@ export default function DarkRoom() {
     }
   }, []);
 
-  const handleRefineImage = useCallback((image: GeneratedImage) => {
-    // Set the image's prompt as the current prompt for refinement
-    setPrompt(image.prompt + " - refined with ");
-    // You could also navigate to a refinement mode or open a panel
-    toast.info("Edit your prompt and regenerate to refine");
-  }, []);
-
-  // Light Table: Open image in editor modal (Phase 2)
-  const handleOpenInEditor = useCallback((image: GeneratedImage) => {
-    setEditorImage({
-      id: image.id,
-      imageUrl: image.imageUrl,
-      prompt: image.prompt,
-      isSaved: image.isSaved,
-    });
-    setEditorModalOpen(true);
-  }, []);
-
-  // Light Table: Create video from image
-  const handleCreateVideo = useCallback((image: GeneratedImage) => {
-    // Navigate to Video Project with this image as the starting point
-    navigate("/video-project", {
+  // Open Light Table page for editing an image
+  const handleOpenLightTable = useCallback((image: GeneratedImage) => {
+    // Navigate to Light Table with the selected image and all session images
+    navigate("/light-table", {
       state: {
-        startingImage: {
-          url: image.imageUrl,
-          id: image.id,
-          prompt: image.prompt,
-        },
+        selectedImageId: image.id,
+        sessionImages: images,
+        sessionId,
       },
     });
-    toast.success("Starting video project...");
-  }, [navigate]);
-
-  // Light Table: Save selected images
-  const handleSaveSelectedImages = useCallback(async (ids: string[]) => {
-    // Images are already saved on generation, just update local state
-    setImages((prev) =>
-      prev.map((img) =>
-        ids.includes(img.id) ? { ...img, isSaved: true } : img
-      )
-    );
-    toast.success(`${ids.length} image(s) saved to library`);
-  }, []);
-
-  // Light Table: Delete selected images
-  const handleDeleteSelectedImages = useCallback((ids: string[]) => {
-    setImages((prev) => prev.filter((img) => !ids.includes(img.id)));
-    if (heroImageId && ids.includes(heroImageId)) {
-      setHeroImageId(null);
-    }
-    toast.success(`${ids.length} image(s) removed from session`);
-  }, [heroImageId]);
+  }, [navigate, images, sessionId]);
 
   const handleUseSuggestion = useCallback((suggestion: Suggestion) => {
     setPrompt(suggestion.text);
@@ -584,7 +532,7 @@ export default function DarkRoom() {
           onSaveImage={handleSaveImage}
           onDeleteImage={handleDeleteImage}
           onDownloadImage={handleDownloadImage}
-          onRefineImage={handleRefineImage}
+          onRefineImage={handleOpenLightTable}
           prompt={prompt}
           onPromptChange={setPrompt}
           onGenerate={handleGenerate}
@@ -596,37 +544,20 @@ export default function DarkRoom() {
           newlyGeneratedId={newlyGeneratedId}
         />
 
-        {/* Right Panel: Light Table + Madison Assistant (Desktop only) */}
+        {/* Right Panel: Madison Assistant (Desktop only) */}
         {!isMobile && (
-          <div className="dark-room-right-column">
-            {/* Light Table - Session Images */}
-            <LightTable
-              images={images}
-              selectedImageId={heroImageId}
-              onSelectImage={setHeroImageId}
-              onOpenEditor={handleOpenInEditor}
-              onSaveSelected={handleSaveSelectedImages}
-              onDeleteSelected={handleDeleteSelectedImages}
-              onCreateVideo={handleCreateVideo}
-              isSaving={isSaving}
-              isCollapsed={lightTableCollapsed}
-              onToggleCollapse={() => setLightTableCollapsed((prev) => !prev)}
-            />
-
-            {/* Madison Assistant */}
-            <RightPanel
-              suggestions={suggestions}
-              onUseSuggestion={handleUseSuggestion}
-              presets={DEFAULT_PRESETS}
-              onApplyPreset={handleApplyPreset}
-              history={history}
-              onRestoreFromHistory={handleRestoreFromHistory}
-              hasProduct={!!productImage}
-              hasBackground={!!backgroundImage}
-              hasStyle={!!styleReference}
-              proSettingsCount={proSettingsCount}
-            />
-          </div>
+          <RightPanel
+            suggestions={suggestions}
+            onUseSuggestion={handleUseSuggestion}
+            presets={DEFAULT_PRESETS}
+            onApplyPreset={handleApplyPreset}
+            history={history}
+            onRestoreFromHistory={handleRestoreFromHistory}
+            hasProduct={!!productImage}
+            hasBackground={!!backgroundImage}
+            hasStyle={!!styleReference}
+            proSettingsCount={proSettingsCount}
+          />
         )}
       </div>
 
@@ -704,38 +635,6 @@ export default function DarkRoom() {
           />
         </MobileBottomSheet>
       )}
-
-      {/* Image Editor Modal */}
-      <ImageEditorModal
-        isOpen={editorModalOpen}
-        onClose={() => {
-          setEditorModalOpen(false);
-          setEditorImage(null);
-        }}
-        image={editorImage}
-        onSave={(savedImage) => {
-          // Update the image in our local state
-          setImages((prev) =>
-            prev.map((img) =>
-              img.id === savedImage.id ? { ...img, isSaved: true } : img
-            )
-          );
-        }}
-        onImageGenerated={(newImage) => {
-          // Add the newly generated refinement to our session
-          const generatedImage: GeneratedImage = {
-            id: newImage.id,
-            imageUrl: newImage.imageUrl,
-            prompt: newImage.prompt,
-            timestamp: Date.now(),
-            isSaved: true,
-          };
-          setImages((prev) => [...prev, generatedImage]);
-          // Update editor to show the new image
-          setEditorImage(newImage);
-        }}
-        source="darkroom"
-      />
     </div>
   );
 }

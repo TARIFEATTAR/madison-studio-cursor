@@ -1,0 +1,592 @@
+/**
+ * Light Table - Image Refinement & Review Studio
+ * 
+ * Full-screen page with large image preview on left/center
+ * and animated film strip on the right.
+ */
+
+/* Container */
+.light-table-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #0f0e0d;
+  color: #f5f0e6;
+  overflow: hidden;
+}
+
+/* Header */
+.light-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: #1a1816;
+  border-bottom: 1px solid rgba(184, 149, 106, 0.15);
+  flex-shrink: 0;
+}
+
+.light-table-back-btn {
+  color: rgba(245, 240, 230, 0.7) !important;
+}
+
+.light-table-back-btn:hover {
+  color: #f5f0e6 !important;
+  background: rgba(184, 149, 106, 0.1) !important;
+}
+
+.light-table-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #b8956a;
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.light-table-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.light-table-session-count {
+  font-size: 0.8rem;
+  color: rgba(245, 240, 230, 0.5);
+}
+
+/* Main Content Layout */
+.light-table-content {
+  display: grid;
+  grid-template-columns: 1fr 120px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Main Area (Image + Editor) */
+.light-table-main {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Image Preview Section */
+.light-table-preview {
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  background: #0a0908;
+  overflow: hidden;
+}
+
+.light-table-image-container {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+.light-table-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* Text Overlay */
+.light-table-text-overlay {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  padding: 1.5rem 2rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.light-table-text-overlay--top {
+  top: 0;
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent);
+}
+
+.light-table-text-overlay--center {
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 8px;
+}
+
+.light-table-text-overlay--bottom {
+  bottom: 0;
+  border-radius: 0 0 8px 8px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+}
+
+.light-table-text-headline {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 600;
+  color: white;
+  margin: 0 0 0.25rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.light-table-text-subtext {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Saved Badge */
+.light-table-saved-badge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  background: rgba(74, 222, 128, 0.9);
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #000;
+}
+
+/* Quick Actions */
+.light-table-quick-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Editor Panel */
+.light-table-editor {
+  display: flex;
+  flex-direction: column;
+  background: #1a1816;
+  border-left: 1px solid rgba(184, 149, 106, 0.15);
+  overflow: hidden;
+}
+
+/* Tabs */
+.light-table-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(184, 149, 106, 0.15);
+  flex-shrink: 0;
+}
+
+.light-table-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 0.5rem;
+  background: transparent;
+  border: none;
+  color: rgba(245, 240, 230, 0.5);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.light-table-tab:hover {
+  color: rgba(245, 240, 230, 0.8);
+  background: rgba(184, 149, 106, 0.05);
+}
+
+.light-table-tab--active {
+  color: #b8956a;
+  background: rgba(184, 149, 106, 0.1);
+  box-shadow: inset 0 -2px 0 #b8956a;
+}
+
+/* Tab Content */
+.light-table-tab-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem;
+}
+
+/* Refine Tab */
+.light-table-refine {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.light-table-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(245, 240, 230, 0.7);
+}
+
+.light-table-textarea {
+  background: rgba(26, 24, 22, 0.8) !important;
+  border: 1px solid rgba(184, 149, 106, 0.2) !important;
+  border-radius: 8px !important;
+  color: #f5f0e6 !important;
+  font-size: 0.85rem;
+  resize: none;
+}
+
+.light-table-textarea:focus {
+  border-color: #b8956a !important;
+  box-shadow: 0 0 0 1px rgba(184, 149, 106, 0.2) !important;
+}
+
+.light-table-generate-btn {
+  width: 100%;
+}
+
+/* Variations Tab */
+.light-table-variations {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.light-table-variations-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: rgba(245, 240, 230, 0.7);
+}
+
+.light-table-variations-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.light-table-variation-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #0f0e0d;
+}
+
+.light-table-variation-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.light-table-variation-item span {
+  position: absolute;
+  bottom: 0.25rem;
+  left: 0.25rem;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: white;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+}
+
+.light-table-variation-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #b8956a;
+}
+
+/* Text Tab */
+.light-table-text-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.light-table-text-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.light-table-text-field label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(245, 240, 230, 0.7);
+}
+
+.light-table-text-input {
+  background: rgba(26, 24, 22, 0.8);
+  border: 1px solid rgba(184, 149, 106, 0.2);
+  border-radius: 8px;
+  padding: 0.625rem 0.875rem;
+  color: #f5f0e6;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.light-table-text-input:focus {
+  outline: none;
+  border-color: #b8956a;
+}
+
+.light-table-position-btns {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.light-table-position-btn {
+  flex: 1;
+  padding: 0.5rem;
+  background: rgba(26, 24, 22, 0.8);
+  border: 1px solid rgba(184, 149, 106, 0.2);
+  border-radius: 6px;
+  color: rgba(245, 240, 230, 0.6);
+  font-size: 0.75rem;
+  text-transform: capitalize;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.light-table-position-btn:hover {
+  border-color: rgba(184, 149, 106, 0.4);
+  color: rgba(245, 240, 230, 0.8);
+}
+
+.light-table-position-btn--active {
+  background: rgba(184, 149, 106, 0.15);
+  border-color: #b8956a;
+  color: #b8956a;
+}
+
+/* Footer */
+.light-table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid rgba(184, 149, 106, 0.15);
+  background: #252220;
+  flex-shrink: 0;
+}
+
+.light-table-delete-btn {
+  color: rgba(239, 68, 68, 0.7) !important;
+}
+
+.light-table-delete-btn:hover {
+  color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+
+.light-table-footer-right {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* =============================================================================
+   FILM STRIP - Animated Vertical Film Reel
+   ============================================================================= */
+
+.light-table-film-strip {
+  display: flex;
+  flex-direction: column;
+  background: #0f0e0d;
+  border-left: 1px solid rgba(184, 149, 106, 0.2);
+  overflow: hidden;
+}
+
+.film-strip-header,
+.film-strip-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  background: #1a1816;
+  flex-shrink: 0;
+}
+
+.film-strip-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #b8956a;
+  margin-right: auto;
+}
+
+.film-strip-scroll-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(184, 149, 106, 0.1);
+  border: none;
+  border-radius: 6px;
+  color: #b8956a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.film-strip-scroll-btn:hover {
+  background: rgba(184, 149, 106, 0.2);
+  transform: scale(1.05);
+}
+
+/* Scroll Area */
+.film-strip-scroll {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.film-strip-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Sprocket Holes */
+.film-strip-sprockets {
+  height: 24px;
+  background: 
+    repeating-linear-gradient(
+      to right,
+      transparent 0px,
+      transparent 8px,
+      rgba(184, 149, 106, 0.3) 8px,
+      rgba(184, 149, 106, 0.3) 16px,
+      transparent 16px,
+      transparent 20px
+    );
+  flex-shrink: 0;
+}
+
+/* Images Container */
+.film-strip-images {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+/* Individual Frame */
+.film-strip-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  background: #0a0908;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.film-strip-frame:hover {
+  border-color: rgba(184, 149, 106, 0.4);
+}
+
+.film-strip-frame--selected {
+  border-color: #b8956a;
+  box-shadow: 
+    0 0 0 2px rgba(184, 149, 106, 0.3),
+    0 0 12px rgba(184, 149, 106, 0.3);
+}
+
+.film-strip-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.film-strip-frame-number {
+  position: absolute;
+  bottom: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 3px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.film-strip-frame-saved {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(74, 222, 128, 0.9);
+  border-radius: 50%;
+  color: #000;
+}
+
+/* =============================================================================
+   RESPONSIVE
+   ============================================================================= */
+
+@media (max-width: 1024px) {
+  .light-table-content {
+    grid-template-columns: 1fr 100px;
+  }
+
+  .light-table-main {
+    grid-template-columns: 1fr 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .light-table-content {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+  }
+
+  .light-table-main {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+  }
+
+  .light-table-preview {
+    padding: 1rem;
+  }
+
+  .light-table-editor {
+    border-left: none;
+    border-top: 1px solid rgba(184, 149, 106, 0.15);
+    max-height: 300px;
+  }
+
+  .light-table-film-strip {
+    display: none; /* Hide on mobile, could make horizontal */
+  }
+
+  .light-table-title {
+    position: static;
+    transform: none;
+    font-size: 1.25rem;
+  }
+}

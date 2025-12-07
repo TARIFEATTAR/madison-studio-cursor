@@ -121,42 +121,6 @@
   overflow: hidden;
 }
 
-/* Right Column Container (Light Table + Madison) */
-.dark-room-right-column {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  padding: var(--space-sm);
-  height: 100%;
-  overflow-y: auto;
-  background: var(--darkroom-bg);
-  border-left: 1px solid var(--darkroom-border);
-}
-
-.dark-room-right-column::-webkit-scrollbar {
-  width: 6px;
-}
-
-.dark-room-right-column::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.dark-room-right-column::-webkit-scrollbar-thumb {
-  background: var(--darkroom-border);
-  border-radius: 3px;
-}
-
-.dark-room-right-column::-webkit-scrollbar-thumb:hover {
-  background: var(--darkroom-accent);
-}
-
-/* Adjust RightPanel when in column */
-.dark-room-right-column .right-panel {
-  border-left: none;
-  flex: 1;
-  min-height: 0;
-}
-
 /* Responsive: Tablet */
 @media (max-width: 1280px) {
   .dark-room-grid {
