@@ -1,8 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Check, Loader2, MessageSquare, Bold, Italic, Underline, Undo2, Redo2, X, List, ListOrdered } from "lucide-react";
+import { ArrowLeft, Save, Check, Loader2, MessageSquare, Bold, Italic, Underline, Strikethrough, Undo2, Redo2, X, List, ListOrdered, Link2, Quote, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
 import QualityRating from "@/components/QualityRating";
 import { useAutoSave } from "@/hooks/useAutoSave";
@@ -17,10 +21,23 @@ import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { useOnboarding } from "@/hooks/useOnboarding";
 
 const FONT_OPTIONS = [
-  { value: 'cormorant', label: 'Cormorant Garamond', family: '"Cormorant Garamond", serif' },
-  { value: 'crimson', label: 'Crimson Text', family: '"Crimson Text", serif' },
-  { value: 'lato', label: 'Lato', family: '"Lato", sans-serif' },
-  { value: 'inter', label: 'Inter', family: '"Inter", sans-serif' },
+  // Serif fonts - Editorial/Luxury
+  { value: 'cormorant', label: 'Cormorant Garamond', family: '"Cormorant Garamond", serif', category: 'serif' },
+  { value: 'crimson', label: 'Crimson Text', family: '"Crimson Text", serif', category: 'serif' },
+  { value: 'georgia', label: 'Georgia', family: 'Georgia, serif', category: 'serif' },
+  { value: 'playfair', label: 'Playfair Display', family: '"Playfair Display", serif', category: 'serif' },
+  { value: 'source-serif', label: 'Source Serif Pro', family: '"Source Serif Pro", serif', category: 'serif' },
+  { value: 'merriweather', label: 'Merriweather', family: 'Merriweather, serif', category: 'serif' },
+  { value: 'libre-baskerville', label: 'Libre Baskerville', family: '"Libre Baskerville", serif', category: 'serif' },
+  { value: 'times', label: 'Times New Roman', family: '"Times New Roman", serif', category: 'serif' },
+  // Sans-serif fonts - Modern/Clean
+  { value: 'lato', label: 'Lato', family: '"Lato", sans-serif', category: 'sans' },
+  { value: 'inter', label: 'Inter', family: '"Inter", sans-serif', category: 'sans' },
+  { value: 'open-sans', label: 'Open Sans', family: '"Open Sans", sans-serif', category: 'sans' },
+  { value: 'roboto', label: 'Roboto', family: 'Roboto, sans-serif', category: 'sans' },
+  { value: 'montserrat', label: 'Montserrat', family: 'Montserrat, sans-serif', category: 'sans' },
+  { value: 'poppins', label: 'Poppins', family: 'Poppins, sans-serif', category: 'sans' },
+  { value: 'arial', label: 'Arial', family: 'Arial, sans-serif', category: 'sans' },
 ];
 
 // Selection preservation utilities
@@ -514,11 +531,64 @@ export default function ContentEditorPage() {
   const handleBold = () => execCommand('bold');
   const handleItalic = () => execCommand('italic');
   const handleUnderline = () => execCommand('underline');
+  const handleStrikethrough = () => execCommand('strikeThrough');
   const handleH1 = () => execCommand('formatBlock', '<h1>');
   const handleH2 = () => execCommand('formatBlock', '<h2>');
   const handleH3 = () => execCommand('formatBlock', '<h3>');
   const handleBulletList = () => execCommand('insertUnorderedList');
   const handleNumberedList = () => execCommand('insertOrderedList');
+  const handleBlockquote = () => execCommand('formatBlock', '<blockquote>');
+  
+  // Link insertion state
+  const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkText, setLinkText] = useState('');
+  
+  const handleInsertLink = () => {
+    const editor = editableRef.current;
+    if (!editor || !linkUrl) return;
+    
+    editor.focus();
+    
+    // Restore selection if we saved it
+    if (savedSelectionRef.current) {
+      try {
+        restoreSelection(editor, savedSelectionRef.current);
+      } catch {}
+    }
+    
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      const selectedText = range.toString();
+      
+      // If there's selected text, use it; otherwise use linkText or URL
+      const displayText = selectedText || linkText || linkUrl;
+      
+      // Create link element
+      const link = document.createElement('a');
+      link.href = linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = displayText;
+      
+      // Replace selection with link
+      range.deleteContents();
+      range.insertNode(link);
+      
+      // Move cursor after the link
+      range.setStartAfter(link);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+    
+    // Reset and close
+    setLinkUrl('');
+    setLinkText('');
+    setLinkPopoverOpen(false);
+    updateContentFromEditable();
+  };
 
   const canUndo = historyIndexRef.current > 0;
   const canRedo = historyIndexRef.current < historyRef.current.length - 1;
@@ -834,27 +904,203 @@ export default function ContentEditorPage() {
     }
   };
 
+  // Global keyboard shortcut handler - works even in embedded browsers
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Only handle if editor is focused or exists
+      const editor = editableRef.current;
+      if (!editor) return;
+      
+      // Check if we're focused on the editor or its children
+      const activeElement = document.activeElement;
+      const isEditorFocused = editor.contains(activeElement) || activeElement === editor;
+      
+      // Also handle if focus is anywhere in the editor page (not in input fields)
+      const isInputField = activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA';
+      if (!isEditorFocused && isInputField) return;
+      
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const modKey = isMac ? e.metaKey : e.ctrlKey;
+      
+      if (!modKey) return; // Only handle modifier key combinations
+      
+      const key = e.key.toLowerCase();
+      const code = e.code;
+      
+      // Bold: Cmd/Ctrl + B
+      if (key === 'b' || code === 'KeyB') {
+        e.preventDefault();
+        e.stopPropagation();
+        editor.focus();
+        document.execCommand('bold', false);
+        updateContentFromEditable();
+        return;
+      }
+      
+      // Italic: Cmd/Ctrl + I
+      if (key === 'i' || code === 'KeyI') {
+        e.preventDefault();
+        e.stopPropagation();
+        editor.focus();
+        document.execCommand('italic', false);
+        updateContentFromEditable();
+        return;
+      }
+      
+      // Underline: Cmd/Ctrl + U
+      if (key === 'u' || code === 'KeyU') {
+        e.preventDefault();
+        e.stopPropagation();
+        editor.focus();
+        document.execCommand('underline', false);
+        updateContentFromEditable();
+        return;
+      }
+      
+      // Strikethrough: Cmd/Ctrl + Shift + S
+      if (e.shiftKey && (key === 's' || code === 'KeyS')) {
+        e.preventDefault();
+        e.stopPropagation();
+        editor.focus();
+        document.execCommand('strikeThrough', false);
+        updateContentFromEditable();
+        return;
+      }
+      
+      // Link: Cmd/Ctrl + K
+      if (key === 'k' || code === 'KeyK') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (editor) {
+          savedSelectionRef.current = saveSelection(editor);
+        }
+        setLinkPopoverOpen(true);
+        return;
+      }
+      
+      // Undo: Cmd/Ctrl + Z (without Shift)
+      if ((key === 'z' || code === 'KeyZ') && !e.shiftKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleUndo();
+        return;
+      }
+      
+      // Redo: Cmd/Ctrl + Shift + Z or Ctrl + Y
+      if ((key === 'z' && e.shiftKey) || (!isMac && (key === 'y' || code === 'KeyY'))) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleRedo();
+        return;
+      }
+    };
+    
+    // Use capture phase to intercept before IDE browser can grab it
+    document.addEventListener('keydown', handleGlobalKeyDown, { capture: true });
+    
+    return () => {
+      document.removeEventListener('keydown', handleGlobalKeyDown, { capture: true });
+    };
+  }, [handleUndo, handleRedo, updateContentFromEditable, saveSelection]);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Handle undo/redo shortcuts
-    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const modKey = isMac ? e.metaKey : e.ctrlKey;
+    
+    // === UNDO/REDO ===
+    // Undo: Cmd+Z (Mac) or Ctrl+Z (Windows)
+    if (modKey && e.key.toLowerCase() === 'z' && !e.shiftKey) {
       e.preventDefault();
       handleUndo();
       return;
-    } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+    }
+    
+    // Redo: Cmd+Shift+Z (Mac) or Ctrl+Y / Ctrl+Shift+Z (Windows)
+    if ((modKey && e.key.toLowerCase() === 'z' && e.shiftKey) || 
+        (!isMac && e.ctrlKey && e.key.toLowerCase() === 'y')) {
       e.preventDefault();
       handleRedo();
       return;
     }
-
+    
+    // === TEXT FORMATTING ===
+    // Bold: Cmd+B (Mac) or Ctrl+B (Windows)
+    if (modKey && (e.key.toLowerCase() === 'b' || e.code === 'KeyB')) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.execCommand('bold', false);
+      updateContentFromEditable();
+      return;
+    }
+    
+    // Italic: Cmd+I (Mac) or Ctrl+I (Windows)
+    if (modKey && (e.key.toLowerCase() === 'i' || e.code === 'KeyI')) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.execCommand('italic', false);
+      updateContentFromEditable();
+      return;
+    }
+    
+    // Underline: Cmd+U (Mac) or Ctrl+U (Windows)
+    if (modKey && (e.key.toLowerCase() === 'u' || e.code === 'KeyU')) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.execCommand('underline', false);
+      updateContentFromEditable();
+      return;
+    }
+    
+    // Strikethrough: Cmd+Shift+S (Mac) or Ctrl+Shift+S (Windows)
+    if (modKey && e.shiftKey && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      handleStrikethrough();
+      return;
+    }
+    
+    // === LISTS ===
     const editor = editableRef.current;
     const sel = window.getSelection();
     const insideList = !!(editor && sel && sel.rangeCount > 0 && sel.anchorNode && (sel.anchorNode as any).parentElement?.closest?.('li') && editor.contains(sel.anchorNode));
+
+    // Bullet List: Cmd+Shift+8 (Mac) or Ctrl+Shift+8 (Windows)
+    if (modKey && e.shiftKey && e.key === '8') {
+      e.preventDefault();
+      handleBulletList();
+      return;
+    }
+    
+    // Numbered List: Cmd+Shift+7 (Mac) or Ctrl+Shift+7 (Windows)
+    if (modKey && e.shiftKey && e.key === '7') {
+      e.preventDefault();
+      handleNumberedList();
+      return;
+    }
 
     // Indent/outdent list items with Tab / Shift+Tab
     if (e.key === 'Tab' && insideList) {
       e.preventDefault();
       document.execCommand(e.shiftKey ? 'outdent' : 'indent');
       updateContentFromEditable();
+      return;
+    }
+    
+    // === BLOCK FORMATTING ===
+    // Block Quote: Cmd+Shift+. (Mac) or Ctrl+Shift+. (Windows)
+    if (modKey && e.shiftKey && e.key === '>') {
+      e.preventDefault();
+      handleBlockquote();
+      return;
+    }
+    
+    // Link: Cmd+K (Mac) or Ctrl+K (Windows)
+    if (modKey && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      // Save selection before opening popover
+      if (editableRef.current) {
+        savedSelectionRef.current = saveSelection(editableRef.current);
+      }
+      setLinkPopoverOpen(true);
       return;
     }
 
@@ -895,24 +1141,24 @@ export default function ContentEditorPage() {
       <div
         className="border-b z-10 flex-shrink-0 bg-brand-parchment border-brand-stone"
       >
-        <div className="flex items-center justify-between px-4 py-2 gap-2 overflow-x-auto scrollbar-hide">
+        <div className="flex items-center justify-between px-2 sm:px-4 py-2 gap-1 sm:gap-2 overflow-x-auto scrollbar-hide">
           {/* Left: Exit Button + Font & Formatting */}
-          <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2 flex-nowrap min-w-0 flex-shrink-0">
+          <div className="flex items-center gap-0.5 flex-nowrap min-w-0 flex-shrink-0">
             {/* Exit Button */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate("/")}
-              className="h-8 w-8 sm:h-9 sm:w-9 p-0 flex-shrink-0"
+              className="h-8 w-8 p-0 flex-shrink-0"
               title="Exit Editor"
             >
               <X className="w-4 h-4" />
             </Button>
 
-            {/* Font Selection - Desktop only */}
-            <div className="h-6 w-px bg-border/40 mx-1 hidden md:block" />
+            {/* Font Selection - Desktop & Tablet */}
+            <div className="h-5 w-px bg-border/40 mx-1 hidden sm:block" />
 
-            <div className="hidden md:block">
+            <div className="hidden sm:block">
               <Select
                 value={selectedFont}
                 onValueChange={(value) => {
@@ -922,7 +1168,6 @@ export default function ContentEditorPage() {
                     const sel = window.getSelection();
                     const withinEditor = !!(sel && sel.rangeCount > 0 && sel.anchorNode && editor.contains(sel.anchorNode));
 
-                    // If toolbar click blurred the editor, restore the last saved selection
                     if (!withinEditor && savedSelectionRef.current) {
                       try {
                         editor.focus();
@@ -932,198 +1177,292 @@ export default function ContentEditorPage() {
                       editor.focus();
                     }
 
-                    // Apply font to selected text only
                     if (sel && sel.rangeCount > 0) {
                       const range = sel.getRangeAt(0);
-
                       if (!range.collapsed) {
-                        // Has selection - wrap selected text in span with font
                         try {
                           const contents = range.extractContents();
                           const span = document.createElement('span');
                           span.style.fontFamily = fontFamily;
                           span.appendChild(contents);
                           range.insertNode(span);
-
-                          // Select the newly wrapped content
                           const newRange = document.createRange();
                           newRange.selectNodeContents(span);
                           sel.removeAllRanges();
                           sel.addRange(newRange);
                         } catch (e) {
-                          // Fallback: use execCommand if surroundContents fails
                           document.execCommand('fontName', false, fontFamily);
                         }
                       } else {
-                        // No selection - insert span at cursor for future typing
                         const span = document.createElement('span');
                         span.style.fontFamily = fontFamily;
-                        span.textContent = '\u200B'; // Zero-width space
+                        span.textContent = '\u200B';
                         range.insertNode(span);
-                        // Move cursor after the span
                         range.setStartAfter(span);
                         range.collapse(true);
                         sel.removeAllRanges();
                         sel.addRange(range);
                       }
                     }
-
                     setSelectedFont(value);
                     updateContentFromEditable();
                   }
                 }}
               >
-                <SelectTrigger className="w-[180px] h-9 border-none shadow-none">
+                <SelectTrigger className="w-[140px] lg:w-[160px] h-8 border-none shadow-none text-xs lg:text-sm">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-background">
-                  {FONT_OPTIONS.map(font => (
+                <SelectContent className="bg-background max-h-[300px]">
+                  <div className="px-2 py-1 text-xs text-muted-foreground font-medium">Serif</div>
+                  {FONT_OPTIONS.filter(f => f.category === 'serif').map(font => (
                     <SelectItem key={font.value} value={font.value}>
-                      <span style={{ fontFamily: font.family }}>{font.label}</span>
+                      <span style={{ fontFamily: font.family }} className="text-sm">{font.label}</span>
+                    </SelectItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <div className="px-2 py-1 text-xs text-muted-foreground font-medium">Sans-Serif</div>
+                  {FONT_OPTIONS.filter(f => f.category === 'sans').map(font => (
+                    <SelectItem key={font.value} value={font.value}>
+                      <span style={{ fontFamily: font.family }} className="text-sm">{font.label}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="h-6 w-px bg-border/40 mx-1 hidden md:block" />
+            <div className="h-5 w-px bg-border/40 mx-0.5 sm:mx-1" />
 
-            {/* Essential Formatting - Always visible */}
+            {/* Text Formatting - Always visible */}
             <Button
               variant="ghost"
               size="sm"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleBold();
-              }}
-              className="h-8 w-8 sm:h-9 sm:w-9 p-0 flex-shrink-0"
-              title="Bold (Ctrl+B)"
+              onMouseDown={(e) => { e.preventDefault(); handleBold(); }}
+              className="h-8 w-8 p-0 flex-shrink-0"
+              title={`Bold (${navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+B)`}
             >
-              <Bold className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <Bold className="w-4 h-4" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleItalic();
-              }}
-              className="h-8 w-8 sm:h-9 sm:w-9 p-0 flex-shrink-0"
-              title="Italic (Ctrl+I)"
+              onMouseDown={(e) => { e.preventDefault(); handleItalic(); }}
+              className="h-8 w-8 p-0 flex-shrink-0"
+              title={`Italic (${navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+I)`}
             >
-              <Italic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <Italic className="w-4 h-4" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleUnderline();
-              }}
-              className="h-8 w-8 sm:h-9 sm:w-9 p-0 flex-shrink-0"
-              title="Underline (Ctrl+U)"
+              onMouseDown={(e) => { e.preventDefault(); handleUnderline(); }}
+              className="h-8 w-8 p-0 flex-shrink-0"
+              title={`Underline (${navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+U)`}
             >
-              <Underline className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            </Button>
-
-            {/* List Formatting - Always visible */}
-            <div className="h-6 w-px bg-border/40 mx-0.5 sm:mx-1" />
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleBulletList();
-              }}
-              className="h-8 w-8 sm:h-9 sm:w-9 p-0 flex-shrink-0"
-              title="Bullet List"
-            >
-              <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <Underline className="w-4 h-4" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleNumberedList();
-              }}
-              className="h-8 w-8 sm:h-9 sm:w-9 p-0 flex-shrink-0"
-              title="Numbered List"
+              onMouseDown={(e) => { e.preventDefault(); handleStrikethrough(); }}
+              className="h-8 w-8 p-0 flex-shrink-0 hidden sm:flex"
+              title={`Strikethrough (${navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+⇧+S)`}
             >
-              <ListOrdered className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <Strikethrough className="w-4 h-4" />
             </Button>
 
-            {/* Undo/Redo - Always visible */}
-            <div className="h-6 w-px bg-border/40 mx-0.5 sm:mx-1" />
+            <div className="h-5 w-px bg-border/40 mx-0.5 sm:mx-1" />
 
+            {/* Lists */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => { e.preventDefault(); handleBulletList(); }}
+              className="h-8 w-8 p-0 flex-shrink-0"
+              title={`Bullet List (${navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+⇧+8)`}
+            >
+              <List className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(e) => { e.preventDefault(); handleNumberedList(); }}
+              className="h-8 w-8 p-0 flex-shrink-0"
+              title={`Numbered List (${navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+⇧+7)`}
+            >
+              <ListOrdered className="w-4 h-4" />
+            </Button>
+
+            <div className="h-5 w-px bg-border/40 mx-0.5 sm:mx-1" />
+
+            {/* Undo/Redo */}
             <Button
               variant="ghost"
               size="sm"
               onClick={handleUndo}
               disabled={!canUndo}
-              className="h-8 w-8 sm:h-9 sm:w-9 p-0 flex-shrink-0"
-              title="Undo (Ctrl+Z)"
+              className="h-8 w-8 p-0 flex-shrink-0"
+              title={`Undo (${navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+Z)`}
             >
-              <Undo2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <Undo2 className="w-4 h-4" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleRedo}
               disabled={!canRedo}
-              className="h-8 w-8 sm:h-9 sm:w-9 p-0 flex-shrink-0"
-              title="Redo (Ctrl+Y)"
+              className="h-8 w-8 p-0 flex-shrink-0"
+              title={`Redo (${navigator.platform.includes('Mac') ? '⌘+⇧+Z' : 'Ctrl+Y'})`}
             >
-              <Redo2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <Redo2 className="w-4 h-4" />
             </Button>
 
-            <div className="h-6 w-px bg-border/40 mx-1 hidden md:block" />
+            {/* Desktop: Headers & More formatting */}
+            <div className="h-5 w-px bg-border/40 mx-1 hidden lg:block" />
+            
+            <div className="hidden lg:flex items-center gap-0.5">
+              <Button
+                variant="ghost"
+                size="sm"
+                onMouseDown={(e) => { e.preventDefault(); handleH1(); }}
+                className="h-8 px-2 text-xs font-semibold"
+                title="Heading 1"
+              >
+                H1
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onMouseDown={(e) => { e.preventDefault(); handleH2(); }}
+                className="h-8 px-2 text-xs font-semibold"
+                title="Heading 2"
+              >
+                H2
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onMouseDown={(e) => { e.preventDefault(); handleH3(); }}
+                className="h-8 px-2 text-xs font-semibold"
+                title="Heading 3"
+              >
+                H3
+              </Button>
+            </div>
 
-            {/* Headers - Desktop only */}
+            <div className="h-5 w-px bg-border/40 mx-1 hidden md:block" />
+
+            {/* Block Quote - Desktop */}
             <Button
               variant="ghost"
               size="sm"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleH1();
-              }}
-              className="h-9 px-3 text-sm hidden md:flex"
-              title="Heading 1"
+              onMouseDown={(e) => { e.preventDefault(); handleBlockquote(); }}
+              className="h-8 w-8 p-0 flex-shrink-0 hidden md:flex"
+              title={`Block Quote (${navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+⇧+>)`}
             >
-              H1
+              <Quote className="w-4 h-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleH2();
-              }}
-              className="h-9 px-3 text-sm hidden md:flex"
-              title="Heading 2"
-            >
-              H2
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleH3();
-              }}
-              className="h-9 px-3 text-sm hidden md:flex"
-              title="Heading 3"
-            >
-              H3
-            </Button>
+
+            {/* Link Insertion - Desktop */}
+            <Popover open={linkPopoverOpen} onOpenChange={setLinkPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 flex-shrink-0 hidden md:flex"
+                  title={`Insert Link (${navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+K)`}
+                >
+                  <Link2 className="w-4 h-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-4" align="start">
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="link-url" className="text-sm font-medium">URL</Label>
+                    <Input
+                      id="link-url"
+                      placeholder="https://example.com"
+                      value={linkUrl}
+                      onChange={(e) => setLinkUrl(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleInsertLink();
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="link-text" className="text-sm font-medium">Display Text (optional)</Label>
+                    <Input
+                      id="link-text"
+                      placeholder="Link text"
+                      value={linkText}
+                      onChange={(e) => setLinkText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleInsertLink();
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => setLinkPopoverOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button variant="brass" size="sm" onClick={handleInsertLink} disabled={!linkUrl}>
+                      Insert Link
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Mobile: More Menu for additional options */}
+            <div className="md:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleStrikethrough(); }}>
+                    <Strikethrough className="w-4 h-4 mr-2" />
+                    Strikethrough
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleH1(); }}>
+                    <span className="font-bold mr-2">H1</span>
+                    Heading 1
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleH2(); }}>
+                    <span className="font-bold mr-2">H2</span>
+                    Heading 2
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleH3(); }}>
+                    <span className="font-bold mr-2">H3</span>
+                    Heading 3
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleBlockquote(); }}>
+                    <Quote className="w-4 h-4 mr-2" />
+                    Block Quote
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setLinkPopoverOpen(true)}>
+                    <Link2 className="w-4 h-4 mr-2" />
+                    Insert Link
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
 
           {/* Center: Editorial Assistant - Hidden on mobile */}
           <Button
             variant={assistantOpen ? "brass" : "ghost"}
             onClick={handleToggleAssistant}
-            className="gap-2 h-9 hidden lg:flex flex-shrink-0 whitespace-nowrap"
+            className="gap-2 h-8 hidden lg:flex flex-shrink-0 whitespace-nowrap text-sm"
           >
             <MessageSquare className="w-4 h-4 flex-shrink-0" />
             <span className="hidden xl:inline">Editorial Assistant</span>
@@ -1131,14 +1470,14 @@ export default function ContentEditorPage() {
           </Button>
 
           {/* Right: Word Count, Quality Rating, Save, Next */}
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 min-w-0">
-            {/* Word Count - Compact on mobile */}
-            <span className="text-xs sm:text-sm text-muted-foreground px-1 sm:px-2 whitespace-nowrap flex-shrink-0">
+          <div className="flex items-center gap-1 flex-shrink-0 min-w-0">
+            {/* Word Count */}
+            <span className="text-xs text-muted-foreground px-1 whitespace-nowrap flex-shrink-0 tabular-nums">
               {wordCount}w
             </span>
 
-            {/* Autosave Indicator - Hidden on mobile, responsive */}
-            <div className="hidden md:block flex-shrink-0">
+            {/* Autosave Indicator - Hidden on mobile */}
+            <div className="hidden lg:block flex-shrink-0">
               <AutosaveIndicator
                 saveStatus={saveStatus}
                 lastSavedAt={lastSavedAt}
@@ -1156,35 +1495,31 @@ export default function ContentEditorPage() {
               onClick={handleSave}
               disabled={saveStatus === "saving"}
               variant="brass"
-              className="gap-1 sm:gap-2 h-8 sm:h-9"
+              className="gap-1 h-8 px-2 sm:px-3"
             >
               {saveStatus === "saving" ? (
-                <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : saveStatus === "saved" ? (
-                <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <Check className="w-4 h-4" />
               ) : (
-                <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <Save className="w-4 h-4" />
               )}
-              <span className="hidden sm:inline">Save</span>
+              <span className="hidden sm:inline text-sm">Save</span>
             </Button>
 
             <Button
               onClick={handleNextToMultiply}
               disabled={saveStatus === "saving"}
               variant="default"
-              className="gap-1 sm:gap-2 h-8 sm:h-9"
+              className="gap-1 h-8 px-2 sm:px-3"
             >
               {saveStatus === "saving" ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
-                  <span className="hidden sm:inline">Saving...</span>
-                  <span className="sm:hidden">Saving</span>
-                </>
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  <span className="hidden sm:inline">Save & Continue to Multiply</span>
-                  <span className="sm:hidden">Continue</span>
-                  <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 rotate-180" />
+                  <span className="hidden md:inline text-sm">Save & Continue to Multiply</span>
+                  <span className="md:hidden text-sm">Continue</span>
+                  <ArrowLeft className="w-4 h-4 rotate-180" />
                 </>
               )}
             </Button>

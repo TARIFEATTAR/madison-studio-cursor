@@ -1,9 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Maximize2, Minimize2, Undo2, Redo2, Copy, Check, Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Heading3, AlignLeft, AlignCenter, AlignRight, AlignJustify, Indent, Outdent, FileText, X } from "lucide-react";
+import { Maximize2, Minimize2, Undo2, Redo2, Copy, Check, Bold, Italic, Underline, Strikethrough, List, ListOrdered, Heading1, Heading2, Heading3, AlignLeft, AlignCenter, AlignRight, AlignJustify, Indent, Outdent, FileText, X, Link2, Quote, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import DOMPurify from 'dompurify';
@@ -48,10 +52,23 @@ const sanitizeHtml = (html: string): string => {
 };
 
 const FONT_OPTIONS = [
-  { value: 'cormorant', label: 'Cormorant Garamond', family: '"Cormorant Garamond", serif' },
-  { value: 'crimson', label: 'Crimson Text', family: '"Crimson Text", serif' },
-  { value: 'lato', label: 'Lato', family: '"Lato", sans-serif' },
-  { value: 'inter', label: 'Inter', family: '"Inter", sans-serif' },
+  // Serif fonts - Editorial/Luxury
+  { value: 'cormorant', label: 'Cormorant Garamond', family: '"Cormorant Garamond", serif', category: 'serif' },
+  { value: 'crimson', label: 'Crimson Text', family: '"Crimson Text", serif', category: 'serif' },
+  { value: 'georgia', label: 'Georgia', family: 'Georgia, serif', category: 'serif' },
+  { value: 'playfair', label: 'Playfair Display', family: '"Playfair Display", serif', category: 'serif' },
+  { value: 'source-serif', label: 'Source Serif Pro', family: '"Source Serif Pro", serif', category: 'serif' },
+  { value: 'merriweather', label: 'Merriweather', family: 'Merriweather, serif', category: 'serif' },
+  { value: 'libre-baskerville', label: 'Libre Baskerville', family: '"Libre Baskerville", serif', category: 'serif' },
+  { value: 'times', label: 'Times New Roman', family: '"Times New Roman", serif', category: 'serif' },
+  // Sans-serif fonts - Modern/Clean
+  { value: 'lato', label: 'Lato', family: '"Lato", sans-serif', category: 'sans' },
+  { value: 'inter', label: 'Inter', family: '"Inter", sans-serif', category: 'sans' },
+  { value: 'open-sans', label: 'Open Sans', family: '"Open Sans", sans-serif', category: 'sans' },
+  { value: 'roboto', label: 'Roboto', family: 'Roboto, sans-serif', category: 'sans' },
+  { value: 'montserrat', label: 'Montserrat', family: 'Montserrat, sans-serif', category: 'sans' },
+  { value: 'poppins', label: 'Poppins', family: 'Poppins, sans-serif', category: 'sans' },
+  { value: 'arial', label: 'Arial', family: 'Arial, sans-serif', category: 'sans' },
 ];
 
 interface SavedSelection {
@@ -274,27 +291,92 @@ export const ContentEditor = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const modKey = isMac ? e.metaKey : e.ctrlKey;
+    
+    // === UNDO/REDO ===
+    if (modKey && e.key.toLowerCase() === 'z' && !e.shiftKey) {
       e.preventDefault();
       handleUndo();
       return;
-    } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+    }
+    
+    if ((modKey && e.key.toLowerCase() === 'z' && e.shiftKey) || 
+        (!isMac && e.ctrlKey && e.key.toLowerCase() === 'y')) {
       e.preventDefault();
       handleRedo();
       return;
     }
+    
+    // === TEXT FORMATTING ===
+    if (modKey && (e.key.toLowerCase() === 'b' || e.code === 'KeyB')) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.execCommand('bold', false);
+      updateContentFromEditable();
+      return;
+    }
+    
+    if (modKey && (e.key.toLowerCase() === 'i' || e.code === 'KeyI')) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.execCommand('italic', false);
+      updateContentFromEditable();
+      return;
+    }
+    
+    if (modKey && (e.key.toLowerCase() === 'u' || e.code === 'KeyU')) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.execCommand('underline', false);
+      updateContentFromEditable();
+      return;
+    }
+    
+    if (modKey && e.shiftKey && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      handleStrikethrough();
+      return;
+    }
+    
+    // === LISTS ===
+    const editor = editableRef.current;
+    const sel = window.getSelection();
+    const insideList = !!(editor && sel && sel.rangeCount > 0 && sel.anchorNode && (sel.anchorNode as any).parentElement?.closest?.('li') && editor.contains(sel.anchorNode));
+    
+    if (modKey && e.shiftKey && e.key === '8') {
+      e.preventDefault();
+      handleBulletList();
+      return;
+    }
+    
+    if (modKey && e.shiftKey && e.key === '7') {
+      e.preventDefault();
+      handleNumberedList();
+      return;
+    }
 
-    // Indent/outdent list items with Tab / Shift+Tab when caret is in a list
-    if (e.key === 'Tab') {
-      const editor = editableRef.current;
-      const sel = window.getSelection();
-      const insideList = !!(editor && sel && sel.rangeCount > 0 && sel.anchorNode && (sel.anchorNode as any).parentElement?.closest?.('li') && editor.contains(sel.anchorNode));
-      if (insideList) {
-        e.preventDefault();
-        document.execCommand(e.shiftKey ? 'outdent' : 'indent');
-        updateContentFromEditable();
-        return;
+    if (e.key === 'Tab' && insideList) {
+      e.preventDefault();
+      document.execCommand(e.shiftKey ? 'outdent' : 'indent');
+      updateContentFromEditable();
+      return;
+    }
+    
+    // === BLOCK FORMATTING ===
+    if (modKey && e.shiftKey && e.key === '>') {
+      e.preventDefault();
+      handleBlockquote();
+      return;
+    }
+    
+    if (modKey && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      if (editableRef.current) {
+        savedSelectionRef.current = saveSelection(editableRef.current);
       }
+      setLinkPopoverOpen(true);
+      return;
     }
 
     if (e.key === 'Escape' && isFullScreen) {
@@ -527,17 +609,63 @@ export const ContentEditor = ({
   const handleBold = () => execCommand('bold');
   const handleItalic = () => execCommand('italic');
   const handleUnderline = () => execCommand('underline');
+  const handleStrikethrough = () => execCommand('strikeThrough');
   const handleH1 = () => execCommand('formatBlock', '<h1>');
   const handleH2 = () => execCommand('formatBlock', '<h2>');
   const handleH3 = () => execCommand('formatBlock', '<h3>');
   const handleBulletList = () => execCommand('insertUnorderedList');
   const handleNumberedList = () => execCommand('insertOrderedList');
+  const handleBlockquote = () => execCommand('formatBlock', '<blockquote>');
   const handleAlignLeft = () => execCommand('justifyLeft');
   const handleAlignCenter = () => execCommand('justifyCenter');
   const handleAlignRight = () => execCommand('justifyRight');
   const handleAlignJustify = () => execCommand('justifyFull');
   const handleIndent = () => execCommand('indent');
   const handleOutdent = () => execCommand('outdent');
+  
+  // Link insertion state
+  const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkText, setLinkText] = useState('');
+  
+  const handleInsertLink = () => {
+    const editor = editableRef.current;
+    if (!editor || !linkUrl) return;
+    
+    editor.focus();
+    
+    if (savedSelectionRef.current) {
+      try {
+        restoreSelection(editor, savedSelectionRef.current);
+      } catch {}
+    }
+    
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      const selectedText = range.toString();
+      const displayText = selectedText || linkText || linkUrl;
+      
+      const link = document.createElement('a');
+      link.href = linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = displayText;
+      
+      range.deleteContents();
+      range.insertNode(link);
+      
+      range.setStartAfter(link);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+    
+    setLinkUrl('');
+    setLinkText('');
+    setLinkPopoverOpen(false);
+    updateContentFromEditable();
+  };
 
   const currentFontFamily = FONT_OPTIONS.find(f => f.value === selectedFont)?.family || FONT_OPTIONS[0].family;
 
