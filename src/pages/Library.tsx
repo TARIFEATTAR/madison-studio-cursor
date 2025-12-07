@@ -20,6 +20,9 @@ import { EmailSequenceEditor } from "@/components/library/EmailSequenceEditor";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { logger } from "@/lib/logger";
 
+// Image Editor Modal for generated images
+import { ImageEditorModal, type ImageEditorImage } from "@/components/image-editor/ImageEditorModal";
+
 // Helper to detect if content type is an email sequence
 const isEmailSequenceType = (contentType: string | undefined): boolean => {
   if (!contentType) return false;
@@ -74,6 +77,10 @@ export default function Library() {
     title?: string;
     contentType?: string;
   } | null>(null);
+
+  // Image editor modal state (for generated images)
+  const [imageEditorOpen, setImageEditorOpen] = useState(false);
+  const [imageEditorImage, setImageEditorImage] = useState<ImageEditorImage | null>(null);
 
   // Read status filter from URL params on mount
   useEffect(() => {
@@ -648,7 +655,21 @@ export default function Library() {
                 <ContentCard
                   key={content.id}
                   content={content}
-                  onClick={() => setSelectedContent(content)}
+                  onClick={() => {
+                    // If it's a generated image, open the image editor modal
+                    if (content.sourceTable === "generated_images" && content.imageUrl) {
+                      setImageEditorImage({
+                        id: content.id,
+                        imageUrl: content.imageUrl,
+                        prompt: content.finalPrompt || content.title || "",
+                        isSaved: true,
+                      });
+                      setImageEditorOpen(true);
+                    } else {
+                      // For text content, use the existing modal
+                      setSelectedContent(content);
+                    }
+                  }}
                   viewMode={viewMode}
                   selectable={true}
                   selected={selectedItems.has(content.id)}
@@ -908,6 +929,27 @@ export default function Library() {
           }}
         />
       )}
+
+      {/* Image Editor Modal (for generated images) */}
+      <ImageEditorModal
+        isOpen={imageEditorOpen}
+        onClose={() => {
+          setImageEditorOpen(false);
+          setImageEditorImage(null);
+        }}
+        image={imageEditorImage}
+        onSave={() => {
+          // Images in library are already saved, just refresh
+          refetch();
+        }}
+        onImageGenerated={(newImage) => {
+          // Refresh library to show new refinement
+          refetch();
+          // Update modal to show new image
+          setImageEditorImage(newImage);
+        }}
+        source="library"
+      />
       
     </div>
   );
