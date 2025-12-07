@@ -148,7 +148,60 @@ export default function LightTable() {
     headline: "",
     subtext: "",
     position: "bottom" as "top" | "center" | "bottom",
+    font: "cormorant" as "cormorant" | "playfair" | "montserrat" | "oswald",
   });
+  const [isEnhancingText, setIsEnhancingText] = useState(false);
+
+  // Font options for text overlay
+  const FONT_OPTIONS = [
+    { value: "cormorant", label: "Cormorant", style: "'Cormorant Garamond', serif" },
+    { value: "playfair", label: "Playfair", style: "'Playfair Display', serif" },
+    { value: "montserrat", label: "Montserrat", style: "'Montserrat', sans-serif" },
+    { value: "oswald", label: "Oswald", style: "'Oswald', sans-serif" },
+  ];
+
+  // AI enhance text using Gemini
+  const handleEnhanceText = useCallback(async () => {
+    if (!textOverlay.headline && !textOverlay.subtext) {
+      toast.error("Enter some text to enhance");
+      return;
+    }
+
+    setIsEnhancingText(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("enhance-copy", {
+        body: {
+          headline: textOverlay.headline,
+          subtext: textOverlay.subtext,
+          context: selectedImage?.prompt || "product advertisement",
+          style: "luxury brand, elegant, compelling",
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.headline || data?.subtext) {
+        setTextOverlay((prev) => ({
+          ...prev,
+          headline: data.headline || prev.headline,
+          subtext: data.subtext || prev.subtext,
+        }));
+        toast.success("Text enhanced!");
+      }
+    } catch (error: any) {
+      console.error("Text enhancement error:", error);
+      // Fallback: Simple enhancement without API
+      setTextOverlay((prev) => ({
+        ...prev,
+        headline: prev.headline ? prev.headline.toUpperCase() : prev.headline,
+        subtext: prev.subtext ? `${prev.subtext} ✨` : prev.subtext,
+      }));
+      toast.info("Applied basic enhancement");
+    } finally {
+      setIsEnhancingText(false);
+    }
+  }, [textOverlay, selectedImage?.prompt]);
 
   // Selected image
   const selectedImage = useMemo(
@@ -269,9 +322,22 @@ export default function LightTable() {
 
   // Generate variations
   const handleGenerateVariations = useCallback(async () => {
-    if (!selectedImage || !user || !orgId) return;
+    if (!selectedImage) {
+      toast.error("No image selected");
+      return;
+    }
+    if (!user) {
+      toast.error("Please sign in");
+      return;
+    }
+    if (!orgId) {
+      toast.error("Organization not found");
+      return;
+    }
 
     setIsGenerating(true);
+    
+    console.log("🎨 Starting variations generation for:", selectedImage.id);
 
     // Create placeholder variations
     const placeholders: Variation[] = Array(3)
@@ -291,8 +357,12 @@ export default function LightTable() {
         `${selectedImage.prompt}. Bold contrast with rich shadows.`,
       ];
 
+      console.log("📸 Generating 3 variations...");
+
       const results = await Promise.allSettled(
         variationPrompts.map(async (prompt, index) => {
+          console.log(`  → Variation ${index + 1} starting...`);
+          
           const { data, error } = await supabase.functions.invoke("generate-madison-image", {
             body: {
               prompt,
@@ -303,7 +373,13 @@ export default function LightTable() {
             },
           });
 
-          if (error) throw error;
+          if (error) {
+            console.error(`  ❌ Variation ${index + 1} error:`, error);
+            throw error;
+          }
+          
+          console.log(`  ✅ Variation ${index + 1} complete:`, data?.imageUrl?.substring(0, 50));
+          
           return {
             id: placeholders[index].id,
             imageUrl: data?.imageUrl || "",
@@ -317,6 +393,7 @@ export default function LightTable() {
           if (result.status === "fulfilled" && result.value.imageUrl) {
             return result.value;
           }
+          console.warn(`  ⚠️ Variation ${index + 1} failed or empty`);
           return { id: placeholders[index].id, imageUrl: "", isGenerating: false };
         })
         .filter((v) => v.imageUrl);
@@ -335,10 +412,12 @@ export default function LightTable() {
 
       if (newVariations.length > 0) {
         toast.success(`Generated ${newVariations.length} variations`);
+      } else {
+        toast.error("No variations could be generated");
       }
-    } catch (error) {
-      console.error("Variations error:", error);
-      toast.error("Failed to generate variations");
+    } catch (error: any) {
+      console.error("❌ Variations error:", error);
+      toast.error(error?.message || "Failed to generate variations");
       setVariations([]);
     } finally {
       setIsGenerating(false);
@@ -507,12 +586,15 @@ export default function LightTable() {
               />
 
               {/* Text Overlay Preview */}
-              {textOverlay.headline && (
+              {(textOverlay.headline || textOverlay.subtext) && (
                 <div
                   className={cn(
                     "light-table-text-overlay",
                     `light-table-text-overlay--${textOverlay.position}`
                   )}
+                  style={{
+                    fontFamily: FONT_OPTIONS.find((f) => f.value === textOverlay.font)?.style,
+                  }}
                 >
                   {textOverlay.headline && (
                     <h2 className="light-table-text-headline">{textOverlay.headline}</h2>
@@ -666,6 +748,7 @@ export default function LightTable() {
                       }
                       placeholder="Enter headline..."
                       className="light-table-text-input"
+                      style={{ fontFamily: FONT_OPTIONS.find((f) => f.value === textOverlay.font)?.style }}
                     />
                   </div>
                   <div className="light-table-text-field">
@@ -678,8 +761,33 @@ export default function LightTable() {
                       }
                       placeholder="Enter subtext..."
                       className="light-table-text-input"
+                      style={{ fontFamily: FONT_OPTIONS.find((f) => f.value === textOverlay.font)?.style }}
                     />
                   </div>
+
+                  {/* Font Selection */}
+                  <div className="light-table-text-field">
+                    <label>Font</label>
+                    <div className="light-table-font-btns">
+                      {FONT_OPTIONS.map((font) => (
+                        <button
+                          key={font.value}
+                          className={cn(
+                            "light-table-font-btn",
+                            textOverlay.font === font.value && "light-table-font-btn--active"
+                          )}
+                          style={{ fontFamily: font.style }}
+                          onClick={() =>
+                            setTextOverlay((prev) => ({ ...prev, font: font.value as any }))
+                          }
+                        >
+                          {font.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Position */}
                   <div className="light-table-text-field">
                     <label>Position</label>
                     <div className="light-table-position-btns">
@@ -699,6 +807,21 @@ export default function LightTable() {
                       ))}
                     </div>
                   </div>
+
+                  {/* AI Enhance Button */}
+                  <Button
+                    variant="outline"
+                    onClick={handleEnhanceText}
+                    disabled={isEnhancingText || (!textOverlay.headline && !textOverlay.subtext)}
+                    className="light-table-enhance-btn"
+                  >
+                    {isEnhancingText ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Wand2 className="w-4 h-4 mr-2" />
+                    )}
+                    {isEnhancingText ? "Enhancing..." : "Enhance with AI"}
+                  </Button>
                 </div>
               )}
             </div>

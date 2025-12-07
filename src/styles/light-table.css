@@ -360,12 +360,14 @@
   border-color: #b8956a;
 }
 
-.light-table-position-btns {
+.light-table-position-btns,
+.light-table-font-btns {
   display: flex;
   gap: 0.5rem;
 }
 
-.light-table-position-btn {
+.light-table-position-btn,
+.light-table-font-btn {
   flex: 1;
   padding: 0.5rem;
   background: rgba(26, 24, 22, 0.8);
@@ -378,15 +380,36 @@
   transition: all 0.2s ease;
 }
 
-.light-table-position-btn:hover {
+.light-table-position-btn:hover,
+.light-table-font-btn:hover {
   border-color: rgba(184, 149, 106, 0.4);
   color: rgba(245, 240, 230, 0.8);
 }
 
-.light-table-position-btn--active {
+.light-table-position-btn--active,
+.light-table-font-btn--active {
   background: rgba(184, 149, 106, 0.15);
   border-color: #b8956a;
   color: #b8956a;
+}
+
+/* Font buttons show their actual font */
+.light-table-font-btn {
+  font-size: 0.8rem;
+  padding: 0.625rem 0.5rem;
+}
+
+/* AI Enhance Button */
+.light-table-enhance-btn {
+  width: 100%;
+  margin-top: 0.5rem;
+  border-color: rgba(184, 149, 106, 0.3) !important;
+  color: #b8956a !important;
+}
+
+.light-table-enhance-btn:hover {
+  background: rgba(184, 149, 106, 0.1) !important;
+  border-color: #b8956a !important;
 }
 
 /* Footer */
