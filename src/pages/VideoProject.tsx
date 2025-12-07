@@ -88,7 +88,7 @@ export interface VideoProject {
   status: "draft" | "generating" | "complete";
 }
 
-// Video Templates
+// Video Templates - Clean structure without pre-populated text
 const VIDEO_TEMPLATES: VideoTemplate[] = [
   {
     id: "product-reveal",
@@ -100,7 +100,7 @@ const VIDEO_TEMPLATES: VideoTemplate[] = [
     scenes: [
       { duration: 10, motion: "zoom-in", order: 0 },
       { duration: 10, motion: "pan-left", order: 1 },
-      { duration: 10, motion: "static", text: { position: "center" }, order: 2 },
+      { duration: 10, motion: "static", order: 2 },
     ],
   },
   {
@@ -112,8 +112,8 @@ const VIDEO_TEMPLATES: VideoTemplate[] = [
     defaultDuration: 15,
     scenes: [
       { duration: 5, motion: "zoom-out", order: 0 },
-      { duration: 5, motion: "static", text: { position: "center" }, order: 1 },
-      { duration: 5, motion: "zoom-in", text: { position: "bottom" }, order: 2 },
+      { duration: 5, motion: "static", order: 1 },
+      { duration: 5, motion: "zoom-in", order: 2 },
     ],
   },
   {
@@ -127,7 +127,7 @@ const VIDEO_TEMPLATES: VideoTemplate[] = [
       { duration: 12, motion: "zoom-in", order: 0 },
       { duration: 10, motion: "pan-right", order: 1 },
       { duration: 13, motion: "pan-left", order: 2 },
-      { duration: 10, motion: "static", text: { position: "center" }, order: 3 },
+      { duration: 10, motion: "static", order: 3 },
     ],
   },
   {

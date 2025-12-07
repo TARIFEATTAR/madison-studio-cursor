@@ -76,3 +76,5 @@ WHERE id = 'USER_ID_HERE';
 -- DELETE FROM auth.users WHERE id = 'USER_ID_HERE';
 
 
+
+
