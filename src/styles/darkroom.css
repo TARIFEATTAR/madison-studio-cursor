@@ -1403,7 +1403,7 @@
 }
 
 /* -----------------------------------------------------------------------------
-   Right Panel (Madison Assistant)
+   Right Panel (Madison Assistant) - Collapsible Drawer
    ----------------------------------------------------------------------------- */
 .right-panel {
   display: flex;
@@ -1411,6 +1411,52 @@
   border-left: 1px solid var(--darkroom-border);
   background: var(--darkroom-surface);
   overflow: hidden;
+  min-width: 280px;
+  max-width: 320px;
+  transition: all 0.3s ease-in-out;
+}
+
+.right-panel--collapsed {
+  min-width: 0;
+  max-width: 0;
+  border-left: none;
+  padding: 0;
+  pointer-events: none;
+}
+
+/* Drawer Toggle Button (when collapsed) */
+.madison-drawer-toggle {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px 12px 12px;
+  background: var(--darkroom-surface);
+  border: 1px solid var(--darkroom-border);
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  color: var(--darkroom-accent);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.madison-drawer-toggle:hover {
+  background: var(--darkroom-surface-elevated);
+  padding-left: 16px;
+}
+
+.madison-drawer-toggle__label {
+  font-family: var(--font-display);
+  font-size: 14px;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  letter-spacing: 0.05em;
 }
 
 .right-panel__header,
@@ -1426,13 +1472,36 @@
 
 .madison-header {
   margin-bottom: var(--space-xl);
-  justify-content: center;
+  justify-content: space-between;
 }
 
 .madison-header h3 {
   font-family: var(--font-display);
   font-size: 20px;
   color: var(--darkroom-accent);
+  flex: 1;
+  text-align: center;
+}
+
+/* Collapse Button */
+.madison-collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid var(--darkroom-border);
+  color: var(--darkroom-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.madison-collapse-btn:hover {
+  background: var(--darkroom-surface-elevated);
+  color: var(--darkroom-accent);
+  border-color: var(--darkroom-accent);
 }
 
 .right-panel__header-icon {

@@ -7,11 +7,14 @@ import {
   Wand2,
   MessageCircle,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Copy,
   Palette,
   History,
   Zap,
   RefreshCw,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -165,6 +168,7 @@ export function RightPanel({
   hasStyle,
   proSettingsCount,
 }: RightPanelProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -192,11 +196,45 @@ export function RightPanel({
   };
 
   return (
-    <aside className="right-panel">
-      {/* Madison Header */}
-      <div className="madison-header">
-        <h3>Madison</h3>
-      </div>
+    <>
+      {/* Collapsed Toggle Button */}
+      <AnimatePresence>
+        {isCollapsed && (
+          <motion.button
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="madison-drawer-toggle madison-drawer-toggle--collapsed"
+            onClick={() => setIsCollapsed(false)}
+            title="Open Madison Assistant"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span className="madison-drawer-toggle__label">Madison</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Drawer Panel */}
+      <motion.aside 
+        className={cn("right-panel", isCollapsed && "right-panel--collapsed")}
+        initial={false}
+        animate={{ 
+          width: isCollapsed ? 0 : "auto",
+          opacity: isCollapsed ? 0 : 1,
+        }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+      >
+        {/* Madison Header */}
+        <div className="madison-header">
+          <h3>Madison</h3>
+          <button 
+            className="madison-collapse-btn"
+            onClick={() => setIsCollapsed(true)}
+            title="Collapse panel"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
 
       {/* Content */}
       <div className="right-panel__content">
@@ -385,6 +423,7 @@ export function RightPanel({
           </div>
         )}
       </div>
-    </aside>
+    </motion.aside>
+    </>
   );
 }
