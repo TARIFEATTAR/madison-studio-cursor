@@ -51,6 +51,7 @@ export function AppSidebar() {
       { url: "/multiply" },
       { url: "/image-editor" },
       { url: "/darkroom" },
+      { url: "/video-project" },
       // { url: "/email-builder" }, // Temporarily hidden for launch
     ];
     const libraryItems = [
@@ -99,6 +100,7 @@ export function AppSidebar() {
         { title: "Multiply", url: "/multiply", icon: Share2 },
         { title: "Image Studio", url: "/image-editor", icon: Image },
         { title: "Dark Room", url: "/darkroom", icon: Camera },
+        { title: "Video Project", url: "/video-project", icon: Video },
         // { title: "Email Builder", url: "/email-builder", icon: Mail }, // Temporarily hidden for launch
       ]
     },
