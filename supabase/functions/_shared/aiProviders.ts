@@ -228,6 +228,7 @@ export interface GeminiImageRequest {
     data: string;
     mimeType: string;
   }>;
+  model?: string; // Optional model override (e.g., "models/gemini-2.0-flash-exp")
 }
 
 export async function callGeminiImage(
@@ -236,6 +237,9 @@ export async function callGeminiImage(
   if (!GEMINI_API_KEY) {
     throw new Error("GEMINI_API_KEY not configured");
   }
+
+  // Use provided model or fall back to default
+  const modelToUse = request.model || GEMINI_IMAGE_MODEL;
 
   // Build content parts array
   const parts: Array<Record<string, unknown>> = [{ text: request.prompt }];
@@ -273,9 +277,11 @@ export async function callGeminiImage(
     (body.generationConfig as any).seed = request.seed;
   }
 
+  console.log(`🤖 Calling Gemini model: ${modelToUse}`);
+
   const response = await withTimeout(
     fetch(
-      `${GEMINI_API_ENDPOINT}/${GEMINI_IMAGE_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+      `${GEMINI_API_ENDPOINT}/${modelToUse}:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

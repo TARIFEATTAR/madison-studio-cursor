@@ -620,15 +620,20 @@ serve(async (req) => {
     } = body;
     
     // Map frontend-friendly names to backend values
-    // aiProvider maps to: provider + freepikModel
+    // aiProvider maps to: provider + freepikModel + geminiModel
     // resolution maps to: freepikResolution
     let effectiveProvider = provider;
     let effectiveFreepikModel = freepikModel;
     let effectiveFreepikResolution = freepikResolution;
+    let effectiveGeminiModel: string | undefined;
     
     if (aiProvider) {
-      if (aiProvider === "gemini") {
+      if (aiProvider === "gemini" || aiProvider === "gemini-2.0-flash") {
         effectiveProvider = "gemini";
+        effectiveGeminiModel = "models/gemini-2.0-flash-exp"; // Default image model
+      } else if (aiProvider === "gemini-2.0-flash-exp") {
+        effectiveProvider = "gemini";
+        effectiveGeminiModel = "models/gemini-2.0-flash-exp";
       } else if (aiProvider === "freepik-mystic") {
         effectiveProvider = "freepik";
         effectiveFreepikModel = effectiveFreepikModel || "mystic";
@@ -1123,12 +1128,15 @@ serve(async (req) => {
       /**
        * GEMINI GENERATION PATH (default)
        */
-      console.log("🎨 Using Gemini for image generation...");
+      console.log("🎨 Using Gemini for image generation...", {
+        model: effectiveGeminiModel || "default",
+      });
 
       const geminiImage = await callGeminiImage({
         prompt: enhancedPrompt,
         aspectRatio,
         seed: randomSeed,
+        model: effectiveGeminiModel, // Pass model override if specified
         referenceImages: referenceImagesPayload.length > 0
           ? referenceImagesPayload
           : undefined,

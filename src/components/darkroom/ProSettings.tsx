@@ -31,7 +31,8 @@ const ASPECT_RATIO_OPTIONS = [
 // AI Provider options
 const AI_PROVIDER_OPTIONS = [
   { value: "auto", label: "Auto (Smart Select)", description: "Best for your plan" },
-  { value: "gemini", label: "Gemini 2.0 Flash", description: "Fast, reliable" },
+  { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash", description: "Fast, reliable" },
+  { value: "gemini-2.0-flash-exp", label: "Gemini 2.0 Flash Exp", description: "Latest features" },
   { value: "freepik-mystic", label: "Freepik Mystic", description: "Studio+ only" },
   { value: "freepik-flux", label: "Freepik Flux", description: "Studio+ only" },
 ];
