@@ -83,29 +83,41 @@ export default function ImageLibrary() {
         userId: user.id 
       });
 
-      // Try fetching by organization first, then fall back to user_id
-      let query = supabase
+      // First try with organization_id if available
+      if (currentOrganizationId) {
+        const { data, error } = await supabase
+          .from("generated_images")
+          .select("*")
+          .eq("organization_id", currentOrganizationId)
+          .eq("is_archived", false)
+          .order("created_at", { ascending: false });
+
+        if (!error && data && data.length > 0) {
+          console.log(`✅ Image Library loaded ${data.length} images by org`);
+          return data as GeneratedImage[];
+        }
+        
+        if (error) {
+          console.error("❌ Error fetching by org:", error);
+        }
+      }
+
+      // Fallback: fetch by user_id
+      console.log("📸 Trying fallback query by user_id...");
+      const { data: userData, error: userError } = await supabase
         .from("generated_images")
         .select("*")
+        .eq("user_id", user.id)
         .eq("is_archived", false)
         .order("created_at", { ascending: false });
 
-      // Filter by organization if available, otherwise by user
-      if (currentOrganizationId) {
-        query = query.eq("organization_id", currentOrganizationId);
-      } else {
-        query = query.eq("user_id", user.id);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error("❌ Error fetching images:", error);
+      if (userError) {
+        console.error("❌ Error fetching by user:", userError);
         return [];
       }
 
-      console.log(`✅ Image Library loaded ${data?.length || 0} images`);
-      return data as GeneratedImage[];
+      console.log(`✅ Image Library loaded ${userData?.length || 0} images by user`);
+      return userData as GeneratedImage[];
     },
     enabled: !!user,
   });
