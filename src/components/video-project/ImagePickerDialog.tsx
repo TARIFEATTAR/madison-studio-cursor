@@ -189,32 +189,32 @@ export function ImagePickerDialog({
         {/* Tab Buttons */}
         <div className="flex gap-2 mb-4">
           <Button
-            variant={activeTab === "library" ? "default" : "outline"}
+            variant="outline"
             size="sm"
             onClick={() => setActiveTab("library")}
             className={cn(
-              "flex-1",
+              "flex-1 h-10",
               activeTab === "library" 
-                ? "bg-[#b8956a] text-[#1a1816]" 
-                : "border-[#b8956a]/30 text-[#f5f0e6]/70"
+                ? "bg-[#b8956a] text-[#1a1816] border-[#b8956a] hover:bg-[#b8956a]/90" 
+                : "bg-transparent border-[#b8956a]/30 text-[#f5f0e6] hover:bg-[#b8956a]/10 hover:border-[#b8956a]/50"
             )}
           >
-            <ImageIcon className="w-4 h-4 mr-2" />
-            Library
+            <ImageIcon className="w-4 h-4 mr-2 flex-shrink-0" />
+            <span>Library</span>
           </Button>
           <Button
-            variant={activeTab === "url" ? "default" : "outline"}
+            variant="outline"
             size="sm"
             onClick={() => setActiveTab("url")}
             className={cn(
-              "flex-1",
+              "flex-1 h-10",
               activeTab === "url" 
-                ? "bg-[#b8956a] text-[#1a1816]" 
-                : "border-[#b8956a]/30 text-[#f5f0e6]/70"
+                ? "bg-[#b8956a] text-[#1a1816] border-[#b8956a] hover:bg-[#b8956a]/90" 
+                : "bg-transparent border-[#b8956a]/30 text-[#f5f0e6] hover:bg-[#b8956a]/10 hover:border-[#b8956a]/50"
             )}
           >
-            <LinkIcon className="w-4 h-4 mr-2" />
-            URL
+            <LinkIcon className="w-4 h-4 mr-2 flex-shrink-0" />
+            <span>URL</span>
           </Button>
         </div>
 

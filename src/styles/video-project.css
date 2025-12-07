@@ -811,7 +811,19 @@
 }
 
 .platform-icon {
-  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(184, 149, 106, 0.8);
+  flex-shrink: 0;
+}
+
+.platform-badge--compatible .platform-icon {
+  color: rgba(184, 149, 106, 0.9);
+}
+
+.platform-badge--incompatible .platform-icon {
+  color: rgba(184, 149, 106, 0.4);
 }
 
 .platform-name {
