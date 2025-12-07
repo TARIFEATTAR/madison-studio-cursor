@@ -7,10 +7,8 @@ import {
   CheckCircle,
   Loader2,
   Wand2,
-  Trash2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { ThumbnailCarousel } from "./ThumbnailCarousel";
 import { cn } from "@/lib/utils";
 
 interface GeneratedImage {
@@ -233,113 +231,6 @@ function EmptyState() {
   );
 }
 
-// Thumbnail Slot
-function ThumbnailSlot({
-  image,
-  isActive,
-  index,
-  onClick,
-  onSave,
-  onDelete,
-}: {
-  image?: GeneratedImage;
-  isActive: boolean;
-  index: number;
-  onClick?: () => void;
-  onSave?: () => void;
-  onDelete?: () => void;
-}) {
-  const [showActions, setShowActions] = useState(false);
-
-  if (!image) {
-    return (
-      <div className="thumbnail-slot empty">
-        <div className="thumbnail-empty-content">
-          <span>{index + 1}</span>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <motion.div
-      className={cn(
-        "thumbnail-slot filled",
-        isActive && "active",
-        image.isSaved && "thumbnail-slot--saved"
-      )}
-      onClick={onClick}
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
-      whileHover={{ y: -2 }}
-      transition={{ duration: 0.15 }}
-    >
-      <img src={image.imageUrl} alt={`Generated ${index + 1}`} />
-
-      {/* Active Border Glow */}
-      {isActive && (
-        <motion.div
-          className="thumbnail-active-border"
-          layoutId="activeBorder"
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        />
-      )}
-
-      {/* Saved Indicator */}
-      {image.isSaved && (
-        <motion.div
-          className="thumbnail-saved-badge"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 400, damping: 15 }}
-        >
-          <CheckCircle size={12} />
-        </motion.div>
-      )}
-
-      {/* Hover Actions */}
-      <AnimatePresence>
-        {showActions && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/70 flex items-center justify-center gap-1 p-1"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {!image.isSaved && onSave && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-6 w-6 p-0 text-white hover:text-[var(--darkroom-success)]"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSave();
-                }}
-              >
-                <Save className="w-3 h-3" />
-              </Button>
-            )}
-            {onDelete && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-6 w-6 p-0 text-white hover:text-[var(--darkroom-error)]"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete();
-                }}
-              >
-                <Trash2 className="w-3 h-3" />
-              </Button>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-}
-
 export function CenterCanvas({
   images,
   heroImage,
@@ -378,8 +269,6 @@ export function CenterCanvas({
     }
   };
 
-  const savedCount = images.filter((img) => img.isSaved).length;
-
   return (
     <section className="center-canvas">
       {/* Main Viewport */}
@@ -402,38 +291,15 @@ export function CenterCanvas({
         </AnimatePresence>
       </div>
 
-      {/* Thumbnail Carousel */}
-      <div className="thumbnail-carousel">
-        <div className="thumbnail-carousel__slots">
-          {Array.from({ length: maxImages }).map((_, index) => {
-            const image = images[index];
-            return (
-              <ThumbnailSlot
-                key={image?.id || `slot-${index}`}
-                image={image}
-                isActive={image?.id === heroImage?.id}
-                index={index}
-                onClick={image ? () => onSetHero(image.id) : undefined}
-                onSave={
-                  image && !image.isSaved
-                    ? () => onSaveImage(image.id)
-                    : undefined
-                }
-                onDelete={image ? () => onDeleteImage(image.id) : undefined}
-              />
-            );
-          })}
-        </div>
-        <div className="thumbnail-carousel__progress">
-          <span style={{ color: "var(--darkroom-text)" }}>{images.length}</span>
-          <span>/{maxImages}</span>
-          {savedCount > 0 && (
-            <span style={{ marginLeft: "8px", color: "var(--darkroom-success)" }}>
-              ({savedCount} saved)
-            </span>
-          )}
-        </div>
-      </div>
+      {/* Film Strip Thumbnail Carousel */}
+      <ThumbnailCarousel
+        images={images}
+        activeId={heroImage?.id || null}
+        onSelect={onSetHero}
+        onSave={onSaveImage}
+        onDelete={onDeleteImage}
+        maxSlots={maxImages}
+      />
 
       {/* Prompt Bar */}
       <div className={cn("prompt-bar", isFocused && "focused")}>

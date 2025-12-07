@@ -4,5 +4,6 @@ export { ProSettings, type ProModeSettings } from './ProSettings';
 export { GenerateButton } from './GenerateButton';
 export { LeftRail } from './LeftRail';
 export { CenterCanvas } from './CenterCanvas';
+export { ThumbnailCarousel } from './ThumbnailCarousel';
 export { RightPanel } from './RightPanel';
 export { DarkRoomHeader } from './DarkRoomHeader';
