@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Camera, Sun, Globe, X, Info, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, Camera, Sun, Globe, X, Info, SlidersHorizontal, Maximize2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -18,10 +18,21 @@ import {
   getEnvironmentOptions,
 } from "@/utils/promptFormula";
 
+// Aspect ratio options
+const ASPECT_RATIO_OPTIONS = [
+  { value: "1:1", label: "Square (1:1)", description: "Instagram, Product" },
+  { value: "4:3", label: "Classic (4:3)", description: "Traditional photo" },
+  { value: "3:4", label: "Portrait (3:4)", description: "Mobile, Pinterest" },
+  { value: "16:9", label: "Wide (16:9)", description: "YouTube, Desktop" },
+  { value: "9:16", label: "Story (9:16)", description: "Reels, TikTok" },
+  { value: "21:9", label: "Cinematic (21:9)", description: "Film, Banner" },
+];
+
 export interface ProModeSettings {
   camera?: string;
   lighting?: string;
   environment?: string;
+  aspectRatio?: string;
 }
 
 interface ProSettingsProps {
@@ -49,6 +60,10 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
 
   const handleEnvironmentChange = (value: string) => {
     onChange({ ...settings, environment: value === "none" ? undefined : value });
+  };
+
+  const handleAspectRatioChange = (value: string) => {
+    onChange({ ...settings, aspectRatio: value === "1:1" ? undefined : value });
   };
 
   const handleClearAll = () => {
@@ -201,6 +216,37 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                 <p className="pro-settings__hint">
                   For image backgrounds, upload a Background Scene
                 </p>
+              </div>
+
+              {/* Aspect Ratio */}
+              <div className="pro-settings__control">
+                <label className="pro-settings__control-label">
+                  <Maximize2 className="w-3.5 h-3.5" />
+                  Aspect Ratio
+                </label>
+                <Select
+                  value={settings.aspectRatio || "1:1"}
+                  onValueChange={handleAspectRatioChange}
+                  disabled={disabled}
+                >
+                  <SelectTrigger className="h-9 bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
+                    <SelectValue placeholder="Select aspect ratio..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] z-50">
+                    {ASPECT_RATIO_OPTIONS.map((option) => (
+                      <SelectItem 
+                        key={option.value} 
+                        value={option.value} 
+                        className="text-[#f5f0e6] focus:bg-[#2a2520] focus:text-[#f5f0e6] data-[highlighted]:bg-[#2a2520] data-[highlighted]:text-[#f5f0e6]"
+                      >
+                        <span className="flex items-center justify-between w-full">
+                          <span>{option.label}</span>
+                          <span className="text-[#a09080] text-xs ml-2">{option.description}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Summary */}

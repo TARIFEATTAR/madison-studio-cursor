@@ -274,7 +274,7 @@ export default function DarkRoom() {
           organizationId: orgId,
           sessionId,
           goalType: "product_photography",
-          aspectRatio: "1:1",
+          aspectRatio: proSettings.aspectRatio || "1:1",
           outputFormat: "png",
           referenceImages,
           proModeControls: proModePayload,

@@ -929,8 +929,9 @@ serve(async (req) => {
      * 
      * TIER ACCESS:
      * - Essentials ($49): Gemini only
-     * - Signature ($99): Gemini + Freepik Flux Pro (limited)
-     * - Signature+ ($199+): Full Freepik (Mystic 4K, Video, etc.)
+     * - Studio ($149): Gemini + Freepik Flux Pro (limited)
+     * - Signature ($349): Full Freepik (Mystic 4K, Video, etc.)
+     * - Super Admins: Full access to all features for testing
      * 
      * FALLBACK: Freepik fails → Gemini
      */
@@ -940,39 +941,65 @@ serve(async (req) => {
     let freepikAllowed = false;
     let freepik4KAllowed = false;
     let freepikVideoAllowed = false;
+    let isSuperAdmin = false;
     
-    try {
-      const { data: orgData } = await supabase
-        .from("organizations")
-        .select("subscription_tier, stripe_subscription_status")
-        .eq("id", resolvedOrgId)
-        .single();
-      
-      if (orgData) {
-        subscriptionTier = (orgData.subscription_tier || "essentials").toLowerCase();
-        const isActive = orgData.stripe_subscription_status === "active" || 
-                        orgData.stripe_subscription_status === "trialing";
+    // Check if user is a super admin (gets full access for testing)
+    if (userId) {
+      try {
+        const { data: superAdminData } = await supabase
+          .from("super_admins")
+          .select("id")
+          .eq("user_id", userId)
+          .maybeSingle();
         
-        // Determine Freepik access based on tier
-        // Actual tiers: essentials ($49), studio ($149), signature ($349)
-        if (isActive || subscriptionTier === "free_trial") {
-          // Studio and Signature get basic Freepik access (Flux Pro)
-          if (subscriptionTier === "studio" || subscriptionTier === "signature") {
-            freepikAllowed = true;
-          }
-          // Only Signature gets 4K and Video (premium Freepik features)
-          if (subscriptionTier === "signature") {
-            freepik4KAllowed = true;
-            freepikVideoAllowed = true;
+        if (superAdminData) {
+          isSuperAdmin = true;
+          freepikAllowed = true;
+          freepik4KAllowed = true;
+          freepikVideoAllowed = true;
+          console.log("👑 Super Admin detected - Full Freepik access enabled");
+        }
+      } catch (saError) {
+        console.warn("Could not check super admin status:", saError);
+      }
+    }
+    
+    // If not a super admin, check subscription tier
+    if (!isSuperAdmin) {
+      try {
+        const { data: orgData } = await supabase
+          .from("organizations")
+          .select("subscription_tier, stripe_subscription_status")
+          .eq("id", resolvedOrgId)
+          .single();
+        
+        if (orgData) {
+          subscriptionTier = (orgData.subscription_tier || "essentials").toLowerCase();
+          const isActive = orgData.stripe_subscription_status === "active" || 
+                          orgData.stripe_subscription_status === "trialing";
+          
+          // Determine Freepik access based on tier
+          // Actual tiers: essentials ($49), studio ($149), signature ($349)
+          if (isActive || subscriptionTier === "free_trial") {
+            // Studio and Signature get basic Freepik access (Flux Pro)
+            if (subscriptionTier === "studio" || subscriptionTier === "signature") {
+              freepikAllowed = true;
+            }
+            // Only Signature gets 4K and Video (premium Freepik features)
+            if (subscriptionTier === "signature") {
+              freepik4KAllowed = true;
+              freepikVideoAllowed = true;
+            }
           }
         }
+      } catch (tierError) {
+        console.warn("Could not fetch subscription tier, defaulting to Gemini:", tierError);
       }
-    } catch (tierError) {
-      console.warn("Could not fetch subscription tier, defaulting to Gemini:", tierError);
     }
     
     console.log(`📊 Subscription Tier Check:`, {
-      tier: subscriptionTier,
+      tier: isSuperAdmin ? "super_admin" : subscriptionTier,
+      isSuperAdmin,
       freepikAllowed,
       freepik4KAllowed,
       requestedProvider: provider,
