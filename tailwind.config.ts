@@ -139,7 +139,7 @@ export default {
         
         // Platform colors object for direct access
         platform: DesignTokens.colors.platform,
-      },
+        },
 
       // ═══════════════════════════════════════════════════════════════
       // TYPOGRAPHY - From Design Tokens

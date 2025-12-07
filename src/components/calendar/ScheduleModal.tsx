@@ -342,11 +342,11 @@ export const ScheduleModal = ({
           <div className="space-y-2">
             <Label htmlFor="time" className={isMobile ? "text-base" : ""}>Time (optional)</Label>
             <TimePicker
-              value={time}
+                value={time}
               onChange={setTime}
               placeholder="--:-- --"
               className={cn(isMobile && "h-12 text-base")}
-            />
+              />
           </div>
         </div>
 

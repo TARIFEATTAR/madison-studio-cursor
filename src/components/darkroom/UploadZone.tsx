@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, X, Replace, Image as ImageIcon } from "lucide-react";
+import { Upload, X, Check, Replace } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -24,12 +24,6 @@ interface UploadZoneProps {
   className?: string;
 }
 
-const TYPE_CONFIG: Record<UploadType, { icon: string; color: string }> = {
-  product: { icon: "📦", color: "var(--darkroom-accent)" },
-  background: { icon: "🌄", color: "#6366F1" },
-  style: { icon: "🎨", color: "#EC4899" },
-};
-
 export function UploadZone({
   type,
   label,
@@ -43,7 +37,6 @@ export function UploadZone({
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const config = TYPE_CONFIG[type];
 
   const processFile = useCallback(
     async (file: File) => {
@@ -103,7 +96,7 @@ export function UploadZone({
       if (disabled) return;
 
       const file = e.dataTransfer.files?.[0];
-      if (file) {
+      if (file && file.type.startsWith("image/")) {
         processFile(file);
       }
     },
@@ -153,9 +146,11 @@ export function UploadZone({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.2 }}
-      className={cn("upload-zone-wrapper", className)}
+      transition={{ duration: 0.3 }}
+      className={cn("upload-zone-container", className)}
     >
+      <label className="upload-zone-label">{label}</label>
+
       <input
         ref={inputRef}
         type="file"
@@ -165,19 +160,81 @@ export function UploadZone({
         disabled={disabled}
       />
 
-      <AnimatePresence mode="wait">
-        {image ? (
-          // Image Preview Mode
-          <motion.div
-            key="preview"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="upload-zone upload-zone--has-image"
-          >
-            <div className="upload-zone__preview">
+      <div
+        className={cn(
+          "upload-zone",
+          isDragging && "dragging",
+          image && "has-image",
+          disabled && "opacity-50 cursor-not-allowed"
+        )}
+        onClick={!image ? handleClick : undefined}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <AnimatePresence mode="wait">
+          {!image ? (
+            // Empty State
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="upload-empty"
+            >
+              {isUploading ? (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                >
+                  <Upload className="upload-icon" />
+                </motion.div>
+              ) : (
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
+                  <Upload className="upload-icon" />
+                </motion.div>
+              )}
+              <p className="upload-text">Drop or click to upload</p>
+              <p className="upload-description">{description}</p>
+            </motion.div>
+          ) : (
+            // Filled State
+            <motion.div
+              key="filled"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="upload-filled"
+            >
               <img src={image.url} alt={label} />
+
+              {/* Success Badge with Animation */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 15,
+                  delay: 0.2,
+                }}
+                className="upload-success-badge"
+              >
+                <Check size={12} />
+              </motion.div>
+
+              {/* Remove Button */}
+              {onRemove && (
+                <button onClick={handleRemove} className="upload-remove">
+                  <X size={16} />
+                </button>
+              )}
+
+              {/* Hover Overlay with Replace */}
               <div className="upload-zone__preview-overlay">
                 <Button
                   size="sm"
@@ -200,54 +257,24 @@ export function UploadZone({
                   </Button>
                 )}
               </div>
-            </div>
-            <div className="mt-2 flex items-center gap-2">
-              <span className="text-sm">{config.icon}</span>
-              <span className="text-xs font-medium text-[var(--darkroom-text)]">
-                {label.replace(/^[^\s]+\s/, "")}
-              </span>
-            </div>
-          </motion.div>
-        ) : (
-          // Upload Mode
-          <motion.div
-            key="upload"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className={cn(
-              "upload-zone",
-              isDragging && "upload-zone--dragging",
-              disabled && "opacity-50 cursor-not-allowed"
-            )}
-            onClick={handleClick}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            <div className="upload-zone__content">
-              {isUploading ? (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                >
-                  <ImageIcon className="upload-zone__icon" />
-                </motion.div>
-              ) : (
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                >
-                  <Upload className="upload-zone__icon" />
-                </motion.div>
-              )}
-              <span className="upload-zone__label">{label}</span>
-              <span className="upload-zone__description">{description}</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Animated Glow Border on Drag */}
+        <AnimatePresence>
+          {isDragging && (
+            <motion.div
+              className="upload-glow-border"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            />
+          )}
+        </AnimatePresence>
+      </div>
+
+      <p className="upload-zone-help">{description}</p>
     </motion.div>
   );
 }

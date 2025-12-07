@@ -57,3 +57,4 @@ https://madison-studio-cursor-*.vercel.app/**
 - Make sure you added `http://localhost:8080/**` (with the wildcard)
 - Not just `http://localhost:8080` (without wildcard)
 
+

@@ -9,6 +9,8 @@ import {
   MessageCircle,
   ChevronDown,
   Copy,
+  Palette,
+  History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,19 +34,19 @@ interface RightPanelProps {
   // Suggestions based on context
   suggestions: Suggestion[];
   onUseSuggestion: (suggestion: Suggestion) => void;
-  
+
   // Quick presets
   presets: string[];
   onApplyPreset: (preset: string) => void;
-  
+
   // Session history
   history: HistoryItem[];
   onRestoreFromHistory: (item: HistoryItem) => void;
-  
+
   // Madison chat (optional)
   onSendMessage?: (message: string) => void;
   chatMessages?: { role: "user" | "assistant"; content: string }[];
-  
+
   // Context info
   hasProduct: boolean;
   hasBackground: boolean;
@@ -53,10 +55,16 @@ interface RightPanelProps {
 }
 
 // Quick Preset Button
-function QuickPreset({ label, onClick }: { label: string; onClick: () => void }) {
+function QuickPreset({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
   return (
     <motion.button
-      className="quick-preset"
+      className="preset-button"
       onClick={onClick}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
@@ -92,7 +100,7 @@ function SuggestionCard({
     <motion.div
       className="suggestion-card"
       onClick={onUse}
-      initial={{ opacity: 0, x: 20 }}
+      initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       whileHover={{ scale: 1.01 }}
     >
@@ -107,7 +115,7 @@ function SuggestionCard({
         <Button
           size="sm"
           variant="ghost"
-          className="h-7 px-2 text-xs text-[var(--darkroom-accent)]"
+          className="h-7 px-2 text-xs text-[var(--darkroom-accent)] hover:bg-[var(--darkroom-accent)]/10"
           onClick={(e) => {
             e.stopPropagation();
             onUse();
@@ -119,7 +127,7 @@ function SuggestionCard({
         <Button
           size="sm"
           variant="ghost"
-          className="h-7 px-2 text-xs text-[var(--darkroom-text-muted)]"
+          className="h-7 px-2 text-xs text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)]"
           onClick={handleCopy}
         >
           <Copy className="w-3 h-3 mr-1" />
@@ -130,30 +138,7 @@ function SuggestionCard({
   );
 }
 
-// History Item
-function HistoryEntry({
-  item,
-  onClick,
-}: {
-  item: HistoryItem;
-  onClick: () => void;
-}) {
-  const timeAgo = formatTimeAgo(item.timestamp);
-
-  return (
-    <motion.button
-      className="history-item"
-      onClick={onClick}
-      whileHover={{ scale: 1.01 }}
-    >
-      <span className="flex-1 truncate">{item.prompt}</span>
-      <span className="text-[10px] text-[var(--darkroom-text-dim)] ml-2">
-        {timeAgo}
-      </span>
-    </motion.button>
-  );
-}
-
+// Format time ago helper
 function formatTimeAgo(date: Date): string {
   const now = new Date();
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
@@ -182,7 +167,7 @@ export function RightPanel({
   const [showChat, setShowChat] = useState(false);
   const [chatInput, setChatInput] = useState("");
 
-  // Generate context-aware suggestions
+  // Generate context-aware tips
   const contextTips = [];
   if (!hasProduct) {
     contextTips.push("Upload a product image for enhancement suggestions");
@@ -206,25 +191,23 @@ export function RightPanel({
 
   return (
     <aside className="right-panel">
-      {/* Header */}
-      <div className="right-panel__header">
+      {/* Madison Header */}
+      <div className="madison-header">
         <div className="right-panel__header-icon">
           <Sparkles className="w-4 h-4" />
         </div>
-        <span className="right-panel__header-title">Madison Assistant</span>
+        <h3>Madison</h3>
       </div>
 
       {/* Content */}
       <div className="right-panel__content">
         {/* Context Tips */}
         {contextTips.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
+          <div className="panel-section">
+            <h4 className="panel-heading">
               <Lightbulb className="w-4 h-4 text-[var(--darkroom-accent)]" />
-              <span className="text-xs font-medium text-[var(--darkroom-text-muted)]">
-                Quick Tips
-              </span>
-            </div>
+              <span>Quick Tips</span>
+            </h4>
             <ul className="space-y-2">
               {contextTips.map((tip, i) => (
                 <motion.li
@@ -232,7 +215,7 @@ export function RightPanel({
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.1 }}
-                  className="text-xs text-[var(--darkroom-text-muted)] pl-4 border-l-2 border-[var(--darkroom-border)] hover:border-[var(--darkroom-accent)] transition-colors"
+                  className="text-xs text-[var(--darkroom-text-muted)] pl-4 border-l-2 border-[var(--darkroom-border)] hover:border-[var(--darkroom-accent)] transition-colors py-1"
                 >
                   {tip}
                 </motion.li>
@@ -241,34 +224,35 @@ export function RightPanel({
           </div>
         )}
 
-        {/* Suggestions Section */}
+        {/* Smart Suggestions */}
         {suggestions.length > 0 && (
-          <div className="suggestions-section">
-            <div className="suggestions-section__title">
+          <div className="panel-section">
+            <h4 className="panel-heading">
               <Wand2 className="w-4 h-4 text-[var(--darkroom-accent)]" />
-              <span>Prompt Suggestions</span>
+              <span>Suggestions</span>
+            </h4>
+            <div className="suggestions-list">
+              <AnimatePresence mode="popLayout">
+                {suggestions.map((suggestion, i) => (
+                  <SuggestionCard
+                    key={suggestion.id}
+                    suggestion={suggestion}
+                    onUse={() => onUseSuggestion(suggestion)}
+                  />
+                ))}
+              </AnimatePresence>
             </div>
-            <AnimatePresence mode="popLayout">
-              {suggestions.map((suggestion) => (
-                <SuggestionCard
-                  key={suggestion.id}
-                  suggestion={suggestion}
-                  onUse={() => onUseSuggestion(suggestion)}
-                />
-              ))}
-            </AnimatePresence>
           </div>
         )}
 
         {/* Quick Presets */}
         {presets.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs font-medium text-[var(--darkroom-text-muted)]">
-                ✨ Quick Presets
-              </span>
-            </div>
-            <div className="quick-presets">
+          <div className="panel-section">
+            <h4 className="panel-heading">
+              <Palette className="w-4 h-4 text-[var(--darkroom-accent)]" />
+              <span>Quick Presets</span>
+            </h4>
+            <div className="presets-grid">
               {presets.map((preset, i) => (
                 <QuickPreset
                   key={i}
@@ -282,23 +266,21 @@ export function RightPanel({
 
         {/* Session History */}
         {history.length > 0 && (
-          <div className="session-history">
+          <div className="panel-section">
             <button
               className="w-full flex items-center justify-between mb-3"
               onClick={() => setShowHistory(!showHistory)}
             >
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[var(--darkroom-text-muted)]" />
-                <span className="text-sm font-medium text-[var(--darkroom-text)]">
-                  Recent Prompts
-                </span>
+              <h4 className="panel-heading mb-0">
+                <History className="w-4 h-4 text-[var(--darkroom-text-muted)]" />
+                <span>Recent Prompts</span>
                 <Badge
                   variant="outline"
-                  className="bg-transparent text-[var(--darkroom-text-muted)] border-[var(--darkroom-border)]"
+                  className="ml-2 bg-transparent text-[var(--darkroom-text-muted)] border-[var(--darkroom-border)]"
                 >
                   {history.length}
                 </Badge>
-              </div>
+              </h4>
               <motion.div
                 animate={{ rotate: showHistory ? 180 : 0 }}
                 transition={{ duration: 0.2 }}
@@ -316,13 +298,18 @@ export function RightPanel({
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden"
                 >
-                  <div className="space-y-1 max-h-[200px] overflow-y-auto">
+                  <div className="history-list max-h-[200px] overflow-y-auto">
                     {history.slice(0, 10).map((item) => (
-                      <HistoryEntry
+                      <button
                         key={item.id}
-                        item={item}
+                        className="history-item"
                         onClick={() => onRestoreFromHistory(item)}
-                      />
+                      >
+                        <span className="flex-1 truncate">{item.prompt}</span>
+                        <span className="text-[10px] text-[var(--darkroom-text-dim)] ml-2">
+                          {formatTimeAgo(item.timestamp)}
+                        </span>
+                      </button>
                     ))}
                   </div>
                 </motion.div>
@@ -335,21 +322,11 @@ export function RightPanel({
         {onSendMessage && (
           <div className="mt-auto pt-6 border-t border-[var(--darkroom-border)]">
             <button
-              className="w-full flex items-center justify-between mb-3"
+              className="chat-toggle"
               onClick={() => setShowChat(!showChat)}
             >
-              <div className="flex items-center gap-2">
-                <MessageCircle className="w-4 h-4 text-[var(--darkroom-accent)]" />
-                <span className="text-sm font-medium text-[var(--darkroom-text)]">
-                  Ask Madison
-                </span>
-              </div>
-              <motion.div
-                animate={{ rotate: showChat ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <ChevronDown className="w-4 h-4 text-[var(--darkroom-text-muted)]" />
-              </motion.div>
+              <MessageCircle className="w-4 h-4" />
+              <span>Chat with Madison</span>
             </button>
 
             <AnimatePresence>
@@ -359,7 +336,7 @@ export function RightPanel({
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
+                  className="overflow-hidden mt-3"
                 >
                   {/* Chat Messages */}
                   {chatMessages && chatMessages.length > 0 && (

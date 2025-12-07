@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wand2, Loader2, Plus, Package } from "lucide-react";
+import { Package, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UploadZone } from "./UploadZone";
 import { ProSettings } from "./ProSettings";
+import { GenerateButton } from "./GenerateButton";
 import type { ProModeSettings } from "./ProSettings";
 import { ProductSelector } from "@/components/forge/ProductSelector";
 import { Product } from "@/hooks/useProducts";
@@ -20,7 +21,7 @@ interface LeftRailProps {
   // Product
   selectedProduct: Product | null;
   onProductSelect: (product: Product | null) => void;
-  
+
   // Images
   productImage: UploadedImage | null;
   onProductImageUpload: (image: UploadedImage | null) => void;
@@ -28,16 +29,16 @@ interface LeftRailProps {
   onBackgroundImageUpload: (image: UploadedImage | null) => void;
   styleReference: UploadedImage | null;
   onStyleReferenceUpload: (image: UploadedImage | null) => void;
-  
+
   // Pro Settings
   proSettings: ProModeSettings;
   onProSettingsChange: (settings: ProModeSettings) => void;
-  
+
   // Generate
   isGenerating: boolean;
   canGenerate: boolean;
   onGenerate: () => void;
-  
+
   // Session info
   sessionCount: number;
   maxImages: number;
@@ -64,33 +65,13 @@ export function LeftRail({
   const [showStyleUpload, setShowStyleUpload] = useState(false);
 
   const proSettingsCount = Object.values(proSettings).filter(Boolean).length;
-  const hasAnyImage = !!productImage || !!backgroundImage || !!styleReference;
-  
-  // Generate dynamic tip
-  const getTip = () => {
-    if (!hasAnyImage && !selectedProduct) {
-      return "💡 Start by uploading a product image or selecting a product";
-    }
-    if (productImage && !backgroundImage) {
-      return "💡 Try adding a background scene for composition";
-    }
-    if (backgroundImage && !styleReference) {
-      return "💡 Add a style reference for lighting & mood";
-    }
-    if (proSettingsCount === 0 && hasAnyImage) {
-      return "💡 Expand Pro Settings for camera & lighting control";
-    }
-    return null;
-  };
-
-  const tip = getTip();
 
   return (
     <aside className="left-rail">
       {/* Section: Product Selection */}
       <div className="left-rail__section">
-        <h3 className="left-rail__section-title">Product Context</h3>
-        
+        <span className="left-rail__section-title">Product Context</span>
+
         {selectedProduct ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -104,19 +85,22 @@ export function LeftRail({
               <p className="text-sm font-medium text-[var(--darkroom-text)] truncate">
                 {selectedProduct.name}
               </p>
-              {selectedProduct.bottle_type && selectedProduct.bottle_type !== 'auto' && (
-                <Badge 
-                  variant="outline" 
-                  className={cn(
-                    "text-[10px] mt-1",
-                    selectedProduct.bottle_type === 'oil' 
-                      ? "bg-green-500/20 border-green-500/50 text-green-400" 
-                      : "bg-blue-500/20 border-blue-500/50 text-blue-400"
-                  )}
-                >
-                  {selectedProduct.bottle_type === 'oil' ? 'Oil Bottle' : 'Spray Bottle'}
-                </Badge>
-              )}
+              {selectedProduct.bottle_type &&
+                selectedProduct.bottle_type !== "auto" && (
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "text-[10px] mt-1",
+                      selectedProduct.bottle_type === "oil"
+                        ? "bg-green-500/20 border-green-500/50 text-green-400"
+                        : "bg-blue-500/20 border-blue-500/50 text-blue-400"
+                    )}
+                  >
+                    {selectedProduct.bottle_type === "oil"
+                      ? "Oil Bottle"
+                      : "Spray Bottle"}
+                  </Badge>
+                )}
             </div>
             <Button
               variant="ghost"
@@ -142,9 +126,9 @@ export function LeftRail({
 
       {/* Section: Image Inputs */}
       <div className="left-rail__section">
-        <h3 className="left-rail__section-title">Reference Images</h3>
-        
-        {/* Primary: Product Image */}
+        <span className="left-rail__section-title">Reference Images</span>
+
+        {/* Primary: Product Image - Always Visible */}
         <UploadZone
           type="product"
           label="📦 Product Image"
@@ -155,68 +139,71 @@ export function LeftRail({
           disabled={isGenerating}
         />
 
-        {/* Secondary: Background Scene */}
-        <AnimatePresence>
-          {!showBackgroundUpload && !backgroundImage ? (
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowBackgroundUpload(true)}
-              className="add-upload-button"
-              disabled={isGenerating}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Background Scene
-            </motion.button>
-          ) : (
-            <UploadZone
-              type="background"
-              label="🌄 Background Scene"
-              description="Composites product into scene"
-              image={backgroundImage}
-              onUpload={onBackgroundImageUpload}
-              onRemove={() => {
-                onBackgroundImageUpload(null);
-                setShowBackgroundUpload(false);
-              }}
-              disabled={isGenerating}
-            />
-          )}
-        </AnimatePresence>
+        {/* Secondary Uploads: Collapsed by Default */}
+        <div className="secondary-uploads space-y-2">
+          {/* Background Scene */}
+          <AnimatePresence>
+            {!showBackgroundUpload && !backgroundImage ? (
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowBackgroundUpload(true)}
+                className="add-upload-button"
+                disabled={isGenerating}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Background Scene
+              </motion.button>
+            ) : (
+              <UploadZone
+                type="background"
+                label="🌄 Background Scene"
+                description="Composites product into scene"
+                image={backgroundImage}
+                onUpload={onBackgroundImageUpload}
+                onRemove={() => {
+                  onBackgroundImageUpload(null);
+                  setShowBackgroundUpload(false);
+                }}
+                disabled={isGenerating}
+              />
+            )}
+          </AnimatePresence>
 
-        {/* Tertiary: Style Reference */}
-        <AnimatePresence>
-          {!showStyleUpload && !styleReference ? (
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowStyleUpload(true)}
-              className="add-upload-button"
-              disabled={isGenerating}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Style Reference
-            </motion.button>
-          ) : (
-            <UploadZone
-              type="style"
-              label="🎨 Style Reference"
-              description="Matches lighting & mood"
-              image={styleReference}
-              onUpload={onStyleReferenceUpload}
-              onRemove={() => {
-                onStyleReferenceUpload(null);
-                setShowStyleUpload(false);
-              }}
-              disabled={isGenerating}
-            />
-          )}
-        </AnimatePresence>
+          {/* Style Reference */}
+          <AnimatePresence>
+            {!showStyleUpload && !styleReference ? (
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowStyleUpload(true)}
+                className="add-upload-button"
+                disabled={isGenerating}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Style Reference
+              </motion.button>
+            ) : (
+              <UploadZone
+                type="style"
+                label="🎨 Style Reference"
+                description="Matches lighting & mood"
+                image={styleReference}
+                onUpload={onStyleReferenceUpload}
+                onRemove={() => {
+                  onStyleReferenceUpload(null);
+                  setShowStyleUpload(false);
+                }}
+                disabled={isGenerating}
+              />
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
-      {/* Section: Pro Settings */}
+      {/* Section: Pro Settings - Collapsible */}
       <div className="left-rail__section">
         <ProSettings
           settings={proSettings}
@@ -226,61 +213,17 @@ export function LeftRail({
       </div>
 
       {/* Generate Button - Sticky Bottom */}
-      <div className="generate-button-container">
-        <motion.button
-          className={cn(
-            "generate-button",
-            isGenerating && "generate-button--generating"
-          )}
-          onClick={onGenerate}
-          disabled={!canGenerate || isGenerating || sessionCount >= maxImages}
-          whileHover={!isGenerating ? { scale: 1.02 } : {}}
-          whileTap={!isGenerating ? { scale: 0.98 } : {}}
-        >
-          {isGenerating ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span>Generating...</span>
-            </>
-          ) : (
-            <>
-              <Wand2 className="w-5 h-5" />
-              <span>
-                {productImage ? "Enhance Image" : "Generate"}
-                {proSettingsCount > 0 && (
-                  <span className="ml-1 text-xs opacity-70">Pro</span>
-                )}
-              </span>
-            </>
-          )}
-        </motion.button>
-
-        {/* Dynamic Tip */}
-        <AnimatePresence>
-          {tip && !isGenerating && (
-            <motion.p
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -5 }}
-              className="generate-button__tip"
-            >
-              {tip}
-            </motion.p>
-          )}
-        </AnimatePresence>
-
-        {/* Session Limit Warning */}
-        {sessionCount >= maxImages && (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-xs text-[var(--darkroom-error)] text-center mt-2"
-          >
-            Session limit reached ({maxImages} images). Save to continue.
-          </motion.p>
-        )}
-      </div>
-
-          </aside>
+      <GenerateButton
+        hasProduct={!!productImage}
+        hasBackground={!!backgroundImage}
+        hasStyle={!!styleReference}
+        proSettingsCount={proSettingsCount}
+        onGenerate={onGenerate}
+        isGenerating={isGenerating}
+        disabled={!canGenerate}
+        sessionCount={sessionCount}
+        maxImages={maxImages}
+      />
+    </aside>
   );
 }

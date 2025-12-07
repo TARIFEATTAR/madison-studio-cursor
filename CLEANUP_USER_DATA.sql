@@ -75,3 +75,4 @@ WHERE id = 'USER_ID_HERE';
 -- Optional: Delete the user entirely (be careful!)
 -- DELETE FROM auth.users WHERE id = 'USER_ID_HERE';
 
+
