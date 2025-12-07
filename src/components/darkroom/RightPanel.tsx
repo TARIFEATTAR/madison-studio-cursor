@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Sparkles,
   Lightbulb,
   Clock,
   ArrowRight,
@@ -11,6 +10,8 @@ import {
   Copy,
   Palette,
   History,
+  Zap,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,12 +84,13 @@ function SuggestionCard({
   onUse: () => void;
 }) {
   const typeConfig = {
-    enhancement: { icon: "✨", label: "Enhancement" },
-    variation: { icon: "🔄", label: "Variation" },
-    creative: { icon: "💡", label: "Creative" },
+    enhancement: { icon: Zap, label: "Enhancement" },
+    variation: { icon: RefreshCw, label: "Variation" },
+    creative: { icon: Lightbulb, label: "Creative" },
   };
 
   const config = typeConfig[suggestion.type];
+  const IconComponent = config.icon;
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -105,7 +107,7 @@ function SuggestionCard({
       whileHover={{ scale: 1.01 }}
     >
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-sm">{config.icon}</span>
+        <IconComponent className="w-3.5 h-3.5 text-[var(--darkroom-accent)]" />
         <span className="text-xs font-medium text-[var(--darkroom-text-muted)]">
           {config.label}
         </span>
@@ -193,9 +195,6 @@ export function RightPanel({
     <aside className="right-panel">
       {/* Madison Header */}
       <div className="madison-header">
-        <div className="right-panel__header-icon">
-          <Sparkles className="w-4 h-4" />
-        </div>
         <h3>Madison</h3>
       </div>
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Camera, Sun, Globe, X, Info } from "lucide-react";
+import { ChevronDown, Camera, Sun, Globe, X, Info, SlidersHorizontal } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -64,7 +64,7 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
         disabled={disabled}
       >
         <div className="pro-settings__title">
-          <span>🎛️</span>
+          <SlidersHorizontal className="w-4 h-4 text-[var(--darkroom-accent)]" />
           <span>Pro Settings</span>
           {activeCount > 0 && (
             <Badge className="pro-settings__badge">{activeCount}</Badge>
@@ -199,7 +199,7 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                   </SelectContent>
                 </Select>
                 <p className="pro-settings__hint">
-                  💡 For image backgrounds, upload a Background Scene
+                  For image backgrounds, upload a Background Scene
                 </p>
               </div>
 
@@ -211,7 +211,7 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                   className="pt-3 border-t border-[var(--darkroom-border)]"
                 >
                   <p className="text-xs text-[var(--darkroom-text-muted)]">
-                    ✨ Your prompt will be enhanced with professional photography specifications.
+                    Your prompt will be enhanced with professional photography specifications.
                   </p>
                 </motion.div>
               )}

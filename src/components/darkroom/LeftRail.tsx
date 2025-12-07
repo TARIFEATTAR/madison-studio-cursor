@@ -131,7 +131,7 @@ export function LeftRail({
         {/* Primary: Product Image - Always Visible */}
         <UploadZone
           type="product"
-          label="📦 Product Image"
+          label="Product Image"
           description="For enhancement & placement"
           image={productImage}
           onUpload={onProductImageUpload}
@@ -158,7 +158,7 @@ export function LeftRail({
             ) : (
               <UploadZone
                 type="background"
-                label="🌄 Background Scene"
+                label="Background Scene"
                 description="Composites product into scene"
                 image={backgroundImage}
                 onUpload={onBackgroundImageUpload}
@@ -188,7 +188,7 @@ export function LeftRail({
             ) : (
               <UploadZone
                 type="style"
-                label="🎨 Style Reference"
+                label="Style Reference"
                 description="Matches lighting & mood"
                 image={styleReference}
                 onUpload={onStyleReferenceUpload}
