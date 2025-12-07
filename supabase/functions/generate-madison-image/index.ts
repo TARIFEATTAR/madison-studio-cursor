@@ -1139,14 +1139,55 @@ serve(async (req) => {
 
     /**
      * -------------------------
-     * 10. Save DB record
+     * 10. Save DB record to generated_images
      * -------------------------
      */
+    
+    // Map goalType to library_category for proper filtering in Image Library
+    // This determines which category tab the image appears under
+    const categoryMap: Record<string, string> = {
+      'product_photography': 'product',
+      'product': 'product',
+      'lifestyle': 'lifestyle',
+      'ecommerce': 'ecommerce',
+      'social_media': 'social',
+      'social': 'social',
+      'editorial': 'editorial',
+      'creative': 'creative',
+      'flat_lay': 'flat_lay',
+      'refinement': 'product', // Refinements inherit parent category or default to product
+      'variation': 'product',  // Variations inherit parent category or default to product
+    };
+    
+    // Infer category from goalType or prompt keywords
+    let libraryCategory = categoryMap[goalType] || 'product';
+    
+    // Smart inference from prompt keywords if goalType doesn't map
+    if (!categoryMap[goalType]) {
+      const promptLower = prompt.toLowerCase();
+      if (promptLower.includes('flat lay') || promptLower.includes('flatlay') || promptLower.includes('overhead')) {
+        libraryCategory = 'flat_lay';
+      } else if (promptLower.includes('lifestyle') || promptLower.includes('real-world') || promptLower.includes('environment')) {
+        libraryCategory = 'lifestyle';
+      } else if (promptLower.includes('ecommerce') || promptLower.includes('e-commerce') || promptLower.includes('product listing')) {
+        libraryCategory = 'ecommerce';
+      } else if (promptLower.includes('social') || promptLower.includes('instagram') || promptLower.includes('facebook') || promptLower.includes('tiktok')) {
+        libraryCategory = 'social';
+      } else if (promptLower.includes('editorial') || promptLower.includes('magazine') || promptLower.includes('cinematic')) {
+        libraryCategory = 'editorial';
+      } else if (promptLower.includes('artistic') || promptLower.includes('creative') || promptLower.includes('abstract')) {
+        libraryCategory = 'creative';
+      }
+    }
+    
+    console.log(`[generate-madison-image] Library category: ${libraryCategory} (from goalType: ${goalType})`);
+    
     const insertPayload: Record<string, unknown> = {
       organization_id: resolvedOrgId,
       user_id: userId,
       session_id: sessionId,
       goal_type: goalType,
+      library_category: libraryCategory, // For Image Library filtering
       aspect_ratio: aspectRatio,
       output_format: outputFormat,
       final_prompt: enhancedPrompt,
@@ -1189,109 +1230,16 @@ serve(async (req) => {
 
     /**
      * -------------------------
-     * 11. Automatically save to Recipe Library (prompts table)
+     * 11. NOTE: Images are saved to generated_images table ONLY
      * -------------------------
+     * Previously, images were also saved to the prompts table, but this caused
+     * them to appear in both Archives and Image Library. Now images only go to
+     * generated_images table and the Image Library reads from there directly.
+     * 
+     * The prompts table is for TEXT prompts/recipes, not generated images.
      */
-    if (savedImage?.id && userId) {
-      try {
-        console.log("[generate-madison-image] Attempting to save recipe to prompts table...");
-        
-        // Generate a descriptive title based on the prompt
-        const promptPreview = prompt.length > 50 
-          ? prompt.substring(0, 50).trim() + "..." 
-          : prompt.trim();
-        const recipeTitle = `Image Recipe - ${promptPreview}`;
-
-        // Map goalType to image category for Recipe Library organization
-        // Categories match IMAGE_CATEGORIES: product, lifestyle, ecommerce, social, editorial, creative, flat_lay
-        const categoryMap: Record<string, string> = {
-          'product_photography': 'product',
-          'lifestyle': 'lifestyle',
-          'ecommerce': 'ecommerce',
-          'social_media': 'social',
-          'editorial': 'editorial',
-          'creative': 'creative',
-          'flat_lay': 'flat_lay',
-        };
-
-        // Infer category from prompt if goalType doesn't map directly
-        let inferredCategory = categoryMap[goalType] || 'product'; // Default to product
-        
-        // Smart inference from prompt keywords
-        const promptLower = prompt.toLowerCase();
-        if (!categoryMap[goalType]) {
-          if (promptLower.includes('flat lay') || promptLower.includes('flatlay') || promptLower.includes('overhead')) {
-            inferredCategory = 'flat_lay';
-          } else if (promptLower.includes('lifestyle') || promptLower.includes('real-world') || promptLower.includes('environment')) {
-            inferredCategory = 'lifestyle';
-          } else if (promptLower.includes('ecommerce') || promptLower.includes('e-commerce') || promptLower.includes('product listing')) {
-            inferredCategory = 'ecommerce';
-          } else if (promptLower.includes('social') || promptLower.includes('instagram') || promptLower.includes('facebook')) {
-            inferredCategory = 'social';
-          } else if (promptLower.includes('editorial') || promptLower.includes('magazine') || promptLower.includes('cinematic')) {
-            inferredCategory = 'editorial';
-          } else if (promptLower.includes('artistic') || promptLower.includes('creative') || promptLower.includes('artistic')) {
-            inferredCategory = 'creative';
-          }
-        }
-
-        console.log(`[generate-madison-image] Inferred category: ${inferredCategory}`);
-
-        // Create prompt entry in Recipe Library
-        const { error: promptError } = await supabase
-          .from("prompts")
-          .insert([
-            {
-              title: recipeTitle,
-              prompt_text: enhancedPrompt, // Use the final enhanced prompt
-              content_type: "visual",
-              collection: "General", // Default collection, user can change later
-              category: inferredCategory, // Image type category for filtering
-              organization_id: resolvedOrgId,
-              created_by: userId,
-              is_template: true,
-              deliverable_format: "image_prompt",
-              generated_image_id: savedImage.id,
-              image_source: "generated",
-              image_url: imageUrl,
-              additional_context: {
-                aspect_ratio: aspectRatio,
-                output_format: outputFormat,
-                image_type: goalType, // Keep original goalType for reference
-                category: inferredCategory, // Also store in context for backward compatibility
-                mode: isDirectorMode ? "Director" : "Essential",
-                pro_mode_controls: proModeControls || null,
-                reference_images_count: actualReferenceImages.length,
-                is_refinement: isRefinement,
-                refinement_instruction: isRefinement ? refinementInstruction : null,
-                parent_image_id: isRefinement ? parentImageId : null,
-                chain_depth: isRefinement ? 1 : 0,
-              },
-              is_auto_saved: true, // Mark as auto-saved
-            },
-          ]);
-
-        if (promptError) {
-          console.error(
-            `[generate-madison-image] ❌ Failed to save recipe to library:`,
-            JSON.stringify(promptError)
-          );
-          // Don't throw - image generation succeeded, recipe save is secondary
-        } else {
-          console.log(
-            `[generate-madison-image] ✅ Recipe automatically saved to library for image ${savedImage.id}`
-          );
-        }
-      } catch (recipeError) {
-        console.error(
-          `[generate-madison-image] ❌ Error saving recipe (non-fatal):`,
-          recipeError
-        );
-        // Continue - don't fail the entire request if recipe save fails
-      }
-    } else {
-      console.warn("[generate-madison-image] Skipping recipe save: Missing savedImage.id or userId", { savedImageId: savedImage?.id, userId });
-    }
+    console.log(`[generate-madison-image] ✅ Image saved to generated_images table: ${savedImage?.id}`);
+    console.log(`[generate-madison-image] Image will appear in Image Library via generated_images table`);
 
     /**
      * -------------------------
