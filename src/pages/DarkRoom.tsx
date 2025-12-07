@@ -267,6 +267,16 @@ export default function DarkRoom() {
         aiProvider: proSettings.aiProvider || "auto",
         resolution: proSettings.resolution || "standard",
       });
+      console.log("🌑 Full payload being sent:", JSON.stringify({
+        prompt: effectivePrompt,
+        userId: user.id,
+        organizationId: orgId,
+        sessionId,
+        goalType: "product_photography",
+        aspectRatio: proSettings.aspectRatio || "1:1",
+        aiProvider: proSettings.aiProvider || "auto",
+        resolution: proSettings.resolution || "standard",
+      }, null, 2));
 
       // Call the edge function
       const { data, error } = await supabase.functions.invoke("generate-madison-image", {
@@ -297,7 +307,8 @@ export default function DarkRoom() {
 
       if (error) {
         console.error("❌ Generation error:", error);
-        const errorMsg = error.message || error.toString();
+        console.error("❌ Error details:", JSON.stringify(error, null, 2));
+        const errorMsg = error.message || error.context?.body || error.toString();
 
         if (errorMsg.includes("Rate limit") || error.status === 429) {
           toast.error("Rate limit reached", {
