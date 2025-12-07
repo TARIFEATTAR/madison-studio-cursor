@@ -168,6 +168,11 @@ export default function ImageLibrary() {
       imageUrl: image.image_url,
       prompt: image.final_prompt || "",
       isSaved: true,
+      // Pass additional metadata
+      goalType: image.goal_type || undefined,
+      aspectRatio: image.aspect_ratio || undefined,
+      createdAt: image.created_at,
+      sessionName: image.session_name || undefined,
     });
     setImageEditorOpen(true);
   };

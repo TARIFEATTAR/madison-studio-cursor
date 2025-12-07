@@ -58,6 +58,11 @@ export interface ImageEditorImage {
   imageUrl: string;
   prompt: string;
   isSaved?: boolean;
+  // Additional metadata
+  goalType?: string;
+  aspectRatio?: string;
+  createdAt?: string;
+  sessionName?: string;
 }
 
 export interface ImageEditorModalProps {
@@ -129,10 +134,20 @@ export function ImageEditorModal({
       const { data, error } = await supabase.functions.invoke("generate-madison-image", {
         body: {
           prompt: refinementPrompt,
-          referenceImageUrl: image.imageUrl,
+          // Pass as referenceImages array (correct format for edge function)
+          referenceImages: [{
+            url: image.imageUrl,
+            label: "product",
+            description: "Image to refine"
+          }],
           userId: user.id,
           organizationId: orgId,
           goalType: "refinement",
+          aspectRatio: image.aspectRatio || "1:1",
+          parentImageId: image.id,
+          isRefinement: true,
+          refinementInstruction: refinementPrompt,
+          parentPrompt: image.prompt,
         },
       });
 
@@ -140,7 +155,7 @@ export function ImageEditorModal({
 
       if (data?.imageUrl) {
         const newImage: ImageEditorImage = {
-          id: data.imageId || uuidv4(),
+          id: data.savedImageId || uuidv4(),
           imageUrl: data.imageUrl,
           prompt: refinementPrompt,
           isSaved: true,
@@ -197,16 +212,23 @@ export function ImageEditorModal({
           const { data, error } = await supabase.functions.invoke("generate-madison-image", {
             body: {
               prompt,
-              referenceImageUrl: image.imageUrl,
+              // Pass as referenceImages array (correct format for edge function)
+              referenceImages: [{
+                url: image.imageUrl,
+                label: "product",
+                description: "Source image for variation"
+              }],
               userId: user.id,
               organizationId: orgId,
               goalType: "variation",
+              aspectRatio: image.aspectRatio || "1:1",
+              parentImageId: image.id,
             },
           });
 
           if (error) throw error;
           return {
-            id: placeholders[index].id,
+            id: data?.savedImageId || placeholders[index].id,
             imageUrl: data?.imageUrl || "",
             isGenerating: false,
           };
