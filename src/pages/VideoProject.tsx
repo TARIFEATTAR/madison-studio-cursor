@@ -82,7 +82,7 @@ export interface VideoTemplate {
   scenes: Omit<VideoScene, "id" | "imageUrl" | "imageId">[];
 }
 
-export interface VideoProject {
+export interface VideoProjectType {
   id: string;
   name: string;
   templateId: string;
@@ -162,7 +162,7 @@ export default function VideoProject() {
   const [selectedTemplate, setSelectedTemplate] = useState<VideoTemplate | null>(null);
 
   // Project state
-  const [project, setProject] = useState<VideoProject | null>(null);
+  const [project, setProject] = useState<VideoProjectType | null>(null);
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
 
   // Generation state
@@ -176,6 +176,43 @@ export default function VideoProject() {
   const [variations, setVariations] = useState<VideoVariation[]>([]);
   const [selectedVariationId, setSelectedVariationId] = useState<string | null>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
+
+  // Check for starting image from Light Table navigation
+  useEffect(() => {
+    const state = location.state as { 
+      startingImage?: { url: string; id: string; prompt: string } 
+    } | undefined;
+    
+    if (state?.startingImage) {
+      // Auto-select "Product Reveal" template and add the image to scene 1
+      const template = VIDEO_TEMPLATES.find((t) => t.id === "product-reveal") || VIDEO_TEMPLATES[0];
+      
+      const newProject: VideoProjectType = {
+        id: uuidv4(),
+        name: `Video from Dark Room - ${new Date().toLocaleDateString()}`,
+        templateId: template.id,
+        scenes: template.scenes.map((scene, index) => ({
+          ...scene,
+          id: uuidv4(),
+          imageUrl: index === 0 ? state.startingImage.url : null,
+          imageId: index === 0 ? state.startingImage.id : null,
+        })),
+        aspectRatio: "9:16",
+        totalDuration: template.defaultDuration,
+        createdAt: new Date(),
+        status: "draft",
+      };
+
+      setSelectedTemplate(template);
+      setProject(newProject);
+      setActiveSceneId(newProject.scenes[0].id);
+      setStep("edit");
+      
+      toast.success("Image added to Scene 1", {
+        description: "Select images for remaining scenes to generate video.",
+      });
+    }
+  }, [location.state]);
 
   // Derived values
   const activeScene = useMemo(
@@ -192,7 +229,7 @@ export default function VideoProject() {
   const handleSelectTemplate = useCallback((template: VideoTemplate) => {
     setSelectedTemplate(template);
     
-    const newProject: VideoProject = {
+    const newProject: VideoProjectType = {
       id: uuidv4(),
       name: `${template.name} - ${new Date().toLocaleDateString()}`,
       templateId: template.id,

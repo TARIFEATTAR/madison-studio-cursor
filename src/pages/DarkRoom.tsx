@@ -27,6 +27,7 @@ import {
   DarkRoomHeader,
   MobileBottomSheet,
   MobileTabBar,
+  LightTable,
 } from "@/components/darkroom";
 import type { ProModeSettings, MobileTab } from "@/components/darkroom";
 
@@ -149,6 +150,9 @@ export default function DarkRoom() {
   const [mobileTab, setMobileTab] = useState<MobileTab>("canvas");
   const [inputsSheetOpen, setInputsSheetOpen] = useState(false);
   const [madisonSheetOpen, setMadisonSheetOpen] = useState(false);
+
+  // Light Table state
+  const [lightTableCollapsed, setLightTableCollapsed] = useState(false);
 
   // Session
   const [sessionId] = useState(() => uuidv4());
@@ -425,6 +429,55 @@ export default function DarkRoom() {
     toast.info("Edit your prompt and regenerate to refine");
   }, []);
 
+  // Light Table: Open image in editor modal (Phase 2)
+  const handleOpenInEditor = useCallback((image: GeneratedImage) => {
+    // TODO: Phase 2 - Open Image Editor Modal
+    // For now, navigate to the legacy image editor with state
+    navigate("/image-editor", {
+      state: {
+        loadedImage: image.imageUrl,
+        loadedPrompt: image.prompt,
+        imageId: image.id,
+      },
+    });
+    toast.info("Opening in Image Editor...");
+  }, [navigate]);
+
+  // Light Table: Create video from image
+  const handleCreateVideo = useCallback((image: GeneratedImage) => {
+    // Navigate to Video Project with this image as the starting point
+    navigate("/video-project", {
+      state: {
+        startingImage: {
+          url: image.imageUrl,
+          id: image.id,
+          prompt: image.prompt,
+        },
+      },
+    });
+    toast.success("Starting video project...");
+  }, [navigate]);
+
+  // Light Table: Save selected images
+  const handleSaveSelectedImages = useCallback(async (ids: string[]) => {
+    // Images are already saved on generation, just update local state
+    setImages((prev) =>
+      prev.map((img) =>
+        ids.includes(img.id) ? { ...img, isSaved: true } : img
+      )
+    );
+    toast.success(`${ids.length} image(s) saved to library`);
+  }, []);
+
+  // Light Table: Delete selected images
+  const handleDeleteSelectedImages = useCallback((ids: string[]) => {
+    setImages((prev) => prev.filter((img) => !ids.includes(img.id)));
+    if (heroImageId && ids.includes(heroImageId)) {
+      setHeroImageId(null);
+    }
+    toast.success(`${ids.length} image(s) removed from session`);
+  }, [heroImageId]);
+
   const handleUseSuggestion = useCallback((suggestion: Suggestion) => {
     setPrompt(suggestion.text);
     toast.success("Suggestion applied");
@@ -539,20 +592,37 @@ export default function DarkRoom() {
           newlyGeneratedId={newlyGeneratedId}
         />
 
-        {/* Right Panel: Madison Assistant (Desktop only) */}
+        {/* Right Panel: Light Table + Madison Assistant (Desktop only) */}
         {!isMobile && (
-          <RightPanel
-            suggestions={suggestions}
-            onUseSuggestion={handleUseSuggestion}
-            presets={DEFAULT_PRESETS}
-            onApplyPreset={handleApplyPreset}
-            history={history}
-            onRestoreFromHistory={handleRestoreFromHistory}
-            hasProduct={!!productImage}
-            hasBackground={!!backgroundImage}
-            hasStyle={!!styleReference}
-            proSettingsCount={proSettingsCount}
-          />
+          <div className="dark-room-right-column">
+            {/* Light Table - Session Images */}
+            <LightTable
+              images={images}
+              selectedImageId={heroImageId}
+              onSelectImage={setHeroImageId}
+              onOpenEditor={handleOpenInEditor}
+              onSaveSelected={handleSaveSelectedImages}
+              onDeleteSelected={handleDeleteSelectedImages}
+              onCreateVideo={handleCreateVideo}
+              isSaving={isSaving}
+              isCollapsed={lightTableCollapsed}
+              onToggleCollapse={() => setLightTableCollapsed((prev) => !prev)}
+            />
+
+            {/* Madison Assistant */}
+            <RightPanel
+              suggestions={suggestions}
+              onUseSuggestion={handleUseSuggestion}
+              presets={DEFAULT_PRESETS}
+              onApplyPreset={handleApplyPreset}
+              history={history}
+              onRestoreFromHistory={handleRestoreFromHistory}
+              hasProduct={!!productImage}
+              hasBackground={!!backgroundImage}
+              hasStyle={!!styleReference}
+              proSettingsCount={proSettingsCount}
+            />
+          </div>
         )}
       </div>
 
