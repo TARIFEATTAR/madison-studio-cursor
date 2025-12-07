@@ -877,44 +877,116 @@ serve(async (req) => {
 
     /**
      * -------------------------
-     * 9. Determine Provider & Generate Image
+     * 9. Check Subscription Tier & Determine Provider
      * -------------------------
+     * 
+     * TIER ACCESS:
+     * - Essentials ($49): Gemini only
+     * - Signature ($99): Gemini + Freepik Flux Pro (limited)
+     * - Signature+ ($199+): Full Freepik (Mystic 4K, Video, etc.)
+     * 
+     * FALLBACK: Freepik fails → Gemini
      */
+    
+    // Fetch organization's subscription tier
+    let subscriptionTier = "essentials"; // Default to lowest tier
+    let freepikAllowed = false;
+    let freepik4KAllowed = false;
+    let freepikVideoAllowed = false;
+    
+    try {
+      const { data: orgData } = await supabase
+        .from("organizations")
+        .select("subscription_tier, stripe_subscription_status")
+        .eq("id", resolvedOrgId)
+        .single();
+      
+      if (orgData) {
+        subscriptionTier = (orgData.subscription_tier || "essentials").toLowerCase();
+        const isActive = orgData.stripe_subscription_status === "active" || 
+                        orgData.stripe_subscription_status === "trialing";
+        
+        // Determine Freepik access based on tier
+        if (isActive || subscriptionTier === "free_trial") {
+          if (subscriptionTier === "signature" || subscriptionTier === "signature_plus" || 
+              subscriptionTier === "enterprise" || subscriptionTier === "signature+") {
+            freepikAllowed = true;
+          }
+          if (subscriptionTier === "signature_plus" || subscriptionTier === "enterprise" || 
+              subscriptionTier === "signature+") {
+            freepik4KAllowed = true;
+            freepikVideoAllowed = true;
+          }
+        }
+      }
+    } catch (tierError) {
+      console.warn("Could not fetch subscription tier, defaulting to Gemini:", tierError);
+    }
+    
+    console.log(`📊 Subscription Tier Check:`, {
+      tier: subscriptionTier,
+      freepikAllowed,
+      freepik4KAllowed,
+      requestedProvider: provider,
+    });
+
     // Generate a random seed for variety (0-4294967295, max 32-bit integer)
     const randomSeed = Math.floor(Math.random() * 4294967295);
 
-    // Determine which provider to use
+    // Determine which provider to use based on tier and request
     let selectedProvider: "gemini" | "freepik" = "gemini";
+    let tierRestrictionApplied = false;
     
-    if (provider === "freepik") {
-      selectedProvider = "freepik";
+    if (provider === "freepik" || freepikModel) {
+      // User explicitly requested Freepik
+      if (freepikAllowed) {
+        // Check if they're requesting 4K (requires higher tier)
+        if (freepikResolution === "4k" && !freepik4KAllowed) {
+          console.log("⚠️ 4K requested but not allowed on this tier, downgrading to 2K");
+          tierRestrictionApplied = true;
+          selectedProvider = "freepik";
+        } else {
+          selectedProvider = "freepik";
+        }
+      } else {
+        // Freepik not allowed on this tier - fall back to Gemini
+        console.log("⚠️ Freepik requested but not available on Essentials tier, using Gemini");
+        tierRestrictionApplied = true;
+      }
     } else if (provider === "auto") {
-      // Auto-selection logic:
-      // - Use Freepik for 4K resolution requests
-      // - Use Freepik if explicitly requested via freepikModel
-      // - Default to Gemini (better for reference image composition)
-      if (freepikResolution === "4k" || freepikModel) {
+      // Auto-selection: Use Gemini by default (better for reference images)
+      // Only use Freepik if explicitly beneficial AND allowed
+      if (freepikAllowed && freepikResolution === "4k" && freepik4KAllowed) {
         selectedProvider = "freepik";
       }
+      // Otherwise default to Gemini
     }
+    // provider === "gemini" → stays as gemini
 
     let imageUrl: string;
     let usedProvider: string = selectedProvider;
+    let didFallback = false;
 
     if (selectedProvider === "freepik") {
       /**
        * FREEPIK GENERATION PATH
        */
+      // Ensure resolution is allowed
+      const effectiveResolution = (freepikResolution === "4k" && !freepik4KAllowed) 
+        ? "2k" 
+        : (freepikResolution || "2k");
+      
       console.log("🎨 Using Freepik for image generation...", {
         model: freepikModel || "mystic",
-        resolution: freepikResolution || "2k",
+        resolution: effectiveResolution,
+        tierRestrictionApplied,
       });
 
       try {
         const freepikResult = await generateFreepikImage({
           prompt: enhancedPrompt,
           model: (freepikModel as FreepikModel) || "mystic",
-          resolution: (freepikResolution as FreepikResolution) || "2k",
+          resolution: effectiveResolution as FreepikResolution,
           aspectRatio: aspectRatio as any,
           seed: randomSeed,
         });
@@ -930,6 +1002,7 @@ serve(async (req) => {
         console.error("❌ Freepik generation failed, falling back to Gemini:", freepikError);
         // Fall back to Gemini
         selectedProvider = "gemini";
+        didFallback = true;
       }
     }
 
@@ -973,13 +1046,16 @@ serve(async (req) => {
         .getPublicUrl(filename);
 
       imageUrl = urlData.publicUrl;
-      usedProvider = "gemini";
+      usedProvider = didFallback ? "gemini (fallback)" : "gemini";
 
-      console.log(`✅ Gemini Image Generated Successfully`);
+      console.log(`✅ Gemini Image Generated Successfully`, { didFallback });
     }
 
     console.log(`✅ Image Generation Complete`, {
       provider: usedProvider,
+      subscriptionTier,
+      didFallback,
+      tierRestrictionApplied,
       mode: isDirectorMode ? "Director Mode" : "Essential Mode",
       promptLength: enhancedPrompt.length,
       referencesUsed: referenceImagesPayload.length,

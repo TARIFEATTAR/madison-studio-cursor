@@ -89,8 +89,12 @@ export interface FreepikCompletedTask {
   data: {
     task_id: string;
     status: "COMPLETED";
-    generated?: Array<{ url: string; content_type: string }>;
+    // Mystic returns URLs as string array directly
+    generated?: string[];
+    // Some endpoints return result object
     result?: { url: string };
+    // Video endpoints may have different structure
+    video?: { url: string };
   };
 }
 
@@ -246,9 +250,12 @@ export async function generateWithMystic(
   // Poll for completion
   const completed = await pollForCompletion("/mystic", taskId);
   
-  const imageUrl = completed.data.generated?.[0]?.url;
-  if (!imageUrl) {
-    throw new Error("No image URL in Mystic response");
+  console.log(`[Freepik] Mystic completed response:`, JSON.stringify(completed.data, null, 2));
+  
+  // Mystic returns generated as string array directly (not objects with url property)
+  const imageUrl = completed.data.generated?.[0];
+  if (!imageUrl || typeof imageUrl !== 'string') {
+    throw new Error(`No image URL in Mystic response. Got: ${JSON.stringify(completed.data.generated)}`);
   }
 
   return { imageUrl, taskId };
@@ -288,9 +295,12 @@ export async function generateWithFlux(
   // Poll for completion
   const completed = await pollForCompletion(`/text-to-image/${model}`, taskId);
   
-  const imageUrl = completed.data.generated?.[0]?.url;
-  if (!imageUrl) {
-    throw new Error("No image URL in Flux response");
+  console.log(`[Freepik] Flux completed response:`, JSON.stringify(completed.data, null, 2));
+  
+  // Flux also returns generated as string array directly
+  const imageUrl = completed.data.generated?.[0];
+  if (!imageUrl || typeof imageUrl !== 'string') {
+    throw new Error(`No image URL in Flux response. Got: ${JSON.stringify(completed.data.generated)}`);
   }
 
   return { imageUrl, taskId };
@@ -360,9 +370,12 @@ export async function generateVideo(
     3000 // Longer interval
   );
 
-  const videoUrl = completed.data.generated?.[0]?.url || completed.data.result?.url;
-  if (!videoUrl) {
-    throw new Error("No video URL in response");
+  console.log(`[Freepik] Video completed response:`, JSON.stringify(completed.data, null, 2));
+  
+  // Video may return URL in different formats depending on endpoint version
+  const videoUrl = completed.data.generated?.[0] || completed.data.result?.url || completed.data.video?.url;
+  if (!videoUrl || typeof videoUrl !== 'string') {
+    throw new Error(`No video URL in response. Got: ${JSON.stringify(completed.data)}`);
   }
 
   return { videoUrl, taskId };

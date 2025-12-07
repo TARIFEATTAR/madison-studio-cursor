@@ -95,6 +95,49 @@ serve(async (req) => {
       );
     }
 
+    /**
+     * Check subscription tier - Video requires Signature+ or higher
+     */
+    let videoAllowed = false;
+    let subscriptionTier = "essentials";
+    
+    try {
+      const { data: orgData } = await supabase
+        .from("organizations")
+        .select("subscription_tier, stripe_subscription_status")
+        .eq("id", resolvedOrgId)
+        .single();
+      
+      if (orgData) {
+        subscriptionTier = (orgData.subscription_tier || "essentials").toLowerCase();
+        const isActive = orgData.stripe_subscription_status === "active" || 
+                        orgData.stripe_subscription_status === "trialing";
+        
+        // Video requires Signature+ or Enterprise
+        if (isActive || subscriptionTier === "free_trial") {
+          if (subscriptionTier === "signature_plus" || subscriptionTier === "enterprise" || 
+              subscriptionTier === "signature+") {
+            videoAllowed = true;
+          }
+        }
+      }
+    } catch (tierError) {
+      console.warn("Could not fetch subscription tier:", tierError);
+    }
+
+    console.log(`📊 Video Tier Check:`, { tier: subscriptionTier, videoAllowed });
+
+    if (!videoAllowed) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Video generation requires Signature+ plan or higher",
+          tier: subscriptionTier,
+          upgrade_required: true
+        }),
+        { status: 403, headers: corsHeaders }
+      );
+    }
+
     // Build motion prompt with product photography context
     const enhancedPrompt = buildVideoPrompt(prompt, cameraFixed);
 
