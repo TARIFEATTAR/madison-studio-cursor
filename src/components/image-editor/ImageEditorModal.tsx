@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import {
   X,
   ArrowLeft,
@@ -39,19 +40,10 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentOrganizationId } from "@/hooks/useIndustryConfig";
-
-// Styles
-import "@/styles/image-editor-modal.css";
 
 export interface ImageEditorImage {
   id: string;
@@ -334,335 +326,379 @@ export function ImageEditorModal({
   if (!image) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="image-editor-modal">
-        <DialogHeader className="image-editor-modal__header">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="image-editor-modal__back-btn"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to {source === "library" ? "Library" : "Dark Room"}
-          </Button>
-          <DialogTitle className="image-editor-modal__title">
-            Image Editor
-          </DialogTitle>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="image-editor-modal__close-btn"
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </DialogHeader>
-
-        <div className="image-editor-modal__content">
-          {/* Main Image Preview */}
-          <div className="image-editor-modal__preview">
-            <motion.div
-              className="image-editor-modal__image-container"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
-              <img
-                src={displayedImage}
-                alt="Selected image"
-                className="image-editor-modal__image"
-              />
+    <DialogPrimitive.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogPrimitive.Portal>
+        {/* Custom overlay without the conflicting default close button */}
+        <DialogPrimitive.Overlay className="fixed inset-0 z-[1100] bg-black/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        
+        <DialogPrimitive.Content className={cn(
+          // Base styles
+          "fixed z-[1101] bg-[#1a1816] border border-[rgba(184,149,106,0.2)] shadow-2xl",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+          // Desktop: Centered modal with constrained size
+          "md:left-[50%] md:top-[50%] md:translate-x-[-50%] md:translate-y-[-50%] md:w-[95vw] md:max-w-[1000px] md:max-h-[90vh] md:rounded-2xl",
+          "md:data-[state=closed]:zoom-out-95 md:data-[state=open]:zoom-in-95",
+          // Mobile: Full screen for better UX
+          "inset-0 w-full h-full max-h-full rounded-none",
+          "md:inset-auto md:h-auto"
+        )}>
+          <div className="flex flex-col h-full md:h-auto md:max-h-[90vh]">
+            {/* Custom Header */}
+            <div className="shrink-0 flex items-center justify-between px-4 md:px-5 py-3 md:py-4 bg-[#252220] border-b border-[rgba(184,149,106,0.15)]">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="text-[rgba(245,240,230,0.7)] hover:text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.1)] text-xs md:text-sm"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1 md:mr-2" />
+                <span className="hidden sm:inline">Back to {source === "library" ? "Library" : "Dark Room"}</span>
+                <span className="sm:hidden">Back</span>
+              </Button>
               
-              {/* Text Overlay Preview (if set) */}
-              {textOverlay.headline && (
-                <div className={cn(
-                  "image-editor-modal__text-overlay",
-                  `image-editor-modal__text-overlay--${textOverlay.position}`
-                )}>
-                  {textOverlay.headline && (
-                    <h2 className="image-editor-modal__text-headline">
-                      {textOverlay.headline}
-                    </h2>
-                  )}
-                  {textOverlay.subtext && (
-                    <p className="image-editor-modal__text-subtext">
-                      {textOverlay.subtext}
-                    </p>
-                  )}
-                </div>
-              )}
-            </motion.div>
-
-            {/* Quick Actions */}
-            <div className="image-editor-modal__quick-actions">
+              <DialogPrimitive.Title className="font-serif text-lg md:text-xl font-medium text-[#f5f0e6] absolute left-1/2 -translate-x-1/2">
+                Image Editor
+              </DialogPrimitive.Title>
+              
               <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCopyPrompt}
-                className="image-editor-modal__action-btn"
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                className="text-[rgba(245,240,230,0.5)] hover:text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.1)]"
               >
-                <Copy className="w-4 h-4 mr-2" />
-                Copy Prompt
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownload}
-                className="image-editor-modal__action-btn"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download
-              </Button>
-              <Button
-                variant="brass"
-                size="sm"
-                onClick={handleCreateVideo}
-                className="image-editor-modal__action-btn"
-              >
-                <Film className="w-4 h-4 mr-2" />
-                Create Video
+                <X className="w-4 h-4" />
               </Button>
             </div>
-          </div>
 
-          {/* Editor Panel */}
-          <div className="image-editor-modal__panel">
-            {/* Tabs */}
-            <div className="image-editor-modal__tabs">
-              <button
-                className={cn(
-                  "image-editor-modal__tab",
-                  activeTab === "refine" && "image-editor-modal__tab--active"
-                )}
-                onClick={() => setActiveTab("refine")}
+            {/* Main Content */}
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-[1fr_320px] min-h-0 overflow-hidden">
+            {/* Main Image Preview */}
+            <div className="flex flex-col p-3 md:p-6 bg-[#0f0e0d] md:border-r border-b md:border-b-0 border-[rgba(184,149,106,0.1)] overflow-hidden min-h-[200px] md:min-h-0">
+              <motion.div
+                className="relative flex-1 flex items-center justify-center bg-[#0a0908] rounded-xl overflow-hidden min-h-0"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
               >
-                <Wand2 className="w-4 h-4" />
-                <span>Refine</span>
-              </button>
-              <button
-                className={cn(
-                  "image-editor-modal__tab",
-                  activeTab === "variations" && "image-editor-modal__tab--active"
-                )}
-                onClick={() => setActiveTab("variations")}
-              >
-                <ImageIcon className="w-4 h-4" />
-                <span>Variations</span>
-              </button>
-              <button
-                className={cn(
-                  "image-editor-modal__tab",
-                  activeTab === "text" && "image-editor-modal__tab--active"
-                )}
-                onClick={() => setActiveTab("text")}
-              >
-                <Type className="w-4 h-4" />
-                <span>Text</span>
-              </button>
-            </div>
-
-            {/* Tab Content */}
-            <div className="image-editor-modal__tab-content">
-              {/* Refine Tab */}
-              {activeTab === "refine" && (
-                <motion.div
-                  className="image-editor-modal__refine"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <label className="image-editor-modal__label">
-                    Describe what you'd like to change
-                  </label>
-                  <Textarea
-                    value={refinementPrompt}
-                    onChange={(e) => setRefinementPrompt(e.target.value)}
-                    placeholder="e.g., Make the lighting warmer, add more shadows, zoom in on the product..."
-                    className="image-editor-modal__textarea"
-                    rows={4}
-                  />
-                  <Button
-                    variant="brass"
-                    onClick={handleRefine}
-                    disabled={isGenerating || !refinementPrompt.trim()}
-                    className="image-editor-modal__generate-btn"
-                  >
-                    {isGenerating ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Wand2 className="w-4 h-4 mr-2" />
+                <img
+                  src={displayedImage}
+                  alt="Selected image"
+                  className="max-w-full max-h-full object-contain rounded-lg"
+                />
+                
+                {/* Text Overlay Preview (if set) */}
+                {textOverlay.headline && (
+                  <div className={cn(
+                    "absolute left-0 right-0 px-4 md:px-6 py-3 md:py-4 text-center pointer-events-none",
+                    textOverlay.position === "top" && "top-0 bg-gradient-to-b from-black/70 to-transparent",
+                    textOverlay.position === "center" && "top-1/2 -translate-y-1/2 bg-black/50",
+                    textOverlay.position === "bottom" && "bottom-0 bg-gradient-to-t from-black/70 to-transparent"
+                  )}>
+                    {textOverlay.headline && (
+                      <h2 className="font-serif text-xl md:text-2xl font-semibold text-white drop-shadow-lg">
+                        {textOverlay.headline}
+                      </h2>
                     )}
-                    {isGenerating ? "Generating..." : "Refine Image"}
-                  </Button>
-
-                  {/* Original Prompt Display */}
-                  <div className="image-editor-modal__original-prompt">
-                    <span className="image-editor-modal__prompt-label">Original prompt:</span>
-                    <p className="image-editor-modal__prompt-text">{image.prompt}</p>
+                    {textOverlay.subtext && (
+                      <p className="text-sm md:text-base text-white/85 drop-shadow-md mt-1">
+                        {textOverlay.subtext}
+                      </p>
+                    )}
                   </div>
-                </motion.div>
-              )}
+                )}
+              </motion.div>
 
-              {/* Variations Tab */}
-              {activeTab === "variations" && (
-                <motion.div
-                  className="image-editor-modal__variations"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+              {/* Quick Actions - Stack on mobile, row on desktop */}
+              <div className="grid grid-cols-3 md:flex md:flex-wrap md:justify-center gap-2 md:gap-3 mt-3 md:mt-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCopyPrompt}
+                  className="h-10 md:h-9 border border-[rgba(184,149,106,0.4)] bg-transparent text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.15)] hover:text-[#f5f0e6] hover:border-[#b8956a] text-xs md:text-sm"
                 >
-                  <div className="image-editor-modal__variations-header">
-                    <h4>Style Variations</h4>
+                  <Copy className="w-4 h-4 md:mr-2" />
+                  <span className="hidden md:inline">Copy Prompt</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDownload}
+                  className="h-10 md:h-9 border border-[rgba(184,149,106,0.4)] bg-transparent text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.15)] hover:text-[#f5f0e6] hover:border-[#b8956a] text-xs md:text-sm"
+                >
+                  <Download className="w-4 h-4 md:mr-2" />
+                  <span className="hidden md:inline">Download</span>
+                </Button>
+                <Button
+                  variant="brass"
+                  size="sm"
+                  onClick={handleCreateVideo}
+                  className="h-10 md:h-9 text-xs md:text-sm"
+                >
+                  <Film className="w-4 h-4 md:mr-2" />
+                  <span className="hidden md:inline">Create Video</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Editor Panel */}
+            <div className="flex flex-col bg-[#1a1816] overflow-hidden min-h-0">
+              {/* Tabs */}
+              <div className="shrink-0 flex border-b border-[rgba(184,149,106,0.15)]">
+                <button
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-2 text-xs md:text-sm transition-all",
+                    activeTab === "refine"
+                      ? "text-[#b8956a] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_#b8956a]"
+                      : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
+                  )}
+                  onClick={() => setActiveTab("refine")}
+                >
+                  <Wand2 className="w-4 h-4" />
+                  <span>Refine</span>
+                </button>
+                <button
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-2 text-xs md:text-sm transition-all",
+                    activeTab === "variations"
+                      ? "text-[#b8956a] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_#b8956a]"
+                      : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
+                  )}
+                  onClick={() => setActiveTab("variations")}
+                >
+                  <ImageIcon className="w-4 h-4" />
+                  <span>Variations</span>
+                </button>
+                <button
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-2 text-xs md:text-sm transition-all",
+                    activeTab === "text"
+                      ? "text-[#b8956a] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_#b8956a]"
+                      : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
+                  )}
+                  onClick={() => setActiveTab("text")}
+                >
+                  <Type className="w-4 h-4" />
+                  <span>Text</span>
+                </button>
+              </div>
+
+              {/* Tab Content - Scrollable */}
+              <div className="flex-1 overflow-y-auto p-4 md:p-5 min-h-0">
+                {/* Refine Tab */}
+                {activeTab === "refine" && (
+                  <motion.div
+                    className="flex flex-col gap-4"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    <label className="text-sm font-medium text-[rgba(245,240,230,0.7)]">
+                      Describe what you'd like to change
+                    </label>
+                    <Textarea
+                      value={refinementPrompt}
+                      onChange={(e) => setRefinementPrompt(e.target.value)}
+                      placeholder="e.g., Make the lighting warmer, add more shadows, zoom in on the product..."
+                      className="bg-[rgba(26,24,22,0.8)] border-[rgba(184,149,106,0.2)] text-[#f5f0e6] placeholder:text-[rgba(245,240,230,0.4)] focus:border-[#b8956a] focus:ring-1 focus:ring-[rgba(184,149,106,0.2)] resize-none"
+                      rows={4}
+                    />
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleGenerateVariations}
-                      disabled={isGenerating}
+                      variant="brass"
+                      onClick={handleRefine}
+                      disabled={isGenerating || !refinementPrompt.trim()}
+                      className="w-full"
                     >
                       {isGenerating ? (
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       ) : (
-                        <Plus className="w-4 h-4 mr-2" />
+                        <Wand2 className="w-4 h-4 mr-2" />
                       )}
-                      Generate
+                      {isGenerating ? "Generating..." : "Refine Image"}
                     </Button>
-                  </div>
 
-                  {/* Original + Variations Grid */}
-                  <div className="image-editor-modal__variations-grid">
-                    {/* Original Image */}
-                    <button
-                      className={cn(
-                        "image-editor-modal__variation-item",
-                        !selectedVariationId && "image-editor-modal__variation-item--selected"
-                      )}
-                      onClick={() => setSelectedVariationId(null)}
-                    >
-                      <img src={image.imageUrl} alt="Original" />
-                      {!selectedVariationId && (
-                        <div className="image-editor-modal__variation-selected">
-                          <Check className="w-4 h-4" />
-                        </div>
-                      )}
-                      <span className="image-editor-modal__variation-label">Original</span>
-                    </button>
+                    {/* Original Prompt Display */}
+                    <div className="mt-2 p-3 bg-[rgba(26,24,22,0.5)] rounded-lg border border-[rgba(184,149,106,0.1)]">
+                      <span className="text-[0.65rem] uppercase tracking-wider text-[rgba(184,149,106,0.6)]">
+                        Original prompt:
+                      </span>
+                      <p className="text-[0.75rem] text-[rgba(245,240,230,0.6)] mt-1 leading-relaxed">
+                        {image.prompt}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
 
-                    {/* Generated Variations */}
-                    {variations.map((variation, index) => (
-                      <button
-                        key={variation.id}
-                        className={cn(
-                          "image-editor-modal__variation-item",
-                          selectedVariationId === variation.id && "image-editor-modal__variation-item--selected"
-                        )}
-                        onClick={() => !variation.isGenerating && setSelectedVariationId(variation.id)}
-                        disabled={variation.isGenerating}
+                {/* Variations Tab */}
+                {activeTab === "variations" && (
+                  <motion.div
+                    className="flex flex-col gap-4"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-medium text-[#f5f0e6]">Style Variations</h4>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleGenerateVariations}
+                        disabled={isGenerating}
+                        className="border border-[rgba(184,149,106,0.4)] bg-transparent text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.15)] hover:text-[#f5f0e6] hover:border-[#b8956a]"
                       >
-                        {variation.isGenerating ? (
-                          <div className="image-editor-modal__variation-loading">
-                            <Loader2 className="w-6 h-6 animate-spin" />
-                          </div>
+                        {isGenerating ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         ) : (
-                          <>
-                            <img src={variation.imageUrl} alt={`Variation ${index + 1}`} />
-                            {selectedVariationId === variation.id && (
-                              <div className="image-editor-modal__variation-selected">
-                                <Check className="w-4 h-4" />
-                              </div>
-                            )}
-                          </>
+                          <Plus className="w-4 h-4 mr-2" />
                         )}
-                        <span className="image-editor-modal__variation-label">
-                          {variation.isGenerating ? "Generating..." : `V${index + 1}`}
+                        Generate
+                      </Button>
+                    </div>
+
+                    {/* Original + Variations Grid */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Original Image */}
+                      <button
+                        className={cn(
+                          "relative aspect-square rounded-lg overflow-hidden border-2 bg-[#0f0e0d] cursor-pointer transition-all",
+                          !selectedVariationId
+                            ? "border-[#b8956a] shadow-[0_0_0_2px_rgba(184,149,106,0.2)]"
+                            : "border-transparent hover:border-[rgba(184,149,106,0.3)]"
+                        )}
+                        onClick={() => setSelectedVariationId(null)}
+                      >
+                        <img src={image.imageUrl} alt="Original" className="w-full h-full object-cover" />
+                        {!selectedVariationId && (
+                          <div className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-[#b8956a] rounded-full">
+                            <Check className="w-4 h-4 text-[#1a1816]" />
+                          </div>
+                        )}
+                        <span className="absolute bottom-2 left-2 text-[0.65rem] font-semibold text-white bg-black/60 px-1.5 py-0.5 rounded">
+                          Original
                         </span>
                       </button>
-                    ))}
-                  </div>
 
-                  {variations.length === 0 && !isGenerating && (
-                    <p className="image-editor-modal__variations-empty">
-                      Click "Generate" to create style variations of this image
-                    </p>
-                  )}
-                </motion.div>
-              )}
-
-              {/* Text Tab */}
-              {activeTab === "text" && (
-                <motion.div
-                  className="image-editor-modal__text-editor"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <div className="image-editor-modal__text-field">
-                    <label>Headline</label>
-                    <input
-                      type="text"
-                      value={textOverlay.headline}
-                      onChange={(e) => setTextOverlay((prev) => ({ ...prev, headline: e.target.value }))}
-                      placeholder="Enter headline text..."
-                      className="image-editor-modal__text-input"
-                    />
-                  </div>
-                  
-                  <div className="image-editor-modal__text-field">
-                    <label>Subtext</label>
-                    <input
-                      type="text"
-                      value={textOverlay.subtext}
-                      onChange={(e) => setTextOverlay((prev) => ({ ...prev, subtext: e.target.value }))}
-                      placeholder="Enter subtext..."
-                      className="image-editor-modal__text-input"
-                    />
-                  </div>
-
-                  <div className="image-editor-modal__text-field">
-                    <label>Position</label>
-                    <div className="image-editor-modal__position-btns">
-                      {(["top", "center", "bottom"] as const).map((pos) => (
+                      {/* Generated Variations */}
+                      {variations.map((variation, index) => (
                         <button
-                          key={pos}
+                          key={variation.id}
                           className={cn(
-                            "image-editor-modal__position-btn",
-                            textOverlay.position === pos && "image-editor-modal__position-btn--active"
+                            "relative aspect-square rounded-lg overflow-hidden border-2 bg-[#0f0e0d] cursor-pointer transition-all",
+                            selectedVariationId === variation.id
+                              ? "border-[#b8956a] shadow-[0_0_0_2px_rgba(184,149,106,0.2)]"
+                              : "border-transparent hover:border-[rgba(184,149,106,0.3)]"
                           )}
-                          onClick={() => setTextOverlay((prev) => ({ ...prev, position: pos }))}
+                          onClick={() => !variation.isGenerating && setSelectedVariationId(variation.id)}
+                          disabled={variation.isGenerating}
                         >
-                          {pos.charAt(0).toUpperCase() + pos.slice(1)}
+                          {variation.isGenerating ? (
+                            <div className="w-full h-full flex items-center justify-center text-[#b8956a]">
+                              <Loader2 className="w-6 h-6 animate-spin" />
+                            </div>
+                          ) : (
+                            <>
+                              <img src={variation.imageUrl} alt={`Variation ${index + 1}`} className="w-full h-full object-cover" />
+                              {selectedVariationId === variation.id && (
+                                <div className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-[#b8956a] rounded-full">
+                                  <Check className="w-4 h-4 text-[#1a1816]" />
+                                </div>
+                              )}
+                            </>
+                          )}
+                          <span className="absolute bottom-2 left-2 text-[0.65rem] font-semibold text-white bg-black/60 px-1.5 py-0.5 rounded">
+                            {variation.isGenerating ? "Generating..." : `V${index + 1}`}
+                          </span>
                         </button>
                       ))}
                     </div>
-                  </div>
 
-                  <p className="image-editor-modal__text-note">
-                    Text will be rendered on the image when you export
-                  </p>
-                </motion.div>
-              )}
-            </div>
+                    {variations.length === 0 && !isGenerating && (
+                      <p className="text-sm text-[rgba(245,240,230,0.4)] text-center py-8">
+                        Click "Generate" to create style variations of this image
+                      </p>
+                    )}
+                  </motion.div>
+                )}
 
-            {/* Footer Actions */}
-            <div className="image-editor-modal__footer">
-              {!image.isSaved && (
-                <Button
-                  variant="outline"
-                  onClick={handleSave}
-                  disabled={isSaving}
-                >
-                  {isSaving ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Save className="w-4 h-4 mr-2" />
-                  )}
-                  Save to Library
+                {/* Text Tab */}
+                {activeTab === "text" && (
+                  <motion.div
+                    className="flex flex-col gap-4"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[0.75rem] font-medium text-[rgba(245,240,230,0.7)]">Headline</label>
+                      <input
+                        type="text"
+                        value={textOverlay.headline}
+                        onChange={(e) => setTextOverlay((prev) => ({ ...prev, headline: e.target.value }))}
+                        placeholder="Enter headline text..."
+                        className="bg-[rgba(26,24,22,0.8)] border border-[rgba(184,149,106,0.2)] rounded-lg px-3.5 py-2.5 text-[#f5f0e6] text-sm placeholder:text-[rgba(245,240,230,0.4)] focus:outline-none focus:border-[#b8956a] focus:ring-1 focus:ring-[rgba(184,149,106,0.2)] transition-all"
+                      />
+                    </div>
+                    
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[0.75rem] font-medium text-[rgba(245,240,230,0.7)]">Subtext</label>
+                      <input
+                        type="text"
+                        value={textOverlay.subtext}
+                        onChange={(e) => setTextOverlay((prev) => ({ ...prev, subtext: e.target.value }))}
+                        placeholder="Enter subtext..."
+                        className="bg-[rgba(26,24,22,0.8)] border border-[rgba(184,149,106,0.2)] rounded-lg px-3.5 py-2.5 text-[#f5f0e6] text-sm placeholder:text-[rgba(245,240,230,0.4)] focus:outline-none focus:border-[#b8956a] focus:ring-1 focus:ring-[rgba(184,149,106,0.2)] transition-all"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[0.75rem] font-medium text-[rgba(245,240,230,0.7)]">Position</label>
+                      <div className="flex gap-2">
+                        {(["top", "center", "bottom"] as const).map((pos) => (
+                          <button
+                            key={pos}
+                            className={cn(
+                              "flex-1 py-2 px-3 bg-[rgba(26,24,22,0.8)] border rounded-md text-[0.75rem] transition-all",
+                              textOverlay.position === pos
+                                ? "border-[#b8956a] bg-[rgba(184,149,106,0.15)] text-[#b8956a]"
+                                : "border-[rgba(184,149,106,0.2)] text-[rgba(245,240,230,0.6)] hover:border-[rgba(184,149,106,0.4)] hover:text-[rgba(245,240,230,0.8)]"
+                            )}
+                            onClick={() => setTextOverlay((prev) => ({ ...prev, position: pos }))}
+                          >
+                            {pos.charAt(0).toUpperCase() + pos.slice(1)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <p className="text-[0.7rem] text-[rgba(245,240,230,0.4)] mt-2">
+                      Text will be rendered on the image when you export
+                    </p>
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Footer Actions - Stack on mobile */}
+              <div className="shrink-0 flex flex-col sm:flex-row gap-2 sm:gap-3 px-4 md:px-5 py-3 md:py-4 border-t border-[rgba(184,149,106,0.15)] bg-[#252220]">
+                {!image.isSaved && (
+                  <Button
+                    variant="ghost"
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="flex-1 h-11 sm:h-10 border border-[rgba(184,149,106,0.4)] bg-transparent text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.15)] hover:text-[#f5f0e6] hover:border-[#b8956a]"
+                  >
+                    {isSaving ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4 mr-2" />
+                    )}
+                    Save to Library
+                  </Button>
+                )}
+                <Button variant="brass" onClick={handleDownload} className="flex-1 h-11 sm:h-10">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
                 </Button>
-              )}
-              <Button variant="brass" onClick={handleDownload}>
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+          </div>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 }

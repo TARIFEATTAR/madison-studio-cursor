@@ -259,9 +259,9 @@ export default function ImageLibrary() {
     <div className="min-h-screen bg-[#0A0908]">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[#0A0908]/95 backdrop-blur-sm border-b border-[#2F2A26]">
-        <div className="container mx-auto px-6 py-6">
-          {/* Title */}
-          <div className="flex items-center justify-between mb-6">
+        <div className="container mx-auto px-6 py-6 space-y-5">
+          {/* Title Row */}
+          <div className="flex items-start justify-between">
             <div>
               <h1 className="font-serif text-3xl text-[#F5F1E8]">Image Library</h1>
               <p className="text-sm text-[#F5F1E8]/60 mt-1">
@@ -277,96 +277,100 @@ export default function ImageLibrary() {
             </Button>
           </div>
 
+          {/* Search Bar - Full Width */}
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#F5F1E8]/40 transition-colors group-focus-within:text-[#B8956A]" />
+            <Input
+              placeholder="Search images by name, prompt, or category..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 py-2.5 bg-[#1A1816] border-[#2F2A26] text-[#F5F1E8] placeholder:text-[#F5F1E8]/40 focus:border-[#B8956A] focus:ring-2 focus:ring-[#B8956A]/20"
+            />
+          </div>
+
           {/* Filters Row */}
-          <div className="flex flex-wrap items-center gap-4">
-            {/* Search */}
-            <div className="relative flex-1 min-w-[200px] max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#F5F1E8]/40" />
-              <Input
-                placeholder="Search images..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-[#1A1816] border-[#2F2A26] text-[#F5F1E8] placeholder:text-[#F5F1E8]/40"
-              />
+          <div className="flex items-center justify-between gap-4">
+            {/* Left: Category + Sort */}
+            <div className="flex items-center gap-2">
+              <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as CategoryFilter)}>
+                <SelectTrigger className="w-[150px] bg-[#1A1816] border-[#2F2A26] text-[#F5F1E8] text-sm">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1A1816] border-[#2F2A26]">
+                  <SelectItem value="all" className="text-[#F5F1E8]">All Categories</SelectItem>
+                  <SelectItem value="product" className="text-[#F5F1E8]">Product</SelectItem>
+                  <SelectItem value="lifestyle" className="text-[#F5F1E8]">Lifestyle</SelectItem>
+                  <SelectItem value="ecommerce" className="text-[#F5F1E8]">E-commerce</SelectItem>
+                  <SelectItem value="social" className="text-[#F5F1E8]">Social</SelectItem>
+                  <SelectItem value="editorial" className="text-[#F5F1E8]">Editorial</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                <SelectTrigger className="w-[130px] bg-[#1A1816] border-[#2F2A26] text-[#F5F1E8] text-sm">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1A1816] border-[#2F2A26]">
+                  <SelectItem value="recent" className="text-[#F5F1E8]">Most Recent</SelectItem>
+                  <SelectItem value="oldest" className="text-[#F5F1E8]">Oldest First</SelectItem>
+                  <SelectItem value="category" className="text-[#F5F1E8]">By Category</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            {/* Category Filter */}
-            <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as CategoryFilter)}>
-              <SelectTrigger className="w-[150px] bg-[#1A1816] border-[#2F2A26] text-[#F5F1E8]">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent className="bg-[#1A1816] border-[#2F2A26]">
-                <SelectItem value="all" className="text-[#F5F1E8]">All Categories</SelectItem>
-                <SelectItem value="product" className="text-[#F5F1E8]">Product</SelectItem>
-                <SelectItem value="lifestyle" className="text-[#F5F1E8]">Lifestyle</SelectItem>
-                <SelectItem value="ecommerce" className="text-[#F5F1E8]">E-commerce</SelectItem>
-                <SelectItem value="social" className="text-[#F5F1E8]">Social</SelectItem>
-                <SelectItem value="editorial" className="text-[#F5F1E8]">Editorial</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Sort */}
-            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-              <SelectTrigger className="w-[140px] bg-[#1A1816] border-[#2F2A26] text-[#F5F1E8]">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent className="bg-[#1A1816] border-[#2F2A26]">
-                <SelectItem value="recent" className="text-[#F5F1E8]">Most Recent</SelectItem>
-                <SelectItem value="oldest" className="text-[#F5F1E8]">Oldest First</SelectItem>
-                <SelectItem value="category" className="text-[#F5F1E8]">By Category</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* View Mode */}
-            <div className="flex items-center gap-1 bg-[#1A1816] border border-[#2F2A26] rounded-md p-1">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={cn(
-                  "p-2 rounded transition-colors",
-                  viewMode === "grid"
-                    ? "bg-[#B8956A]/20 text-[#B8956A]"
-                    : "text-[#F5F1E8]/60 hover:text-[#F5F1E8]"
-                )}
-              >
-                <Grid3X3 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode("masonry")}
-                className={cn(
-                  "p-2 rounded transition-colors",
-                  viewMode === "masonry"
-                    ? "bg-[#B8956A]/20 text-[#B8956A]"
-                    : "text-[#F5F1E8]/60 hover:text-[#F5F1E8]"
-                )}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Bulk Actions */}
-            {selectedImages.size > 0 && (
-              <div className="flex items-center gap-2 ml-auto">
-                <Badge variant="outline" className="border-[#B8956A] text-[#B8956A]">
-                  {selectedImages.size} selected
-                </Badge>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedImages(new Set())}
-                  className="border-[#2F2A26] text-[#F5F1E8]/60"
+            {/* Right: View Mode + Bulk Actions */}
+            <div className="flex items-center gap-3">
+              {/* View Mode Toggle */}
+              <div className="flex items-center bg-[#1A1816] border border-[#2F2A26] rounded-lg p-0.5">
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={cn(
+                    "h-8 w-8 flex items-center justify-center rounded-md transition-colors",
+                    viewMode === "grid"
+                      ? "bg-[#B8956A]/20 text-[#B8956A]"
+                      : "text-[#F5F1E8]/60 hover:text-[#F5F1E8]"
+                  )}
                 >
-                  <X className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleBulkArchive}
+                  <Grid3X3 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode("masonry")}
+                  className={cn(
+                    "h-8 w-8 flex items-center justify-center rounded-md transition-colors",
+                    viewMode === "masonry"
+                      ? "bg-[#B8956A]/20 text-[#B8956A]"
+                      : "text-[#F5F1E8]/60 hover:text-[#F5F1E8]"
+                  )}
                 >
-                  <Trash2 className="w-4 h-4 mr-1" />
-                  Archive
-                </Button>
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
               </div>
-            )}
+
+              {/* Bulk Actions */}
+              {selectedImages.size > 0 && (
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="border-[#B8956A] text-[#B8956A]">
+                    {selectedImages.size} selected
+                  </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedImages(new Set())}
+                    className="border-[#2F2A26] text-[#F5F1E8]/60"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleBulkArchive}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Archive
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -19,6 +19,7 @@ import { MadisonSplitEditor } from "@/components/library/MadisonSplitEditor";
 import { EmailSequenceEditor } from "@/components/library/EmailSequenceEditor";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { logger } from "@/lib/logger";
+import { contentTypeMatchesFilter } from "@/config/libraryContentTypes";
 
 // Image Editor Modal for generated images
 import { ImageEditorModal, type ImageEditorImage } from "@/components/image-editor/ImageEditorModal";
@@ -110,9 +111,9 @@ export default function Library() {
       );
     }
 
-    // Filter by content type
+    // Filter by content type (supports grouped filters like "all_emails")
     if (selectedContentType !== "all") {
-      filtered = filtered.filter(c => c.contentType === selectedContentType);
+      filtered = filtered.filter(c => contentTypeMatchesFilter(c.contentType, selectedContentType));
     }
 
     // Filter by status (draft, scheduled, published)
@@ -579,7 +580,12 @@ export default function Library() {
                       type="checkbox"
                       checked={selectedItems.size === filteredContent.length && filteredContent.length > 0}
                       onChange={handleSelectAll}
-                      className="w-4 h-4 rounded border-border text-brass focus:ring-brass"
+                      className="w-5 h-5 rounded border-2 border-border/60 bg-transparent text-brand-brass focus:ring-brand-brass focus:ring-offset-0 cursor-pointer appearance-none checked:bg-brand-brass checked:border-brand-brass"
+                      style={{
+                        backgroundImage: selectedItems.size === filteredContent.length && filteredContent.length > 0
+                          ? `url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e")`
+                          : 'none'
+                      }}
                     />
                     <span className="text-sm text-muted-foreground">
                       {selectedItems.size > 0 
