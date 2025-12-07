@@ -325,54 +325,58 @@ const Auth = () => {
 
   // Mode selection buttons component
   const AuthModeSelector = () => (
-    <div className="flex gap-2 mb-6">
+    <div className="flex gap-2 mb-4 sm:mb-6">
       <button
         type="button"
         onClick={() => { setAuthMode('signin'); setResetMode(false); }}
-        className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
+        className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
           authMode === 'signin'
-            ? 'bg-foreground text-background shadow-sm'
+            ? 'bg-brand-ink text-brand-parchment shadow-sm'
             : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
         }`}
       >
-        <LogIn className="w-4 h-4" />
+        <LogIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         Sign In
       </button>
       <button
         type="button"
         onClick={() => { setAuthMode('signup'); setSignupSuccess(false); }}
-        className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
+        className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
           authMode === 'signup'
-            ? 'bg-foreground text-background shadow-sm'
+            ? 'bg-brand-ink text-brand-parchment shadow-sm'
             : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
         }`}
       >
-        <UserPlus className="w-4 h-4" />
+        <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         Create Account
       </button>
     </div>
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 bg-gradient-to-b from-background to-muted/20">
+    <div className="min-h-screen min-h-[100dvh] flex items-center justify-center px-4 sm:px-6 py-8 bg-gradient-to-b from-background to-muted/20">
       <div className="w-full max-w-md">
         {/* Logo & Tagline */}
-        <div className="text-center mb-8 fade-enter">
-          <img src={maddiLogo} alt="Madison" className="h-40 w-auto mx-auto mb-4" />
-          <p className="text-muted-foreground">
+        <div className="text-center mb-6 sm:mb-8 fade-enter">
+          <img 
+            src={maddiLogo} 
+            alt="Madison" 
+            className="h-24 sm:h-32 md:h-40 w-auto mx-auto mb-3 sm:mb-4" 
+          />
+          <p className="text-sm sm:text-base text-muted-foreground">
             Where brands craft their narrative
           </p>
         </div>
 
-        <div className="card-matte p-8 rounded-xl border border-border/40 shadow-lg fade-enter">
+        <div className="bg-card/80 backdrop-blur-sm p-5 sm:p-8 rounded-xl border border-border/40 shadow-lg fade-enter">
           {/* Google Sign In - Always visible at top */}
           <Button 
             onClick={handleGoogleSignIn} 
             variant="outline" 
-            className="w-full mb-6 h-12 gap-3 text-base font-medium hover:bg-muted/50 transition-colors" 
+            className="w-full mb-4 sm:mb-6 h-11 sm:h-12 gap-2 sm:gap-3 text-sm sm:text-base font-medium hover:bg-muted/50 transition-colors" 
             disabled={loading}
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24">
               <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
               <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -382,12 +386,12 @@ const Auth = () => {
           </Button>
 
           {/* Divider */}
-          <div className="relative mb-6">
+          <div className="relative mb-4 sm:mb-6">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-border/60" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-3 text-muted-foreground tracking-wider">or</span>
+              <span className="bg-card/80 px-3 text-muted-foreground tracking-wider">or</span>
             </div>
           </div>
 
@@ -425,14 +429,14 @@ const Auth = () => {
                       />
                     </div>
                   </div>
-                  <Button type="submit" className="w-full h-11 btn-craft" disabled={loading}>
+                  <Button type="submit" variant="brass" className="w-full h-10 sm:h-11" disabled={loading}>
                     {loading ? "Sending..." : "Send Reset Link"}
                   </Button>
                 </form>
               ) : (
-                <form onSubmit={handleSignIn} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-email" className="text-sm font-medium">Email address</Label>
+                <form onSubmit={handleSignIn} className="space-y-3 sm:space-y-4">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="signin-email" className="text-xs sm:text-sm font-medium">Email address</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input 
@@ -441,14 +445,14 @@ const Auth = () => {
                         value={email} 
                         onChange={(e) => setEmail(e.target.value)} 
                         required 
-                        className="pl-10 h-11"
+                        className="pl-10 h-10 sm:h-11 text-sm"
                         placeholder="you@example.com"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-password" className="text-sm font-medium">Password</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="signin-password" className="text-xs sm:text-sm font-medium">Password</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input 
@@ -457,7 +461,7 @@ const Auth = () => {
                         value={password} 
                         onChange={(e) => setPassword(e.target.value)} 
                         required 
-                        className="pl-10 pr-10 h-11"
+                        className="pl-10 pr-10 h-10 sm:h-11 text-sm"
                         placeholder="••••••••"
                       />
                       <button
@@ -470,24 +474,24 @@ const Auth = () => {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full h-11 btn-craft" disabled={loading}>
+                  <Button type="submit" variant="brass" className="w-full h-10 sm:h-11" disabled={loading}>
                     {loading ? "Signing in..." : "Sign In"}
                   </Button>
 
-                  <div className="flex items-center justify-between pt-2">
+                  <div className="flex items-center justify-between pt-2 gap-2">
                     <button 
                       type="button" 
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors" 
+                      className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors" 
                       onClick={() => setResetMode(true)}
                     >
                       Forgot password?
                     </button>
                     <button 
                       type="button" 
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1" 
+                      className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1" 
                       onClick={() => setAuthMode('magic')}
                     >
-                      <Sparkles className="w-3.5 h-3.5" />
+                      <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       Use magic link
                     </button>
                   </div>
@@ -549,9 +553,9 @@ const Auth = () => {
                   </Button>
                 </div>
               ) : (
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email" className="text-sm font-medium">Email address</Label>
+                <form onSubmit={handleSignUp} className="space-y-3 sm:space-y-4">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="signup-email" className="text-xs sm:text-sm font-medium">Email address</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
@@ -560,14 +564,14 @@ const Auth = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
-                        className="pl-10 h-11"
+                        className="pl-10 h-10 sm:h-11 text-sm"
                         placeholder="you@example.com"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password" className="text-sm font-medium">Create password</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="signup-password" className="text-xs sm:text-sm font-medium">Create password</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
@@ -576,7 +580,7 @@ const Auth = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="pl-10 pr-10 h-11"
+                        className="pl-10 pr-10 h-10 sm:h-11 text-sm"
                         placeholder="8+ characters"
                       />
                       <button
@@ -589,11 +593,11 @@ const Auth = () => {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full h-11 btn-craft" disabled={loading}>
+                  <Button type="submit" variant="brass" className="w-full h-10 sm:h-11" disabled={loading}>
                     {loading ? "Creating account..." : "Create Account"}
                   </Button>
 
-                  <p className="text-xs text-center text-muted-foreground pt-2">
+                  <p className="text-[10px] sm:text-xs text-center text-muted-foreground pt-2">
                     By creating an account, you agree to our{" "}
                     <a href="/terms" className="underline hover:text-foreground">Terms</a>
                     {" "}and{" "}
@@ -655,7 +659,7 @@ const Auth = () => {
                       />
                     </div>
                   </div>
-                  <Button type="submit" className="w-full h-11 btn-craft" disabled={loading}>
+                  <Button type="submit" variant="brass" className="w-full h-10 sm:h-11" disabled={loading}>
                     {loading ? "Sending..." : "Send Magic Link"}
                   </Button>
                 </form>
