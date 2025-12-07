@@ -31,6 +31,9 @@ import {
 } from "@/components/darkroom";
 import type { ProModeSettings, MobileTab } from "@/components/darkroom";
 
+// Image Editor Modal
+import { ImageEditorModal, type ImageEditorImage } from "@/components/image-editor/ImageEditorModal";
+
 // Hook to detect mobile
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
@@ -153,6 +156,10 @@ export default function DarkRoom() {
 
   // Light Table state
   const [lightTableCollapsed, setLightTableCollapsed] = useState(false);
+
+  // Image Editor Modal state
+  const [editorModalOpen, setEditorModalOpen] = useState(false);
+  const [editorImage, setEditorImage] = useState<ImageEditorImage | null>(null);
 
   // Session
   const [sessionId] = useState(() => uuidv4());
@@ -431,17 +438,14 @@ export default function DarkRoom() {
 
   // Light Table: Open image in editor modal (Phase 2)
   const handleOpenInEditor = useCallback((image: GeneratedImage) => {
-    // TODO: Phase 2 - Open Image Editor Modal
-    // For now, navigate to the legacy image editor with state
-    navigate("/image-editor", {
-      state: {
-        loadedImage: image.imageUrl,
-        loadedPrompt: image.prompt,
-        imageId: image.id,
-      },
+    setEditorImage({
+      id: image.id,
+      imageUrl: image.imageUrl,
+      prompt: image.prompt,
+      isSaved: image.isSaved,
     });
-    toast.info("Opening in Image Editor...");
-  }, [navigate]);
+    setEditorModalOpen(true);
+  }, []);
 
   // Light Table: Create video from image
   const handleCreateVideo = useCallback((image: GeneratedImage) => {
@@ -700,6 +704,38 @@ export default function DarkRoom() {
           />
         </MobileBottomSheet>
       )}
+
+      {/* Image Editor Modal */}
+      <ImageEditorModal
+        isOpen={editorModalOpen}
+        onClose={() => {
+          setEditorModalOpen(false);
+          setEditorImage(null);
+        }}
+        image={editorImage}
+        onSave={(savedImage) => {
+          // Update the image in our local state
+          setImages((prev) =>
+            prev.map((img) =>
+              img.id === savedImage.id ? { ...img, isSaved: true } : img
+            )
+          );
+        }}
+        onImageGenerated={(newImage) => {
+          // Add the newly generated refinement to our session
+          const generatedImage: GeneratedImage = {
+            id: newImage.id,
+            imageUrl: newImage.imageUrl,
+            prompt: newImage.prompt,
+            timestamp: Date.now(),
+            isSaved: true,
+          };
+          setImages((prev) => [...prev, generatedImage]);
+          // Update editor to show the new image
+          setEditorImage(newImage);
+        }}
+        source="darkroom"
+      />
     </div>
   );
 }

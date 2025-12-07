@@ -45,6 +45,7 @@
     "@types/dompurify": "^3.2.0",
     "@types/react-beautiful-dnd": "^13.1.8",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "@untitledui/icons": "^0.0.19",
     "ai": "^5.0.93",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
