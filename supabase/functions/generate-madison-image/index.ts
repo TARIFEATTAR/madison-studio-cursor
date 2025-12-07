@@ -1188,44 +1188,12 @@ serve(async (req) => {
      * -------------------------
      */
     
-    // Map goalType to library_category for proper filtering in Image Library
-    // This determines which category tab the image appears under
-    const categoryMap: Record<string, string> = {
-      'product_photography': 'product',
-      'product': 'product',
-      'lifestyle': 'lifestyle',
-      'ecommerce': 'ecommerce',
-      'social_media': 'social',
-      'social': 'social',
-      'editorial': 'editorial',
-      'creative': 'creative',
-      'flat_lay': 'flat_lay',
-      'refinement': 'product', // Refinements inherit parent category or default to product
-      'variation': 'product',  // Variations inherit parent category or default to product
-    };
+    // library_category is constrained to: 'content', 'marketplace', or 'both'
+    // Use 'content' as default for all generated images (they go to Image Library)
+    // The goal_type field stores the detailed category (product, lifestyle, etc.)
+    const libraryCategory = 'content';
     
-    // Infer category from goalType or prompt keywords
-    let libraryCategory = categoryMap[goalType] || 'product';
-    
-    // Smart inference from prompt keywords if goalType doesn't map
-    if (!categoryMap[goalType]) {
-      const promptLower = prompt.toLowerCase();
-      if (promptLower.includes('flat lay') || promptLower.includes('flatlay') || promptLower.includes('overhead')) {
-        libraryCategory = 'flat_lay';
-      } else if (promptLower.includes('lifestyle') || promptLower.includes('real-world') || promptLower.includes('environment')) {
-        libraryCategory = 'lifestyle';
-      } else if (promptLower.includes('ecommerce') || promptLower.includes('e-commerce') || promptLower.includes('product listing')) {
-        libraryCategory = 'ecommerce';
-      } else if (promptLower.includes('social') || promptLower.includes('instagram') || promptLower.includes('facebook') || promptLower.includes('tiktok')) {
-        libraryCategory = 'social';
-      } else if (promptLower.includes('editorial') || promptLower.includes('magazine') || promptLower.includes('cinematic')) {
-        libraryCategory = 'editorial';
-      } else if (promptLower.includes('artistic') || promptLower.includes('creative') || promptLower.includes('abstract')) {
-        libraryCategory = 'creative';
-      }
-    }
-    
-    console.log(`[generate-madison-image] Library category: ${libraryCategory} (from goalType: ${goalType})`);
+    console.log(`[generate-madison-image] Library category: ${libraryCategory}, goal_type: ${goalType}`);
     
     const insertPayload: Record<string, unknown> = {
       organization_id: resolvedOrgId,

@@ -137,10 +137,10 @@ export default function ImageLibrary() {
       );
     }
 
-    // Filter by category
+    // Filter by category (use goal_type for detailed categorization)
     if (categoryFilter !== "all") {
       result = result.filter((img) =>
-        img.library_category?.toLowerCase().includes(categoryFilter)
+        img.goal_type?.toLowerCase().includes(categoryFilter)
       );
     }
 
@@ -493,17 +493,17 @@ export default function ImageLibrary() {
                       </DropdownMenu>
                     </div>
 
-                    {/* Category Badge */}
-                    {image.library_category && (
+                    {/* Category Badge - use goal_type for display */}
+                    {image.goal_type && (
                       <div className="absolute bottom-2 left-2">
                         <Badge
                           variant="outline"
                           className={cn(
                             "text-xs capitalize",
-                            getCategoryBadgeColor(image.library_category)
+                            getCategoryBadgeColor(image.goal_type)
                           )}
                         >
-                          {image.library_category}
+                          {image.goal_type.replace(/_/g, ' ')}
                         </Badge>
                       </div>
                     )}
