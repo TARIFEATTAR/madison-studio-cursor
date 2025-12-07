@@ -1,4 +1,4 @@
-import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu, ShoppingBag, Store, Image, Mail, ChevronDown, Palette, FolderOpen, BookOpen, HelpCircle, Compass, Sparkles } from "lucide-react";
+import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu, ShoppingBag, Store, Image, Mail, ChevronDown, Palette, FolderOpen, BookOpen, HelpCircle, Compass, Sparkles, Camera } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,6 +50,7 @@ export function AppSidebar() {
       { url: "/create" },
       { url: "/multiply" },
       { url: "/image-editor" },
+      { url: "/darkroom" },
       // { url: "/email-builder" }, // Temporarily hidden for launch
     ];
     const libraryItems = [
@@ -97,6 +98,7 @@ export function AppSidebar() {
         { title: "Create", url: "/create", icon: Pencil },
         { title: "Multiply", url: "/multiply", icon: Share2 },
         { title: "Image Studio", url: "/image-editor", icon: Image },
+        { title: "Dark Room", url: "/darkroom", icon: Camera },
         // { title: "Email Builder", url: "/email-builder", icon: Mail }, // Temporarily hidden for launch
       ]
     },

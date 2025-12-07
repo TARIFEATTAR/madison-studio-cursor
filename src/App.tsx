@@ -37,6 +37,7 @@ import CreateShopifyListing from "./pages/marketplace/CreateShopifyListing";
 import BrandHealth from "./pages/BrandHealth";
 import BrandBuilder from "./pages/BrandBuilder";
 import ImageEditor from "./pages/ImageEditor";
+import DarkRoom from "./pages/DarkRoom";
 import EmailBuilderV2 from "./pages/EmailBuilderV2";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -299,8 +300,8 @@ const AppContent = () => {
   // Initialize onboarding for org creation only (no modals shown globally)
   useOnboarding();
 
-  // Show sidebar for authenticated users on all pages except /auth, /editor, and /onboarding
-  const showSidebar = user && location.pathname !== "/auth" && location.pathname !== "/editor" && location.pathname !== "/onboarding";
+  // Show sidebar for authenticated users on all pages except /auth, /editor, /onboarding, and /darkroom
+  const showSidebar = user && location.pathname !== "/auth" && location.pathname !== "/editor" && location.pathname !== "/onboarding" && location.pathname !== "/darkroom";
 
   return (
     <>
@@ -324,6 +325,7 @@ const AppContent = () => {
                   <Route path="/marketplace/shopify" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Shopify Listing"><CreateShopifyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
                   <Route path="/templates" element={<ProtectedRoute><RouteErrorBoundary routeName="Templates"><Templates /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/image-editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Editor"><ImageEditor /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/darkroom" element={<ProtectedRoute><RouteErrorBoundary routeName="Dark Room"><DarkRoom /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/calendar" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
@@ -365,6 +367,7 @@ const AppContent = () => {
             <Route path="/marketplace/shopify" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Shopify Listing"><CreateShopifyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
             <Route path="/templates" element={<ProtectedRoute><RouteErrorBoundary routeName="Templates"><Templates /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/image-editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Editor"><ImageEditor /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/darkroom" element={<ProtectedRoute><RouteErrorBoundary routeName="Dark Room"><DarkRoom /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/calendar" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
