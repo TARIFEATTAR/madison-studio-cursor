@@ -182,7 +182,8 @@ export default function DarkRoom() {
     [images]
   );
 
-  const proSettingsCount = Object.values(proSettings).filter(Boolean).length;
+  // Count only photography-related pro settings (not AI provider settings)
+  const proSettingsCount = [proSettings.camera, proSettings.lighting, proSettings.environment].filter(Boolean).length;
 
   const canGenerate = useMemo(() => {
     // Need either a prompt or a product image
@@ -254,8 +255,12 @@ export default function DarkRoom() {
         });
       }
 
-      // Build Pro Mode payload if active
-      const proModePayload = proSettingsCount > 0 ? proSettings : undefined;
+      // Build Pro Mode payload if active (only camera/lighting/environment, not AI settings)
+      const proModePayload = proSettingsCount > 0 ? {
+        camera: proSettings.camera,
+        lighting: proSettings.lighting,
+        environment: proSettings.environment,
+      } : undefined;
 
       console.log("🌑 Dark Room Generate:", {
         prompt: effectivePrompt,
