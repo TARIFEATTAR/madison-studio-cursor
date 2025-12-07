@@ -264,6 +264,8 @@ export default function DarkRoom() {
         product: selectedProduct?.name,
         organizationId: orgId,
         userId: user.id,
+        aiProvider: proSettings.aiProvider || "auto",
+        resolution: proSettings.resolution || "standard",
       });
 
       // Call the edge function
@@ -279,6 +281,9 @@ export default function DarkRoom() {
           referenceImages,
           proModeControls: proModePayload,
           product_id: selectedProduct?.id,
+          // AI Model settings
+          aiProvider: proSettings.aiProvider || "auto",
+          resolution: proSettings.resolution || "standard",
           productContext: selectedProduct
             ? {
                 name: selectedProduct.name,

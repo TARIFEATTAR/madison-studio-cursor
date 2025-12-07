@@ -613,7 +613,42 @@ serve(async (req) => {
       provider = "auto", // "auto" | "gemini" | "freepik"
       freepikModel, // "mystic" | "flux-dev" | "flux-pro-v1-1"
       freepikResolution, // "1k" | "2k" | "4k"
+      
+      // Frontend-friendly aliases (Pro Settings)
+      aiProvider, // "auto" | "gemini" | "freepik-mystic" | "freepik-flux"
+      resolution, // "standard" | "high" | "4k"
     } = body;
+    
+    // Map frontend-friendly names to backend values
+    // aiProvider maps to: provider + freepikModel
+    // resolution maps to: freepikResolution
+    let effectiveProvider = provider;
+    let effectiveFreepikModel = freepikModel;
+    let effectiveFreepikResolution = freepikResolution;
+    
+    if (aiProvider) {
+      if (aiProvider === "gemini") {
+        effectiveProvider = "gemini";
+      } else if (aiProvider === "freepik-mystic") {
+        effectiveProvider = "freepik";
+        effectiveFreepikModel = effectiveFreepikModel || "mystic";
+      } else if (aiProvider === "freepik-flux") {
+        effectiveProvider = "freepik";
+        effectiveFreepikModel = effectiveFreepikModel || "flux-pro-v1-1";
+      } else if (aiProvider === "auto") {
+        effectiveProvider = "auto";
+      }
+    }
+    
+    if (resolution) {
+      if (resolution === "standard") {
+        effectiveFreepikResolution = "1k";
+      } else if (resolution === "high") {
+        effectiveFreepikResolution = "2k";
+      } else if (resolution === "4k") {
+        effectiveFreepikResolution = "4k";
+      }
+    }
 
     console.log("🎨 Incoming Request", {
       goalType,
@@ -1002,7 +1037,9 @@ serve(async (req) => {
       isSuperAdmin,
       freepikAllowed,
       freepik4KAllowed,
-      requestedProvider: provider,
+      requestedProvider: effectiveProvider,
+      requestedModel: effectiveFreepikModel,
+      requestedResolution: effectiveFreepikResolution,
     });
 
     // Generate a random seed for variety (0-2147483647, max signed 32-bit integer)
@@ -1013,11 +1050,11 @@ serve(async (req) => {
     let selectedProvider: "gemini" | "freepik" = "gemini";
     let tierRestrictionApplied = false;
     
-    if (provider === "freepik" || freepikModel) {
+    if (effectiveProvider === "freepik" || effectiveFreepikModel) {
       // User explicitly requested Freepik
       if (freepikAllowed) {
         // Check if they're requesting 4K (requires higher tier)
-        if (freepikResolution === "4k" && !freepik4KAllowed) {
+        if (effectiveFreepikResolution === "4k" && !freepik4KAllowed) {
           console.log("⚠️ 4K requested but not allowed on this tier, downgrading to 2K");
           tierRestrictionApplied = true;
           selectedProvider = "freepik";
@@ -1029,15 +1066,15 @@ serve(async (req) => {
         console.log("⚠️ Freepik requested but not available on Essentials tier, using Gemini");
         tierRestrictionApplied = true;
       }
-    } else if (provider === "auto") {
+    } else if (effectiveProvider === "auto") {
       // Auto-selection: Use Gemini by default (better for reference images)
       // Only use Freepik if explicitly beneficial AND allowed
-      if (freepikAllowed && freepikResolution === "4k" && freepik4KAllowed) {
+      if (freepikAllowed && effectiveFreepikResolution === "4k" && freepik4KAllowed) {
         selectedProvider = "freepik";
       }
       // Otherwise default to Gemini
     }
-    // provider === "gemini" → stays as gemini
+    // effectiveProvider === "gemini" → stays as gemini
 
     let imageUrl: string;
     let usedProvider: string = selectedProvider;
@@ -1048,21 +1085,21 @@ serve(async (req) => {
        * FREEPIK GENERATION PATH
        */
       // Ensure resolution is allowed
-      const effectiveResolution = (freepikResolution === "4k" && !freepik4KAllowed) 
+      const finalResolution = (effectiveFreepikResolution === "4k" && !freepik4KAllowed) 
         ? "2k" 
-        : (freepikResolution || "2k");
+        : (effectiveFreepikResolution || "2k");
       
       console.log("🎨 Using Freepik for image generation...", {
-        model: freepikModel || "mystic",
-        resolution: effectiveResolution,
+        model: effectiveFreepikModel || "mystic",
+        resolution: finalResolution,
         tierRestrictionApplied,
       });
 
       try {
         const freepikResult = await generateFreepikImage({
           prompt: enhancedPrompt,
-          model: (freepikModel as FreepikModel) || "mystic",
-          resolution: effectiveResolution as FreepikResolution,
+          model: (effectiveFreepikModel as FreepikModel) || "mystic",
+          resolution: finalResolution as FreepikResolution,
           aspectRatio: aspectRatio as any,
           seed: randomSeed,
         });
