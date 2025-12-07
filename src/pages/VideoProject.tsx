@@ -43,6 +43,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentOrganizationId } from "@/hooks/useIndustryConfig";
+import { supabase } from "@/integrations/supabase/client";
 
 // Import video project components
 import { VideoProjectHeader } from "@/components/video-project/VideoProjectHeader";
@@ -59,6 +60,7 @@ export interface VideoScene {
   id: string;
   imageUrl: string | null;
   imageId: string | null;
+  videoUrl?: string | null; // Generated video URL
   duration: number; // seconds
   motion: "zoom-in" | "zoom-out" | "pan-left" | "pan-right" | "static";
   text?: {
@@ -284,7 +286,7 @@ export default function VideoProject() {
     handleUpdateScene(sceneId, { imageUrl, imageId });
   }, [handleUpdateScene]);
 
-  // Generate video
+  // Generate video for each scene
   const handleGenerateVideo = useCallback(async () => {
     if (!project || !user || !orgId) {
       toast.error("Missing project or authentication");
@@ -302,13 +304,88 @@ export default function VideoProject() {
     setProject((prev) => prev ? { ...prev, status: "generating" } : null);
 
     try {
-      // TODO: Call generate-madison-video function
-      toast.info("Video generation coming soon!", {
-        description: "The backend integration is ready. UI preview mode active.",
-      });
+      // Generate video for the first scene as proof of concept
+      // In a full implementation, we would generate and stitch all scenes
+      const firstScene = project.scenes[0];
       
-      setStep("preview");
-      setProject((prev) => prev ? { ...prev, status: "complete" } : null);
+      toast.info("Starting video generation...", {
+        description: `Processing scene 1 of ${project.scenes.length}`,
+      });
+
+      // Build motion prompt based on scene settings
+      const motionDescription = {
+        "zoom-in": "Smooth cinematic zoom in, building focus and intensity",
+        "zoom-out": "Elegant zoom out revealing the full composition",
+        "pan-left": "Graceful pan from right to left across the scene",
+        "pan-right": "Smooth pan from left to right across the scene",
+        "static": "Steady fixed camera with subtle atmospheric movement",
+      };
+
+      const scenePrompt = `${motionDescription[firstScene.motion]}. Professional product video with luxurious lighting.`;
+
+      console.log("🎬 Generating video:", {
+        sceneId: firstScene.id,
+        imageUrl: firstScene.imageUrl,
+        duration: firstScene.duration,
+        motion: firstScene.motion,
+      });
+
+      const { data, error } = await supabase.functions.invoke("generate-madison-video", {
+        body: {
+          imageUrl: firstScene.imageUrl,
+          imageId: firstScene.imageId,
+          prompt: scenePrompt,
+          duration: firstScene.duration <= 5 ? "5" : "10",
+          resolution: "720p",
+          aspectRatio: project.aspectRatio,
+          cameraFixed: firstScene.motion === "static",
+          userId: user.id,
+          organizationId: orgId,
+        },
+      });
+
+      if (error) {
+        console.error("❌ Video generation error:", error);
+        const errorMsg = error.message || "Video generation failed";
+        
+        if (errorMsg.includes("Signature plan") || errorMsg.includes("upgrade_required")) {
+          toast.error("Upgrade Required", {
+            description: "Video generation requires the Signature plan ($349/mo)",
+          });
+        } else {
+          toast.error("Generation failed", {
+            description: errorMsg.substring(0, 100),
+          });
+        }
+        setProject((prev) => prev ? { ...prev, status: "draft" } : null);
+        return;
+      }
+
+      if (data?.videoUrl) {
+        console.log("✅ Video generated:", data);
+        
+        // Update the scene with the video URL
+        setProject((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            status: "complete",
+            scenes: prev.scenes.map((s) =>
+              s.id === firstScene.id
+                ? { ...s, videoUrl: data.videoUrl }
+                : s
+            ),
+          };
+        });
+
+        toast.success("Video generated!", {
+          description: `Scene 1 ready. Duration: ${data.duration}s`,
+        });
+        
+        setStep("preview");
+      } else {
+        throw new Error("No video URL returned");
+      }
     } catch (error) {
       console.error("Video generation error:", error);
       toast.error("Failed to generate video");

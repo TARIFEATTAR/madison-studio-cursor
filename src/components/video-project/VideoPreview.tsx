@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, RotateCcw } from "lucide-react";
+import { Play, Pause, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { VideoScene } from "@/pages/VideoProject";
@@ -24,13 +24,36 @@ export function VideoPreview({
 }: VideoPreviewProps) {
   const [currentSceneIndex, setCurrentSceneIndex] = useState(0);
   const [sceneProgress, setSceneProgress] = useState(0);
+  const [isMuted, setIsMuted] = useState(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const currentScene = fullPreview
     ? scenes[currentSceneIndex]
     : scenes.find((s) => s.id === activeSceneId) || scenes[0];
 
+  // Check if current scene has a generated video
+  const hasVideo = !!currentScene?.videoUrl;
+
   const totalDuration = scenes.reduce((sum, s) => sum + s.duration, 0);
+
+  // Sync video element with playback state
+  useEffect(() => {
+    if (!videoRef.current || !hasVideo) return;
+
+    if (isPlaying) {
+      videoRef.current.play().catch(console.error);
+    } else {
+      videoRef.current.pause();
+    }
+  }, [isPlaying, hasVideo]);
+
+  // Handle video mute state
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
 
   // Playback logic for full preview
   useEffect(() => {
@@ -117,7 +140,41 @@ export function VideoPreview({
     <div className={cn("video-preview", fullPreview && "video-preview--full")}>
       {/* Preview Frame */}
       <div className={cn("preview-frame", aspectRatioClass)}>
-        {currentScene?.imageUrl ? (
+        {/* If scene has a generated video, show it */}
+        {currentScene?.videoUrl ? (
+          <div className="preview-video-container">
+            <video
+              ref={videoRef}
+              src={currentScene.videoUrl}
+              className="preview-video"
+              loop
+              muted={isMuted}
+              playsInline
+              onEnded={() => {
+                // Move to next scene in full preview mode
+                if (fullPreview) {
+                  const nextIndex = currentSceneIndex + 1;
+                  if (nextIndex >= scenes.length) {
+                    onPlayPause();
+                    setCurrentSceneIndex(0);
+                  } else {
+                    setCurrentSceneIndex(nextIndex);
+                  }
+                }
+              }}
+            />
+            {/* Mute toggle */}
+            <button
+              className="preview-mute-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMuted(!isMuted);
+              }}
+            >
+              {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            </button>
+          </div>
+        ) : currentScene?.imageUrl ? (
           <motion.div
             className="preview-image-container"
             animate={getMotionStyle(currentScene)}
