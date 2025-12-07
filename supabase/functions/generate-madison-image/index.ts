@@ -907,13 +907,14 @@ serve(async (req) => {
                         orgData.stripe_subscription_status === "trialing";
         
         // Determine Freepik access based on tier
+        // Actual tiers: essentials ($49), studio ($149), signature ($349)
         if (isActive || subscriptionTier === "free_trial") {
-          if (subscriptionTier === "signature" || subscriptionTier === "signature_plus" || 
-              subscriptionTier === "enterprise" || subscriptionTier === "signature+") {
+          // Studio and Signature get basic Freepik access (Flux Pro)
+          if (subscriptionTier === "studio" || subscriptionTier === "signature") {
             freepikAllowed = true;
           }
-          if (subscriptionTier === "signature_plus" || subscriptionTier === "enterprise" || 
-              subscriptionTier === "signature+") {
+          // Only Signature gets 4K and Video (premium Freepik features)
+          if (subscriptionTier === "signature") {
             freepik4KAllowed = true;
             freepikVideoAllowed = true;
           }

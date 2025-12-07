@@ -96,7 +96,8 @@ serve(async (req) => {
     }
 
     /**
-     * Check subscription tier - Video requires Signature+ or higher
+     * Check subscription tier - Video requires Signature tier
+     * Actual tiers: essentials ($49), studio ($149), signature ($349)
      */
     let videoAllowed = false;
     let subscriptionTier = "essentials";
@@ -113,10 +114,9 @@ serve(async (req) => {
         const isActive = orgData.stripe_subscription_status === "active" || 
                         orgData.stripe_subscription_status === "trialing";
         
-        // Video requires Signature+ or Enterprise
+        // Video requires Signature tier (highest tier with apiAccess)
         if (isActive || subscriptionTier === "free_trial") {
-          if (subscriptionTier === "signature_plus" || subscriptionTier === "enterprise" || 
-              subscriptionTier === "signature+") {
+          if (subscriptionTier === "signature") {
             videoAllowed = true;
           }
         }
@@ -130,7 +130,7 @@ serve(async (req) => {
     if (!videoAllowed) {
       return new Response(
         JSON.stringify({ 
-          error: "Video generation requires Signature+ plan or higher",
+          error: "Video generation requires Signature plan ($349/mo)",
           tier: subscriptionTier,
           upgrade_required: true
         }),
