@@ -160,6 +160,12 @@ export default function LightTable() {
     { value: "oswald", label: "Oswald", style: "'Oswald', sans-serif" },
   ];
 
+  // Selected image - MUST be defined before callbacks that use it
+  const selectedImage = useMemo(
+    () => images.find((img) => img.id === selectedImageId) || images[0] || null,
+    [images, selectedImageId]
+  );
+
   // AI enhance text using Gemini
   const handleEnhanceText = useCallback(async () => {
     if (!textOverlay.headline && !textOverlay.subtext) {
@@ -202,12 +208,6 @@ export default function LightTable() {
       setIsEnhancingText(false);
     }
   }, [textOverlay, selectedImage?.prompt]);
-
-  // Selected image
-  const selectedImage = useMemo(
-    () => images.find((img) => img.id === selectedImageId) || images[0] || null,
-    [images, selectedImageId]
-  );
 
   // Update refinement prompt when image changes
   useEffect(() => {
