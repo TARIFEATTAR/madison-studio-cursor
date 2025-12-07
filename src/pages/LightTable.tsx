@@ -269,33 +269,42 @@ export default function LightTable() {
           referenceImages: [
             {
               url: selectedImage.imageUrl,
-              label: "style",
-              description: "Base image to refine",
+              label: "product",
+              description: "Base image to refine - maintain core visual elements",
             },
           ],
-          isRefinement: true,
-          refinementInstruction: refinementPrompt,
-          parentPrompt: selectedImage.prompt,
           userId: user.id,
           organizationId: orgId,
           goalType: "refinement",
+          aspectRatio: "1:1",
         },
       });
 
+      console.log("📡 Raw response:", { data, error });
+
       if (error) {
         console.error("❌ Refinement API error:", error);
-        throw error;
+        // Try to get more details from the error
+        const errorDetails = error?.context?.body || error?.message || JSON.stringify(error);
+        console.error("❌ Error details:", errorDetails);
+        throw new Error(typeof errorDetails === 'string' ? errorDetails : JSON.stringify(errorDetails));
+      }
+
+      // Check if data contains an error
+      if (data?.error) {
+        console.error("❌ API returned error:", data.error);
+        throw new Error(data.error);
       }
 
       console.log("✅ Refinement response:", data);
 
       if (data?.imageUrl) {
         const newImage: SessionImage = {
-          id: data.imageId || uuidv4(),
+          id: data.savedImageId || uuidv4(),
           imageUrl: data.imageUrl,
           prompt: refinementPrompt,
           timestamp: Date.now(),
-          isSaved: data.savedToLibrary || false,
+          isSaved: true,
         };
 
         // Add to images and select it
@@ -305,12 +314,12 @@ export default function LightTable() {
         toast.success("Refinement generated!");
       } else {
         console.error("❌ No imageUrl in response:", data);
-        toast.error("No image returned from generation");
+        toast.error(data?.error || "No image returned from generation");
       }
     } catch (error: any) {
       console.error("❌ Refinement error:", error);
-      const errorMsg = error?.message || "Failed to generate refinement";
-      toast.error(errorMsg.substring(0, 100));
+      const errorMsg = error?.message || error?.toString() || "Failed to generate refinement";
+      toast.error(errorMsg.substring(0, 150));
     } finally {
       setIsGenerating(false);
     }
@@ -378,13 +387,14 @@ export default function LightTable() {
               referenceImages: [
                 {
                   url: selectedImage.imageUrl,
-                  label: "style",
-                  description: "Reference for variation",
+                  label: "product",
+                  description: "Reference for variation - maintain product appearance",
                 },
               ],
               userId: user.id,
               organizationId: orgId,
               goalType: "variation",
+              aspectRatio: "1:1",
             },
           });
 
