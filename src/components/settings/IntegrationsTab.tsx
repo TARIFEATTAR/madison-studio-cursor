@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { ShopifyConnection } from "./ShopifyConnection";
 import { KlaviyoConnection } from "./KlaviyoConnection";
+import { EtsyConnection } from "./EtsyConnection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, Bot, Plus, Trash2, Sparkles } from "lucide-react";
+import { Package, Bot, Plus, Trash2, Sparkles, Store } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -95,6 +96,7 @@ export function IntegrationsTab() {
       </div>
 
 
+      {/* E-commerce Platforms */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-3">
@@ -111,6 +113,26 @@ export function IntegrationsTab() {
         </CardHeader>
         <CardContent>
           <ShopifyConnection />
+        </CardContent>
+      </Card>
+
+      {/* Etsy */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
+              <Store className="w-5 h-5 text-orange-500" />
+            </div>
+            <div>
+              <CardTitle>Etsy</CardTitle>
+              <CardDescription>
+                Push marketplace listings directly to your Etsy shop as drafts
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <EtsyConnection organizationId={organizationId} />
         </CardContent>
       </Card>
 

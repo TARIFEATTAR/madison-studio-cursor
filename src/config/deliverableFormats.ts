@@ -68,9 +68,33 @@ export const DELIVERABLE_CATEGORIES: DeliverableCategory[] = [
     icon: MousePointerClick,
     deliverables: [
       {
-        value: "email_campaign",
-        label: "Email Campaign",
-        description: "Multi-touch email sequence",
+        value: "email",
+        label: "Email (Single)",
+        description: "Single email piece",
+        icon: Mail,
+      },
+      {
+        value: "email_3part",
+        label: "3-Part Email Sequence",
+        description: "3-part nurture sequence",
+        icon: Mail,
+      },
+      {
+        value: "email_5part",
+        label: "5-Part Email Sequence",
+        description: "5-part nurture sequence",
+        icon: Mail,
+      },
+      {
+        value: "email_7part",
+        label: "7-Part Email Sequence",
+        description: "7-part nurture sequence",
+        icon: Mail,
+      },
+      {
+        value: "email_newsletter",
+        label: "Email Newsletter",
+        description: "Newsletter content",
         icon: Mail,
       },
       {

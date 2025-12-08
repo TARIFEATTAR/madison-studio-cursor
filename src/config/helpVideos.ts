@@ -7,6 +7,8 @@ export type VideoCategory =
   | 'getting-started'
   | 'content-creation'
   | 'multiply'
+  | 'image-studio'
+  | 'video'
   | 'library'
   | 'calendar'
   | 'settings';
@@ -27,6 +29,8 @@ export const categoryLabels: Record<VideoCategory, string> = {
   'getting-started': 'Getting Started',
   'content-creation': 'Content Creation',
   'multiply': 'Multiply',
+  'image-studio': 'Image Studio',
+  'video': 'Video',
   'library': 'Library',
   'calendar': 'Calendar',
   'settings': 'Settings',
@@ -38,6 +42,8 @@ export const orderedCategories: VideoCategory[] = [
   'settings',
   'content-creation',
   'multiply',
+  'image-studio',
+  'video',
   'library',
   'calendar',
 ];
@@ -169,6 +175,120 @@ export const helpVideos: HelpVideo[] = [
     keywords: ['quality', 'rating', 'feedback', 'improve'],
   },
 
+  // Image Studio (Dark Room)
+  {
+    id: 'image-studio-overview',
+    title: 'Introduction to Image Studio',
+    description: 'Overview of the Dark Room: AI-powered product photography and lifestyle imagery creation.',
+    duration: '5:00',
+    category: 'image-studio',
+    videoUrl: 'https://www.loom.com/embed/placeholder',
+    order: 20,
+    keywords: ['image studio', 'dark room', 'ai images', 'photography', 'overview'],
+  },
+  {
+    id: 'uploading-product-images',
+    title: 'Uploading Product & Reference Images',
+    description: 'Learn how to upload product photos, background scenes, and style references for AI generation.',
+    duration: '3:30',
+    category: 'image-studio',
+    videoUrl: 'https://www.loom.com/embed/placeholder',
+    order: 21,
+    keywords: ['upload', 'product image', 'reference', 'background', 'style'],
+  },
+  {
+    id: 'ai-image-generation',
+    title: 'Generating AI Images',
+    description: 'Write prompts and generate stunning product photography with multiple AI models.',
+    duration: '4:30',
+    category: 'image-studio',
+    videoUrl: 'https://www.loom.com/embed/placeholder',
+    order: 22,
+    keywords: ['generate', 'ai', 'prompt', 'create', 'photography'],
+  },
+  {
+    id: 'pro-settings-image',
+    title: 'Pro Settings: Camera, Lighting & Models',
+    description: 'Master the pro controls: camera angles, lighting setups, AI models (Gemini, Freepik Mystic, Seedream), and resolutions.',
+    duration: '5:30',
+    category: 'image-studio',
+    videoUrl: 'https://www.loom.com/embed/placeholder',
+    order: 23,
+    keywords: ['pro settings', 'camera', 'lighting', 'freepik', 'mystic', 'seedream', 'resolution', 'ai model'],
+  },
+  {
+    id: 'image-library-management',
+    title: 'Managing Your Image Library',
+    description: 'View, organize, download, and manage all your generated images in one place.',
+    duration: '3:00',
+    category: 'image-studio',
+    videoUrl: 'https://www.loom.com/embed/placeholder',
+    order: 24,
+    keywords: ['image library', 'organize', 'download', 'manage', 'gallery'],
+  },
+  {
+    id: 'image-editor-refinements',
+    title: 'Refining Images with the Editor',
+    description: 'Use the image editor modal to generate variations, refine with AI, and create video from images.',
+    duration: '4:00',
+    category: 'image-studio',
+    videoUrl: 'https://www.loom.com/embed/placeholder',
+    order: 25,
+    keywords: ['editor', 'refine', 'variations', 'edit', 'modal'],
+  },
+
+  // Video
+  {
+    id: 'video-overview',
+    title: 'Introduction to Video Creation',
+    description: 'Transform your generated images into eye-catching videos for social media.',
+    duration: '4:00',
+    category: 'video',
+    videoUrl: 'https://www.loom.com/embed/placeholder',
+    order: 30,
+    keywords: ['video', 'motion', 'animation', 'introduction', 'overview'],
+  },
+  {
+    id: 'image-to-video',
+    title: 'Creating Videos from Images',
+    description: 'Step-by-step guide to converting any image into a dynamic video with motion prompts.',
+    duration: '4:30',
+    category: 'video',
+    videoUrl: 'https://www.loom.com/embed/placeholder',
+    order: 31,
+    keywords: ['image to video', 'convert', 'motion', 'animate', 'create'],
+  },
+  {
+    id: 'video-motion-prompts',
+    title: 'Writing Effective Motion Prompts',
+    description: 'Learn how to describe camera movements, lighting shifts, and ambient effects for best results.',
+    duration: '3:30',
+    category: 'video',
+    videoUrl: 'https://www.loom.com/embed/placeholder',
+    order: 32,
+    keywords: ['motion prompt', 'camera movement', 'effects', 'description', 'writing'],
+  },
+  {
+    id: 'video-settings',
+    title: 'Video Settings: Duration, Resolution & Models',
+    description: 'Configure video duration (4-10s), resolution (480p-1080p), and choose AI models.',
+    duration: '3:00',
+    category: 'video',
+    videoUrl: 'https://www.loom.com/embed/placeholder',
+    order: 33,
+    keywords: ['video settings', 'duration', 'resolution', 'model', 'configuration'],
+  },
+  {
+    id: 'exporting-videos',
+    title: 'Exporting & Using Your Videos',
+    description: 'Download your videos and use them across Instagram Reels, TikTok, and email campaigns.',
+    duration: '2:30',
+    category: 'video',
+    videoUrl: 'https://www.loom.com/embed/placeholder',
+    order: 34,
+    keywords: ['export', 'download', 'reels', 'tiktok', 'social media'],
+  },
+
   // Library
   {
     id: 'organizing-content-library',
@@ -177,7 +297,7 @@ export const helpVideos: HelpVideo[] = [
     duration: '3:45',
     category: 'library',
     videoUrl: 'https://www.loom.com/embed/placeholder',
-    order: 10,
+    order: 40,
     keywords: ['library', 'archives', 'organize', 'filter', 'search'],
   },
   {
@@ -187,7 +307,7 @@ export const helpVideos: HelpVideo[] = [
     duration: '3:00',
     category: 'library',
     videoUrl: 'https://www.loom.com/embed/placeholder',
-    order: 11,
+    order: 41,
     keywords: ['export', 'download', 'save', 'share'],
   },
 
@@ -199,7 +319,7 @@ export const helpVideos: HelpVideo[] = [
     duration: '4:15',
     category: 'calendar',
     videoUrl: 'https://www.loom.com/embed/placeholder',
-    order: 12,
+    order: 50,
     keywords: ['schedule', 'calendar', 'plan', 'timeline'],
   },
   {
@@ -209,7 +329,7 @@ export const helpVideos: HelpVideo[] = [
     duration: '3:30',
     category: 'calendar',
     videoUrl: 'https://www.loom.com/embed/placeholder',
-    order: 13,
+    order: 51,
     keywords: ['google', 'calendar', 'sync', 'integration'],
   },
 
@@ -221,7 +341,7 @@ export const helpVideos: HelpVideo[] = [
     duration: '4:00',
     category: 'settings',
     videoUrl: 'https://www.loom.com/embed/placeholder',
-    order: 14,
+    order: 60,
     keywords: ['products', 'catalog', 'manage', 'inventory'],
   },
   {
@@ -231,7 +351,7 @@ export const helpVideos: HelpVideo[] = [
     duration: '3:15',
     category: 'settings',
     videoUrl: 'https://www.loom.com/embed/placeholder',
-    order: 15,
+    order: 61,
     keywords: ['collections', 'categories', 'organize', 'tags'],
   },
   {
@@ -241,7 +361,7 @@ export const helpVideos: HelpVideo[] = [
     duration: '3:45',
     category: 'settings',
     videoUrl: 'https://www.loom.com/embed/placeholder',
-    order: 16,
+    order: 62,
     keywords: ['team', 'invite', 'collaborate', 'permissions'],
   },
 ];

@@ -5,7 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { formatVisualContext } from "../_shared/productFieldFilters.ts";
 import { callGeminiImage } from "../_shared/aiProviders.ts";
 import { enhancePromptWithOntology } from "../_shared/photographyOntology.ts";
-import { generateImage as generateFreepikImage, type FreepikModel, type FreepikResolution } from "../_shared/freepikProvider.ts";
+import { generateImage as generateFreepikImage, type FreepikImageModel, type FreepikResolution, IMAGE_MODELS } from "../_shared/freepikProvider.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -628,18 +628,39 @@ serve(async (req) => {
     let effectiveGeminiModel: string | undefined;
     
     if (aiProvider) {
+      // Gemini models
       if (aiProvider === "gemini" || aiProvider === "gemini-2.0-flash") {
         effectiveProvider = "gemini";
-        effectiveGeminiModel = "models/gemini-2.0-flash-exp"; // Default image model
+        effectiveGeminiModel = "models/gemini-2.0-flash-exp";
       } else if (aiProvider === "gemini-2.0-flash-exp") {
         effectiveProvider = "gemini";
         effectiveGeminiModel = "models/gemini-2.0-flash-exp";
-      } else if (aiProvider === "freepik-mystic") {
+      } 
+      // Freepik models (expanded 2024-2025)
+      else if (aiProvider === "freepik-seedream-4-4k") {
         effectiveProvider = "freepik";
-        effectiveFreepikModel = effectiveFreepikModel || "mystic";
+        effectiveFreepikModel = "seedream-4-4k";
+      } else if (aiProvider === "freepik-seedream") {
+        effectiveProvider = "freepik";
+        effectiveFreepikModel = "seedream";
       } else if (aiProvider === "freepik-flux") {
         effectiveProvider = "freepik";
-        effectiveFreepikModel = effectiveFreepikModel || "flux-pro-v1-1";
+        effectiveFreepikModel = "flux";
+      } else if (aiProvider === "freepik-z-image") {
+        effectiveProvider = "freepik";
+        effectiveFreepikModel = "z-image";
+      } else if (aiProvider === "freepik-mystic") {
+        effectiveProvider = "freepik";
+        effectiveFreepikModel = "mystic";
+      } else if (aiProvider === "freepik-google") {
+        effectiveProvider = "freepik";
+        effectiveFreepikModel = "google";
+      } else if (aiProvider === "freepik-ideogram") {
+        effectiveProvider = "freepik";
+        effectiveFreepikModel = "ideogram-3";
+      } else if (aiProvider === "freepik-gpt") {
+        effectiveProvider = "freepik";
+        effectiveFreepikModel = "gpt";
       } else if (aiProvider === "auto") {
         effectiveProvider = "auto";
       }
@@ -1101,12 +1122,25 @@ serve(async (req) => {
       });
 
       try {
+        // Check if this model supports reference images
+        const modelInfo = IMAGE_MODELS.find(m => m.id === effectiveFreepikModel);
+        const supportsReferences = modelInfo?.supportsReferences ?? false;
+        
+        // Prepare reference images for models that support them (Seedream 4 4K, Seedream)
+        const freepikReferenceImages = supportsReferences && categorizedRefs.product.length > 0
+          ? categorizedRefs.product.map(ref => ({
+              url: ref.url,
+              weight: 0.8, // High weight for product accuracy
+            }))
+          : undefined;
+
         const freepikResult = await generateFreepikImage({
           prompt: enhancedPrompt,
-          model: (effectiveFreepikModel as FreepikModel) || "mystic",
+          model: (effectiveFreepikModel as FreepikImageModel) || "mystic",
           resolution: finalResolution as FreepikResolution,
           aspectRatio: aspectRatio as any,
           seed: randomSeed,
+          referenceImages: freepikReferenceImages,
         });
 
         imageUrl = freepikResult.imageUrl;
@@ -1115,6 +1149,7 @@ serve(async (req) => {
         console.log(`✅ Freepik Image Generated:`, {
           taskId: freepikResult.taskId,
           model: freepikResult.model,
+          usedReferences: !!freepikReferenceImages,
         });
       } catch (freepikError) {
         console.error("❌ Freepik generation failed, falling back to Gemini:", freepikError);

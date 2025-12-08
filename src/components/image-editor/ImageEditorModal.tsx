@@ -20,7 +20,12 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import {
   X,
   ArrowLeft,
@@ -323,54 +328,61 @@ export function ImageEditorModal({
     ? variations.find((v) => v.id === selectedVariationId)?.imageUrl || image?.imageUrl
     : image?.imageUrl;
 
-  if (!image) return null;
+  // Always render Dialog for proper state management, but only open when image exists
+  const shouldOpen = isOpen && !!image;
 
   return (
-    <DialogPrimitive.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogPrimitive.Portal>
-        {/* Custom overlay without the conflicting default close button */}
-        <DialogPrimitive.Overlay className="fixed inset-0 z-[1100] bg-black/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        
-        <DialogPrimitive.Content className={cn(
-          // Base styles
-          "fixed z-[1101] bg-[#1a1816] border border-[rgba(184,149,106,0.2)] shadow-2xl",
-          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-          // Desktop: Centered modal with constrained size
-          "md:left-[50%] md:top-[50%] md:translate-x-[-50%] md:translate-y-[-50%] md:w-[95vw] md:max-w-[1000px] md:max-h-[90vh] md:rounded-2xl",
-          "md:data-[state=closed]:zoom-out-95 md:data-[state=open]:zoom-in-95",
+    <Dialog open={shouldOpen} onOpenChange={(open) => {
+      if (!open) {
+        onClose();
+      }
+    }}>
+      <DialogContent 
+        className={cn(
+          // Base styles - override default DialogContent styles
+          "bg-[#1a1816] border border-[rgba(184,149,106,0.2)] shadow-2xl p-0",
+          // Desktop: Large modal with constrained size
+          "w-[95vw] max-w-[1000px] max-h-[90vh]",
           // Mobile: Full screen for better UX
-          "inset-0 w-full h-full max-h-full rounded-none",
-          "md:inset-auto md:h-auto"
-        )}>
-          <div className="flex flex-col h-full md:h-auto md:max-h-[90vh]">
-            {/* Custom Header */}
-            <div className="shrink-0 flex items-center justify-between px-4 md:px-5 py-3 md:py-4 bg-[#252220] border-b border-[rgba(184,149,106,0.15)]">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                className="text-[rgba(245,240,230,0.7)] hover:text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.1)] text-xs md:text-sm"
-              >
-                <ArrowLeft className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Back to {source === "library" ? "Library" : "Dark Room"}</span>
-                <span className="sm:hidden">Back</span>
-              </Button>
-              
-              <DialogPrimitive.Title className="font-serif text-lg md:text-xl font-medium text-[#f5f0e6] absolute left-1/2 -translate-x-1/2">
-                Image Editor
-              </DialogPrimitive.Title>
-              
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onClose}
-                className="text-[rgba(245,240,230,0.5)] hover:text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.1)]"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
+          "sm:rounded-2xl",
+          // Remove default close button styling (we have custom header)
+          "[&>button]:hidden"
+        )}
+      >
+        <div className="flex flex-col h-full md:h-auto md:max-h-[90vh]">
+          {/* Custom Header */}
+          <div className="shrink-0 flex items-center justify-between px-4 md:px-5 py-3 md:py-4 bg-[#252220] border-b border-[rgba(184,149,106,0.15)]">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="text-[rgba(245,240,230,0.7)] hover:text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.1)] text-xs md:text-sm"
+            >
+              <ArrowLeft className="w-4 h-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Back to {source === "library" ? "Library" : "Dark Room"}</span>
+              <span className="sm:hidden">Back</span>
+            </Button>
+            
+            <DialogTitle className="font-serif text-lg md:text-xl font-medium text-[#f5f0e6] absolute left-1/2 -translate-x-1/2">
+              Image Editor
+            </DialogTitle>
+            
+            <DialogDescription className="sr-only">
+              Edit and refine your generated image. Generate variations, add text overlays, or create videos.
+            </DialogDescription>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="text-[rgba(245,240,230,0.5)] hover:text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.1)]"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
 
             {/* Main Content */}
+            {image ? (
             <div className="flex-1 grid grid-cols-1 md:grid-cols-[1fr_320px] min-h-0 overflow-hidden">
             {/* Main Image Preview */}
             <div className="flex flex-col p-3 md:p-6 bg-[#0f0e0d] md:border-r border-b md:border-b-0 border-[rgba(184,149,106,0.1)] overflow-hidden min-h-[200px] md:min-h-0">
@@ -379,11 +391,13 @@ export function ImageEditorModal({
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
               >
+                {displayedImage && (
                 <img
                   src={displayedImage}
                   alt="Selected image"
                   className="max-w-full max-h-full object-contain rounded-lg"
                 />
+                )}
                 
                 {/* Text Overlay Preview (if set) */}
                 {textOverlay.headline && (
@@ -515,14 +529,16 @@ export function ImageEditorModal({
                     </Button>
 
                     {/* Original Prompt Display */}
-                    <div className="mt-2 p-3 bg-[rgba(26,24,22,0.5)] rounded-lg border border-[rgba(184,149,106,0.1)]">
-                      <span className="text-[0.65rem] uppercase tracking-wider text-[rgba(184,149,106,0.6)]">
-                        Original prompt:
-                      </span>
-                      <p className="text-[0.75rem] text-[rgba(245,240,230,0.6)] mt-1 leading-relaxed">
-                        {image.prompt}
-                      </p>
-                    </div>
+                    {image?.prompt && (
+                      <div className="mt-2 p-3 bg-[rgba(26,24,22,0.5)] rounded-lg border border-[rgba(184,149,106,0.1)]">
+                        <span className="text-[0.65rem] uppercase tracking-wider text-[rgba(184,149,106,0.6)]">
+                          Original prompt:
+                        </span>
+                        <p className="text-[0.75rem] text-[rgba(245,240,230,0.6)] mt-1 leading-relaxed">
+                          {image.prompt}
+                        </p>
+                      </div>
+                    )}
                   </motion.div>
                 )}
 
@@ -696,9 +712,13 @@ export function ImageEditorModal({
               </div>
             </div>
           </div>
+            ) : (
+              <div className="flex items-center justify-center p-8 text-[rgba(245,240,230,0.5)]">
+                <p>No image selected</p>
+              </div>
+            )}
           </div>
-        </DialogPrimitive.Content>
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+        </DialogContent>
+    </Dialog>
   );
 }

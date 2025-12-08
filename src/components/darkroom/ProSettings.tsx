@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Camera, Sun, Globe, X, Info, SlidersHorizontal, Maximize2, Cpu, Sparkles, Zap } from "lucide-react";
+import { ChevronDown, Camera, Sun, Globe, X, Info, SlidersHorizontal, Maximize2, Cpu, Sparkles, Zap, TrendingUp, Star } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -18,30 +18,70 @@ import {
   getEnvironmentOptions,
 } from "@/utils/promptFormula";
 
-// Aspect ratio options
+// Expanded aspect ratio options (matching Freepik's offerings)
 const ASPECT_RATIO_OPTIONS = [
-  { value: "1:1", label: "Square (1:1)", description: "Instagram, Product" },
-  { value: "4:3", label: "Classic (4:3)", description: "Traditional photo" },
-  { value: "3:4", label: "Portrait (3:4)", description: "Mobile, Pinterest" },
-  { value: "16:9", label: "Wide (16:9)", description: "YouTube, Desktop" },
-  { value: "9:16", label: "Story (9:16)", description: "Reels, TikTok" },
-  { value: "21:9", label: "Cinematic (21:9)", description: "Film, Banner" },
+  { value: "1:1", label: "Square", description: "Instagram, Product" },
+  { value: "16:9", label: "Widescreen", description: "YouTube, Desktop" },
+  { value: "9:16", label: "Social Story", description: "Reels, TikTok" },
+  { value: "2:3", label: "Portrait", description: "Pinterest, Print" },
+  { value: "3:4", label: "Traditional", description: "Mobile, Portrait" },
+  { value: "1:2", label: "Vertical", description: "Tall banner" },
+  { value: "2:1", label: "Horizontal", description: "Wide banner" },
+  { value: "4:5", label: "Social Post", description: "Instagram Feed" },
+  { value: "3:2", label: "Standard", description: "Classic photo" },
+  { value: "4:3", label: "Classic", description: "Traditional photo" },
 ];
 
-// AI Provider options
+// AI Provider/Model options - Updated for Freepik's 2024-2025 offerings
 const AI_PROVIDER_OPTIONS = [
-  { value: "auto", label: "Auto (Smart Select)", description: "Best for your plan" },
-  { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash", description: "Fast, reliable" },
-  { value: "gemini-2.0-flash-exp", label: "Gemini 2.0 Flash Exp", description: "Latest features" },
-  { value: "freepik-mystic", label: "Freepik Mystic", description: "Studio+ only" },
-  { value: "freepik-flux", label: "Freepik Flux", description: "Studio+ only" },
+  // Auto
+  { value: "auto", label: "Auto", description: "AI picks what's best", badge: "SUGGESTED", group: "auto" },
+  // Freepik Premium Models
+  { value: "freepik-seedream-4-4k", label: "Seedream 4 4K", description: "4K with reference images", badge: "TRENDING", group: "freepik" },
+  { value: "freepik-seedream", label: "Seedream", description: "Exceptional creativity", badge: "NEW", group: "freepik" },
+  { value: "freepik-flux", label: "Flux", description: "Community favorite", badge: null, group: "freepik" },
+  { value: "freepik-z-image", label: "Z-Image", description: "Ultra-realistic, fast", badge: "NEW", group: "freepik" },
+  { value: "freepik-mystic", label: "Mystic", description: "Freepik AI at 2K", badge: null, group: "freepik" },
+  { value: "freepik-google", label: "Google", description: "Photorealism", badge: "NEW", group: "freepik" },
+  { value: "freepik-ideogram", label: "Ideogram 3", description: "Typography & design", badge: null, group: "freepik" },
+  { value: "freepik-gpt", label: "GPT", description: "OpenAI's technology", badge: null, group: "freepik" },
+  // Gemini (always available)
+  { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash", description: "Fast, reliable", badge: null, group: "gemini" },
+  { value: "gemini-2.0-flash-exp", label: "Gemini 2.0 Exp", description: "Latest features", badge: null, group: "gemini" },
 ];
 
 // Resolution/Quality options
 const RESOLUTION_OPTIONS = [
-  { value: "standard", label: "Standard", description: "1024×1024" },
-  { value: "high", label: "High", description: "2048×2048" },
-  { value: "4k", label: "4K Ultra", description: "4096×4096 (Signature)" },
+  { value: "standard", label: "Standard", description: "1K (1024px)" },
+  { value: "high", label: "High", description: "2K (2048px)" },
+  { value: "4k", label: "4K Ultra", description: "4K (4096px)", badge: "Signature" },
+];
+
+// AI Characters for consistent faces (Freepik feature)
+// These are pre-defined character faces that maintain consistency across generations
+const AI_CHARACTERS = [
+  { id: "kat", name: "@Kat", gender: "female", style: "diverse" },
+  { id: "helena", name: "@Helena", gender: "female", style: "elegant" },
+  { id: "mei", name: "@Mei", gender: "female", style: "asian" },
+  { id: "camile", name: "@Camile", gender: "female", style: "natural" },
+  { id: "rafael", name: "@Rafael", gender: "male", style: "casual" },
+  { id: "rohan", name: "@Rohan", gender: "male", style: "south-asian" },
+  { id: "lucia", name: "@Lucia", gender: "female", style: "mature" },
+  { id: "sophia", name: "@Sophia", gender: "female", style: "youthful" },
+  { id: "samuel", name: "@Samuel", gender: "male", style: "professional" },
+  { id: "alvaro", name: "@Alvaro", gender: "male", style: "mediterranean" },
+  { id: "kenji", name: "@Kenji", gender: "male", style: "east-asian" },
+  { id: "marcia", name: "@Marcia", gender: "female", style: "afro" },
+  { id: "alejandro", name: "@Alejandro", gender: "male", style: "latino" },
+  { id: "freja", name: "@Freja", gender: "female", style: "nordic" },
+  { id: "alex", name: "@Alex", gender: "non-binary", style: "androgynous" },
+  { id: "jonas", name: "@Jonas", gender: "male", style: "european" },
+  { id: "mary", name: "@Mary", gender: "female", style: "senior" },
+  { id: "emily", name: "@Emily", gender: "female", style: "afro" },
+  { id: "belinda", name: "@Belinda", gender: "female", style: "mature-elegant" },
+  { id: "jackson", name: "@Jackson", gender: "male", style: "afro" },
+  { id: "kevin", name: "@Kevin", gender: "male", style: "east-asian" },
+  { id: "laura", name: "@Laura", gender: "female", style: "natural" },
 ];
 
 export interface ProModeSettings {
@@ -51,6 +91,7 @@ export interface ProModeSettings {
   aspectRatio?: string;
   aiProvider?: string;
   resolution?: string;
+  characterId?: string; // AI Character for consistent faces
 }
 
 interface ProSettingsProps {
@@ -86,6 +127,10 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
 
   const handleAiProviderChange = (value: string) => {
     onChange({ ...settings, aiProvider: value === "auto" ? undefined : value });
+  };
+
+  const handleCharacterChange = (value: string) => {
+    onChange({ ...settings, characterId: value === "none" ? undefined : value });
   };
 
   const handleResolutionChange = (value: string) => {
@@ -280,12 +325,12 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                 <span className="pro-settings__divider-text">AI Model Settings</span>
               </div>
 
-              {/* AI Provider */}
+              {/* AI Model */}
               <div className="pro-settings__control">
                 <div className="flex items-center justify-between">
                   <label className="pro-settings__control-label">
                     <Cpu className="w-3.5 h-3.5" />
-                    AI Provider
+                    AI Model
                   </label>
                   <TooltipProvider>
                     <Tooltip>
@@ -295,7 +340,7 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                       <TooltipContent side="left" className="max-w-[220px]">
                         <p className="text-xs">
                           Freepik models require Studio or Signature plan. 
-                          Auto will select the best available for your tier.
+                          Seedream 4 4K supports reference images for best product accuracy.
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -307,21 +352,43 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                   disabled={disabled}
                 >
                   <SelectTrigger className="h-9 bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
-                    <SelectValue placeholder="Select AI provider..." />
+                    <SelectValue placeholder="Select AI model..." />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] z-50">
-                    {AI_PROVIDER_OPTIONS.map((option) => (
-                      <SelectItem 
-                        key={option.value} 
-                        value={option.value} 
-                        className="text-[#f5f0e6] focus:bg-[#2a2520] focus:text-[#f5f0e6] data-[highlighted]:bg-[#2a2520] data-[highlighted]:text-[#f5f0e6]"
-                      >
-                        <span className="flex items-center justify-between w-full">
-                          <span>{option.label}</span>
-                          <span className="text-[#a09080] text-xs ml-2">{option.description}</span>
-                        </span>
-                      </SelectItem>
-                    ))}
+                  <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] z-50 max-h-[300px]">
+                    {AI_PROVIDER_OPTIONS.map((option, idx) => {
+                      // Add group headers
+                      const prevOption = idx > 0 ? AI_PROVIDER_OPTIONS[idx - 1] : null;
+                      const showGroupHeader = !prevOption || prevOption.group !== option.group;
+                      
+                      return (
+                        <div key={option.value}>
+                          {showGroupHeader && option.group !== "auto" && (
+                            <div className="px-2 py-1.5 text-[10px] uppercase tracking-wider text-[#6a5f50] font-medium border-t border-[var(--darkroom-border)] mt-1 first:mt-0 first:border-t-0">
+                              {option.group === "freepik" ? "Freepik Models (Studio+)" : "Google Gemini"}
+                            </div>
+                          )}
+                          <SelectItem 
+                            value={option.value} 
+                            className="text-[#f5f0e6] focus:bg-[#2a2520] focus:text-[#f5f0e6] data-[highlighted]:bg-[#2a2520] data-[highlighted]:text-[#f5f0e6]"
+                          >
+                            <span className="flex items-center gap-2 w-full">
+                              <span className="flex-1">{option.label}</span>
+                              {option.badge && (
+                                <span className={cn(
+                                  "text-[9px] px-1.5 py-0.5 rounded font-medium",
+                                  option.badge === "TRENDING" && "bg-orange-500/20 text-orange-400",
+                                  option.badge === "NEW" && "bg-emerald-500/20 text-emerald-400",
+                                  option.badge === "SUGGESTED" && "bg-[var(--darkroom-accent)]/20 text-[var(--darkroom-accent)]"
+                                )}>
+                                  {option.badge}
+                                </span>
+                              )}
+                              <span className="text-[#6a5f50] text-[10px] ml-1">{option.description}</span>
+                            </span>
+                          </SelectItem>
+                        </div>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -341,7 +408,7 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                       <TooltipContent side="left" className="max-w-[200px]">
                         <p className="text-xs">
                           Higher resolution uses more credits. 
-                          4K requires Signature plan.
+                          4K requires Signature plan and Seedream 4 4K model.
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -362,14 +429,77 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                         value={option.value} 
                         className="text-[#f5f0e6] focus:bg-[#2a2520] focus:text-[#f5f0e6] data-[highlighted]:bg-[#2a2520] data-[highlighted]:text-[#f5f0e6]"
                       >
-                        <span className="flex items-center justify-between w-full">
+                        <span className="flex items-center gap-2 w-full">
                           <span>{option.label}</span>
-                          <span className="text-[#a09080] text-xs ml-2">{option.description}</span>
+                          {"badge" in option && option.badge && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded font-medium bg-purple-500/20 text-purple-400">
+                              {option.badge}
+                            </span>
+                          )}
+                          <span className="text-[#6a5f50] text-[10px] ml-auto">{option.description}</span>
                         </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* AI Character (for lifestyle images with people) */}
+              <div className="pro-settings__control">
+                <div className="flex items-center justify-between">
+                  <label className="pro-settings__control-label">
+                    <Star className="w-3.5 h-3.5" />
+                    AI Character
+                  </label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="w-3 h-3 text-[var(--darkroom-text-dim)] cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="max-w-[220px]">
+                        <p className="text-xs">
+                          Select a pre-defined AI character for consistent faces 
+                          across multiple images. Great for lifestyle and campaign shots.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <Select
+                  value={settings.characterId || "none"}
+                  onValueChange={handleCharacterChange}
+                  disabled={disabled}
+                >
+                  <SelectTrigger className="h-9 bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
+                    <SelectValue placeholder="Select character..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] z-50 max-h-[250px]">
+                    <SelectItem 
+                      value="none" 
+                      className="text-[#a09080] focus:bg-[#2a2520] focus:text-[#f5f0e6] data-[highlighted]:bg-[#2a2520] data-[highlighted]:text-[#f5f0e6]"
+                    >
+                      None (no character)
+                    </SelectItem>
+                    <div className="px-2 py-1.5 text-[10px] uppercase tracking-wider text-[#6a5f50] font-medium border-t border-[var(--darkroom-border)] mt-1">
+                      AI Characters (consistent faces)
+                    </div>
+                    {AI_CHARACTERS.map((char) => (
+                      <SelectItem 
+                        key={char.id} 
+                        value={char.id}
+                        className="text-[#f5f0e6] focus:bg-[#2a2520] focus:text-[#f5f0e6] data-[highlighted]:bg-[#2a2520] data-[highlighted]:text-[#f5f0e6]"
+                      >
+                        <span className="flex items-center gap-2 w-full">
+                          <span>{char.name}</span>
+                          <span className="text-[#6a5f50] text-[10px] capitalize">{char.style}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="pro-settings__hint">
+                  For lifestyle/campaign images with people
+                </p>
               </div>
 
               {/* Summary */}

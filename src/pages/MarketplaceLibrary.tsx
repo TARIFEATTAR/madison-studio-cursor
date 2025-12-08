@@ -34,7 +34,10 @@ import {
   ExternalLink,
   ArrowUpDown,
   X,
-  Trash2
+  Trash2,
+  Upload,
+  Loader2,
+  Check
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -48,6 +51,9 @@ interface MarketplaceListing {
   updated_at: string;
   product_id: string | null;
   external_url: string | null;
+  etsy_listing_id?: number | null;
+  etsy_state?: string | null;
+  last_etsy_sync?: string | null;
 }
 
 export default function MarketplaceLibrary() {
@@ -60,6 +66,8 @@ export default function MarketplaceLibrary() {
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"alphabetical" | "recent" | "status">("recent");
+  const [etsyConnected, setEtsyConnected] = useState(false);
+  const [pushingToEtsy, setPushingToEtsy] = useState<string | null>(null);
 
   useEffect(() => {
     if (currentOrganizationId) {
