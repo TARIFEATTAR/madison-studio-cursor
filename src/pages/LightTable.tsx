@@ -664,9 +664,15 @@ export default function LightTable() {
                 <Download className="w-4 h-4 mr-2" />
                 Download
               </Button>
-              <Button variant="brass" size="sm" onClick={handleCreateVideo}>
+              <Button 
+                variant="brass" 
+                size="sm" 
+                disabled
+                title="Coming Soon"
+                className="opacity-50 cursor-not-allowed"
+              >
                 <Film className="w-4 h-4 mr-2" />
-                Create Video
+                Coming Soon
               </Button>
             </div>
           </div>

@@ -241,36 +241,36 @@ export function ContentCard({
       <div className="absolute top-3 right-3 z-10 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onClick={(e) => e.stopPropagation()}>
         {/* Action Buttons */}
         <div className="flex items-center bg-card/90 backdrop-blur-sm rounded-lg border border-border/30 p-1 gap-0.5">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            setPublishDrawerOpen(true);
+          }}
+            className="h-7 w-7 p-0 hover:bg-brand-brass/10 rounded-md"
+          title={content.status === "published" ? "Update Publishing" : "Mark as Published"}
+        >
+            <Send className="w-3.5 h-3.5 text-muted-foreground hover:text-brand-brass transition-colors" />
+        </Button>
+        {onArchive && (
           <Button
             variant="ghost"
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              setPublishDrawerOpen(true);
+              onArchive();
             }}
-            className="h-7 w-7 p-0 hover:bg-brand-brass/10 rounded-md"
-            title={content.status === "published" ? "Update Publishing" : "Mark as Published"}
-          >
-            <Send className="w-3.5 h-3.5 text-muted-foreground hover:text-brand-brass transition-colors" />
-          </Button>
-          {onArchive && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onArchive();
-              }}
               className="h-7 w-7 p-0 hover:bg-brand-brass/10 rounded-md"
-              title={content.archived ? "Unarchive" : "Archive"}
-            >
-              {content.archived ? (
+            title={content.archived ? "Unarchive" : "Archive"}
+          >
+            {content.archived ? (
                 <ArchiveRestore className="w-3.5 h-3.5 text-muted-foreground hover:text-brand-brass transition-colors" />
-              ) : (
+            ) : (
                 <Archive className="w-3.5 h-3.5 text-muted-foreground hover:text-brand-brass transition-colors" />
-              )}
-            </Button>
-          )}
+            )}
+          </Button>
+        )}
         </div>
         
         {/* Checkbox - separate from action buttons */}
@@ -296,58 +296,58 @@ export function ContentCard({
         {/* Header Section: Badges */}
         <div className="flex flex-wrap items-center gap-2 mb-3">
           {/* Primary Badge: Source Type */}
-          {isEmailComposer && (
-            <Badge 
-              variant="default"
-              className="text-xs font-semibold bg-gradient-to-r from-brass to-[#9B8A6F] text-white border-0 flex items-center gap-1"
-            >
-              <Mail className="w-3 h-3" />
-              Email Composer
-            </Badge>
-          )}
-          {content.sourceTable === "master_content" && !isEmailComposer && (
-            <Badge 
-              variant="default"
-              className="text-xs font-semibold bg-brand-brass hover:bg-brand-brass/90 text-brand-parchment border-0"
-            >
-              Master Content
-            </Badge>
-          )}
-          {content.sourceTable === "derivative_assets" && (
-            <Badge 
-              variant="secondary"
-              className="text-xs font-medium"
-            >
-              Derivative Asset
-            </Badge>
-          )}
-          {content.sourceTable === "generated_images" && (
-            <Badge 
-              variant="secondary"
-              className="text-xs font-medium"
-            >
-              Generated Image
-            </Badge>
-          )}
+            {isEmailComposer && (
+              <Badge 
+                variant="default"
+                className="text-xs font-semibold bg-gradient-to-r from-brass to-[#9B8A6F] text-white border-0 flex items-center gap-1"
+              >
+                <Mail className="w-3 h-3" />
+                Email Composer
+              </Badge>
+            )}
+            {content.sourceTable === "master_content" && !isEmailComposer && (
+              <Badge 
+                variant="default"
+                className="text-xs font-semibold bg-brand-brass hover:bg-brand-brass/90 text-brand-parchment border-0"
+              >
+                Master Content
+              </Badge>
+            )}
+            {content.sourceTable === "derivative_assets" && (
+              <Badge 
+                variant="secondary"
+                className="text-xs font-medium"
+              >
+                Derivative Asset
+              </Badge>
+            )}
+            {content.sourceTable === "generated_images" && (
+              <Badge 
+                variant="secondary"
+                className="text-xs font-medium"
+              >
+                Generated Image
+              </Badge>
+            )}
 
           {/* Secondary Badge: Content Type (smart combined label) */}
           {contentTypeBadge && (
-            <Badge 
-              variant="outline"
+                    <Badge 
+                      variant="outline"
               className="text-xs border-border/50 font-medium flex items-center gap-1"
-            >
+                    >
               {contentTypeBadge.icon && <contentTypeBadge.icon className="w-3 h-3" />}
               {contentTypeBadge.label}
-            </Badge>
-          )}
-
+                    </Badge>
+                  )}
+                  
           {/* Archived indicator - subtle */}
-          {content.archived && (
+            {content.archived && (
             <Badge variant="outline" className="text-xs border-destructive/40 text-destructive">
-              Archived
-            </Badge>
-          )}
-        </div>
+                Archived
+              </Badge>
+            )}
+          </div>
 
         {/* Divider */}
         <div className="h-px bg-border/30 mb-3" />
@@ -362,53 +362,53 @@ export function ContentCard({
 
         {/* Content Preview - Flex grow for consistent card heights */}
         <div className="flex-1 min-h-[60px]">
-          {isEmailComposer && emailComposerData ? (
-            <div className="space-y-3">
-              {/* Header Image Preview */}
-              {emailComposerData.headerImage && (
-                <div className="relative w-full h-48 rounded-lg overflow-hidden bg-muted border border-border">
-                  <img
-                    src={emailComposerData.headerImage}
-                    alt="Email header"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-              
-              {/* Email Content Preview */}
-              <div className="space-y-2">
-                {emailComposerData.subtitle && (
-                  <p className="text-sm font-medium text-foreground/80">
-                    {emailComposerData.subtitle}
-                  </p>
-                )}
-                <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed">
-                  {previewText}
-                </p>
-              </div>
-            </div>
-          ) : content.sourceTable === "generated_images" && content.imageUrl ? (
-            /* Generated Images Preview */
-            <div className="space-y-2">
-              <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden bg-[#252220] border border-[#3D3935]">
+        {isEmailComposer && emailComposerData ? (
+          <div className="space-y-3">
+            {/* Header Image Preview */}
+            {emailComposerData.headerImage && (
+              <div className="relative w-full h-48 rounded-lg overflow-hidden bg-muted border border-border">
                 <img
-                  src={content.imageUrl}
-                  alt={content.title}
-                  className="w-full h-full object-contain"
+                  src={emailComposerData.headerImage}
+                  alt="Email header"
+                  className="w-full h-full object-cover"
                 />
               </div>
-              {content.finalPrompt && (
-                <p className="text-xs text-muted-foreground italic line-clamp-2">
-                  "{content.finalPrompt.substring(0, 120)}..."
+            )}
+            
+            {/* Email Content Preview */}
+            <div className="space-y-2">
+              {emailComposerData.subtitle && (
+                <p className="text-sm font-medium text-foreground/80">
+                  {emailComposerData.subtitle}
                 </p>
               )}
+              <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed">
+                {previewText}
+              </p>
             </div>
-          ) : (
-            /* Regular Content Preview */
-            <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed">
-              {previewText}
-            </p>
-          )}
+          </div>
+        ) : content.sourceTable === "generated_images" && content.imageUrl ? (
+          /* Generated Images Preview */
+          <div className="space-y-2">
+            <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden bg-[#252220] border border-[#3D3935]">
+              <img
+                src={content.imageUrl}
+                alt={content.title}
+                className="w-full h-full object-contain"
+              />
+            </div>
+            {content.finalPrompt && (
+              <p className="text-xs text-muted-foreground italic line-clamp-2">
+                "{content.finalPrompt.substring(0, 120)}..."
+              </p>
+            )}
+          </div>
+        ) : (
+          /* Regular Content Preview */
+          <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed">
+            {previewText}
+          </p>
+        )}
         </div>
 
         {/* Publishing Status - Only show if published */}

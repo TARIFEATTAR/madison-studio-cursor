@@ -11,7 +11,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
-import { Image, Sparkles } from "lucide-react";
+import { Image, Wand2 } from "lucide-react";
 
 // Supabase & Auth
 import { supabase } from "@/integrations/supabase/client";
@@ -565,7 +565,7 @@ export default function DarkRoom() {
           newlyGeneratedId={newlyGeneratedId}
         />
 
-        {/* Right Panel: Madison Assistant (Desktop only) */}
+        {/* Right Panel: Madison Assistant + Settings (Desktop only) */}
         {!isMobile && (
           <RightPanel
             suggestions={suggestions}
@@ -578,6 +578,9 @@ export default function DarkRoom() {
             hasBackground={!!backgroundImage}
             hasStyle={!!styleReference}
             proSettingsCount={proSettingsCount}
+            proSettings={proSettings}
+            onProSettingsChange={setProSettings}
+            isGenerating={isGenerating}
           />
         )}
       </div>
@@ -629,8 +632,8 @@ export default function DarkRoom() {
         <MobileBottomSheet
           isOpen={madisonSheetOpen}
           onClose={handleCloseMadisonSheet}
-          title="Madison"
-          icon={<Sparkles className="w-5 h-5 text-[var(--darkroom-accent)]" />}
+          title="Madison & Settings"
+          icon={<Wand2 className="w-5 h-5 text-[var(--darkroom-accent)]" />}
           className="mobile-madison-sheet"
         >
           <RightPanel
@@ -653,6 +656,9 @@ export default function DarkRoom() {
             hasBackground={!!backgroundImage}
             hasStyle={!!styleReference}
             proSettingsCount={proSettingsCount}
+            proSettings={proSettings}
+            onProSettingsChange={setProSettings}
+            isGenerating={isGenerating}
           />
         </MobileBottomSheet>
       )}

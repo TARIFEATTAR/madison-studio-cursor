@@ -287,12 +287,9 @@ export function LightTable({
                           <ExternalLink className="w-3.5 h-3.5" />
                         </button>
                         <button
-                          className="light-table__hover-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onCreateVideo(image);
-                          }}
-                          title="Create Video"
+                          className="light-table__hover-btn opacity-50 cursor-not-allowed"
+                          disabled
+                          title="Video - Coming Soon"
                         >
                           <Film className="w-3.5 h-3.5" />
                         </button>

@@ -280,96 +280,96 @@ export default function ImageLibrary() {
           {/* Search Bar - Full Width */}
           <div className="relative group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#F5F1E8]/40 transition-colors group-focus-within:text-[#B8956A]" />
-            <Input
+              <Input
               placeholder="Search images by name, prompt, or category..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 py-2.5 bg-[#1A1816] border-[#2F2A26] text-[#F5F1E8] placeholder:text-[#F5F1E8]/40 focus:border-[#B8956A] focus:ring-2 focus:ring-[#B8956A]/20"
-            />
-          </div>
+              />
+            </div>
 
           {/* Filters Row */}
           <div className="flex items-center justify-between gap-4">
             {/* Left: Category + Sort */}
             <div className="flex items-center gap-2">
-              <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as CategoryFilter)}>
+            <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as CategoryFilter)}>
                 <SelectTrigger className="w-[150px] bg-[#1A1816] border-[#2F2A26] text-[#F5F1E8] text-sm">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#1A1816] border-[#2F2A26]">
-                  <SelectItem value="all" className="text-[#F5F1E8]">All Categories</SelectItem>
-                  <SelectItem value="product" className="text-[#F5F1E8]">Product</SelectItem>
-                  <SelectItem value="lifestyle" className="text-[#F5F1E8]">Lifestyle</SelectItem>
-                  <SelectItem value="ecommerce" className="text-[#F5F1E8]">E-commerce</SelectItem>
-                  <SelectItem value="social" className="text-[#F5F1E8]">Social</SelectItem>
-                  <SelectItem value="editorial" className="text-[#F5F1E8]">Editorial</SelectItem>
-                </SelectContent>
-              </Select>
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#1A1816] border-[#2F2A26]">
+                <SelectItem value="all" className="text-[#F5F1E8]">All Categories</SelectItem>
+                <SelectItem value="product" className="text-[#F5F1E8]">Product</SelectItem>
+                <SelectItem value="lifestyle" className="text-[#F5F1E8]">Lifestyle</SelectItem>
+                <SelectItem value="ecommerce" className="text-[#F5F1E8]">E-commerce</SelectItem>
+                <SelectItem value="social" className="text-[#F5F1E8]">Social</SelectItem>
+                <SelectItem value="editorial" className="text-[#F5F1E8]">Editorial</SelectItem>
+              </SelectContent>
+            </Select>
 
-              <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
                 <SelectTrigger className="w-[130px] bg-[#1A1816] border-[#2F2A26] text-[#F5F1E8] text-sm">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#1A1816] border-[#2F2A26]">
-                  <SelectItem value="recent" className="text-[#F5F1E8]">Most Recent</SelectItem>
-                  <SelectItem value="oldest" className="text-[#F5F1E8]">Oldest First</SelectItem>
-                  <SelectItem value="category" className="text-[#F5F1E8]">By Category</SelectItem>
-                </SelectContent>
-              </Select>
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#1A1816] border-[#2F2A26]">
+                <SelectItem value="recent" className="text-[#F5F1E8]">Most Recent</SelectItem>
+                <SelectItem value="oldest" className="text-[#F5F1E8]">Oldest First</SelectItem>
+                <SelectItem value="category" className="text-[#F5F1E8]">By Category</SelectItem>
+              </SelectContent>
+            </Select>
             </div>
 
             {/* Right: View Mode + Bulk Actions */}
             <div className="flex items-center gap-3">
               {/* View Mode Toggle */}
               <div className="flex items-center bg-[#1A1816] border border-[#2F2A26] rounded-lg p-0.5">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={cn(
+              <button
+                onClick={() => setViewMode("grid")}
+                className={cn(
                     "h-8 w-8 flex items-center justify-center rounded-md transition-colors",
-                    viewMode === "grid"
-                      ? "bg-[#B8956A]/20 text-[#B8956A]"
-                      : "text-[#F5F1E8]/60 hover:text-[#F5F1E8]"
-                  )}
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode("masonry")}
-                  className={cn(
+                  viewMode === "grid"
+                    ? "bg-[#B8956A]/20 text-[#B8956A]"
+                    : "text-[#F5F1E8]/60 hover:text-[#F5F1E8]"
+                )}
+              >
+                <Grid3X3 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("masonry")}
+                className={cn(
                     "h-8 w-8 flex items-center justify-center rounded-md transition-colors",
-                    viewMode === "masonry"
-                      ? "bg-[#B8956A]/20 text-[#B8956A]"
-                      : "text-[#F5F1E8]/60 hover:text-[#F5F1E8]"
-                  )}
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </button>
-              </div>
+                  viewMode === "masonry"
+                    ? "bg-[#B8956A]/20 text-[#B8956A]"
+                    : "text-[#F5F1E8]/60 hover:text-[#F5F1E8]"
+                )}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+            </div>
 
-              {/* Bulk Actions */}
-              {selectedImages.size > 0 && (
+            {/* Bulk Actions */}
+            {selectedImages.size > 0 && (
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="border-[#B8956A] text-[#B8956A]">
-                    {selectedImages.size} selected
-                  </Badge>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedImages(new Set())}
-                    className="border-[#2F2A26] text-[#F5F1E8]/60"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleBulkArchive}
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    Archive
-                  </Button>
-                </div>
-              )}
+                <Badge variant="outline" className="border-[#B8956A] text-[#B8956A]">
+                  {selectedImages.size} selected
+                </Badge>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedImages(new Set())}
+                  className="border-[#2F2A26] text-[#F5F1E8]/60"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBulkArchive}
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Archive
+                </Button>
+              </div>
+            )}
             </div>
           </div>
         </div>

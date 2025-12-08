@@ -4,10 +4,10 @@ const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const CLAUDE_TEXT_MODEL =
   Deno.env.get("CLAUDE_TEXT_MODEL") ?? "claude-3-sonnet-20240229";
 const GEMINI_TEXT_MODEL =
-  Deno.env.get("GEMINI_TEXT_MODEL") ?? "models/gemini-2.0-flash";
+  Deno.env.get("GEMINI_TEXT_MODEL") ?? "models/gemini-3-pro-preview";
 const GEMINI_IMAGE_MODEL =
   Deno.env.get("GEMINI_IMAGE_MODEL") ??
-  "models/gemini-2.0-flash-exp";
+  "models/gemini-3-pro-image-preview";
 const GEMINI_API_ENDPOINT =
   Deno.env.get("GEMINI_API_ENDPOINT") ??
   "https://generativelanguage.googleapis.com/v1beta";

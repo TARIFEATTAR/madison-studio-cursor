@@ -625,44 +625,47 @@ serve(async (req) => {
     let effectiveProvider = provider;
     let effectiveFreepikModel = freepikModel;
     let effectiveFreepikResolution = freepikResolution;
-    let effectiveGeminiModel: string | undefined;
+    // Default to Gemini 3.0 Pro (Nano Banana) for image generation
+    let effectiveGeminiModel: string = "models/gemini-3-pro-image-preview";
     
     if (aiProvider) {
-      // Gemini models
-      if (aiProvider === "gemini" || aiProvider === "gemini-2.0-flash") {
+      // Gemini models (Google Direct)
+      if (aiProvider === "gemini-3-pro-image" || aiProvider === "gemini-3") {
+        effectiveProvider = "gemini";
+        effectiveGeminiModel = "models/gemini-3-pro-image-preview";
+      } else if (aiProvider === "gemini" || aiProvider === "gemini-2.0-flash") {
         effectiveProvider = "gemini";
         effectiveGeminiModel = "models/gemini-2.0-flash-exp";
       } else if (aiProvider === "gemini-2.0-flash-exp") {
         effectiveProvider = "gemini";
         effectiveGeminiModel = "models/gemini-2.0-flash-exp";
       } 
-      // Freepik models (expanded 2024-2025)
-      else if (aiProvider === "freepik-seedream-4-4k") {
+      // Freepik models (actual available models from docs.freepik.com)
+      else if (aiProvider === "freepik-seedream-4") {
         effectiveProvider = "freepik";
-        effectiveFreepikModel = "seedream-4-4k";
+        effectiveFreepikModel = "seedream-4";
+      } else if (aiProvider === "freepik-flux-pro") {
+        effectiveProvider = "freepik";
+        effectiveFreepikModel = "flux-pro-v1-1";
+      } else if (aiProvider === "freepik-hyperflux") {
+        effectiveProvider = "freepik";
+        effectiveFreepikModel = "hyperflux";
+      } else if (aiProvider === "freepik-flux") {
+        effectiveProvider = "freepik";
+        effectiveFreepikModel = "flux-dev";
       } else if (aiProvider === "freepik-seedream") {
         effectiveProvider = "freepik";
         effectiveFreepikModel = "seedream";
-      } else if (aiProvider === "freepik-flux") {
-        effectiveProvider = "freepik";
-        effectiveFreepikModel = "flux";
-      } else if (aiProvider === "freepik-z-image") {
-        effectiveProvider = "freepik";
-        effectiveFreepikModel = "z-image";
       } else if (aiProvider === "freepik-mystic") {
         effectiveProvider = "freepik";
         effectiveFreepikModel = "mystic";
-      } else if (aiProvider === "freepik-google") {
+      } else if (aiProvider === "freepik-classic") {
         effectiveProvider = "freepik";
-        effectiveFreepikModel = "google";
-      } else if (aiProvider === "freepik-ideogram") {
-        effectiveProvider = "freepik";
-        effectiveFreepikModel = "ideogram-3";
-      } else if (aiProvider === "freepik-gpt") {
-        effectiveProvider = "freepik";
-        effectiveFreepikModel = "gpt";
+        effectiveFreepikModel = "classic-fast";
       } else if (aiProvider === "auto") {
         effectiveProvider = "auto";
+        // Default to Gemini 3.0 Pro for auto mode
+        effectiveGeminiModel = "models/gemini-3-pro-image-preview";
       }
     }
     

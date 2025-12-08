@@ -155,3 +155,4 @@ BEGIN
   RAISE NOTICE 'Etsy integration schema created successfully!';
 END $$;
 
+

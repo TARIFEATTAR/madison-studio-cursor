@@ -32,22 +32,21 @@ const ASPECT_RATIO_OPTIONS = [
   { value: "4:3", label: "Classic", description: "Traditional photo" },
 ];
 
-// AI Provider/Model options - Updated for Freepik's 2024-2025 offerings
+// AI Provider/Model options - Updated for Freepik's actual API offerings
 const AI_PROVIDER_OPTIONS = [
   // Auto
   { value: "auto", label: "Auto", description: "AI picks what's best", badge: "SUGGESTED", group: "auto" },
+  // Google Gemini Direct (Google's API) - MOVED TO TOP
+  { value: "gemini-3-pro-image", label: "Gemini 3.0 Pro", description: "Google's latest - Image gen & editing", badge: "BEST", group: "gemini" },
+  { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash", description: "Fast & reliable", badge: "FREE", group: "gemini" },
   // Freepik Premium Models
-  { value: "freepik-seedream-4-4k", label: "Seedream 4 4K", description: "4K with reference images", badge: "TRENDING", group: "freepik" },
-  { value: "freepik-seedream", label: "Seedream", description: "Exceptional creativity", badge: "NEW", group: "freepik" },
-  { value: "freepik-flux", label: "Flux", description: "Community favorite", badge: null, group: "freepik" },
-  { value: "freepik-z-image", label: "Z-Image", description: "Ultra-realistic, fast", badge: "NEW", group: "freepik" },
+  { value: "freepik-seedream-4", label: "Seedream 4", description: "Best quality, 4K capable", badge: "4K", group: "freepik" },
+  { value: "freepik-flux-pro", label: "Flux Pro v1.1", description: "Premium Flux model", badge: "NEW", group: "freepik" },
+  { value: "freepik-hyperflux", label: "Hyperflux", description: "Ultra-fast Flux variant", badge: "FAST", group: "freepik" },
+  { value: "freepik-flux", label: "Flux Dev", description: "Community favorite", badge: "POPULAR", group: "freepik" },
+  { value: "freepik-seedream", label: "Seedream", description: "Exceptional creativity", badge: null, group: "freepik" },
   { value: "freepik-mystic", label: "Mystic", description: "Freepik AI at 2K", badge: null, group: "freepik" },
-  { value: "freepik-google", label: "Google", description: "Photorealism", badge: "NEW", group: "freepik" },
-  { value: "freepik-ideogram", label: "Ideogram 3", description: "Typography & design", badge: null, group: "freepik" },
-  { value: "freepik-gpt", label: "GPT", description: "OpenAI's technology", badge: null, group: "freepik" },
-  // Gemini (always available)
-  { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash", description: "Fast, reliable", badge: null, group: "gemini" },
-  { value: "gemini-2.0-flash-exp", label: "Gemini 2.0 Exp", description: "Latest features", badge: null, group: "gemini" },
+  { value: "freepik-classic", label: "Classic Fast", description: "Quick generation", badge: null, group: "freepik" },
 ];
 
 // Resolution/Quality options
@@ -360,11 +359,16 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                       const prevOption = idx > 0 ? AI_PROVIDER_OPTIONS[idx - 1] : null;
                       const showGroupHeader = !prevOption || prevOption.group !== option.group;
                       
+                      const groupLabels: Record<string, string> = {
+                        "gemini": "Google Gemini",
+                        "freepik": "Freepik AI Models",
+                      };
+                      
                       return (
                         <div key={option.value}>
                           {showGroupHeader && option.group !== "auto" && (
                             <div className="px-2 py-1.5 text-[10px] uppercase tracking-wider text-[#6a5f50] font-medium border-t border-[var(--darkroom-border)] mt-1 first:mt-0 first:border-t-0">
-                              {option.group === "freepik" ? "Freepik Models (Studio+)" : "Google Gemini"}
+                              {groupLabels[option.group] || option.group}
                             </div>
                           )}
                           <SelectItem 
@@ -376,6 +380,11 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                               {option.badge && (
                                 <span className={cn(
                                   "text-[9px] px-1.5 py-0.5 rounded font-medium",
+                                  option.badge === "BEST" && "bg-purple-500/20 text-purple-400",
+                                  option.badge === "POPULAR" && "bg-blue-500/20 text-blue-400",
+                                  option.badge === "4K" && "bg-amber-500/20 text-amber-400",
+                                  option.badge === "FAST" && "bg-cyan-500/20 text-cyan-400",
+                                  option.badge === "FREE" && "bg-emerald-500/20 text-emerald-400",
                                   option.badge === "TRENDING" && "bg-orange-500/20 text-orange-400",
                                   option.badge === "NEW" && "bg-emerald-500/20 text-emerald-400",
                                   option.badge === "SUGGESTED" && "bg-[var(--darkroom-accent)]/20 text-[var(--darkroom-accent)]"

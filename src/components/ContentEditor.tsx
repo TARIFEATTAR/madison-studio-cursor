@@ -307,7 +307,7 @@ export const ContentEditor = ({
       handleRedo();
       return;
     }
-    
+
     // === TEXT FORMATTING ===
     if (modKey && (e.key.toLowerCase() === 'b' || e.code === 'KeyB')) {
       e.preventDefault();
@@ -340,9 +340,9 @@ export const ContentEditor = ({
     }
     
     // === LISTS ===
-    const editor = editableRef.current;
-    const sel = window.getSelection();
-    const insideList = !!(editor && sel && sel.rangeCount > 0 && sel.anchorNode && (sel.anchorNode as any).parentElement?.closest?.('li') && editor.contains(sel.anchorNode));
+      const editor = editableRef.current;
+      const sel = window.getSelection();
+      const insideList = !!(editor && sel && sel.rangeCount > 0 && sel.anchorNode && (sel.anchorNode as any).parentElement?.closest?.('li') && editor.contains(sel.anchorNode));
     
     if (modKey && e.shiftKey && e.key === '8') {
       e.preventDefault();
@@ -357,11 +357,11 @@ export const ContentEditor = ({
     }
 
     if (e.key === 'Tab' && insideList) {
-      e.preventDefault();
-      document.execCommand(e.shiftKey ? 'outdent' : 'indent');
-      updateContentFromEditable();
-      return;
-    }
+        e.preventDefault();
+        document.execCommand(e.shiftKey ? 'outdent' : 'indent');
+        updateContentFromEditable();
+        return;
+      }
     
     // === BLOCK FORMATTING ===
     if (modKey && e.shiftKey && e.key === '>') {

@@ -352,183 +352,184 @@ export function ImageEditorModal({
         <div className="flex flex-col h-full md:h-auto md:max-h-[90vh]">
           {/* Custom Header */}
           <div className="shrink-0 flex items-center justify-between px-4 md:px-5 py-3 md:py-4 bg-[#252220] border-b border-[rgba(184,149,106,0.15)]">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
               className="text-[rgba(245,240,230,0.7)] hover:text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.1)] text-xs md:text-sm"
-            >
+          >
               <ArrowLeft className="w-4 h-4 mr-1 md:mr-2" />
               <span className="hidden sm:inline">Back to {source === "library" ? "Library" : "Dark Room"}</span>
               <span className="sm:hidden">Back</span>
-            </Button>
+          </Button>
             
             <DialogTitle className="font-serif text-lg md:text-xl font-medium text-[#f5f0e6] absolute left-1/2 -translate-x-1/2">
-              Image Editor
-            </DialogTitle>
+            Image Editor
+          </DialogTitle>
             
             <DialogDescription className="sr-only">
               Edit and refine your generated image. Generate variations, add text overlays, or create videos.
             </DialogDescription>
             
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
               className="text-[rgba(245,240,230,0.5)] hover:text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.1)]"
-            >
-              <X className="w-4 h-4" />
-            </Button>
+          >
+            <X className="w-4 h-4" />
+          </Button>
           </div>
 
             {/* Main Content */}
             {image ? (
             <div className="flex-1 grid grid-cols-1 md:grid-cols-[1fr_320px] min-h-0 overflow-hidden">
-            {/* Main Image Preview */}
+          {/* Main Image Preview */}
             <div className="flex flex-col p-3 md:p-6 bg-[#0f0e0d] md:border-r border-b md:border-b-0 border-[rgba(184,149,106,0.1)] overflow-hidden min-h-[200px] md:min-h-0">
-              <motion.div
+            <motion.div
                 className="relative flex-1 flex items-center justify-center bg-[#0a0908] rounded-xl overflow-hidden min-h-0"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-              >
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
                 {displayedImage && (
-                <img
-                  src={displayedImage}
-                  alt="Selected image"
+              <img
+                src={displayedImage}
+                alt="Selected image"
                   className="max-w-full max-h-full object-contain rounded-lg"
-                />
+              />
                 )}
-                
-                {/* Text Overlay Preview (if set) */}
-                {textOverlay.headline && (
-                  <div className={cn(
+              
+              {/* Text Overlay Preview (if set) */}
+              {textOverlay.headline && (
+                <div className={cn(
                     "absolute left-0 right-0 px-4 md:px-6 py-3 md:py-4 text-center pointer-events-none",
                     textOverlay.position === "top" && "top-0 bg-gradient-to-b from-black/70 to-transparent",
                     textOverlay.position === "center" && "top-1/2 -translate-y-1/2 bg-black/50",
                     textOverlay.position === "bottom" && "bottom-0 bg-gradient-to-t from-black/70 to-transparent"
-                  )}>
-                    {textOverlay.headline && (
+                )}>
+                  {textOverlay.headline && (
                       <h2 className="font-serif text-xl md:text-2xl font-semibold text-white drop-shadow-lg">
-                        {textOverlay.headline}
-                      </h2>
-                    )}
-                    {textOverlay.subtext && (
+                      {textOverlay.headline}
+                    </h2>
+                  )}
+                  {textOverlay.subtext && (
                       <p className="text-sm md:text-base text-white/85 drop-shadow-md mt-1">
-                        {textOverlay.subtext}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </motion.div>
+                      {textOverlay.subtext}
+                    </p>
+                  )}
+                </div>
+              )}
+            </motion.div>
 
               {/* Quick Actions - Stack on mobile, row on desktop */}
               <div className="grid grid-cols-3 md:flex md:flex-wrap md:justify-center gap-2 md:gap-3 mt-3 md:mt-4">
-                <Button
+              <Button
                   variant="ghost"
-                  size="sm"
-                  onClick={handleCopyPrompt}
+                size="sm"
+                onClick={handleCopyPrompt}
                   className="h-10 md:h-9 border border-[rgba(184,149,106,0.4)] bg-transparent text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.15)] hover:text-[#f5f0e6] hover:border-[#b8956a] text-xs md:text-sm"
-                >
+              >
                   <Copy className="w-4 h-4 md:mr-2" />
                   <span className="hidden md:inline">Copy Prompt</span>
-                </Button>
-                <Button
+              </Button>
+              <Button
                   variant="ghost"
-                  size="sm"
-                  onClick={handleDownload}
+                size="sm"
+                onClick={handleDownload}
                   className="h-10 md:h-9 border border-[rgba(184,149,106,0.4)] bg-transparent text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.15)] hover:text-[#f5f0e6] hover:border-[#b8956a] text-xs md:text-sm"
-                >
+              >
                   <Download className="w-4 h-4 md:mr-2" />
                   <span className="hidden md:inline">Download</span>
-                </Button>
-                <Button
-                  variant="brass"
-                  size="sm"
-                  onClick={handleCreateVideo}
-                  className="h-10 md:h-9 text-xs md:text-sm"
-                >
+              </Button>
+              <Button
+                variant="brass"
+                size="sm"
+                disabled
+                title="Coming Soon"
+                className="h-10 md:h-9 text-xs md:text-sm opacity-50 cursor-not-allowed"
+              >
                   <Film className="w-4 h-4 md:mr-2" />
-                  <span className="hidden md:inline">Create Video</span>
-                </Button>
-              </div>
+                  <span className="hidden md:inline">Coming Soon</span>
+              </Button>
             </div>
+          </div>
 
-            {/* Editor Panel */}
+          {/* Editor Panel */}
             <div className="flex flex-col bg-[#1a1816] overflow-hidden min-h-0">
-              {/* Tabs */}
+            {/* Tabs */}
               <div className="shrink-0 flex border-b border-[rgba(184,149,106,0.15)]">
-                <button
-                  className={cn(
+              <button
+                className={cn(
                     "flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-2 text-xs md:text-sm transition-all",
                     activeTab === "refine"
                       ? "text-[#b8956a] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_#b8956a]"
                       : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
-                  )}
-                  onClick={() => setActiveTab("refine")}
-                >
-                  <Wand2 className="w-4 h-4" />
-                  <span>Refine</span>
-                </button>
-                <button
-                  className={cn(
+                )}
+                onClick={() => setActiveTab("refine")}
+              >
+                <Wand2 className="w-4 h-4" />
+                <span>Refine</span>
+              </button>
+              <button
+                className={cn(
                     "flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-2 text-xs md:text-sm transition-all",
                     activeTab === "variations"
                       ? "text-[#b8956a] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_#b8956a]"
                       : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
-                  )}
-                  onClick={() => setActiveTab("variations")}
-                >
-                  <ImageIcon className="w-4 h-4" />
-                  <span>Variations</span>
-                </button>
-                <button
-                  className={cn(
+                )}
+                onClick={() => setActiveTab("variations")}
+              >
+                <ImageIcon className="w-4 h-4" />
+                <span>Variations</span>
+              </button>
+              <button
+                className={cn(
                     "flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-2 text-xs md:text-sm transition-all",
                     activeTab === "text"
                       ? "text-[#b8956a] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_#b8956a]"
                       : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
-                  )}
-                  onClick={() => setActiveTab("text")}
-                >
-                  <Type className="w-4 h-4" />
-                  <span>Text</span>
-                </button>
-              </div>
+                )}
+                onClick={() => setActiveTab("text")}
+              >
+                <Type className="w-4 h-4" />
+                <span>Text</span>
+              </button>
+            </div>
 
               {/* Tab Content - Scrollable */}
               <div className="flex-1 overflow-y-auto p-4 md:p-5 min-h-0">
-                {/* Refine Tab */}
-                {activeTab === "refine" && (
-                  <motion.div
+              {/* Refine Tab */}
+              {activeTab === "refine" && (
+                <motion.div
                     className="flex flex-col gap-4"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
                     <label className="text-sm font-medium text-[rgba(245,240,230,0.7)]">
-                      Describe what you'd like to change
-                    </label>
-                    <Textarea
-                      value={refinementPrompt}
-                      onChange={(e) => setRefinementPrompt(e.target.value)}
-                      placeholder="e.g., Make the lighting warmer, add more shadows, zoom in on the product..."
+                    Describe what you'd like to change
+                  </label>
+                  <Textarea
+                    value={refinementPrompt}
+                    onChange={(e) => setRefinementPrompt(e.target.value)}
+                    placeholder="e.g., Make the lighting warmer, add more shadows, zoom in on the product..."
                       className="bg-[rgba(26,24,22,0.8)] border-[rgba(184,149,106,0.2)] text-[#f5f0e6] placeholder:text-[rgba(245,240,230,0.4)] focus:border-[#b8956a] focus:ring-1 focus:ring-[rgba(184,149,106,0.2)] resize-none"
-                      rows={4}
-                    />
-                    <Button
-                      variant="brass"
-                      onClick={handleRefine}
-                      disabled={isGenerating || !refinementPrompt.trim()}
+                    rows={4}
+                  />
+                  <Button
+                    variant="brass"
+                    onClick={handleRefine}
+                    disabled={isGenerating || !refinementPrompt.trim()}
                       className="w-full"
-                    >
-                      {isGenerating ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Wand2 className="w-4 h-4 mr-2" />
-                      )}
-                      {isGenerating ? "Generating..." : "Refine Image"}
-                    </Button>
+                  >
+                    {isGenerating ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Wand2 className="w-4 h-4 mr-2" />
+                    )}
+                    {isGenerating ? "Generating..." : "Refine Image"}
+                  </Button>
 
-                    {/* Original Prompt Display */}
+                  {/* Original Prompt Display */}
                     {image?.prompt && (
                       <div className="mt-2 p-3 bg-[rgba(26,24,22,0.5)] rounded-lg border border-[rgba(184,149,106,0.1)]">
                         <span className="text-[0.65rem] uppercase tracking-wider text-[rgba(184,149,106,0.6)]">
@@ -537,188 +538,188 @@ export function ImageEditorModal({
                         <p className="text-[0.75rem] text-[rgba(245,240,230,0.6)] mt-1 leading-relaxed">
                           {image.prompt}
                         </p>
-                      </div>
+                  </div>
                     )}
-                  </motion.div>
-                )}
+                </motion.div>
+              )}
 
-                {/* Variations Tab */}
-                {activeTab === "variations" && (
-                  <motion.div
+              {/* Variations Tab */}
+              {activeTab === "variations" && (
+                <motion.div
                     className="flex flex-col gap-4"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
                     <div className="flex items-center justify-between">
                       <h4 className="text-sm font-medium text-[#f5f0e6]">Style Variations</h4>
-                      <Button
+                    <Button
                         variant="ghost"
-                        size="sm"
-                        onClick={handleGenerateVariations}
-                        disabled={isGenerating}
+                      size="sm"
+                      onClick={handleGenerateVariations}
+                      disabled={isGenerating}
                         className="border border-[rgba(184,149,106,0.4)] bg-transparent text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.15)] hover:text-[#f5f0e6] hover:border-[#b8956a]"
-                      >
-                        {isGenerating ? (
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        ) : (
-                          <Plus className="w-4 h-4 mr-2" />
-                        )}
-                        Generate
-                      </Button>
-                    </div>
+                    >
+                      {isGenerating ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Plus className="w-4 h-4 mr-2" />
+                      )}
+                      Generate
+                    </Button>
+                  </div>
 
-                    {/* Original + Variations Grid */}
+                  {/* Original + Variations Grid */}
                     <div className="grid grid-cols-2 gap-3">
-                      {/* Original Image */}
-                      <button
-                        className={cn(
+                    {/* Original Image */}
+                    <button
+                      className={cn(
                           "relative aspect-square rounded-lg overflow-hidden border-2 bg-[#0f0e0d] cursor-pointer transition-all",
                           !selectedVariationId
                             ? "border-[#b8956a] shadow-[0_0_0_2px_rgba(184,149,106,0.2)]"
                             : "border-transparent hover:border-[rgba(184,149,106,0.3)]"
-                        )}
-                        onClick={() => setSelectedVariationId(null)}
-                      >
+                      )}
+                      onClick={() => setSelectedVariationId(null)}
+                    >
                         <img src={image.imageUrl} alt="Original" className="w-full h-full object-cover" />
-                        {!selectedVariationId && (
+                      {!selectedVariationId && (
                           <div className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-[#b8956a] rounded-full">
                             <Check className="w-4 h-4 text-[#1a1816]" />
-                          </div>
-                        )}
+                        </div>
+                      )}
                         <span className="absolute bottom-2 left-2 text-[0.65rem] font-semibold text-white bg-black/60 px-1.5 py-0.5 rounded">
                           Original
                         </span>
-                      </button>
+                    </button>
 
-                      {/* Generated Variations */}
-                      {variations.map((variation, index) => (
-                        <button
-                          key={variation.id}
-                          className={cn(
+                    {/* Generated Variations */}
+                    {variations.map((variation, index) => (
+                      <button
+                        key={variation.id}
+                        className={cn(
                             "relative aspect-square rounded-lg overflow-hidden border-2 bg-[#0f0e0d] cursor-pointer transition-all",
                             selectedVariationId === variation.id
                               ? "border-[#b8956a] shadow-[0_0_0_2px_rgba(184,149,106,0.2)]"
                               : "border-transparent hover:border-[rgba(184,149,106,0.3)]"
-                          )}
-                          onClick={() => !variation.isGenerating && setSelectedVariationId(variation.id)}
-                          disabled={variation.isGenerating}
-                        >
-                          {variation.isGenerating ? (
+                        )}
+                        onClick={() => !variation.isGenerating && setSelectedVariationId(variation.id)}
+                        disabled={variation.isGenerating}
+                      >
+                        {variation.isGenerating ? (
                             <div className="w-full h-full flex items-center justify-center text-[#b8956a]">
-                              <Loader2 className="w-6 h-6 animate-spin" />
-                            </div>
-                          ) : (
-                            <>
+                            <Loader2 className="w-6 h-6 animate-spin" />
+                          </div>
+                        ) : (
+                          <>
                               <img src={variation.imageUrl} alt={`Variation ${index + 1}`} className="w-full h-full object-cover" />
-                              {selectedVariationId === variation.id && (
+                            {selectedVariationId === variation.id && (
                                 <div className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-[#b8956a] rounded-full">
                                   <Check className="w-4 h-4 text-[#1a1816]" />
-                                </div>
-                              )}
-                            </>
-                          )}
+                              </div>
+                            )}
+                          </>
+                        )}
                           <span className="absolute bottom-2 left-2 text-[0.65rem] font-semibold text-white bg-black/60 px-1.5 py-0.5 rounded">
-                            {variation.isGenerating ? "Generating..." : `V${index + 1}`}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
+                          {variation.isGenerating ? "Generating..." : `V${index + 1}`}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
 
-                    {variations.length === 0 && !isGenerating && (
+                  {variations.length === 0 && !isGenerating && (
                       <p className="text-sm text-[rgba(245,240,230,0.4)] text-center py-8">
-                        Click "Generate" to create style variations of this image
-                      </p>
-                    )}
-                  </motion.div>
-                )}
+                      Click "Generate" to create style variations of this image
+                    </p>
+                  )}
+                </motion.div>
+              )}
 
-                {/* Text Tab */}
-                {activeTab === "text" && (
-                  <motion.div
+              {/* Text Tab */}
+              {activeTab === "text" && (
+                <motion.div
                     className="flex flex-col gap-4"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[0.75rem] font-medium text-[rgba(245,240,230,0.7)]">Headline</label>
-                      <input
-                        type="text"
-                        value={textOverlay.headline}
-                        onChange={(e) => setTextOverlay((prev) => ({ ...prev, headline: e.target.value }))}
-                        placeholder="Enter headline text..."
+                    <input
+                      type="text"
+                      value={textOverlay.headline}
+                      onChange={(e) => setTextOverlay((prev) => ({ ...prev, headline: e.target.value }))}
+                      placeholder="Enter headline text..."
                         className="bg-[rgba(26,24,22,0.8)] border border-[rgba(184,149,106,0.2)] rounded-lg px-3.5 py-2.5 text-[#f5f0e6] text-sm placeholder:text-[rgba(245,240,230,0.4)] focus:outline-none focus:border-[#b8956a] focus:ring-1 focus:ring-[rgba(184,149,106,0.2)] transition-all"
-                      />
-                    </div>
-                    
+                    />
+                  </div>
+                  
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[0.75rem] font-medium text-[rgba(245,240,230,0.7)]">Subtext</label>
-                      <input
-                        type="text"
-                        value={textOverlay.subtext}
-                        onChange={(e) => setTextOverlay((prev) => ({ ...prev, subtext: e.target.value }))}
-                        placeholder="Enter subtext..."
+                    <input
+                      type="text"
+                      value={textOverlay.subtext}
+                      onChange={(e) => setTextOverlay((prev) => ({ ...prev, subtext: e.target.value }))}
+                      placeholder="Enter subtext..."
                         className="bg-[rgba(26,24,22,0.8)] border border-[rgba(184,149,106,0.2)] rounded-lg px-3.5 py-2.5 text-[#f5f0e6] text-sm placeholder:text-[rgba(245,240,230,0.4)] focus:outline-none focus:border-[#b8956a] focus:ring-1 focus:ring-[rgba(184,149,106,0.2)] transition-all"
-                      />
-                    </div>
+                    />
+                  </div>
 
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[0.75rem] font-medium text-[rgba(245,240,230,0.7)]">Position</label>
                       <div className="flex gap-2">
-                        {(["top", "center", "bottom"] as const).map((pos) => (
-                          <button
-                            key={pos}
-                            className={cn(
+                      {(["top", "center", "bottom"] as const).map((pos) => (
+                        <button
+                          key={pos}
+                          className={cn(
                               "flex-1 py-2 px-3 bg-[rgba(26,24,22,0.8)] border rounded-md text-[0.75rem] transition-all",
                               textOverlay.position === pos
                                 ? "border-[#b8956a] bg-[rgba(184,149,106,0.15)] text-[#b8956a]"
                                 : "border-[rgba(184,149,106,0.2)] text-[rgba(245,240,230,0.6)] hover:border-[rgba(184,149,106,0.4)] hover:text-[rgba(245,240,230,0.8)]"
-                            )}
-                            onClick={() => setTextOverlay((prev) => ({ ...prev, position: pos }))}
-                          >
-                            {pos.charAt(0).toUpperCase() + pos.slice(1)}
-                          </button>
-                        ))}
-                      </div>
+                          )}
+                          onClick={() => setTextOverlay((prev) => ({ ...prev, position: pos }))}
+                        >
+                          {pos.charAt(0).toUpperCase() + pos.slice(1)}
+                        </button>
+                      ))}
                     </div>
+                  </div>
 
                     <p className="text-[0.7rem] text-[rgba(245,240,230,0.4)] mt-2">
-                      Text will be rendered on the image when you export
-                    </p>
-                  </motion.div>
-                )}
-              </div>
+                    Text will be rendered on the image when you export
+                  </p>
+                </motion.div>
+              )}
+            </div>
 
               {/* Footer Actions - Stack on mobile */}
               <div className="shrink-0 flex flex-col sm:flex-row gap-2 sm:gap-3 px-4 md:px-5 py-3 md:py-4 border-t border-[rgba(184,149,106,0.15)] bg-[#252220]">
-                {!image.isSaved && (
-                  <Button
+              {!image.isSaved && (
+                <Button
                     variant="ghost"
-                    onClick={handleSave}
-                    disabled={isSaving}
+                  onClick={handleSave}
+                  disabled={isSaving}
                     className="flex-1 h-11 sm:h-10 border border-[rgba(184,149,106,0.4)] bg-transparent text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.15)] hover:text-[#f5f0e6] hover:border-[#b8956a]"
-                  >
-                    {isSaving ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Save className="w-4 h-4 mr-2" />
-                    )}
-                    Save to Library
-                  </Button>
-                )}
-                <Button variant="brass" onClick={handleDownload} className="flex-1 h-11 sm:h-10">
-                  <Download className="w-4 h-4 mr-2" />
-                  Export
+                >
+                  {isSaving ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4 mr-2" />
+                  )}
+                  Save to Library
                 </Button>
-              </div>
+              )}
+                <Button variant="brass" onClick={handleDownload} className="flex-1 h-11 sm:h-10">
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button>
             </div>
           </div>
+        </div>
             ) : (
               <div className="flex items-center justify-center p-8 text-[rgba(245,240,230,0.5)]">
                 <p>No image selected</p>
               </div>
             )}
           </div>
-        </DialogContent>
+      </DialogContent>
     </Dialog>
   );
 }

@@ -4,7 +4,6 @@ import { Package, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UploadZone } from "./UploadZone";
-import { ProSettings } from "./ProSettings";
 import { GenerateButton } from "./GenerateButton";
 import type { ProModeSettings } from "./ProSettings";
 import { ProductSelector } from "@/components/forge/ProductSelector";
@@ -201,15 +200,6 @@ export function LeftRail({
             )}
           </AnimatePresence>
         </div>
-      </div>
-
-      {/* Section: Pro Settings - Collapsible */}
-      <div className="left-rail__section">
-        <ProSettings
-          settings={proSettings}
-          onChange={onProSettingsChange}
-          disabled={isGenerating}
-        />
       </div>
 
       {/* Generate Button - Sticky Bottom */}

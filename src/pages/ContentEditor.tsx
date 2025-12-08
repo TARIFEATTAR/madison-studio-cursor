@@ -1022,7 +1022,7 @@ export default function ContentEditorPage() {
       handleRedo();
       return;
     }
-    
+
     // === TEXT FORMATTING ===
     // Bold: Cmd+B (Mac) or Ctrl+B (Windows)
     if (modKey && (e.key.toLowerCase() === 'b' || e.code === 'KeyB')) {
@@ -1318,35 +1318,35 @@ export default function ContentEditorPage() {
 
             {/* Desktop: Headers & More formatting */}
             <div className="h-5 w-px bg-border/40 mx-1 hidden lg:block" />
-            
+
             <div className="hidden lg:flex items-center gap-0.5">
-              <Button
-                variant="ghost"
-                size="sm"
+            <Button
+              variant="ghost"
+              size="sm"
                 onMouseDown={(e) => { e.preventDefault(); handleH1(); }}
                 className="h-8 px-2 text-xs font-semibold"
-                title="Heading 1"
-              >
-                H1
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
+              title="Heading 1"
+            >
+              H1
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
                 onMouseDown={(e) => { e.preventDefault(); handleH2(); }}
                 className="h-8 px-2 text-xs font-semibold"
-                title="Heading 2"
-              >
-                H2
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
+              title="Heading 2"
+            >
+              H2
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
                 onMouseDown={(e) => { e.preventDefault(); handleH3(); }}
                 className="h-8 px-2 text-xs font-semibold"
-                title="Heading 3"
-              >
-                H3
-              </Button>
+              title="Heading 3"
+            >
+              H3
+            </Button>
             </div>
 
             <div className="h-5 w-px bg-border/40 mx-1 hidden md:block" />

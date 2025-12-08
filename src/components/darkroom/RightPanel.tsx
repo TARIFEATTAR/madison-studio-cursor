@@ -15,12 +15,38 @@ import {
   Zap,
   RefreshCw,
   X,
+  SlidersHorizontal,
+  Cpu,
+  Camera,
+  Sun,
+  Globe,
+  Maximize2,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import type { ProModeSettings } from "./ProSettings";
+import {
+  getCameraOptions,
+  getLightingOptions,
+  getEnvironmentOptions,
+} from "@/utils/promptFormula";
 
 interface Suggestion {
   id: string;
@@ -33,6 +59,35 @@ interface HistoryItem {
   prompt: string;
   timestamp: Date;
 }
+
+// AI Model options
+const AI_MODEL_OPTIONS = [
+  { value: "auto", label: "Auto", description: "AI picks what's best", badge: "SUGGESTED", group: "auto" },
+  { value: "gemini-3-pro-image", label: "Gemini 3.0 Pro", description: "Google's latest", badge: "BEST", group: "gemini" },
+  { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash", description: "Fast & reliable", badge: "FREE", group: "gemini" },
+  { value: "freepik-seedream-4", label: "Seedream 4", description: "4K capable", badge: "4K", group: "freepik" },
+  { value: "freepik-flux-pro", label: "Flux Pro v1.1", description: "Premium", badge: "NEW", group: "freepik" },
+  { value: "freepik-hyperflux", label: "Hyperflux", description: "Ultra-fast", badge: "FAST", group: "freepik" },
+  { value: "freepik-flux", label: "Flux Dev", description: "Community favorite", badge: "POPULAR", group: "freepik" },
+  { value: "freepik-mystic", label: "Mystic", description: "2K resolution", badge: null, group: "freepik" },
+];
+
+const RESOLUTION_OPTIONS = [
+  { value: "standard", label: "Standard", description: "1K (1024px)" },
+  { value: "high", label: "High", description: "2K (2048px)" },
+  { value: "4k", label: "4K Ultra", description: "4K (4096px)", badge: "Signature" },
+];
+
+const ASPECT_RATIO_OPTIONS = [
+  { value: "1:1", label: "Square", description: "Instagram, Product" },
+  { value: "16:9", label: "Widescreen", description: "YouTube, Desktop" },
+  { value: "9:16", label: "Social Story", description: "Reels, TikTok" },
+  { value: "4:5", label: "Social Post", description: "Instagram Feed" },
+  { value: "2:3", label: "Portrait", description: "Pinterest, Print" },
+  { value: "3:2", label: "Standard", description: "Classic photo" },
+];
+
+type RightPanelTab = "madison" | "settings";
 
 interface RightPanelProps {
   // Suggestions based on context
@@ -56,6 +111,11 @@ interface RightPanelProps {
   hasBackground: boolean;
   hasStyle: boolean;
   proSettingsCount: number;
+  
+  // Pro Settings (NEW)
+  proSettings?: ProModeSettings;
+  onProSettingsChange?: (settings: ProModeSettings) => void;
+  isGenerating?: boolean;
 }
 
 // Quick Preset Button
@@ -167,11 +227,27 @@ export function RightPanel({
   hasBackground,
   hasStyle,
   proSettingsCount,
+  proSettings,
+  onProSettingsChange,
+  isGenerating = false,
 }: RightPanelProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [chatInput, setChatInput] = useState("");
+  const [activeTab, setActiveTab] = useState<RightPanelTab>("madison");
+  
+  // Get photography options
+  const cameraOptions = getCameraOptions();
+  const lightingOptions = getLightingOptions();
+  const environmentOptions = getEnvironmentOptions();
+  
+  // Handle settings change
+  const handleSettingChange = (key: keyof ProModeSettings, value: string | undefined) => {
+    if (onProSettingsChange && proSettings) {
+      onProSettingsChange({ ...proSettings, [key]: value });
+    }
+  };
 
   // Generate context-aware tips
   const contextTips = [];
@@ -224,9 +300,34 @@ export function RightPanel({
         }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
-        {/* Madison Header */}
+        {/* Header with Tabs */}
         <div className="madison-header">
-          <h3>Madison</h3>
+          <div className="flex items-center gap-1 flex-1">
+            <button
+              onClick={() => setActiveTab("madison")}
+              className={cn(
+                "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                activeTab === "madison"
+                  ? "bg-[var(--darkroom-accent)]/20 text-[var(--darkroom-accent)]"
+                  : "text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)]"
+              )}
+            >
+              <Wand2 className="w-3.5 h-3.5 inline mr-1.5" />
+              Madison
+            </button>
+            <button
+              onClick={() => setActiveTab("settings")}
+              className={cn(
+                "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                activeTab === "settings"
+                  ? "bg-[var(--darkroom-accent)]/20 text-[var(--darkroom-accent)]"
+                  : "text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)]"
+              )}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5 inline mr-1.5" />
+              Settings
+            </button>
+          </div>
           <button 
             className="madison-collapse-btn"
             onClick={() => setIsCollapsed(true)}
@@ -238,6 +339,246 @@ export function RightPanel({
 
       {/* Content */}
       <div className="right-panel__content">
+        
+        {/* === SETTINGS TAB === */}
+        {activeTab === "settings" && proSettings && onProSettingsChange && (
+          <div className="space-y-4">
+            {/* Reset Button */}
+            <div className="flex items-center justify-between pb-2 border-b border-[var(--darkroom-border)]">
+              <span className="text-xs text-[var(--darkroom-text-muted)]">
+                {Object.values(proSettings).filter(Boolean).length} settings active
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onProSettingsChange({
+                  aiProvider: "auto",
+                  resolution: "standard",
+                  aspectRatio: "1:1",
+                  camera: undefined,
+                  lighting: undefined,
+                  environment: undefined,
+                  characterId: undefined,
+                })}
+                className="h-7 px-2 text-xs text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-accent)]"
+              >
+                <RefreshCw className="w-3 h-3 mr-1" />
+                Reset All
+              </Button>
+            </div>
+
+            {/* AI Model */}
+            <div className="panel-section">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="panel-heading mb-0">
+                  <Cpu className="w-4 h-4 text-[var(--darkroom-accent)]" />
+                  <span>AI Model</span>
+                </h4>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-3.5 h-3.5 text-[var(--darkroom-text-dim)] cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="left" className="max-w-[200px]">
+                      <p className="text-xs">Choose the AI model for generation. Gemini 3.0 Pro is recommended.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <Select
+                value={proSettings.aiProvider || "auto"}
+                onValueChange={(v) => handleSettingChange("aiProvider", v)}
+                disabled={isGenerating}
+              >
+                <SelectTrigger className="w-full h-9 bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
+                  <SelectValue placeholder="Select model..." />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] max-h-[280px]">
+                  {AI_MODEL_OPTIONS.map((option, idx) => {
+                    const prevOption = idx > 0 ? AI_MODEL_OPTIONS[idx - 1] : null;
+                    const showGroupHeader = !prevOption || prevOption.group !== option.group;
+                    const groupLabels: Record<string, string> = {
+                      "gemini": "Google Gemini",
+                      "freepik": "Freepik Models",
+                    };
+                    
+                    return (
+                      <div key={option.value}>
+                        {showGroupHeader && option.group !== "auto" && (
+                          <div className="px-2 py-1.5 text-[10px] uppercase tracking-wider text-[#6a5f50] font-medium border-t border-[var(--darkroom-border)] mt-1 first:mt-0 first:border-t-0">
+                            {groupLabels[option.group] || option.group}
+                          </div>
+                        )}
+                        <SelectItem value={option.value} className="text-[#f5f0e6]">
+                          <span className="flex items-center gap-2">
+                            <span>{option.label}</span>
+                            {option.badge && (
+                              <span className={cn(
+                                "text-[9px] px-1.5 py-0.5 rounded font-medium",
+                                option.badge === "BEST" && "bg-purple-500/20 text-purple-400",
+                                option.badge === "FREE" && "bg-emerald-500/20 text-emerald-400",
+                                option.badge === "SUGGESTED" && "bg-[var(--darkroom-accent)]/20 text-[var(--darkroom-accent)]",
+                                option.badge === "NEW" && "bg-emerald-500/20 text-emerald-400",
+                                option.badge === "FAST" && "bg-cyan-500/20 text-cyan-400",
+                                option.badge === "4K" && "bg-amber-500/20 text-amber-400",
+                                option.badge === "POPULAR" && "bg-blue-500/20 text-blue-400"
+                              )}>
+                                {option.badge}
+                              </span>
+                            )}
+                          </span>
+                        </SelectItem>
+                      </div>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Resolution */}
+            <div className="panel-section">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="panel-heading mb-0">
+                  <Maximize2 className="w-4 h-4 text-[var(--darkroom-accent)]" />
+                  <span>Resolution</span>
+                </h4>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {RESOLUTION_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => handleSettingChange("resolution", option.value)}
+                    disabled={isGenerating}
+                    className={cn(
+                      "px-2 py-2 rounded-md text-xs font-medium transition-all",
+                      proSettings.resolution === option.value
+                        ? "bg-[var(--darkroom-accent)] text-[var(--darkroom-bg)]"
+                        : "bg-[var(--darkroom-surface)] text-[var(--darkroom-text-muted)] hover:bg-[var(--darkroom-surface-elevated)]"
+                    )}
+                  >
+                    {option.label}
+                    {option.badge && (
+                      <span className="block text-[9px] opacity-60">{option.badge}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Aspect Ratio */}
+            <div className="panel-section">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="panel-heading mb-0">
+                  <Maximize2 className="w-4 h-4 text-[var(--darkroom-accent)]" />
+                  <span>Aspect Ratio</span>
+                </h4>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {ASPECT_RATIO_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => handleSettingChange("aspectRatio", option.value)}
+                    disabled={isGenerating}
+                    className={cn(
+                      "px-2 py-2 rounded-md text-xs font-medium transition-all",
+                      proSettings.aspectRatio === option.value
+                        ? "bg-[var(--darkroom-accent)] text-[var(--darkroom-bg)]"
+                        : "bg-[var(--darkroom-surface)] text-[var(--darkroom-text-muted)] hover:bg-[var(--darkroom-surface-elevated)]"
+                    )}
+                  >
+                    {option.label}
+                    <span className="block text-[9px] opacity-60">{option.value}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Camera */}
+            <div className="panel-section">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="panel-heading mb-0">
+                  <Camera className="w-4 h-4 text-[var(--darkroom-accent)]" />
+                  <span>Camera</span>
+                </h4>
+              </div>
+              <Select
+                value={proSettings.camera || "none"}
+                onValueChange={(v) => handleSettingChange("camera", v === "none" ? undefined : v)}
+                disabled={isGenerating}
+              >
+                <SelectTrigger className="w-full h-9 bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
+                  <SelectValue placeholder="No camera style" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] max-h-[200px]">
+                  <SelectItem value="none" className="text-[#f5f0e6]">No camera style</SelectItem>
+                  {cameraOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value} className="text-[#f5f0e6]">
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Lighting */}
+            <div className="panel-section">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="panel-heading mb-0">
+                  <Sun className="w-4 h-4 text-[var(--darkroom-accent)]" />
+                  <span>Lighting</span>
+                </h4>
+              </div>
+              <Select
+                value={proSettings.lighting || "none"}
+                onValueChange={(v) => handleSettingChange("lighting", v === "none" ? undefined : v)}
+                disabled={isGenerating}
+              >
+                <SelectTrigger className="w-full h-9 bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
+                  <SelectValue placeholder="No lighting style" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] max-h-[200px]">
+                  <SelectItem value="none" className="text-[#f5f0e6]">No lighting style</SelectItem>
+                  {lightingOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value} className="text-[#f5f0e6]">
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Environment */}
+            <div className="panel-section">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="panel-heading mb-0">
+                  <Globe className="w-4 h-4 text-[var(--darkroom-accent)]" />
+                  <span>Environment</span>
+                </h4>
+              </div>
+              <Select
+                value={proSettings.environment || "none"}
+                onValueChange={(v) => handleSettingChange("environment", v === "none" ? undefined : v)}
+                disabled={isGenerating}
+              >
+                <SelectTrigger className="w-full h-9 bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
+                  <SelectValue placeholder="No environment" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] max-h-[200px]">
+                  <SelectItem value="none" className="text-[#f5f0e6]">No environment</SelectItem>
+                  {environmentOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value} className="text-[#f5f0e6]">
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
+
+        {/* === MADISON TAB === */}
+        {activeTab === "madison" && (
+          <>
         {/* Context Tips */}
         {contextTips.length > 0 && (
           <div className="panel-section">
@@ -421,6 +762,8 @@ export function RightPanel({
               )}
             </AnimatePresence>
           </div>
+        )}
+        </>
         )}
       </div>
     </motion.aside>

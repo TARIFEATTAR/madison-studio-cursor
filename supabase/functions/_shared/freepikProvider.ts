@@ -35,20 +35,16 @@ const FREEPIK_API_BASE = "https://api.freepik.com/v1/ai";
 // TYPES
 // ============================================
 
-// Image Models - Updated for 2024-2025
+// Image Models - Actual available models from docs.freepik.com
 export type FreepikImageModel = 
-  // Premium Models
-  | "seedream-4-4k"     // 4K with reference images, strong aesthetics (TRENDING)
-  | "seedream"          // Exceptional creativity
-  | "flux"              // Community favorite
+  | "mystic"            // Freepik's own AI model
+  | "classic-fast"      // Fast generation
   | "flux-dev"          // Flux development version
-  | "flux-pro-v1-1"     // Flux Pro
-  | "z-image"           // Ultra-realistic, fast (NEW)
-  | "mystic"            // Freepik's model at 2K
-  | "google"            // Photorealism + prompt adherence (NEW)
-  | "ideogram-3"        // Typography and graphic design
-  | "gpt"               // OpenAI's image model
-  | "runway";           // Creative outputs
+  | "flux-pro-v1-1"     // Flux Pro (NEW)
+  | "hyperflux"         // Ultra-fast Flux variant
+  | "seedream"          // Exceptional creativity
+  | "seedream-4"        // Latest with 4K support
+  | "seedream-4-edit";  // Edit existing images
 
 // Video Models - Updated for 2024-2025
 export type FreepikVideoModel =
@@ -233,20 +229,17 @@ function mapAspectRatio(ratio?: string): FreepikAspectRatio {
   return mapping[ratio] || "square_1_1";
 }
 
-// Map model name to API endpoint
+// Map model name to API endpoint - from docs.freepik.com
 function getImageEndpoint(model: FreepikImageModel): string {
   const endpoints: Record<FreepikImageModel, string> = {
-    "seedream-4-4k": "/text-to-image/seedream-4-4k",
-    "seedream": "/text-to-image/seedream",
-    "flux": "/text-to-image/flux",
+    "mystic": "/mystic",
+    "classic-fast": "/text-to-image",
     "flux-dev": "/text-to-image/flux-dev",
     "flux-pro-v1-1": "/text-to-image/flux-pro-v1-1",
-    "z-image": "/text-to-image/z-image",
-    "mystic": "/mystic",
-    "google": "/text-to-image/google",
-    "ideogram-3": "/text-to-image/ideogram-3",
-    "gpt": "/text-to-image/gpt",
-    "runway": "/text-to-image/runway",
+    "hyperflux": "/text-to-image/hyperflux",
+    "seedream": "/text-to-image/seedream",
+    "seedream-4": "/text-to-image/seedream-4",
+    "seedream-4-edit": "/text-to-image/seedream-4-edit",
   };
   return endpoints[model] || "/mystic";
 }
@@ -694,16 +687,15 @@ export async function relightImage(
 // MODEL METADATA (for UI)
 // ============================================
 
+// Actual available models from docs.freepik.com
 export const IMAGE_MODELS = [
-  { id: "seedream-4-4k", name: "Seedream 4 4K", description: "4K with reference images and strong aesthetics", badge: "TRENDING", supportsReferences: true },
-  { id: "seedream", name: "Seedream", description: "Exceptional creativity", badge: "NEW", supportsReferences: true },
-  { id: "flux", name: "Flux", description: "Most loved by the AI community", supportsReferences: false },
-  { id: "z-image", name: "Z-Image", description: "Ultra-realistic fast images", badge: "NEW", supportsReferences: false },
+  { id: "seedream-4", name: "Seedream 4", description: "Best quality with 4K support", badge: "BEST", supportsReferences: true },
+  { id: "flux-pro-v1-1", name: "Flux Pro v1.1", description: "Premium Flux model", badge: "NEW", supportsReferences: false },
+  { id: "hyperflux", name: "Hyperflux", description: "Ultra-fast Flux variant", badge: "FAST", supportsReferences: false },
+  { id: "flux-dev", name: "Flux Dev", description: "Community favorite", badge: "POPULAR", supportsReferences: false },
+  { id: "seedream", name: "Seedream", description: "Exceptional creativity", supportsReferences: true },
   { id: "mystic", name: "Mystic", description: "Freepik AI at 2K resolution", supportsReferences: false },
-  { id: "google", name: "Google", description: "Photorealism and prompt adherence", badge: "NEW", supportsReferences: false },
-  { id: "ideogram-3", name: "Ideogram 3", description: "Typography and graphic design", supportsReferences: false },
-  { id: "gpt", name: "GPT", description: "OpenAI's technology from ChatGPT", supportsReferences: false },
-  { id: "runway", name: "Runway", description: "Creative outputs", supportsReferences: false },
+  { id: "classic-fast", name: "Classic Fast", description: "Quick generation", supportsReferences: false },
 ] as const;
 
 export const VIDEO_MODELS = [

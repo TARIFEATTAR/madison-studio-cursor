@@ -2666,3 +2666,62 @@
   border-top: 1px solid var(--darkroom-border-subtle);
   margin: 0;
 }
+
+/* =============================================================================
+   MOBILE SELECT DROPDOWN FIX
+   Ensure Radix UI Select dropdowns appear above bottom sheets
+   ============================================================================= */
+@media (max-width: 1024px) {
+  /* Fix Select dropdown z-index to appear above mobile bottom sheets */
+  [data-radix-popper-content-wrapper] {
+    z-index: 9999 !important;
+  }
+  
+  /* Ensure SelectContent has proper z-index */
+  [role="listbox"] {
+    z-index: 9999 !important;
+  }
+  
+  /* Mobile bottom sheet content - prevent overflow issues */
+  .mobile-bottom-sheet .mobile-sheet-content {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Compact Pro Settings for mobile */
+  .mobile-bottom-sheet .pro-settings {
+    padding: 0;
+    background: transparent;
+    border: none;
+  }
+  
+  .mobile-bottom-sheet .pro-settings__toggle {
+    padding: var(--space-sm) var(--space-md);
+    background: var(--darkroom-surface-elevated);
+    border-radius: 8px;
+    margin-bottom: var(--space-sm);
+  }
+  
+  .mobile-bottom-sheet .pro-settings__content {
+    padding: var(--space-sm);
+    background: var(--darkroom-bg);
+    border-radius: 8px;
+  }
+  
+  .mobile-bottom-sheet .pro-settings__control {
+    margin-bottom: var(--space-md);
+  }
+  
+  .mobile-bottom-sheet .pro-settings__control:last-child {
+    margin-bottom: 0;
+  }
+  
+  /* Ensure touch events work on all interactive elements */
+  .mobile-bottom-sheet button,
+  .mobile-bottom-sheet [role="combobox"],
+  .mobile-bottom-sheet [role="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
