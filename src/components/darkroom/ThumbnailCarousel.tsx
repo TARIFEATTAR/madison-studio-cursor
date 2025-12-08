@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Save, Trash2 } from "lucide-react";
+import { Check, Save, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -41,15 +41,39 @@ function FilmFrame({
   onDelete,
 }: FilmFrameProps) {
   const [showActions, setShowActions] = useState(false);
+  const isTouchDevice = typeof window !== 'undefined' && 'ontouchstart' in window;
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (!image) return;
+    
+    // On touch devices or if actions are already showing, toggle actions
+    if (isTouchDevice) {
+      e.preventDefault();
+      e.stopPropagation();
+      setShowActions(!showActions);
+    } else {
+      // On desktop, clicking selects the image (hover shows actions)
+      onSelect?.();
+    }
+  };
+
+  const handleDoubleClick = () => {
+    if (image && isTouchDevice) {
+      // On touch devices, double-tap selects
+      onSelect?.();
+    }
+  };
 
   return (
     <motion.div
       className={cn(
         "film-frame",
         image ? "exposed" : "unexposed",
-        isActive && "active"
+        isActive && "active",
+        showActions && "actions-visible"
       )}
-      onClick={image ? onSelect : undefined}
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{
@@ -64,8 +88,8 @@ function FilmFrame({
             }
           : {}
       }
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
+      onMouseEnter={() => !isTouchDevice && setShowActions(true)}
+      onMouseLeave={() => !isTouchDevice && setShowActions(false)}
     >
       {/* Film Frame Border (Glossy Black) */}
       <div className="film-frame-border">
@@ -122,7 +146,7 @@ function FilmFrame({
                 </motion.div>
               )}
 
-              {/* Hover Actions */}
+              {/* Hover/Tap Actions */}
               <AnimatePresence>
                 {showActions && (onSave || onDelete) && (
                   <motion.div
@@ -132,30 +156,46 @@ function FilmFrame({
                     className="film-frame-actions"
                     onClick={(e) => e.stopPropagation()}
                   >
+                    {/* Close button for mobile */}
+                    {isTouchDevice && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="absolute top-1 right-1 h-5 w-5 p-0 text-white/70 hover:text-white bg-black/50 hover:bg-black/70 rounded-full"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowActions(false);
+                        }}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    )}
                     {!image.isSaved && onSave && (
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-6 w-6 p-0 text-white hover:text-[var(--darkroom-success)] bg-black/50 hover:bg-black/70 rounded-full"
+                        className="h-8 w-8 p-0 text-white hover:text-[var(--darkroom-success)] bg-black/50 hover:bg-black/70 rounded-full"
                         onClick={(e) => {
                           e.stopPropagation();
                           onSave();
+                          if (isTouchDevice) setShowActions(false);
                         }}
                       >
-                        <Save className="w-3 h-3" />
+                        <Save className="w-4 h-4" />
                       </Button>
                     )}
                     {onDelete && (
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-6 w-6 p-0 text-white hover:text-[var(--darkroom-error)] bg-black/50 hover:bg-black/70 rounded-full"
+                        className="h-8 w-8 p-0 text-white hover:text-[var(--darkroom-error)] bg-black/50 hover:bg-black/70 rounded-full"
                         onClick={(e) => {
                           e.stopPropagation();
                           onDelete();
+                          if (isTouchDevice) setShowActions(false);
                         }}
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     )}
                   </motion.div>

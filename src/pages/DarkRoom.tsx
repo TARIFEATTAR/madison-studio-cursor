@@ -27,6 +27,7 @@ import {
   DarkRoomHeader,
   MobileBottomSheet,
   MobileTabBar,
+  MobileDarkRoom,
 } from "@/components/darkroom";
 import type { ProModeSettings, MobileTab } from "@/components/darkroom";
 
@@ -512,6 +513,38 @@ export default function DarkRoom() {
 
   const hasInputs = !!productImage || !!backgroundImage || !!styleReference;
 
+  // Mobile uses the new tile-based UI
+  if (isMobile) {
+    return (
+      <MobileDarkRoom
+        prompt={prompt}
+        onPromptChange={setPrompt}
+        onGenerate={handleGenerate}
+        isGenerating={isGenerating}
+        canGenerate={canGenerate}
+        images={images}
+        heroImageId={heroImageId}
+        onSetHero={setHeroImageId}
+        onSaveImage={handleSaveImage}
+        onDeleteImage={handleDeleteImage}
+        onRefineImage={handleOpenLightTable}
+        maxImages={MAX_IMAGES_PER_SESSION}
+        newlyGeneratedId={newlyGeneratedId}
+        selectedProduct={selectedProduct}
+        onProductSelect={setSelectedProduct}
+        productImage={productImage}
+        onProductImageUpload={setProductImage}
+        backgroundImage={backgroundImage}
+        onBackgroundImageUpload={setBackgroundImage}
+        styleReference={styleReference}
+        onStyleReferenceUpload={setStyleReference}
+        proSettings={proSettings}
+        onProSettingsChange={setProSettings}
+      />
+    );
+  }
+
+  // Desktop layout
   return (
     <div className={`dark-room-container ${(inputsSheetOpen || madisonSheetOpen) ? 'sheet-open' : ''}`}>
       {/* Header */}
@@ -524,26 +557,24 @@ export default function DarkRoom() {
 
       {/* Main Grid */}
       <div className="dark-room-grid">
-        {/* Left Rail: Inputs & Controls (Desktop only) */}
-        {!isMobile && (
-          <LeftRail
-            selectedProduct={selectedProduct}
-            onProductSelect={setSelectedProduct}
-            productImage={productImage}
-            onProductImageUpload={setProductImage}
-            backgroundImage={backgroundImage}
-            onBackgroundImageUpload={setBackgroundImage}
-            styleReference={styleReference}
-            onStyleReferenceUpload={setStyleReference}
-            proSettings={proSettings}
-            onProSettingsChange={setProSettings}
-            isGenerating={isGenerating}
-            canGenerate={canGenerate}
-            onGenerate={handleGenerate}
-            sessionCount={images.length}
-            maxImages={MAX_IMAGES_PER_SESSION}
-          />
-        )}
+        {/* Left Rail: Inputs & Controls */}
+        <LeftRail
+          selectedProduct={selectedProduct}
+          onProductSelect={setSelectedProduct}
+          productImage={productImage}
+          onProductImageUpload={setProductImage}
+          backgroundImage={backgroundImage}
+          onBackgroundImageUpload={setBackgroundImage}
+          styleReference={styleReference}
+          onStyleReferenceUpload={setStyleReference}
+          proSettings={proSettings}
+          onProSettingsChange={setProSettings}
+          isGenerating={isGenerating}
+          canGenerate={canGenerate}
+          onGenerate={handleGenerate}
+          sessionCount={images.length}
+          maxImages={MAX_IMAGES_PER_SESSION}
+        />
 
         {/* Center Canvas: Preview & Results */}
         <CenterCanvas
@@ -565,103 +596,23 @@ export default function DarkRoom() {
           newlyGeneratedId={newlyGeneratedId}
         />
 
-        {/* Right Panel: Madison Assistant + Settings (Desktop only) */}
-        {!isMobile && (
-          <RightPanel
-            suggestions={suggestions}
-            onUseSuggestion={handleUseSuggestion}
-            presets={DEFAULT_PRESETS}
-            onApplyPreset={handleApplyPreset}
-            history={history}
-            onRestoreFromHistory={handleRestoreFromHistory}
-            hasProduct={!!productImage}
-            hasBackground={!!backgroundImage}
-            hasStyle={!!styleReference}
-            proSettingsCount={proSettingsCount}
-            proSettings={proSettings}
-            onProSettingsChange={setProSettings}
-            isGenerating={isGenerating}
-          />
-        )}
-      </div>
-
-      {/* Mobile Tab Bar */}
-      {isMobile && (
-        <MobileTabBar
-          activeTab={mobileTab}
-          onTabChange={handleMobileTabChange}
-          hasInputs={hasInputs}
+        {/* Right Panel: Madison Assistant + Settings */}
+        <RightPanel
+          suggestions={suggestions}
+          onUseSuggestion={handleUseSuggestion}
+          presets={DEFAULT_PRESETS}
+          onApplyPreset={handleApplyPreset}
+          history={history}
+          onRestoreFromHistory={handleRestoreFromHistory}
+          hasProduct={!!productImage}
+          hasBackground={!!backgroundImage}
+          hasStyle={!!styleReference}
+          proSettingsCount={proSettingsCount}
+          proSettings={proSettings}
+          onProSettingsChange={setProSettings}
           isGenerating={isGenerating}
         />
-      )}
-
-      {/* Mobile Inputs Sheet */}
-      {isMobile && (
-        <MobileBottomSheet
-          isOpen={inputsSheetOpen}
-          onClose={handleCloseInputsSheet}
-          title="Inputs"
-          icon={<Image className="w-5 h-5 text-[var(--darkroom-accent)]" />}
-          className="mobile-inputs-sheet"
-        >
-          <LeftRail
-            selectedProduct={selectedProduct}
-            onProductSelect={setSelectedProduct}
-            productImage={productImage}
-            onProductImageUpload={setProductImage}
-            backgroundImage={backgroundImage}
-            onBackgroundImageUpload={setBackgroundImage}
-            styleReference={styleReference}
-            onStyleReferenceUpload={setStyleReference}
-            proSettings={proSettings}
-            onProSettingsChange={setProSettings}
-            isGenerating={isGenerating}
-            canGenerate={canGenerate}
-            onGenerate={() => {
-              handleGenerate();
-              handleCloseInputsSheet();
-            }}
-            sessionCount={images.length}
-            maxImages={MAX_IMAGES_PER_SESSION}
-          />
-        </MobileBottomSheet>
-      )}
-
-      {/* Mobile Madison Sheet */}
-      {isMobile && (
-        <MobileBottomSheet
-          isOpen={madisonSheetOpen}
-          onClose={handleCloseMadisonSheet}
-          title="Madison & Settings"
-          icon={<Wand2 className="w-5 h-5 text-[var(--darkroom-accent)]" />}
-          className="mobile-madison-sheet"
-        >
-          <RightPanel
-            suggestions={suggestions}
-            onUseSuggestion={(suggestion) => {
-              handleUseSuggestion(suggestion);
-              handleCloseMadisonSheet();
-            }}
-            presets={DEFAULT_PRESETS}
-            onApplyPreset={(preset) => {
-              handleApplyPreset(preset);
-              handleCloseMadisonSheet();
-            }}
-            history={history}
-            onRestoreFromHistory={(item) => {
-              handleRestoreFromHistory(item);
-              handleCloseMadisonSheet();
-            }}
-            hasProduct={!!productImage}
-            hasBackground={!!backgroundImage}
-            hasStyle={!!styleReference}
-            proSettingsCount={proSettingsCount}
-            proSettings={proSettings}
-            onProSettingsChange={setProSettings}
-            isGenerating={isGenerating}
-          />
-        </MobileBottomSheet>
-      )}
+      </div>
     </div>
   );
 }

@@ -15,3 +15,9 @@ export {
   useDevelopingAnimation, 
   DEVELOPING_PRESETS 
 } from './DevelopingAnimation';
+
+// Mobile Tile-based UI
+export { MobileDarkRoom } from './MobileDarkRoom';
+export { MobileSettingsTile } from './MobileSettingsTile';
+export { MobileSettingsGrid } from './MobileSettingsGrid';
+export { MobileSettingModal } from './MobileSettingModal';

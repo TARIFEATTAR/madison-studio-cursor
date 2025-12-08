@@ -26,9 +26,14 @@ import {
   Film,
   ExternalLink,
   Loader2,
+  X,
+  Edit3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+// Detect touch device
+const isTouchDevice = typeof window !== 'undefined' && 'ontouchstart' in window;
 
 interface LightTableImage {
   id: string;
@@ -66,6 +71,7 @@ export function LightTable({
 }: LightTableProps) {
   const [multiSelectMode, setMultiSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [activeImageId, setActiveImageId] = useState<string | null>(null); // For mobile tap-to-show-actions
 
   const handleThumbnailClick = useCallback(
     (image: LightTableImage, e: React.MouseEvent) => {
@@ -80,12 +86,16 @@ export function LightTable({
           }
           return newSet;
         });
+      } else if (isTouchDevice) {
+        // On mobile: tap to show actions for this image
+        e.preventDefault();
+        setActiveImageId(activeImageId === image.id ? null : image.id);
       } else {
-        // Single select - preview in canvas
+        // Desktop: Single select - preview in canvas
         onSelectImage(image.id);
       }
     },
-    [multiSelectMode, onSelectImage]
+    [multiSelectMode, onSelectImage, activeImageId]
   );
 
   const handleThumbnailDoubleClick = useCallback(
@@ -128,7 +138,19 @@ export function LightTable({
     if (multiSelectMode) {
       setSelectedIds(new Set());
     }
+    setActiveImageId(null); // Clear mobile actions when toggling
   }, [multiSelectMode]);
+
+  // Single image actions for mobile
+  const handleSaveSingle = useCallback((id: string) => {
+    onSaveSelected([id]);
+    setActiveImageId(null);
+  }, [onSaveSelected]);
+
+  const handleDeleteSingle = useCallback((id: string) => {
+    onDeleteSelected([id]);
+    setActiveImageId(null);
+  }, [onDeleteSelected]);
 
   const unsavedCount = images.filter((img) => !img.isSaved).length;
 
@@ -227,76 +249,145 @@ export function LightTable({
             {/* Image Grid */}
             {images.length > 0 ? (
               <div className="light-table__grid">
-                {images.map((image, index) => (
-                  <motion.div
-                    key={image.id}
-                    className={cn(
-                      "light-table__thumbnail",
-                      selectedImageId === image.id && "light-table__thumbnail--selected",
-                      multiSelectMode &&
-                        selectedIds.has(image.id) &&
-                        "light-table__thumbnail--checked"
-                    )}
-                    onClick={(e) => handleThumbnailClick(image, e)}
-                    onDoubleClick={() => handleThumbnailDoubleClick(image)}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.05 }}
-                    whileHover={{ scale: 1.02 }}
-                    layout
-                  >
-                    <img
-                      src={image.imageUrl}
-                      alt={`Session image ${index + 1}`}
-                      className="light-table__image"
-                    />
+                {images.map((image, index) => {
+                  const isActive = activeImageId === image.id;
+                  const showMobileActions = isTouchDevice && isActive && !multiSelectMode;
+                  
+                  return (
+                    <motion.div
+                      key={image.id}
+                      className={cn(
+                        "light-table__thumbnail",
+                        selectedImageId === image.id && "light-table__thumbnail--selected",
+                        multiSelectMode &&
+                          selectedIds.has(image.id) &&
+                          "light-table__thumbnail--checked",
+                        showMobileActions && "light-table__thumbnail--actions-visible"
+                      )}
+                      onClick={(e) => handleThumbnailClick(image, e)}
+                      onDoubleClick={() => handleThumbnailDoubleClick(image)}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.05 }}
+                      whileHover={!isTouchDevice ? { scale: 1.02 } : {}}
+                      layout
+                    >
+                      <img
+                        src={image.imageUrl}
+                        alt={`Session image ${index + 1}`}
+                        className="light-table__image"
+                      />
 
-                    {/* Index Badge */}
-                    <div className="light-table__index">{index + 1}</div>
+                      {/* Index Badge */}
+                      <div className="light-table__index">{index + 1}</div>
 
-                    {/* Saved Indicator */}
-                    {image.isSaved && (
-                      <div className="light-table__saved-badge">
-                        <Check className="w-3 h-3" />
-                      </div>
-                    )}
+                      {/* Saved Indicator */}
+                      {image.isSaved && (
+                        <div className="light-table__saved-badge">
+                          <Check className="w-3 h-3" />
+                        </div>
+                      )}
 
-                    {/* Multi-select Checkbox */}
-                    {multiSelectMode && (
-                      <div
-                        className={cn(
-                          "light-table__checkbox",
-                          selectedIds.has(image.id) && "light-table__checkbox--checked"
+                      {/* Multi-select Checkbox */}
+                      {multiSelectMode && (
+                        <div
+                          className={cn(
+                            "light-table__checkbox",
+                            selectedIds.has(image.id) && "light-table__checkbox--checked"
+                          )}
+                        >
+                          {selectedIds.has(image.id) && <Check className="w-3 h-3" />}
+                        </div>
+                      )}
+
+                      {/* Desktop Hover Actions */}
+                      {!multiSelectMode && !isTouchDevice && (
+                        <div className="light-table__hover-actions">
+                          <button
+                            className="light-table__hover-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onOpenEditor(image);
+                            }}
+                            title="Open in Editor"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            className="light-table__hover-btn opacity-50 cursor-not-allowed"
+                            disabled
+                            title="Video - Coming Soon"
+                          >
+                            <Film className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Mobile Tap Actions Overlay */}
+                      <AnimatePresence>
+                        {showMobileActions && (
+                          <motion.div
+                            className="light-table__mobile-actions"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {/* Close button */}
+                            <button
+                              className="light-table__mobile-close"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveImageId(null);
+                              }}
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+
+                            {/* Action buttons */}
+                            <div className="light-table__mobile-btns">
+                              <button
+                                className="light-table__mobile-btn"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onOpenEditor(image);
+                                  setActiveImageId(null);
+                                }}
+                              >
+                                <Edit3 className="w-5 h-5" />
+                                <span>Edit</span>
+                              </button>
+                              
+                              {!image.isSaved && (
+                                <button
+                                  className="light-table__mobile-btn light-table__mobile-btn--save"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSaveSingle(image.id);
+                                  }}
+                                >
+                                  <Save className="w-5 h-5" />
+                                  <span>Save</span>
+                                </button>
+                              )}
+                              
+                              <button
+                                className="light-table__mobile-btn light-table__mobile-btn--delete"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteSingle(image.id);
+                                }}
+                              >
+                                <Trash2 className="w-5 h-5" />
+                                <span>Delete</span>
+                              </button>
+                            </div>
+                          </motion.div>
                         )}
-                      >
-                        {selectedIds.has(image.id) && <Check className="w-3 h-3" />}
-                      </div>
-                    )}
-
-                    {/* Hover Actions (only in non-multiselect mode) */}
-                    {!multiSelectMode && (
-                      <div className="light-table__hover-actions">
-                        <button
-                          className="light-table__hover-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onOpenEditor(image);
-                          }}
-                          title="Open in Editor"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          className="light-table__hover-btn opacity-50 cursor-not-allowed"
-                          disabled
-                          title="Video - Coming Soon"
-                        >
-                          <Film className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    )}
-                  </motion.div>
-                ))}
+                      </AnimatePresence>
+                    </motion.div>
+                  );
+                })}
               </div>
             ) : (
               <div className="light-table__empty">
@@ -305,10 +396,13 @@ export function LightTable({
               </div>
             )}
 
-            {/* Quick Tip */}
+            {/* Quick Tip - different for mobile */}
             {images.length > 0 && !multiSelectMode && (
               <p className="light-table__tip">
-                Click to preview • Double-click to edit • Hover for actions
+                {isTouchDevice 
+                  ? "Tap for actions • Double-tap to edit"
+                  : "Click to preview • Double-click to edit • Hover for actions"
+                }
               </p>
             )}
           </motion.div>

@@ -319,10 +319,19 @@
   background: rgba(10, 9, 8, 0.8);
   opacity: 0;
   transition: opacity var(--duration-fast) var(--ease-out);
+  z-index: 5;
 }
 
-.upload-zone__preview:hover .upload-zone__preview-overlay {
+.upload-zone__preview:hover .upload-zone__preview-overlay,
+.upload-filled:hover .upload-zone__preview-overlay {
   opacity: 1;
+}
+
+/* Mobile: Hide overlay (X button is always visible instead) */
+@media (max-width: 768px) {
+  .upload-zone__preview-overlay {
+    display: none;
+  }
 }
 
 /* Success Badge */
@@ -344,14 +353,14 @@
   color: white;
 }
 
-/* Remove Button */
+/* Remove Button - Always visible X button */
 .upload-remove {
   position: absolute;
   top: 8px;
   left: 8px;
-  width: 24px;
-  height: 24px;
-  background: rgba(26, 24, 22, 0.9);
+  width: 32px;
+  height: 32px;
+  background: rgba(26, 24, 22, 0.95);
   border: 1px solid var(--darkroom-border);
   border-radius: 50%;
   display: flex;
@@ -359,13 +368,616 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: var(--darkroom-text-muted);
+  color: var(--darkroom-text);
+  z-index: 10;
+  /* Ensure button is always clickable on all devices */
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .upload-remove:hover {
-  background: rgba(26, 24, 22, 1);
-  border-color: var(--darkroom-accent);
+  background: rgba(239, 68, 68, 0.9);
+  border-color: var(--darkroom-error);
+  color: white;
+  transform: scale(1.1);
+}
+
+.upload-remove:active {
+  background: rgba(239, 68, 68, 0.9);
+  border-color: var(--darkroom-error);
+  color: white;
+  transform: scale(0.95);
+}
+
+/* Mobile: Larger touch target and always visible */
+@media (max-width: 768px) {
+  .upload-remove {
+    width: 36px;
+    height: 36px;
+    top: 6px;
+    left: 6px;
+    background: rgba(239, 68, 68, 0.85);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: white;
+  }
+  
+  .upload-remove:active {
+    background: rgba(239, 68, 68, 1);
+    transform: scale(0.9);
+  }
+}
+
+/* =============================================================================
+   MOBILE DARK ROOM - TILE-BASED SETTINGS UI
+   Clean, modern mobile interface with tappable setting tiles
+   ============================================================================= */
+
+/* Mobile Dark Room Container */
+.mobile-darkroom {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--darkroom-bg);
   color: var(--darkroom-text);
+  padding: var(--space-md);
+  padding-bottom: calc(var(--space-md) + env(safe-area-inset-bottom));
+}
+
+.mobile-darkroom__header {
+  padding: var(--space-sm) 0 var(--space-md);
+}
+
+.mobile-darkroom__title {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--darkroom-text);
+  margin: 0;
+}
+
+/* Prompt Area */
+.mobile-darkroom__prompt-area {
+  position: relative;
+  background: var(--darkroom-surface);
+  border: 1px solid var(--darkroom-border);
+  border-radius: 16px;
+  padding: var(--space-md);
+  margin-bottom: var(--space-md);
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-darkroom__prompt-area::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 17px;
+  background: linear-gradient(135deg, var(--darkroom-accent) 0%, transparent 50%);
+  opacity: 0.3;
+  z-index: -1;
+}
+
+.mobile-darkroom__prompt-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--darkroom-text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+}
+
+.mobile-darkroom__prompt-input::placeholder {
+  color: var(--darkroom-text-dim);
+}
+
+.mobile-darkroom__prompt-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-sm);
+}
+
+.mobile-darkroom__image-count {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--darkroom-surface-elevated);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: var(--darkroom-text-muted);
+}
+
+.mobile-darkroom__random-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--darkroom-surface-elevated);
+  border: none;
+  border-radius: 50%;
+  color: var(--darkroom-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobile-darkroom__random-btn:active {
+  background: var(--darkroom-accent);
+  color: var(--darkroom-bg);
+  transform: scale(0.95);
+}
+
+/* Settings Grid */
+.mobile-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+/* Individual Setting Tile */
+.mobile-settings-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--space-md);
+  background: var(--darkroom-surface);
+  border: 1px solid var(--darkroom-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  min-height: 90px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.mobile-settings-tile:active {
+  background: var(--darkroom-surface-elevated);
+  border-color: var(--darkroom-accent);
+  transform: scale(0.97);
+}
+
+/* Add a focus state for accessibility */
+.mobile-settings-tile:focus {
+  outline: none;
+  border-color: var(--darkroom-accent);
+  box-shadow: 0 0 0 2px rgba(184, 149, 106, 0.3);
+}
+
+.mobile-settings-tile--disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.mobile-settings-tile__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-bottom: var(--space-sm);
+  color: var(--darkroom-accent);
+}
+
+.mobile-settings-tile__content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+
+.mobile-settings-tile__label {
+  font-size: 0.7rem;
+  color: var(--darkroom-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mobile-settings-tile__value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--darkroom-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Generate Button */
+.mobile-darkroom__generate-btn {
+  width: 100%;
+  padding: var(--space-md) var(--space-lg);
+  background: linear-gradient(135deg, var(--darkroom-accent) 0%, var(--darkroom-glow) 100%);
+  border: none;
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--darkroom-bg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-top: auto;
+}
+
+.mobile-darkroom__generate-btn:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.mobile-darkroom__generate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =============================================================================
+   MOBILE SETTING MODAL - Full-screen option selector
+   ============================================================================= */
+
+.mobile-setting-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999; /* Very high z-index to appear above everything */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  touch-action: none; /* Prevent background scroll */
+}
+
+.mobile-setting-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-setting-modal__content {
+  position: relative;
+  background: var(--darkroom-bg);
+  border-radius: 20px 20px 0 0;
+  max-height: 85vh;
+  max-height: 85dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Add safe area padding for iPhone notch/home indicator */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.mobile-setting-modal__handle {
+  width: 36px;
+  height: 4px;
+  background: var(--darkroom-border);
+  border-radius: 2px;
+  margin: var(--space-sm) auto 0;
+  flex-shrink: 0;
+}
+
+/* Sticky header that stays at top when scrolling */
+.mobile-setting-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md);
+  background: var(--darkroom-bg);
+  border-bottom: 1px solid var(--darkroom-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.mobile-setting-modal__title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--darkroom-text);
+  margin: 0;
+}
+
+.mobile-setting-modal__close {
+  width: 44px; /* Larger touch target */
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--darkroom-surface);
+  border: 1px solid var(--darkroom-border);
+  border-radius: 50%;
+  color: var(--darkroom-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.mobile-setting-modal__close:active {
+  background: var(--darkroom-accent);
+  border-color: var(--darkroom-accent);
+  color: var(--darkroom-bg);
+  transform: scale(0.95);
+}
+
+/* Scrollable options list */
+.mobile-setting-modal__options {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-sm) var(--space-md);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+/* Individual option button */
+.mobile-setting-modal__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 56px; /* Good touch target size */
+  padding: var(--space-md);
+  background: var(--darkroom-surface);
+  border: 1px solid var(--darkroom-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  margin-bottom: var(--space-sm);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.mobile-setting-modal__option:active {
+  background: var(--darkroom-surface-elevated);
+  transform: scale(0.98);
+}
+
+.mobile-setting-modal__option--selected {
+  background: rgba(184, 149, 106, 0.15);
+  border-color: var(--darkroom-accent);
+}
+
+.mobile-setting-modal__option--selected:active {
+  background: rgba(184, 149, 106, 0.25);
+}
+
+.mobile-setting-modal__option-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.mobile-setting-modal__option-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--darkroom-text);
+}
+
+.mobile-setting-modal__option-desc {
+  font-size: 0.85rem;
+  color: var(--darkroom-text-muted);
+}
+
+.mobile-setting-modal__option-check {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--darkroom-accent);
+  border-radius: 50%;
+  color: var(--darkroom-bg);
+  flex-shrink: 0;
+  margin-left: var(--space-sm);
+}
+
+/* Film Strip (at bottom of mobile view) */
+.mobile-darkroom__film-strip {
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--darkroom-border);
+}
+
+/* =============================================================================
+   MOBILE HERO PREVIEW - Large image display with developing animation
+   ============================================================================= */
+
+.mobile-darkroom__hero-preview {
+  margin-bottom: var(--space-md);
+  overflow: hidden;
+}
+
+.mobile-darkroom__developing {
+  aspect-ratio: 1;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--darkroom-surface);
+  border: 1px solid var(--darkroom-border);
+}
+
+.mobile-darkroom__hero-container {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--darkroom-surface);
+  border: 1px solid var(--darkroom-border);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-darkroom__hero-container:active {
+  transform: scale(0.99);
+}
+
+.mobile-darkroom__hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mobile-darkroom__saved-badge {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--darkroom-success);
+  border-radius: 50%;
+  color: var(--darkroom-bg);
+}
+
+.mobile-darkroom__hero-hint {
+  position: absolute;
+  bottom: var(--space-sm);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--space-xs) var(--space-sm);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  color: var(--darkroom-text-muted);
+  opacity: 0.8;
+}
+
+/* =============================================================================
+   MOBILE FULLSCREEN VIEWER - Full viewport image display
+   ============================================================================= */
+
+.mobile-darkroom__fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-darkroom__fullscreen-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-darkroom__fullscreen-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+  padding-top: 60px;
+  padding-bottom: 100px;
+}
+
+.mobile-darkroom__fullscreen-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.mobile-darkroom__fullscreen-close {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--darkroom-surface);
+  border: 1px solid var(--darkroom-border);
+  border-radius: 50%;
+  color: var(--darkroom-text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  z-index: 10;
+}
+
+.mobile-darkroom__fullscreen-close:active {
+  background: var(--darkroom-surface-elevated);
+  transform: scale(0.95);
+}
+
+.mobile-darkroom__fullscreen-actions {
+  position: absolute;
+  bottom: var(--space-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--space-md);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.mobile-darkroom__fullscreen-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--darkroom-surface);
+  border: 1px solid var(--darkroom-border);
+  border-radius: 12px;
+  color: var(--darkroom-text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  min-width: 80px;
+}
+
+.mobile-darkroom__fullscreen-action:active {
+  background: var(--darkroom-surface-elevated);
+  transform: scale(0.95);
+}
+
+.mobile-darkroom__fullscreen-action:disabled {
+  color: var(--darkroom-success);
+  border-color: var(--darkroom-success);
+}
+
+.mobile-darkroom__fullscreen-action span {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.mobile-darkroom__fullscreen-action--primary {
+  background: var(--darkroom-accent);
+  border-color: var(--darkroom-accent);
+  color: var(--darkroom-bg);
+}
+
+.mobile-darkroom__fullscreen-action--primary:active {
+  background: var(--darkroom-accent-hover);
+  transform: scale(0.95);
+}
+
+.mobile-darkroom__fullscreen-action--delete {
+  color: var(--darkroom-error);
+}
+
+.mobile-darkroom__fullscreen-action--delete:active {
+  background: rgba(239, 68, 68, 0.2);
 }
 
 .upload-zone-help {
@@ -2665,6 +3277,126 @@
   text-align: center;
   border-top: 1px solid var(--darkroom-border-subtle);
   margin: 0;
+}
+
+/* =============================================================================
+   LIGHT TABLE MOBILE ACTIONS
+   ============================================================================= */
+
+/* Mobile actions overlay */
+.light-table__mobile-actions {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 10;
+  border-radius: 6px;
+}
+
+/* Close button */
+.light-table__mobile-close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  color: var(--darkroom-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.light-table__mobile-close:hover,
+.light-table__mobile-close:active {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--darkroom-text);
+}
+
+/* Action buttons container */
+.light-table__mobile-btns {
+  display: flex;
+  gap: 12px;
+  padding: 8px;
+}
+
+/* Individual action button */
+.light-table__mobile-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 8px;
+  color: var(--darkroom-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 56px;
+}
+
+.light-table__mobile-btn span {
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.light-table__mobile-btn:active {
+  transform: scale(0.95);
+}
+
+.light-table__mobile-btn--save:hover,
+.light-table__mobile-btn--save:active {
+  background: rgba(74, 222, 128, 0.2);
+  color: var(--darkroom-success);
+}
+
+.light-table__mobile-btn--delete:hover,
+.light-table__mobile-btn--delete:active {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--darkroom-error);
+}
+
+/* Thumbnail with actions visible */
+.light-table__thumbnail--actions-visible {
+  border-color: var(--darkroom-accent);
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  .light-table__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 8px;
+  }
+  
+  .light-table__toolbar {
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px;
+  }
+  
+  .light-table__select-btn,
+  .light-table__action-btn {
+    height: 32px;
+    font-size: 0.75rem;
+  }
+  
+  .light-table__mobile-btn {
+    padding: 10px;
+    min-width: 64px;
+  }
+  
+  .light-table__mobile-btn span {
+    font-size: 11px;
+  }
 }
 
 /* =============================================================================
