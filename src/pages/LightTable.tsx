@@ -12,6 +12,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
+import { toPng } from "html-to-image";
 
 // Session persistence key
 const LIGHT_TABLE_SESSION_KEY = "madison-light-table-session";
@@ -31,6 +32,9 @@ import {
   Heart,
   ChevronUp,
   ChevronDown,
+  Layout,
+  RotateCcw,
+  ChevronRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -40,8 +44,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentOrganizationId } from "@/hooks/useIndustryConfig";
 
+// Ad Overlay components
+import { AdOverlay, AdPresetSelector, type AdOverlayConfig } from "@/components/ad-overlay";
+import { 
+  AD_LAYOUT_PRESETS, 
+  AD_FONT_OPTIONS, 
+  AD_COLOR_PRESETS,
+  type AdLayoutPreset 
+} from "@/config/adLayoutPresets";
+
 // Styles
 import "@/styles/light-table.css";
+import "@/styles/ad-overlay.css";
 
 // Types
 interface SessionImage {
@@ -145,9 +159,10 @@ export default function LightTable() {
   }, [images, selectedImageId, sessionId]);
 
   // UI state
-  const [activeTab, setActiveTab] = useState<"refine" | "text" | "variations">("refine");
+  const [activeTab, setActiveTab] = useState<"refine" | "text" | "variations" | "ad">("refine");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isExportingAd, setIsExportingAd] = useState(false);
 
   // Refine state
   const [refinementPrompt, setRefinementPrompt] = useState("");
@@ -163,6 +178,16 @@ export default function LightTable() {
     font: "cormorant" as "cormorant" | "playfair" | "montserrat" | "oswald",
   });
   const [isEnhancingText, setIsEnhancingText] = useState(false);
+
+  // Ad overlay state
+  const adOverlayRef = useRef<HTMLDivElement>(null);
+  const [showCustomizeAd, setShowCustomizeAd] = useState(false);
+  const [adConfig, setAdConfig] = useState<AdOverlayConfig>({
+    preset: AD_LAYOUT_PRESETS[0],
+    headline: "",
+    subtext: "",
+    ctaText: "",
+  });
 
   // Font options for text overlay
   const FONT_OPTIONS = [
@@ -570,6 +595,68 @@ export default function LightTable() {
     });
   }, []);
 
+  // Ad overlay handlers
+  const handleSelectAdPreset = useCallback((preset: AdLayoutPreset) => {
+    setAdConfig((prev) => ({
+      ...prev,
+      preset,
+      // Reset custom colors to preset defaults
+      colorBlockColor: undefined,
+      colorBlockOpacity: undefined,
+      textColor: undefined,
+      ctaBackgroundColor: undefined,
+      ctaTextColor: undefined,
+      fontFamily: undefined,
+    }));
+  }, []);
+
+  const handleResetAdConfig = useCallback(() => {
+    setAdConfig({
+      preset: AD_LAYOUT_PRESETS[0],
+      headline: "",
+      subtext: "",
+      ctaText: "",
+    });
+    setShowCustomizeAd(false);
+  }, []);
+
+  const handleExportAd = useCallback(async () => {
+    if (!adOverlayRef.current) {
+      toast.error("No ad to export");
+      return;
+    }
+
+    if (!adConfig.headline && !adConfig.subtext) {
+      toast.error("Add some text to your ad first");
+      return;
+    }
+
+    setIsExportingAd(true);
+
+    try {
+      const dataUrl = await toPng(adOverlayRef.current, {
+        quality: 1,
+        pixelRatio: 2, // Higher quality export
+      });
+
+      // Download the image
+      const link = document.createElement("a");
+      link.download = `madison-ad-${Date.now()}.png`;
+      link.href = dataUrl;
+      link.click();
+
+      toast.success("Ad exported successfully!");
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export ad");
+    } finally {
+      setIsExportingAd(false);
+    }
+  }, [adConfig.headline, adConfig.subtext]);
+
+  // Check if ad has content
+  const hasAdContent = adConfig.headline || adConfig.subtext || adConfig.ctaText;
+
   if (!selectedImage) {
     return null;
   }
@@ -619,34 +706,46 @@ export default function LightTable() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
             >
-              <img
-                src={selectedImage.imageUrl}
-                alt="Selected"
-                className="light-table-image"
-              />
+              {/* Show Ad Overlay when in ad tab */}
+              {activeTab === "ad" ? (
+                <AdOverlay
+                  ref={adOverlayRef}
+                  imageUrl={selectedImage.imageUrl}
+                  config={adConfig}
+                  className="light-table-image"
+                />
+              ) : (
+                <>
+                  <img
+                    src={selectedImage.imageUrl}
+                    alt="Selected"
+                    className="light-table-image"
+                  />
 
-              {/* Text Overlay Preview */}
-              {(textOverlay.headline || textOverlay.subtext) && (
-                <div
-                  className={cn(
-                    "light-table-text-overlay",
-                    `light-table-text-overlay--${textOverlay.position}`
+                  {/* Text Overlay Preview */}
+                  {(textOverlay.headline || textOverlay.subtext) && (
+                    <div
+                      className={cn(
+                        "light-table-text-overlay",
+                        `light-table-text-overlay--${textOverlay.position}`
+                      )}
+                      style={{
+                        fontFamily: FONT_OPTIONS.find((f) => f.value === textOverlay.font)?.style,
+                      }}
+                    >
+                      {textOverlay.headline && (
+                        <h2 className="light-table-text-headline">{textOverlay.headline}</h2>
+                      )}
+                      {textOverlay.subtext && (
+                        <p className="light-table-text-subtext">{textOverlay.subtext}</p>
+                      )}
+                    </div>
                   )}
-                  style={{
-                    fontFamily: FONT_OPTIONS.find((f) => f.value === textOverlay.font)?.style,
-                  }}
-                >
-                  {textOverlay.headline && (
-                    <h2 className="light-table-text-headline">{textOverlay.headline}</h2>
-                  )}
-                  {textOverlay.subtext && (
-                    <p className="light-table-text-subtext">{textOverlay.subtext}</p>
-                  )}
-                </div>
+                </>
               )}
 
               {/* Saved Badge */}
-              {selectedImage.isSaved && (
+              {selectedImage.isSaved && activeTab !== "ad" && (
                 <div className="light-table-saved-badge">
                   <Check className="w-3 h-3" />
                   Saved
@@ -710,6 +809,16 @@ export default function LightTable() {
               >
                 <Type className="w-4 h-4" />
                 <span>Text</span>
+              </button>
+              <button
+                className={cn(
+                  "light-table-tab",
+                  activeTab === "ad" && "light-table-tab--active"
+                )}
+                onClick={() => setActiveTab("ad")}
+              >
+                <Layout className="w-4 h-4" />
+                <span>Ad</span>
               </button>
             </div>
 
@@ -868,6 +977,197 @@ export default function LightTable() {
                     )}
                     {isEnhancingText ? "Enhancing..." : "Enhance with AI"}
                   </Button>
+                </div>
+              )}
+
+              {/* Ad Layout Tab */}
+              {activeTab === "ad" && (
+                <div className="light-table-ad-editor">
+                  {/* Preset Selector */}
+                  <div className="light-table-ad-editor__presets">
+                    <span className="light-table-ad-editor__presets-label">Choose Layout</span>
+                    <AdPresetSelector
+                      selectedPresetId={adConfig.preset.id}
+                      onSelectPreset={handleSelectAdPreset}
+                    />
+                  </div>
+
+                  {/* Text Inputs */}
+                  <div className="light-table-ad-editor__inputs">
+                    <div className="light-table-ad-editor__field">
+                      <label>Headline</label>
+                      <input
+                        type="text"
+                        value={adConfig.headline}
+                        onChange={(e) =>
+                          setAdConfig((prev) => ({ ...prev, headline: e.target.value }))
+                        }
+                        placeholder="e.g., SUMMER SALE"
+                      />
+                    </div>
+                    <div className="light-table-ad-editor__field">
+                      <label>Subtext</label>
+                      <input
+                        type="text"
+                        value={adConfig.subtext}
+                        onChange={(e) =>
+                          setAdConfig((prev) => ({ ...prev, subtext: e.target.value }))
+                        }
+                        placeholder="e.g., Up to 50% off all items"
+                      />
+                    </div>
+                    {adConfig.preset.layout.hasCTA && (
+                      <div className="light-table-ad-editor__field">
+                        <label>CTA Button</label>
+                        <input
+                          type="text"
+                          value={adConfig.ctaText}
+                          onChange={(e) =>
+                            setAdConfig((prev) => ({ ...prev, ctaText: e.target.value }))
+                          }
+                          placeholder="e.g., Shop Now"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Customize Section (Collapsible) */}
+                  <div className="light-table-ad-editor__customize">
+                    <button
+                      className="light-table-ad-editor__customize-toggle"
+                      onClick={() => setShowCustomizeAd(!showCustomizeAd)}
+                    >
+                      <span>Customize Colors & Font</span>
+                      <ChevronRight
+                        className={cn(
+                          "w-4 h-4 transition-transform",
+                          showCustomizeAd && "rotate-90"
+                        )}
+                      />
+                    </button>
+
+                    {showCustomizeAd && (
+                      <div className="light-table-ad-editor__customize-content">
+                        {/* Color Block Color */}
+                        <div className="light-table-ad-editor__color-field">
+                          <label>Background Color</label>
+                          <div className="light-table-ad-editor__color-swatches">
+                            {AD_COLOR_PRESETS.map((color) => (
+                              <button
+                                key={color.value}
+                                className={cn(
+                                  "light-table-ad-editor__color-swatch",
+                                  (adConfig.colorBlockColor || adConfig.preset.defaultStyles.colorBlockColor) === color.value &&
+                                    "light-table-ad-editor__color-swatch--selected"
+                                )}
+                                style={{ backgroundColor: color.value }}
+                                onClick={() =>
+                                  setAdConfig((prev) => ({ ...prev, colorBlockColor: color.value }))
+                                }
+                                title={color.name}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Text Color */}
+                        <div className="light-table-ad-editor__color-field">
+                          <label>Text Color</label>
+                          <div className="light-table-ad-editor__color-swatches">
+                            {AD_COLOR_PRESETS.map((color) => (
+                              <button
+                                key={color.value}
+                                className={cn(
+                                  "light-table-ad-editor__color-swatch",
+                                  (adConfig.textColor || adConfig.preset.defaultStyles.textColor) === color.value &&
+                                    "light-table-ad-editor__color-swatch--selected"
+                                )}
+                                style={{ backgroundColor: color.value }}
+                                onClick={() =>
+                                  setAdConfig((prev) => ({ ...prev, textColor: color.value }))
+                                }
+                                title={color.name}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* CTA Color (if has CTA) */}
+                        {adConfig.preset.layout.hasCTA && (
+                          <div className="light-table-ad-editor__color-field">
+                            <label>Button Color</label>
+                            <div className="light-table-ad-editor__color-swatches">
+                              {AD_COLOR_PRESETS.map((color) => (
+                                <button
+                                  key={color.value}
+                                  className={cn(
+                                    "light-table-ad-editor__color-swatch",
+                                    (adConfig.ctaBackgroundColor || adConfig.preset.defaultStyles.ctaBackgroundColor) === color.value &&
+                                      "light-table-ad-editor__color-swatch--selected"
+                                  )}
+                                  style={{ backgroundColor: color.value }}
+                                  onClick={() =>
+                                    setAdConfig((prev) => ({ ...prev, ctaBackgroundColor: color.value }))
+                                  }
+                                  title={color.name}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Font Selection */}
+                        <div className="light-table-ad-editor__color-field">
+                          <label>Font</label>
+                          <div className="light-table-ad-editor__fonts">
+                            {AD_FONT_OPTIONS.map((font) => (
+                              <button
+                                key={font.value}
+                                className={cn(
+                                  "light-table-ad-editor__font-btn",
+                                  (adConfig.fontFamily || adConfig.preset.defaultStyles.fontFamily) === font.value &&
+                                    "light-table-ad-editor__font-btn--active"
+                                )}
+                                style={{ fontFamily: font.style }}
+                                onClick={() =>
+                                  setAdConfig((prev) => ({ ...prev, fontFamily: font.value }))
+                                }
+                              >
+                                {font.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="light-table-ad-editor__actions">
+                    <button
+                      className="light-table-ad-editor__reset-btn"
+                      onClick={handleResetAdConfig}
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
+                    <button
+                      className="light-table-ad-editor__export-btn"
+                      onClick={handleExportAd}
+                      disabled={isExportingAd || !hasAdContent}
+                    >
+                      {isExportingAd ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Exporting...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-4 h-4" />
+                          Export Ad
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
