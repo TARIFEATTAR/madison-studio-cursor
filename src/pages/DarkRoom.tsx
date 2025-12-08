@@ -25,11 +25,9 @@ import {
   CenterCanvas,
   RightPanel,
   DarkRoomHeader,
-  MobileBottomSheet,
-  MobileTabBar,
   MobileDarkRoom,
 } from "@/components/darkroom";
-import type { ProModeSettings, MobileTab } from "@/components/darkroom";
+import type { ProModeSettings } from "@/components/darkroom";
 
 // Hook to detect mobile
 function useIsMobile() {
@@ -145,11 +143,6 @@ export default function DarkRoom() {
   
   // Debug: Log org resolution
   console.log("🏢 Organization state:", { orgId, orgLoading, userId: user?.id });
-
-  // Mobile state
-  const [mobileTab, setMobileTab] = useState<MobileTab>("canvas");
-  const [inputsSheetOpen, setInputsSheetOpen] = useState(false);
-  const [madisonSheetOpen, setMadisonSheetOpen] = useState(false);
 
   // Session
   const [sessionId] = useState(() => uuidv4());
@@ -485,33 +478,6 @@ export default function DarkRoom() {
     }
   }, [images]);
 
-  // Handle mobile tab changes
-  const handleMobileTabChange = useCallback((tab: MobileTab) => {
-    if (tab === "inputs") {
-      setInputsSheetOpen(true);
-      setMadisonSheetOpen(false);
-    } else if (tab === "madison") {
-      setMadisonSheetOpen(true);
-      setInputsSheetOpen(false);
-    } else {
-      setInputsSheetOpen(false);
-      setMadisonSheetOpen(false);
-    }
-    setMobileTab(tab);
-  }, []);
-
-  // Close sheets
-  const handleCloseInputsSheet = useCallback(() => {
-    setInputsSheetOpen(false);
-    setMobileTab("canvas");
-  }, []);
-
-  const handleCloseMadisonSheet = useCallback(() => {
-    setMadisonSheetOpen(false);
-    setMobileTab("canvas");
-  }, []);
-
-  const hasInputs = !!productImage || !!backgroundImage || !!styleReference;
 
   // Mobile uses the new tile-based UI
   if (isMobile) {
@@ -546,7 +512,7 @@ export default function DarkRoom() {
 
   // Desktop layout
   return (
-    <div className={`dark-room-container ${(inputsSheetOpen || madisonSheetOpen) ? 'sheet-open' : ''}`}>
+    <div className="dark-room-container">
       {/* Header */}
       <DarkRoomHeader
         sessionCount={images.length}

@@ -718,7 +718,7 @@ export function ImageEditorModal({
                 <p>No image selected</p>
               </div>
             )}
-          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
