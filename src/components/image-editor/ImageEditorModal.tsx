@@ -15,11 +15,12 @@
  * Keeps users in context by overlaying rather than navigating away.
  */
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
+import { toPng } from "html-to-image";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +42,9 @@ import {
   Check,
   Sparkles,
   Image as ImageIcon,
+  Layout,
+  ChevronRight,
+  RotateCcw,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -49,6 +53,15 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentOrganizationId } from "@/hooks/useIndustryConfig";
+
+// Ad Overlay components
+import { AdOverlay, AdPresetSelector, type AdOverlayConfig } from "@/components/ad-overlay";
+import { 
+  AD_LAYOUT_PRESETS, 
+  AD_FONT_OPTIONS, 
+  AD_COLOR_PRESETS,
+  type AdLayoutPreset 
+} from "@/config/adLayoutPresets";
 
 export interface ImageEditorImage {
   id: string;
@@ -90,9 +103,10 @@ export function ImageEditorModal({
   const { orgId } = useCurrentOrganizationId();
 
   // UI State
-  const [activeTab, setActiveTab] = useState<"refine" | "text" | "variations">("refine");
+  const [activeTab, setActiveTab] = useState<"refine" | "text" | "variations" | "ad">("refine");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isExportingAd, setIsExportingAd] = useState(false);
 
   // Refine State
   const [refinementPrompt, setRefinementPrompt] = useState("");
@@ -108,6 +122,16 @@ export function ImageEditorModal({
     position: "bottom" as "top" | "center" | "bottom",
   });
 
+  // Ad Overlay State
+  const adOverlayRef = useRef<HTMLDivElement>(null);
+  const [showCustomizeAd, setShowCustomizeAd] = useState(false);
+  const [adConfig, setAdConfig] = useState<AdOverlayConfig>({
+    preset: AD_LAYOUT_PRESETS[0],
+    headline: "",
+    subtext: "",
+    ctaText: "",
+  });
+
   // Reset state when image changes
   useEffect(() => {
     if (image) {
@@ -115,8 +139,77 @@ export function ImageEditorModal({
       setVariations([]);
       setSelectedVariationId(null);
       setActiveTab("refine");
+      // Reset ad config
+      setAdConfig({
+        preset: AD_LAYOUT_PRESETS[0],
+        headline: "",
+        subtext: "",
+        ctaText: "",
+      });
     }
   }, [image?.id]);
+
+  // Ad overlay handlers
+  const handleSelectAdPreset = useCallback((preset: AdLayoutPreset) => {
+    setAdConfig((prev) => ({
+      ...prev,
+      preset,
+      // Reset custom colors to preset defaults
+      colorBlockColor: undefined,
+      colorBlockOpacity: undefined,
+      textColor: undefined,
+      ctaBackgroundColor: undefined,
+      ctaTextColor: undefined,
+      fontFamily: undefined,
+    }));
+  }, []);
+
+  const handleResetAdConfig = useCallback(() => {
+    setAdConfig({
+      preset: AD_LAYOUT_PRESETS[0],
+      headline: "",
+      subtext: "",
+      ctaText: "",
+    });
+    setShowCustomizeAd(false);
+  }, []);
+
+  const handleExportAd = useCallback(async () => {
+    if (!adOverlayRef.current) {
+      toast.error("No ad to export");
+      return;
+    }
+
+    if (!adConfig.headline && !adConfig.subtext) {
+      toast.error("Add some text to your ad first");
+      return;
+    }
+
+    setIsExportingAd(true);
+
+    try {
+      const dataUrl = await toPng(adOverlayRef.current, {
+        quality: 1,
+        pixelRatio: 2, // Higher quality export
+      });
+
+      // Download the image
+      const link = document.createElement("a");
+      link.download = `madison-ad-${Date.now()}.png`;
+      link.href = dataUrl;
+      link.click();
+
+      toast.success("Ad exported successfully!");
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export ad");
+    } finally {
+      setIsExportingAd(false);
+    }
+  }, [adConfig.headline, adConfig.subtext]);
+
+  // Check if ad has content
+  const hasAdContent = adConfig.headline || adConfig.subtext || adConfig.ctaText;
 
   // Generate a variation/refinement
   const handleRefine = useCallback(async () => {
@@ -391,6 +484,18 @@ export function ImageEditorModal({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
+              {/* Show Ad Overlay when in ad tab */}
+              {activeTab === "ad" && displayedImage ? (
+                <div className="w-full h-full max-w-full max-h-full flex items-center justify-center">
+                  <AdOverlay
+                    ref={adOverlayRef}
+                    imageUrl={displayedImage}
+                    config={adConfig}
+                    className="max-w-full max-h-full object-contain"
+                  />
+                </div>
+              ) : (
+                <>
                 {displayedImage && (
               <img
                 src={displayedImage}
@@ -418,6 +523,8 @@ export function ImageEditorModal({
                     </p>
                   )}
                 </div>
+              )}
+                </>
               )}
             </motion.div>
 
@@ -493,6 +600,18 @@ export function ImageEditorModal({
               >
                 <Type className="w-4 h-4" />
                 <span>Text</span>
+              </button>
+              <button
+                className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-2 text-xs md:text-sm transition-all",
+                    activeTab === "ad"
+                      ? "text-[#b8956a] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_#b8956a]"
+                      : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
+                )}
+                onClick={() => setActiveTab("ad")}
+              >
+                <Layout className="w-4 h-4" />
+                <span>Ad</span>
               </button>
             </div>
 
@@ -685,6 +804,208 @@ export function ImageEditorModal({
                     <p className="text-[0.7rem] text-[rgba(245,240,230,0.4)] mt-2">
                     Text will be rendered on the image when you export
                   </p>
+                </motion.div>
+              )}
+
+              {/* Ad Tab */}
+              {activeTab === "ad" && (
+                <motion.div
+                  className="flex flex-col gap-5"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  {/* Preset Selector */}
+                  <div className="flex flex-col gap-2.5">
+                    <span className="text-[0.65rem] uppercase tracking-wider font-semibold text-[rgba(245,240,230,0.5)]">
+                      Choose Layout
+                    </span>
+                    <AdPresetSelector
+                      selectedPresetId={adConfig.preset.id}
+                      onSelectPreset={handleSelectAdPreset}
+                    />
+                  </div>
+
+                  {/* Text Inputs */}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[0.75rem] font-medium text-[rgba(245,240,230,0.7)]">Headline</label>
+                      <input
+                        type="text"
+                        value={adConfig.headline}
+                        onChange={(e) =>
+                          setAdConfig((prev) => ({ ...prev, headline: e.target.value }))
+                        }
+                        placeholder="e.g., SUMMER SALE"
+                        className="bg-[rgba(26,24,22,0.6)] border border-[rgba(184,149,106,0.2)] rounded-md px-3 py-2.5 text-[#f5f0e6] text-sm focus:outline-none focus:border-[#b8956a] transition-all"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[0.75rem] font-medium text-[rgba(245,240,230,0.7)]">Subtext</label>
+                      <input
+                        type="text"
+                        value={adConfig.subtext}
+                        onChange={(e) =>
+                          setAdConfig((prev) => ({ ...prev, subtext: e.target.value }))
+                        }
+                        placeholder="e.g., Up to 50% off all items"
+                        className="bg-[rgba(26,24,22,0.6)] border border-[rgba(184,149,106,0.2)] rounded-md px-3 py-2.5 text-[#f5f0e6] text-sm focus:outline-none focus:border-[#b8956a] transition-all"
+                      />
+                    </div>
+                    {adConfig.preset.layout.hasCTA && (
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[0.75rem] font-medium text-[rgba(245,240,230,0.7)]">CTA Button</label>
+                        <input
+                          type="text"
+                          value={adConfig.ctaText}
+                          onChange={(e) =>
+                            setAdConfig((prev) => ({ ...prev, ctaText: e.target.value }))
+                          }
+                          placeholder="e.g., Shop Now"
+                          className="bg-[rgba(26,24,22,0.6)] border border-[rgba(184,149,106,0.2)] rounded-md px-3 py-2.5 text-[#f5f0e6] text-sm focus:outline-none focus:border-[#b8956a] transition-all"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Customize Section (Collapsible) */}
+                  <div className="border-t border-[rgba(184,149,106,0.15)] pt-4">
+                    <button
+                      className="flex items-center justify-between w-full py-2 text-xs font-medium text-[rgba(245,240,230,0.6)] hover:text-[rgba(245,240,230,0.8)] transition-colors"
+                      onClick={() => setShowCustomizeAd(!showCustomizeAd)}
+                    >
+                      <span>Customize Colors & Font</span>
+                      <ChevronRight
+                        className={cn(
+                          "w-4 h-4 transition-transform",
+                          showCustomizeAd && "rotate-90"
+                        )}
+                      />
+                    </button>
+
+                    {showCustomizeAd && (
+                      <div className="flex flex-col gap-4 pt-3">
+                        {/* Color Block Color */}
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-[0.65rem] text-[rgba(245,240,230,0.5)]">Background Color</label>
+                          <div className="flex flex-wrap gap-1.5">
+                            {AD_COLOR_PRESETS.map((color) => (
+                              <button
+                                key={color.value}
+                                className={cn(
+                                  "w-6 h-6 rounded border-2 border-transparent transition-transform hover:scale-110",
+                                  (adConfig.colorBlockColor || adConfig.preset.defaultStyles.colorBlockColor) === color.value &&
+                                    "border-white shadow-[0_0_0_1px_rgba(184,149,106,0.5)]"
+                                )}
+                                style={{ backgroundColor: color.value }}
+                                onClick={() =>
+                                  setAdConfig((prev) => ({ ...prev, colorBlockColor: color.value }))
+                                }
+                                title={color.name}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Text Color */}
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-[0.65rem] text-[rgba(245,240,230,0.5)]">Text Color</label>
+                          <div className="flex flex-wrap gap-1.5">
+                            {AD_COLOR_PRESETS.map((color) => (
+                              <button
+                                key={color.value}
+                                className={cn(
+                                  "w-6 h-6 rounded border-2 border-transparent transition-transform hover:scale-110",
+                                  (adConfig.textColor || adConfig.preset.defaultStyles.textColor) === color.value &&
+                                    "border-white shadow-[0_0_0_1px_rgba(184,149,106,0.5)]"
+                                )}
+                                style={{ backgroundColor: color.value }}
+                                onClick={() =>
+                                  setAdConfig((prev) => ({ ...prev, textColor: color.value }))
+                                }
+                                title={color.name}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* CTA Color (if has CTA) */}
+                        {adConfig.preset.layout.hasCTA && (
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[0.65rem] text-[rgba(245,240,230,0.5)]">Button Color</label>
+                            <div className="flex flex-wrap gap-1.5">
+                              {AD_COLOR_PRESETS.map((color) => (
+                                <button
+                                  key={color.value}
+                                  className={cn(
+                                    "w-6 h-6 rounded border-2 border-transparent transition-transform hover:scale-110",
+                                    (adConfig.ctaBackgroundColor || adConfig.preset.defaultStyles.ctaBackgroundColor) === color.value &&
+                                      "border-white shadow-[0_0_0_1px_rgba(184,149,106,0.5)]"
+                                  )}
+                                  style={{ backgroundColor: color.value }}
+                                  onClick={() =>
+                                    setAdConfig((prev) => ({ ...prev, ctaBackgroundColor: color.value }))
+                                  }
+                                  title={color.name}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Font Selection */}
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-[0.65rem] text-[rgba(245,240,230,0.5)]">Font</label>
+                          <div className="flex flex-wrap gap-1.5">
+                            {AD_FONT_OPTIONS.map((font) => (
+                              <button
+                                key={font.value}
+                                className={cn(
+                                  "px-2.5 py-1.5 rounded border text-[0.65rem] transition-all",
+                                  (adConfig.fontFamily || adConfig.preset.defaultStyles.fontFamily) === font.value
+                                    ? "border-[#b8956a] bg-[rgba(184,149,106,0.15)] text-[#b8956a]"
+                                    : "border-[rgba(184,149,106,0.2)] bg-[rgba(26,24,22,0.4)] text-[rgba(245,240,230,0.6)] hover:text-[rgba(245,240,230,0.8)]"
+                                )}
+                                style={{ fontFamily: font.style }}
+                                onClick={() =>
+                                  setAdConfig((prev) => ({ ...prev, fontFamily: font.value }))
+                                }
+                              >
+                                {font.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      className="p-2.5 rounded-md border border-[rgba(184,149,106,0.2)] text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.7)] hover:border-[rgba(184,149,106,0.4)] transition-all"
+                      onClick={handleResetAdConfig}
+                      title="Reset Ad"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
+                    <button
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md bg-[#b8956a] text-[#1a1816] font-semibold text-sm hover:bg-[#c9a67b] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      onClick={handleExportAd}
+                      disabled={isExportingAd || (!adConfig.headline && !adConfig.subtext && !adConfig.ctaText)}
+                    >
+                      {isExportingAd ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Exporting...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-4 h-4" />
+                          Export Ad
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </motion.div>
               )}
             </div>
