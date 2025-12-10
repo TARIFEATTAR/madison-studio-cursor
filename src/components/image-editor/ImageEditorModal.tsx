@@ -563,55 +563,55 @@ export function ImageEditorModal({
 
           {/* Editor Panel */}
             <div className="flex flex-col bg-[#1a1816] overflow-hidden min-h-0">
-            {/* Tabs */}
-              <div className="shrink-0 flex border-b border-[rgba(184,149,106,0.15)]">
+            {/* Tabs - Scrollable on mobile, fixed on desktop */}
+              <div className="shrink-0 flex border-b border-[rgba(184,149,106,0.15)] overflow-x-auto md:overflow-x-visible scrollbar-hide">
               <button
                 className={cn(
-                    "flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-2 text-xs md:text-sm transition-all",
+                    "flex-shrink-0 md:flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-3 md:px-2 min-w-[80px] md:min-w-0 text-xs md:text-sm transition-all",
                     activeTab === "refine"
                       ? "text-[#b8956a] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_#b8956a]"
                       : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
                 )}
                 onClick={() => setActiveTab("refine")}
               >
-                <Wand2 className="w-4 h-4" />
-                <span>Refine</span>
+                <Wand2 className="w-4 h-4 flex-shrink-0" />
+                <span className="whitespace-nowrap">Refine</span>
               </button>
               <button
                 className={cn(
-                    "flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-2 text-xs md:text-sm transition-all",
+                    "flex-shrink-0 md:flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-3 md:px-2 min-w-[80px] md:min-w-0 text-xs md:text-sm transition-all",
                     activeTab === "variations"
                       ? "text-[#b8956a] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_#b8956a]"
                       : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
                 )}
                 onClick={() => setActiveTab("variations")}
               >
-                <ImageIcon className="w-4 h-4" />
-                <span>Variations</span>
+                <ImageIcon className="w-4 h-4 flex-shrink-0" />
+                <span className="whitespace-nowrap">Variations</span>
               </button>
               <button
                 className={cn(
-                    "flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-2 text-xs md:text-sm transition-all",
+                    "flex-shrink-0 md:flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-3 md:px-2 min-w-[80px] md:min-w-0 text-xs md:text-sm transition-all",
                     activeTab === "text"
                       ? "text-[#b8956a] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_#b8956a]"
                       : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
                 )}
                 onClick={() => setActiveTab("text")}
               >
-                <Type className="w-4 h-4" />
-                <span>Text</span>
+                <Type className="w-4 h-4 flex-shrink-0" />
+                <span className="whitespace-nowrap">Text</span>
               </button>
               <button
                 className={cn(
-                    "flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-2 text-xs md:text-sm transition-all",
+                    "flex-shrink-0 md:flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-3 md:px-2 min-w-[80px] md:min-w-0 text-xs md:text-sm transition-all",
                     activeTab === "ad"
                       ? "text-[#b8956a] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_#b8956a]"
                       : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
                 )}
                 onClick={() => setActiveTab("ad")}
               >
-                <Layout className="w-4 h-4" />
-                <span>Ad</span>
+                <Layout className="w-4 h-4 flex-shrink-0" />
+                <span className="whitespace-nowrap">Ad</span>
               </button>
             </div>
 
