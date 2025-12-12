@@ -159,6 +159,26 @@ export const PLATFORM_IMAGE_SPECS: Record<string, PlatformImageSpec> = {
     notes: 'High contrast, readable text, expressive faces perform best.'
   },
   
+  // Website Banners / Hero Images
+  'hero_banner_wide': {
+    aspectRatio: '21:9 (ultrawide)',
+    resolution: '2520x1080',
+    maxFileSize: 'No limit for web',
+    notes: 'Desktop hero banners, cinematic feel. Keep subject centered for mobile crop.'
+  },
+  'hero_banner_standard': {
+    aspectRatio: '2:1',
+    resolution: '2000x1000',
+    maxFileSize: 'No limit for web',
+    notes: 'Standard website hero. Works well across devices.'
+  },
+  'hero_banner_16x9': {
+    aspectRatio: '16:9',
+    resolution: '1920x1080',
+    maxFileSize: 'No limit for web',
+    notes: 'Video-friendly aspect ratio. YouTube covers, presentations.'
+  },
+  
   // Product Photography
   'product_hero': {
     aspectRatio: '1:1 or 4:3',

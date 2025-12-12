@@ -1000,8 +1000,11 @@ ASPECT RATIOS BY PLATFORM:
 - Facebook Feed: 1:1 or 4:5
 - Pinterest: 2:3
 - Product Page: 1:1
-- Hero Banner: 16:9 or 21:9
+- Hero Banner (standard): 2:1 (2000x1000)
+- Hero Banner (ultrawide): 21:9 (2520x1080)
+- Hero Banner (video-friendly): 16:9 (1920x1080)
 - Amazon: 1:1 (white background required)
+- Email Header: 2:1 or 3:1
 
 PROMPT STRUCTURE:
 [Subject] + [Style reference] + [Composition] + [Lighting] + [Color/mood] + [--ar X:X] + [--style raw]
