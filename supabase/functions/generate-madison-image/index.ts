@@ -6,6 +6,7 @@ import { formatVisualContext } from "../_shared/productFieldFilters.ts";
 import { callGeminiImage } from "../_shared/aiProviders.ts";
 import { enhancePromptWithOntology } from "../_shared/photographyOntology.ts";
 import { generateImage as generateFreepikImage, type FreepikImageModel, type FreepikResolution, IMAGE_MODELS } from "../_shared/freepikProvider.ts";
+import { getVisualMasterContext, type VisualSquad } from "../_shared/visualMasters.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -176,7 +177,8 @@ function buildDirectorModePrompt(
   proModeControls: any,
   brandKnowledge: any,
   productData: any,
-  aspectRatio?: string
+  aspectRatio?: string,
+  visualMasterContext?: string
 ): string {
   let prompt = "";
 
@@ -305,7 +307,14 @@ function buildDirectorModePrompt(
   prompt += "=== CREATIVE DIRECTION ===\n";
   prompt += `${userPrompt}\n\n`;
 
-  // === SECTION 3: PROFESSIONAL PHOTOGRAPHY SPECIFICATIONS ===
+  // === SECTION 3: VISUAL MASTER TRAINING ===
+  if (visualMasterContext) {
+    prompt += "=== VISUAL MASTER TRAINING ===\n";
+    prompt += visualMasterContext;
+    prompt += "\n\n";
+  }
+
+  // === SECTION 4: PROFESSIONAL PHOTOGRAPHY SPECIFICATIONS ===
   prompt += "=== PHOTOGRAPHIC SPECIFICATIONS ===\n";
   prompt += "You are a Virtual Art Director with expertise in high-end commercial photography.\n";
   prompt += "Apply professional photography ontology concepts:\n\n";
@@ -617,6 +626,7 @@ serve(async (req) => {
       // Frontend-friendly aliases (Pro Settings)
       aiProvider, // "auto" | "gemini" | "freepik-mystic" | "freepik-flux"
       resolution, // "standard" | "high" | "4k"
+      visualSquad, // "THE_MINIMALISTS" | "THE_STORYTELLERS" | "THE_DISRUPTORS"
     } = body;
     
     // Map frontend-friendly names to backend values
@@ -849,7 +859,50 @@ serve(async (req) => {
       categorizedRefs.product.length > 1;
 
     /**
-     * 7. Build enhanced prompt based on mode
+     * 7. Fetch Visual Master context if visualSquad is specified
+     */
+    let visualMasterContext: string | undefined;
+    
+    if (visualSquad || goalType) {
+      try {
+        const { strategy, masterContext } = await getVisualMasterContext(
+          supabase,
+          goalType || 'product_hero',
+          prompt,
+          undefined // brandTone - could be extracted from brandKnowledge
+        );
+        
+        // Use user-selected squad if provided, otherwise use auto-routed squad
+        if (visualSquad) {
+          // Re-fetch for the specific squad if different from auto-routed
+          if (visualSquad !== strategy.visualSquad) {
+            const { masterContext: specificContext } = await getVisualMasterContext(
+              supabase,
+              goalType || 'product_hero',
+              `${visualSquad} style ${prompt}`, // Hint the brief with squad
+              undefined
+            );
+            visualMasterContext = specificContext;
+          } else {
+            visualMasterContext = masterContext;
+          }
+        } else {
+          visualMasterContext = masterContext;
+        }
+        
+        console.log(`🎨 Visual Master Context:`, {
+          selectedSquad: visualSquad || strategy.visualSquad,
+          primaryMaster: strategy.primaryVisualMaster,
+          contextLength: visualMasterContext?.length || 0,
+        });
+      } catch (vmError) {
+        console.warn("Could not fetch visual master context:", vmError);
+        // Continue without visual master context
+      }
+    }
+
+    /**
+     * 8. Build enhanced prompt based on mode
      */
     let enhancedPrompt: string;
 
@@ -864,7 +917,8 @@ serve(async (req) => {
         proModeControls,
         brandKnowledge,
         productData,
-        aspectRatio
+        aspectRatio,
+        visualMasterContext
       );
 
       // Add product visual DNA if available

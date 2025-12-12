@@ -47,6 +47,11 @@ import {
   getLightingOptions,
   getEnvironmentOptions,
 } from "@/utils/promptFormula";
+import {
+  COMMON_ASPECT_RATIOS,
+  VISUAL_SQUADS,
+  type VisualSquad,
+} from "@/config/imageSettings";
 
 interface Suggestion {
   id: string;
@@ -78,14 +83,8 @@ const RESOLUTION_OPTIONS = [
   { value: "4k", label: "4K Ultra", description: "4K (4096px)", badge: "Signature" },
 ];
 
-const ASPECT_RATIO_OPTIONS = [
-  { value: "1:1", label: "Square", description: "Instagram, Product" },
-  { value: "16:9", label: "Widescreen", description: "YouTube, Desktop" },
-  { value: "9:16", label: "Social Story", description: "Reels, TikTok" },
-  { value: "4:5", label: "Social Post", description: "Instagram Feed" },
-  { value: "2:3", label: "Portrait", description: "Pinterest, Print" },
-  { value: "3:2", label: "Standard", description: "Classic photo" },
-];
+// Use centralized aspect ratios from imageSettings.ts
+const ASPECT_RATIO_OPTIONS = COMMON_ASPECT_RATIOS;
 
 type RightPanelTab = "madison" | "settings";
 
@@ -572,6 +571,69 @@ export function RightPanel({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Visual Squad Selector */}
+            <div className="panel-section">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="panel-heading mb-0">
+                  <Palette className="w-4 h-4 text-[var(--darkroom-accent)]" />
+                  <span>Visual Style</span>
+                </h4>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-3.5 h-3.5 text-[var(--darkroom-text-dim)] cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="left" className="max-w-[220px]">
+                      <p className="text-xs">
+                        Choose a visual style to influence composition, lighting, and mood.
+                        Based on legendary photographers.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  onClick={() => handleSettingChange("visualSquad", undefined)}
+                  disabled={isGenerating}
+                  className={cn(
+                    "px-2 py-2 rounded-md text-xs font-medium transition-all text-center",
+                    !proSettings.visualSquad
+                      ? "bg-[var(--darkroom-accent)] text-[var(--darkroom-bg)]"
+                      : "bg-[var(--darkroom-surface)] text-[var(--darkroom-text-muted)] hover:bg-[var(--darkroom-surface-elevated)]"
+                  )}
+                >
+                  Auto
+                </button>
+                {VISUAL_SQUADS.map((squad) => (
+                  <TooltipProvider key={squad.value}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => handleSettingChange("visualSquad", squad.value)}
+                          disabled={isGenerating}
+                          className={cn(
+                            "px-2 py-2 rounded-md text-xs font-medium transition-all text-center",
+                            proSettings.visualSquad === squad.value
+                              ? "bg-[var(--darkroom-accent)] text-[var(--darkroom-bg)]"
+                              : "bg-[var(--darkroom-surface)] text-[var(--darkroom-text-muted)] hover:bg-[var(--darkroom-surface-elevated)]"
+                          )}
+                        >
+                          {squad.label}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-[200px]">
+                        <p className="text-xs font-medium">{squad.description}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          Best for: {squad.bestFor.slice(0, 2).join(', ')}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ))}
+              </div>
             </div>
           </div>
         )}
