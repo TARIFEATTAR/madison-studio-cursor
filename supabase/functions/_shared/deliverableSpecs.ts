@@ -965,6 +965,92 @@ PROVIDE:
   },
 
   // ═══════════════════════════════════════════════════════════════════════════════
+  // AI IMAGE GENERATION
+  // ═══════════════════════════════════════════════════════════════════════════════
+  'visual-asset': {
+    platformNotes: `
+AI IMAGE GENERATION FORMAT:
+
+VISUAL SQUADS (choose one based on brief):
+
+THE MINIMALISTS (AVEDON_ISOLATION):
+- Pure white or neutral backgrounds
+- Clinical, precise lighting (soft directional from top-left)
+- Product as hero, no distractions
+- Best for: Product pages, luxury items, e-commerce, Amazon
+- Prompt style: "[Product] centered on pure white background, soft directional light, hyperrealistic, 8k --ar 1:1 --style raw"
+
+THE STORYTELLERS (LEIBOVITZ_ENVIRONMENT):
+- Natural settings, environmental context
+- Warm window light, golden hour aesthetic
+- Lifestyle integration with props
+- Best for: Instagram, brand story, fragrance, candles
+- Prompt style: "[Product] in natural setting, soft window light, warm color grading, editorial, magazine quality --ar 4:5"
+
+THE DISRUPTORS (RICHARDSON_RAW / ANDERSON_SYMMETRY):
+Richardson: Direct flash, high contrast, raw energy, 90s aesthetic
+Anderson: Hyper-symmetry, bold colors, perfectly centered
+- Best for: Social ads, TikTok, scroll-stopping content
+- Richardson style: "[Product] direct flash, high contrast, raw aesthetic --ar 9:16"
+- Anderson style: "[Product] overhead flat lay, perfect symmetry, bold [color] background --ar 1:1"
+
+ASPECT RATIOS BY PLATFORM:
+- Instagram Feed: 1:1 or 4:5
+- Instagram Story/Reel: 9:16
+- Facebook Feed: 1:1 or 4:5
+- Pinterest: 2:3
+- Product Page: 1:1
+- Hero Banner: 16:9 or 21:9
+- Amazon: 1:1 (white background required)
+
+PROMPT STRUCTURE:
+[Subject] + [Style reference] + [Composition] + [Lighting] + [Color/mood] + [--ar X:X] + [--style raw]
+
+NEGATIVE PROMPTS (add to avoid):
+--no text --no watermark --no logo --no hands (if applicable)
+    `,
+    structure: [
+      'Subject description',
+      'Visual squad/master style',
+      'Composition (centered, rule of thirds, overhead)',
+      'Lighting direction',
+      'Color palette/mood',
+      'Aspect ratio parameter',
+      'Negative prompts'
+    ],
+    toneNotes: 'Be specific about materials, textures, lighting angles. Avoid vague words like "beautiful" or "nice."'
+  },
+
+  'image_prompt': {
+    platformNotes: `
+IMAGE PROMPT / RECIPE FORMAT:
+Save a reusable image prompt template for consistent visual output.
+
+PROVIDE:
+1. FULL PROMPT: Complete prompt with [PRODUCT] placeholder for reuse
+2. VISUAL MASTER: Which style this follows (Avedon, Leibovitz, Richardson, Anderson)
+3. BEST USE CASES: When to use this recipe
+4. VARIATIONS: 2-3 tweaks for different moods
+5. NEGATIVE PROMPT: What to exclude
+
+EXAMPLE:
+---
+PROMPT: [PRODUCT] on weathered marble surface, soft diffused natural light from window, editorial product photography, muted earth tones, film grain, 85mm lens aesthetic --ar 4:5 --style raw --no harsh shadows
+
+MASTER: Leibovitz Environment (Storytellers)
+USE FOR: Instagram feed, product story, fragrance/skincare
+
+VARIATIONS:
+• Swap marble for aged wood → warmer, rustic
+• Add botanical elements → organic/natural brands
+• Change to 1:1 → e-commerce ready
+
+NEGATIVE: clinical, pure white background, flash, sterile
+---
+    `
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════════
   // ANNOUNCEMENTS & PR
   // ═══════════════════════════════════════════════════════════════════════════════
   'launch_announcement': {
