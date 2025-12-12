@@ -5,6 +5,7 @@ import { getSemanticFields, formatSemanticContext } from '../_shared/productFiel
 import { buildAuthorProfilesSection } from '../_shared/authorProfiles.ts';
 import { buildBrandAuthoritiesSection } from '../_shared/brandAuthorities.ts';
 import { getMadisonMasterContext, getSchwartzTemplate, SQUAD_DEFINITIONS } from '../_shared/madisonMasters.ts';
+import { buildFormatInstructions } from '../_shared/deliverableSpecs.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
@@ -1341,6 +1342,10 @@ KEY PHRASES TO USE:
     // Get Schwartz stage template
     const schwartzTemplate = getSchwartzTemplate(madisonStrategy.schwartzStage);
     
+    // Get platform-specific format instructions
+    const formatInstructions = buildFormatInstructions(contentType);
+    console.log(`[Format Specs] Content type: ${contentType}, has format instructions: ${!!formatInstructions}`);
+    
     // Build the Madison Masters system training section
     const madisonSystemConfig = `
 ╔══════════════════════════════════════════════════════════════════╗
@@ -1353,6 +1358,10 @@ ${madisonMasterContext}
 ━━━ SCHWARTZ AWARENESS STAGE: ${madisonStrategy.schwartzStage.toUpperCase()} ━━━
 ${schwartzTemplate}
 
+${formatInstructions ? `
+━━━ PLATFORM/FORMAT SPECIFICATIONS ━━━
+${formatInstructions}
+` : ''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `;
     
