@@ -1,5 +1,5 @@
 import { ALL_DELIVERABLES, DeliverableFormat } from "./deliverableFormats";
-import { LucideIcon, Mail, BookOpen, Instagram, ShoppingBag, Layers } from "lucide-react";
+import { LucideIcon, Mail, BookOpen, Instagram, Quote } from "lucide-react";
 
 export interface LibraryContentType {
   id: string;
@@ -28,6 +28,25 @@ export const CONTENT_TYPE_GROUPS: Record<string, string[]> = {
     "email_subject_lines"
   ],
   "all_social": [
+    // Instagram
+    "instagram_post",
+    "instagram_carousel", 
+    "instagram_reel_script",
+    // Facebook
+    "facebook_post",
+    // LinkedIn
+    "linkedin_post",
+    "linkedin_article",
+    // Twitter/X
+    "twitter_thread",
+    "twitter_post",
+    // TikTok
+    "tiktok_script",
+    // YouTube
+    "youtube_description",
+    // Pinterest
+    "pinterest_pin",
+    // Legacy values
     "social_media_post", 
     "instagram", 
     "linkedin", 
@@ -36,15 +55,19 @@ export const CONTENT_TYPE_GROUPS: Record<string, string[]> = {
     "youtube", 
     "carousel_copy",
     "short_form_video_script",
-    "customer_testimonial_story",
-    "quote_hook_generator"
   ],
   "all_blog": [
     "blog_article", 
     "blog_post", 
     "blog",
     "video_script",
-    "podcast_script"
+    "podcast_script",
+    "long_form_sales_letter"
+  ],
+  "all_micro": [
+    "quote_hook_generator",
+    "customer_testimonial_story",
+    "tagline_generator"
   ],
 };
 
@@ -62,19 +85,27 @@ const groupedFilterOptions: LibraryContentType[] = [
   },
   {
     id: "all_social",
-    name: "All Social",
+    name: "All Social Media",
     icon: Instagram,
-    category: "All social media content",
+    category: "Instagram, Facebook, LinkedIn, Twitter, TikTok, YouTube, Pinterest",
     isGroup: true,
     groupKeys: CONTENT_TYPE_GROUPS.all_social,
   },
   {
     id: "all_blog",
-    name: "All Blog/Articles",
+    name: "All Long-Form",
     icon: BookOpen,
-    category: "All blog and article content",
+    category: "Blog, articles, video scripts, sales letters",
     isGroup: true,
     groupKeys: CONTENT_TYPE_GROUPS.all_blog,
+  },
+  {
+    id: "all_micro",
+    name: "All Micro Content",
+    icon: Quote,
+    category: "Hooks, quotes, taglines, testimonials",
+    isGroup: true,
+    groupKeys: CONTENT_TYPE_GROUPS.all_micro,
   },
 ];
 

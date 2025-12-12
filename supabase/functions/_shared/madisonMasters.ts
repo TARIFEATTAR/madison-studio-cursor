@@ -67,11 +67,12 @@ export const SQUAD_DEFINITIONS = {
 // This covers ALL deliverable formats from the Create page
 export const CONTENT_TYPE_TO_SQUAD: Record<string, CopySquad> = {
   // ═══════════════════════════════════════════════════════════════════════════════
-  // HERO / ANCHOR CONTENT
+  // HERO / ANCHOR CONTENT (Long-Form)
   // ═══════════════════════════════════════════════════════════════════════════════
   'blog_article': 'THE_STORYTELLERS',        // Long-form editorial → narrative style
   'video_script': 'THE_STORYTELLERS',        // Screenplay → emotional engagement
   'podcast_script': 'THE_STORYTELLERS',      // Conversational → Collier's style
+  'long_form_sales_letter': 'THE_SCIENTISTS', // Classic Halbert/Ogilvy direct response
   
   // ═══════════════════════════════════════════════════════════════════════════════
   // CONVERSION CONTENT (Direct Response / Sales)
@@ -96,14 +97,39 @@ export const CONTENT_TYPE_TO_SQUAD: Record<string, CopySquad> = {
   'faq_page_copy': 'THE_SCIENTISTS',         // FAQ → clear, factual, helpful
   
   // ═══════════════════════════════════════════════════════════════════════════════
-  // MICRO & SOCIAL CONTENT
+  // SOCIAL MEDIA — PLATFORM SPECIFIC
   // ═══════════════════════════════════════════════════════════════════════════════
-  'social_media_post': 'THE_STORYTELLERS',   // Social posts → lifestyle, engagement
-  'instagram_caption': 'THE_STORYTELLERS',   // Instagram → sensory, evocative
-  'carousel_copy': 'THE_STORYTELLERS',       // Carousel → storytelling slides
-  'short_form_video_script': 'THE_DISRUPTORS', // Reels/TikTok → hook fast, bold
-  'customer_testimonial_story': 'THE_STORYTELLERS', // Testimonials → narrative
+  // Instagram (Visual-first, lifestyle, sensory)
+  'instagram_post': 'THE_STORYTELLERS',      // Feed post → Peterman sensory
+  'instagram_carousel': 'THE_STORYTELLERS',  // Educational carousel → narrative slides
+  'instagram_reel_script': 'THE_DISRUPTORS', // Reels → hook fast, bold
+  
+  // Facebook (Community, longer form OK)
+  'facebook_post': 'THE_STORYTELLERS',       // Community post → engaging, relatable
+  
+  // LinkedIn (Professional, thought leadership)
+  'linkedin_post': 'THE_SCIENTISTS',         // Professional → Ogilvy authority
+  'linkedin_article': 'THE_SCIENTISTS',      // Long-form → proof, expertise
+  
+  // Twitter/X (Punchy, hooks, threads)
+  'twitter_thread': 'THE_DISRUPTORS',        // Thread → Halbert hooks, build tension
+  'twitter_post': 'THE_DISRUPTORS',          // Single tweet → punchy, bold
+  
+  // TikTok (Scroll-stopping, hook in 3 sec)
+  'tiktok_script': 'THE_DISRUPTORS',         // Short video → pattern interrupt
+  
+  // YouTube (SEO, value-driven)
+  'youtube_description': 'THE_SCIENTISTS',   // Description → SEO, specificity
+  
+  // Pinterest (Visual search, aspirational)
+  'pinterest_pin': 'THE_STORYTELLERS',       // Pin → evocative, inspirational
+  
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // MICRO CONTENT (Hooks, Quotes, Testimonials)
+  // ═══════════════════════════════════════════════════════════════════════════════
   'quote_hook_generator': 'THE_DISRUPTORS',  // Hooks → pattern interrupt
+  'customer_testimonial_story': 'THE_STORYTELLERS', // Testimonials → narrative
+  'tagline_generator': 'THE_DISRUPTORS',     // Taglines → punchy, memorable
   
   // ═══════════════════════════════════════════════════════════════════════════════
   // VISUALS & CREATIVE
@@ -114,16 +140,20 @@ export const CONTENT_TYPE_TO_SQUAD: Record<string, CopySquad> = {
   'ad_creative_prompt': 'THE_DISRUPTORS',    // Ad visuals → scroll-stopping
   
   // ═══════════════════════════════════════════════════════════════════════════════
-  // ANNOUNCEMENTS & OUTREACH
+  // ANNOUNCEMENTS & PR
   // ═══════════════════════════════════════════════════════════════════════════════
   'launch_announcement': 'THE_DISRUPTORS',   // Launch → urgency, excitement
-  'press_release': 'THE_SCIENTISTS',         // Press → factual, credible
+  'press_release': 'THE_SCIENTISTS',         // Press → factual, credible, AP style
   'sms_campaign_copy': 'THE_DISRUPTORS',     // SMS → urgent, punchy
   
   // ═══════════════════════════════════════════════════════════════════════════════
-  // LEGACY / FALLBACK MAPPINGS
+  // LEGACY / FALLBACK MAPPINGS (for old content)
   // ═══════════════════════════════════════════════════════════════════════════════
+  'social_media_post': 'THE_STORYTELLERS',   // Generic social
   'social_post': 'THE_STORYTELLERS',
+  'instagram_caption': 'THE_STORYTELLERS',   // Old format
+  'carousel_copy': 'THE_STORYTELLERS',       // Old format
+  'short_form_video_script': 'THE_DISRUPTORS',
   'brand_story': 'THE_STORYTELLERS',
   'lifestyle_description': 'THE_STORYTELLERS',
   'product_page': 'THE_SCIENTISTS',
