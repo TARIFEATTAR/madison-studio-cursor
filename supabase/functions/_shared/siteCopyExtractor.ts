@@ -172,7 +172,7 @@ async function fetchPageContent(url: string): Promise<{
  */
 function extractTextFromHtml(html: string): string {
   // Remove scripts and styles
-  let text = html
+  const text = html
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
     .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, '')

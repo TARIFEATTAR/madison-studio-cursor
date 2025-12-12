@@ -135,7 +135,7 @@ export function useStreakCalculation() {
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
 
-      let checkDate = new Date(today);
+      const checkDate = new Date(today);
       
       // Check if vacation mode is active
       const vacationMode = gamificationData?.streak.vacation_mode;

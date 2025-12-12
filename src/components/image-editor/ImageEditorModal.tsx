@@ -45,6 +45,7 @@ import {
   Layout,
   ChevronRight,
   RotateCcw,
+  Scissors,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -62,6 +63,9 @@ import {
   AD_COLOR_PRESETS,
   type AdLayoutPreset 
 } from "@/config/adLayoutPresets";
+
+// Background Removal
+import { BackgroundRemovalTab } from "./BackgroundRemovalTab";
 
 export interface ImageEditorImage {
   id: string;
@@ -103,7 +107,7 @@ export function ImageEditorModal({
   const { orgId } = useCurrentOrganizationId();
 
   // UI State
-  const [activeTab, setActiveTab] = useState<"refine" | "text" | "variations" | "ad">("refine");
+  const [activeTab, setActiveTab] = useState<"refine" | "text" | "variations" | "ad" | "bg-remove">("refine");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isExportingAd, setIsExportingAd] = useState(false);
@@ -433,7 +437,7 @@ export function ImageEditorModal({
       <DialogContent 
         className={cn(
           // Base styles - override default DialogContent styles
-          "bg-[#1a1816] border border-[rgba(184,149,106,0.2)] shadow-2xl p-0",
+          "bg-[var(--darkroom-surface)] border border-[rgba(184,149,106,0.2)] shadow-2xl p-0",
           // Desktop: Large modal with constrained size
           "w-[95vw] max-w-[1000px] max-h-[90vh]",
           // Mobile: Full screen for better UX
@@ -444,19 +448,19 @@ export function ImageEditorModal({
       >
         <div className="flex flex-col h-full md:h-auto md:max-h-[90vh]">
           {/* Custom Header */}
-          <div className="shrink-0 flex items-center justify-between px-4 md:px-5 py-3 md:py-4 bg-[#252220] border-b border-[rgba(184,149,106,0.15)]">
+          <div className="shrink-0 flex items-center justify-between px-4 md:px-5 py-3 md:py-4 bg-[var(--darkroom-surface-elevated)] border-b border-[rgba(184,149,106,0.15)]">
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-              className="text-[rgba(245,240,230,0.7)] hover:text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.1)] text-xs md:text-sm"
+              className="text-[rgba(245,240,230,0.7)] hover:text-[var(--darkroom-text)] hover:bg-[rgba(184,149,106,0.1)] text-xs md:text-sm"
           >
               <ArrowLeft className="w-4 h-4 mr-1 md:mr-2" />
               <span className="hidden sm:inline">Back to {source === "library" ? "Library" : "Dark Room"}</span>
               <span className="sm:hidden">Back</span>
           </Button>
             
-            <DialogTitle className="font-serif text-lg md:text-xl font-medium text-[#f5f0e6] absolute left-1/2 -translate-x-1/2">
+            <DialogTitle className="font-serif text-lg md:text-xl font-medium text-[var(--darkroom-text)] absolute left-1/2 -translate-x-1/2">
             Image Editor
           </DialogTitle>
             
@@ -468,7 +472,7 @@ export function ImageEditorModal({
             variant="ghost"
             size="icon"
             onClick={onClose}
-              className="text-[rgba(245,240,230,0.5)] hover:text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.1)]"
+              className="text-[rgba(245,240,230,0.5)] hover:text-[var(--darkroom-text)] hover:bg-[rgba(184,149,106,0.1)]"
           >
             <X className="w-4 h-4" />
           </Button>
@@ -478,9 +482,9 @@ export function ImageEditorModal({
             {image ? (
             <div className="flex-1 grid grid-cols-1 md:grid-cols-[1fr_320px] min-h-0 overflow-hidden">
           {/* Main Image Preview */}
-            <div className="flex flex-col p-3 md:p-6 bg-[#0f0e0d] md:border-r border-b md:border-b-0 border-[rgba(184,149,106,0.1)] overflow-hidden min-h-[200px] md:min-h-0">
+            <div className="flex flex-col p-3 md:p-6 bg-[var(--darkroom-bg)] md:border-r border-b md:border-b-0 border-[rgba(184,149,106,0.1)] overflow-hidden min-h-[200px] md:min-h-0">
             <motion.div
-                className="relative flex-1 flex items-center justify-center bg-[#0a0908] rounded-xl overflow-hidden min-h-0"
+                className="relative flex-1 flex items-center justify-center bg-[var(--darkroom-bg)] rounded-xl overflow-hidden min-h-0"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
@@ -534,7 +538,7 @@ export function ImageEditorModal({
                   variant="ghost"
                 size="sm"
                 onClick={handleCopyPrompt}
-                  className="h-10 md:h-9 border border-[rgba(184,149,106,0.4)] bg-transparent text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.15)] hover:text-[#f5f0e6] hover:border-[#b8956a] text-xs md:text-sm"
+                  className="h-10 md:h-9 border border-[rgba(184,149,106,0.4)] bg-transparent text-[var(--darkroom-text)] hover:bg-[rgba(184,149,106,0.15)] hover:text-[var(--darkroom-text)] hover:border-[var(--darkroom-accent)] text-xs md:text-sm"
               >
                   <Copy className="w-4 h-4 md:mr-2" />
                   <span className="hidden md:inline">Copy Prompt</span>
@@ -543,7 +547,7 @@ export function ImageEditorModal({
                   variant="ghost"
                 size="sm"
                 onClick={handleDownload}
-                  className="h-10 md:h-9 border border-[rgba(184,149,106,0.4)] bg-transparent text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.15)] hover:text-[#f5f0e6] hover:border-[#b8956a] text-xs md:text-sm"
+                  className="h-10 md:h-9 border border-[rgba(184,149,106,0.4)] bg-transparent text-[var(--darkroom-text)] hover:bg-[rgba(184,149,106,0.15)] hover:text-[var(--darkroom-text)] hover:border-[var(--darkroom-accent)] text-xs md:text-sm"
               >
                   <Download className="w-4 h-4 md:mr-2" />
                   <span className="hidden md:inline">Download</span>
@@ -562,14 +566,14 @@ export function ImageEditorModal({
           </div>
 
           {/* Editor Panel */}
-            <div className="flex flex-col bg-[#1a1816] overflow-hidden min-h-0">
+            <div className="flex flex-col bg-[var(--darkroom-surface)] overflow-hidden min-h-0">
             {/* Tabs - Scrollable on mobile, fixed on desktop */}
               <div className="shrink-0 flex border-b border-[rgba(184,149,106,0.15)] overflow-x-auto md:overflow-x-visible scrollbar-hide">
               <button
                 className={cn(
                     "flex-shrink-0 md:flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-3 md:px-2 min-w-[80px] md:min-w-0 text-xs md:text-sm transition-all",
                     activeTab === "refine"
-                      ? "text-[#b8956a] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_#b8956a]"
+                      ? "text-[var(--darkroom-accent)] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_var(--darkroom-accent)]"
                       : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
                 )}
                 onClick={() => setActiveTab("refine")}
@@ -581,7 +585,7 @@ export function ImageEditorModal({
                 className={cn(
                     "flex-shrink-0 md:flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-3 md:px-2 min-w-[80px] md:min-w-0 text-xs md:text-sm transition-all",
                     activeTab === "variations"
-                      ? "text-[#b8956a] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_#b8956a]"
+                      ? "text-[var(--darkroom-accent)] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_var(--darkroom-accent)]"
                       : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
                 )}
                 onClick={() => setActiveTab("variations")}
@@ -593,7 +597,7 @@ export function ImageEditorModal({
                 className={cn(
                     "flex-shrink-0 md:flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-3 md:px-2 min-w-[80px] md:min-w-0 text-xs md:text-sm transition-all",
                     activeTab === "text"
-                      ? "text-[#b8956a] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_#b8956a]"
+                      ? "text-[var(--darkroom-accent)] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_var(--darkroom-accent)]"
                       : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
                 )}
                 onClick={() => setActiveTab("text")}
@@ -605,13 +609,25 @@ export function ImageEditorModal({
                 className={cn(
                     "flex-shrink-0 md:flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-3 md:px-2 min-w-[80px] md:min-w-0 text-xs md:text-sm transition-all",
                     activeTab === "ad"
-                      ? "text-[#b8956a] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_#b8956a]"
+                      ? "text-[var(--darkroom-accent)] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_var(--darkroom-accent)]"
                       : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
                 )}
                 onClick={() => setActiveTab("ad")}
               >
                 <Layout className="w-4 h-4 flex-shrink-0" />
                 <span className="whitespace-nowrap">Ad</span>
+              </button>
+              <button
+                className={cn(
+                    "flex-shrink-0 md:flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-3 md:px-2 min-w-[80px] md:min-w-0 text-xs md:text-sm transition-all",
+                    activeTab === "bg-remove"
+                      ? "text-[var(--darkroom-accent)] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_var(--darkroom-accent)]"
+                      : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
+                )}
+                onClick={() => setActiveTab("bg-remove")}
+              >
+                <Scissors className="w-4 h-4 flex-shrink-0" />
+                <span className="whitespace-nowrap">BG Remove</span>
               </button>
             </div>
 
@@ -631,7 +647,7 @@ export function ImageEditorModal({
                     value={refinementPrompt}
                     onChange={(e) => setRefinementPrompt(e.target.value)}
                     placeholder="e.g., Make the lighting warmer, add more shadows, zoom in on the product..."
-                      className="bg-[rgba(26,24,22,0.8)] border-[rgba(184,149,106,0.2)] text-[#f5f0e6] placeholder:text-[rgba(245,240,230,0.4)] focus:border-[#b8956a] focus:ring-1 focus:ring-[rgba(184,149,106,0.2)] resize-none"
+                      className="bg-[rgba(26,24,22,0.8)] border-[rgba(184,149,106,0.2)] text-[var(--darkroom-text)] placeholder:text-[rgba(245,240,230,0.4)] focus:border-[var(--darkroom-accent)] focus:ring-1 focus:ring-[rgba(184,149,106,0.2)] resize-none"
                     rows={4}
                   />
                   <Button
@@ -670,13 +686,13 @@ export function ImageEditorModal({
                   animate={{ opacity: 1, y: 0 }}
                 >
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium text-[#f5f0e6]">Style Variations</h4>
+                      <h4 className="text-sm font-medium text-[var(--darkroom-text)]">Style Variations</h4>
                     <Button
                         variant="ghost"
                       size="sm"
                       onClick={handleGenerateVariations}
                       disabled={isGenerating}
-                        className="border border-[rgba(184,149,106,0.4)] bg-transparent text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.15)] hover:text-[#f5f0e6] hover:border-[#b8956a]"
+                        className="border border-[rgba(184,149,106,0.4)] bg-transparent text-[var(--darkroom-text)] hover:bg-[rgba(184,149,106,0.15)] hover:text-[var(--darkroom-text)] hover:border-[var(--darkroom-accent)]"
                     >
                       {isGenerating ? (
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -692,17 +708,17 @@ export function ImageEditorModal({
                     {/* Original Image */}
                     <button
                       className={cn(
-                          "relative aspect-square rounded-lg overflow-hidden border-2 bg-[#0f0e0d] cursor-pointer transition-all",
+                          "relative aspect-square rounded-lg overflow-hidden border-2 bg-[var(--darkroom-bg)] cursor-pointer transition-all",
                           !selectedVariationId
-                            ? "border-[#b8956a] shadow-[0_0_0_2px_rgba(184,149,106,0.2)]"
+                            ? "border-[var(--darkroom-accent)] shadow-[0_0_0_2px_rgba(184,149,106,0.2)]"
                             : "border-transparent hover:border-[rgba(184,149,106,0.3)]"
                       )}
                       onClick={() => setSelectedVariationId(null)}
                     >
                         <img src={image.imageUrl} alt="Original" className="w-full h-full object-cover" />
                       {!selectedVariationId && (
-                          <div className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-[#b8956a] rounded-full">
-                            <Check className="w-4 h-4 text-[#1a1816]" />
+                          <div className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-[var(--darkroom-accent)] rounded-full">
+                            <Check className="w-4 h-4 text-[var(--darkroom-bg)]" />
                         </div>
                       )}
                         <span className="absolute bottom-2 left-2 text-[0.65rem] font-semibold text-white bg-black/60 px-1.5 py-0.5 rounded">
@@ -715,24 +731,24 @@ export function ImageEditorModal({
                       <button
                         key={variation.id}
                         className={cn(
-                            "relative aspect-square rounded-lg overflow-hidden border-2 bg-[#0f0e0d] cursor-pointer transition-all",
+                            "relative aspect-square rounded-lg overflow-hidden border-2 bg-[var(--darkroom-bg)] cursor-pointer transition-all",
                             selectedVariationId === variation.id
-                              ? "border-[#b8956a] shadow-[0_0_0_2px_rgba(184,149,106,0.2)]"
+                              ? "border-[var(--darkroom-accent)] shadow-[0_0_0_2px_rgba(184,149,106,0.2)]"
                               : "border-transparent hover:border-[rgba(184,149,106,0.3)]"
                         )}
                         onClick={() => !variation.isGenerating && setSelectedVariationId(variation.id)}
                         disabled={variation.isGenerating}
                       >
                         {variation.isGenerating ? (
-                            <div className="w-full h-full flex items-center justify-center text-[#b8956a]">
+                            <div className="w-full h-full flex items-center justify-center text-[var(--darkroom-accent)]">
                             <Loader2 className="w-6 h-6 animate-spin" />
                           </div>
                         ) : (
                           <>
                               <img src={variation.imageUrl} alt={`Variation ${index + 1}`} className="w-full h-full object-cover" />
                             {selectedVariationId === variation.id && (
-                                <div className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-[#b8956a] rounded-full">
-                                  <Check className="w-4 h-4 text-[#1a1816]" />
+                                <div className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-[var(--darkroom-accent)] rounded-full">
+                                  <Check className="w-4 h-4 text-[var(--darkroom-bg)]" />
                               </div>
                             )}
                           </>
@@ -766,7 +782,7 @@ export function ImageEditorModal({
                       value={textOverlay.headline}
                       onChange={(e) => setTextOverlay((prev) => ({ ...prev, headline: e.target.value }))}
                       placeholder="Enter headline text..."
-                        className="bg-[rgba(26,24,22,0.8)] border border-[rgba(184,149,106,0.2)] rounded-lg px-3.5 py-2.5 text-[#f5f0e6] text-sm placeholder:text-[rgba(245,240,230,0.4)] focus:outline-none focus:border-[#b8956a] focus:ring-1 focus:ring-[rgba(184,149,106,0.2)] transition-all"
+                        className="bg-[rgba(26,24,22,0.8)] border border-[rgba(184,149,106,0.2)] rounded-lg px-3.5 py-2.5 text-[var(--darkroom-text)] text-sm placeholder:text-[rgba(245,240,230,0.4)] focus:outline-none focus:border-[var(--darkroom-accent)] focus:ring-1 focus:ring-[rgba(184,149,106,0.2)] transition-all"
                     />
                   </div>
                   
@@ -777,7 +793,7 @@ export function ImageEditorModal({
                       value={textOverlay.subtext}
                       onChange={(e) => setTextOverlay((prev) => ({ ...prev, subtext: e.target.value }))}
                       placeholder="Enter subtext..."
-                        className="bg-[rgba(26,24,22,0.8)] border border-[rgba(184,149,106,0.2)] rounded-lg px-3.5 py-2.5 text-[#f5f0e6] text-sm placeholder:text-[rgba(245,240,230,0.4)] focus:outline-none focus:border-[#b8956a] focus:ring-1 focus:ring-[rgba(184,149,106,0.2)] transition-all"
+                        className="bg-[rgba(26,24,22,0.8)] border border-[rgba(184,149,106,0.2)] rounded-lg px-3.5 py-2.5 text-[var(--darkroom-text)] text-sm placeholder:text-[rgba(245,240,230,0.4)] focus:outline-none focus:border-[var(--darkroom-accent)] focus:ring-1 focus:ring-[rgba(184,149,106,0.2)] transition-all"
                     />
                   </div>
 
@@ -790,7 +806,7 @@ export function ImageEditorModal({
                           className={cn(
                               "flex-1 py-2 px-3 bg-[rgba(26,24,22,0.8)] border rounded-md text-[0.75rem] transition-all",
                               textOverlay.position === pos
-                                ? "border-[#b8956a] bg-[rgba(184,149,106,0.15)] text-[#b8956a]"
+                                ? "border-[var(--darkroom-accent)] bg-[rgba(184,149,106,0.15)] text-[var(--darkroom-accent)]"
                                 : "border-[rgba(184,149,106,0.2)] text-[rgba(245,240,230,0.6)] hover:border-[rgba(184,149,106,0.4)] hover:text-[rgba(245,240,230,0.8)]"
                           )}
                           onClick={() => setTextOverlay((prev) => ({ ...prev, position: pos }))}
@@ -836,7 +852,7 @@ export function ImageEditorModal({
                           setAdConfig((prev) => ({ ...prev, headline: e.target.value }))
                         }
                         placeholder="e.g., SUMMER SALE"
-                        className="bg-[rgba(26,24,22,0.6)] border border-[rgba(184,149,106,0.2)] rounded-md px-3 py-2.5 text-[#f5f0e6] text-sm focus:outline-none focus:border-[#b8956a] transition-all"
+                        className="bg-[rgba(26,24,22,0.6)] border border-[rgba(184,149,106,0.2)] rounded-md px-3 py-2.5 text-[var(--darkroom-text)] text-sm focus:outline-none focus:border-[var(--darkroom-accent)] transition-all"
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
@@ -848,7 +864,7 @@ export function ImageEditorModal({
                           setAdConfig((prev) => ({ ...prev, subtext: e.target.value }))
                         }
                         placeholder="e.g., Up to 50% off all items"
-                        className="bg-[rgba(26,24,22,0.6)] border border-[rgba(184,149,106,0.2)] rounded-md px-3 py-2.5 text-[#f5f0e6] text-sm focus:outline-none focus:border-[#b8956a] transition-all"
+                        className="bg-[rgba(26,24,22,0.6)] border border-[rgba(184,149,106,0.2)] rounded-md px-3 py-2.5 text-[var(--darkroom-text)] text-sm focus:outline-none focus:border-[var(--darkroom-accent)] transition-all"
                       />
                     </div>
                     {adConfig.preset.layout.hasCTA && (
@@ -861,7 +877,7 @@ export function ImageEditorModal({
                             setAdConfig((prev) => ({ ...prev, ctaText: e.target.value }))
                           }
                           placeholder="e.g., Shop Now"
-                          className="bg-[rgba(26,24,22,0.6)] border border-[rgba(184,149,106,0.2)] rounded-md px-3 py-2.5 text-[#f5f0e6] text-sm focus:outline-none focus:border-[#b8956a] transition-all"
+                          className="bg-[rgba(26,24,22,0.6)] border border-[rgba(184,149,106,0.2)] rounded-md px-3 py-2.5 text-[var(--darkroom-text)] text-sm focus:outline-none focus:border-[var(--darkroom-accent)] transition-all"
                         />
                       </div>
                     )}
@@ -962,7 +978,7 @@ export function ImageEditorModal({
                                 className={cn(
                                   "px-2.5 py-1.5 rounded border text-[0.65rem] transition-all",
                                   (adConfig.fontFamily || adConfig.preset.defaultStyles.fontFamily) === font.value
-                                    ? "border-[#b8956a] bg-[rgba(184,149,106,0.15)] text-[#b8956a]"
+                                    ? "border-[var(--darkroom-accent)] bg-[rgba(184,149,106,0.15)] text-[var(--darkroom-accent)]"
                                     : "border-[rgba(184,149,106,0.2)] bg-[rgba(26,24,22,0.4)] text-[rgba(245,240,230,0.6)] hover:text-[rgba(245,240,230,0.8)]"
                                 )}
                                 style={{ fontFamily: font.style }}
@@ -989,7 +1005,7 @@ export function ImageEditorModal({
                       <RotateCcw className="w-4 h-4" />
                     </button>
                     <button
-                      className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md bg-[#b8956a] text-[#1a1816] font-semibold text-sm hover:bg-[#c9a67b] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md bg-[var(--darkroom-accent)] text-[var(--darkroom-bg)] font-semibold text-sm hover:bg-[var(--darkroom-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                       onClick={handleExportAd}
                       disabled={isExportingAd || (!adConfig.headline && !adConfig.subtext && !adConfig.ctaText)}
                     >
@@ -1008,16 +1024,33 @@ export function ImageEditorModal({
                   </div>
                 </motion.div>
               )}
+
+              {/* Background Removal Tab */}
+              {activeTab === "bg-remove" && image && (
+                <BackgroundRemovalTab
+                  imageUrl={displayedImage || image.imageUrl}
+                  onImageProcessed={(newImageUrl, savedImageId) => {
+                    if (onImageGenerated && savedImageId) {
+                      onImageGenerated({
+                        id: savedImageId,
+                        imageUrl: newImageUrl,
+                        prompt: "Background removed",
+                        isSaved: true,
+                      });
+                    }
+                  }}
+                />
+              )}
             </div>
 
               {/* Footer Actions - Stack on mobile */}
-              <div className="shrink-0 flex flex-col sm:flex-row gap-2 sm:gap-3 px-4 md:px-5 py-3 md:py-4 border-t border-[rgba(184,149,106,0.15)] bg-[#252220]">
+              <div className="shrink-0 flex flex-col sm:flex-row gap-2 sm:gap-3 px-4 md:px-5 py-3 md:py-4 border-t border-[rgba(184,149,106,0.15)] bg-[var(--darkroom-surface-elevated)]">
               {!image.isSaved && (
                 <Button
                     variant="ghost"
                   onClick={handleSave}
                   disabled={isSaving}
-                    className="flex-1 h-11 sm:h-10 border border-[rgba(184,149,106,0.4)] bg-transparent text-[#f5f0e6] hover:bg-[rgba(184,149,106,0.15)] hover:text-[#f5f0e6] hover:border-[#b8956a]"
+                    className="flex-1 h-11 sm:h-10 border border-[rgba(184,149,106,0.4)] bg-transparent text-[var(--darkroom-text)] hover:bg-[rgba(184,149,106,0.15)] hover:text-[var(--darkroom-text)] hover:border-[var(--darkroom-accent)]"
                 >
                   {isSaving ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />

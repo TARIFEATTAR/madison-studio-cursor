@@ -542,7 +542,7 @@ async function insertGeneratedImageRecord(
   supabase: ReturnType<typeof createClient>,
   payload: Record<string, unknown>,
 ) {
-  let attemptPayload = { ...payload };
+  const attemptPayload = { ...payload };
   const maxAttempts = Object.keys(payload).length + 1;
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {

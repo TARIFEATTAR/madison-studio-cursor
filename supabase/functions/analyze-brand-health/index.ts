@@ -299,7 +299,7 @@ Be specific and prioritize recommendations by impact.`;
     }
 
     // === POST-PROCESS: Filter contradictory recommendations ===
-    let filteredMissing = (aiAnalysis.gap_analysis?.missing_components || []).filter((item: string) => {
+    const filteredMissing = (aiAnalysis.gap_analysis?.missing_components || []).filter((item: string) => {
       const lower = item.toLowerCase();
       if (lower.includes('core identity') && coreIdentityPresent) return false;
       if (lower.includes('voice') && lower.includes('tone') && voiceTonePresent) return false;
@@ -309,7 +309,7 @@ Be specific and prioritize recommendations by impact.`;
       return true;
     });
 
-    let filteredRecommendations = (aiAnalysis.recommendations || []).filter((rec: any) => {
+    const filteredRecommendations = (aiAnalysis.recommendations || []).filter((rec: any) => {
       const text = (rec.title + ' ' + rec.description).toLowerCase();
       if (text.includes('transparency') && text.includes('collection') && hasComprehensiveTransparencyDoc) return false;
       return true;

@@ -158,7 +158,7 @@ export function PromptWizard({ open, onOpenChange, onComplete, initialData }: Pr
     
     // Adjust step count labels based on flow
     let currentStep = step;
-    let totalLabelSteps = totalSteps - 2; // Subtract review and result steps roughly
+    const totalLabelSteps = totalSteps - 2; // Subtract review and result steps roughly
 
     if (data.contentType === 'visual') {
        if (step === 3) return "Select Mode";
