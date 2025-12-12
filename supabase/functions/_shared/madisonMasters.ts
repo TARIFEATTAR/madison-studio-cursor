@@ -64,28 +64,77 @@ export const SQUAD_DEFINITIONS = {
 };
 
 // Map content types to recommended squads
+// This covers ALL deliverable formats from the Create page
 export const CONTENT_TYPE_TO_SQUAD: Record<string, CopySquad> = {
-  // Storyteller content
-  'instagram_caption': 'THE_STORYTELLERS',
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // HERO / ANCHOR CONTENT
+  // ═══════════════════════════════════════════════════════════════════════════════
+  'blog_article': 'THE_STORYTELLERS',        // Long-form editorial → narrative style
+  'video_script': 'THE_STORYTELLERS',        // Screenplay → emotional engagement
+  'podcast_script': 'THE_STORYTELLERS',      // Conversational → Collier's style
+  
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // CONVERSION CONTENT (Direct Response / Sales)
+  // ═══════════════════════════════════════════════════════════════════════════════
+  'email': 'THE_SCIENTISTS',                 // Single email → benefit + proof
+  'email_3part': 'THE_SCIENTISTS',           // Nurture sequence → methodical persuasion
+  'email_5part': 'THE_SCIENTISTS',           // Extended sequence → Ogilvy's long copy
+  'email_7part': 'THE_SCIENTISTS',           // Deep nurture → comprehensive proof
+  'email_newsletter': 'THE_STORYTELLERS',    // Newsletter → engaging narrative
+  'email_subject_lines': 'THE_DISRUPTORS',   // Subject lines → scroll-stopping (Halbert)
+  'ad_copy': 'THE_DISRUPTORS',               // Paid ads → urgency, pattern interrupt
+  'landing_page_copy': 'THE_SCIENTISTS',     // Landing page → proof, specificity, conversion
+  'website_hero_copy': 'THE_DISRUPTORS',     // Hero headlines → bold, attention-grabbing
+  
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // PRODUCT & BRAND CONTENT
+  // ═══════════════════════════════════════════════════════════════════════════════
+  'product_description': 'THE_SCIENTISTS',   // Product page → features, benefits, proof
+  'product_story': 'THE_STORYTELLERS',       // Product narrative → Peterman romance
+  'collection_page_copy': 'THE_STORYTELLERS',// Collection → brand atmosphere
+  'brand_story_page': 'THE_STORYTELLERS',    // About page → emotional connection
+  'faq_page_copy': 'THE_SCIENTISTS',         // FAQ → clear, factual, helpful
+  
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // MICRO & SOCIAL CONTENT
+  // ═══════════════════════════════════════════════════════════════════════════════
+  'social_media_post': 'THE_STORYTELLERS',   // Social posts → lifestyle, engagement
+  'instagram_caption': 'THE_STORYTELLERS',   // Instagram → sensory, evocative
+  'carousel_copy': 'THE_STORYTELLERS',       // Carousel → storytelling slides
+  'short_form_video_script': 'THE_DISRUPTORS', // Reels/TikTok → hook fast, bold
+  'customer_testimonial_story': 'THE_STORYTELLERS', // Testimonials → narrative
+  'quote_hook_generator': 'THE_DISRUPTORS',  // Hooks → pattern interrupt
+  
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // VISUALS & CREATIVE
+  // ═══════════════════════════════════════════════════════════════════════════════
+  'visual-asset': 'THE_STORYTELLERS',        // Visual concepts → atmospheric
+  'image_prompt': 'THE_STORYTELLERS',        // Image prompts → evocative detail
+  'campaign_concept_visual': 'THE_STORYTELLERS', // Campaign direction → brand story
+  'ad_creative_prompt': 'THE_DISRUPTORS',    // Ad visuals → scroll-stopping
+  
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // ANNOUNCEMENTS & OUTREACH
+  // ═══════════════════════════════════════════════════════════════════════════════
+  'launch_announcement': 'THE_DISRUPTORS',   // Launch → urgency, excitement
+  'press_release': 'THE_SCIENTISTS',         // Press → factual, credible
+  'sms_campaign_copy': 'THE_DISRUPTORS',     // SMS → urgent, punchy
+  
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // LEGACY / FALLBACK MAPPINGS
+  // ═══════════════════════════════════════════════════════════════════════════════
   'social_post': 'THE_STORYTELLERS',
   'brand_story': 'THE_STORYTELLERS',
   'lifestyle_description': 'THE_STORYTELLERS',
-  
-  // Scientist content
-  'product_description': 'THE_SCIENTISTS',
   'product_page': 'THE_SCIENTISTS',
   'technical_spec': 'THE_SCIENTISTS',
   'ingredient_breakdown': 'THE_SCIENTISTS',
   'educational': 'THE_SCIENTISTS',
-  
-  // Disruptor content
-  'ad_copy': 'THE_DISRUPTORS',
   'paid_social': 'THE_DISRUPTORS',
   'email_subject': 'THE_DISRUPTORS',
   'headline': 'THE_DISRUPTORS',
-  'launch_announcement': 'THE_DISRUPTORS',
   
-  // Default
+  // Default fallback
   'default': 'THE_STORYTELLERS',
 };
 
