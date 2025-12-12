@@ -24,7 +24,8 @@ const corsHeaders = {
 // fal.ai API configuration
 // NOTE: trim() prevents subtle 401s caused by copied secrets containing trailing newlines/spaces.
 const FAL_API_KEY = (Deno.env.get("FAL_API_KEY") ?? "").trim();
-const FAL_API_URL = "https://queue.fal.run/fal-ai/rmbg";
+// Updated endpoint - fal.ai renamed the model from "rmbg" to "birefnet"
+const FAL_API_URL = "https://fal.run/fal-ai/birefnet";
 
 // Alternative providers (fallbacks)
 const REPLICATE_API_TOKEN = (Deno.env.get("REPLICATE_API_TOKEN") ?? "").trim();
@@ -63,9 +64,10 @@ async function removeBackgroundWithFal(imageUrl: string): Promise<{
   }
 
   try {
-    console.log("🎨 Calling fal.ai RMBG model...");
+    console.log("🎨 Calling fal.ai birefnet model for background removal...");
+    console.log("Image URL:", imageUrl);
 
-    // Submit the job
+    // Use the synchronous fal.run endpoint (not queue.fal.run)
     const submitResponse = await fetch(FAL_API_URL, {
       method: "POST",
       headers: {
@@ -80,70 +82,38 @@ async function removeBackgroundWithFal(imageUrl: string): Promise<{
     if (!submitResponse.ok) {
       const errorText = await submitResponse.text();
       console.error("fal.ai submit error:", errorText);
-      // Include response body (truncated) to aid debugging without leaking secrets.
       const truncated = errorText.length > 500 ? `${errorText.slice(0, 500)}…` : errorText;
-      return { error: `fal.ai error: ${submitResponse.status}${truncated ? ` - ${truncated}` : ""}` };
+      return { error: `fal.ai error: ${submitResponse.status} - ${truncated}` };
     }
 
     const result = await submitResponse.json();
+    console.log("fal.ai response keys:", Object.keys(result));
 
-    // fal.ai queue returns request_id for async processing
-    if (result.request_id) {
-      // Poll for completion
-      const statusUrl = `${FAL_API_URL}/requests/${result.request_id}/status`;
-      let attempts = 0;
-      const maxAttempts = 30; // 30 seconds max wait
-
-      while (attempts < maxAttempts) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        
-        const statusResponse = await fetch(statusUrl, {
-          headers: {
-            "Authorization": `Key ${FAL_API_KEY}`,
-          },
-        });
-
-        if (!statusResponse.ok) {
-          attempts++;
-          continue;
-        }
-
-        const status = await statusResponse.json();
-
-        if (status.status === "COMPLETED") {
-          // Fetch the result
-          const resultUrl = `${FAL_API_URL}/requests/${result.request_id}`;
-          const resultResponse = await fetch(resultUrl, {
-            headers: {
-              "Authorization": `Key ${FAL_API_KEY}`,
-            },
-          });
-
-          if (resultResponse.ok) {
-            const finalResult = await resultResponse.json();
-            if (finalResult.image?.url) {
-              return { imageUrl: finalResult.image.url };
-            }
-          }
-          break;
-        }
-
-        if (status.status === "FAILED") {
-          return { error: "fal.ai processing failed" };
-        }
-
-        attempts++;
-      }
-
-      return { error: "fal.ai timeout" };
-    }
-
-    // Synchronous response (direct result)
+    // birefnet returns the image directly in the response
+    // Check various possible response formats
     if (result.image?.url) {
+      console.log("✅ Got image URL from result.image.url");
       return { imageUrl: result.image.url };
     }
+    
+    if (result.image && typeof result.image === "string") {
+      console.log("✅ Got image URL from result.image (string)");
+      return { imageUrl: result.image };
+    }
 
-    return { error: "No image in fal.ai response" };
+    if (result.output?.url) {
+      console.log("✅ Got image URL from result.output.url");
+      return { imageUrl: result.output.url };
+    }
+
+    if (result.url) {
+      console.log("✅ Got image URL from result.url");
+      return { imageUrl: result.url };
+    }
+
+    // Log full response for debugging
+    console.error("Unexpected fal.ai response structure:", JSON.stringify(result, null, 2));
+    return { error: "No image URL in fal.ai response" };
   } catch (error) {
     console.error("fal.ai error:", error);
     return { error: `fal.ai exception: ${error.message}` };

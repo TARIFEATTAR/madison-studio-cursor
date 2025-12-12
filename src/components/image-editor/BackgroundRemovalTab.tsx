@@ -106,25 +106,83 @@ export function BackgroundRemovalTab({
     }
   };
 
-  // Handle save to library
+  // Handle save to library - saves the already-processed image directly
   const handleSaveToLibrary = async () => {
     if (!displayUrl) return;
 
     setIsSaving(true);
     try {
-      const response = await removeBackground({
-        imageUrl: displayUrl.startsWith("data:") ? imageUrl : displayUrl,
-        saveToLibrary: true,
-        onSuccess: (res) => {
-          toast.success("Saved to library!");
-          if (res.savedImageId) {
-            onImageProcessed?.(res.imageUrl || displayUrl, res.savedImageId);
-          }
-        },
-        onError: (err) => {
-          toast.error(err.message || "Failed to save to library");
-        },
-      });
+      // Fetch the processed image
+      const response = await fetch(displayUrl);
+      const blob = await response.blob();
+      
+      // Import supabase client
+      const { supabase } = await import("@/integrations/supabase/client");
+      
+      // Generate a unique filename
+      const fileName = `bg-removed/${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
+      
+      // Upload to storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("generated-images")
+        .upload(fileName, blob, {
+          contentType: "image/png",
+          upsert: true,
+        });
+      
+      if (uploadError) {
+        throw new Error(`Upload failed: ${uploadError.message}`);
+      }
+      
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from("generated-images")
+        .getPublicUrl(fileName);
+      
+      const publicUrl = urlData.publicUrl;
+      
+      // Get current user/org for saving to generated_images table
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        // Get user's organization
+        const { data: orgData } = await supabase
+          .from("organization_members")
+          .select("organization_id")
+          .eq("user_id", user.id)
+          .single();
+        
+        // Save to generated_images table with all required fields
+        const { data: savedImage, error: saveError } = await supabase
+          .from("generated_images")
+          .insert({
+            user_id: user.id,
+            organization_id: orgData?.organization_id,
+            image_url: publicUrl,
+            goal_type: "product",
+            aspect_ratio: "1:1",
+            final_prompt: "Background removed using AI",
+            image_generator: "fal-ai/birefnet",
+            saved_to_library: true,
+          })
+          .select()
+          .single();
+        
+        if (saveError) {
+          console.error("Error saving to database:", saveError);
+          toast.error("Upload succeeded but failed to save to library");
+          return;
+        }
+        
+        toast.success("Saved to library!");
+        onImageProcessed?.(publicUrl, savedImage?.id);
+      } else {
+        toast.success("Image uploaded!");
+        onImageProcessed?.(publicUrl);
+      }
+    } catch (error) {
+      console.error("Save error:", error);
+      toast.error("Failed to save to library");
     } finally {
       setIsSaving(false);
     }
@@ -138,22 +196,13 @@ export function BackgroundRemovalTab({
 
   return (
     <motion.div
-      className="flex flex-col gap-4"
+      className="flex flex-col gap-5"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      {/* Header */}
-      <div className="flex items-center gap-2">
-        <Scissors className="w-4 h-4 text-[var(--darkroom-accent)]" />
-        <h4 className="text-sm font-medium text-[var(--darkroom-text)]">
-          Remove Background
-        </h4>
-      </div>
-
-      {/* Description */}
-      <p className="text-xs text-[rgba(245,240,230,0.5)]">
-        Remove the background from your image to create a transparent PNG.
-        Perfect for product shots and compositing.
+      {/* Description - concise */}
+      <p className="text-sm text-[rgba(245,240,230,0.6)] leading-relaxed">
+        Remove the background from your image to create a transparent PNG. Perfect for product shots and compositing.
       </p>
 
       {/* Main Action / Result */}
@@ -217,20 +266,20 @@ export function BackgroundRemovalTab({
             className="flex flex-col gap-3"
           >
             {/* Comparison Toggle */}
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[rgba(245,240,230,0.5)]">
-                {showComparison ? "Comparison View" : "Result Preview"}
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-medium text-[rgba(245,240,230,0.7)]">
+                {showComparison ? "Before / After" : "Result"}
               </span>
               <button
                 onClick={() => setShowComparison(!showComparison)}
-                className="text-xs text-[var(--darkroom-accent)] hover:underline"
+                className="text-xs text-[var(--darkroom-accent)] hover:text-[var(--darkroom-accent-hover)] transition-colors"
               >
-                {showComparison ? "Hide comparison" : "Show comparison"}
+                {showComparison ? "Hide comparison" : "Compare"}
               </button>
             </div>
 
-            {/* Result Preview */}
-            <div className="relative aspect-square rounded-lg overflow-hidden border border-[rgba(184,149,106,0.2)]">
+            {/* Result Preview - larger aspect ratio */}
+            <div className="relative aspect-[4/3] rounded-lg overflow-hidden border border-[rgba(184,149,106,0.25)] shadow-lg">
               {showComparison ? (
                 // Comparison slider
                 <div className="relative w-full h-full">
@@ -329,22 +378,13 @@ export function BackgroundRemovalTab({
               )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleDownload}
-                className="border border-[rgba(184,149,106,0.4)] bg-transparent text-[var(--darkroom-text)] hover:bg-[rgba(184,149,106,0.15)]"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download PNG
-              </Button>
+            {/* Action Buttons - stacked for clarity */}
+            <div className="flex flex-col gap-3 mt-2">
               <Button
                 variant="brass"
-                size="sm"
                 onClick={handleSaveToLibrary}
                 disabled={isSaving}
+                className="w-full h-11"
               >
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -353,23 +393,25 @@ export function BackgroundRemovalTab({
                 )}
                 Save to Library
               </Button>
+              
+              <Button
+                variant="ghost"
+                onClick={handleDownload}
+                className="w-full h-10 border border-[rgba(184,149,106,0.3)] bg-transparent text-[var(--darkroom-text)] hover:bg-[rgba(184,149,106,0.1)]"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download PNG
+              </Button>
             </div>
 
-            {/* Reset Button */}
+            {/* Reset link */}
             <button
               onClick={handleReset}
-              className="flex items-center justify-center gap-2 py-2 text-xs text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] transition-colors"
+              className="flex items-center justify-center gap-2 py-3 text-xs text-[rgba(245,240,230,0.4)] hover:text-[var(--darkroom-accent)] transition-colors"
             >
-              <RefreshCw className="w-3 h-3" />
-              Remove from different image
+              <RefreshCw className="w-3.5 h-3.5" />
+              Try a different image
             </button>
-
-            {/* Provider info */}
-            {result.provider && (
-              <p className="text-[0.65rem] text-[rgba(245,240,230,0.3)] text-center">
-                Processed with {result.provider}
-              </p>
-            )}
           </motion.div>
         ) : (
           // Error state
@@ -399,17 +441,6 @@ export function BackgroundRemovalTab({
         )}
       </AnimatePresence>
 
-      {/* Tips */}
-      <div className="mt-2 p-3 bg-[rgba(26,24,22,0.5)] rounded-lg border border-[rgba(184,149,106,0.1)]">
-        <span className="text-[0.65rem] uppercase tracking-wider text-[rgba(184,149,106,0.6)]">
-          Tips for best results
-        </span>
-        <ul className="mt-2 space-y-1 text-[0.7rem] text-[rgba(245,240,230,0.5)]">
-          <li>• Product images with clear edges work best</li>
-          <li>• Good lighting helps distinguish the subject</li>
-          <li>• Avoid complex backgrounds with similar colors</li>
-        </ul>
-      </div>
     </motion.div>
   );
 }

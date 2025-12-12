@@ -568,66 +568,71 @@ export function ImageEditorModal({
           {/* Editor Panel */}
             <div className="flex flex-col bg-[var(--darkroom-surface)] overflow-hidden min-h-0">
             {/* Tabs - Scrollable on mobile, fixed on desktop */}
-              <div className="shrink-0 flex border-b border-[rgba(184,149,106,0.15)] overflow-x-auto md:overflow-x-visible scrollbar-hide">
+              <div className="shrink-0 flex border-b border-[rgba(184,149,106,0.15)] overflow-x-auto scrollbar-hide">
               <button
                 className={cn(
-                    "flex-shrink-0 md:flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-3 md:px-2 min-w-[80px] md:min-w-0 text-xs md:text-sm transition-all",
+                    "flex-shrink-0 flex items-center justify-center gap-1 py-2.5 px-2.5 text-[11px] font-medium transition-all",
                     activeTab === "refine"
                       ? "text-[var(--darkroom-accent)] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_var(--darkroom-accent)]"
                       : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
                 )}
                 onClick={() => setActiveTab("refine")}
+                title="Refine Image"
               >
-                <Wand2 className="w-4 h-4 flex-shrink-0" />
-                <span className="whitespace-nowrap">Refine</span>
+                <Wand2 className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="hidden sm:inline whitespace-nowrap">Refine</span>
               </button>
               <button
                 className={cn(
-                    "flex-shrink-0 md:flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-3 md:px-2 min-w-[80px] md:min-w-0 text-xs md:text-sm transition-all",
+                    "flex-shrink-0 flex items-center justify-center gap-1 py-2.5 px-2.5 text-[11px] font-medium transition-all",
                     activeTab === "variations"
                       ? "text-[var(--darkroom-accent)] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_var(--darkroom-accent)]"
                       : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
                 )}
                 onClick={() => setActiveTab("variations")}
+                title="Create Variations"
               >
-                <ImageIcon className="w-4 h-4 flex-shrink-0" />
-                <span className="whitespace-nowrap">Variations</span>
+                <ImageIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="hidden sm:inline whitespace-nowrap">Vary</span>
               </button>
               <button
                 className={cn(
-                    "flex-shrink-0 md:flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-3 md:px-2 min-w-[80px] md:min-w-0 text-xs md:text-sm transition-all",
+                    "flex-shrink-0 flex items-center justify-center gap-1 py-2.5 px-2.5 text-[11px] font-medium transition-all",
                     activeTab === "text"
                       ? "text-[var(--darkroom-accent)] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_var(--darkroom-accent)]"
                       : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
                 )}
                 onClick={() => setActiveTab("text")}
+                title="Add Text Overlay"
               >
-                <Type className="w-4 h-4 flex-shrink-0" />
-                <span className="whitespace-nowrap">Text</span>
+                <Type className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="hidden sm:inline whitespace-nowrap">Text</span>
               </button>
               <button
                 className={cn(
-                    "flex-shrink-0 md:flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-3 md:px-2 min-w-[80px] md:min-w-0 text-xs md:text-sm transition-all",
+                    "flex-shrink-0 flex items-center justify-center gap-1 py-2.5 px-2.5 text-[11px] font-medium transition-all",
                     activeTab === "ad"
                       ? "text-[var(--darkroom-accent)] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_var(--darkroom-accent)]"
                       : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
                 )}
                 onClick={() => setActiveTab("ad")}
+                title="Create Ad"
               >
-                <Layout className="w-4 h-4 flex-shrink-0" />
-                <span className="whitespace-nowrap">Ad</span>
+                <Layout className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="hidden sm:inline whitespace-nowrap">Ad</span>
               </button>
               <button
                 className={cn(
-                    "flex-shrink-0 md:flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-3 md:py-3.5 px-3 md:px-2 min-w-[80px] md:min-w-0 text-xs md:text-sm transition-all",
+                    "flex-shrink-0 flex items-center justify-center gap-1 py-2.5 px-2.5 text-[11px] font-medium transition-all",
                     activeTab === "bg-remove"
                       ? "text-[var(--darkroom-accent)] bg-[rgba(184,149,106,0.1)] shadow-[inset_0_-2px_0_var(--darkroom-accent)]"
                       : "text-[rgba(245,240,230,0.5)] hover:text-[rgba(245,240,230,0.8)] hover:bg-[rgba(184,149,106,0.05)]"
                 )}
                 onClick={() => setActiveTab("bg-remove")}
+                title="Remove Background"
               >
-                <Scissors className="w-4 h-4 flex-shrink-0" />
-                <span className="whitespace-nowrap">BG Remove</span>
+                <Scissors className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="hidden sm:inline whitespace-nowrap">BG</span>
               </button>
             </div>
 
