@@ -8,11 +8,13 @@ export interface MasterContent {
     charCount: number;
 }
 
+import { LucideIcon } from "lucide-react";
+
 export interface DerivativeType {
     id: string;
     name: string;
     description: string;
-    icon: any;
+    icon: LucideIcon;
     iconColor: string;
     charLimit?: number;
     isSequence?: boolean;
@@ -35,7 +37,7 @@ export interface DerivativeContent {
         content: string;
         charCount: number;
     }[];
-    platformSpecs?: any;
+    platformSpecs?: Record<string, unknown>;
     asset_type?: string;
     generated_content?: string;
 }

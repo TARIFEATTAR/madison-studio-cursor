@@ -10,7 +10,8 @@ export interface BrandProfile extends DbTables<'organizations'> {
 export interface BrandConfig {
   industry?: string;
   description?: string;
-  [key: string]: any;
+  brandName?: string;
+  [key: string]: unknown;
 }
 
 export interface BrandKnowledge extends DbTables<'brand_knowledge'> {
@@ -25,15 +26,15 @@ export interface BrandKnowledgeContent {
   voice_guidelines?: string;
   tone_spectrum?: string;
   description?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface MasterContent extends DbTables<'master_content'> {
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface GeneratedImage extends DbTables<'generated_images'> {
-  settings?: Record<string, any>;
+  settings?: Record<string, unknown>;
 }
 
 export interface CalendarTask extends DbTables<'calendar_tasks'> {}

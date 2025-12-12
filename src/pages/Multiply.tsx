@@ -25,7 +25,7 @@ import { MasterContentPanel } from "@/components/multiply/MasterContentPanel";
 import { DerivativeResults } from "@/components/multiply/DerivativeResults";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
-import fannedPagesImage from "@/assets/fanned-pages-new.png";
+import fannedPagesImage from "@/assets/fanned-pages-new.jpg";
 import { MasterContent, DerivativeContent, RawDerivativeResponse } from "@/types/multiply";
 import { TOP_DERIVATIVE_TYPES, ADDITIONAL_DERIVATIVE_TYPES, DERIVATIVE_TYPES } from "@/constants/multiply";
 import { buildSequenceEmailsFromDerivative } from "@/lib/multiplyUtils";
