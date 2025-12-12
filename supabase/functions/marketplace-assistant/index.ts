@@ -8,6 +8,7 @@ import {
 } from "../_shared/geminiClient.ts";
 import { buildAuthorProfilesSection } from "../_shared/authorProfiles.ts";
 import { buildBrandAuthoritiesSection } from "../_shared/brandAuthorities.ts";
+import { getMadisonMasterContext, SQUAD_DEFINITIONS } from "../_shared/madisonMasters.ts";
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -192,11 +193,24 @@ serve(async (req) => {
       organizationId ? getBrandKnowledge(organizationId) : Promise.resolve(''),
       productId && organizationId ? getProductData(productId, organizationId) : Promise.resolve(null)
     ]);
+    
+    // Fetch Madison Masters context (new Three Silos architecture)
+    const supabaseForMasters = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const lastMessage = messages[messages.length - 1]?.content;
+    const briefText = typeof lastMessage === 'string' ? lastMessage : '';
+    
+    // Route to Storytellers for marketplace listings (emotional appeal)
+    const { strategy: madisonStrategy, masterContext: madisonMasterContext } = await getMadisonMasterContext(
+      supabaseForMasters,
+      'product_description', // Marketplace listings are product-focused
+      briefText
+    );
 
     // Debug logging
     console.log('Madison config fetched:', !!madisonConfig, madisonConfig ? `${madisonConfig.substring(0, 100)}...` : 'EMPTY');
     console.log('Brand knowledge fetched:', !!brandKnowledge, brandKnowledge ? `Length: ${brandKnowledge.length} chars` : 'EMPTY');
     console.log('Product data fetched:', !!productData, productData ? productData.name : 'NONE');
+    console.log(`Madison Masters: ${madisonStrategy.copySquad}, Primary: ${madisonStrategy.primaryCopyMaster}`);
 
     // Platform-specific templates
     const platformTemplates: Record<string, any> = {
@@ -242,11 +256,15 @@ serve(async (req) => {
 
     const platformInfo = platformTemplates[platform] || platformTemplates.etsy;
 
-    // Build system prompt
-    let systemContent = `You are Madison, Editorial Director helping create marketplace listings.`;
+    // Build system prompt with Madison Masters
+    let systemContent = `You are Madison, Editorial Director helping create marketplace listings.
+
+=== MADISON MASTERS — COPY TRAINING ===
+${madisonMasterContext}
+`;
     
     if (madisonConfig) {
-      systemContent += `\n\n=== YOUR CORE TRAINING ===\n${madisonConfig}\n`;
+      systemContent += `\n=== LEGACY TRAINING ===\n${madisonConfig}\n`;
     }
     
     systemContent += `\n\n=== PLATFORM CONTEXT ===

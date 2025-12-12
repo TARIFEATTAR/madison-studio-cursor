@@ -45,6 +45,7 @@ import EmailBuilderV2 from "./pages/EmailBuilderV2";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import ComponentDemo from "./pages/ComponentDemo";
+import MadisonTest from "./pages/MadisonTest";
 import BrandReport from "./pages/BrandReport";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
@@ -344,6 +345,7 @@ const AppContent = () => {
                   <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/reports/:domainId" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Report"><BrandReport /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/component-demo" element={<ProtectedRoute><RouteErrorBoundary routeName="Component Demo"><ComponentDemo /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/madison-test" element={<ProtectedRoute><RouteErrorBoundary routeName="Madison Test"><MadisonTest /></RouteErrorBoundary></ProtectedRoute>} />
                   {/* Email Builder routes - Temporarily hidden for launch */}
                   {/* <Route path="/email-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Builder"><EmailBuilderV2 /></RouteErrorBoundary></ProtectedRoute>} /> */}
                   {/* Legacy redirects */}
@@ -389,6 +391,7 @@ const AppContent = () => {
             <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/reports/:domainId" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Report"><BrandReport /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/component-demo" element={<ProtectedRoute><RouteErrorBoundary routeName="Component Demo"><ComponentDemo /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/madison-test" element={<ProtectedRoute><RouteErrorBoundary routeName="Madison Test"><MadisonTest /></RouteErrorBoundary></ProtectedRoute>} />
             {/* Email Builder routes - Temporarily hidden for launch */}
             {/* <Route path="/email-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Builder"><EmailBuilderV2 /></RouteErrorBoundary></ProtectedRoute>} /> */}
             {/* Legacy redirects */}

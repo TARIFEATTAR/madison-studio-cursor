@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { generateGeminiContent, extractTextFromGeminiResponse } from "../_shared/geminiClient.ts";
 import { buildAuthorProfilesSection } from "../_shared/authorProfiles.ts";
 import { buildBrandAuthoritiesSection } from "../_shared/brandAuthorities.ts";
+import { getMadisonMasterContext, SQUAD_DEFINITIONS, CONTENT_TYPE_TO_SQUAD } from "../_shared/madisonMasters.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -887,8 +888,48 @@ serve(async (req) => {
 \n${contextInfo}
 \nIMPORTANT OUTPUT RULES:\n- Return PLAIN TEXT only.\n- Do NOT use any Markdown or markup (no **bold**, *italics*, # headings, lists, or backticks).\n- Keep labels like SLIDE 1:, TWEET 1:, SUBJECT LINE 1: as plain text when applicable.\n\nMASTER CONTENT:\n${masterContent.full_content}\n\nGenerate the ${derivativeType} version now.`;
 
-      // Build brand-aware system prompt with Codex v2
+      // Build brand-aware system prompt with Codex v2 and Madison Masters
+      
+      // Map derivative types to content types for squad routing
+      const derivativeToContentType: Record<string, string> = {
+        'email': 'product_description',
+        'email_3part': 'product_description',
+        'email_5part': 'product_description',
+        'email_7part': 'product_description',
+        'instagram': 'instagram_caption',
+        'twitter': 'social_post',
+        'product': 'product_description',
+        'sms': 'ad_copy',
+        'linkedin': 'social_post',
+        'tiktok': 'ad_copy',
+        'pinterest': 'social_post',
+        'youtube': 'product_description',
+        'facebook': 'social_post',
+      };
+      
+      const contentTypeForRouting = derivativeToContentType[derivativeType] || 'product_description';
+      
+      // Fetch Madison Masters context (new Three Silos architecture)
+      const supabaseForMasters = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+      
+      const { strategy: madisonStrategy, masterContext: madisonMasterContext } = await getMadisonMasterContext(
+        supabaseForMasters,
+        contentTypeForRouting,
+        masterContent.full_content || ''
+      );
+      
+      console.log(`[Madison Masters] Routed to: ${madisonStrategy.copySquad}, Primary: ${madisonStrategy.primaryCopyMaster}`);
+      
       let systemPrompt = `╔══════════════════════════════════════════════════════════════════╗
+║           MADISON MASTERS — COPY TRAINING                        ║
+╚══════════════════════════════════════════════════════════════════╝
+
+${madisonMasterContext}
+
+╔══════════════════════════════════════════════════════════════════╗
 ║                      GLOBAL SYSTEM PROMPT                         ║
 ║                        (Codex v2 — Universal)                     ║
 ╚══════════════════════════════════════════════════════════════════╝
@@ -932,9 +973,9 @@ OUTPUT RULES:
 - No emojis, no excessive enthusiasm
 - ONLY the requested copy content
 
-You are a precise editorial assistant following Codex v2 Universal Principles. Follow instructions exactly and return clean text.`;
+You are a precise editorial assistant following Codex v2 Universal Principles and the Madison Masters training above. Follow instructions exactly and return clean text.`;
       
-      // Fetch Madison's system-wide training
+      // Fetch Madison's legacy system-wide training (for backward compatibility)
       const madisonSystemConfig = await getMadisonSystemConfig(supabaseClient);
       
       if (brandContext) {

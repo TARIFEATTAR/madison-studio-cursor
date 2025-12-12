@@ -8,6 +8,7 @@ import {
 } from "../_shared/geminiClient.ts";
 import { buildAuthorProfilesSection } from "../_shared/authorProfiles.ts";
 import { buildBrandAuthoritiesSection } from "../_shared/brandAuthorities.ts";
+import { getMadisonMasterContext, SQUAD_DEFINITIONS } from "../_shared/madisonMasters.ts";
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -164,9 +165,21 @@ serve(async (req) => {
     const lastMessageContent = messages[messages.length - 1]?.content;
     console.log('Last user message:', typeof lastMessageContent === 'string' ? lastMessageContent.substring(0, 100) : 'Non-string content');
 
-    // Fetch Madison's system-wide training
-    const madisonSystemConfig = await getMadisonSystemConfig();
-    console.log('Madison system config loaded:', madisonSystemConfig ? `${madisonSystemConfig.length} chars` : 'none');
+    // Fetch Madison's system-wide training (legacy)
+    const legacyMadisonConfig = await getMadisonSystemConfig();
+    console.log('Legacy Madison config loaded:', legacyMadisonConfig ? `${legacyMadisonConfig.length} chars` : 'none');
+    
+    // Fetch Madison Masters context (new Three Silos architecture)
+    const supabaseForMasters = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const lastMessage = messages[messages.length - 1]?.content;
+    const briefText = typeof lastMessage === 'string' ? lastMessage : '';
+    
+    const { strategy: madisonStrategy, masterContext: madisonMasterContext } = await getMadisonMasterContext(
+      supabaseForMasters,
+      undefined, // content type not specified in think mode
+      briefText
+    );
+    console.log(`Madison Masters: ${madisonStrategy.copySquad}, Primary: ${madisonStrategy.primaryCopyMaster}`);
     
     // Fetch User's Brand Context (Products, Knowledge, Config)
     let brandContext = "No brand context available.";
@@ -274,12 +287,29 @@ Example:
 `;
 
     } else {
-      // CREATIVE / BRAINSTORMING PROMPT (Legacy Think Mode)
-      systemContent = `You are Madison, Editorial Director at Madison Studio. You're helping users brainstorm and refine content ideas in Think Mode (Creative Brainstorming).`;
-      
-      if (madisonSystemConfig) {
-        systemContent += `\n\n=== YOUR CORE TRAINING ===\n${madisonSystemConfig}\n`;
-      }
+      // CREATIVE / BRAINSTORMING PROMPT (Think Mode with Madison Masters)
+      systemContent = `You are Madison, Editorial Director at Madison Studio. You're helping users brainstorm and refine content ideas in Think Mode (Creative Brainstorming).
+
+=== MADISON MASTERS — YOUR WRITING TRAINING ===
+${madisonMasterContext}
+
+=== SQUAD SYSTEM ===
+You have been trained by the legendary Copy Masters. Based on the user's request, you'll naturally draw from:
+
+THE_SCIENTISTS (Ogilvy, Hopkins, Caples):
+${SQUAD_DEFINITIONS.THE_SCIENTISTS.philosophy}
+Use for: ${SQUAD_DEFINITIONS.THE_SCIENTISTS.useWhen.join(', ')}
+
+THE_STORYTELLERS (Peterman, Collier):
+${SQUAD_DEFINITIONS.THE_STORYTELLERS.philosophy}
+Use for: ${SQUAD_DEFINITIONS.THE_STORYTELLERS.useWhen.join(', ')}
+
+THE_DISRUPTORS (Halbert, Bernbach):
+${SQUAD_DEFINITIONS.THE_DISRUPTORS.philosophy}
+Use for: ${SQUAD_DEFINITIONS.THE_DISRUPTORS.useWhen.join(', ')}
+
+Currently routed to: ${madisonStrategy.copySquad} (${madisonStrategy.primaryCopyMaster})
+`;
       
       systemContent += `
 \n

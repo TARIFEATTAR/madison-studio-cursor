@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 import { getSemanticFields, formatSemanticContext } from '../_shared/productFieldFilters.ts';
 import { buildAuthorProfilesSection } from '../_shared/authorProfiles.ts';
 import { buildBrandAuthoritiesSection } from '../_shared/brandAuthorities.ts';
+import { getMadisonMasterContext, getSchwartzTemplate, SQUAD_DEFINITIONS } from '../_shared/madisonMasters.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
@@ -1320,8 +1321,43 @@ KEY PHRASES TO USE:
       ? '' // No style overlay, just use brand knowledge
       : styleOverlayInstructions[mappedStyle as keyof typeof styleOverlayInstructions] || '';
     
-    // Fetch Madison's system-wide training first
-    const madisonSystemConfig = await getMadisonSystemConfig();
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // MADISON MASTERS INTEGRATION (Three Silos Architecture)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    // Create Supabase client for fetching masters
+    const supabaseForMasters = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    
+    // Route to the appropriate squad and fetch master training
+    const { strategy: madisonStrategy, masterContext: madisonMasterContext } = await getMadisonMasterContext(
+      supabaseForMasters,
+      contentType,
+      prompt,
+      styleOverlay
+    );
+    
+    console.log(`[Madison Masters] Routed to: ${madisonStrategy.copySquad}, Primary: ${madisonStrategy.primaryCopyMaster}`);
+    
+    // Get Schwartz stage template
+    const schwartzTemplate = getSchwartzTemplate(madisonStrategy.schwartzStage);
+    
+    // Build the Madison Masters system training section
+    const madisonSystemConfig = `
+╔══════════════════════════════════════════════════════════════════╗
+║           MADISON STUDIO — THREE SILOS ARCHITECTURE              ║
+║          (Copy Masters + Brand Facts + Brand Vibe)               ║
+╚══════════════════════════════════════════════════════════════════╝
+
+${madisonMasterContext}
+
+━━━ SCHWARTZ AWARENESS STAGE: ${madisonStrategy.schwartzStage.toUpperCase()} ━━━
+${schwartzTemplate}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`;
+    
+    // Fetch legacy system config as fallback (will be deprecated)
+    const legacySystemConfig = await getMadisonSystemConfig();
     
     // Build category-specific product context
     let productContext = '';
@@ -1419,32 +1455,39 @@ ${productGuidance}
 ║           (Follow This Order of Priority)                        ║
 ╚══════════════════════════════════════════════════════════════════╝
 
-1. PRODUCT DATA FIRST:
+1. USER'S EDITORIAL DIRECTIVE (THE BRIEF):
+   - The user's request is your PRIMARY instruction
+   - Their content type, goal, and tone preferences OVERRIDE default brand documents
+   - If they ask for "product description with clinical proof" — write that, not brand philosophy
+
+2. MADISON MASTERS (WRITING TECHNIQUE):
+   - Apply the TECHNIQUES and PHILOSOPHY from the selected Master above
+   - Extract STYLE, CADENCE, and STRUCTURAL approach — NOT literal content
+   - The Master training teaches you HOW to write, not WHAT to write about
+
+3. PRODUCT DATA (SOURCE OF TRUTH):
    - If fragrance notes are provided, you MUST use them verbatim
-   - If scent family is specified, describe within that family
    - Never invent or substitute product specifications
-   - Product details are your SOURCE OF TRUTH
-   - ⚠️ CRITICAL: NEVER reference products from training examples (e.g., wallets, sunglasses, watches)
-   - ⚠️ ALWAYS write about the user's ACTUAL products using stylistic techniques from training
+   - Product details are your FACTUAL foundation
+   - ⚠️ CRITICAL: NEVER reference products from training examples (e.g., wallets, sunglasses)
+   - ⚠️ ALWAYS write about the user's ACTUAL products
 
-2. BRAND VOICE SECOND:
-   - Apply the brand voice TO the product data, not instead of it
-   - Use approved vocabulary to describe the specific product
+4. BRAND VOICE (TONAL GUIDE):
+   - Apply brand tone TO the product data, not instead of it
    - Brand voice shapes HOW you say it, not WHAT you say
+   - Brand documents provide CONTEXT, not rigid templates to copy
 
-3. COLLECTION CONTEXT LAST:
-   - Mention collection name 0-1 times maximum
-   - Focus on the product, not the brand architecture
-   - Collection provides tonal context, not repetitive branding
+5. FORBIDDEN:
+   - DO NOT copy mission statements or brand philosophy verbatim
+   - DO NOT write generic brand content when a specific product is selected
+   - DO NOT ignore the user's brief in favor of brand documents
 
-━━━ PRE-FLIGHT CHECKLIST (Ask yourself before sending output) ━━━
-☑ Did I use the specific fragrance notes provided (not made-up ones)?
-☑ Did I avoid repeating the collection name?
-☑ Is this description specific to THIS product (not generic)?
-☑ Would a customer understand what this smells like?
-☑ Am I writing about the PRODUCT, not just the COLLECTION?
-☑ Did I extract STYLE and CADENCE from training examples, not literal product references?
-☑ Am I writing about the user's ACTUAL products, not products from training examples?
+━━━ PRE-FLIGHT CHECKLIST ━━━
+☑ Did I follow the USER'S BRIEF (not just brand documents)?
+☑ Did I apply the Master's TECHNIQUE (not copy their examples)?
+☑ Did I use the actual PRODUCT DATA provided?
+☑ Is this specific to THIS task (not generic brand copy)?
+☑ Did I respect the FORBIDDEN language from the selected squad?
 
 ╔══════════════════════════════════════════════════════════════════╗
 ║                      GLOBAL SYSTEM PROMPT                         ║
