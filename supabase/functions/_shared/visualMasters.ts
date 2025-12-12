@@ -691,3 +691,4 @@ export function getImageFormatInstructions(contentType: string): string {
   
   return parts.join('\n');
 }
+

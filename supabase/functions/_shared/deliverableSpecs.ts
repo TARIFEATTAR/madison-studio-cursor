@@ -1219,3 +1219,4 @@ export function buildFormatInstructions(contentType: string): string {
   
   return parts.join('\n');
 }
+
