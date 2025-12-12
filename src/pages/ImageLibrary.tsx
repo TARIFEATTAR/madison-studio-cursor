@@ -256,21 +256,21 @@ export default function ImageLibrary() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0908]">
+    <div className="min-h-screen bg-[var(--darkroom-bg)]">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#0A0908]/95 backdrop-blur-sm border-b border-[#2F2A26]">
+      <div className="sticky top-0 z-10 bg-[var(--darkroom-bg)]/95 backdrop-blur-sm border-b border-[var(--darkroom-border)]">
         <div className="container mx-auto px-6 py-6 space-y-5">
           {/* Title Row */}
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="font-serif text-3xl text-[#F5F1E8]">Image Library</h1>
-              <p className="text-sm text-[#F5F1E8]/60 mt-1">
+              <h1 className="font-serif text-3xl text-[var(--darkroom-text)]">Image Library</h1>
+              <p className="text-sm text-[var(--darkroom-text)]/60 mt-1">
                 {filteredImages.length} {filteredImages.length === 1 ? "image" : "images"}
               </p>
             </div>
             <Button
               onClick={() => navigate("/darkroom")}
-              className="bg-[#B8956A] hover:bg-[#C9A67B] text-[#0A0908]"
+              className="bg-[var(--darkroom-accent)] hover:bg-[var(--darkroom-accent-hover)] text-[var(--darkroom-bg)]"
             >
               <Camera className="w-4 h-4 mr-2" />
               Create New
@@ -279,12 +279,12 @@ export default function ImageLibrary() {
 
           {/* Search Bar - Full Width */}
           <div className="relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#F5F1E8]/40 transition-colors group-focus-within:text-[#B8956A]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--darkroom-text)]/40 transition-colors group-focus-within:text-[var(--darkroom-accent)]" />
               <Input
               placeholder="Search images by name, prompt, or category..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 py-2.5 bg-[#1A1816] border-[#2F2A26] text-[#F5F1E8] placeholder:text-[#F5F1E8]/40 focus:border-[#B8956A] focus:ring-2 focus:ring-[#B8956A]/20"
+              className="w-full pl-10 py-2.5 bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] placeholder:text-[var(--darkroom-text)]/40 focus:border-[var(--darkroom-accent)] focus:ring-2 focus:ring-[var(--darkroom-accent)]/20"
               />
             </div>
 
@@ -293,27 +293,27 @@ export default function ImageLibrary() {
             {/* Left: Category + Sort */}
             <div className="flex items-center gap-2">
             <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as CategoryFilter)}>
-                <SelectTrigger className="w-[150px] bg-[#1A1816] border-[#2F2A26] text-[#F5F1E8] text-sm">
+                <SelectTrigger className="w-[150px] bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
-              <SelectContent className="bg-[#1A1816] border-[#2F2A26]">
-                <SelectItem value="all" className="text-[#F5F1E8]">All Categories</SelectItem>
-                <SelectItem value="product" className="text-[#F5F1E8]">Product</SelectItem>
-                <SelectItem value="lifestyle" className="text-[#F5F1E8]">Lifestyle</SelectItem>
-                <SelectItem value="ecommerce" className="text-[#F5F1E8]">E-commerce</SelectItem>
-                <SelectItem value="social" className="text-[#F5F1E8]">Social</SelectItem>
-                <SelectItem value="editorial" className="text-[#F5F1E8]">Editorial</SelectItem>
+              <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)]">
+                <SelectItem value="all" className="text-[var(--darkroom-text)]">All Categories</SelectItem>
+                <SelectItem value="product" className="text-[var(--darkroom-text)]">Product</SelectItem>
+                <SelectItem value="lifestyle" className="text-[var(--darkroom-text)]">Lifestyle</SelectItem>
+                <SelectItem value="ecommerce" className="text-[var(--darkroom-text)]">E-commerce</SelectItem>
+                <SelectItem value="social" className="text-[var(--darkroom-text)]">Social</SelectItem>
+                <SelectItem value="editorial" className="text-[var(--darkroom-text)]">Editorial</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-                <SelectTrigger className="w-[130px] bg-[#1A1816] border-[#2F2A26] text-[#F5F1E8] text-sm">
+                <SelectTrigger className="w-[130px] bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
-              <SelectContent className="bg-[#1A1816] border-[#2F2A26]">
-                <SelectItem value="recent" className="text-[#F5F1E8]">Most Recent</SelectItem>
-                <SelectItem value="oldest" className="text-[#F5F1E8]">Oldest First</SelectItem>
-                <SelectItem value="category" className="text-[#F5F1E8]">By Category</SelectItem>
+              <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)]">
+                <SelectItem value="recent" className="text-[var(--darkroom-text)]">Most Recent</SelectItem>
+                <SelectItem value="oldest" className="text-[var(--darkroom-text)]">Oldest First</SelectItem>
+                <SelectItem value="category" className="text-[var(--darkroom-text)]">By Category</SelectItem>
               </SelectContent>
             </Select>
             </div>
@@ -321,14 +321,14 @@ export default function ImageLibrary() {
             {/* Right: View Mode + Bulk Actions */}
             <div className="flex items-center gap-3">
               {/* View Mode Toggle */}
-              <div className="flex items-center bg-[#1A1816] border border-[#2F2A26] rounded-lg p-0.5">
+              <div className="flex items-center bg-[var(--darkroom-surface)] border border-[var(--darkroom-border)] rounded-lg p-0.5">
               <button
                 onClick={() => setViewMode("grid")}
                 className={cn(
                     "h-8 w-8 flex items-center justify-center rounded-md transition-colors",
                   viewMode === "grid"
-                    ? "bg-[#B8956A]/20 text-[#B8956A]"
-                    : "text-[#F5F1E8]/60 hover:text-[#F5F1E8]"
+                    ? "bg-[var(--darkroom-accent)]/20 text-[var(--darkroom-accent)]"
+                    : "text-[var(--darkroom-text)]/60 hover:text-[var(--darkroom-text)]"
                 )}
               >
                 <Grid3X3 className="w-4 h-4" />
@@ -338,8 +338,8 @@ export default function ImageLibrary() {
                 className={cn(
                     "h-8 w-8 flex items-center justify-center rounded-md transition-colors",
                   viewMode === "masonry"
-                    ? "bg-[#B8956A]/20 text-[#B8956A]"
-                    : "text-[#F5F1E8]/60 hover:text-[#F5F1E8]"
+                    ? "bg-[var(--darkroom-accent)]/20 text-[var(--darkroom-accent)]"
+                    : "text-[var(--darkroom-text)]/60 hover:text-[var(--darkroom-text)]"
                 )}
               >
                 <LayoutGrid className="w-4 h-4" />
@@ -349,14 +349,14 @@ export default function ImageLibrary() {
             {/* Bulk Actions */}
             {selectedImages.size > 0 && (
                 <div className="flex items-center gap-2">
-                <Badge variant="outline" className="border-[#B8956A] text-[#B8956A]">
+                <Badge variant="outline" className="border-[var(--darkroom-accent)] text-[var(--darkroom-accent)]">
                   {selectedImages.size} selected
                 </Badge>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setSelectedImages(new Set())}
-                  className="border-[#2F2A26] text-[#F5F1E8]/60"
+                  className="border-[var(--darkroom-border)] text-[var(--darkroom-text)]/60"
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -379,20 +379,20 @@ export default function ImageLibrary() {
       <div className="container mx-auto px-6 py-8">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <Sparkles className="w-8 h-8 text-[#B8956A] animate-pulse" />
+            <Sparkles className="w-8 h-8 text-[var(--darkroom-accent)] animate-pulse" />
           </div>
         ) : filteredImages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Camera className="w-16 h-16 text-[#F5F1E8]/20 mb-4" />
-            <h3 className="text-xl font-serif text-[#F5F1E8] mb-2">No images yet</h3>
-            <p className="text-[#F5F1E8]/60 mb-6 max-w-md">
+            <Camera className="w-16 h-16 text-[var(--darkroom-text)]/20 mb-4" />
+            <h3 className="text-xl font-serif text-[var(--darkroom-text)] mb-2">No images yet</h3>
+            <p className="text-[var(--darkroom-text)]/60 mb-6 max-w-md">
               {searchQuery || categoryFilter !== "all"
                 ? "No images match your filters. Try adjusting your search."
                 : "Start creating stunning product images in the Dark Room."}
             </p>
             <Button
               onClick={() => navigate("/darkroom")}
-              className="bg-[#B8956A] hover:bg-[#C9A67B] text-[#0A0908]"
+              className="bg-[var(--darkroom-accent)] hover:bg-[var(--darkroom-accent-hover)] text-[var(--darkroom-bg)]"
             >
               <Camera className="w-4 h-4 mr-2" />
               Go to Dark Room
@@ -416,9 +416,9 @@ export default function ImageLibrary() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   className={cn(
-                    "group relative rounded-lg overflow-hidden bg-[#1A1816] border border-[#2F2A26]",
-                    "hover:border-[#B8956A]/50 transition-all cursor-pointer",
-                    selectedImages.has(image.id) && "ring-2 ring-[#B8956A]",
+                    "group relative rounded-lg overflow-hidden bg-[var(--darkroom-surface)] border border-[var(--darkroom-border)]",
+                    "hover:border-[var(--darkroom-accent)]/50 transition-all cursor-pointer",
+                    selectedImages.has(image.id) && "ring-2 ring-[var(--darkroom-accent)]",
                     viewMode === "masonry" && "break-inside-avoid mb-4"
                   )}
                   onClick={() => handleImageClick(image)}
@@ -440,7 +440,7 @@ export default function ImageLibrary() {
                       className={cn(
                         "absolute top-2 left-2 w-6 h-6 rounded border-2 flex items-center justify-center transition-all",
                         selectedImages.has(image.id)
-                          ? "bg-[#B8956A] border-[#B8956A]"
+                          ? "bg-[var(--darkroom-accent)] border-[var(--darkroom-accent)]"
                           : "bg-black/40 border-white/40 opacity-0 group-hover:opacity-100"
                       )}
                       onClick={(e) => {
@@ -467,13 +467,13 @@ export default function ImageLibrary() {
                             <MoreVertical className="w-4 h-4 text-white" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-[#1A1816] border-[#2F2A26]">
+                        <DropdownMenuContent align="end" className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)]">
                           <DropdownMenuItem
                             onClick={(e) => {
                               e.stopPropagation();
                               handleImageClick(image);
                             }}
-                            className="text-[#F5F1E8] focus:bg-[#2F2A26]"
+                            className="text-[var(--darkroom-text)] focus:bg-[var(--darkroom-border)]"
                           >
                             <Eye className="w-4 h-4 mr-2" />
                             View & Edit
@@ -483,7 +483,7 @@ export default function ImageLibrary() {
                               e.stopPropagation();
                               handleDownload(image);
                             }}
-                            className="text-[#F5F1E8] focus:bg-[#2F2A26]"
+                            className="text-[var(--darkroom-text)] focus:bg-[var(--darkroom-border)]"
                           >
                             <Download className="w-4 h-4 mr-2" />
                             Download
@@ -493,7 +493,7 @@ export default function ImageLibrary() {
                               e.stopPropagation();
                               handleArchive(image.id);
                             }}
-                            className="text-red-400 focus:bg-[#2F2A26]"
+                            className="text-red-400 focus:bg-[var(--darkroom-border)]"
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
                             Archive

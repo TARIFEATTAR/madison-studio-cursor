@@ -127,7 +127,7 @@ export default function MarketplaceLibrary() {
 
   // Filter and sort listings
   const filteredAndSortedListings = useMemo(() => {
-    let filtered = listings.filter(listing => {
+    const filtered = listings.filter(listing => {
       const matchesSearch = listing.title.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesPlatform = platformFilter === "all" || listing.platform === platformFilter;
       const matchesStatus = statusFilter === "all" || listing.status === statusFilter;

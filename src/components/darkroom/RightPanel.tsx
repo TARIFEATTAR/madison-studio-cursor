@@ -393,7 +393,7 @@ export function RightPanel({
                 <SelectTrigger className="w-full h-9 bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
                   <SelectValue placeholder="Select model..." />
                 </SelectTrigger>
-                <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] max-h-[280px]">
+                <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] max-h-[280px]">
                   {AI_MODEL_OPTIONS.map((option, idx) => {
                     const prevOption = idx > 0 ? AI_MODEL_OPTIONS[idx - 1] : null;
                     const showGroupHeader = !prevOption || prevOption.group !== option.group;
@@ -405,11 +405,11 @@ export function RightPanel({
                     return (
                       <div key={option.value}>
                         {showGroupHeader && option.group !== "auto" && (
-                          <div className="px-2 py-1.5 text-[10px] uppercase tracking-wider text-[#6a5f50] font-medium border-t border-[var(--darkroom-border)] mt-1 first:mt-0 first:border-t-0">
+                          <div className="px-2 py-1.5 text-[10px] uppercase tracking-wider text-[var(--darkroom-text-dim)] font-medium border-t border-[var(--darkroom-border)] mt-1 first:mt-0 first:border-t-0">
                             {groupLabels[option.group] || option.group}
                           </div>
                         )}
-                        <SelectItem value={option.value} className="text-[#f5f0e6]">
+                        <SelectItem value={option.value} className="text-[var(--darkroom-text)]">
                           <span className="flex items-center gap-2">
                             <span>{option.label}</span>
                             {option.badge && (
@@ -509,10 +509,10 @@ export function RightPanel({
                 <SelectTrigger className="w-full h-9 bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
                   <SelectValue placeholder="No camera style" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] max-h-[200px]">
-                  <SelectItem value="none" className="text-[#f5f0e6]">No camera style</SelectItem>
+                <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] max-h-[200px]">
+                  <SelectItem value="none" className="text-[var(--darkroom-text)]">No camera style</SelectItem>
                   {cameraOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value} className="text-[#f5f0e6]">
+                    <SelectItem key={opt.value} value={opt.value} className="text-[var(--darkroom-text)]">
                       {opt.label}
                     </SelectItem>
                   ))}
@@ -536,10 +536,10 @@ export function RightPanel({
                 <SelectTrigger className="w-full h-9 bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
                   <SelectValue placeholder="No lighting style" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] max-h-[200px]">
-                  <SelectItem value="none" className="text-[#f5f0e6]">No lighting style</SelectItem>
+                <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] max-h-[200px]">
+                  <SelectItem value="none" className="text-[var(--darkroom-text)]">No lighting style</SelectItem>
                   {lightingOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value} className="text-[#f5f0e6]">
+                    <SelectItem key={opt.value} value={opt.value} className="text-[var(--darkroom-text)]">
                       {opt.label}
                     </SelectItem>
                   ))}
@@ -563,10 +563,10 @@ export function RightPanel({
                 <SelectTrigger className="w-full h-9 bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
                   <SelectValue placeholder="No environment" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] max-h-[200px]">
-                  <SelectItem value="none" className="text-[#f5f0e6]">No environment</SelectItem>
+                <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] max-h-[200px]">
+                  <SelectItem value="none" className="text-[var(--darkroom-text)]">No environment</SelectItem>
                   {environmentOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value} className="text-[#f5f0e6]">
+                    <SelectItem key={opt.value} value={opt.value} className="text-[var(--darkroom-text)]">
                       {opt.label}
                     </SelectItem>
                   ))}

@@ -589,7 +589,7 @@ export function ProductsTab() {
 
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = products.filter((p) => {
+    const filtered = products.filter((p) => {
       const matchesSearch = 
         p.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
         (p.collection?.toLowerCase() || "").includes(searchFilter.toLowerCase()) ||

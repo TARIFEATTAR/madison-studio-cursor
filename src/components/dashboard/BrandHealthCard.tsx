@@ -4,6 +4,7 @@ import { ChevronDown, ExternalLink } from "lucide-react";
 import { useBrandHealth } from "@/hooks/useBrandHealth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { BrandQuickViewTrigger } from "@/components/brand";
 
 interface BrandHealthCardProps {
   compact?: boolean;
@@ -125,19 +126,22 @@ export function BrandHealthCard({ compact = false }: BrandHealthCardProps) {
               </div>
             ))}
 
-            {/* View Report Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full mt-2 text-xs"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate("/brand-health");
-              }}
-            >
-              <ExternalLink className="w-3 h-3 mr-1" />
-              View Report
-            </Button>
+            {/* Quick View & View Report Buttons */}
+            <div className="flex gap-2 mt-2">
+              <BrandQuickViewTrigger variant="minimal" className="flex-1 text-xs" />
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 text-xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate("/brand-health");
+                }}
+              >
+                <ExternalLink className="w-3 h-3 mr-1" />
+                Full Report
+              </Button>
+            </div>
           </div>
         )}
 

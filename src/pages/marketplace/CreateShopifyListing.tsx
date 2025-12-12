@@ -351,7 +351,7 @@ const CreateShopifyListing = () => {
       });
 
       // Step 3: First attempt via SDK with explicit headers
-      let { data, error } = await invokeViaSDK(listingId, shopifyProductId, token);
+      const { data, error } = await invokeViaSDK(listingId, shopifyProductId, token);
 
       // Step 4: Detect 401 or missing auth header
       const is401 =

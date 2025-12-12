@@ -25,6 +25,7 @@ import { logger } from "@/lib/logger";
 
 import MadisonPanel from "@/components/image-editor/MadisonPanel";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
+import { BrandQuickViewTrigger } from "@/components/brand";
 
 export default function DashboardNew() {
   const navigate = useNavigate();
@@ -99,26 +100,32 @@ export default function DashboardNew() {
       {/* Top Bar with Madison Button - Desktop Only */}
       <div className="hidden md:flex h-16 border-b border-[#E0E0E0] px-8 items-center justify-between bg-white">
         <h1 className="text-xl font-semibold text-[#1C150D]">Dashboard</h1>
-        <Button
-          size="sm"
-          onClick={() => setMadisonPanelOpen(true)}
-          className="bg-[#B8956A] hover:bg-[#A3865A] text-white flex items-center gap-2 shadow-sm"
-        >
-          <Sparkles className="w-4 h-4" />
-          Ask Madison
-        </Button>
+        <div className="flex items-center gap-3">
+          <BrandQuickViewTrigger variant="minimal" />
+          <Button
+            size="sm"
+            onClick={() => setMadisonPanelOpen(true)}
+            className="bg-[#B8956A] hover:bg-[#A3865A] text-white flex items-center gap-2 shadow-sm"
+          >
+            <Sparkles className="w-4 h-4" />
+            Ask Madison
+          </Button>
+        </div>
       </div>
 
       {/* Mobile Header - Simplified */}
       <div className="md:hidden h-14 border-b border-[#E0E0E0] px-4 flex items-center justify-between bg-white">
         <h1 className="text-lg font-semibold text-[#1C150D]">Dashboard</h1>
-        <Button
-          size="sm"
-          onClick={() => setMadisonPanelOpen(true)}
-          className="bg-[#B8956A] hover:bg-[#A3865A] text-white px-3 py-2"
-        >
-          <Sparkles className="w-4 h-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <BrandQuickViewTrigger variant="icon-only" />
+          <Button
+            size="sm"
+            onClick={() => setMadisonPanelOpen(true)}
+            className="bg-[#B8956A] hover:bg-[#A3865A] text-white px-3 py-2"
+          >
+            <Sparkles className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Main Content Area */}
