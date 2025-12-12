@@ -212,6 +212,18 @@ export const PLATFORM_IMAGE_SPECS: Record<string, PlatformImageSpec> = {
     maxFileSize: '20MB',
     notes: 'First image is most important. Variety of angles.'
   },
+  'etsy_banner': {
+    aspectRatio: '1200:300 (4:1)',
+    resolution: '1200x300 (minimum) or 3360x840 (large)',
+    maxFileSize: '20MB',
+    notes: 'Shop banner. Keep text/logo in center 760x100 safe zone for mobile.'
+  },
+  'etsy_mini_banner': {
+    aspectRatio: '1200:160 (7.5:1)',
+    resolution: '1200x160',
+    maxFileSize: '20MB',
+    notes: 'Smaller banner option. Very horizontal — use simple patterns or centered logo.'
+  },
   'amazon_main': {
     aspectRatio: '1:1',
     resolution: '2000x2000 minimum',
