@@ -35,6 +35,9 @@ import {
   Layout,
   RotateCcw,
   ChevronRight,
+  Edit3,
+  Scissors,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -43,6 +46,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentOrganizationId } from "@/hooks/useIndustryConfig";
+import { ImageEditorModal, type ImageEditorImage } from "@/components/image-editor/ImageEditorModal";
 
 // Ad Overlay components
 import { AdOverlay, AdPresetSelector, type AdOverlayConfig } from "@/components/ad-overlay";
@@ -160,6 +164,8 @@ export default function LightTable() {
 
   // UI state
   const [activeTab, setActiveTab] = useState<"refine" | "text" | "variations" | "ad">("refine");
+  const [imageEditorOpen, setImageEditorOpen] = useState(false);
+  const [imageEditorImage, setImageEditorImage] = useState<ImageEditorImage | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isExportingAd, setIsExportingAd] = useState(false);
@@ -188,6 +194,8 @@ export default function LightTable() {
     subtext: "",
     ctaText: "",
   });
+  const [editorialDirection, setEditorialDirection] = useState("");
+  const [isGeneratingAd, setIsGeneratingAd] = useState(false);
 
   // Font options for text overlay
   const FONT_OPTIONS = [
@@ -580,9 +588,14 @@ export default function LightTable() {
     toast.success("Image removed from session");
   }, [selectedImage, navigate]);
 
-  // Navigate back
+  // Navigate back to Dark Room
   const handleBack = useCallback(() => {
     navigate("/darkroom");
+  }, [navigate]);
+
+  // Exit completely to Create page
+  const handleExit = useCallback(() => {
+    navigate("/create");
   }, [navigate]);
 
   // Film strip scroll
@@ -617,8 +630,163 @@ export default function LightTable() {
       subtext: "",
       ctaText: "",
     });
+    setEditorialDirection("");
     setShowCustomizeAd(false);
   }, []);
+
+  // Generate Ad with Gemini 3.0 - Hybrid approach
+  const handleGenerateAd = useCallback(async () => {
+    if (!selectedImage) {
+      toast.error("No image selected");
+      return;
+    }
+
+    if (!user) {
+      toast.error("Please sign in to generate ads");
+      return;
+    }
+
+    if (!orgId) {
+      toast.error("Organization not found");
+      return;
+    }
+
+    // Validate that we have at least some text
+    if (!adConfig.headline && !adConfig.subtext && !adConfig.ctaText) {
+      toast.error("Add at least one text element (headline, subtext, or CTA)");
+      return;
+    }
+
+    setIsGeneratingAd(true);
+
+    try {
+      // Build the ad generation prompt with Pomelli-style layout intelligence
+      const layoutDescription = `${adConfig.preset.name}: ${adConfig.preset.description}`;
+      
+      // Text elements with semantic meaning
+      const textSpecs = [];
+      if (adConfig.headline) textSpecs.push(`PRIMARY HEADLINE: "${adConfig.headline}" (most prominent, attention-grabbing)`);
+      if (adConfig.subtext) textSpecs.push(`SUPPORTING TEXT: "${adConfig.subtext}" (secondary information)`);
+      if (adConfig.ctaText) textSpecs.push(`CALL-TO-ACTION BUTTON: "${adConfig.ctaText}" (action-oriented, prominent)`);
+
+      const colorBlockColor = adConfig.colorBlockColor || adConfig.preset.defaultStyles.colorBlockColor;
+      const textColor = adConfig.textColor || adConfig.preset.defaultStyles.textColor;
+      const ctaBgColor = adConfig.ctaBackgroundColor || adConfig.preset.defaultStyles.ctaBackgroundColor;
+      
+      const fontInfo = adConfig.fontFamily || adConfig.preset.defaultStyles.fontFamily;
+      const fontLabel = AD_FONT_OPTIONS.find(f => f.value === fontInfo)?.label || fontInfo;
+
+      // Build comprehensive prompt for Gemini 3.0 Pro with Pomelli-style intelligence
+      const adPrompt = `You are an expert art director creating a professional product advertisement.
+
+BASE IMAGE: Analyze the provided product image. This is your foundation.
+
+LAYOUT INTELLIGENCE (Pomelli-style):
+- Layout template: ${layoutDescription}
+- Text positioning strategy: ${adConfig.preset.layout.textPosition} placement
+- Text alignment: ${adConfig.preset.layout.textAlign}
+${adConfig.preset.layout.hasColorBlock ? `- Visual hierarchy: Color block at ${adConfig.preset.layout.colorBlockPosition} (${adConfig.preset.layout.colorBlockSize}% coverage) for depth and text readability` : ""}
+
+TEXT ELEMENTS TO INTELLIGENTLY COMPOSE:
+${textSpecs.join("\n")}
+
+DESIGN SYSTEM:
+- Typography: ${fontLabel} font family (${fontInfo}) - apply appropriate weights and sizes
+- Color palette:
+  ${colorBlockColor ? `  - Background/overlay: ${colorBlockColor}` : ""}
+  ${textColor ? `  - Text color: ${textColor}` : ""}
+  ${ctaBgColor ? `  - CTA button: ${ctaBgColor}` : ""}
+
+${editorialDirection ? `ART DIRECTION:\n${editorialDirection}\n` : ""}
+
+COMPOSITION REQUIREMENTS:
+1. Product remains the hero - text enhances, never obscures
+2. Text placement follows visual hierarchy principles
+3. Ensure maximum readability with proper contrast
+4. Text should feel integrated, not pasted on
+5. Maintain professional advertising aesthetic
+6. Optimize for social media and digital display
+7. Create visual flow that guides eye: product → headline → subtext → CTA
+
+TECHNICAL SPECIFICATIONS:
+- Photorealistic quality
+- Professional lighting and shadows
+- Text rendered as part of the image (not overlay)
+- Seamless integration of all elements
+- Ready for immediate use in campaigns
+
+Generate a polished, publication-ready advertisement image where the product and text elements form a cohesive, visually compelling composition.`;
+
+      console.log("🎨 Generating ad with Gemini 3.0:", {
+        baseImage: selectedImage.imageUrl.substring(0, 50),
+        layout: adConfig.preset.name,
+        hasText: !!(adConfig.headline || adConfig.subtext || adConfig.ctaText),
+        hasEditorialDirection: !!editorialDirection,
+      });
+
+      // Call the image generation function with ad-specific parameters
+      const { data, error } = await supabase.functions.invoke("generate-madison-image", {
+        body: {
+          prompt: adPrompt,
+          userId: user.id,
+          organizationId: orgId,
+          sessionId,
+          goalType: "product_advertisement",
+          aspectRatio: "1:1", // Default to square for ads, can be made configurable
+          aiProvider: "gemini-3-pro-image", // Force Gemini 3.0 Pro
+          resolution: "high", // Use high res for ads
+          referenceImages: [
+            {
+              url: selectedImage.imageUrl,
+              label: "Product Image",
+              description: "Base product image to create advertisement from",
+            },
+          ],
+        },
+      });
+
+      if (error) {
+        console.error("❌ Ad generation error:", error);
+        toast.error(error.message || "Failed to generate ad");
+        return;
+      }
+
+      if (!data?.imageUrl) {
+        toast.error("Ad generation failed - no image returned");
+        return;
+      }
+
+      // Add the generated ad to the session
+      const newAdImage: SessionImage = {
+        id: data.savedImageId || uuidv4(),
+        imageUrl: data.imageUrl,
+        prompt: `Ad: ${adConfig.headline || adConfig.subtext || "Product Advertisement"}`,
+        timestamp: Date.now(),
+        isSaved: true,
+      };
+
+      setImages((prev) => [...prev, newAdImage]);
+      setSelectedImageId(newAdImage.id);
+      
+      toast.success("Ad generated successfully!");
+      
+      // Reset ad config after successful generation
+      handleResetAdConfig();
+    } catch (err: any) {
+      console.error("❌ Ad generation error:", err);
+      toast.error(err.message || "Failed to generate ad");
+    } finally {
+      setIsGeneratingAd(false);
+    }
+  }, [
+    selectedImage,
+    user,
+    orgId,
+    sessionId,
+    adConfig,
+    editorialDirection,
+    handleResetAdConfig,
+  ]);
 
   const handleExportAd = useCallback(async () => {
     if (!adOverlayRef.current) {
@@ -665,15 +833,27 @@ export default function LightTable() {
     <div className="light-table-container">
       {/* Header */}
       <header className="light-table-header">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleBack}
-          className="light-table-back-btn"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dark Room
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleBack}
+            className="light-table-back-btn"
+            title="Back to Dark Room"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dark Room
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleExit}
+            className="light-table-exit-btn"
+            title="Exit to Create"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
 
         <h1 className="light-table-title">Light Table</h1>
 
@@ -755,6 +935,23 @@ export default function LightTable() {
 
             {/* Quick Actions */}
             <div className="light-table-quick-actions">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  if (selectedImage) {
+                    setImageEditorImage({
+                      id: selectedImage.id,
+                      url: selectedImage.imageUrl,
+                      prompt: selectedImage.prompt,
+                    });
+                    setImageEditorOpen(true);
+                  }
+                }}
+              >
+                <Edit3 className="w-4 h-4 mr-2" />
+                Edit
+              </Button>
               <Button variant="outline" size="sm" onClick={handleCopyPrompt}>
                 <Copy className="w-4 h-4 mr-2" />
                 Copy Prompt
@@ -1029,6 +1226,19 @@ export default function LightTable() {
                         />
                       </div>
                     )}
+                    <div className="light-table-ad-editor__field">
+                      <label>Editorial Direction</label>
+                      <Textarea
+                        value={editorialDirection}
+                        onChange={(e) => setEditorialDirection(e.target.value)}
+                        placeholder="e.g., Make it feel luxurious and premium, use warm lighting, lifestyle setting with natural elements..."
+                        rows={3}
+                        className="resize-none"
+                      />
+                      <span className="text-xs text-[var(--darkroom-text-dim)] mt-1 block">
+                        Describe the mood, style, and visual approach for the ad
+                      </span>
+                    </div>
                   </div>
 
                   {/* Customize Section (Collapsible) */}
@@ -1147,6 +1357,7 @@ export default function LightTable() {
                     <button
                       className="light-table-ad-editor__reset-btn"
                       onClick={handleResetAdConfig}
+                      title="Reset"
                     >
                       <RotateCcw className="w-4 h-4" />
                     </button>
@@ -1154,6 +1365,7 @@ export default function LightTable() {
                       className="light-table-ad-editor__export-btn"
                       onClick={handleExportAd}
                       disabled={isExportingAd || !hasAdContent}
+                      title="Export current overlay"
                     >
                       {isExportingAd ? (
                         <>
@@ -1163,7 +1375,25 @@ export default function LightTable() {
                       ) : (
                         <>
                           <Download className="w-4 h-4" />
-                          Export Ad
+                          Export Overlay
+                        </>
+                      )}
+                    </button>
+                    <button
+                      className="light-table-ad-editor__generate-btn"
+                      onClick={handleGenerateAd}
+                      disabled={isGeneratingAd || !selectedImage || (!adConfig.headline && !adConfig.subtext && !adConfig.ctaText)}
+                      title="Generate new ad image with Gemini 3.0"
+                    >
+                      {isGeneratingAd ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="w-4 h-4" />
+                          Generate Ad
                         </>
                       )}
                     </button>
@@ -1262,6 +1492,39 @@ export default function LightTable() {
           </div>
         </div>
       </div>
+
+      {/* Image Editor Modal - Includes Background Removal */}
+      {selectedImage && (
+        <ImageEditorModal
+          isOpen={imageEditorOpen}
+          onClose={() => {
+            setImageEditorOpen(false);
+            setImageEditorImage(null);
+          }}
+          image={imageEditorImage}
+          onSave={() => {
+            // Refresh the image list if needed
+            const updatedImages = images.map((img) =>
+              img.id === selectedImage.id ? { ...img, isSaved: true } : img
+            );
+            // Update state if needed
+            toast.success("Image saved");
+          }}
+          onImageGenerated={(newImage) => {
+            // Add new image to session
+            const newSessionImage: SessionImage = {
+              id: newImage.id,
+              imageUrl: newImage.url,
+              prompt: newImage.prompt || selectedImage.prompt,
+              timestamp: Date.now(),
+              isSaved: true,
+            };
+            // You might want to add this to the images array
+            toast.success("New image generated");
+          }}
+          source="light-table"
+        />
+      )}
     </div>
   );
 }

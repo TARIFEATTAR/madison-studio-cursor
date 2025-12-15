@@ -192,7 +192,17 @@ export function MadisonEditor({
    * - Preserves undo/redo
    */
   const handleAIAction = useCallback(async (action: MadisonInlineAction) => {
-    if (!editor || !editor.isEditable) return;
+    console.log('[MadisonEditor] handleAIAction called:', { action, hasEditor: !!editor, isEditable: editor?.isEditable });
+    
+    if (!editor) {
+      console.error('[MadisonEditor] No editor instance available');
+      return;
+    }
+    
+    if (!editor.isEditable) {
+      console.warn('[MadisonEditor] Editor is not editable');
+      return;
+    }
 
     // If slash menu is open, close it and delete the "/" character
     if (slashMenuOpen && slashStartPosRef.current !== null) {
@@ -219,15 +229,21 @@ export function MadisonEditor({
       organizationId,
     };
 
-    // Execute the AI action
-    const result = await handleMadisonInlineAction(action, editor, context);
+    try {
+      // Execute the AI action
+      const result = await handleMadisonInlineAction(action, editor, context);
 
-    if (result) {
-      console.log('[MadisonEditor] AI action completed:', {
-        action,
-        mode: result.mode,
-        contentLength: result.content.length,
-      });
+      if (result) {
+        console.log('[MadisonEditor] AI action completed:', {
+          action,
+          mode: result.mode,
+          contentLength: result.content.length,
+        });
+      } else {
+        console.warn('[MadisonEditor] AI action returned no result');
+      }
+    } catch (error) {
+      console.error('[MadisonEditor] AI action error:', error);
     }
   }, [editor, slashMenuOpen, organizationId]);
 

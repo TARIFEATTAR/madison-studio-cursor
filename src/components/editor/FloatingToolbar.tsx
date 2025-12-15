@@ -55,7 +55,11 @@ export function FloatingToolbar({
 
   // Handler for AI actions
   const handleAIAction = (action: MadisonInlineAction) => {
-    if (disabled || !isEditable) return;
+    if (disabled || !isEditable) {
+      console.warn('[FloatingToolbar] AI action blocked - disabled or not editable');
+      return;
+    }
+    console.log('[FloatingToolbar] Triggering AI action:', action);
     onAIAction?.(action);
   };
 
@@ -68,19 +72,32 @@ export function FloatingToolbar({
         offset: [0, 8],
         // Hide on blur/click outside
         hideOnClick: true,
-        // Only show when there's a selection
-        onShow: (instance) => {
-          const { empty } = editor.state.selection;
-          if (empty) {
-            instance.hide();
-            return false;
-          }
-        },
+        // Prevent showing when clicking inside the toolbar
+        interactive: true,
+        // Smooth animations
+        animation: 'fade',
       }}
-      // Only show when selection length > 0
+      // Only show when selection length > 0 and editor is editable
+      // This is the single source of truth for visibility
       shouldShow={({ editor, state }) => {
-        const { empty } = state.selection;
-        return !empty && editor.isEditable;
+        // Must have a non-empty selection
+        const { empty, from, to } = state.selection;
+        if (empty || from === to) {
+          return false;
+        }
+        
+        // Must be editable
+        if (!editor.isEditable) {
+          return false;
+        }
+        
+        // Don't show if selection is just whitespace
+        const selectedText = state.doc.textBetween(from, to, ' ');
+        if (!selectedText.trim()) {
+          return false;
+        }
+        
+        return true;
       }}
       className={cn(
         "flex items-center gap-0.5 p-1.5 rounded-lg",
@@ -152,7 +169,10 @@ export function FloatingToolbar({
 
       {/* Heading 2 */}
       <FormatButton
-        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+        onClick={() => {
+          console.log('[FloatingToolbar] Toggling H2');
+          editor.chain().focus().toggleHeading({ level: 2 }).run();
+        }}
         isActive={editor.isActive('heading', { level: 2 })}
         disabled={disabled || !isEditable}
         title="Heading 2"
@@ -162,7 +182,10 @@ export function FloatingToolbar({
 
       {/* Heading 3 */}
       <FormatButton
-        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+        onClick={() => {
+          console.log('[FloatingToolbar] Toggling H3');
+          editor.chain().focus().toggleHeading({ level: 3 }).run();
+        }}
         isActive={editor.isActive('heading', { level: 3 })}
         disabled={disabled || !isEditable}
         title="Heading 3"
@@ -174,7 +197,10 @@ export function FloatingToolbar({
 
       {/* Bullet List */}
       <FormatButton
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
+        onClick={() => {
+          console.log('[FloatingToolbar] Toggling bullet list');
+          editor.chain().focus().toggleBulletList().run();
+        }}
         isActive={editor.isActive('bulletList')}
         disabled={disabled || !isEditable}
         title="Bullet List"
@@ -184,7 +210,10 @@ export function FloatingToolbar({
 
       {/* Ordered List */}
       <FormatButton
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        onClick={() => {
+          console.log('[FloatingToolbar] Toggling ordered list');
+          editor.chain().focus().toggleOrderedList().run();
+        }}
         isActive={editor.isActive('orderedList')}
         disabled={disabled || !isEditable}
         title="Numbered List"
@@ -194,7 +223,10 @@ export function FloatingToolbar({
 
       {/* Blockquote */}
       <FormatButton
-        onClick={() => editor.chain().focus().toggleBlockquote().run()}
+        onClick={() => {
+          console.log('[FloatingToolbar] Toggling blockquote');
+          editor.chain().focus().toggleBlockquote().run();
+        }}
         isActive={editor.isActive('blockquote')}
         disabled={disabled || !isEditable}
         title="Quote"

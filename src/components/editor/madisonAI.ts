@@ -298,6 +298,11 @@ export async function handleMadisonInlineAction(
       },
     });
 
+    if (!result || !result.trim()) {
+      console.warn('[Madison AI] Empty result from resolver');
+      return null;
+    }
+
     // Determine replacement mode
     const mode: 'replace' | 'insert' = hasSelection ? 'replace' : 'insert';
 
@@ -308,16 +313,22 @@ export async function handleMadisonInlineAction(
         .chain()
         .focus()
         .deleteRange({ from, to })
-        .insertContentAt(from, result)
+        .insertContent(result)
         .run();
     } else {
       // Insert at cursor position
       editor
         .chain()
         .focus()
-        .insertContentAt(from, result)
+        .insertContent(result)
         .run();
     }
+
+    console.log('[Madison AI] Action completed successfully:', {
+      action,
+      mode,
+      resultLength: result.length,
+    });
 
     return {
       content: result,

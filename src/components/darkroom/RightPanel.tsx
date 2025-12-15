@@ -495,7 +495,7 @@ export function RightPanel({
               <button
                 onClick={() => setActiveTab("madison")}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-[11px] font-mono uppercase tracking-wider transition-all duration-200",
+                  "flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-[12px] font-mono uppercase tracking-wider transition-all duration-200",
                   activeTab === "madison"
                     ? "bg-[var(--camera-body)] text-[var(--darkroom-accent)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_8px_rgba(0,0,0,0.3)] border border-[var(--darkroom-accent)]/30"
                     : "text-[var(--darkroom-text-dim)] hover:text-[var(--darkroom-text-muted)] hover:bg-white/5"
@@ -507,7 +507,7 @@ export function RightPanel({
               <button
                 onClick={() => setActiveTab("settings")}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-[11px] font-mono uppercase tracking-wider transition-all duration-200",
+                  "flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-[12px] font-mono uppercase tracking-wider transition-all duration-200",
                   activeTab === "settings"
                     ? "bg-[var(--camera-body)] text-[var(--darkroom-accent)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_8px_rgba(0,0,0,0.3)] border border-[var(--darkroom-accent)]/30"
                     : "text-[var(--darkroom-text-dim)] hover:text-[var(--darkroom-text-muted)] hover:bg-white/5"
@@ -571,7 +571,7 @@ export function RightPanel({
                   size="sm"
                 />
                 <Cpu className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">AI Model</span>
+                <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">AI Model</span>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -641,7 +641,7 @@ export function RightPanel({
                   size="sm"
                 />
                 <Maximize2 className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Resolution</span>
+                <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Resolution</span>
               </div>
               <div className="flex gap-1 p-1 rounded-lg bg-black/30 border border-white/5">
                   {RESOLUTION_OPTIONS.map((option, idx) => {
@@ -670,13 +670,13 @@ export function RightPanel({
                             : "bg-[var(--led-off)]"
                         )} style={{ width: "80%" }} />
                         <span className={cn(
-                          "text-[10px] font-mono uppercase tracking-wider block",
+                          "text-[12px] font-mono uppercase tracking-wider block",
                           isSelected ? "text-[var(--led-ready)]" : "text-[var(--darkroom-text-dim)]"
                         )}>
                           {option.label}
                         </span>
                         {option.badge && (
-                          <span className="text-[7px] text-purple-400 block">{option.badge}</span>
+                          <span className="text-[8px] text-purple-400 block">{option.badge}</span>
                         )}
                       </button>
                     );
@@ -692,7 +692,7 @@ export function RightPanel({
                   size="sm"
                 />
                 <Aperture className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Aspect Ratio</span>
+                <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Aspect Ratio</span>
               </div>
               <div className="grid grid-cols-3 gap-1">
                 {ASPECT_RATIO_OPTIONS.map((option) => {
@@ -712,7 +712,7 @@ export function RightPanel({
                     >
                       <span className="text-[10px] font-medium block">{option.label}</span>
                       <span className={cn(
-                        "text-[8px] font-mono block",
+                        "text-[10px] font-mono block",
                         isSelected ? "text-[var(--led-ready)]/70" : "opacity-50"
                       )}>{option.value}</span>
                     </button>
@@ -729,7 +729,7 @@ export function RightPanel({
                   size="sm"
                 />
                 <Camera className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Camera</span>
+                <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Camera</span>
               </div>
               <Select
                 value={proSettings.camera || "none"}
@@ -754,7 +754,7 @@ export function RightPanel({
               <div className="flex items-center gap-2">
                 <LEDIndicator state={proSettings.lighting ? "active" : "off"} size="sm" />
                 <Sun className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Lighting</span>
+                <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Lighting</span>
               </div>
               <Select
                 value={proSettings.lighting || "none"}
@@ -779,7 +779,7 @@ export function RightPanel({
               <div className="flex items-center gap-2">
                 <LEDIndicator state={proSettings.environment ? "active" : "off"} size="sm" />
                 <Globe className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Environment</span>
+                <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Environment</span>
               </div>
               <Select
                 value={proSettings.environment || "none"}
@@ -805,7 +805,7 @@ export function RightPanel({
               <div className="flex items-center gap-2">
                 <LEDIndicator state={proSettings.visualSquad ? "active" : "ready"} size="sm" />
                 <Palette className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Visual Style</span>
+                <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Visual Style</span>
               </div>
               <div className="grid grid-cols-2 gap-1">
                 <button
@@ -847,7 +847,7 @@ export function RightPanel({
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-2">
             <LEDIndicator state="ready" size="sm" />
-            <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Shot Type</span>
+            <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Shot Type</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {[
@@ -860,7 +860,7 @@ export function RightPanel({
               <button
                 key={shot.label}
                 onClick={() => onApplyPreset(shot.label)}
-                className="px-2.5 py-1.5 rounded-md text-[10px] font-medium bg-[var(--camera-body-deep)] border border-white/5 text-[var(--darkroom-text-muted)] hover:border-[var(--darkroom-accent)]/50 hover:text-[var(--darkroom-accent)] transition-all flex items-center gap-1"
+                className="px-2.5 py-1.5 rounded-md text-[12px] font-medium bg-[var(--camera-body-deep)] border border-white/5 text-[var(--darkroom-text-muted)] hover:border-[var(--darkroom-accent)]/50 hover:text-[var(--darkroom-accent)] transition-all flex items-center gap-1"
               >
                 <span className="text-[11px]">{shot.icon}</span>
                 {shot.label}
@@ -873,7 +873,7 @@ export function RightPanel({
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-2">
             <LEDIndicator state="off" size="sm" />
-            <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Platform</span>
+            <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Platform</span>
           </div>
           <div className="grid grid-cols-2 gap-1.5">
             {[
@@ -899,14 +899,14 @@ export function RightPanel({
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
               <LEDIndicator state="active" size="sm" />
-              <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Suggestions</span>
+              <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Suggestions</span>
             </div>
             <div className="space-y-1.5">
               {suggestions.slice(0, 2).map((suggestion) => (
                 <button
                   key={suggestion.id}
                   onClick={() => onUseSuggestion(suggestion)}
-                  className="w-full p-2.5 rounded-md text-left text-[11px] leading-relaxed bg-[var(--camera-body-deep)] border border-white/5 text-[var(--darkroom-text-muted)] hover:border-[var(--darkroom-accent)]/30 hover:bg-[var(--darkroom-accent)]/5 transition-all"
+                  className="w-full p-2.5 rounded-md text-left text-[12px] leading-relaxed bg-[var(--camera-body-deep)] border border-white/5 text-[var(--darkroom-text-muted)] hover:border-[var(--darkroom-accent)]/30 hover:bg-[var(--darkroom-accent)]/5 transition-all"
                 >
                   {suggestion.text}
                 </button>
@@ -924,7 +924,7 @@ export function RightPanel({
             >
               <div className="flex items-center gap-2">
                 <LEDIndicator state={showHistory ? "active" : "off"} size="sm" />
-                <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">
+                <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">
                   History ({history.length})
                 </span>
               </div>
@@ -966,24 +966,24 @@ export function RightPanel({
         <div className="mt-6 p-3 rounded-lg bg-gradient-to-b from-[var(--camera-body-deep)] to-transparent border border-white/5">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-1.5 h-1.5 rounded-full bg-[var(--darkroom-accent)]" />
-            <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Pro Tips</span>
+            <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Pro Tips</span>
           </div>
           <div className="space-y-2.5">
             <div className="flex items-start gap-2">
               <span className="text-[10px] text-[var(--darkroom-accent)] mt-0.5">›</span>
-              <p className="text-[10px] leading-relaxed text-[var(--darkroom-text-dim)]">
+              <p className="text-[12px] leading-relaxed text-[var(--darkroom-text-dim)]">
                 Add a <span className="text-[var(--darkroom-text-muted)]">product image</span> first for best results
               </p>
             </div>
             <div className="flex items-start gap-2">
               <span className="text-[10px] text-[var(--darkroom-accent)] mt-0.5">›</span>
-              <p className="text-[10px] leading-relaxed text-[var(--darkroom-text-dim)]">
+              <p className="text-[12px] leading-relaxed text-[var(--darkroom-text-dim)]">
                 Describe <span className="text-[var(--darkroom-text-muted)]">mood & setting</span>, not just the product
               </p>
             </div>
             <div className="flex items-start gap-2">
               <span className="text-[10px] text-[var(--darkroom-accent)] mt-0.5">›</span>
-              <p className="text-[10px] leading-relaxed text-[var(--darkroom-text-dim)]">
+              <p className="text-[12px] leading-relaxed text-[var(--darkroom-text-dim)]">
                 Use <span className="text-[var(--darkroom-text-muted)]">Settings</span> tab for aspect ratio & quality
               </p>
             </div>

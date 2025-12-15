@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Save, Settings, HelpCircle } from "lucide-react";
+import { ArrowLeft, Save, Settings, HelpCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -28,24 +28,51 @@ export function DarkRoomHeader({
 }: DarkRoomHeaderProps) {
   const navigate = useNavigate();
 
+  // Exit to Create page
+  const handleExit = () => {
+    navigate("/create");
+  };
+
+  // Go back to Create (prevents loop with Light Table)
+  const handleBack = () => {
+    navigate("/create");
+  };
+
   return (
     <header className="dark-room-header">
-      {/* Left: Back + Title */}
-      <div className="flex items-center gap-4">
+      {/* Left: Back + Exit + Title */}
+      <div className="flex items-center gap-2">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate(-1)}
+                onClick={handleBack}
                 className="h-9 w-9 p-0 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-white/5 border border-transparent hover:border-[var(--darkroom-border)]"
               >
                 <ArrowLeft className="w-5 h-5" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              <p>Exit Dark Room</p>
+              <p>Back</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleExit}
+                className="h-9 w-9 p-0 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-white/5 border border-transparent hover:border-[var(--darkroom-border)]"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>Exit to Create</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
