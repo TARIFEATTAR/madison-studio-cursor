@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { ThumbnailCarousel } from "./ThumbnailCarousel";
 import { DevelopingAnimation, useDevelopingAnimation } from "./DevelopingAnimation";
+import { LEDIndicator } from "./LEDIndicator";
 import { cn } from "@/lib/utils";
 
 interface GeneratedImage {
@@ -52,8 +53,33 @@ interface CenterCanvasProps {
   newlyGeneratedId?: string | null;
 }
 
-// Generating State with Chemical Bath Animation
-function GeneratingState({ pendingImageUrl }: { pendingImageUrl?: string }) {
+// Generating State with Chemical Bath Animation & Camera Capture Sequence
+function GeneratingState({ 
+  pendingImageUrl, 
+  showShutter = true 
+}: { 
+  pendingImageUrl?: string;
+  showShutter?: boolean;
+}) {
+  const [capturePhase, setCapturePhase] = useState<"shutter" | "flash" | "developing">("shutter");
+
+  useEffect(() => {
+    // Camera capture sequence:
+    // 1. Shutter click (150ms)
+    // 2. Sensor flash (400ms)
+    // 3. Developing animation
+    if (showShutter) {
+      const shutterTimer = setTimeout(() => setCapturePhase("flash"), 150);
+      const flashTimer = setTimeout(() => setCapturePhase("developing"), 550);
+      return () => {
+        clearTimeout(shutterTimer);
+        clearTimeout(flashTimer);
+      };
+    } else {
+      setCapturePhase("developing");
+    }
+  }, [showShutter]);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -61,10 +87,22 @@ function GeneratingState({ pendingImageUrl }: { pendingImageUrl?: string }) {
       exit={{ opacity: 0 }}
       className="generating-state"
     >
+      {/* Shutter overlay - quick black flash */}
+      <div className={cn(
+        "shutter-overlay",
+        capturePhase === "shutter" && "shutter-overlay--active"
+      )} />
+      
+      {/* Sensor flash - warm neutral bloom */}
+      <div className={cn(
+        "sensor-flash",
+        capturePhase === "flash" && "sensor-flash--active"
+      )} />
+
       <DevelopingAnimation
         imageUrl={pendingImageUrl}
         phase="submerged"
-        developingText="Exposing image..."
+        developingText={capturePhase === "developing" ? "Exposing image..." : "Capturing..."}
       />
     </motion.div>
   );
@@ -228,7 +266,7 @@ function ImageReveal({
   );
 }
 
-// Empty State
+// Empty State - Minimal viewfinder
 function EmptyState() {
   return (
     <motion.div
@@ -237,12 +275,12 @@ function EmptyState() {
       exit={{ opacity: 0 }}
       className="empty-state"
     >
-      <div className="empty-frame">
-        <Camera className="center-canvas__empty-icon" strokeWidth={1} />
-        <h3 className="center-canvas__empty-title">Your canvas awaits</h3>
-        <p className="center-canvas__empty-description">
-          Describe your vision below and watch Madison bring it to life
-        </p>
+      {/* Minimal crosshair indicator */}
+      <div className="w-16 h-16 relative">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-4 bg-[var(--darkroom-border-strong)]" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-4 bg-[var(--darkroom-border-strong)]" />
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-px bg-[var(--darkroom-border-strong)]" />
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-px bg-[var(--darkroom-border-strong)]" />
       </div>
     </motion.div>
   );
@@ -289,8 +327,56 @@ export function CenterCanvas({
 
   return (
     <section className="center-canvas">
-      {/* Main Viewport */}
-      <div className="center-canvas__viewport">
+      {/* Main Viewport with Viewfinder Brackets */}
+      <div className={cn(
+        "center-canvas__viewport viewfinder-brackets viewfinder-brackets-bottom",
+        isGenerating && "viewfinder-brackets--active"
+      )}>
+        {/* Focus Point Indicator - shows during generation */}
+        <div className={cn(
+          "focus-point",
+          isGenerating && "focus-point--visible"
+        )} />
+        
+        {/* Status Panel - Top Left Corner */}
+        <div className="absolute top-4 left-4 z-10">
+          <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-black/60 backdrop-blur-sm border border-[var(--darkroom-border)]">
+            <LEDIndicator 
+              state={isGenerating ? "processing" : heroImage ? "ready" : "off"} 
+              size="lg"
+            />
+            <div className="flex flex-col">
+              <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-[var(--darkroom-text-dim)]">
+                Status
+              </span>
+              <span className={cn(
+                "text-[11px] font-mono uppercase tracking-wider",
+                isGenerating 
+                  ? "text-[var(--led-active)]" 
+                  : heroImage 
+                    ? "text-[var(--led-ready)]" 
+                    : "text-[var(--darkroom-text-muted)]"
+              )}>
+                {isGenerating ? "Capturing" : heroImage ? "Ready" : "Standby"}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Frame Counter - Top Right Corner */}
+        <div className="absolute top-4 right-4 z-10">
+          <div className="px-3 py-2 rounded-lg bg-black/60 backdrop-blur-sm border border-[var(--darkroom-border)]">
+            <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-[var(--darkroom-text-dim)] block mb-0.5">
+              Frames
+            </span>
+            <span className="text-[14px] font-mono font-bold tracking-wider">
+              <span className="text-[var(--led-ready)]">{images.length}</span>
+              <span className="text-[var(--darkroom-text-dim)]">/</span>
+              <span className="text-[var(--darkroom-text-muted)]">{maxImages}</span>
+            </span>
+          </div>
+        </div>
+        
         <AnimatePresence mode="wait">
           {isGenerating ? (
             <GeneratingState key="generating" />

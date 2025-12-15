@@ -31,9 +31,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
+    // Connection timeout - if Supabase doesn't respond in 8 seconds, stop waiting
+    const connectionTimeout = setTimeout(() => {
+      if (loading) {
+        logger.error("[AuthProvider] Connection timeout - Supabase may be unavailable");
+        setSession(null);
+        setUser(null);
+        setLoading(false);
+      }
+    }, 8000);
+
     // Check for existing session
     supabase.auth.getSession()
       .then(({ data: { session }, error }) => {
+        clearTimeout(connectionTimeout);
         if (error) {
           logger.error("[AuthProvider] getSession error:", error);
           setSession(null);
@@ -46,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       })
       .catch((err) => {
+        clearTimeout(connectionTimeout);
         logger.error("[AuthProvider] getSession exception:", err);
         setSession(null);
         setUser(null);
@@ -53,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
     return () => {
+      clearTimeout(connectionTimeout);
       subscription.unsubscribe();
     };
   }, []);

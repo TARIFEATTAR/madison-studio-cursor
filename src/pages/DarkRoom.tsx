@@ -29,6 +29,9 @@ import {
 } from "@/components/darkroom";
 import type { ProModeSettings } from "@/components/darkroom";
 
+// Camera Feedback (sound + flash)
+import { useCameraFeedback } from "@/hooks/useCameraFeedback";
+
 // Hook to detect mobile
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
@@ -165,6 +168,28 @@ export default function DarkRoom() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Camera Feedback (shutter sound + flash)
+  const { trigger: triggerCameraFeedback, FlashOverlay, preload: preloadSound } = useCameraFeedback({
+    soundEnabled: true,
+    flashEnabled: true,
+  });
+
+  // Preload sound on first user interaction
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+      console.log("[DarkRoom] First user interaction - preloading audio");
+      preloadSound();
+      window.removeEventListener("click", handleFirstInteraction);
+      window.removeEventListener("keydown", handleFirstInteraction);
+    };
+    window.addEventListener("click", handleFirstInteraction, { once: true });
+    window.addEventListener("keydown", handleFirstInteraction, { once: true });
+    return () => {
+      window.removeEventListener("click", handleFirstInteraction);
+      window.removeEventListener("keydown", handleFirstInteraction);
+    };
+  }, [preloadSound]);
+
   // Derived
   const heroImage = useMemo(
     () => images.find((img) => img.id === heroImageId) || images[images.length - 1] || null,
@@ -218,6 +243,9 @@ export default function DarkRoom() {
     }
 
     const effectivePrompt = prompt.trim() || "Professional product photography";
+    
+    // Trigger camera feedback (sound + flash) immediately on capture
+    triggerCameraFeedback();
     
     setIsGenerating(true);
 
@@ -486,31 +514,35 @@ export default function DarkRoom() {
   // Mobile uses the new tile-based UI
   if (isMobile) {
     return (
-      <MobileDarkRoom
-        prompt={prompt}
-        onPromptChange={setPrompt}
-        onGenerate={handleGenerate}
-        isGenerating={isGenerating}
-        canGenerate={canGenerate}
-        images={images}
-        heroImageId={heroImageId}
-        onSetHero={setHeroImageId}
-        onSaveImage={handleSaveImage}
-        onDeleteImage={handleDeleteImage}
-        onRefineImage={handleOpenLightTable}
-        maxImages={MAX_IMAGES_PER_SESSION}
-        newlyGeneratedId={newlyGeneratedId}
-        selectedProduct={selectedProduct}
-        onProductSelect={setSelectedProduct}
-        productImage={productImage}
-        onProductImageUpload={setProductImage}
-        backgroundImage={backgroundImage}
-        onBackgroundImageUpload={setBackgroundImage}
-        styleReference={styleReference}
-        onStyleReferenceUpload={setStyleReference}
-        proSettings={proSettings}
-        onProSettingsChange={setProSettings}
-      />
+      <>
+        <MobileDarkRoom
+          prompt={prompt}
+          onPromptChange={setPrompt}
+          onGenerate={handleGenerate}
+          isGenerating={isGenerating}
+          canGenerate={canGenerate}
+          images={images}
+          heroImageId={heroImageId}
+          onSetHero={setHeroImageId}
+          onSaveImage={handleSaveImage}
+          onDeleteImage={handleDeleteImage}
+          onRefineImage={handleOpenLightTable}
+          maxImages={MAX_IMAGES_PER_SESSION}
+          newlyGeneratedId={newlyGeneratedId}
+          selectedProduct={selectedProduct}
+          onProductSelect={setSelectedProduct}
+          productImage={productImage}
+          onProductImageUpload={setProductImage}
+          backgroundImage={backgroundImage}
+          onBackgroundImageUpload={setBackgroundImage}
+          styleReference={styleReference}
+          onStyleReferenceUpload={setStyleReference}
+          proSettings={proSettings}
+          onProSettingsChange={setProSettings}
+        />
+        {/* Camera Flash Overlay for mobile */}
+        <FlashOverlay />
+      </>
     );
   }
 
@@ -583,6 +615,9 @@ export default function DarkRoom() {
           isGenerating={isGenerating}
         />
       </div>
+
+      {/* Camera Flash Overlay - triggers on generate */}
+      <FlashOverlay />
     </div>
   );
 }

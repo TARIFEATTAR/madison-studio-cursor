@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
+import { LEDIndicator } from "./LEDIndicator";
 
 interface DarkRoomHeaderProps {
   sessionCount: number;
@@ -38,7 +39,7 @@ export function DarkRoomHeader({
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate(-1)}
-                className="h-9 w-9 p-0 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-[var(--darkroom-surface-elevated)]"
+                className="h-9 w-9 p-0 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-white/5 border border-transparent hover:border-[var(--darkroom-border)]"
               >
                 <ArrowLeft className="w-5 h-5" />
               </Button>
@@ -58,14 +59,18 @@ export function DarkRoomHeader({
         </motion.h1>
       </div>
 
-      {/* Center: Session Info */}
+      {/* Center: Session Info with LED */}
       <div className="dark-room-header__session">
+        <LEDIndicator 
+          state={sessionCount > 0 ? "ready" : "off"} 
+          size="md" 
+        />
         <span>Session</span>
         <span className="dark-room-header__session-count">{sessionCount}</span>
         {savedCount > 0 && (
           <Badge
             variant="outline"
-            className="ml-2 bg-[var(--darkroom-success)]/10 text-[var(--darkroom-success)] border-[var(--darkroom-success)]/30"
+            className="ml-2 bg-[var(--led-ready)]/10 text-[var(--led-ready)] border-[var(--led-ready)]/30 font-mono text-[10px] uppercase tracking-wider"
           >
             {savedCount} saved
           </Badge>
@@ -80,7 +85,7 @@ export function DarkRoomHeader({
             size="sm"
             onClick={onSaveAll}
             disabled={isSaving}
-            className="h-9 px-3 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-[var(--darkroom-surface-elevated)]"
+            className="h-9 px-3 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-accent)] hover:bg-white/5 border border-transparent hover:border-[var(--darkroom-border)] font-mono text-xs uppercase tracking-wider"
           >
             <Save className="w-4 h-4 mr-2" />
             Save All
@@ -94,7 +99,7 @@ export function DarkRoomHeader({
                 variant="ghost"
                 size="sm"
                 onClick={() => window.open("/docs/dark-room", "_blank")}
-                className="h-9 w-9 p-0 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-[var(--darkroom-surface-elevated)]"
+                className="h-9 w-9 p-0 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-white/5 border border-transparent hover:border-[var(--darkroom-border)]"
               >
                 <HelpCircle className="w-4 h-4" />
               </Button>
@@ -113,7 +118,7 @@ export function DarkRoomHeader({
                   variant="ghost"
                   size="sm"
                   onClick={onOpenSettings}
-                  className="h-9 w-9 p-0 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-[var(--darkroom-surface-elevated)]"
+                  className="h-9 w-9 p-0 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-white/5 border border-transparent hover:border-[var(--darkroom-border)]"
                 >
                   <Settings className="w-4 h-4" />
                 </Button>

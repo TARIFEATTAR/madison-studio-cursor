@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Loader2 } from "lucide-react";
+import { Camera, Loader2, Aperture } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LEDIndicator } from "./LEDIndicator";
 
 interface GenerateButtonProps {
   hasProduct: boolean;
@@ -33,6 +34,9 @@ export function GenerateButton({
 
   const canGenerate = !disabled && !isGenerating && sessionCount < maxImages;
   const atLimit = sessionCount >= maxImages;
+  
+  // Determine LED state
+  const ledState = isGenerating ? "processing" : canGenerate ? "ready" : "off";
 
   // Generate contextual tip
   const getTip = () => {
@@ -58,22 +62,37 @@ export function GenerateButton({
 
   return (
     <div className="generate-button-container">
-      {/* Active Features Indicator */}
-      <AnimatePresence>
-        {activeFeatures.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -5 }}
-            className="active-features"
-          >
-            {activeFeatures.join(" + ")}
-            {proSettingsCount > 0 && ` • Pro Mode (${proSettingsCount})`}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Status Bar with LED */}
+      <div className="flex items-center justify-center gap-3 mb-3">
+        <LEDIndicator state={ledState} size="md" />
+        <AnimatePresence mode="wait">
+          {activeFeatures.length > 0 ? (
+            <motion.div
+              key="features"
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              className="text-[10px] font-mono uppercase tracking-[0.1em] text-[var(--led-ready)]"
+              style={{ textShadow: '0 0 8px rgba(0, 255, 102, 0.3)' }}
+            >
+              {activeFeatures.join(" + ")}
+              {proSettingsCount > 0 && ` • PRO (${proSettingsCount})`}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="standby"
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              className="text-[10px] font-mono uppercase tracking-[0.1em] text-[var(--darkroom-text-dim)]"
+            >
+              Standby
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
-      {/* Main Button */}
+      {/* Main Button - Shutter Release Style */}
       <motion.button
         className={cn(
           "generate-button",
@@ -81,8 +100,8 @@ export function GenerateButton({
         )}
         onClick={onGenerate}
         disabled={!canGenerate}
-        whileHover={canGenerate ? { scale: 1.02 } : {}}
-        whileTap={canGenerate ? { scale: 0.98 } : {}}
+        whileHover={canGenerate ? { y: -1 } : {}}
+        whileTap={canGenerate ? { y: 2 } : {}}
       >
         <AnimatePresence mode="wait">
           {!isGenerating ? (
@@ -93,9 +112,9 @@ export function GenerateButton({
               exit={{ opacity: 0 }}
               className="button-content"
             >
-              <Camera size={18} />
+              <Aperture size={18} />
               <span>
-                {hasProduct ? "Enhance Image" : "Generate Image"}
+                {hasProduct ? "Capture" : "Generate"}
               </span>
             </motion.div>
           ) : (
@@ -122,11 +141,10 @@ export function GenerateButton({
           <motion.div
             className="button-glow"
             animate={{
-              opacity: [0.3, 0.6, 0.3],
-              scale: [1, 1.05, 1],
+              opacity: [0.2, 0.5, 0.2],
             }}
             transition={{
-              duration: 2,
+              duration: 2.5,
               repeat: Infinity,
               ease: "easeInOut",
             }}
@@ -143,7 +161,7 @@ export function GenerateButton({
             exit={{ opacity: 0, y: -5 }}
             className={cn(
               "generate-tip",
-              atLimit && "text-[var(--darkroom-error)]"
+              atLimit && "text-[var(--led-error)]"
             )}
           >
             {tip}

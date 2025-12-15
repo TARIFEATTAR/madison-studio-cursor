@@ -16,6 +16,18 @@ export {
   DEVELOPING_PRESETS 
 } from './DevelopingAnimation';
 
+// Camera Body Aesthetic Components
+export { 
+  LEDIndicator, 
+  CameraPanelHeader, 
+  SettingsRow,
+  LCDDisplay,
+  LCDCounter,
+  ModeDialButton,
+  FirmwarePresetButton,
+  type LEDState 
+} from './LEDIndicator';
+
 // Mobile Tile-based UI
 export { MobileDarkRoom } from './MobileDarkRoom';
 export { MobileSettingsTile } from './MobileSettingsTile';

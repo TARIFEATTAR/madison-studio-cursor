@@ -1,29 +1,133 @@
 /* =============================================================================
    DARK ROOM - Image Generation Studio
    Madison Studio's photography-inspired image creation interface
+   
+   Design Philosophy: "Professional Camera Dark Room Aesthetic"
+   - Glossy anodized black surfaces (like Hasselblad, Canon Pro)
+   - OLED-style contrast with deep blacks
+   - Neon LED indicators (green/yellow/red) with soft glow
+   - LCD-style technical typography
+   - Hairline borders with glass/metal textures
+   - Cinematic low-key studio lighting feel
+   - Firmware-style UI, not consumer app
    ============================================================================= */
 
 /* -----------------------------------------------------------------------------
-   CSS Variables
+   CSS Variables - Professional Camera Body Design Language
    ----------------------------------------------------------------------------- */
 :root {
-  /* Dark Room Color Palette */
-  --darkroom-bg: #0A0908;
-  --darkroom-surface: #1A1816;
-  --darkroom-surface-elevated: #252220;
-  --darkroom-border: #2F2A26;
-  --darkroom-border-subtle: rgba(47, 42, 38, 0.5);
-  --darkroom-text: #F5F1E8;
-  --darkroom-text-muted: rgba(245, 241, 232, 0.6);
-  --darkroom-text-dim: rgba(245, 241, 232, 0.4);
+  /* === PRIMARY DARK ROOM PALETTE === */
+  /* Deep blacks with OLED-style contrast */
+  --darkroom-bg: #050505;
+  --darkroom-bg-gradient: linear-gradient(180deg, #080808 0%, #030303 100%);
+  --darkroom-surface: #0c0c0c;
+  --darkroom-surface-elevated: #151515;
+  --darkroom-surface-glossy: #0a0a0a;
+  
+  /* Hairline borders - subtle but present */
+  --darkroom-border: rgba(255, 255, 255, 0.08);
+  --darkroom-border-subtle: rgba(255, 255, 255, 0.04);
+  --darkroom-border-strong: rgba(255, 255, 255, 0.12);
+  
+  /* Text hierarchy */
+  --darkroom-text: #E8E6E3;
+  --darkroom-text-muted: rgba(232, 230, 227, 0.65);
+  --darkroom-text-dim: rgba(232, 230, 227, 0.35);
+  
+  /* Madison Brass Accent - warm metal */
   --darkroom-accent: #B8956A;
   --darkroom-accent-hover: #C9A67B;
+  --darkroom-accent-glow: rgba(184, 149, 106, 0.4);
   --darkroom-glow: #D4AF37;
-  --darkroom-success: #4ADE80;
-  --darkroom-success-glow: rgba(74, 222, 128, 0.3);
-  --darkroom-error: #EF4444;
   
-  /* Spacing System */
+  /* Status Colors */
+  --darkroom-success: #4ADE80;
+  --darkroom-success-glow: rgba(74, 222, 128, 0.35);
+  --darkroom-error: #EF4444;
+  --darkroom-error-glow: rgba(239, 68, 68, 0.35);
+  
+  /* === CAMERA BODY AESTHETIC === */
+  /* Glossy black anodized surfaces - precision machined feel */
+  --camera-body: #080808;
+  --camera-body-deep: #040404;
+  --camera-body-gloss: linear-gradient(
+    180deg, 
+    rgba(255, 255, 255, 0.06) 0%, 
+    rgba(255, 255, 255, 0.02) 20%,
+    transparent 50%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+  --camera-body-reflection: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    transparent 30%,
+    transparent 70%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  
+  /* Camera Panel Shadow - depth and dimension */
+  --camera-panel-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    0 4px 20px rgba(0, 0, 0, 0.6),
+    0 1px 3px rgba(0, 0, 0, 0.4);
+  
+  /* Camera Panel Hover - subtle luminance lift */
+  --camera-panel-hover: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.10) 0%,
+    rgba(255, 255, 255, 0.03) 30%,
+    transparent 60%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+  
+  /* Glass/Metal Textures */
+  --glass-overlay: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.04) 20%,
+    transparent 50%
+  );
+  
+  /* === NEON LED INDICATOR SYSTEM === */
+  /* Professional camera LEDs - communicate state, not decoration */
+  --led-ready: #00FF66;       /* Neon Green - system ready */
+  --led-active: #FFCC00;      /* Neon Yellow/Amber - processing */
+  --led-error: #FF3333;       /* Neon Red - error/warning */
+  --led-off: #1a1a1a;
+  --led-standby: #2a2a2a;     /* Subtle standby state */
+  
+  /* LED Glow Effects - soft OLED bloom */
+  --led-glow-ready: 
+    0 0 4px #00FF66,
+    0 0 12px rgba(0, 255, 102, 0.6),
+    0 0 24px rgba(0, 255, 102, 0.3);
+  --led-glow-active: 
+    0 0 4px #FFCC00,
+    0 0 12px rgba(255, 204, 0, 0.6),
+    0 0 24px rgba(255, 204, 0, 0.3);
+  --led-glow-error: 
+    0 0 4px #FF3333,
+    0 0 12px rgba(255, 51, 51, 0.6),
+    0 0 24px rgba(255, 51, 51, 0.3);
+  
+  /* === LCD DISPLAY LANGUAGE === */
+  /* Firmware-level technical readouts */
+  --lcd-text: #b8ffb8;
+  --lcd-text-bright: #00FF66;
+  --lcd-text-active: #FFCC00;
+  --lcd-bg: rgba(0, 255, 102, 0.05);
+  --lcd-bg-active: rgba(255, 204, 0, 0.08);
+  --lcd-font: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Courier New', monospace;
+  --lcd-glow: 0 0 8px rgba(184, 255, 184, 0.4);
+  
+  /* === VIEWFINDER & FOCUS SYSTEM === */
+  --viewfinder-bracket: rgba(255, 255, 255, 0.35);
+  --viewfinder-bracket-active: rgba(255, 255, 255, 0.7);
+  --focus-point: #FF3333;
+  --focus-point-glow: 0 0 8px rgba(255, 51, 51, 0.6);
+  
+  /* === SPACING SYSTEM (4px base) === */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
@@ -35,40 +139,67 @@
   --font-display: 'Cormorant Garamond', Georgia, serif;
   --font-body: 'Lato', -apple-system, sans-serif;
   
-  /* Animation Timing */
+  /* === ANIMATION TIMING === */
   --duration-instant: 0.1s;
   --duration-fast: 0.2s;
   --duration-normal: 0.3s;
   --duration-slow: 0.5s;
   --duration-reveal: 0.8s;
+  --duration-shutter: 0.15s;
   
   /* Easing */
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-shutter: cubic-bezier(0.25, 0.1, 0.25, 1);
   
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px rgba(184, 149, 106, 0.3);
-  --shadow-glow-lg: 0 0 40px rgba(212, 175, 55, 0.4);
+  /* === SHADOWS & DEPTH === */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.7);
+  --shadow-glow: 0 0 24px rgba(184, 149, 106, 0.3);
+  --shadow-glow-lg: 0 0 48px rgba(212, 175, 55, 0.4);
+  --shadow-optical: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 2px 12px rgba(0, 0, 0, 0.5);
+  --shadow-inset-deep: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
 }
 
 /* -----------------------------------------------------------------------------
-   Base Container
+   Base Container - Camera Body Environment
    ----------------------------------------------------------------------------- */
 .dark-room-container {
   min-height: 100vh;
   height: 100vh;
   overflow: hidden;
   background: var(--darkroom-bg);
+  background-image: var(--darkroom-bg-gradient);
   color: var(--darkroom-text);
   font-family: var(--font-body);
+  /* Subtle noise texture for anodized metal feel */
+  position: relative;
+}
+
+.dark-room-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.015'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dark-room-container > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* -----------------------------------------------------------------------------
-   Header
+   Header - Camera Top Plate Aesthetic
    ----------------------------------------------------------------------------- */
 .dark-room-header {
   display: flex;
@@ -76,8 +207,32 @@
   justify-content: space-between;
   padding: var(--space-md) var(--space-lg);
   border-bottom: 1px solid var(--darkroom-border);
-  background: var(--darkroom-surface);
+  background: var(--camera-body);
+  background-image: var(--camera-body-gloss);
   height: 64px;
+  position: relative;
+  /* Top plate shadow */
+  box-shadow: 
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Glossy highlight line at top */
+.dark-room-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 20%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.1) 80%,
+    transparent 100%
+  );
 }
 
 .dark-room-header__title {
@@ -85,14 +240,18 @@
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--darkroom-accent);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
+  text-shadow: 0 0 20px var(--darkroom-accent-glow);
 }
 
 .dark-room-header__session {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
+  font-family: var(--lcd-font);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   color: var(--darkroom-text-muted);
 }
 
@@ -100,14 +259,20 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 24px;
-  height: 24px;
+  min-width: 28px;
+  height: 28px;
   padding: 0 var(--space-sm);
-  background: var(--darkroom-accent);
-  color: var(--darkroom-bg);
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  background: var(--lcd-bg);
+  color: var(--led-ready);
+  border: 1px solid rgba(0, 255, 102, 0.2);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-family: var(--lcd-font);
+  text-shadow: var(--lcd-glow);
+  box-shadow: 
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 8px rgba(0, 255, 102, 0.15);
 }
 
 /* -----------------------------------------------------------------------------
@@ -137,17 +302,40 @@
 }
 
 /* -----------------------------------------------------------------------------
-   Left Rail
+   Left Rail - Camera Control Panel
    ----------------------------------------------------------------------------- */
 .left-rail {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-lg);
   padding: var(--space-lg);
   border-right: 1px solid var(--darkroom-border);
-  background: var(--darkroom-surface);
+  background: var(--camera-body);
+  background-image: var(--camera-body-gloss);
   overflow-y: auto;
   overflow-x: hidden;
+  position: relative;
+  /* Glossy panel depth */
+  box-shadow: 
+    inset -1px 0 0 rgba(255, 255, 255, 0.03),
+    2px 0 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Side highlight for glass edge effect */
+.left-rail::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.02) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
 }
 
 .left-rail__section {
@@ -157,17 +345,36 @@
 }
 
 .left-rail__section-title {
-  display: block;
-  font-size: 12px;
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 10px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
   margin-bottom: var(--space-sm);
   color: var(--darkroom-text-muted);
+  font-family: var(--lcd-font);
+}
+
+/* LED indicator dot before section titles */
+.left-rail__section-title::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--led-off);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.left-rail__section:has(.upload-zone--has-image) .left-rail__section-title::before,
+.left-rail__section:has(.has-image) .left-rail__section-title::before {
+  background: var(--led-ready);
+  box-shadow: var(--led-glow-ready);
 }
 
 /* -----------------------------------------------------------------------------
-   Upload Zones
+   Upload Zones - Camera Module Slots
    ----------------------------------------------------------------------------- */
 .upload-zone-container {
   margin-bottom: var(--space-lg);
@@ -178,52 +385,125 @@
 }
 
 .upload-zone-label {
-  display: block;
-  font-size: 12px;
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 10px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   margin-bottom: var(--space-sm);
-  color: var(--darkroom-text);
+  color: var(--darkroom-text-muted);
+  font-family: var(--lcd-font);
 }
 
 .upload-zone {
   position: relative;
   width: 100%;
   height: 160px;
-  border: 1px dashed var(--darkroom-border);
+  border: 1px solid var(--darkroom-border);
   border-radius: 8px;
-  background: var(--darkroom-surface);
+  background: var(--camera-body-deep);
+  background-image: var(--camera-body-gloss);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--duration-normal) var(--ease-out);
   overflow: hidden;
+  /* Inset shadow for module slot feel */
+  box-shadow: 
+    inset 0 2px 8px rgba(0, 0, 0, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.03),
+    0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Corner brackets for viewfinder feel */
+.upload-zone::before,
+.upload-zone::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: var(--darkroom-border-strong);
+  border-style: solid;
+  pointer-events: none;
+  transition: all var(--duration-fast) var(--ease-out);
+  opacity: 0.5;
+}
+
+.upload-zone::before {
+  top: 8px;
+  left: 8px;
+  border-width: 1px 0 0 1px;
+}
+
+.upload-zone::after {
+  bottom: 8px;
+  right: 8px;
+  border-width: 0 1px 1px 0;
 }
 
 .upload-zone:hover {
-  border-color: rgba(184, 149, 106, 0.4);
-  background: rgba(47, 42, 38, 0.5);
+  border-color: var(--darkroom-accent);
+  background: linear-gradient(
+    180deg,
+    rgba(184, 149, 106, 0.08) 0%,
+    var(--camera-body-deep) 100%
+  );
+  box-shadow: 
+    inset 0 2px 8px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(184, 149, 106, 0.15);
+}
+
+.upload-zone:hover::before,
+.upload-zone:hover::after {
+  border-color: var(--darkroom-accent);
+  opacity: 0.8;
 }
 
 /* Dragging State with Glow */
 .upload-zone--dragging,
 .upload-zone.dragging {
-  border-color: var(--darkroom-accent);
-  background: rgba(47, 42, 38, 0.8);
+  border-color: var(--led-active);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 204, 0, 0.1) 0%,
+    var(--camera-body-deep) 100%
+  );
   box-shadow: 
-    0 0 24px rgba(184, 149, 106, 0.2),
-    inset 0 0 48px rgba(184, 149, 106, 0.1);
+    inset 0 2px 8px rgba(0, 0, 0, 0.3),
+    0 0 32px rgba(255, 204, 0, 0.2),
+    inset 0 0 48px rgba(255, 204, 0, 0.05);
+}
+
+.upload-zone--dragging::before,
+.upload-zone--dragging::after,
+.upload-zone.dragging::before,
+.upload-zone.dragging::after {
+  border-color: var(--led-active);
+  opacity: 1;
 }
 
 /* Has Image State */
 .upload-zone--has-image,
 .upload-zone.has-image {
   border-style: solid;
-  border-color: var(--darkroom-border);
+  border-color: var(--led-ready);
+  border-width: 1px;
   padding: var(--space-sm);
   height: auto;
+  box-shadow: 
+    inset 0 2px 8px rgba(0, 0, 0, 0.4),
+    0 0 16px rgba(0, 255, 102, 0.15);
+}
+
+.upload-zone--has-image::before,
+.upload-zone--has-image::after,
+.upload-zone.has-image::before,
+.upload-zone.has-image::after {
+  border-color: var(--led-ready);
+  opacity: 0.6;
 }
 
 /* Animated Glow Border (SVG or Box Shadow) */
@@ -1173,7 +1453,7 @@
 }
 
 /* -----------------------------------------------------------------------------
-   Generate Button
+   Generate Button - Shutter Release
    ----------------------------------------------------------------------------- */
 .generate-button-container {
   position: sticky;
@@ -1183,18 +1463,20 @@
   background: linear-gradient(
     to bottom,
     transparent,
-    var(--darkroom-surface) 20%
+    var(--camera-body) 30%
   );
 }
 
 .active-features {
-  font-size: 11px;
-  color: var(--darkroom-accent);
+  font-size: 10px;
+  color: var(--led-ready);
   text-align: center;
   margin-bottom: var(--space-sm);
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
+  font-family: var(--lcd-font);
+  text-shadow: var(--lcd-glow);
 }
 
 .generate-button {
@@ -1205,38 +1487,74 @@
   gap: var(--space-sm);
   width: 100%;
   padding: var(--space-md) var(--space-lg);
-  background: linear-gradient(135deg, var(--darkroom-accent), var(--darkroom-glow));
-  border: none;
-  border-radius: 8px;
-  color: var(--darkroom-bg);
-  font-size: 14px;
+  background: var(--camera-body);
+  background-image: var(--camera-body-gloss);
+  border: 1px solid var(--darkroom-accent);
+  border-radius: 10px;
+  color: var(--darkroom-accent);
+  font-size: 13px;
   font-weight: 600;
-  font-family: var(--font-body);
+  font-family: var(--lcd-font);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   cursor: pointer;
   overflow: hidden;
-  transition: all 0.3s ease;
-  box-shadow: var(--shadow-md);
+  transition: all var(--duration-normal) var(--ease-out);
+  /* Shutter button depth */
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.3),
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(184, 149, 106, 0.2);
 }
 
 .generate-button:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
-  background: var(--darkroom-border);
+  border-color: var(--darkroom-border);
+  color: var(--darkroom-text-dim);
 }
 
 .generate-button:hover:not(:disabled) {
-  filter: brightness(1.1);
-  box-shadow: 0 4px 24px rgba(212, 175, 55, 0.4);
-  transform: translateY(-2px);
+  background: linear-gradient(
+    180deg,
+    rgba(184, 149, 106, 0.15) 0%,
+    var(--camera-body) 100%
+  );
+  border-color: var(--darkroom-glow);
+  color: var(--darkroom-glow);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.3),
+    0 4px 24px rgba(212, 175, 55, 0.3),
+    0 0 32px rgba(184, 149, 106, 0.2);
 }
 
 .generate-button:active:not(:disabled) {
-  transform: translateY(0);
+  transform: translateY(2px);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.4),
+    0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 .generate-button--generating {
-  background: var(--darkroom-surface-elevated);
-  color: var(--darkroom-accent);
+  background: var(--camera-body);
+  border-color: var(--led-active);
+  color: var(--led-active);
+  animation: shutter-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes shutter-pulse {
+  0%, 100% { 
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 16px rgba(255, 204, 0, 0.2);
+  }
+  50% { 
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 32px rgba(255, 204, 0, 0.4);
+  }
 }
 
 .button-content {
@@ -1252,31 +1570,40 @@
   inset: 0;
   background: radial-gradient(
     circle,
-    rgba(212, 175, 55, 0.4),
+    rgba(212, 175, 55, 0.3),
     transparent 70%
   );
   pointer-events: none;
   z-index: -1;
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+
+.generate-button:hover:not(:disabled) .button-glow {
+  opacity: 1;
 }
 
 .generate-button__tip,
 .generate-tip {
-  font-size: 12px;
-  color: var(--darkroom-text-muted);
+  font-size: 10px;
+  color: var(--darkroom-text-dim);
   text-align: center;
   margin-top: var(--space-sm);
-  font-style: italic;
+  font-family: var(--lcd-font);
+  letter-spacing: 0.05em;
 }
 
 /* -----------------------------------------------------------------------------
-   Center Canvas
+   Center Canvas - Viewfinder / Sensor Area
    ----------------------------------------------------------------------------- */
 .center-canvas {
   display: flex;
   flex-direction: column;
   background: var(--darkroom-bg);
+  background-image: var(--darkroom-bg-gradient);
   overflow: hidden;
   height: 100%;
+  position: relative;
 }
 
 .center-canvas__viewport,
@@ -1285,11 +1612,39 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--darkroom-surface);
+  background: var(--camera-body-deep);
+  background-image: 
+    radial-gradient(
+      ellipse at center,
+      rgba(20, 20, 20, 1) 0%,
+      rgba(8, 8, 8, 1) 70%,
+      rgba(4, 4, 4, 1) 100%
+    );
   border-radius: 0;
   position: relative;
   overflow: hidden;
   min-height: 400px;
+  /* Vignette effect for camera sensor feel */
+  box-shadow: 
+    inset 0 0 100px rgba(0, 0, 0, 0.5),
+    inset 0 0 200px rgba(0, 0, 0, 0.3);
+}
+
+/* Scan line overlay for that cinematic monitor feel */
+.center-canvas__viewport::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.5;
 }
 
 /* Empty State */
@@ -1529,11 +1884,29 @@
   background: linear-gradient(
     to bottom,
     transparent,
-    rgba(26, 24, 22, 0.5) 10%,
-    rgba(26, 24, 22, 0.5) 90%,
+    var(--camera-body) 20%,
+    var(--camera-body) 80%,
     transparent
   );
   border-top: 1px solid var(--darkroom-border);
+  position: relative;
+}
+
+/* Top edge highlight */
+.film-strip-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--space-lg);
+  right: var(--space-lg);
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.06) 30%,
+    rgba(255, 255, 255, 0.06) 70%,
+    transparent
+  );
 }
 
 .carousel-header {
@@ -1542,16 +1915,18 @@
 }
 
 .carousel-progress {
-  font-size: 11px;
-  color: var(--darkroom-text-muted);
-  font-weight: 500;
+  font-size: 10px;
+  color: var(--lcd-text);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-family: 'Courier New', monospace;
+  letter-spacing: 0.12em;
+  font-family: var(--lcd-font);
+  text-shadow: var(--lcd-glow);
 }
 
 .carousel-progress .saved-count {
-  color: var(--darkroom-success);
+  color: var(--led-ready);
+  text-shadow: 0 0 8px rgba(0, 255, 102, 0.4);
 }
 
 /* Film Strip Layout */
@@ -1559,14 +1934,17 @@
   display: grid;
   grid-template-columns: 24px 1fr 24px;
   gap: 0;
-  background: #0D0C0B;
-  padding: 12px 0;
-  border-radius: 8px;
+  background: var(--camera-body-deep);
+  background-image: var(--camera-body-gloss);
+  padding: 14px 0;
+  border-radius: 10px;
+  border: 1px solid var(--darkroom-border);
   position: relative;
   overflow: hidden;
   box-shadow: 
-    0 4px 20px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    inset 0 2px 8px rgba(0, 0, 0, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.03),
+    0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
 /* Film Edges with Sprocket Holes */
@@ -1945,23 +2323,48 @@
 }
 
 /* -----------------------------------------------------------------------------
-   Prompt Bar
+   Prompt Bar - Command Input Panel
    ----------------------------------------------------------------------------- */
 .prompt-bar {
   position: relative;
   display: flex;
   align-items: flex-end;
-  gap: var(--space-sm);
+  gap: var(--space-md);
   padding: var(--space-md) var(--space-lg);
-  background: var(--darkroom-surface);
+  background: var(--camera-body);
+  background-image: var(--camera-body-gloss);
   border-top: 1px solid var(--darkroom-border);
   overflow: hidden;
-  transition: all 0.2s ease;
+  transition: all var(--duration-normal) var(--ease-out);
+  /* Top plate shadow */
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 -2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .prompt-bar.focused {
-  border-color: var(--darkroom-accent);
-  box-shadow: 0 0 0 3px rgba(184, 149, 106, 0.1);
+  background: linear-gradient(
+    180deg,
+    rgba(184, 149, 106, 0.06) 0%,
+    var(--camera-body) 100%
+  );
+}
+
+/* Glow line at top when focused */
+.prompt-bar.focused::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--space-lg);
+  right: var(--space-lg);
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--darkroom-accent) 50%,
+    transparent 100%
+  );
+  opacity: 0.6;
 }
 
 .prompt-bar__input-container {
@@ -1977,7 +2380,7 @@
   min-height: 48px;
   max-height: 200px;
   padding: var(--space-md);
-  background: var(--darkroom-bg);
+  background: var(--camera-body-deep);
   border: 1px solid var(--darkroom-border);
   border-radius: 8px;
   color: var(--darkroom-text);
@@ -1986,35 +2389,51 @@
   resize: none;
   outline: none;
   line-height: 1.5;
-  transition: border-color var(--duration-fast) var(--ease-out);
+  transition: all var(--duration-fast) var(--ease-out);
+  /* Inset for input field feel */
+  box-shadow: 
+    inset 0 2px 6px rgba(0, 0, 0, 0.4),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.02);
 }
 
 .prompt-bar__input:focus,
 .prompt-input:focus {
   outline: none;
   border-color: var(--darkroom-accent);
-  box-shadow: 0 0 0 3px rgba(184, 149, 106, 0.15);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.3) 0%,
+    var(--camera-body-deep) 100%
+  );
+  box-shadow: 
+    inset 0 2px 6px rgba(0, 0, 0, 0.4),
+    0 0 16px rgba(184, 149, 106, 0.15);
 }
 
 .prompt-bar__input::placeholder,
 .prompt-input::placeholder {
-  color: var(--darkroom-text-muted);
+  color: var(--darkroom-text-dim);
   font-style: italic;
 }
 
 .prompt-submit {
-  width: 40px;
-  height: 40px;
-  background: var(--darkroom-accent);
-  border: none;
-  border-radius: 8px;
-  color: var(--darkroom-bg);
+  width: 48px;
+  height: 48px;
+  background: var(--camera-body);
+  background-image: var(--camera-body-gloss);
+  border: 1px solid var(--darkroom-border);
+  border-radius: 10px;
+  color: var(--darkroom-accent);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--duration-fast) var(--ease-out);
   flex-shrink: 0;
+  /* Button depth */
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 .prompt-submit:disabled {
@@ -2023,8 +2442,24 @@
 }
 
 .prompt-submit:hover:not(:disabled) {
-  background: var(--darkroom-glow);
-  box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
+  background: linear-gradient(
+    180deg,
+    rgba(184, 149, 106, 0.2) 0%,
+    var(--camera-body) 100%
+  );
+  border-color: var(--darkroom-accent);
+  color: var(--darkroom-glow);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 20px rgba(184, 149, 106, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.prompt-submit:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.3),
+    0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* Pro Mode Indicator */
@@ -2047,13 +2482,37 @@
   display: flex;
   flex-direction: column;
   border-left: 1px solid var(--darkroom-border);
-  background: var(--darkroom-surface);
+  background: var(--camera-body);
+  background-image: var(--camera-body-gloss);
   overflow: hidden;
   min-width: 280px;
   max-width: 320px;
   width: 300px;
   transition: all 0.3s ease-in-out;
-  margin-left: auto; /* Push to right edge */
+  margin-left: auto;
+  position: relative;
+  /* Panel depth */
+  box-shadow: 
+    inset 1px 0 0 rgba(255, 255, 255, 0.03),
+    -2px 0 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Left edge highlight */
+.right-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.02) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 10;
 }
 
 .right-panel--collapsed {
@@ -2480,6 +2939,1118 @@
   100% {
     left: 100%;
   }
+}
+
+/* =============================================================================
+   CAMERA BODY AESTHETIC - LED Indicators & Glossy Panels
+   Professional camera equipment styling for DarkRoom Settings
+   
+   Design Rules:
+   - LEDs only animate when actively processing
+   - No idle blinking, no rainbow effects
+   - Error state is static but intense
+   ============================================================================= */
+
+/* === LED PULSE ANIMATIONS === */
+/* Active only during processing - not idle */
+@keyframes led-pulse {
+  0%, 100% { 
+    opacity: 1;
+    box-shadow: var(--led-glow-active);
+  }
+  50% { 
+    opacity: 0.6;
+    box-shadow: 0 0 6px currentColor;
+  }
+}
+
+@keyframes led-pulse-fast {
+  0%, 100% { 
+    opacity: 1;
+    box-shadow: var(--led-glow-active);
+  }
+  50% { 
+    opacity: 0.5;
+    box-shadow: 0 0 4px currentColor;
+  }
+}
+
+/* Subtle ready pulse - very slow, almost imperceptible */
+@keyframes led-ready-breathe {
+  0%, 100% { 
+    opacity: 1;
+  }
+  50% { 
+    opacity: 0.85;
+  }
+}
+
+/* === LED INDICATOR COMPONENT - NEON GLOW === */
+.led-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--led-off);
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  /* Inner highlight for 3D effect */
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.1);
+  position: relative;
+}
+
+/* Neon glow halo effect */
+.led-indicator::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: transparent;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+/* Off state - dark but visible */
+.led-indicator--off {
+  background: var(--led-standby);
+  box-shadow: 
+    inset 0 1px 1px rgba(255,255,255,0.03),
+    inset 0 -1px 2px rgba(0,0,0,0.5);
+}
+
+/* Ready state - neon green, steady glow */
+.led-indicator--ready {
+  background: var(--led-ready);
+  box-shadow: var(--led-glow-ready);
+}
+
+.led-indicator--ready::after {
+  background: radial-gradient(
+    circle,
+    rgba(0, 255, 102, 0.3) 0%,
+    transparent 70%
+  );
+}
+
+/* Active state - neon amber, pulsing */
+.led-indicator--active {
+  background: var(--led-active);
+  box-shadow: var(--led-glow-active);
+  animation: led-pulse 1.5s ease-in-out infinite;
+}
+
+.led-indicator--active::after {
+  background: radial-gradient(
+    circle,
+    rgba(255, 204, 0, 0.3) 0%,
+    transparent 70%
+  );
+  animation: led-halo-pulse 1.5s ease-in-out infinite;
+}
+
+/* Processing state - neon amber, fast pulse */
+.led-indicator--processing {
+  background: var(--led-active);
+  box-shadow: var(--led-glow-active);
+  animation: led-pulse-fast 0.8s ease-in-out infinite;
+}
+
+.led-indicator--processing::after {
+  background: radial-gradient(
+    circle,
+    rgba(255, 204, 0, 0.4) 0%,
+    transparent 70%
+  );
+  animation: led-halo-pulse-fast 0.8s ease-in-out infinite;
+}
+
+/* Error state - neon red, static but intense */
+.led-indicator--error {
+  background: var(--led-error);
+  box-shadow: var(--led-glow-error);
+}
+
+.led-indicator--error::after {
+  background: radial-gradient(
+    circle,
+    rgba(255, 51, 51, 0.35) 0%,
+    transparent 70%
+  );
+}
+
+@keyframes led-halo-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+@keyframes led-halo-pulse-fast {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+
+/* === LCD DISPLAY STYLES === */
+/* Used for session counters, exposure indicators, status readouts */
+.lcd-display {
+  font-family: var(--lcd-font);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lcd-text);
+  background: var(--lcd-bg);
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 255, 102, 0.15);
+  text-shadow: var(--lcd-glow);
+  /* No animations - firmware-level, static feel */
+}
+
+.lcd-display--active {
+  color: var(--lcd-text-active);
+  background: var(--lcd-bg-active);
+  border-color: rgba(255, 204, 0, 0.2);
+  text-shadow: 0 0 8px rgba(255, 230, 102, 0.3);
+}
+
+.lcd-display--large {
+  font-size: 14px;
+  padding: 6px 12px;
+}
+
+/* LCD Counter - for frame/exposure counts */
+.lcd-counter {
+  font-family: var(--lcd-font);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--lcd-text);
+  opacity: 0.9;
+}
+
+.lcd-counter__value {
+  color: var(--led-ready);
+  font-weight: 700;
+}
+
+.lcd-counter__separator {
+  color: var(--darkroom-text-dim);
+  margin: 0 2px;
+}
+
+/* === CAMERA PANEL COMPONENT === */
+/* Every panel inherits this. No exceptions. */
+/* Glossy black anodized surface - precision machined feel */
+.camera-panel {
+  background: var(--camera-body);
+  background-image: var(--camera-body-gloss);
+  border-radius: 10px;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 4px 16px rgba(0, 0, 0, 0.5),
+    0 1px 3px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--darkroom-border);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+/* Glossy highlight reflection - premium top shine */
+.camera-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.03) 30%,
+    transparent 100%
+  );
+  pointer-events: none;
+  border-radius: 9px 9px 0 0;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+/* Edge highlight for glass feel */
+.camera-panel::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  right: 1px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 10%,
+    rgba(255, 255, 255, 0.1) 30%,
+    rgba(255, 255, 255, 0.1) 70%,
+    transparent 90%
+  );
+  pointer-events: none;
+  border-radius: 9px 9px 0 0;
+}
+
+/* Interaction: Hover - subtle luminance lift */
+.camera-panel:hover {
+  border-color: var(--darkroom-border-strong);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 6px 20px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.camera-panel:hover::before {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.04) 30%,
+    transparent 100%
+  );
+}
+
+/* Interaction: Active/Focused - Madison accent glow */
+.camera-panel--active,
+.camera-panel:focus-within {
+  border-color: rgba(184, 149, 106, 0.3);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 4px 16px rgba(0, 0, 0, 0.5),
+    0 0 24px rgba(184, 149, 106, 0.1);
+}
+
+/* Interaction: Focus - optical highlight */
+.camera-panel--focused {
+  border-color: var(--darkroom-border-strong);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 4px 16px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Camera Panel Header */
+.camera-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  /* Clickable header for expandable panels */
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.camera-panel__header:hover {
+  background: rgba(255,255,255,0.02);
+}
+
+.camera-panel__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--darkroom-text-muted);
+}
+
+.camera-panel__title svg {
+  width: 14px;
+  height: 14px;
+  color: var(--darkroom-accent);
+}
+
+/* Camera Panel Content */
+.camera-panel__content {
+  padding: 16px;
+}
+
+/* === MODE DIAL BUTTON === */
+/* Shot Types styled like physical camera mode dials */
+.mode-dial-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 10px 12px;
+  background: var(--camera-body);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  text-align: left;
+  overflow: hidden;
+}
+
+/* Top shine on mode dial */
+.mode-dial-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+  border-radius: 5px 5px 0 0;
+}
+
+.mode-dial-btn:hover {
+  border-color: rgba(255,255,255,0.12);
+  background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, var(--camera-body) 100%);
+}
+
+/* Active mode - LED glow effect */
+.mode-dial-btn--active {
+  border-color: rgba(0, 255, 102, 0.3);
+  background: linear-gradient(180deg, rgba(0, 255, 102, 0.06) 0%, var(--camera-body) 100%);
+}
+
+.mode-dial-btn--active::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  background: var(--led-ready);
+  border-radius: 50%;
+  box-shadow: var(--led-glow-ready);
+}
+
+.mode-dial-btn__icon {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.mode-dial-btn__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--darkroom-text);
+  margin-bottom: 2px;
+}
+
+.mode-dial-btn__desc {
+  font-size: 9px;
+  color: var(--darkroom-text-dim);
+  line-height: 1.3;
+}
+
+/* === FIRMWARE PRESET BUTTON === */
+/* Platform presets styled like firmware profile buttons */
+.firmware-preset-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 10px 12px;
+  background: var(--camera-body);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  text-align: left;
+}
+
+.firmware-preset-btn:hover {
+  border-color: rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.02);
+}
+
+/* Active firmware preset - amber LED */
+.firmware-preset-btn--active {
+  border-color: rgba(255, 204, 0, 0.3);
+  background: linear-gradient(180deg, rgba(255, 204, 0, 0.05) 0%, var(--camera-body) 100%);
+}
+
+.firmware-preset-btn--active::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  background: var(--led-active);
+  border-radius: 50%;
+  box-shadow: var(--led-glow-active);
+}
+
+.firmware-preset-btn__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--darkroom-text);
+  margin-bottom: 2px;
+}
+
+.firmware-preset-btn__desc {
+  font-size: 9px;
+  color: var(--darkroom-text-dim);
+}
+
+/* LCD Display Style for Values */
+.lcd-value {
+  font-family: var(--lcd-font);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  color: var(--led-ready);
+  background: var(--lcd-bg);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 255, 102, 0.2);
+}
+
+.lcd-value--active {
+  color: var(--led-active);
+  border-color: rgba(255, 204, 0, 0.2);
+  background: rgba(255, 204, 0, 0.05);
+}
+
+/* Exposure Meter - Horizontal LED Bar */
+.exposure-meter {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: var(--camera-body);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.exposure-meter__segment {
+  width: 100%;
+  height: 8px;
+  background: var(--led-off);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.exposure-meter__segment--lit {
+  background: var(--led-ready);
+  box-shadow: 0 0 8px rgba(0, 255, 102, 0.4);
+}
+
+.exposure-meter__segment--active {
+  background: var(--led-active);
+  box-shadow: 0 0 8px rgba(255, 204, 0, 0.4);
+}
+
+.exposure-meter__label {
+  font-family: var(--lcd-font);
+  font-size: 9px;
+  color: var(--darkroom-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  min-width: 24px;
+}
+
+/* Settings Row with LED */
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.settings-row:last-child {
+  border-bottom: none;
+}
+
+.settings-row__led {
+  flex-shrink: 0;
+}
+
+.settings-row__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-row__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--darkroom-text-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.settings-row__label svg {
+  width: 12px;
+  height: 12px;
+  opacity: 0.7;
+}
+
+/* === VIEWFINDER & FOCUS SYSTEM === */
+/* Appears sparingly - during capture or selection */
+/* No permanent overlays */
+
+/* Viewfinder Corner Brackets */
+.viewfinder-brackets {
+  position: relative;
+}
+
+.viewfinder-brackets::before,
+.viewfinder-brackets::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: var(--viewfinder-bracket);
+  border-style: solid;
+  pointer-events: none;
+  transition: all var(--duration-fast) var(--ease-out);
+  opacity: 0.6;
+}
+
+.viewfinder-brackets::before {
+  top: 16px;
+  left: 16px;
+  border-width: 2px 0 0 2px;
+}
+
+.viewfinder-brackets::after {
+  top: 16px;
+  right: 16px;
+  border-width: 2px 2px 0 0;
+}
+
+.viewfinder-brackets-bottom::before,
+.viewfinder-brackets-bottom::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: var(--viewfinder-bracket);
+  border-style: solid;
+  pointer-events: none;
+  transition: all var(--duration-fast) var(--ease-out);
+  opacity: 0.6;
+}
+
+.viewfinder-brackets-bottom::before {
+  bottom: 16px;
+  left: 16px;
+  border-width: 0 0 2px 2px;
+}
+
+.viewfinder-brackets-bottom::after {
+  bottom: 16px;
+  right: 16px;
+  border-width: 0 2px 2px 0;
+}
+
+/* Active viewfinder - during capture/generation */
+.viewfinder-brackets--active::before,
+.viewfinder-brackets--active::after,
+.viewfinder-brackets--active.viewfinder-brackets-bottom::before,
+.viewfinder-brackets--active.viewfinder-brackets-bottom::after {
+  border-color: var(--viewfinder-bracket-active);
+  opacity: 1;
+}
+
+/* Focus Point Indicator - center of viewfinder */
+.focus-point {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid var(--focus-point);
+  border-radius: 2px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+/* Show focus point during generation */
+.focus-point--visible {
+  opacity: 0.7;
+  animation: focus-lock 0.3s ease-out;
+}
+
+@keyframes focus-lock {
+  0% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.7;
+  }
+}
+
+.focus-point::before,
+.focus-point::after {
+  content: '';
+  position: absolute;
+  background: var(--focus-point);
+}
+
+.focus-point::before {
+  width: 1px;
+  height: 10px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.focus-point::after {
+  width: 10px;
+  height: 1px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* === CAMERA CAPTURE SEQUENCE === */
+/* When Generate is pressed: LED → Active, Shutter, Flash, Resolve, LED → Ready */
+
+/* Shutter animation - quick black flash */
+@keyframes shutter-click {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  30% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.shutter-overlay {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0;
+}
+
+.shutter-overlay--active {
+  animation: shutter-click var(--duration-shutter) var(--ease-shutter);
+}
+
+/* Sensor flash - warm neutral bloom */
+@keyframes sensor-flash {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.sensor-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 248, 240, 0.8) 0%,
+    rgba(255, 248, 240, 0.4) 30%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 51;
+  opacity: 0;
+}
+
+.sensor-flash--active {
+  animation: sensor-flash 0.4s var(--ease-out);
+}
+
+/* Image resolve animation - low-contrast to final */
+@keyframes image-resolve {
+  0% {
+    filter: brightness(1.3) contrast(0.7) saturate(0.5);
+    opacity: 0.3;
+  }
+  40% {
+    filter: brightness(1.1) contrast(0.85) saturate(0.8);
+    opacity: 0.7;
+  }
+  100% {
+    filter: brightness(1) contrast(1) saturate(1);
+    opacity: 1;
+  }
+}
+
+.image-resolving {
+  animation: image-resolve 1.2s var(--ease-out) forwards;
+}
+
+/* =============================================================================
+   CAMERA FLASH OVERLAY
+   
+   Professional sensor acknowledgment flash.
+   Inspired by Hasselblad, Canon Pro, Apple Pro Apps.
+   
+   Design Rules:
+   - This is NOT a strobe
+   - Subtle, warm-neutral white
+   - Slight edge falloff (vignette)
+   - Smooth ease-out transition
+   - Precision over flair
+   ============================================================================= */
+
+@keyframes camera-flash-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: var(--camera-flash-opacity, 0.18);
+  }
+}
+
+@keyframes camera-flash-out {
+  0% {
+    opacity: var(--camera-flash-opacity, 0.18);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.camera-flash-overlay {
+  /* Positioning - full viewport coverage */
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  
+  /* Initial state - invisible */
+  opacity: 0;
+  
+  /* Warm-neutral white with edge falloff (vignette) */
+  /* Not pure #fff - slightly warm for sensor feel */
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, var(--camera-flash-opacity, 0.35)) 0%,
+    rgba(255, 255, 255, calc(var(--camera-flash-opacity, 0.35) * 0.8)) 40%,
+    rgba(255, 255, 255, calc(var(--camera-flash-opacity, 0.35) * 0.4)) 70%,
+    transparent 100%
+  );
+  
+  /* Smooth transition for fade-out */
+  transition: opacity 80ms ease-out;
+  
+  /* Prevent any render blocking */
+  will-change: opacity;
+  contain: strict;
+}
+
+/* Active state - flash visible */
+.camera-flash-overlay--active {
+  opacity: 1;
+  animation: camera-flash-pulse 120ms ease-out forwards;
+}
+
+@keyframes camera-flash-pulse {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: var(--camera-flash-opacity, 0.35);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Alternative: Viewport-contained flash (for canvas area only) */
+.camera-flash-overlay--viewport {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+/* Intensity variants */
+.camera-flash-overlay--subtle {
+  --camera-flash-opacity: 0.12;
+}
+
+.camera-flash-overlay--standard {
+  --camera-flash-opacity: 0.18;
+}
+
+.camera-flash-overlay--bright {
+  --camera-flash-opacity: 0.25;
+}
+
+/* =============================================================================
+   SHUTTER CLICK VISUAL FEEDBACK
+   
+   Quick black frame to simulate mechanical shutter closure.
+   Duration: ~60ms (faster than flash)
+   ============================================================================= */
+
+@keyframes shutter-close {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.camera-shutter-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0;
+  background: #000;
+  will-change: opacity;
+  contain: strict;
+}
+
+.camera-shutter-overlay--active {
+  animation: shutter-close 60ms ease-out forwards;
+}
+
+/* === STYLE REFERENCE - LENS/FILTER TREATMENT === */
+/* Treated like adding a lens or filter to the camera */
+/* Minimal affordance, subtle focus glow, no "dropzone UI clichés" */
+
+.style-reference-zone {
+  position: relative;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  background: var(--camera-body);
+  overflow: hidden;
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+/* Glass lens effect - subtle refraction appearance */
+.style-reference-zone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.04) 0%,
+    transparent 30%,
+    transparent 70%,
+    rgba(255,255,255,0.02) 100%
+  );
+  pointer-events: none;
+  border-radius: 7px;
+}
+
+/* Focus state - optical highlight ring */
+.style-reference-zone:focus-within,
+.style-reference-zone--focused {
+  border-color: rgba(184, 149, 106, 0.25);
+  box-shadow: 
+    0 0 0 1px rgba(184, 149, 106, 0.1),
+    inset 0 0 30px rgba(184, 149, 106, 0.03);
+}
+
+/* Drag-over state - subtle glow, not aggressive */
+.style-reference-zone--dragging {
+  border-color: rgba(184, 149, 106, 0.35);
+  box-shadow: 
+    0 0 20px rgba(184, 149, 106, 0.15),
+    inset 0 0 40px rgba(184, 149, 106, 0.05);
+}
+
+/* Has images - show as attached filters */
+.style-reference-zone--active {
+  border-color: rgba(0, 255, 102, 0.2);
+}
+
+.style-reference-zone--active::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  background: var(--led-ready);
+  border-radius: 50%;
+  box-shadow: var(--led-glow-ready);
+}
+
+/* Style image thumbnail - lens filter appearance */
+.style-image-thumb {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--camera-body);
+  /* Lens curvature effect */
+  box-shadow: 
+    inset 0 0 0 1px rgba(255,255,255,0.05),
+    inset 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.style-image-thumb::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 30% 20%,
+    rgba(255,255,255,0.15) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
+}
+
+.style-image-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Remove button - minimal, appears on hover */
+.style-image-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0,0,0,0.7);
+  border: none;
+  border-radius: 50%;
+  color: var(--darkroom-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.style-image-thumb:hover .style-image-remove {
+  opacity: 1;
+}
+
+.style-image-remove:hover {
+  background: var(--darkroom-error);
+  color: white;
+}
+
+/* Upload area within style reference - lens mount feel */
+.style-upload-mount {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.style-upload-mount:hover {
+  background: rgba(255,255,255,0.02);
+}
+
+.style-upload-mount__icon {
+  width: 24px;
+  height: 24px;
+  color: var(--darkroom-text-dim);
+  margin-bottom: 8px;
+  opacity: 0.6;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.style-upload-mount:hover .style-upload-mount__icon {
+  opacity: 0.9;
+  color: var(--darkroom-accent);
+}
+
+.style-upload-mount__text {
+  font-size: 10px;
+  color: var(--darkroom-text-dim);
+  line-height: 1.4;
+}
+
+.style-upload-mount__subtext {
+  font-size: 9px;
+  color: var(--darkroom-text-dim);
+  opacity: 0.6;
+  margin-top: 4px;
+}
+
+/* === DORMANT MODULE STATE === */
+/* For future expansion modules that aren't yet active */
+/* Maintains camera body aesthetic but appears "disconnected" */
+
+.camera-panel--dormant {
+  opacity: 0.6;
+  background: var(--camera-body);
+  /* Slightly desaturated gloss */
+  background-image: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.04) 0%,
+    transparent 40%,
+    rgba(0,0,0,0.2) 100%
+  );
+}
+
+.camera-panel--dormant::before {
+  /* Dimmer highlight for dormant state */
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    transparent 100%
+  );
+}
+
+.camera-panel--dormant:hover {
+  opacity: 0.7;
+  /* Subtle hint that this module exists */
+}
+
+/* Connection indicator for modules */
+.module-connection-indicator {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--led-off);
+  border: 2px solid var(--camera-body);
+}
+
+.module-connection-indicator--connected {
+  background: var(--led-ready);
+  box-shadow: var(--led-glow-ready);
+}
+
+.module-connection-indicator--pending {
+  background: var(--led-active);
+  box-shadow: var(--led-glow-active);
+  animation: led-pulse 1.5s ease-in-out infinite;
 }
 
 /* -----------------------------------------------------------------------------
