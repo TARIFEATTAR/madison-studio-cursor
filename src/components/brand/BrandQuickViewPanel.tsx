@@ -552,3 +552,8 @@ export default BrandQuickViewPanel;
 
 
 
+
+
+
+
+

@@ -6,7 +6,7 @@ import { formatVisualContext } from "../_shared/productFieldFilters.ts";
 import { callGeminiImage } from "../_shared/aiProviders.ts";
 import { enhancePromptWithOntology } from "../_shared/photographyOntology.ts";
 import { generateImage as generateFreepikImage, type FreepikImageModel, type FreepikResolution, IMAGE_MODELS } from "../_shared/freepikProvider.ts";
-import { getVisualMasterContext, type VisualSquad } from "../_shared/visualMasters.ts";
+import { getVisualMasterContext, getVisualStyleDirective, type VisualSquad } from "../_shared/visualMasters.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -863,7 +863,15 @@ serve(async (req) => {
      */
     let visualMasterContext: string | undefined;
     
-    if (visualSquad || goalType) {
+    // If user explicitly selected a Visual Squad, use the hardcoded directive (most reliable)
+    if (visualSquad) {
+      visualMasterContext = getVisualStyleDirective(visualSquad as VisualSquad);
+      console.log(`🎨 Visual Squad Selected: ${visualSquad}`, {
+        directiveLength: visualMasterContext?.length || 0,
+        usingHardcodedDirective: true,
+      });
+    } else if (goalType) {
+      // Auto-route based on goal type
       try {
         const { strategy, masterContext } = await getVisualMasterContext(
           supabase,
@@ -872,28 +880,13 @@ serve(async (req) => {
           undefined // brandTone - could be extracted from brandKnowledge
         );
         
-        // Use user-selected squad if provided, otherwise use auto-routed squad
-        if (visualSquad) {
-          // Re-fetch for the specific squad if different from auto-routed
-          if (visualSquad !== strategy.visualSquad) {
-            const { masterContext: specificContext } = await getVisualMasterContext(
-              supabase,
-              goalType || 'product_hero',
-              `${visualSquad} style ${prompt}`, // Hint the brief with squad
-              undefined
-            );
-            visualMasterContext = specificContext;
-          } else {
-            visualMasterContext = masterContext;
-          }
-        } else {
-          visualMasterContext = masterContext;
-        }
+        // Use hardcoded directive for the auto-routed squad too
+        visualMasterContext = getVisualStyleDirective(strategy.visualSquad);
         
-        console.log(`🎨 Visual Master Context:`, {
-          selectedSquad: visualSquad || strategy.visualSquad,
+        console.log(`🎨 Visual Master Auto-Routed:`, {
+          autoSquad: strategy.visualSquad,
           primaryMaster: strategy.primaryVisualMaster,
-          contextLength: visualMasterContext?.length || 0,
+          directiveLength: visualMasterContext?.length || 0,
         });
       } catch (vmError) {
         console.warn("Could not fetch visual master context:", vmError);

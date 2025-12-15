@@ -87,7 +87,7 @@ export type BrandReport = {
     rawSources?: {
       fromBrandApi?: {
         source: 'brandfetch' | 'colorize';
-        colors: Array<{ hex?: string; type?: string; brightness?: number }>;
+        colors: any[];
       };
       fromCss?: {
         variables: string[];
@@ -257,7 +257,7 @@ export type ReportGenerationOptions = {
 /**
  * Type guards and utilities
  */
-export function isValidBrandReport(data: unknown): data is BrandReport {
+export function isValidBrandReport(data: any): data is BrandReport {
   return (
     typeof data === 'object' &&
     data !== null &&

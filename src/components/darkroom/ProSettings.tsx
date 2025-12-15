@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Camera, Sun, Globe, X, Info, SlidersHorizontal, Maximize2, Cpu, Sparkles, Star, Palette } from "lucide-react";
+import { ChevronDown, Camera, Sun, Globe, X, Info, SlidersHorizontal, Maximize2, Cpu, Sparkles, Zap, TrendingUp, Star } from "lucide-react";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  SelectGroup,
-  SelectLabel,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,11 +17,20 @@ import {
   getLightingOptions,
   getEnvironmentOptions,
 } from "@/utils/promptFormula";
-import {
-  ASPECT_RATIO_CATEGORIES,
-  VISUAL_SQUADS,
-  type VisualSquad,
-} from "@/config/imageSettings";
+
+// Expanded aspect ratio options (matching Freepik's offerings)
+const ASPECT_RATIO_OPTIONS = [
+  { value: "1:1", label: "Square", description: "Instagram, Product" },
+  { value: "16:9", label: "Widescreen", description: "YouTube, Desktop" },
+  { value: "9:16", label: "Social Story", description: "Reels, TikTok" },
+  { value: "2:3", label: "Portrait", description: "Pinterest, Print" },
+  { value: "3:4", label: "Traditional", description: "Mobile, Portrait" },
+  { value: "1:2", label: "Vertical", description: "Tall banner" },
+  { value: "2:1", label: "Horizontal", description: "Wide banner" },
+  { value: "4:5", label: "Social Post", description: "Instagram Feed" },
+  { value: "3:2", label: "Standard", description: "Classic photo" },
+  { value: "4:3", label: "Classic", description: "Traditional photo" },
+];
 
 // AI Provider/Model options - Updated for Freepik's actual API offerings
 const AI_PROVIDER_OPTIONS = [
@@ -84,7 +91,6 @@ export interface ProModeSettings {
   aiProvider?: string;
   resolution?: string;
   characterId?: string; // AI Character for consistent faces
-  visualSquad?: VisualSquad; // Visual style squad (Minimalist, Storyteller, Disruptor)
 }
 
 interface ProSettingsProps {
@@ -128,10 +134,6 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
 
   const handleResolutionChange = (value: string) => {
     onChange({ ...settings, resolution: value === "standard" ? undefined : value });
-  };
-
-  const handleVisualSquadChange = (value: string) => {
-    onChange({ ...settings, visualSquad: value === "auto" ? undefined : value as VisualSquad });
   };
 
   const handleClearAll = () => {
@@ -286,7 +288,7 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                 </p>
               </div>
 
-              {/* Aspect Ratio - Grouped by Category */}
+              {/* Aspect Ratio */}
               <div className="pro-settings__control">
                 <label className="pro-settings__control-label">
                   <Maximize2 className="w-3.5 h-3.5" />
@@ -300,91 +302,21 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                   <SelectTrigger className="h-9 bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
                     <SelectValue placeholder="Select aspect ratio..." />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] z-50 max-h-[350px]">
-                    {ASPECT_RATIO_CATEGORIES.map((category) => (
-                      <SelectGroup key={category.name}>
-                        <SelectLabel className="px-2 py-1.5 text-[10px] uppercase tracking-wider text-[#6a5f50] font-medium">
-                          {category.name}
-                        </SelectLabel>
-                        {category.options.map((option) => (
-                          <SelectItem 
-                            key={`${category.name}-${option.value}-${option.label}`} 
-                            value={option.value} 
-                            className="text-[#f5f0e6] focus:bg-[#2a2520] focus:text-[#f5f0e6] data-[highlighted]:bg-[#2a2520] data-[highlighted]:text-[#f5f0e6]"
-                          >
-                            <span className="flex items-center justify-between w-full">
-                              <span>{option.label}</span>
-                              <span className="text-[#6a5f50] text-[10px] ml-2">{option.value}</span>
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
+                  <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] z-50">
+                    {ASPECT_RATIO_OPTIONS.map((option) => (
+                      <SelectItem 
+                        key={option.value} 
+                        value={option.value} 
+                        className="text-[#f5f0e6] focus:bg-[#2a2520] focus:text-[#f5f0e6] data-[highlighted]:bg-[#2a2520] data-[highlighted]:text-[#f5f0e6]"
+                      >
+                        <span className="flex items-center justify-between w-full">
+                          <span>{option.label}</span>
+                          <span className="text-[#a09080] text-xs ml-2">{option.description}</span>
+                        </span>
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-
-              {/* Visual Squad Selector */}
-              <div className="pro-settings__control">
-                <div className="flex items-center justify-between">
-                  <label className="pro-settings__control-label">
-                    <Palette className="w-3.5 h-3.5" />
-                    Visual Style
-                  </label>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="w-3 h-3 text-[var(--darkroom-text-dim)] cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent side="left" className="max-w-[220px]">
-                        <p className="text-xs">
-                          Choose a visual style to influence composition, lighting, and mood.
-                          Each style is based on legendary photographers.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-                <div className="grid grid-cols-3 gap-1.5 mt-2">
-                  <button
-                    onClick={() => handleVisualSquadChange("auto")}
-                    disabled={disabled}
-                    className={cn(
-                      "px-2 py-2 rounded-md text-xs font-medium transition-all text-center",
-                      !settings.visualSquad
-                        ? "bg-[var(--darkroom-accent)] text-[var(--darkroom-bg)]"
-                        : "bg-[var(--darkroom-surface)] text-[var(--darkroom-text-muted)] hover:bg-[var(--darkroom-surface-elevated)]"
-                    )}
-                  >
-                    Auto
-                  </button>
-                  {VISUAL_SQUADS.map((squad) => (
-                    <TooltipProvider key={squad.value}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            onClick={() => handleVisualSquadChange(squad.value)}
-                            disabled={disabled}
-                            className={cn(
-                              "px-2 py-2 rounded-md text-xs font-medium transition-all text-center",
-                              settings.visualSquad === squad.value
-                                ? "bg-[var(--darkroom-accent)] text-[var(--darkroom-bg)]"
-                                : "bg-[var(--darkroom-surface)] text-[var(--darkroom-text-muted)] hover:bg-[var(--darkroom-surface-elevated)]"
-                            )}
-                          >
-                            {squad.label}
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" className="max-w-[200px]">
-                          <p className="text-xs font-medium">{squad.description}</p>
-                          <p className="text-[10px] text-muted-foreground mt-1">
-                            Best for: {squad.bestFor.slice(0, 2).join(', ')}
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ))}
-                </div>
               </div>
 
               {/* Divider for AI Settings */}

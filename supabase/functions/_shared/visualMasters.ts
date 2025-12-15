@@ -271,6 +271,122 @@ export const VISUAL_CONTENT_TO_SQUAD: Record<string, VisualSquad> = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// HARDCODED VISUAL STYLE DIRECTIVES (No Database Required)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Get strong, explicit visual style directives for each squad
+ * These are injected directly into the prompt to ensure style differentiation
+ */
+export function getVisualStyleDirective(squad: VisualSquad): string {
+  switch (squad) {
+    case 'THE_MINIMALISTS':
+      return `
+╔══════════════════════════════════════════════════════════════════╗
+║               VISUAL STYLE: THE MINIMALISTS                       ║
+║               "Less is more. Product as hero."                    ║
+╚══════════════════════════════════════════════════════════════════╝
+
+MANDATORY STYLE REQUIREMENTS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+BACKGROUND: Pure white (#FFFFFF) or neutral gray gradient. NO environmental props.
+LIGHTING: Soft, diffused studio lighting. Even illumination. No harsh shadows.
+COMPOSITION: Product centered, breathing room, negative space emphasized.
+MOOD: Clinical, precise, editorial, timeless, sophisticated.
+COLOR GRADING: Cool tones, desaturated, clean whites.
+
+✅ DO:
+- Place product on pure white or light gray seamless background
+- Use soft directional light from above-left (Avedon style)
+- Keep composition minimal - product only, no props
+- Emphasize product details and craftsmanship
+- Sharp focus, high clarity
+
+❌ DO NOT:
+- Add lifestyle props (books, plants, fabric, wood surfaces)
+- Use warm color grading
+- Include environmental context
+- Add texture to background
+- Use dramatic shadows
+
+REFERENCE: Think Apple product photography, luxury skincare campaigns, Richard Avedon portraits.
+`;
+
+    case 'THE_STORYTELLERS':
+      return `
+╔══════════════════════════════════════════════════════════════════╗
+║               VISUAL STYLE: THE STORYTELLERS                      ║
+║               "Context creates desire."                           ║
+╚══════════════════════════════════════════════════════════════════╝
+
+MANDATORY STYLE REQUIREMENTS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+BACKGROUND: Natural environment, lifestyle setting, lived-in spaces.
+LIGHTING: Warm window light, golden hour, soft natural illumination.
+COMPOSITION: Product in context, environmental storytelling, magazine editorial.
+MOOD: Warm, inviting, aspirational, intimate, nostalgic.
+COLOR GRADING: Warm tones, golden highlights, rich shadows, film-like.
+
+✅ DO:
+- Place product in a natural, lived-in environment
+- Use warm, directional window light (Leibovitz style)
+- Include lifestyle props (wood surfaces, fabric, books, botanicals)
+- Create atmosphere and mood
+- Add subtle film grain for editorial feel
+- Show product being used or in context
+
+❌ DO NOT:
+- Use pure white backgrounds
+- Use harsh studio lighting
+- Isolate product completely
+- Use cool/clinical color grading
+- Make it look like e-commerce
+
+REFERENCE: Think Vanity Fair editorials, Annie Leibovitz environmental portraits, luxury fragrance campaigns.
+`;
+
+    case 'THE_DISRUPTORS':
+      return `
+╔══════════════════════════════════════════════════════════════════╗
+║               VISUAL STYLE: THE DISRUPTORS                        ║
+║               "Stop the scroll. Bold beats beautiful."            ║
+╚══════════════════════════════════════════════════════════════════╝
+
+MANDATORY STYLE REQUIREMENTS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+BACKGROUND: Bold solid color, dramatic gradient, or high-contrast scene.
+LIGHTING: Direct flash, hard light, dramatic shadows, high contrast.
+COMPOSITION: Dynamic angles, bold framing, unexpected crops, graphic impact.
+MOOD: Energetic, bold, provocative, attention-grabbing, raw.
+COLOR GRADING: High contrast, saturated colors, punchy, bold.
+
+✅ DO:
+- Use bold, solid color backgrounds (black, deep blue, vibrant colors)
+- Add dramatic lighting with hard shadows
+- Create high contrast imagery
+- Use unexpected angles (low angle, Dutch angle)
+- Make it scroll-stopping and attention-grabbing
+- Add motion blur or action elements if appropriate
+
+❌ DO NOT:
+- Use soft, diffused lighting
+- Create muted, subtle compositions
+- Use beige/neutral backgrounds
+- Make it look traditional or safe
+- Use warm, cozy aesthetics
+
+REFERENCE: Think Terry Richardson flash photography, Wes Anderson symmetry, Nike ads, TikTok viral content.
+`;
+
+    default:
+      return '';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // VISUAL MASTER ROUTING
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -691,4 +807,9 @@ export function getImageFormatInstructions(contentType: string): string {
   
   return parts.join('\n');
 }
+
+
+
+
+
 

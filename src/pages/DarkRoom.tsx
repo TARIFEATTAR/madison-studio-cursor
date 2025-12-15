@@ -265,6 +265,7 @@ export default function DarkRoom() {
         userId: user.id,
         aiProvider: proSettings.aiProvider || "auto",
         resolution: proSettings.resolution || "standard",
+        visualSquad: proSettings.visualSquad || "auto",
       });
       console.log("🌑 Full payload being sent:", JSON.stringify({
         prompt: effectivePrompt,
@@ -275,6 +276,7 @@ export default function DarkRoom() {
         aspectRatio: proSettings.aspectRatio || "1:1",
         aiProvider: proSettings.aiProvider || "auto",
         resolution: proSettings.resolution || "standard",
+        visualSquad: proSettings.visualSquad,
       }, null, 2));
 
       // Call the edge function
@@ -293,6 +295,8 @@ export default function DarkRoom() {
           // AI Model settings
           aiProvider: proSettings.aiProvider || "auto",
           resolution: proSettings.resolution || "standard",
+          // Visual Squad for style direction
+          visualSquad: proSettings.visualSquad,
           productContext: selectedProduct
             ? {
                 name: selectedProduct.name,

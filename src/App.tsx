@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState } from "react";
 import React from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
@@ -13,57 +13,46 @@ import Navigation from "./components/Navigation";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./components/AppSidebar";
 
-// Core routes - loaded immediately
 import Index from "./pages/Index";
 import DashboardNew from "./pages/DashboardNew";
-import Auth from "./pages/Auth";
+import Library from "./pages/Library";
+import Create from "./pages/Create";
+import ContentEditor from "./pages/ContentEditor";
+import Repurpose from "./pages/Repurpose";
+import Multiply from "./pages/Multiply";
+import Templates from "./pages/Templates";
+import Calendar from "./pages/Calendar";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
-
-// Lazy-loaded routes - code-split for better initial load
-const Library = React.lazy(() => import("./pages/Library"));
-const Create = React.lazy(() => import("./pages/Create"));
-const ContentEditor = React.lazy(() => import("./pages/ContentEditor"));
-const Repurpose = React.lazy(() => import("./pages/Repurpose"));
-const Multiply = React.lazy(() => import("./pages/Multiply"));
-const Templates = React.lazy(() => import("./pages/Templates"));
-const Calendar = React.lazy(() => import("./pages/Calendar"));
-const Settings = React.lazy(() => import("./pages/Settings"));
-const MeetMadison = React.lazy(() => import("./pages/MeetMadison"));
-const HelpCenter = React.lazy(() => import("./pages/HelpCenter"));
-const ThinkMode = React.lazy(() => import("./pages/ThinkMode"));
-const Onboarding = React.lazy(() => import("./pages/Onboarding"));
-const Marketplace = React.lazy(() => import("./pages/Marketplace"));
-const MarketplaceLibrary = React.lazy(() => import("./pages/MarketplaceLibrary"));
-const CreateEtsyListing = React.lazy(() => import("./pages/marketplace/CreateEtsyListing"));
-const CreateTikTokShopListing = React.lazy(() => import("./pages/marketplace/CreateTikTokShopListing"));
-const CreateShopifyListing = React.lazy(() => import("./pages/marketplace/CreateShopifyListing"));
-const BrandHealth = React.lazy(() => import("./pages/BrandHealth"));
-const BrandBuilder = React.lazy(() => import("./pages/BrandBuilder"));
-const ImageEditor = React.lazy(() => import("./pages/ImageEditor"));
-const DarkRoom = React.lazy(() => import("./pages/DarkRoom"));
-const LightTable = React.lazy(() => import("./pages/LightTable"));
-const VideoProject = React.lazy(() => import("./pages/VideoProject"));
-const ImageLibrary = React.lazy(() => import("./pages/ImageLibrary"));
-const EmailBuilderV2 = React.lazy(() => import("./pages/EmailBuilderV2"));
-const PrivacyPolicy = React.lazy(() => import("./pages/PrivacyPolicy"));
-const TermsOfService = React.lazy(() => import("./pages/TermsOfService"));
-const ComponentDemo = React.lazy(() => import("./pages/ComponentDemo"));
-const MadisonTest = React.lazy(() => import("./pages/MadisonTest"));
-const BrandReport = React.lazy(() => import("./pages/BrandReport"));
-
+import MeetMadison from "./pages/MeetMadison";
+import HelpCenter from "./pages/HelpCenter";
+import ThinkMode from "./pages/ThinkMode";
+import Auth from "./pages/Auth";
+import Onboarding from "./pages/Onboarding";
+import Marketplace from "./pages/Marketplace";
+import MarketplaceLibrary from "./pages/MarketplaceLibrary";
+import CreateEtsyListing from "./pages/marketplace/CreateEtsyListing";
+import CreateTikTokShopListing from "./pages/marketplace/CreateTikTokShopListing";
+import CreateShopifyListing from "./pages/marketplace/CreateShopifyListing";
+import BrandHealth from "./pages/BrandHealth";
+import BrandBuilder from "./pages/BrandBuilder";
+import ImageEditor from "./pages/ImageEditor";
+import DarkRoom from "./pages/DarkRoom";
+import LightTable from "./pages/LightTable";
+import VideoProject from "./pages/VideoProject";
+import ImageLibrary from "./pages/ImageLibrary";
+import EmailBuilderV2 from "./pages/EmailBuilderV2";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import ComponentDemo from "./pages/ComponentDemo";
+import MadisonTest from "./pages/MadisonTest";
+import BrandReport from "./pages/BrandReport";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EcommerceGuard } from "./components/guards/EcommerceGuard";
 import { OnboardingTooltipProvider } from "./components/onboarding/OnboardingTooltipProvider";
-
-// Loading fallback for lazy routes
-const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <div className="text-muted-foreground text-lg font-serif">Loading…</div>
-  </div>
-);
 
 const queryClient = new QueryClient();
 
@@ -326,7 +315,6 @@ const AppContent = () => {
             <AppSidebar />
             <main className="flex-1 overflow-auto pt-0">
               <div className="pt-16 md:pt-0">
-                <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><RootRoute /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/dashboard" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><DashboardNew /></RouteErrorBoundary></ProtectedRoute>} />
@@ -365,14 +353,12 @@ const AppContent = () => {
                   {/* <Route path="/email-builder-v2" element={<Navigate to="/email-builder" replace />} /> */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-                </Suspense>
               </div>
             </main>
           </div>
         </SidebarProvider>
       ) : (
         <>
-          <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<ProtectedRoute><RouteErrorBoundary routeName="Onboarding"><Onboarding /></RouteErrorBoundary></ProtectedRoute>} />
@@ -413,7 +399,6 @@ const AppContent = () => {
             {/* <Route path="/email-builder-v2" element={<Navigate to="/email-builder" replace />} /> */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-          </Suspense>
         </>
       )}
 
