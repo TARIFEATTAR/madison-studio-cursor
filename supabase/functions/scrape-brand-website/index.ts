@@ -151,8 +151,8 @@ serve(async (req) => {
     if (fullContent.length < 200) {
        return new Response(
         JSON.stringify({ 
-          error: "Website content is too sparse to analyze. Please try uploading a brand PDF instead.",
-          details: "Less than 200 characters of text found."
+          error: `This website uses JavaScript to load content, which our scanner can't read. Please use Manual Entry or upload a brand document instead. (Only ${fullContent.length} characters found)`,
+          details: "Less than 200 characters of text found. This usually means the site loads content via JavaScript."
         }),
         { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -243,6 +243,18 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Delete old website_scrape entries first to avoid accumulation
+    const { error: deleteError } = await supabase
+      .from("brand_knowledge")
+      .delete()
+      .eq("organization_id", organizationId)
+      .eq("knowledge_type", "website_scrape");
+    
+    if (deleteError) {
+      console.warn("[scrape-brand-website] Could not delete old entries:", deleteError);
+      // Continue anyway - new data will still be added
+    }
+
     const { error: insertError } = await supabase.from("brand_knowledge").insert({
       organization_id: organizationId,
       knowledge_type: "website_scrape",
@@ -260,9 +272,27 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("Error:", error);
+    console.error("[scrape-brand-website] Error:", error);
+    
+    // Provide more detailed error information
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorDetails = error instanceof Error ? error.stack : String(error);
+    
+    // Check for common issues
+    let userFriendlyMessage = errorMessage;
+    if (errorMessage.includes("GEMINI_API_KEY")) {
+      userFriendlyMessage = "AI service is not configured. Please contact support.";
+    } else if (errorMessage.includes("fetch failed") || errorMessage.includes("network")) {
+      userFriendlyMessage = "Could not connect to the website. Please check the URL and try again.";
+    } else if (errorMessage.includes("brand_knowledge")) {
+      userFriendlyMessage = "Failed to save analysis results. Please try again.";
+    }
+    
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ 
+        error: userFriendlyMessage,
+        // Include stack trace in logs but not in response
+      }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
