@@ -200,7 +200,7 @@ export async function resolveMadisonAction({
 
   // For 'continue' action with no content, provide placeholder continuation
   if (action === 'continue' && !content.trim()) {
-    return '\n\n[Madison will continue writing here...]';
+    return 'This is a sample continuation of your writing. Madison will generate thoughtful, well-structured content that flows naturally from where you left off.\n\nThe AI will maintain your voice and style while adding depth and clarity to your message. Each paragraph will be properly formatted and separated for easy reading.';
   }
 
   // Return marked content for testing - this shows the action worked
@@ -219,8 +219,113 @@ export async function resolveMadisonAction({
 
   const label = actionLabels[action] || action.toUpperCase();
   
-  // Format the placeholder response
-  return `[${label}]\n${content}`;
+  // Format the placeholder response with multiple paragraphs for testing
+  // This demonstrates proper paragraph formatting
+  return `[${label}]\n\n${content}\n\nThis is an example of how Madison formats longer content. Each paragraph is properly separated, making the text easy to read and edit.\n\nThe formatting system automatically detects paragraph breaks and structures the content accordingly.`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONTENT FORMATTING HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Format plain text with line breaks into properly structured HTML for Tiptap
+ * 
+ * Handles:
+ * - Double newlines (\n\n) = paragraph breaks
+ * - Single newlines (\n) = line breaks within paragraph
+ * - Empty lines = paragraph breaks
+ * - Preserves existing formatting markers
+ * 
+ * @param text - Plain text content with line breaks
+ * @returns HTML string with proper paragraph structure
+ */
+function formatContentForEditor(text: string): string {
+  if (!text || !text.trim()) {
+    return '<p></p>';
+  }
+
+  // Normalize line endings
+  const normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  
+  // Split by double newlines (paragraph breaks)
+  // If no double newlines, treat each single newline as a potential paragraph break
+  const hasDoubleBreaks = normalized.includes('\n\n');
+  
+  let paragraphs: string[];
+  
+  if (hasDoubleBreaks) {
+    // Split by double newlines (one or more)
+    paragraphs = normalized.split(/\n\n+/);
+  } else {
+    // For single newlines, check if they're at line boundaries
+    // If text has many single newlines, treat them as paragraph breaks
+    const lines = normalized.split('\n');
+    const singleLineCount = lines.filter(l => l.trim().length > 0 && l.trim().length < 100).length;
+    
+    // If we have multiple short lines, treat each as a paragraph
+    // Otherwise, join with <br> tags
+    if (lines.length > 2 && singleLineCount > lines.length * 0.5) {
+      paragraphs = lines;
+    } else {
+      // Single paragraph with line breaks
+      const content = lines
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .join('<br>');
+      return `<p>${escapeHtml(content)}</p>`;
+    }
+  }
+
+  const formattedParagraphs: string[] = [];
+
+  for (const para of paragraphs) {
+    const trimmed = para.trim();
+    
+    // Skip empty paragraphs
+    if (!trimmed) {
+      continue;
+    }
+
+    // Handle single newlines within paragraph (convert to <br>)
+    const lines = trimmed.split('\n');
+    const content = lines
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .join('<br>');
+
+    if (content) {
+      formattedParagraphs.push(`<p>${escapeHtml(content)}</p>`);
+    }
+  }
+
+  // If no paragraphs were created, create one with the original content
+  if (formattedParagraphs.length === 0) {
+    const escaped = escapeHtml(text.trim());
+    return `<p>${escaped}</p>`;
+  }
+
+  return formattedParagraphs.join('');
+}
+
+/**
+ * Escape HTML special characters
+ * Works in both browser and Node.js environments
+ */
+function escapeHtml(text: string): string {
+  if (typeof document !== 'undefined') {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+  
+  // Fallback for Node.js/server environments
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -303,24 +408,33 @@ export async function handleMadisonInlineAction(
       return null;
     }
 
+    // Format the content with proper paragraph structure
+    const formattedContent = formatContentForEditor(result);
+    
+    console.log('[Madison AI] Formatted content:', {
+      originalLength: result.length,
+      formattedLength: formattedContent.length,
+      paragraphCount: (formattedContent.match(/<p>/g) || []).length,
+    });
+
     // Determine replacement mode
     const mode: 'replace' | 'insert' = hasSelection ? 'replace' : 'insert';
 
-    // Apply the result to the editor
+    // Apply the formatted result to the editor
     if (mode === 'replace' && hasSelection) {
       // Replace selected content
       editor
         .chain()
         .focus()
         .deleteRange({ from, to })
-        .insertContent(result)
+        .insertContent(formattedContent)
         .run();
     } else {
       // Insert at cursor position
       editor
         .chain()
         .focus()
-        .insertContent(result)
+        .insertContent(formattedContent)
         .run();
     }
 

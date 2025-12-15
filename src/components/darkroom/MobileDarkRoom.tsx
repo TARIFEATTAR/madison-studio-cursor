@@ -193,11 +193,11 @@ export function MobileDarkRoom({
     <div className="mobile-darkroom">
       {/* Header */}
       <div className="mobile-darkroom__header">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
             onClick={handleBackClick}
             onTouchEnd={handleBackClick}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--darkroom-surface)] text-[var(--darkroom-text-muted)] active:bg-[var(--darkroom-surface-elevated)] active:scale-95 transition-all"
+            className="w-9 h-9 flex items-center justify-center rounded-[4px] bg-[var(--darkroom-surface)] border border-[var(--darkroom-border-subtle)] text-[var(--darkroom-text-muted)] active:bg-[var(--darkroom-surface-elevated)] active:scale-[0.97] transition-all"
             type="button"
           >
             <ChevronLeft className="w-5 h-5" />

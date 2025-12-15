@@ -2,11 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Camera,
-  Download,
-  Save,
-  CheckCircle,
   Loader2,
-  Wand2,
   Send,
 } from "lucide-react";
 import { ThumbnailCarousel } from "./ThumbnailCarousel";
@@ -109,12 +105,9 @@ function GeneratingState({
 }
 
 // Image Reveal with Chemical Bath Developing Effect
+// Actions now in header - this just shows the image
 function ImageReveal({
   image,
-  onSave,
-  onDownload,
-  onRefine,
-  isSaving,
   isNewlyGenerated = false,
 }: {
   image: GeneratedImage;
@@ -124,15 +117,12 @@ function ImageReveal({
   isSaving: boolean;
   isNewlyGenerated?: boolean;
 }) {
-  const [showActions, setShowActions] = useState(!isNewlyGenerated);
-  
   // Use the developing animation for newly generated images
-  const { phase, isComplete } = useDevelopingAnimation(
+  const { phase } = useDevelopingAnimation(
     isNewlyGenerated ? image.imageUrl : null,
     {
       autoStart: isNewlyGenerated,
       developDuration: 2500, // 2.5 seconds for the full reveal
-      onComplete: () => setShowActions(true),
     }
   );
 
@@ -150,51 +140,6 @@ function ImageReveal({
           alt="Generated"
           className="hero-image"
         />
-        
-        {/* Action Buttons - always visible for non-new images */}
-        <motion.div
-          className="hero-actions"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.3 }}
-        >
-          <motion.button
-            className="hero-action-btn"
-            onClick={onDownload}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Download size={18} />
-            <span>Download</span>
-          </motion.button>
-
-          <motion.button
-            className={cn("hero-action-btn", image.isSaved && "primary")}
-            onClick={onSave}
-            disabled={isSaving || image.isSaved}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {isSaving ? (
-              <Loader2 size={18} className="animate-spin" />
-            ) : image.isSaved ? (
-              <CheckCircle size={18} />
-            ) : (
-              <Save size={18} />
-            )}
-            <span>{image.isSaved ? "Saved" : "Save to Library"}</span>
-          </motion.button>
-
-          <motion.button
-            className="hero-action-btn"
-            onClick={onRefine}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Wand2 size={18} />
-            <span>Refine</span>
-          </motion.button>
-        </motion.div>
       </motion.div>
     );
   }
@@ -213,55 +158,6 @@ function ImageReveal({
         phase={phase}
         developDuration={2500}
       />
-
-      {/* Action Buttons - appear after reveal completes */}
-      <AnimatePresence>
-        {showActions && (
-          <motion.div
-            className="hero-actions"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.4, ease: "easeOut" }}
-          >
-            <motion.button
-              className="hero-action-btn"
-              onClick={onDownload}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Download size={18} />
-              <span>Download</span>
-            </motion.button>
-
-            <motion.button
-              className={cn("hero-action-btn", image.isSaved && "primary")}
-              onClick={onSave}
-              disabled={isSaving || image.isSaved}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {isSaving ? (
-                <Loader2 size={18} className="animate-spin" />
-              ) : image.isSaved ? (
-                <CheckCircle size={18} />
-              ) : (
-                <Save size={18} />
-              )}
-              <span>{image.isSaved ? "Saved" : "Save to Library"}</span>
-            </motion.button>
-
-            <motion.button
-              className="hero-action-btn"
-              onClick={onRefine}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Wand2 size={18} />
-              <span>Refine</span>
-            </motion.button>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }

@@ -160,6 +160,16 @@ export default function DarkRoom() {
   const [backgroundImage, setBackgroundImage] = useState<UploadedImage | null>(null);
   const [styleReference, setStyleReference] = useState<UploadedImage | null>(null);
   const [proSettings, setProSettings] = useState<ProModeSettings>({});
+  
+  // Multi-product slots for compositing
+  const [productSlots, setProductSlots] = useState<{ id: string; imageUrl: string | null; name?: string }[]>([
+    { id: "slot-0", imageUrl: null },
+    { id: "slot-1", imageUrl: null },
+    { id: "slot-2", imageUrl: null },
+    { id: "slot-3", imageUrl: null },
+    { id: "slot-4", imageUrl: null },
+    { id: "slot-5", imageUrl: null },
+  ]);
 
   // Prompt
   const [prompt, setPrompt] = useState("");
@@ -276,6 +286,16 @@ export default function DarkRoom() {
           description: "Style reference for lighting and mood",
         });
       }
+      
+      // Add multi-product slots (for compositing multiple products into scene)
+      const activeProductSlots = productSlots.filter(slot => slot.imageUrl);
+      activeProductSlots.forEach((slot, index) => {
+        referenceImages.push({
+          url: slot.imageUrl!,
+          label: `Product ${index + 1}`,
+          description: `Additional product ${index + 1} to composite into the scene`,
+        });
+      });
 
       // Build Pro Mode payload if active (only camera/lighting/environment, not AI settings)
       const proModePayload = proSettingsCount > 0 ? {
@@ -287,6 +307,7 @@ export default function DarkRoom() {
       console.log("🌑 Dark Room Generate:", {
         prompt: effectivePrompt,
         referenceImages: referenceImages.length,
+        productSlots: activeProductSlots.length,
         proMode: proModePayload,
         product: selectedProduct?.name,
         organizationId: orgId,
@@ -555,6 +576,10 @@ export default function DarkRoom() {
         savedCount={savedCount}
         isSaving={isSaving}
         onSaveAll={handleSaveAll}
+        heroImage={heroImage}
+        onDownloadHero={heroImage ? () => handleDownload(heroImage) : undefined}
+        onSaveHero={heroImage ? () => handleSaveImage(heroImage.id) : undefined}
+        onRefineHero={heroImage ? () => handleOpenLightTable(heroImage) : undefined}
       />
 
       {/* Main Grid */}
@@ -613,6 +638,8 @@ export default function DarkRoom() {
           proSettings={proSettings}
           onProSettingsChange={setProSettings}
           isGenerating={isGenerating}
+          productSlots={productSlots}
+          onProductSlotsChange={setProductSlots}
         />
       </div>
 

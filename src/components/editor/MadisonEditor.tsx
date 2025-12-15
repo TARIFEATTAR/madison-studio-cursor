@@ -56,6 +56,78 @@ interface MadisonEditorProps {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Convert plain text with line breaks into properly structured HTML
+ * 
+ * This is critical for displaying AI-generated content correctly:
+ * - Double newlines (\n\n) become paragraph breaks (<p>)
+ * - Single newlines (\n) become line breaks (<br>) within paragraphs
+ * - Markdown headers (## ) become <h2>, (### ) become <h3>
+ * - Empty lines are preserved as paragraph separators
+ * 
+ * @param text - Plain text content with line breaks
+ * @returns HTML string with proper paragraph structure
+ */
+function convertPlainTextToHtml(text: string): string {
+  if (!text || !text.trim()) {
+    return '<p></p>';
+  }
+
+  // Normalize line endings (Windows \r\n to Unix \n)
+  let normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  
+  // Split by double newlines (paragraph breaks)
+  // Also split on single newlines followed by headers
+  const paragraphs = normalized.split(/\n\n+/);
+  
+  const htmlParts: string[] = [];
+  
+  for (const para of paragraphs) {
+    const trimmed = para.trim();
+    if (!trimmed) continue;
+    
+    // Check for markdown-style headers
+    if (trimmed.startsWith('### ')) {
+      htmlParts.push(`<h3>${escapeHtml(trimmed.slice(4))}</h3>`);
+      continue;
+    }
+    if (trimmed.startsWith('## ')) {
+      htmlParts.push(`<h2>${escapeHtml(trimmed.slice(3))}</h2>`);
+      continue;
+    }
+    if (trimmed.startsWith('# ')) {
+      // Convert H1 to H2 (H1 is typically the page title)
+      htmlParts.push(`<h2>${escapeHtml(trimmed.slice(2))}</h2>`);
+      continue;
+    }
+    
+    // Check if paragraph contains internal single newlines
+    if (trimmed.includes('\n')) {
+      // Split by single newlines and join with <br>
+      const lines = trimmed.split('\n').map(line => line.trim()).filter(line => line);
+      htmlParts.push(`<p>${lines.map(escapeHtml).join('<br>')}</p>`);
+    } else {
+      // Simple paragraph
+      htmlParts.push(`<p>${escapeHtml(trimmed)}</p>`);
+    }
+  }
+  
+  return htmlParts.join('') || '<p></p>';
+}
+
+/**
+ * Escape HTML special characters
+ */
+function escapeHtml(text: string): string {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -83,10 +155,34 @@ export function MadisonEditor({
   // CONTENT PARSING
   // ─────────────────────────────────────────────────────────────────────────
   
+  /**
+   * Parse initial content into Tiptap-compatible format
+   * 
+   * Handles:
+   * - JSON content (Tiptap format) - passed through as-is
+   * - HTML strings - passed through as-is (Tiptap handles them)
+   * - Plain text - converted to proper HTML paragraphs
+   * 
+   * The key issue: Plain text with \n characters doesn't automatically
+   * become paragraphs in Tiptap - we need to convert them to <p> tags.
+   */
   const parseInitialContent = useCallback(() => {
     if (!initialContent) return undefined;
+    
+    // If it's already a JSON object (Tiptap format), use it directly
     if (typeof initialContent === 'object') return initialContent;
-    return initialContent;
+    
+    // If it's a string, check if it's HTML or plain text
+    const content = initialContent.trim();
+    
+    // If it already contains HTML tags, let Tiptap handle it
+    if (content.startsWith('<') || /<[^>]+>/.test(content)) {
+      return content;
+    }
+    
+    // Plain text - convert to HTML paragraphs
+    // This is critical for content from the AI generator which uses \n\n for paragraphs
+    return convertPlainTextToHtml(content);
   }, [initialContent]);
 
   // ─────────────────────────────────────────────────────────────────────────

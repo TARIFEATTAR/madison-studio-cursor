@@ -243,32 +243,61 @@ function buildDirectorModePrompt(
   prompt += "=== REFERENCE IMAGE DIRECTIVES ===\n\n";
 
   if (categorizedRefs.product.length > 0) {
-    prompt += `PRODUCT REFERENCE (${categorizedRefs.product.length} image${categorizedRefs.product.length > 1 ? "s" : ""}):\n`;
-    prompt += "Use the product reference image(s) for visual guidance. Maintain:\n";
-    prompt += "- Product shape, proportions, and overall design\n";
-    prompt += "- Product color accuracy (match hex values precisely)\n";
-    prompt += "- Product texture and material finish\n";
-    prompt += "- Branding, labels, and decorative elements\n";
-    if (productData) {
-      const bottleType = detectBottleType(productData);
-      if (bottleType.isOil) {
-        prompt += "\n⚠️ IMPORTANT: If the reference image shows a spray mechanism, IGNORE IT.\n";
-        prompt += "You MUST render an oil bottle with dropper/roller instead (as specified in Section 0).\n";
-        prompt += "The bottle type specification in Section 0 takes absolute priority over reference images.\n";
-      } else if (bottleType.isSpray) {
-        prompt += "\n⚠️ IMPORTANT: If the reference image shows a dropper/roller, IGNORE IT.\n";
-        prompt += "You MUST render a spray bottle with atomizer instead (as specified in Section 0).\n";
-        prompt += "The bottle type specification in Section 0 takes absolute priority over reference images.\n";
-      }
-    }
-    prompt += "\n";
+    const isMultiProduct = categorizedRefs.product.length > 1;
     
-    categorizedRefs.product.forEach((ref, idx) => {
-      if (ref.description) {
-        prompt += `Product Ref ${idx + 1} Note: ${ref.description}\n`;
+    if (isMultiProduct) {
+      // Multi-product compositing mode
+      prompt += `🎨 MULTI-PRODUCT COMPOSITE (${categorizedRefs.product.length} products):\n\n`;
+      prompt += "⚠️ CRITICAL: You MUST include ALL provided products in a SINGLE cohesive scene.\n\n";
+      prompt += "COMPOSITING REQUIREMENTS:\n";
+      prompt += "- Place all products naturally within the scene (arranged artistically, not in a grid)\n";
+      prompt += "- Create visual harmony between products (consistent lighting, shadows, reflections)\n";
+      prompt += "- Use varying heights, angles, and positions for visual interest\n";
+      prompt += "- Products may overlap slightly or be grouped naturally\n";
+      prompt += "- Maintain accurate proportions between all products\n";
+      prompt += "- Every product must be clearly visible and identifiable\n\n";
+      prompt += "PRODUCT ACCURACY FOR EACH:\n";
+      prompt += "- Preserve exact shape, proportions, and design of each product\n";
+      prompt += "- Match colors precisely for each product\n";
+      prompt += "- Maintain branding, labels, and decorative elements on each\n";
+      prompt += "- Apply consistent lighting direction across all products\n\n";
+      
+      categorizedRefs.product.forEach((ref, idx) => {
+        prompt += `📦 Product ${idx + 1}: ${ref.label || "Product"}\n`;
+        if (ref.description) {
+          prompt += `   Description: ${ref.description}\n`;
+        }
+      });
+      prompt += "\n";
+    } else {
+      // Single product mode (original behavior)
+      prompt += `PRODUCT REFERENCE (${categorizedRefs.product.length} image):\n`;
+      prompt += "Use the product reference image for visual guidance. Maintain:\n";
+      prompt += "- Product shape, proportions, and overall design\n";
+      prompt += "- Product color accuracy (match hex values precisely)\n";
+      prompt += "- Product texture and material finish\n";
+      prompt += "- Branding, labels, and decorative elements\n";
+      if (productData) {
+        const bottleType = detectBottleType(productData);
+        if (bottleType.isOil) {
+          prompt += "\n⚠️ IMPORTANT: If the reference image shows a spray mechanism, IGNORE IT.\n";
+          prompt += "You MUST render an oil bottle with dropper/roller instead (as specified in Section 0).\n";
+          prompt += "The bottle type specification in Section 0 takes absolute priority over reference images.\n";
+        } else if (bottleType.isSpray) {
+          prompt += "\n⚠️ IMPORTANT: If the reference image shows a dropper/roller, IGNORE IT.\n";
+          prompt += "You MUST render a spray bottle with atomizer instead (as specified in Section 0).\n";
+          prompt += "The bottle type specification in Section 0 takes absolute priority over reference images.\n";
+        }
       }
-    });
-    prompt += "\n";
+      prompt += "\n";
+      
+      categorizedRefs.product.forEach((ref, idx) => {
+        if (ref.description) {
+          prompt += `Product Ref ${idx + 1} Note: ${ref.description}\n`;
+        }
+      });
+      prompt += "\n";
+    }
   }
 
   if (categorizedRefs.background.length > 0) {

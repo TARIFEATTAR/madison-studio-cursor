@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { ShopifyConnection } from "./ShopifyConnection";
 import { KlaviyoConnection } from "./KlaviyoConnection";
 import { EtsyConnection } from "./EtsyConnection";
+import { LinkedInConnection } from "./LinkedInConnection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, Bot, Plus, Trash2, Sparkles, Store } from "lucide-react";
+import { Package, Bot, Plus, Trash2, Sparkles, Store, Linkedin } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -153,6 +154,26 @@ export function IntegrationsTab() {
         </CardHeader>
         <CardContent>
           <KlaviyoConnection />
+        </CardContent>
+      </Card>
+
+      {/* LinkedIn */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-[#0077B5]/10 flex items-center justify-center">
+              <Linkedin className="w-5 h-5 text-[#0077B5]" />
+            </div>
+            <div>
+              <CardTitle>LinkedIn</CardTitle>
+              <CardDescription>
+                Publish content directly to your LinkedIn profile or company page
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <LinkedInConnection organizationId={organizationId} />
         </CardContent>
       </Card>
 

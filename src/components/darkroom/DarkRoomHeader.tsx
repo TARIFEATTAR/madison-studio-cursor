@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Save, Settings, HelpCircle, X } from "lucide-react";
+import { ArrowLeft, Save, Settings, HelpCircle, X, Download, CheckCircle, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,12 +11,23 @@ import {
 import { useNavigate } from "react-router-dom";
 import { LEDIndicator } from "./LEDIndicator";
 
+interface HeroImage {
+  id: string;
+  imageUrl: string;
+  isSaved: boolean;
+}
+
 interface DarkRoomHeaderProps {
   sessionCount: number;
   savedCount: number;
   isSaving: boolean;
   onSaveAll?: () => void;
   onOpenSettings?: () => void;
+  // Hero image actions
+  heroImage?: HeroImage | null;
+  onDownloadHero?: () => void;
+  onSaveHero?: () => void;
+  onRefineHero?: () => void;
 }
 
 export function DarkRoomHeader({
@@ -25,6 +36,10 @@ export function DarkRoomHeader({
   isSaving,
   onSaveAll,
   onOpenSettings,
+  heroImage,
+  onDownloadHero,
+  onSaveHero,
+  onRefineHero,
 }: DarkRoomHeaderProps) {
   const navigate = useNavigate();
 
@@ -49,9 +64,9 @@ export function DarkRoomHeader({
                 variant="ghost"
                 size="sm"
                 onClick={handleBack}
-                className="h-9 w-9 p-0 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-white/5 border border-transparent hover:border-[var(--darkroom-border)]"
+                className="h-8 w-8 p-0 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-white/5"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-4 h-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
@@ -66,13 +81,13 @@ export function DarkRoomHeader({
                 variant="ghost"
                 size="sm"
                 onClick={handleExit}
-                className="h-9 w-9 p-0 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-white/5 border border-transparent hover:border-[var(--darkroom-border)]"
+                className="h-8 w-8 p-0 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-white/5"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              <p>Exit to Create</p>
+              <p>Exit</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -86,35 +101,79 @@ export function DarkRoomHeader({
         </motion.h1>
       </div>
 
-      {/* Center: Session Info with LED */}
-      <div className="dark-room-header__session">
-        <LEDIndicator 
-          state={sessionCount > 0 ? "ready" : "off"} 
-          size="md" 
-        />
-        <span>Session</span>
-        <span className="dark-room-header__session-count">{sessionCount}</span>
-        {savedCount > 0 && (
-          <Badge
-            variant="outline"
-            className="ml-2 bg-[var(--led-ready)]/10 text-[var(--led-ready)] border-[var(--led-ready)]/30 font-mono text-[10px] uppercase tracking-wider"
+      {/* Center: Hero Image Actions (when image selected) */}
+      {heroImage && (
+        <div className="flex items-center gap-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onDownloadHero}
+            className="h-8 px-3 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-white/5 text-[11px] font-medium"
           >
-            {savedCount} saved
-          </Badge>
-        )}
-      </div>
+            <Download className="w-3.5 h-3.5 mr-1.5" />
+            Download
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onSaveHero}
+            disabled={isSaving || heroImage.isSaved}
+            className={`h-8 px-3 text-[11px] font-medium ${
+              heroImage.isSaved 
+                ? "text-[var(--led-ready)] bg-[var(--led-ready)]/10 hover:bg-[var(--led-ready)]/15" 
+                : "text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-accent)] hover:bg-[var(--darkroom-accent)]/10"
+            }`}
+          >
+            {isSaving ? (
+              <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+            ) : heroImage.isSaved ? (
+              <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+            ) : (
+              <Save className="w-3.5 h-3.5 mr-1.5" />
+            )}
+            {heroImage.isSaved ? "Saved" : "Save"}
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onRefineHero}
+            className="h-8 px-3 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-white/5 text-[11px] font-medium"
+          >
+            <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+            Refine
+          </Button>
+        </div>
+      )}
 
-      {/* Right: Actions */}
+      {/* Right: Session Info + Actions */}
       <div className="flex items-center gap-2">
+        {/* Session indicator - compact */}
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-black/20 border border-white/[0.04]">
+          <LEDIndicator 
+            state={sessionCount > 0 ? "ready" : "off"} 
+            size="sm" 
+          />
+          <span className="text-[10px] font-mono text-[var(--darkroom-text-dim)]">
+            {sessionCount}
+          </span>
+          {savedCount > 0 && (
+            <span className="text-[10px] font-mono text-[var(--led-ready)]">
+              ({savedCount})
+            </span>
+          )}
+        </div>
+
         {sessionCount > savedCount && onSaveAll && (
           <Button
             variant="ghost"
             size="sm"
             onClick={onSaveAll}
             disabled={isSaving}
-            className="h-9 px-3 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-accent)] hover:bg-white/5 border border-transparent hover:border-[var(--darkroom-border)] font-mono text-xs uppercase tracking-wider"
+            className="h-8 px-2 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-accent)] hover:bg-white/5 text-[10px] font-medium"
           >
-            <Save className="w-4 h-4 mr-2" />
+            <Save className="w-3.5 h-3.5 mr-1" />
             Save All
           </Button>
         )}
@@ -126,36 +185,16 @@ export function DarkRoomHeader({
                 variant="ghost"
                 size="sm"
                 onClick={() => window.open("/docs/dark-room", "_blank")}
-                className="h-9 w-9 p-0 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-white/5 border border-transparent hover:border-[var(--darkroom-border)]"
+                className="h-8 w-8 p-0 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-white/5"
               >
-                <HelpCircle className="w-4 h-4" />
+                <HelpCircle className="w-3.5 h-3.5" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              <p>Help & Tips</p>
+              <p>Help</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-
-        {onOpenSettings && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onOpenSettings}
-                  className="h-9 w-9 p-0 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-white/5 border border-transparent hover:border-[var(--darkroom-border)]"
-                >
-                  <Settings className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p>Settings</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
       </div>
     </header>
   );

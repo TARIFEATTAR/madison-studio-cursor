@@ -5,7 +5,6 @@ import {
   Clock,
   ArrowRight,
   Wand2,
-  MessageCircle,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -21,8 +20,10 @@ import {
   Sun,
   Globe,
   Maximize2,
-  Info,
   Aperture,
+  Plus,
+  ImagePlus,
+  Layers,
 } from "lucide-react";
 import { 
   LEDIndicator, 
@@ -31,7 +32,6 @@ import {
   type LEDState 
 } from "./LEDIndicator";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -40,12 +40,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { ProModeSettings } from "./ProSettings";
@@ -72,9 +66,15 @@ interface HistoryItem {
   timestamp: Date;
 }
 
+interface ProductSlot {
+  id: string;
+  imageUrl: string | null;
+  name?: string;
+}
+
 // AI Model options
 const AI_MODEL_OPTIONS = [
-  { value: "auto", label: "Auto", description: "AI picks what's best", badge: "SUGGESTED", group: "auto" },
+  { value: "auto", label: "Auto (Gemini 3.0)", description: "Best for beginners", badge: "DEFAULT", group: "auto" },
   { value: "gemini-3-pro-image", label: "Gemini 3.0 Pro", description: "Google's latest", badge: "BEST", group: "gemini" },
   { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash", description: "Fast & reliable", badge: "FREE", group: "gemini" },
   { value: "freepik-seedream-4", label: "Seedream 4", description: "4K capable", badge: "4K", group: "freepik" },
@@ -108,9 +108,6 @@ interface RightPanelProps {
   history: HistoryItem[];
   onRestoreFromHistory: (item: HistoryItem) => void;
 
-  // Madison chat (optional)
-  onSendMessage?: (message: string) => void;
-  chatMessages?: { role: "user" | "assistant"; content: string }[];
 
   // Context info
   hasProduct: boolean;
@@ -122,6 +119,10 @@ interface RightPanelProps {
   proSettings?: ProModeSettings;
   onProSettingsChange?: (settings: ProModeSettings) => void;
   isGenerating?: boolean;
+  
+  // Multi-product slots for compositing
+  productSlots?: ProductSlot[];
+  onProductSlotsChange?: (slots: ProductSlot[]) => void;
 }
 
 // Quick Preset Button
@@ -284,7 +285,7 @@ function StyleReferencesSection({ onApplyStyle }: { onApplyStyle: (style: string
           {styleImages.length > 0 && (
             <Badge
               variant="outline"
-              className="ml-1 bg-transparent text-[var(--led-ready)] border-[var(--led-ready)]/30 text-[9px] px-1.5 py-0"
+              className="ml-1 bg-transparent text-[var(--darkroom-text-muted)] border-white/[0.12] text-[9px] px-1.5 py-0"
             >
               {styleImages.length} attached
             </Badge>
@@ -404,8 +405,6 @@ export function RightPanel({
   onApplyPreset,
   history,
   onRestoreFromHistory,
-  onSendMessage,
-  chatMessages,
   hasProduct,
   hasBackground,
   hasStyle,
@@ -413,12 +412,13 @@ export function RightPanel({
   proSettings,
   onProSettingsChange,
   isGenerating = false,
+  productSlots,
+  onProductSlotsChange,
 }: RightPanelProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [showChat, setShowChat] = useState(false);
-  const [chatInput, setChatInput] = useState("");
   const [activeTab, setActiveTab] = useState<RightPanelTab>("madison");
+  const productSlotInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   
   // Get photography options
   const cameraOptions = getCameraOptions();
@@ -446,13 +446,6 @@ export function RightPanel({
   if (proSettingsCount === 0) {
     contextTips.push("Enable Pro Settings for camera & lighting control");
   }
-
-  const handleSendChat = () => {
-    if (chatInput.trim() && onSendMessage) {
-      onSendMessage(chatInput.trim());
-      setChatInput("");
-    }
-  };
 
   return (
     <>
@@ -483,22 +476,30 @@ export function RightPanel({
         }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
-        {/* Header with Tabs - Glossy Camera Top Plate Style */}
-        <div className="relative px-2 py-2 border-b border-[var(--darkroom-border)] bg-[var(--camera-body)] overflow-hidden">
-          {/* Glossy highlight */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/[0.06] via-transparent to-black/20 pointer-events-none" />
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        {/* Header with Tabs - Tight firmware style */}
+        <div className="relative px-2 py-1.5 border-b border-[var(--darkroom-border)] bg-[var(--camera-body)]">
+          {/* Subtle top highlight */}
+          <div className="absolute top-0 left-0 right-0 h-px bg-white/[0.04]" />
           
           <div className="relative flex items-center gap-1">
-            {/* Tab Buttons - Firmware style */}
-            <div className="flex-1 flex gap-1 p-1 rounded-lg bg-black/30 border border-white/5">
+            {/* Collapse button - Left side */}
+            <button 
+              className="w-7 h-7 flex items-center justify-center rounded bg-black/20 border border-white/[0.04] text-[var(--darkroom-text-dim)] hover:text-[var(--darkroom-text)] hover:bg-white/5 transition-colors"
+              onClick={() => setIsCollapsed(true)}
+              title="Collapse panel"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+            
+            {/* Tab Buttons - Compact firmware style */}
+            <div className="flex-1 flex gap-0.5 p-0.5 rounded bg-black/20 border border-white/[0.04]">
               <button
                 onClick={() => setActiveTab("madison")}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-[12px] font-mono uppercase tracking-wider transition-all duration-200",
+                  "flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-[11px] font-mono uppercase tracking-wide transition-all",
                   activeTab === "madison"
-                    ? "bg-[var(--camera-body)] text-[var(--darkroom-accent)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_8px_rgba(0,0,0,0.3)] border border-[var(--darkroom-accent)]/30"
-                    : "text-[var(--darkroom-text-dim)] hover:text-[var(--darkroom-text-muted)] hover:bg-white/5"
+                    ? "bg-[var(--camera-body)] text-[var(--darkroom-accent)] border border-[var(--darkroom-accent)]/20"
+                    : "text-[var(--darkroom-text-dim)] hover:text-[var(--darkroom-text-muted)] hover:bg-white/[0.03]"
                 )}
               >
                 <Wand2 className="w-3 h-3" />
@@ -507,88 +508,73 @@ export function RightPanel({
               <button
                 onClick={() => setActiveTab("settings")}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-[12px] font-mono uppercase tracking-wider transition-all duration-200",
+                  "flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-[11px] font-mono uppercase tracking-wide transition-all",
                   activeTab === "settings"
-                    ? "bg-[var(--camera-body)] text-[var(--darkroom-accent)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_8px_rgba(0,0,0,0.3)] border border-[var(--darkroom-accent)]/30"
-                    : "text-[var(--darkroom-text-dim)] hover:text-[var(--darkroom-text-muted)] hover:bg-white/5"
+                    ? "bg-[var(--camera-body)] text-[var(--darkroom-accent)] border border-[var(--darkroom-accent)]/20"
+                    : "text-[var(--darkroom-text-dim)] hover:text-[var(--darkroom-text-muted)] hover:bg-white/[0.03]"
                 )}
               >
                 <SlidersHorizontal className="w-3 h-3" />
                 Settings
               </button>
             </div>
-            
-            {/* Collapse button */}
-            <button 
-              className="w-8 h-8 flex items-center justify-center rounded-md bg-black/30 border border-white/5 text-[var(--darkroom-text-dim)] hover:text-[var(--darkroom-text)] hover:bg-white/5 transition-colors"
-              onClick={() => setIsCollapsed(true)}
-              title="Collapse panel"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
           </div>
         </div>
 
       {/* Content */}
       <div className="right-panel__content">
         
-        {/* === SETTINGS TAB - Compact Camera Body Aesthetic === */}
+        {/* === SETTINGS TAB - Compact Firmware Layout === */}
         {activeTab === "settings" && proSettings && onProSettingsChange && (
-          <div className="space-y-3">
-            {/* Compact Status Bar */}
-            <div className="flex items-center justify-between px-1 py-2 border-b border-white/5">
-              <div className="flex items-center gap-2">
-                <LEDIndicator 
-                  state={isGenerating ? "processing" : Object.values(proSettings).filter(Boolean).length > 0 ? "ready" : "off"} 
-                  size="md"
-                />
-                <span className="text-[10px] font-mono text-[var(--darkroom-text-muted)] uppercase tracking-[0.1em]">
-                  {isGenerating ? "Processing" : `${Object.values(proSettings).filter(Boolean).length} settings active`}
-                </span>
+          <div className="space-y-2">
+            {/* Status Header */}
+            <div className="camera-panel">
+              <div className="flex items-center justify-between p-2.5">
+                <div className="flex items-center gap-2">
+                  <LEDIndicator 
+                    state={isGenerating ? "processing" : Object.values(proSettings).filter(Boolean).length > 0 ? "ready" : "off"} 
+                    size="sm"
+                  />
+                  <div>
+                    <span className="text-[11px] font-medium text-[var(--darkroom-text)] block">
+                      {isGenerating ? "Processing..." : `${Object.values(proSettings).filter(Boolean).length} Active`}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => onProSettingsChange({
+                    aiProvider: "auto",
+                    resolution: "standard",
+                    aspectRatio: "1:1",
+                    camera: undefined,
+                    lighting: undefined,
+                    environment: undefined,
+                    characterId: undefined,
+                  })}
+                  className="text-[10px] text-[var(--darkroom-text-dim)] hover:text-[var(--led-error)] font-medium flex items-center gap-1 px-2 py-1 rounded hover:bg-white/5 transition-colors"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  Reset
+                </button>
               </div>
-              <button
-                onClick={() => onProSettingsChange({
-                  aiProvider: "auto",
-                  resolution: "standard",
-                  aspectRatio: "1:1",
-                  camera: undefined,
-                  lighting: undefined,
-                  environment: undefined,
-                  characterId: undefined,
-                })}
-                className="text-[9px] text-[var(--darkroom-text-dim)] hover:text-[var(--led-error)] font-mono uppercase tracking-wider flex items-center gap-1 transition-colors"
-              >
-                <RefreshCw className="w-2.5 h-2.5" />
-                Reset All
-              </button>
             </div>
 
-            {/* AI Model - Compact */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
+            {/* AI Model */}
+            <div className="camera-panel p-2.5 space-y-2">
+              <div className="flex items-center gap-1.5">
                 <LEDIndicator 
                   state={proSettings.aiProvider && proSettings.aiProvider !== "auto" ? "active" : "ready"} 
                   size="sm"
                 />
                 <Cpu className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">AI Model</span>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="w-2.5 h-2.5 text-[var(--darkroom-text-dim)] cursor-help ml-auto" />
-                    </TooltipTrigger>
-                    <TooltipContent side="left" className="max-w-[200px]">
-                      <p className="text-xs">Choose the AI model for generation.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <span className="text-[11px] font-medium text-[var(--darkroom-text)]">AI Model</span>
               </div>
               <Select
                 value={proSettings.aiProvider || "auto"}
                 onValueChange={(v) => handleSettingChange("aiProvider", v)}
                 disabled={isGenerating}
               >
-                <SelectTrigger className="w-full h-8 bg-[var(--camera-body-deep)] border-white/5 text-[var(--darkroom-text)] text-[11px] font-mono rounded-md">
+                <SelectTrigger className="w-full h-8 bg-[var(--camera-body-deep)] border-white/[0.06] text-[var(--darkroom-text)] text-[11px] rounded">
                   <SelectValue placeholder="Select model..." />
                 </SelectTrigger>
                 <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] max-h-[280px]">
@@ -603,19 +589,19 @@ export function RightPanel({
                     return (
                       <div key={option.value}>
                         {showGroupHeader && option.group !== "auto" && (
-                          <div className="px-2 py-1.5 text-[10px] uppercase tracking-wider text-[var(--darkroom-text-dim)] font-medium border-t border-[var(--darkroom-border)] mt-1 first:mt-0 first:border-t-0">
+                          <div className="px-2 py-1 text-[9px] uppercase tracking-wider text-[var(--darkroom-text-dim)] font-medium border-t border-[var(--darkroom-border)] mt-1 first:mt-0 first:border-t-0">
                             {groupLabels[option.group] || option.group}
                           </div>
                         )}
-                        <SelectItem value={option.value} className="text-[var(--darkroom-text)]">
-                          <span className="flex items-center gap-2">
+                        <SelectItem value={option.value} className="text-[var(--darkroom-text)] text-[11px]">
+                          <span className="flex items-center gap-1.5">
                             <span>{option.label}</span>
                             {option.badge && (
                               <span className={cn(
-                                "text-[8px] px-1.5 py-0.5 rounded font-medium",
+                                "text-[8px] px-1 py-0.5 rounded font-medium",
                                 option.badge === "BEST" && "bg-purple-500/20 text-purple-400",
                                 option.badge === "FREE" && "bg-emerald-500/20 text-emerald-400",
-                                option.badge === "SUGGESTED" && "bg-[var(--led-ready)]/20 text-[var(--led-ready)]",
+                                option.badge === "DEFAULT" && "bg-white/10 text-[var(--darkroom-text-muted)]",
                                 option.badge === "NEW" && "bg-emerald-500/20 text-emerald-400",
                                 option.badge === "FAST" && "bg-cyan-500/20 text-cyan-400",
                                 option.badge === "4K" && "bg-amber-500/20 text-amber-400",
@@ -633,66 +619,57 @@ export function RightPanel({
               </Select>
             </div>
 
-            {/* Resolution - Compact Exposure Meter Style */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
+            {/* Resolution */}
+            <div className="camera-panel p-2.5 space-y-2">
+              <div className="flex items-center gap-1.5">
                 <LEDIndicator 
                   state={proSettings.resolution && proSettings.resolution !== "standard" ? "active" : "off"} 
                   size="sm"
                 />
                 <Maximize2 className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Resolution</span>
+                <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Resolution</span>
               </div>
-              <div className="flex gap-1 p-1 rounded-lg bg-black/30 border border-white/5">
-                  {RESOLUTION_OPTIONS.map((option, idx) => {
-                    const isSelected = proSettings.resolution === option.value || 
-                      (!proSettings.resolution && option.value === "standard");
-                    const isLit = RESOLUTION_OPTIONS.findIndex(o => 
-                      o.value === (proSettings.resolution || "standard")
-                    ) >= idx;
-                    
-                    return (
-                      <button
-                        key={option.value}
-                        onClick={() => handleSettingChange("resolution", option.value)}
-                        disabled={isGenerating}
-                        className={cn(
-                          "flex-1 py-2 px-1 rounded transition-all text-center",
-                          isSelected 
-                            ? "bg-[var(--led-ready)]/20" 
-                            : "bg-transparent hover:bg-white/5"
-                        )}
-                      >
-                        <div className={cn(
-                          "h-2 rounded-sm mb-1.5 mx-auto transition-all",
-                          isLit 
-                            ? "bg-[var(--led-ready)] shadow-[0_0_8px_var(--led-ready)]" 
-                            : "bg-[var(--led-off)]"
-                        )} style={{ width: "80%" }} />
-                        <span className={cn(
-                          "text-[12px] font-mono uppercase tracking-wider block",
-                          isSelected ? "text-[var(--led-ready)]" : "text-[var(--darkroom-text-dim)]"
-                        )}>
-                          {option.label}
-                        </span>
-                        {option.badge && (
-                          <span className="text-[8px] text-purple-400 block">{option.badge}</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+              <div className="flex gap-1">
+                {RESOLUTION_OPTIONS.map((option) => {
+                  const isSelected = proSettings.resolution === option.value || 
+                    (!proSettings.resolution && option.value === "standard");
+                  
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => handleSettingChange("resolution", option.value)}
+                      disabled={isGenerating}
+                      className={cn(
+                        "flex-1 py-2 px-1.5 rounded transition-all text-center border",
+                        isSelected 
+                          ? "bg-white/[0.06] border-white/[0.12]" 
+                          : "bg-[var(--camera-body-deep)] border-white/[0.04] hover:border-white/[0.08]"
+                      )}
+                    >
+                      <span className={cn(
+                        "text-[11px] font-medium block",
+                        isSelected ? "text-[var(--darkroom-text)]" : "text-[var(--darkroom-text-muted)]"
+                      )}>
+                        {option.label}
+                      </span>
+                      {option.badge && (
+                        <span className="text-[9px] text-purple-400 block">{option.badge}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Aspect Ratio - Compact Grid */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
+            {/* Aspect Ratio */}
+            <div className="camera-panel p-2.5 space-y-2">
+              <div className="flex items-center gap-1.5">
                 <LEDIndicator 
                   state={proSettings.aspectRatio && proSettings.aspectRatio !== "1:1" ? "active" : "off"} 
                   size="sm"
                 />
                 <Aperture className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Aspect Ratio</span>
+                <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Aspect Ratio</span>
               </div>
               <div className="grid grid-cols-3 gap-1">
                 {ASPECT_RATIO_OPTIONS.map((option) => {
@@ -704,16 +681,19 @@ export function RightPanel({
                       onClick={() => handleSettingChange("aspectRatio", option.value)}
                       disabled={isGenerating}
                       className={cn(
-                        "px-1.5 py-1.5 rounded-md text-center transition-all border",
+                        "py-1.5 px-1 rounded text-center transition-all border",
                         isSelected
-                          ? "bg-[var(--led-ready)]/10 border-[var(--led-ready)]/30 text-[var(--led-ready)]"
-                          : "bg-[var(--camera-body-deep)] border-white/5 text-[var(--darkroom-text-muted)] hover:border-white/10"
+                          ? "bg-white/[0.06] border-white/[0.12]"
+                          : "bg-[var(--camera-body-deep)] border-white/[0.04] hover:border-white/[0.08]"
                       )}
                     >
-                      <span className="text-[10px] font-medium block">{option.label}</span>
                       <span className={cn(
-                        "text-[10px] font-mono block",
-                        isSelected ? "text-[var(--led-ready)]/70" : "opacity-50"
+                        "text-[10px] font-medium block",
+                        isSelected ? "text-[var(--darkroom-text)]" : "text-[var(--darkroom-text-muted)]"
+                      )}>{option.label}</span>
+                      <span className={cn(
+                        "text-[9px] font-mono block",
+                        isSelected ? "text-[var(--darkroom-text-muted)]" : "text-[var(--darkroom-text-dim)]"
                       )}>{option.value}</span>
                     </button>
                   );
@@ -721,101 +701,134 @@ export function RightPanel({
               </div>
             </div>
 
-            {/* Camera / Lighting / Environment - Compact Dropdowns */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <LEDIndicator 
-                  state={proSettings.camera || proSettings.lighting || proSettings.environment ? "active" : "off"} 
-                  size="sm"
-                />
-                <Camera className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Camera</span>
-              </div>
-              <Select
-                value={proSettings.camera || "none"}
-                onValueChange={(v) => handleSettingChange("camera", v === "none" ? undefined : v)}
-                disabled={isGenerating}
+            {/* Pro Controls - Collapsible */}
+            <div className="camera-panel">
+              <button 
+                onClick={() => setShowHistory(!showHistory)}
+                className="w-full flex items-center justify-between p-2.5"
               >
-                <SelectTrigger className="w-full h-8 bg-[var(--camera-body-deep)] border-white/5 text-[var(--darkroom-text)] text-[11px] rounded-md">
-                  <SelectValue placeholder="No camera style" />
-                </SelectTrigger>
-                <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] max-h-[200px]">
-                  <SelectItem value="none" className="text-[var(--darkroom-text)]">No camera style</SelectItem>
-                  {cameraOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value} className="text-[var(--darkroom-text)]">
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <div className="flex items-center gap-1.5">
+                  <LEDIndicator 
+                    state={proSettings.camera || proSettings.lighting || proSettings.environment ? "active" : "off"} 
+                    size="sm"
+                  />
+                  <Camera className="w-3 h-3 text-[var(--darkroom-accent)]" />
+                  <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Pro Controls</span>
+                </div>
+                <motion.div
+                  animate={{ rotate: showHistory ? 180 : 0 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <ChevronDown className="w-3.5 h-3.5 text-[var(--darkroom-text-dim)]" />
+                </motion.div>
+              </button>
+              
+              <AnimatePresence>
+                {showHistory && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-2.5 pb-2.5 space-y-2 border-t border-white/[0.04] pt-2">
+                      {/* Camera */}
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <Camera className="w-3 h-3 text-[var(--darkroom-text-dim)]" />
+                          <span className="text-[10px] text-[var(--darkroom-text-muted)]">Camera Style</span>
+                        </div>
+                        <Select
+                          value={proSettings.camera || "none"}
+                          onValueChange={(v) => handleSettingChange("camera", v === "none" ? undefined : v)}
+                          disabled={isGenerating}
+                        >
+                          <SelectTrigger className="w-full h-7 bg-[var(--camera-body-deep)] border-white/[0.06] text-[var(--darkroom-text)] text-[10px] rounded">
+                            <SelectValue placeholder="No camera style" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] max-h-[200px]">
+                            <SelectItem value="none" className="text-[var(--darkroom-text)] text-[11px]">No camera style</SelectItem>
+                            {cameraOptions.map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value} className="text-[var(--darkroom-text)] text-[11px]">
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Lighting */}
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <Sun className="w-3 h-3 text-[var(--darkroom-text-dim)]" />
+                          <span className="text-[10px] text-[var(--darkroom-text-muted)]">Lighting</span>
+                        </div>
+                        <Select
+                          value={proSettings.lighting || "none"}
+                          onValueChange={(v) => handleSettingChange("lighting", v === "none" ? undefined : v)}
+                          disabled={isGenerating}
+                        >
+                          <SelectTrigger className="w-full h-7 bg-[var(--camera-body-deep)] border-white/[0.06] text-[var(--darkroom-text)] text-[10px] rounded">
+                            <SelectValue placeholder="No lighting style" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] max-h-[200px]">
+                            <SelectItem value="none" className="text-[var(--darkroom-text)] text-[11px]">No lighting style</SelectItem>
+                            {lightingOptions.map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value} className="text-[var(--darkroom-text)] text-[11px]">
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Environment */}
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <Globe className="w-3 h-3 text-[var(--darkroom-text-dim)]" />
+                          <span className="text-[10px] text-[var(--darkroom-text-muted)]">Environment</span>
+                        </div>
+                        <Select
+                          value={proSettings.environment || "none"}
+                          onValueChange={(v) => handleSettingChange("environment", v === "none" ? undefined : v)}
+                          disabled={isGenerating}
+                        >
+                          <SelectTrigger className="w-full h-7 bg-[var(--camera-body-deep)] border-white/[0.06] text-[var(--darkroom-text)] text-[10px] rounded">
+                            <SelectValue placeholder="No environment" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] max-h-[200px]">
+                            <SelectItem value="none" className="text-[var(--darkroom-text)] text-[11px]">No environment</SelectItem>
+                            {environmentOptions.map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value} className="text-[var(--darkroom-text)] text-[11px]">
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <LEDIndicator state={proSettings.lighting ? "active" : "off"} size="sm" />
-                <Sun className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Lighting</span>
-              </div>
-              <Select
-                value={proSettings.lighting || "none"}
-                onValueChange={(v) => handleSettingChange("lighting", v === "none" ? undefined : v)}
-                disabled={isGenerating}
-              >
-                <SelectTrigger className="w-full h-8 bg-[var(--camera-body-deep)] border-white/5 text-[var(--darkroom-text)] text-[11px] rounded-md">
-                  <SelectValue placeholder="No lighting style" />
-                </SelectTrigger>
-                <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] max-h-[200px]">
-                  <SelectItem value="none" className="text-[var(--darkroom-text)]">No lighting style</SelectItem>
-                  {lightingOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value} className="text-[var(--darkroom-text)]">
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <LEDIndicator state={proSettings.environment ? "active" : "off"} size="sm" />
-                <Globe className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Environment</span>
-              </div>
-              <Select
-                value={proSettings.environment || "none"}
-                onValueChange={(v) => handleSettingChange("environment", v === "none" ? undefined : v)}
-                disabled={isGenerating}
-              >
-                <SelectTrigger className="w-full h-8 bg-[var(--camera-body-deep)] border-white/5 text-[var(--darkroom-text)] text-[11px] rounded-md">
-                  <SelectValue placeholder="No environment" />
-                </SelectTrigger>
-                <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] max-h-[200px]">
-                  <SelectItem value="none" className="text-[var(--darkroom-text)]">No environment</SelectItem>
-                  {environmentOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value} className="text-[var(--darkroom-text)]">
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Visual Squad Selector - Compact */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
+            {/* Visual Style */}
+            <div className="camera-panel p-2.5 space-y-2">
+              <div className="flex items-center gap-1.5">
                 <LEDIndicator state={proSettings.visualSquad ? "active" : "ready"} size="sm" />
                 <Palette className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Visual Style</span>
+                <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Visual Style</span>
               </div>
               <div className="grid grid-cols-2 gap-1">
                 <button
                   onClick={() => handleSettingChange("visualSquad", undefined)}
                   disabled={isGenerating}
                   className={cn(
-                    "px-1.5 py-1.5 rounded-md text-[10px] transition-all text-center border",
+                    "py-1.5 px-1.5 rounded text-[10px] transition-all text-center border",
                     !proSettings.visualSquad
-                      ? "bg-[var(--led-ready)]/10 border-[var(--led-ready)]/30 text-[var(--led-ready)] font-medium"
-                      : "bg-[var(--camera-body-deep)] border-white/5 text-[var(--darkroom-text-muted)] hover:border-white/10"
+                      ? "bg-white/[0.06] border-white/[0.12] text-[var(--darkroom-text)] font-medium"
+                      : "bg-[var(--camera-body-deep)] border-white/[0.04] text-[var(--darkroom-text-muted)] hover:border-white/[0.08]"
                   )}
                 >
                   Auto
@@ -826,10 +839,10 @@ export function RightPanel({
                     onClick={() => handleSettingChange("visualSquad", squad.value)}
                     disabled={isGenerating}
                     className={cn(
-                      "px-1.5 py-1.5 rounded-md text-[10px] transition-all text-center border",
+                      "py-1.5 px-1.5 rounded text-[10px] transition-all text-center border",
                       proSettings.visualSquad === squad.value
                         ? "bg-[var(--led-active)]/10 border-[var(--led-active)]/30 text-[var(--led-active)] font-medium"
-                        : "bg-[var(--camera-body-deep)] border-white/5 text-[var(--darkroom-text-muted)] hover:border-white/10"
+                        : "bg-[var(--camera-body-deep)] border-white/[0.04] text-[var(--darkroom-text-muted)] hover:border-white/[0.08]"
                     )}
                   >
                     {squad.label}
@@ -840,225 +853,175 @@ export function RightPanel({
           </div>
         )}
 
-        {/* === MADISON TAB - Compact Layout === */}
+        {/* === MADISON TAB - Multi-Product & Aspect Ratio === */}
         {activeTab === "madison" && (
-          <>
-        {/* Quick Shot Types - Compact horizontal pills */}
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <LEDIndicator state="ready" size="sm" />
-            <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Shot Type</span>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {[
-              { label: "Hero", icon: "🎯" },
-              { label: "Lifestyle", icon: "🏠" },
-              { label: "Detail", icon: "🔍" },
-              { label: "Scale", icon: "📏" },
-              { label: "Package", icon: "📦" },
-            ].map((shot) => (
-              <button
-                key={shot.label}
-                onClick={() => onApplyPreset(shot.label)}
-                className="px-2.5 py-1.5 rounded-md text-[12px] font-medium bg-[var(--camera-body-deep)] border border-white/5 text-[var(--darkroom-text-muted)] hover:border-[var(--darkroom-accent)]/50 hover:text-[var(--darkroom-accent)] transition-all flex items-center gap-1"
-              >
-                <span className="text-[11px]">{shot.icon}</span>
-                {shot.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Platform Presets - Compact grid */}
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <LEDIndicator state="off" size="sm" />
-            <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Platform</span>
-          </div>
-          <div className="grid grid-cols-2 gap-1.5">
-            {[
-              { label: "Etsy", color: "#fb923c" },
-              { label: "Amazon", color: "#fbbf24" },
-              { label: "Instagram", color: "#f472b6" },
-              { label: "TikTok", color: "#22d3ee" },
-            ].map((platform) => (
-              <button
-                key={platform.label}
-                onClick={() => onApplyPreset(`Optimize for ${platform.label}`)}
-                className="px-2.5 py-2 rounded-md text-[10px] font-semibold bg-[var(--camera-body-deep)] border border-white/5 hover:border-white/10 transition-all text-left"
-                style={{ color: platform.color }}
-              >
-                {platform.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Smart Suggestions - Compact cards */}
-        {suggestions.length > 0 && (
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <LEDIndicator state="active" size="sm" />
-              <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Suggestions</span>
-            </div>
-            <div className="space-y-1.5">
-              {suggestions.slice(0, 2).map((suggestion) => (
-                <button
-                  key={suggestion.id}
-                  onClick={() => onUseSuggestion(suggestion)}
-                  className="w-full p-2.5 rounded-md text-left text-[12px] leading-relaxed bg-[var(--camera-body-deep)] border border-white/5 text-[var(--darkroom-text-muted)] hover:border-[var(--darkroom-accent)]/30 hover:bg-[var(--darkroom-accent)]/5 transition-all"
-                >
-                  {suggestion.text}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Session History - Compact collapsible */}
-        {history.length > 0 && (
-          <div className="mb-4">
-            <button
-              className="w-full flex items-center justify-between mb-2"
-              onClick={() => setShowHistory(!showHistory)}
-            >
-              <div className="flex items-center gap-2">
-                <LEDIndicator state={showHistory ? "active" : "off"} size="sm" />
-                <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">
-                  History ({history.length})
+          <div className="space-y-2">
+            {/* Multi-Product Upload Grid */}
+            <div className="camera-panel p-2.5 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <LEDIndicator 
+                    state={productSlots?.some(s => s.imageUrl) ? "active" : "ready"} 
+                    size="sm"
+                  />
+                  <Layers className="w-3 h-3 text-[var(--darkroom-accent)]" />
+                  <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Product Slots</span>
+                </div>
+                <span className="text-[9px] font-mono text-[var(--darkroom-text-dim)]">
+                  {productSlots?.filter(s => s.imageUrl).length || 0}/6
                 </span>
               </div>
-              <motion.div
-                animate={{ rotate: showHistory ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <ChevronDown className="w-3 h-3 text-[var(--darkroom-text-dim)]" />
-              </motion.div>
-            </button>
-
-            <AnimatePresence>
-              {showHistory && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
-                >
-                  <div className="space-y-1 max-h-[120px] overflow-y-auto">
-                    {history.slice(0, 5).map((item) => (
-                      <button
-                        key={item.id}
-                        className="w-full px-2.5 py-1.5 rounded text-[10px] text-left bg-[var(--camera-body-deep)] border border-white/5 text-[var(--darkroom-text-dim)] hover:text-[var(--darkroom-text-muted)] hover:border-white/10 transition-all truncate"
-                        onClick={() => onRestoreFromHistory(item)}
-                      >
-                        {item.prompt}
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        )}
-
-        {/* Pro Tips Section - Fills void space */}
-        <div className="mt-6 p-3 rounded-lg bg-gradient-to-b from-[var(--camera-body-deep)] to-transparent border border-white/5">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-[var(--darkroom-accent)]" />
-            <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[var(--darkroom-text-dim)]">Pro Tips</span>
-          </div>
-          <div className="space-y-2.5">
-            <div className="flex items-start gap-2">
-              <span className="text-[10px] text-[var(--darkroom-accent)] mt-0.5">›</span>
-              <p className="text-[12px] leading-relaxed text-[var(--darkroom-text-dim)]">
-                Add a <span className="text-[var(--darkroom-text-muted)]">product image</span> first for best results
-              </p>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-[10px] text-[var(--darkroom-accent)] mt-0.5">›</span>
-              <p className="text-[12px] leading-relaxed text-[var(--darkroom-text-dim)]">
-                Describe <span className="text-[var(--darkroom-text-muted)]">mood & setting</span>, not just the product
-              </p>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-[10px] text-[var(--darkroom-accent)] mt-0.5">›</span>
-              <p className="text-[12px] leading-relaxed text-[var(--darkroom-text-dim)]">
-                Use <span className="text-[var(--darkroom-text-muted)]">Settings</span> tab for aspect ratio & quality
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Chat with Madison (optional) */}
-        {onSendMessage && (
-          <div className="mt-auto pt-4 border-t border-white/5">
-            <button
-              className="chat-toggle"
-              onClick={() => setShowChat(!showChat)}
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span>Chat with Madison</span>
-            </button>
-
-            <AnimatePresence>
-              {showChat && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden mt-3"
-                >
-                  {/* Chat Messages */}
-                  {chatMessages && chatMessages.length > 0 && (
-                    <div className="max-h-[200px] overflow-y-auto mb-3 space-y-2">
-                      {chatMessages.map((msg, i) => (
-                        <div
-                          key={i}
-                          className={cn(
-                            "text-xs p-2 rounded-md",
-                            msg.role === "user"
-                              ? "bg-[var(--darkroom-accent)]/20 text-[var(--darkroom-text)] ml-4"
-                              : "bg-[var(--darkroom-surface-elevated)] text-[var(--darkroom-text-muted)] mr-4"
-                          )}
-                        >
-                          {msg.content}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Chat Input */}
-                  <div className="flex gap-2">
-                    <Input
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendChat();
+              
+              {/* 3x2 Grid of Drop Zones */}
+              <div className="grid grid-cols-3 gap-1.5">
+                {Array.from({ length: 6 }).map((_, index) => {
+                  const slot = productSlots?.[index];
+                  const hasImage = slot?.imageUrl;
+                  
+                  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                      if (ev.target?.result && onProductSlotsChange) {
+                        const newSlots = [...(productSlots || [])];
+                        // Ensure we have enough slots
+                        while (newSlots.length <= index) {
+                          newSlots.push({ id: `slot-${newSlots.length}`, imageUrl: null });
                         }
-                      }}
-                      placeholder="Ask for help..."
-                      className="h-9 bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm"
-                    />
-                    <Button
-                      size="sm"
-                      onClick={handleSendChat}
-                      disabled={!chatInput.trim()}
-                      className="h-9 px-3 bg-[var(--darkroom-accent)] hover:bg-[var(--darkroom-accent-hover)] text-[var(--darkroom-bg)]"
+                        newSlots[index] = {
+                          id: slot?.id || `slot-${index}`,
+                          imageUrl: ev.target.result as string,
+                          name: file.name,
+                        };
+                        onProductSlotsChange(newSlots);
+                        toast.success(`Product ${index + 1} added`);
+                      }
+                    };
+                    reader.readAsDataURL(file);
+                    // Reset input
+                    if (productSlotInputRefs.current[index]) {
+                      productSlotInputRefs.current[index]!.value = '';
+                    }
+                  };
+                  
+                  const handleRemove = (e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    if (onProductSlotsChange && productSlots) {
+                      const newSlots = [...productSlots];
+                      newSlots[index] = { id: slot?.id || `slot-${index}`, imageUrl: null };
+                      onProductSlotsChange(newSlots);
+                      toast.success(`Product ${index + 1} removed`);
+                    }
+                  };
+                  
+                  return (
+                    <div key={index} className="relative">
+                      <input
+                        ref={(el) => { productSlotInputRefs.current[index] = el; }}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                        id={`product-slot-${index}`}
+                      />
+                      <motion.label
+                        htmlFor={`product-slot-${index}`}
+                        className={cn(
+                          "aspect-square rounded flex items-center justify-center cursor-pointer transition-all border overflow-hidden",
+                          hasImage
+                            ? "border-white/[0.12] bg-black"
+                            : "border-dashed border-white/[0.06] bg-[var(--camera-body-deep)] hover:border-white/[0.12] hover:bg-white/[0.03]"
+                        )}
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                      >
+                        {hasImage ? (
+                          <img 
+                            src={slot.imageUrl!} 
+                            alt={`Product ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center gap-0.5">
+                            <Plus className="w-3 h-3 text-[var(--darkroom-text-dim)]" />
+                            <span className="text-[8px] font-mono text-[var(--darkroom-text-dim)]">{index + 1}</span>
+                          </div>
+                        )}
+                      </motion.label>
+                      
+                      {/* Remove button */}
+                      {hasImage && (
+                        <motion.button
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          onClick={handleRemove}
+                          className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[var(--led-error)] text-white flex items-center justify-center hover:bg-red-500 transition-colors z-10"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </motion.button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* Helper text */}
+              <p className="text-[9px] text-[var(--darkroom-text-dim)]">
+                Add products to composite into scenes
+              </p>
+            </div>
+
+            {/* Quick Aspect Ratios */}
+            <div className="camera-panel p-2.5 space-y-2">
+              <div className="flex items-center gap-1.5">
+                <LEDIndicator 
+                  state={proSettings?.aspectRatio && proSettings.aspectRatio !== "1:1" ? "active" : "ready"} 
+                  size="sm"
+                />
+                <Aperture className="w-3 h-3 text-[var(--darkroom-accent)]" />
+                <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Aspect Ratio</span>
+              </div>
+              <div className="grid grid-cols-3 gap-1">
+                {[
+                  { label: "Square", value: "1:1", desc: "Products" },
+                  { label: "Landscape", value: "16:9", desc: "Website" },
+                  { label: "Story/Reel", value: "9:16", desc: "TikTok/IG" },
+                  { label: "Social", value: "4:5", desc: "IG Feed" },
+                  { label: "Classic", value: "4:3", desc: "Etsy/Print" },
+                  { label: "Banner", value: "2:1", desc: "Hero/Wide" },
+                ].map((ratio) => {
+                  const isSelected = proSettings?.aspectRatio === ratio.value ||
+                    (!proSettings?.aspectRatio && ratio.value === "1:1");
+                  return (
+                    <button
+                      key={ratio.value}
+                      onClick={() => onProSettingsChange?.({ ...proSettings, aspectRatio: ratio.value })}
+                      disabled={isGenerating}
+                      className={cn(
+                        "py-1.5 px-1 rounded text-center transition-all border",
+                        isSelected
+                          ? "bg-white/[0.06] border-white/[0.12]"
+                          : "bg-[var(--camera-body-deep)] border-white/[0.04] hover:border-white/[0.08]"
+                      )}
                     >
-                      Send
-                    </Button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                      <span className={cn(
+                        "text-[10px] font-medium block",
+                        isSelected ? "text-[var(--darkroom-text)]" : "text-[var(--darkroom-text-muted)]"
+                      )}>{ratio.label}</span>
+                      <span className={cn(
+                        "text-[9px] font-mono block",
+                        isSelected ? "text-[var(--darkroom-text-muted)]" : "text-[var(--darkroom-text-dim)]"
+                      )}>{ratio.value}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
-        </>
-        )}
+
       </div>
     </motion.aside>
     </>

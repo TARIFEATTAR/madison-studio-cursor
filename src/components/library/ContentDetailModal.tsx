@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Edit2, Send, Copy, Check, FileDown, Calendar, MessageSquare, Download, Trash2, X, Mail } from "lucide-react";
+import { Edit2, Send, Copy, Check, FileDown, Calendar, MessageSquare, Download, Trash2, X, Mail, Linkedin } from "lucide-react";
+import { PublishToLinkedIn } from "./PublishToLinkedIn";
 import {
   Dialog,
   DialogContent,
@@ -619,6 +620,23 @@ export function ContentDetailModal({
                   <Mail className="w-4 h-4 mr-2" />
                   Publish
                 </Button>
+              )}
+
+              {/* Publish to LinkedIn - available for social posts and general content */}
+              {contentType && (
+                contentType.toLowerCase().includes('social') || 
+                contentType.toLowerCase().includes('linkedin') || 
+                contentType.toLowerCase().includes('post') ||
+                category === 'master' ||
+                category === 'derivative'
+              ) && (
+                <PublishToLinkedIn
+                  content={displayContent}
+                  contentId={content.id}
+                  contentTable={category === 'master' ? 'master_content' : category === 'derivative' ? 'derivative_assets' : 'outputs'}
+                  variant="outline"
+                  size="sm"
+                />
               )}
 
               <Button

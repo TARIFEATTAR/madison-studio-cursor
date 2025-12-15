@@ -65,20 +65,16 @@
     rgba(255, 255, 255, 0.03) 100%
   );
   
-  /* Camera Panel Shadow - depth and dimension */
+  /* Camera Panel Shadow - inset, anchored feel */
   --camera-panel-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
-    0 4px 20px rgba(0, 0, 0, 0.6),
-    0 1px 3px rgba(0, 0, 0, 0.4);
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 1px 2px rgba(0, 0, 0, 0.3);
   
-  /* Camera Panel Hover - subtle luminance lift */
+  /* Camera Panel Hover - minimal lift */
   --camera-panel-hover: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.10) 0%,
-    rgba(255, 255, 255, 0.03) 30%,
-    transparent 60%,
-    rgba(0, 0, 0, 0.3) 100%
+    rgba(255, 255, 255, 0.04) 0%,
+    transparent 40%
   );
   
   /* Glass/Metal Textures */
@@ -97,19 +93,16 @@
   --led-off: #1a1a1a;
   --led-standby: #2a2a2a;     /* Subtle standby state */
   
-  /* LED Glow Effects - soft OLED bloom */
+  /* LED Glow Effects - controlled, not bloomy */
   --led-glow-ready: 
-    0 0 4px #00FF66,
-    0 0 12px rgba(0, 255, 102, 0.6),
-    0 0 24px rgba(0, 255, 102, 0.3);
+    0 0 3px #00FF66,
+    0 0 6px rgba(0, 255, 102, 0.4);
   --led-glow-active: 
-    0 0 4px #FFCC00,
-    0 0 12px rgba(255, 204, 0, 0.6),
-    0 0 24px rgba(255, 204, 0, 0.3);
+    0 0 3px #FFCC00,
+    0 0 6px rgba(255, 204, 0, 0.4);
   --led-glow-error: 
-    0 0 4px #FF3333,
-    0 0 12px rgba(255, 51, 51, 0.6),
-    0 0 24px rgba(255, 51, 51, 0.3);
+    0 0 3px #FF3333,
+    0 0 6px rgba(255, 51, 51, 0.4);
   
   /* === LCD DISPLAY LANGUAGE === */
   /* Firmware-level technical readouts */
@@ -127,13 +120,19 @@
   --focus-point: #FF3333;
   --focus-point-glow: 0 0 8px rgba(255, 51, 51, 0.6);
   
-  /* === SPACING SYSTEM (4px base) === */
+  /* === SPACING SYSTEM (4px base) - TIGHTENED === */
   --space-xs: 4px;
   --space-sm: 8px;
-  --space-md: 16px;
-  --space-lg: 24px;
-  --space-xl: 32px;
-  --space-2xl: 48px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  
+  /* === BORDER RADIUS - PRECISION MACHINED (max 6px) === */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-panel: 6px;
   
   /* Typography */
   --font-display: 'Cormorant Garamond', Georgia, serif;
@@ -153,20 +152,25 @@
   --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   --ease-shutter: cubic-bezier(0.25, 0.1, 0.25, 1);
   
-  /* === SHADOWS & DEPTH === */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
-  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.7);
-  --shadow-glow: 0 0 24px rgba(184, 149, 106, 0.3);
-  --shadow-glow-lg: 0 0 48px rgba(212, 175, 55, 0.4);
+  /* === SHADOWS & DEPTH - CONTROLLED, NOT FLOATY === */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 6px 16px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 12px rgba(184, 149, 106, 0.2);
+  --shadow-glow-lg: 0 0 20px rgba(212, 175, 55, 0.25);
   --shadow-optical: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
     inset 0 -1px 0 rgba(0, 0, 0, 0.3),
-    0 2px 12px rgba(0, 0, 0, 0.5);
+    0 2px 4px rgba(0, 0, 0, 0.35);
   --shadow-inset-deep: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.5),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+    inset 0 1px 3px rgba(0, 0, 0, 0.4),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+  /* Inset panel shadow - recessed, not floating */
+  --shadow-panel-inset:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
 /* -----------------------------------------------------------------------------
@@ -205,19 +209,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-md) var(--space-lg);
-  border-bottom: 1px solid var(--darkroom-border);
-  background: var(--camera-body);
-  background-image: var(--camera-body-gloss);
-  height: 64px;
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(8, 8, 8, 0.95);
+  height: 48px;
   position: relative;
-  /* Top plate shadow */
+  /* Subtle depth */
   box-shadow: 
-    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
-    0 2px 8px rgba(0, 0, 0, 0.4);
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
-/* Glossy highlight line at top */
+/* Subtle top highlight */
 .dark-room-header::before {
   content: '';
   position: absolute;
@@ -225,33 +228,25 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.1) 20%,
-    rgba(255, 255, 255, 0.15) 50%,
-    rgba(255, 255, 255, 0.1) 80%,
-    transparent 100%
-  );
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .dark-room-header__title {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.125rem;
   font-weight: 600;
   color: var(--darkroom-accent);
-  letter-spacing: 0.03em;
-  text-shadow: 0 0 20px var(--darkroom-accent-glow);
+  letter-spacing: 0.02em;
 }
 
 .dark-room-header__session {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  font-size: 0.75rem;
+  gap: var(--space-xs);
+  font-size: 0.625rem;
   font-family: var(--lcd-font);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   color: var(--darkroom-text-muted);
 }
 
@@ -259,20 +254,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 28px;
-  height: 28px;
-  padding: 0 var(--space-sm);
+  min-width: 22px;
+  height: 22px;
+  padding: 0 var(--space-xs);
   background: var(--lcd-bg);
   color: var(--led-ready);
-  border: 1px solid rgba(0, 255, 102, 0.2);
-  border-radius: 6px;
-  font-size: 0.875rem;
+  border: 1px solid rgba(0, 255, 102, 0.15);
+  border-radius: 4px;
+  font-size: 0.75rem;
   font-weight: 700;
   font-family: var(--lcd-font);
-  text-shadow: var(--lcd-glow);
-  box-shadow: 
-    inset 0 1px 2px rgba(0, 0, 0, 0.3),
-    0 0 8px rgba(0, 255, 102, 0.15);
 }
 
 /* -----------------------------------------------------------------------------
@@ -302,40 +293,40 @@
 }
 
 /* -----------------------------------------------------------------------------
-   Left Rail - Camera Control Panel
+   Left Rail - Camera Control Panel (Premium Glossy Aesthetic)
    ----------------------------------------------------------------------------- */
 .left-rail {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
-  padding: var(--space-lg);
-  border-right: 1px solid var(--darkroom-border);
-  background: var(--camera-body);
-  background-image: var(--camera-body-gloss);
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(8, 8, 8, 0.95);
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
-  /* Glossy panel depth */
+  /* Inset panel feel - anchored, not floating */
   box-shadow: 
-    inset -1px 0 0 rgba(255, 255, 255, 0.03),
-    2px 0 12px rgba(0, 0, 0, 0.3);
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    1px 0 0 rgba(0, 0, 0, 0.3);
 }
 
-/* Side highlight for glass edge effect */
-.left-rail::after {
+/* Subtle top edge highlight */
+.left-rail::before {
   content: '';
   position: absolute;
   top: 0;
+  left: 0;
   right: 0;
-  bottom: 0;
-  width: 1px;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0.02) 50%,
-    transparent 100%
-  );
+  height: 1px;
+  background: rgba(255, 255, 255, 0.04);
   pointer-events: none;
+  z-index: 0;
+}
+
+/* Remove overly glossy side effect */
+.left-rail::after {
+  display: none;
 }
 
 .left-rail__section {
@@ -392,7 +383,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--space-xs);
   color: var(--darkroom-text-muted);
   font-family: var(--lcd-font);
 }
@@ -400,22 +391,20 @@
 .upload-zone {
   position: relative;
   width: 100%;
-  height: 160px;
+  height: 140px;
   border: 1px solid var(--darkroom-border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--camera-body-deep);
-  background-image: var(--camera-body-gloss);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all var(--duration-normal) var(--ease-out);
+  transition: border-color var(--duration-fast) var(--ease-out);
   overflow: hidden;
-  /* Inset shadow for module slot feel */
+  /* Subtle inset feel */
   box-shadow: 
-    inset 0 2px 8px rgba(0, 0, 0, 0.5),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.03),
-    0 1px 3px rgba(0, 0, 0, 0.3);
+    inset 0 1px 3px rgba(0, 0, 0, 0.4),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.02);
 }
 
 /* Corner brackets for viewfinder feel */
@@ -689,8 +678,9 @@
 }
 
 /* =============================================================================
-   MOBILE DARK ROOM - TILE-BASED SETTINGS UI
-   Clean, modern mobile interface with tappable setting tiles
+   MOBILE DARK ROOM - PRECISION ENGINEERED MOBILE UI
+   Professional camera firmware aesthetic - machined, not molded
+   Matches desktop Dark Room's industrial, restrained quality
    ============================================================================= */
 
 /* Mobile Dark Room Container */
@@ -700,44 +690,67 @@
   min-height: 100vh;
   min-height: 100dvh;
   background: var(--darkroom-bg);
+  background-image: var(--darkroom-bg-gradient);
   color: var(--darkroom-text);
-  padding: var(--space-md);
-  padding-bottom: calc(var(--space-md) + env(safe-area-inset-bottom));
+  padding: var(--space-sm) var(--space-md);
+  padding-bottom: calc(var(--space-sm) + env(safe-area-inset-bottom));
+  /* Subtle noise texture for anodized metal feel */
+  position: relative;
+}
+
+/* Add subtle texture overlay */
+.mobile-darkroom::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.015'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+.mobile-darkroom > * {
+  position: relative;
+  z-index: 1;
 }
 
 .mobile-darkroom__header {
-  padding: var(--space-sm) 0 var(--space-md);
+  padding: var(--space-xs) 0 var(--space-sm);
 }
 
 .mobile-darkroom__title {
   font-family: var(--font-display);
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 600;
   color: var(--darkroom-text);
+  letter-spacing: 0.01em;
   margin: 0;
 }
 
-/* Prompt Area */
+/* Prompt Area - Machined input panel */
 .mobile-darkroom__prompt-area {
   position: relative;
   background: var(--darkroom-surface);
-  border: 1px solid var(--darkroom-border);
-  border-radius: 16px;
-  padding: var(--space-md);
-  margin-bottom: var(--space-md);
-  min-height: 180px;
+  border: 1px solid var(--darkroom-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-sm);
+  min-height: 140px;
   display: flex;
   flex-direction: column;
+  /* Inset panel depth - recessed feel */
+  box-shadow: var(--shadow-panel-inset);
 }
 
+/* Subtle top edge highlight for machined feel */
 .mobile-darkroom__prompt-area::before {
   content: '';
   position: absolute;
-  inset: -1px;
-  border-radius: 17px;
-  background: linear-gradient(135deg, var(--darkroom-accent) 0%, transparent 50%);
-  opacity: 0.3;
-  z-index: -1;
+  top: 0;
+  left: 1px;
+  right: 1px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
 .mobile-darkroom__prompt-input {
@@ -746,7 +759,7 @@
   border: none;
   color: var(--darkroom-text);
   font-family: var(--font-body);
-  font-size: 1rem;
+  font-size: 0.95rem;
   line-height: 1.5;
   resize: none;
   outline: none;
@@ -754,83 +767,93 @@
 
 .mobile-darkroom__prompt-input::placeholder {
   color: var(--darkroom-text-dim);
+  font-size: 0.9rem;
 }
 
 .mobile-darkroom__prompt-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: var(--space-sm);
+  margin-top: var(--space-xs);
+  padding-top: var(--space-xs);
+  border-top: 1px solid var(--darkroom-border-subtle);
 }
 
+/* LCD-style counter badge */
 .mobile-darkroom__image-count {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-sm);
-  background: var(--darkroom-surface-elevated);
-  border-radius: 20px;
-  font-size: 0.8rem;
+  padding: 2px var(--space-sm);
+  background: var(--lcd-bg);
+  border: 1px solid rgba(0, 255, 102, 0.1);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-family: var(--lcd-font);
   color: var(--darkroom-text-muted);
+  letter-spacing: 0.02em;
 }
 
 .mobile-darkroom__random-btn {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--darkroom-surface-elevated);
-  border: none;
-  border-radius: 50%;
+  border: 1px solid var(--darkroom-border);
+  border-radius: var(--radius-md);
   color: var(--darkroom-text-muted);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--duration-fast) ease;
 }
 
 .mobile-darkroom__random-btn:active {
   background: var(--darkroom-accent);
+  border-color: var(--darkroom-accent);
   color: var(--darkroom-bg);
-  transform: scale(0.95);
+  transform: scale(0.96);
 }
 
-/* Settings Grid */
+/* Settings Grid - Unified modular system */
 .mobile-settings-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-sm);
-  margin-bottom: var(--space-md);
+  gap: 6px;
+  margin-bottom: var(--space-sm);
+  padding: 1px;
+  background: var(--darkroom-border-subtle);
+  border-radius: calc(var(--radius-lg) + 1px);
 }
 
-/* Individual Setting Tile */
+/* Individual Setting Tile - Machined control surface */
 .mobile-settings-tile {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: var(--space-md);
+  padding: var(--space-sm) var(--space-sm);
   background: var(--darkroom-surface);
-  border: 1px solid var(--darkroom-border);
-  border-radius: 12px;
+  border: none;
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background var(--duration-fast) ease;
   text-align: left;
-  min-height: 90px;
+  min-height: 76px;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   user-select: none;
+  /* Subtle inset feel */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
 }
 
 .mobile-settings-tile:active {
   background: var(--darkroom-surface-elevated);
-  border-color: var(--darkroom-accent);
-  transform: scale(0.97);
 }
 
-/* Add a focus state for accessibility */
+/* Focus state for accessibility */
 .mobile-settings-tile:focus {
   outline: none;
-  border-color: var(--darkroom-accent);
-  box-shadow: 0 0 0 2px rgba(184, 149, 106, 0.3);
+  background: var(--darkroom-surface-elevated);
 }
 
 .mobile-settings-tile--disabled {
@@ -842,28 +865,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin-bottom: var(--space-sm);
+  width: 24px;
+  height: 24px;
+  margin-bottom: 6px;
   color: var(--darkroom-accent);
+  opacity: 0.85;
 }
 
 .mobile-settings-tile__content {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   width: 100%;
 }
 
 .mobile-settings-tile__label {
-  font-size: 0.7rem;
+  font-size: 0.625rem;
+  font-family: var(--lcd-font);
   color: var(--darkroom-text-dim);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
 .mobile-settings-tile__value {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--darkroom-text);
   white-space: nowrap;
@@ -871,87 +896,107 @@
   text-overflow: ellipsis;
 }
 
-/* Generate Button */
+/* Generate Button - Premium brass CTA */
 .mobile-darkroom__generate-btn {
   width: 100%;
-  padding: var(--space-md) var(--space-lg);
-  background: linear-gradient(135deg, var(--darkroom-accent) 0%, var(--darkroom-glow) 100%);
+  padding: var(--space-sm) var(--space-lg);
+  background: linear-gradient(
+    180deg, 
+    var(--darkroom-accent-hover) 0%, 
+    var(--darkroom-accent) 50%,
+    #9F7D54 100%
+  );
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-family: var(--font-body);
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--darkroom-bg);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--duration-fast) ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
   margin-top: auto;
+  /* Subtle depth */
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+  letter-spacing: 0.01em;
 }
 
 .mobile-darkroom__generate-btn:active {
-  transform: scale(0.98);
-  opacity: 0.9;
+  transform: scale(0.99);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 1px 1px rgba(0, 0, 0, 0.15);
 }
 
 .mobile-darkroom__generate-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+  background: var(--darkroom-surface-elevated);
+  color: var(--darkroom-text-dim);
+  box-shadow: none;
 }
 
 /* =============================================================================
-   MOBILE SETTING MODAL - Full-screen option selector
+   MOBILE SETTING MODAL - Precision option selector
+   Professional bottom sheet with machined aesthetic
    ============================================================================= */
 
 .mobile-setting-modal {
   position: fixed;
   inset: 0;
-  z-index: 9999; /* Very high z-index to appear above everything */
+  z-index: 9999;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  touch-action: none; /* Prevent background scroll */
+  touch-action: none;
 }
 
 .mobile-setting-modal__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.85);
   -webkit-tap-highlight-color: transparent;
 }
 
 .mobile-setting-modal__content {
   position: relative;
   background: var(--darkroom-bg);
-  border-radius: 20px 20px 0 0;
-  max-height: 85vh;
-  max-height: 85dvh;
+  background-image: var(--darkroom-bg-gradient);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  max-height: 70vh;
+  max-height: 70dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  /* Add safe area padding for iPhone notch/home indicator */
   padding-bottom: env(safe-area-inset-bottom);
+  /* Top border highlight */
+  border-top: 1px solid var(--darkroom-border);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
 }
 
 .mobile-setting-modal__handle {
-  width: 36px;
-  height: 4px;
+  width: 32px;
+  height: 3px;
   background: var(--darkroom-border);
   border-radius: 2px;
   margin: var(--space-sm) auto 0;
   flex-shrink: 0;
+  opacity: 0.6;
 }
 
-/* Sticky header that stays at top when scrolling */
+/* Sticky header */
 .mobile-setting-modal__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
   background: var(--darkroom-bg);
-  border-bottom: 1px solid var(--darkroom-border);
+  border-bottom: 1px solid var(--darkroom-border-subtle);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -960,33 +1005,32 @@
 
 .mobile-setting-modal__title {
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 600;
   color: var(--darkroom-text);
   margin: 0;
 }
 
 .mobile-setting-modal__close {
-  width: 44px; /* Larger touch target */
-  height: 44px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--darkroom-surface);
   border: 1px solid var(--darkroom-border);
-  border-radius: 50%;
+  border-radius: var(--radius-md);
   color: var(--darkroom-text-muted);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--duration-fast) ease;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
 
 .mobile-setting-modal__close:active {
-  background: var(--darkroom-accent);
-  border-color: var(--darkroom-accent);
-  color: var(--darkroom-bg);
-  transform: scale(0.95);
+  background: var(--darkroom-surface-elevated);
+  color: var(--darkroom-text);
+  transform: scale(0.96);
 }
 
 /* Scrollable options list */
@@ -994,71 +1038,70 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-sm);
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   touch-action: pan-y;
 }
 
-/* Individual option button */
+/* Individual option button - machined control */
 .mobile-setting-modal__option {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  min-height: 56px; /* Good touch target size */
-  padding: var(--space-md);
+  min-height: 52px;
+  padding: var(--space-sm) var(--space-md);
   background: var(--darkroom-surface);
-  border: 1px solid var(--darkroom-border);
-  border-radius: 12px;
+  border: 1px solid var(--darkroom-border-subtle);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background var(--duration-fast) ease;
   text-align: left;
-  margin-bottom: var(--space-sm);
+  margin-bottom: 6px;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
 
 .mobile-setting-modal__option:active {
   background: var(--darkroom-surface-elevated);
-  transform: scale(0.98);
 }
 
 .mobile-setting-modal__option--selected {
-  background: rgba(184, 149, 106, 0.15);
+  background: rgba(184, 149, 106, 0.08);
   border-color: var(--darkroom-accent);
 }
 
 .mobile-setting-modal__option--selected:active {
-  background: rgba(184, 149, 106, 0.25);
+  background: rgba(184, 149, 106, 0.15);
 }
 
 .mobile-setting-modal__option-content {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   flex: 1;
 }
 
 .mobile-setting-modal__option-label {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--darkroom-text);
 }
 
 .mobile-setting-modal__option-desc {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: var(--darkroom-text-muted);
 }
 
 .mobile-setting-modal__option-check {
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--darkroom-accent);
-  border-radius: 50%;
+  border-radius: var(--radius-sm);
   color: var(--darkroom-bg);
   flex-shrink: 0;
   margin-left: var(--space-sm);
@@ -1066,41 +1109,41 @@
 
 /* Film Strip (at bottom of mobile view) */
 .mobile-darkroom__film-strip {
-  margin-top: var(--space-sm);
-  padding-top: var(--space-sm);
-  border-top: 1px solid var(--darkroom-border);
+  margin-top: var(--space-xs);
+  padding-top: var(--space-xs);
+  border-top: 1px solid var(--darkroom-border-subtle);
 }
 
 /* =============================================================================
-   MOBILE HERO PREVIEW - Large image display with developing animation
+   MOBILE HERO PREVIEW - Precision image display
    ============================================================================= */
 
 .mobile-darkroom__hero-preview {
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-sm);
   overflow: hidden;
 }
 
 .mobile-darkroom__developing {
   aspect-ratio: 1;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--darkroom-surface);
-  border: 1px solid var(--darkroom-border);
+  border: 1px solid var(--darkroom-border-subtle);
 }
 
 .mobile-darkroom__hero-container {
   position: relative;
   aspect-ratio: 1;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--darkroom-surface);
-  border: 1px solid var(--darkroom-border);
+  border: 1px solid var(--darkroom-border-subtle);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 
 .mobile-darkroom__hero-container:active {
-  transform: scale(0.99);
+  opacity: 0.95;
 }
 
 .mobile-darkroom__hero-image {
@@ -1113,13 +1156,14 @@
   position: absolute;
   top: var(--space-sm);
   right: var(--space-sm);
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--darkroom-success);
-  border-radius: 50%;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   color: var(--darkroom-bg);
 }
 
@@ -1128,17 +1172,18 @@
   bottom: var(--space-sm);
   left: 50%;
   transform: translateX(-50%);
-  padding: var(--space-xs) var(--space-sm);
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
-  border-radius: 20px;
-  font-size: 0.75rem;
-  color: var(--darkroom-text-muted);
-  opacity: 0.8;
+  padding: 2px var(--space-sm);
+  background: rgba(0, 0, 0, 0.75);
+  border-radius: var(--radius-sm);
+  font-size: 0.65rem;
+  font-family: var(--lcd-font);
+  color: var(--darkroom-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* =============================================================================
-   MOBILE FULLSCREEN VIEWER - Full viewport image display
+   MOBILE FULLSCREEN VIEWER - Precision image viewer
    ============================================================================= */
 
 .mobile-darkroom__fullscreen {
@@ -1153,7 +1198,7 @@
 .mobile-darkroom__fullscreen-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.95);
+  background: rgba(3, 3, 3, 0.98);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -1164,30 +1209,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-md);
-  padding-top: 60px;
-  padding-bottom: 100px;
+  padding: var(--space-sm);
+  padding-top: 50px;
+  padding-bottom: 90px;
 }
 
 .mobile-darkroom__fullscreen-image {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .mobile-darkroom__fullscreen-close {
   position: absolute;
-  top: var(--space-md);
-  right: var(--space-md);
-  width: 48px;
-  height: 48px;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--darkroom-surface);
   border: 1px solid var(--darkroom-border);
-  border-radius: 50%;
+  border-radius: var(--radius-md);
   color: var(--darkroom-text);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -1197,16 +1242,16 @@
 
 .mobile-darkroom__fullscreen-close:active {
   background: var(--darkroom-surface-elevated);
-  transform: scale(0.95);
+  transform: scale(0.96);
 }
 
 .mobile-darkroom__fullscreen-actions {
   position: absolute;
-  bottom: var(--space-lg);
+  bottom: var(--space-md);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: var(--space-md);
+  gap: var(--space-sm);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -1214,50 +1259,58 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-md) var(--space-lg);
+  gap: 2px;
+  padding: var(--space-sm) var(--space-md);
   background: var(--darkroom-surface);
   border: 1px solid var(--darkroom-border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   color: var(--darkroom-text);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  min-width: 80px;
+  min-width: 70px;
 }
 
 .mobile-darkroom__fullscreen-action:active {
   background: var(--darkroom-surface-elevated);
-  transform: scale(0.95);
+  transform: scale(0.97);
 }
 
 .mobile-darkroom__fullscreen-action:disabled {
   color: var(--darkroom-success);
-  border-color: var(--darkroom-success);
+  border-color: rgba(74, 222, 128, 0.3);
+  background: rgba(74, 222, 128, 0.05);
 }
 
 .mobile-darkroom__fullscreen-action span {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
 .mobile-darkroom__fullscreen-action--primary {
-  background: var(--darkroom-accent);
+  background: linear-gradient(
+    180deg, 
+    var(--darkroom-accent-hover) 0%, 
+    var(--darkroom-accent) 100%
+  );
   border-color: var(--darkroom-accent);
   color: var(--darkroom-bg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .mobile-darkroom__fullscreen-action--primary:active {
-  background: var(--darkroom-accent-hover);
-  transform: scale(0.95);
+  background: var(--darkroom-accent);
+  transform: scale(0.97);
 }
 
 .mobile-darkroom__fullscreen-action--delete {
   color: var(--darkroom-error);
+  border-color: rgba(239, 68, 68, 0.2);
 }
 
 .mobile-darkroom__fullscreen-action--delete:active {
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .upload-zone-help {
@@ -1878,73 +1931,129 @@
    Film Strip Carousel (Darkroom Film Reel Design)
    ----------------------------------------------------------------------------- */
 
-/* Film Strip Container */
+/* Film Strip Container - Enhanced glossy dark aesthetic */
 .film-strip-container {
   padding: var(--space-lg) var(--space-lg);
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    var(--camera-body) 20%,
-    var(--camera-body) 80%,
-    transparent
-  );
-  border-top: 1px solid var(--darkroom-border);
+  background: 
+    linear-gradient(
+      180deg,
+      rgba(15, 14, 12, 1) 0%,
+      rgba(8, 8, 8, 1) 30%,
+      rgba(5, 5, 5, 1) 70%,
+      rgba(8, 8, 8, 1) 100%
+    );
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   position: relative;
 }
 
-/* Top edge highlight */
+/* Top glossy reflection */
 .film-strip-container::before {
   content: '';
   position: absolute;
   top: 0;
-  left: var(--space-lg);
-  right: var(--space-lg);
-  height: 1px;
+  left: 0;
+  right: 0;
+  height: 40px;
   background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.06) 30%,
-    rgba(255, 255, 255, 0.06) 70%,
-    transparent
+    180deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.02) 40%,
+    transparent 100%
   );
+  pointer-events: none;
+}
+
+/* Bottom vignette */
+.film-strip-container::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background: linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.4) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
 }
 
 .carousel-header {
   margin-bottom: var(--space-md);
   text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-md);
 }
 
 .carousel-progress {
-  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 11px;
   color: var(--lcd-text);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-family: var(--lcd-font);
   text-shadow: var(--lcd-glow);
+  padding: 6px 14px;
+  background: rgba(0, 255, 102, 0.06);
+  border: 1px solid rgba(0, 255, 102, 0.2);
+  border-radius: 6px;
+  box-shadow: 
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 15px rgba(0, 255, 102, 0.1);
 }
 
 .carousel-progress .saved-count {
-  color: var(--led-ready);
-  text-shadow: 0 0 8px rgba(0, 255, 102, 0.4);
+  color: #00FF66;
+  text-shadow: 0 0 10px rgba(0, 255, 102, 0.6);
+  font-weight: 700;
 }
 
-/* Film Strip Layout */
+/* Film Strip Layout - Premium glossy container */
 .film-strip {
   display: grid;
   grid-template-columns: 24px 1fr 24px;
   gap: 0;
-  background: var(--camera-body-deep);
-  background-image: var(--camera-body-gloss);
+  background: 
+    linear-gradient(
+      145deg,
+      rgba(18, 16, 14, 1) 0%,
+      rgba(6, 6, 6, 1) 40%,
+      rgba(4, 4, 4, 1) 100%
+    );
   padding: 14px 0;
-  border-radius: 10px;
-  border: 1px solid var(--darkroom-border);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   position: relative;
   overflow: hidden;
   box-shadow: 
-    inset 0 2px 8px rgba(0, 0, 0, 0.5),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.03),
-    0 4px 20px rgba(0, 0, 0, 0.5);
+    inset 0 2px 10px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    0 6px 30px rgba(0, 0, 0, 0.6);
+}
+
+/* Top glossy shine on film strip */
+.film-strip::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.03) 40%,
+    transparent 100%
+  );
+  pointer-events: none;
+  border-radius: 12px 12px 0 0;
 }
 
 /* Film Edges with Sprocket Holes */
@@ -1986,23 +2095,42 @@
   cursor: default;
 }
 
-/* Film Frame Border (Glossy Black) */
+/* Film Frame Border (Glossy Black - Professional Camera Back) */
 .film-frame-border {
   position: relative;
   width: 100%;
   height: 100%;
   background: linear-gradient(
-    135deg,
-    #1a1816 0%,
-    #0D0C0B 50%,
-    #1a1816 100%
+    145deg,
+    #1c1a18 0%,
+    #0a0908 40%,
+    #0D0C0B 60%,
+    #151310 100%
   );
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.6),
-    inset 0 1px 1px rgba(255, 255, 255, 0.1),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.5);
+    0 4px 12px rgba(0, 0, 0, 0.7),
+    0 1px 3px rgba(0, 0, 0, 0.5),
+    inset 0 1px 2px rgba(255, 255, 255, 0.12),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.6);
+  transition: all 0.25s ease;
+}
+
+/* Exposed frames get subtle brass trim */
+.film-frame.exposed .film-frame-border {
+  border-color: rgba(184, 149, 106, 0.15);
+}
+
+/* Active frame gets gold border glow */
+.film-frame.active .film-frame-border {
+  border-color: rgba(212, 175, 55, 0.5);
+  box-shadow: 
+    0 6px 20px rgba(0, 0, 0, 0.8),
+    0 0 30px rgba(212, 175, 55, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.15),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.5);
 }
 
 /* Film Texture Overlay (Subtle Grain) */
@@ -2017,21 +2145,39 @@
   opacity: 0.3;
 }
 
-/* Glossy sheen on frame */
+/* Glossy sheen on frame - enhanced reflection */
 .film-frame-border::after {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 40%;
+  height: 50%;
   background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.15) 0%,
-    rgba(255, 255, 255, 0.08) 30%,
+    175deg,
+    rgba(255, 255, 255, 0.18) 0%,
+    rgba(255, 255, 255, 0.10) 20%,
+    rgba(255, 255, 255, 0.04) 40%,
     transparent 100%
   );
-  border-radius: 4px 4px 0 0;
+  border-radius: 6px 6px 0 0;
+  pointer-events: none;
+}
+
+/* Additional corner highlight for premium feel */
+.film-frame-border .film-frame-image::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 25%;
+  height: 25%;
+  background: radial-gradient(
+    circle at top left,
+    rgba(255, 255, 255, 0.15) 0%,
+    transparent 70%
+  );
+  z-index: 2;
   pointer-events: none;
 }
 
@@ -2108,17 +2254,37 @@
   );
 }
 
-/* Active Frame Glow */
+/* Active Frame Glow - Enhanced amber/gold lighting */
 .film-active-glow {
   position: absolute;
-  inset: -3px;
-  border: 2px solid var(--darkroom-glow);
-  border-radius: 4px;
+  inset: -4px;
+  border: 2px solid #D4AF37;
+  border-radius: 6px;
   box-shadow: 
-    0 0 16px rgba(212, 175, 55, 0.6),
-    inset 0 0 12px rgba(212, 175, 55, 0.3);
+    0 0 8px rgba(212, 175, 55, 0.8),
+    0 0 20px rgba(212, 175, 55, 0.5),
+    0 0 40px rgba(212, 175, 55, 0.25),
+    inset 0 0 15px rgba(212, 175, 55, 0.4);
   z-index: 3;
   pointer-events: none;
+  animation: filmGlowPulse 2s ease-in-out infinite;
+}
+
+@keyframes filmGlowPulse {
+  0%, 100% { 
+    box-shadow: 
+      0 0 8px rgba(212, 175, 55, 0.8),
+      0 0 20px rgba(212, 175, 55, 0.5),
+      0 0 40px rgba(212, 175, 55, 0.25),
+      inset 0 0 15px rgba(212, 175, 55, 0.4);
+  }
+  50% { 
+    box-shadow: 
+      0 0 12px rgba(212, 175, 55, 1),
+      0 0 28px rgba(212, 175, 55, 0.6),
+      0 0 50px rgba(212, 175, 55, 0.3),
+      inset 0 0 20px rgba(212, 175, 55, 0.5);
+  }
 }
 
 /* Light Leak Effect on Active Frame */
@@ -2210,49 +2376,54 @@
     inset 0 -1px 1px rgba(0, 0, 0, 0.5);
 }
 
-/* Legacy Thumbnail Support (fallback) */
+/* Legacy Thumbnail Support (fallback) - Precision strip */
 .thumbnail-carousel {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
-  border-top: 1px solid var(--darkroom-border);
+  gap: 6px;
+  padding: var(--space-xs) var(--space-sm);
+  border-top: 1px solid var(--darkroom-border-subtle);
   background: var(--darkroom-surface);
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .thumbnail-carousel__slots,
 .thumbnail-grid {
   display: flex;
-  gap: var(--space-sm);
+  gap: 6px;
   flex: 1;
 }
 
 .thumbnail-carousel__progress {
-  font-size: 12px;
-  color: var(--darkroom-text-muted);
+  font-size: 0.7rem;
+  font-family: var(--lcd-font);
+  color: var(--darkroom-text-dim);
   font-weight: 500;
   white-space: nowrap;
+  letter-spacing: 0.02em;
 }
 
+/* Thumbnail Slot - Machined frame */
 .thumbnail-slot {
   flex-shrink: 0;
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   aspect-ratio: 1;
-  border-radius: 6px;
-  border: 2px solid var(--darkroom-border);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--darkroom-border);
   background: var(--darkroom-bg);
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: border-color var(--duration-fast) ease;
   position: relative;
 }
 
 .thumbnail-slot--empty,
 .thumbnail-slot.empty {
   border-style: dashed;
-  opacity: 0.4;
+  border-color: var(--darkroom-border-subtle);
+  opacity: 0.35;
   cursor: default;
   display: flex;
   align-items: center;
@@ -2260,20 +2431,18 @@
 }
 
 .thumbnail-empty-content {
-  color: var(--darkroom-text-muted);
-  font-size: 11px;
+  color: var(--darkroom-text-dim);
+  font-size: 10px;
   font-weight: 500;
 }
 
 .thumbnail-slot--active,
 .thumbnail-slot.active {
-  border-color: var(--darkroom-glow);
-  box-shadow: 0 0 0 2px var(--darkroom-glow);
+  border-color: var(--darkroom-accent);
 }
 
 .thumbnail-slot--saved {
-  border-color: var(--darkroom-success);
-  box-shadow: 0 0 8px var(--darkroom-success-glow);
+  border-color: rgba(74, 222, 128, 0.4);
 }
 
 .thumbnail-slot.filled {
@@ -2281,9 +2450,7 @@
 }
 
 .thumbnail-slot:hover:not(.thumbnail-slot--empty):not(.empty) {
-  border-color: rgba(184, 149, 106, 0.4);
-  box-shadow: 0 0 12px rgba(184, 149, 106, 0.2);
-  transform: translateY(-2px);
+  border-color: var(--darkroom-accent);
 }
 
 .thumbnail-slot img {
@@ -2292,30 +2459,27 @@
   object-fit: cover;
 }
 
-/* Active Border Animation */
+/* Active Border Animation - Subtle indicator */
 .thumbnail-active-border {
   position: absolute;
-  inset: -2px;
-  border: 2px solid var(--darkroom-glow);
-  border-radius: 6px;
-  box-shadow: 
-    0 0 12px rgba(212, 175, 55, 0.4),
-    inset 0 0 12px rgba(212, 175, 55, 0.2);
+  inset: -1px;
+  border: 1px solid var(--darkroom-accent);
+  border-radius: var(--radius-md);
 }
 
 /* Saved Badge (Legacy) */
 .thumbnail-saved-badge {
   position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 20px;
-  height: 20px;
+  top: 3px;
+  right: 3px;
+  width: 16px;
+  height: 16px;
   background: var(--darkroom-success);
-  border-radius: 50%;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 8px var(--darkroom-success-glow);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .thumbnail-saved-badge svg {
@@ -2476,43 +2640,42 @@
 }
 
 /* -----------------------------------------------------------------------------
-   Right Panel (Madison Assistant) - Collapsible Drawer
+   Right Panel (Madison Assistant) - Premium Glossy Drawer
    ----------------------------------------------------------------------------- */
 .right-panel {
   display: flex;
   flex-direction: column;
-  border-left: 1px solid var(--darkroom-border);
-  background: var(--camera-body);
-  background-image: var(--camera-body-gloss);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(8, 8, 8, 0.95);
   overflow: hidden;
-  min-width: 280px;
-  max-width: 320px;
-  width: 300px;
-  transition: all 0.3s ease-in-out;
+  min-width: 260px;
+  max-width: 280px;
+  width: 270px;
+  transition: all 0.2s ease-in-out;
   margin-left: auto;
   position: relative;
-  /* Panel depth */
+  /* Inset panel feel - anchored */
   box-shadow: 
-    inset 1px 0 0 rgba(255, 255, 255, 0.03),
-    -2px 0 12px rgba(0, 0, 0, 0.3);
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    -1px 0 0 rgba(0, 0, 0, 0.3);
 }
 
-/* Left edge highlight */
-.right-panel::before {
+/* Subtle top edge highlight */
+.right-panel::after {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
-  bottom: 0;
-  width: 1px;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.06) 0%,
-    rgba(255, 255, 255, 0.02) 50%,
-    transparent 100%
-  );
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.04);
   pointer-events: none;
-  z-index: 10;
+  z-index: 0;
+}
+
+/* Remove overly glossy edge */
+.right-panel::before {
+  display: none;
 }
 
 .right-panel--collapsed {
@@ -2629,7 +2792,7 @@
 .right-panel__content {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-lg);
+  padding: var(--space-md);
 }
 
 /* Panel Sections */
@@ -3017,47 +3180,62 @@
     inset 0 -1px 2px rgba(0,0,0,0.5);
 }
 
-/* Ready state - neon green, steady glow */
+/* Ready state - neon green, bright steady glow */
 .led-indicator--ready {
-  background: var(--led-ready);
-  box-shadow: var(--led-glow-ready);
+  background: #00FF66;
+  box-shadow: 
+    0 0 4px #00FF66,
+    0 0 10px rgba(0, 255, 102, 0.7),
+    0 0 20px rgba(0, 255, 102, 0.4),
+    0 0 30px rgba(0, 255, 102, 0.2);
 }
 
 .led-indicator--ready::after {
   background: radial-gradient(
     circle,
-    rgba(0, 255, 102, 0.3) 0%,
+    rgba(0, 255, 102, 0.45) 0%,
+    rgba(0, 255, 102, 0.15) 40%,
     transparent 70%
   );
 }
 
 /* Active state - neon amber, pulsing */
 .led-indicator--active {
-  background: var(--led-active);
-  box-shadow: var(--led-glow-active);
+  background: #FFCC00;
+  box-shadow: 
+    0 0 4px #FFCC00,
+    0 0 10px rgba(255, 204, 0, 0.7),
+    0 0 20px rgba(255, 204, 0, 0.4),
+    0 0 30px rgba(255, 204, 0, 0.2);
   animation: led-pulse 1.5s ease-in-out infinite;
 }
 
 .led-indicator--active::after {
   background: radial-gradient(
     circle,
-    rgba(255, 204, 0, 0.3) 0%,
+    rgba(255, 204, 0, 0.45) 0%,
+    rgba(255, 204, 0, 0.15) 40%,
     transparent 70%
   );
   animation: led-halo-pulse 1.5s ease-in-out infinite;
 }
 
-/* Processing state - neon amber, fast pulse */
+/* Processing state - neon amber, fast pulse, extra bright */
 .led-indicator--processing {
-  background: var(--led-active);
-  box-shadow: var(--led-glow-active);
+  background: #FFD700;
+  box-shadow: 
+    0 0 6px #FFD700,
+    0 0 14px rgba(255, 215, 0, 0.8),
+    0 0 28px rgba(255, 215, 0, 0.5),
+    0 0 40px rgba(255, 215, 0, 0.25);
   animation: led-pulse-fast 0.8s ease-in-out infinite;
 }
 
 .led-indicator--processing::after {
   background: radial-gradient(
     circle,
-    rgba(255, 204, 0, 0.4) 0%,
+    rgba(255, 215, 0, 0.55) 0%,
+    rgba(255, 215, 0, 0.2) 40%,
     transparent 70%
   );
   animation: led-halo-pulse-fast 0.8s ease-in-out infinite;
@@ -3065,14 +3243,19 @@
 
 /* Error state - neon red, static but intense */
 .led-indicator--error {
-  background: var(--led-error);
-  box-shadow: var(--led-glow-error);
+  background: #FF3333;
+  box-shadow: 
+    0 0 4px #FF3333,
+    0 0 10px rgba(255, 51, 51, 0.7),
+    0 0 20px rgba(255, 51, 51, 0.4),
+    0 0 30px rgba(255, 51, 51, 0.2);
 }
 
 .led-indicator--error::after {
   background: radial-gradient(
     circle,
-    rgba(255, 51, 51, 0.35) 0%,
+    rgba(255, 51, 51, 0.5) 0%,
+    rgba(255, 51, 51, 0.15) 40%,
     transparent 70%
   );
 }
@@ -3127,8 +3310,9 @@
 }
 
 .lcd-counter__value {
-  color: var(--led-ready);
+  color: #00FF66;
   font-weight: 700;
+  text-shadow: 0 0 8px rgba(0, 255, 102, 0.5);
 }
 
 .lcd-counter__separator {
@@ -3136,100 +3320,69 @@
   margin: 0 2px;
 }
 
-/* === CAMERA PANEL COMPONENT === */
-/* Every panel inherits this. No exceptions. */
-/* Glossy black anodized surface - precision machined feel */
-.camera-panel {
-  background: var(--camera-body);
-  background-image: var(--camera-body-gloss);
-  border-radius: 10px;
+/* Enhanced LCD counter container with glow */
+.lcd-counter-display {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  background: rgba(0, 255, 102, 0.08);
+  border: 1px solid rgba(0, 255, 102, 0.25);
+  border-radius: 6px;
   box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
-    0 4px 16px rgba(0, 0, 0, 0.5),
-    0 1px 3px rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--darkroom-border);
-  position: relative;
-  overflow: hidden;
-  transition: all var(--duration-normal) var(--ease-out);
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 12px rgba(0, 255, 102, 0.15);
 }
 
-/* Glossy highlight reflection - premium top shine */
+/* === CAMERA PANEL COMPONENT === */
+/* Every panel inherits this. No exceptions. */
+/* Premium glossy black anodized surface with accent lighting */
+.camera-panel {
+  background: rgba(12, 12, 12, 0.9);
+  border-radius: var(--radius-panel);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 1px 2px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+/* Subtle top edge - minimal, not glossy */
 .camera-panel::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 40%;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0.03) 30%,
-    transparent 100%
-  );
-  pointer-events: none;
-  border-radius: 9px 9px 0 0;
-  transition: all var(--duration-fast) var(--ease-out);
-}
-
-/* Edge highlight for glass feel */
-.camera-panel::after {
-  content: '';
-  position: absolute;
-  top: 1px;
-  left: 1px;
-  right: 1px;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 10%,
-    rgba(255, 255, 255, 0.1) 30%,
-    rgba(255, 255, 255, 0.1) 70%,
-    transparent 90%
-  );
+  background: rgba(255, 255, 255, 0.06);
   pointer-events: none;
-  border-radius: 9px 9px 0 0;
 }
 
-/* Interaction: Hover - subtle luminance lift */
+/* Remove decorative bottom edge */
+.camera-panel::after {
+  display: none;
+}
+
+/* Interaction: Hover - subtle border lift */
 .camera-panel:hover {
-  border-color: var(--darkroom-border-strong);
-  box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
-    0 6px 20px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .camera-panel:hover::before {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(255, 255, 255, 0.04) 30%,
-    transparent 100%
-  );
+  background: rgba(255, 255, 255, 0.08);
 }
 
-/* Interaction: Active/Focused - Madison accent glow */
+/* Interaction: Active/Focused - accent hint */
 .camera-panel--active,
 .camera-panel:focus-within {
-  border-color: rgba(184, 149, 106, 0.3);
-  box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
-    0 4px 16px rgba(0, 0, 0, 0.5),
-    0 0 24px rgba(184, 149, 106, 0.1);
+  border-color: rgba(184, 149, 106, 0.25);
 }
 
-/* Interaction: Focus - optical highlight */
+/* Interaction: Focus - subtle highlight */
 .camera-panel--focused {
-  border-color: var(--darkroom-border-strong);
-  box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
-    0 4px 16px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 /* Camera Panel Header */
@@ -3237,9 +3390,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  /* Clickable header for expandable panels */
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   cursor: pointer;
   transition: background var(--duration-fast) var(--ease-out);
 }
@@ -3251,23 +3403,23 @@
 .camera-panel__title {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 11px;
+  gap: 6px;
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--darkroom-text-muted);
 }
 
 .camera-panel__title svg {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   color: var(--darkroom-accent);
 }
 
 /* Camera Panel Content */
 .camera-panel__content {
-  padding: 16px;
+  padding: 10px;
 }
 
 /* === MODE DIAL BUTTON === */
@@ -4283,15 +4435,15 @@
     color: var(--darkroom-glow);
   }
 
-  /* Bottom Sheet Overlay */
+  /* Bottom Sheet Overlay - Professional backdrop */
   .mobile-sheet-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.85);
     z-index: 200;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.2s ease;
   }
 
   .mobile-sheet-overlay.open {
@@ -4299,21 +4451,24 @@
     pointer-events: auto;
   }
 
-  /* Bottom Sheet Panel */
+  /* Bottom Sheet Panel - Machined panel */
   .mobile-bottom-sheet {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    max-height: 85vh;
-    background: var(--darkroom-surface);
-    border-radius: 16px 16px 0 0;
+    max-height: 75vh;
+    background: var(--darkroom-bg);
+    background-image: var(--darkroom-bg-gradient);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border-top: 1px solid var(--darkroom-border);
     z-index: 250;
     transform: translateY(100%);
     transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
   }
 
   .mobile-bottom-sheet.open {
@@ -4331,10 +4486,11 @@
 
   .mobile-sheet-handle::before {
     content: '';
-    width: 36px;
-    height: 4px;
+    width: 32px;
+    height: 3px;
     background: var(--darkroom-border);
     border-radius: 2px;
+    opacity: 0.6;
   }
 
   /* Sheet Header */
@@ -4342,14 +4498,14 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 var(--space-md) var(--space-md);
-    border-bottom: 1px solid var(--darkroom-border);
+    padding: 0 var(--space-md) var(--space-sm);
+    border-bottom: 1px solid var(--darkroom-border-subtle);
     flex-shrink: 0;
   }
 
   .mobile-sheet-title {
     font-family: var(--font-display);
-    font-size: 1.125rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--darkroom-text);
   }
@@ -4360,18 +4516,24 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: transparent;
+    background: var(--darkroom-surface);
     border: 1px solid var(--darkroom-border);
-    border-radius: 50%;
+    border-radius: var(--radius-md);
     color: var(--darkroom-text-muted);
     cursor: pointer;
+    transition: all var(--duration-fast) ease;
+  }
+
+  .mobile-sheet-close:active {
+    background: var(--darkroom-surface-elevated);
+    transform: scale(0.96);
   }
 
   /* Sheet Content */
   .mobile-sheet-content {
     flex: 1;
     overflow-y: auto;
-    padding: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
     -webkit-overflow-scrolling: touch;
   }
 
@@ -4405,27 +4567,31 @@
   .mobile-inputs-sheet .generate-button-container {
     position: sticky;
     bottom: 0;
-    padding: var(--space-md);
-    margin: 0 calc(-1 * var(--space-md));
-    background: var(--darkroom-surface);
-    border-top: 1px solid var(--darkroom-border);
+    padding: var(--space-sm);
+    margin: 0 calc(-1 * var(--space-sm));
+    background: var(--darkroom-bg);
+    border-top: 1px solid var(--darkroom-border-subtle);
   }
 
   .mobile-inputs-sheet .upload-zone {
-    height: 120px;
+    height: 100px;
   }
 
   .mobile-inputs-sheet .upload-icon {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
   }
 
   .mobile-inputs-sheet .upload-text {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .mobile-inputs-sheet .upload-description {
-    font-size: 10px;
+    font-size: 9px;
+  }
+  
+  .mobile-inputs-sheet .upload-zone-wrapper {
+    margin-bottom: var(--space-sm);
   }
 
   /* ==========================================================================
@@ -4992,7 +5158,7 @@
     -webkit-overflow-scrolling: touch;
   }
   
-  /* Compact Pro Settings for mobile */
+  /* Compact Pro Settings for mobile - machined controls */
   .mobile-bottom-sheet .pro-settings {
     padding: 0;
     background: transparent;
@@ -5000,20 +5166,22 @@
   }
   
   .mobile-bottom-sheet .pro-settings__toggle {
-    padding: var(--space-sm) var(--space-md);
-    background: var(--darkroom-surface-elevated);
-    border-radius: 8px;
-    margin-bottom: var(--space-sm);
+    padding: var(--space-sm);
+    background: var(--darkroom-surface);
+    border: 1px solid var(--darkroom-border-subtle);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-xs);
   }
   
   .mobile-bottom-sheet .pro-settings__content {
     padding: var(--space-sm);
-    background: var(--darkroom-bg);
-    border-radius: 8px;
+    background: var(--darkroom-surface);
+    border: 1px solid var(--darkroom-border-subtle);
+    border-radius: var(--radius-md);
   }
   
   .mobile-bottom-sheet .pro-settings__control {
-    margin-bottom: var(--space-md);
+    margin-bottom: var(--space-sm);
   }
   
   .mobile-bottom-sheet .pro-settings__control:last-child {
