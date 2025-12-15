@@ -95,3 +95,8 @@ SELECT COUNT(*) as schwartz_templates FROM schwartz_templates; -- Should be 5
 
 
 
+
+
+
+
+
