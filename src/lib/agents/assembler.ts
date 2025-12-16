@@ -39,6 +39,7 @@ export async function assemblerAgent(
     designTokens,
     writingExamples,
     visualExamples,
+    industryConfig,
   ] = await Promise.all([
     // 1. Fetch full master documents (Silo A - no chunking!)
     fetchMasterDocuments(strategy.primaryCopyMaster, strategy.secondaryCopyMaster),
@@ -60,9 +61,12 @@ export async function assemblerAgent(
     
     // 7. Fetch relevant visual examples (Silo C - semantic search)
     fetchVisualExamples(orgId, userBrief),
+    
+    // 8. Fetch industry configuration
+    fetchIndustryConfig(orgId),
   ]);
 
-  console.log(`[Assembler] Loaded ${masterDocs.length} master docs, ${writingExamples.length} writing examples`);
+  console.log(`[Assembler] Loaded ${masterDocs.length} master docs, ${writingExamples.length} writing examples, industry: ${industryConfig?.id || 'none'}`);
 
   return {
     masterDocuments: masterDocs,
@@ -72,6 +76,7 @@ export async function assemblerAgent(
     designTokens,
     writingExamples,
     visualExamples,
+    industryConfig,
   };
 }
 
@@ -222,6 +227,36 @@ function getDefaultBrandDNA(orgId: string): BrandDNA {
   };
 }
 
+async function fetchIndustryConfig(orgId: string): Promise<{ id: string; subIndustry?: string } | undefined> {
+  const { data, error } = await supabase
+    .from('organizations')
+    .select('brand_config')
+    .eq('id', orgId)
+    .maybeSingle();
+
+  if (error || !data) {
+    console.log('[Assembler] No industry config found');
+    return undefined;
+  }
+
+  const brandConfig = (data.brand_config as any) || {};
+  const industryConfig = brandConfig.industry_config;
+  
+  if (!industryConfig?.id) {
+    // Try legacy industry field
+    const legacyIndustry = brandConfig.industry;
+    if (legacyIndustry) {
+      return { id: legacyIndustry };
+    }
+    return undefined;
+  }
+
+  return {
+    id: industryConfig.id,
+    subIndustry: industryConfig.subIndustry,
+  };
+}
+
 async function fetchDesignTokens(orgId: string): Promise<DesignTokens> {
   const { data, error } = await supabase
     .from('design_systems')
@@ -352,6 +387,7 @@ export async function fetchVisualMaster(masterName: string): Promise<{
 }
 
 export default assemblerAgent;
+
 
 
 

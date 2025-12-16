@@ -45,7 +45,7 @@ export function useBrandDNA() {
   // Fetch Design Tokens
   const { data: designTokens } = useQuery({
     queryKey: ["design-tokens", organizationId],
-    queryFn: async () => {
+    queryFn: async (): Promise<DesignTokens | null> => {
       if (!organizationId) return null;
 
       const { data, error } = await supabase
@@ -54,8 +54,13 @@ export function useBrandDNA() {
         .eq("org_id", organizationId)
         .maybeSingle();
 
-      if (error) throw error;
-      return data?.tokens as DesignTokens | null;
+      if (error) {
+        console.warn("[useBrandDNA] Design tokens fetch error:", error.message);
+        return null; // Return null instead of throwing - tokens are optional
+      }
+      
+      // Explicitly return null if no data (prevents undefined warning)
+      return (data?.tokens as DesignTokens) ?? null;
     },
     enabled: !!organizationId,
     staleTime: 5 * 60 * 1000,
@@ -151,6 +156,7 @@ export function useBrandSquads() {
 }
 
 export default useBrandDNA;
+
 
 
 

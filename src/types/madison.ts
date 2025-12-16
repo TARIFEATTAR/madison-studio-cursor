@@ -481,11 +481,17 @@ export interface ContextPackage {
   // From Silo A (full documents)
   masterDocuments: string[];
   schwartzTemplate: string;
-  
+
   // From Silo B (structured data)
   productData: ProductSpecs | null;
   brandDNA: BrandDNA;
   designTokens: DesignTokens;
+  
+  // Industry configuration
+  industryConfig?: {
+    id: string;
+    subIndustry?: string;
+  };
   
   // From Silo C (semantic search)
   writingExamples: BrandWritingExample[];
@@ -535,6 +541,7 @@ export interface BrandQuickView {
   scanConfidence?: number;
   lastScanned?: string;
 }
+
 
 
 

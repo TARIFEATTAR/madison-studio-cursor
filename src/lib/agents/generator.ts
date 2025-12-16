@@ -14,6 +14,7 @@ import type {
   ContextPackage,
   CopySquad,
 } from '@/types/madison';
+import { getIndustryById, type IndustryConfig } from '@/config/industries';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MADISON IDENTITY DOCUMENT
@@ -122,12 +123,33 @@ ${context.masterDocuments.join('\n\n---\n\n')}
 ${context.schwartzTemplate}
 </SCHWARTZ_TEMPLATE>`;
 
+  // Get industry-specific context if available
+  const industryId = context.industryConfig?.id;
+  const industryConfig = industryId ? getIndustryById(industryId) : null;
+  
   const brandSection = context.brandDNA ? `<BRAND_DNA>
 Mission: ${context.brandDNA.essence?.mission || 'Create beautiful things'}
 Tone: ${context.brandDNA.essence?.tone || 'sophisticated'}
 Colors: ${JSON.stringify(context.brandDNA.visual?.colors || {})}
 Typography: ${JSON.stringify(context.brandDNA.visual?.typography || {})}
 </BRAND_DNA>` : '';
+
+  // Industry-specific guidance for Madison
+  const industrySection = industryConfig ? `<INDUSTRY_CONTEXT>
+Industry: ${industryConfig.name}
+Description: ${industryConfig.description}
+
+VOCABULARY GUIDANCE:
+- Words to embrace: ${industryConfig.defaults.wordsWeLove.join(', ')}
+- Words to avoid: ${industryConfig.defaults.wordsWeAvoid.join(', ')}
+
+TONE GUIDANCE:
+- Preferred tones: ${industryConfig.defaults.tones.join(', ')}
+- Personality traits: ${industryConfig.defaults.personalityTraits.join(', ')}
+
+CONTENT STYLE:
+${getIndustryStyleGuidance(industryConfig)}
+</INDUSTRY_CONTEXT>` : '';
 
   const productSection = context.productData ? `<PRODUCT_DATA>
 ${JSON.stringify(context.productData, null, 2)}
@@ -159,6 +181,8 @@ ${masterSection}
 ${schwartzSection}
 
 ${brandSection}
+
+${industrySection}
 
 ${productSection}
 
@@ -205,6 +229,45 @@ function generateApprovedExample(squad: CopySquad): string {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// INDUSTRY-SPECIFIC STYLE GUIDANCE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function getIndustryStyleGuidance(industry: IndustryConfig): string {
+  const guidance: Record<string, string> = {
+    'fragrance-beauty': `
+- Use sensory language: describe scents, textures, and the feeling of application
+- Reference ingredients with reverence, like a sommelier describes wine notes
+- Evoke ritual and self-care moments
+- Connect products to identity transformation and emotional states
+- Paint scenes: "the moment after a warm bath", "the quiet of your morning routine"`,
+    
+    'luxury-goods': `
+- Emphasize craftsmanship and the human hands behind the product
+- Use heritage and provenance as narrative anchors
+- Describe materials with specificity (full-grain vs top-grain leather)
+- Reference time: "heirloom quality", "patinas that develop over years"
+- Less is more: understated elegance, not loud luxury`,
+    
+    'hospitality-realestate': `
+- Paint experiential scenes: what does it feel like to wake up here?
+- Use specific sensory details: the texture of linens, the view at golden hour
+- Balance aspiration with attainability
+- Highlight what makes this place unique, not generic luxury descriptors
+- Create urgency through scarcity or seasonal moments`,
+    
+    'expert-brands': `
+- Lead with insight, not credentials
+- Use "you" language: speak directly to the reader's ambitions
+- Share frameworks and mental models
+- Balance confidence with approachability
+- Avoid jargon; translate complexity into clarity
+- Make the reader feel understood before offering solutions`,
+  };
+  
+  return guidance[industry.id] || '';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // IMAGE PROMPT GENERATION
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -246,6 +309,7 @@ function getDefaultPromptTemplate(masterName: string): string {
 }
 
 export default generatorAgent;
+
 
 
 

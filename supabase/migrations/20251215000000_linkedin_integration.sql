@@ -171,3 +171,4 @@ DO $$
 BEGIN
   RAISE NOTICE 'LinkedIn integration schema created successfully!';
 END $$;
+

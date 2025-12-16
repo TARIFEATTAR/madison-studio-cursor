@@ -39,6 +39,15 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
   // Uploaded documents state
   const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocument[]>([]);
   const [loadingDocuments, setLoadingDocuments] = useState(false);
+  
+  // Brand knowledge state (extracted insights)
+  const [brandKnowledge, setBrandKnowledge] = useState<Array<{
+    id: string;
+    knowledge_type: string;
+    content: any;
+    created_at: string;
+  }>>([]);
+  const [loadingKnowledge, setLoadingKnowledge] = useState(false);
 
   // Auto-select upload method when files are staged
   useEffect(() => {
@@ -47,10 +56,80 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
     }
   }, [stagedFiles.length, selectedMethod]);
 
-  // Fetch uploaded documents
+  // Fetch uploaded documents and brand knowledge
   useEffect(() => {
     fetchUploadedDocuments();
+    fetchBrandKnowledge();
   }, [organizationId]);
+
+  const fetchBrandKnowledge = async () => {
+    setLoadingKnowledge(true);
+    try {
+      const { data, error } = await supabase
+        .from("brand_knowledge")
+        .select("id, knowledge_type, content, created_at")
+        .eq("organization_id", organizationId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setBrandKnowledge(data || []);
+      logger.debug("🧠 Fetched brand knowledge:", data?.length || 0);
+    } catch (error: any) {
+      logger.error("Error fetching brand knowledge:", error);
+    } finally {
+      setLoadingKnowledge(false);
+    }
+  };
+
+  const handleDeleteKnowledge = async (id: string, type: string) => {
+    if (!confirm(`Delete this ${type.replace(/_/g, ' ')} entry? This cannot be undone.`)) return;
+
+    try {
+      const { error } = await supabase
+        .from("brand_knowledge")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({ 
+        title: "Knowledge Deleted", 
+        description: "Brand knowledge entry removed successfully" 
+      });
+      await fetchBrandKnowledge();
+    } catch (error: any) {
+      toast({ 
+        title: "Error", 
+        description: error.message, 
+        variant: "destructive" 
+      });
+    }
+  };
+
+  const handleClearAllKnowledge = async () => {
+    if (!confirm("⚠️ Delete ALL brand knowledge for this organization? This includes all website scans, manual entries, and document extractions. This cannot be undone.")) return;
+
+    try {
+      const { error } = await supabase
+        .from("brand_knowledge")
+        .delete()
+        .eq("organization_id", organizationId);
+
+      if (error) throw error;
+
+      toast({ 
+        title: "All Knowledge Cleared", 
+        description: "All brand knowledge has been deleted. You can now start fresh." 
+      });
+      await fetchBrandKnowledge();
+    } catch (error: any) {
+      toast({ 
+        title: "Error", 
+        description: error.message, 
+        variant: "destructive" 
+      });
+    }
+  };
 
   // Auto-hide Quick Start when documents exist
   useEffect(() => {
@@ -109,6 +188,18 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
     setUploadStatus("processing");
 
     try {
+      // Delete old website_scrape entries first to avoid accumulation
+      const { error: deleteError } = await supabase
+        .from("brand_knowledge")
+        .delete()
+        .eq("organization_id", organizationId)
+        .eq("knowledge_type", "website_scrape");
+      
+      if (deleteError) {
+        logger.warn("Could not delete old website scans:", deleteError);
+        // Continue anyway - new data will just be added
+      }
+
       const { data, error } = await supabase.functions.invoke("scrape-brand-website", {
         body: { url: websiteUrl, organizationId },
       });
@@ -119,16 +210,31 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
         setUploadStatus("success");
         toast({
           title: "Website Scanned",
-          description: "Brand voice and tone extracted successfully!",
+          description: "Brand voice and tone extracted successfully! Previous website scan data was replaced.",
         });
         setWebsiteUrl("");
+        await fetchBrandKnowledge(); // Refresh the knowledge list
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.error("Error scraping website:", error);
       setUploadStatus("error");
+      
+      // Extract error message from edge function response
+      let errorMessage = "Failed to extract brand information.";
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.context?.body) {
+        try {
+          const body = JSON.parse(error.context.body);
+          errorMessage = body.error || errorMessage;
+        } catch {
+          // Ignore parse errors
+        }
+      }
+      
       toast({
         title: "Scraping Failed",
-        description: error instanceof Error ? error.message : "Failed to extract brand information.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -149,6 +255,17 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
     setIsProcessing(true);
 
     try {
+      // Delete old manual voice entries first to avoid accumulation
+      const { error: deleteError } = await supabase
+        .from("brand_knowledge")
+        .delete()
+        .eq("organization_id", organizationId)
+        .eq("knowledge_type", "voice_manual");
+      
+      if (deleteError) {
+        logger.warn("Could not delete old voice entries:", deleteError);
+      }
+
       const { error } = await supabase.from("brand_knowledge").insert({
         organization_id: organizationId,
         knowledge_type: "voice_manual",
@@ -159,10 +276,11 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
 
       toast({
         title: "Brand Voice Saved",
-        description: "Your brand voice description has been stored.",
+        description: "Your brand voice description has been stored (previous manual entries replaced).",
       });
       
       setBrandVoice("");
+      await fetchBrandKnowledge(); // Refresh the knowledge list
     } catch (error) {
       logger.error("Error saving brand voice:", error);
       toast({
@@ -1152,6 +1270,108 @@ Our brand voice is warm, elegant, and poetic. We use sensory language and evocat
                       <p className="whitespace-pre-wrap">{doc.content_preview}</p>
                     </div>
                   )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Brand Knowledge Inspector */}
+        <div className="mt-8 pt-6 border-t border-border/20">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-brass" />
+              Brand Knowledge Inspector
+            </h3>
+            {brandKnowledge.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearAllKnowledge}
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/30"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Clear All
+              </Button>
+            )}
+          </div>
+          
+          <p className="text-sm text-muted-foreground mb-4">
+            This shows all extracted brand knowledge. Delete entries to start fresh or remove incorrect data.
+          </p>
+
+          {loadingKnowledge ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : brandKnowledge.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Sparkles className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <p>No brand knowledge extracted yet</p>
+              <p className="text-xs mt-1">Upload documents or scan a website to get started</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {brandKnowledge.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="p-4 border border-border/30 rounded-lg hover:bg-accent/30 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="secondary" className="text-xs capitalize">
+                          {entry.knowledge_type.replace(/_/g, ' ')}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}
+                        </span>
+                      </div>
+                      
+                      {/* Display a summary of the content */}
+                      <div className="text-sm text-muted-foreground">
+                        {entry.knowledge_type === 'website_scrape' && entry.content?.scraped_pages && (
+                          <p>Scanned: {entry.content.scraped_pages.join(', ').substring(0, 100)}...</p>
+                        )}
+                        {entry.knowledge_type === 'voice_manual' && entry.content?.description && (
+                          <p className="line-clamp-2">{entry.content.description}</p>
+                        )}
+                        {entry.knowledge_type === 'brand_dna_scan' && entry.content?.sourceUrl && (
+                          <p>Source: {entry.content.sourceUrl}</p>
+                        )}
+                        {entry.knowledge_type === 'document_extraction' && entry.content?.document_name && (
+                          <p>From: {entry.content.document_name}</p>
+                        )}
+                        {/* Fallback for other types */}
+                        {!['website_scrape', 'voice_manual', 'brand_dna_scan', 'document_extraction'].includes(entry.knowledge_type) && (
+                          <p className="line-clamp-2">
+                            {JSON.stringify(entry.content).substring(0, 150)}...
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Show key insights if available */}
+                      {entry.content?.brand_voice?.tone && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {entry.content.brand_voice.tone.slice(0, 3).map((tone: string, i: number) => (
+                            <Badge key={i} variant="outline" className="text-xs">
+                              {tone}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteKnowledge(entry.id, entry.knowledge_type)}
+                      className="hover:bg-destructive/10 hover:text-destructive flex-shrink-0"
+                      title="Delete this knowledge entry"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

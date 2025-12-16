@@ -63,3 +63,4 @@ If the sound file is missing or fails to load:
 - Flash effect will still trigger
 - No errors will be thrown
 - A console warning will be logged
+

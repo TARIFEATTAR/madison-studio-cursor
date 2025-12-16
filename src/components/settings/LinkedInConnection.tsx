@@ -416,3 +416,4 @@ export function LinkedInConnection({ organizationId }: LinkedInConnectionProps) 
     </div>
   );
 }
+

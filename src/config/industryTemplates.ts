@@ -9,7 +9,12 @@ export interface IndustryTemplate {
 }
 
 // E-commerce industries that have access to Marketplace features
+// Updated for new 4-category system
 export const ECOMMERCE_INDUSTRIES = [
+  // New industry IDs
+  'fragrance-beauty',
+  'luxury-goods',
+  // Legacy IDs for backwards compatibility
   'skincare',
   'perfume',
   'home_fragrance',
@@ -20,6 +25,10 @@ export const ECOMMERCE_INDUSTRIES = [
 
 export const isEcommerceIndustry = (industryId: string | undefined): boolean => {
   if (!industryId) return false;
+  // Hospitality/Real Estate and Expert Brands are NOT e-commerce
+  if (industryId === 'hospitality-realestate' || industryId === 'expert-brands') {
+    return false;
+  }
   return ECOMMERCE_INDUSTRIES.includes(industryId);
 };
 
@@ -58,10 +67,28 @@ export function getAllIndustryOptions() {
 }
 
 export function getIndustryOptions() {
+  // New 4-category system - imports from industries.ts
   return [
-    { value: 'skincare', label: 'Skin Care' },
-    { value: 'perfume', label: 'Perfumery' },
-    { value: 'home_fragrance', label: 'Home Fragrance' },
-    { value: 'other', label: 'Other' }
+    { value: 'fragrance-beauty', label: 'Fragrance & Beauty' },
+    { value: 'luxury-goods', label: 'Luxury Goods & Craft' },
+    { value: 'hospitality-realestate', label: 'Hospitality & Real Estate' },
+    { value: 'expert-brands', label: 'Expert Brands' }
   ];
+}
+
+// Legacy mapping for backwards compatibility
+export function migrateLegacyIndustry(oldValue: string): string {
+  const mapping: Record<string, string> = {
+    'skincare': 'fragrance-beauty',
+    'perfume': 'fragrance-beauty',
+    'home_fragrance': 'fragrance-beauty',
+    'fashion': 'luxury-goods',
+    'jewelry': 'luxury-goods',
+    'cosmetics': 'fragrance-beauty',
+    'consulting': 'expert-brands',
+    'saas': 'expert-brands',
+    'real_estate': 'hospitality-realestate',
+    'other': 'fragrance-beauty',
+  };
+  return mapping[oldValue] || oldValue;
 }
