@@ -18,6 +18,7 @@ import type {
   BrandWritingExample,
   BrandVisualExample,
 } from '@/types/madison';
+import { checkBrandReadiness, getBrandReadinessMessage } from './brandReadinessCheck';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MAIN ASSEMBLER FUNCTION
@@ -30,6 +31,25 @@ export async function assemblerAgent(
 ): Promise<ContextPackage> {
   console.log('[Assembler] Fetching context for strategy:', strategy.copySquad);
 
+  // CRITICAL: Check brand readiness before proceeding
+  const readiness = await checkBrandReadiness(orgId);
+  console.log(`[Assembler] Brand readiness: ${readiness.readinessScore}%`);
+  
+  if (!readiness.isReady) {
+    const errorMessage = getBrandReadinessMessage(readiness);
+    const recommendations = readiness.recommendations.length > 0 
+      ? `\n\nTo fix this:\n${readiness.recommendations.map((r, i) => `${i + 1}. ${r}`).join('\n')}`
+      : '';
+    
+    throw new Error(
+      `${errorMessage}${recommendations}\n\nMadison cannot generate accurate content without proper brand setup. Please complete your brand profile first.`
+    );
+  }
+  
+  if (readiness.warnings.length > 0) {
+    console.warn('[Assembler] Brand readiness warnings:', readiness.warnings);
+  }
+
   // Execute all fetches in parallel for speed
   const [
     masterDocs,
@@ -40,33 +60,37 @@ export async function assemblerAgent(
     writingExamples,
     visualExamples,
     industryConfig,
+    brandKnowledge,
   ] = await Promise.all([
     // 1. Fetch full master documents (Silo A - no chunking!)
     fetchMasterDocuments(strategy.primaryCopyMaster, strategy.secondaryCopyMaster),
-    
+
     // 2. Fetch Schwartz stage template (Silo A)
     fetchSchwartzTemplate(strategy.schwartzStage),
-    
+
     // 3. Fetch product data (Silo B - exact lookup)
     fetchProductData(strategy.productId, orgId),
-    
+
     // 4. Fetch brand DNA (Silo B)
     fetchBrandDNA(orgId),
-    
+
     // 5. Fetch design tokens (Silo B)
     fetchDesignTokens(orgId),
-    
+
     // 6. Fetch relevant writing examples (Silo C - semantic search)
     fetchWritingExamples(orgId, userBrief),
-    
+
     // 7. Fetch relevant visual examples (Silo C - semantic search)
     fetchVisualExamples(orgId, userBrief),
-    
+
     // 8. Fetch industry configuration
     fetchIndustryConfig(orgId),
+
+    // 9. Fetch brand knowledge from uploaded documents
+    fetchBrandKnowledge(orgId),
   ]);
 
-  console.log(`[Assembler] Loaded ${masterDocs.length} master docs, ${writingExamples.length} writing examples, industry: ${industryConfig?.id || 'none'}`);
+  console.log(`[Assembler] Loaded ${masterDocs.length} master docs, ${writingExamples.length} writing examples, ${brandKnowledge ? 'brand knowledge found' : 'no brand knowledge'}, industry: ${industryConfig?.id || 'none'}`);
 
   return {
     masterDocuments: masterDocs,
@@ -77,6 +101,7 @@ export async function assemblerAgent(
     writingExamples,
     visualExamples,
     industryConfig,
+    brandKnowledge,
   };
 }
 
@@ -194,15 +219,38 @@ async function fetchBrandDNA(orgId: string): Promise<BrandDNA | null> {
     .single();
 
   if (error) {
-    console.log('[Assembler] No brand DNA found');
+    console.log('[Assembler] No brand DNA found in brand_dna table, checking brand_knowledge...');
+    
+    // FALLBACK: Try to synthesize from brand_knowledge table
+    const synthesizedDNA = await synthesizeBrandDNAFromKnowledge(orgId);
+    if (synthesizedDNA) {
+      console.log('[Assembler] Synthesized brand DNA from brand_knowledge entries');
+      return synthesizedDNA;
+    }
+    
     return getDefaultBrandDNA(orgId);
   }
 
   return data as BrandDNA;
 }
 
-function getDefaultBrandDNA(orgId: string): BrandDNA {
-  return {
+async function synthesizeBrandDNAFromKnowledge(orgId: string): Promise<BrandDNA | null> {
+  // Fetch all active brand knowledge entries
+  const { data: knowledgeEntries, error } = await supabase
+    .from('brand_knowledge')
+    .select('knowledge_type, content')
+    .eq('organization_id', orgId)
+    .eq('is_active', true);
+
+  if (error || !knowledgeEntries || knowledgeEntries.length === 0) {
+    console.log('[Assembler] No brand knowledge entries found');
+    return null;
+  }
+
+  console.log(`[Assembler] Found ${knowledgeEntries.length} brand knowledge entries`);
+
+  // Build a synthesized BrandDNA from knowledge entries
+  const synthesized: BrandDNA = {
     id: '',
     org_id: orgId,
     visual: {
@@ -219,6 +267,66 @@ function getDefaultBrandDNA(orgId: string): BrandDNA {
     },
     constraints: {
       forbiddenWords: [],
+    },
+    scan_method: 'document_upload',
+    scan_metadata: {},
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  // Extract data from knowledge entries
+  for (const entry of knowledgeEntries) {
+    const content = entry.content as any;
+    
+    switch (entry.knowledge_type) {
+      case 'brand_voice':
+        if (content.toneAttributes && content.toneAttributes.length > 0) {
+          synthesized.essence!.tone = content.toneAttributes.join(', ');
+        }
+        break;
+        
+      case 'vocabulary':
+        if (content.forbiddenPhrases && content.forbiddenPhrases.length > 0) {
+          synthesized.constraints!.forbiddenWords = content.forbiddenPhrases;
+        }
+        break;
+        
+      case 'brandIdentity':
+        if (content.mission) {
+          synthesized.essence!.mission = content.mission;
+        }
+        if (content.values) {
+          synthesized.essence!.values = content.values;
+        }
+        break;
+    }
+  }
+
+  return synthesized;
+}
+
+function getDefaultBrandDNA(orgId: string): BrandDNA {
+  // IMPORTANT: This is a minimal fallback only used when brand readiness check passes
+  // but no specific DNA exists. It provides neutral defaults that won't mislead.
+  console.warn('[Assembler] Using default brand DNA - brand should complete their profile');
+  
+  return {
+    id: '',
+    org_id: orgId,
+    visual: {
+      colors: {
+        primary: '#1A1816', // Neutral ink black
+        secondary: '#B8956A', // Neutral brass
+        accent: '#D4AF37', // Neutral gold
+      },
+    },
+    essence: {
+      tone: 'professional', // Changed from 'sophisticated' to more neutral
+      copySquad: 'THE_STORYTELLERS', // Most versatile squad
+      visualSquad: 'THE_STORYTELLERS',
+    },
+    constraints: {
+      forbiddenWords: [], // No assumptions about forbidden words
     },
     scan_method: 'manual',
     scan_metadata: {},
@@ -255,6 +363,46 @@ async function fetchIndustryConfig(orgId: string): Promise<{ id: string; subIndu
     id: industryConfig.id,
     subIndustry: industryConfig.subIndustry,
   };
+}
+
+async function fetchBrandKnowledge(orgId: string): Promise<any> {
+  const { data, error } = await supabase
+    .from('brand_knowledge')
+    .select('knowledge_type, content')
+    .eq('organization_id', orgId)
+    .eq('is_active', true);
+
+  if (error || !data || data.length === 0) {
+    console.log('[Assembler] No brand knowledge found');
+    return undefined;
+  }
+
+  console.log(`[Assembler] Found ${data.length} brand knowledge entries`);
+
+  // Organize knowledge by type
+  const knowledge: any = {};
+  
+  for (const entry of data) {
+    switch (entry.knowledge_type) {
+      case 'brand_voice':
+        knowledge.voice = entry.content;
+        break;
+      case 'vocabulary':
+        knowledge.vocabulary = entry.content;
+        break;
+      case 'brandIdentity':
+        knowledge.brandIdentity = entry.content;
+        break;
+      case 'writing_examples':
+        knowledge.examples = entry.content;
+        break;
+      case 'structural_guidelines':
+        knowledge.structure = entry.content;
+        break;
+    }
+  }
+
+  return Object.keys(knowledge).length > 0 ? knowledge : undefined;
 }
 
 async function fetchDesignTokens(orgId: string): Promise<DesignTokens> {

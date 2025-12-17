@@ -486,13 +486,22 @@ export interface ContextPackage {
   productData: ProductSpecs | null;
   brandDNA: BrandDNA;
   designTokens: DesignTokens;
-  
+
   // Industry configuration
   industryConfig?: {
     id: string;
     subIndustry?: string;
   };
-  
+
+  // Brand Knowledge (from uploaded documents)
+  brandKnowledge?: {
+    voice?: any;
+    vocabulary?: any;
+    brandIdentity?: any;
+    examples?: any;
+    structure?: any;
+  };
+
   // From Silo C (semantic search)
   writingExamples: BrandWritingExample[];
   visualExamples: BrandVisualExample[];

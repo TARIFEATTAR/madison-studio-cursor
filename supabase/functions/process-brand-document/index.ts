@@ -366,41 +366,20 @@ serve(async (req) => {
         });
       }
       
-      // Save category-specific knowledge
-      if (extractionData.categories) {
-        if (extractionData.categories.personal_fragrance?.detected) {
-          knowledgeInserts.push({
-            organization_id: document.organization_id,
-            document_id: documentId,
-            knowledge_type: 'category_personal_fragrance',
-            content: extractionData.categories.personal_fragrance,
-            is_active: true,
-            version: 1
-          });
-        }
-        
-        if (extractionData.categories.home_fragrance?.detected) {
-          knowledgeInserts.push({
-            organization_id: document.organization_id,
-            document_id: documentId,
-            knowledge_type: 'category_home_fragrance',
-            content: extractionData.categories.home_fragrance,
-            is_active: true,
-            version: 1
-          });
-        }
-        
-        if (extractionData.categories.skincare?.detected) {
-          knowledgeInserts.push({
-            organization_id: document.organization_id,
-            document_id: documentId,
-            knowledge_type: 'category_skincare',
-            content: extractionData.categories.skincare,
-            is_active: true,
-            version: 1
-          });
-        }
+      // CRITICAL: Save brandIdentity (mission, values, target audience, positioning)
+      if (extractionData.brandIdentity) {
+        knowledgeInserts.push({
+          organization_id: document.organization_id,
+          document_id: documentId,
+          knowledge_type: 'brandIdentity',
+          content: extractionData.brandIdentity,
+          is_active: true,
+          version: 1
+        });
       }
+      
+      // REMOVED: Old fragrance-specific categories (no longer extracted)
+      // These were causing Madison to misinterpret brands as fragrance companies
       
       if (knowledgeInserts.length > 0) {
         const { error: insertError } = await supabase

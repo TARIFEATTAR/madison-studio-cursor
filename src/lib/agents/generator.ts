@@ -134,6 +134,42 @@ Colors: ${JSON.stringify(context.brandDNA.visual?.colors || {})}
 Typography: ${JSON.stringify(context.brandDNA.visual?.typography || {})}
 </BRAND_DNA>` : '';
 
+  // Brand Knowledge from uploaded documents (PRIORITY SOURCE)
+  const brandKnowledgeSection = context.brandKnowledge ? `<BRAND_KNOWLEDGE>
+${context.brandKnowledge.brandIdentity ? `
+BRAND IDENTITY:
+Mission: ${context.brandKnowledge.brandIdentity.mission || ''}
+Values: ${context.brandKnowledge.brandIdentity.values?.join(', ') || ''}
+Target Audience: ${context.brandKnowledge.brandIdentity.targetAudience || ''}
+Unique Positioning: ${context.brandKnowledge.brandIdentity.uniquePositioning || ''}
+` : ''}
+
+${context.brandKnowledge.voice ? `
+BRAND VOICE:
+Tone Attributes: ${context.brandKnowledge.voice.toneAttributes?.join(', ') || ''}
+Personality Traits: ${context.brandKnowledge.voice.personalityTraits?.join(', ') || ''}
+Writing Style: ${context.brandKnowledge.voice.writingStyle || ''}
+Key Characteristics: ${context.brandKnowledge.voice.keyCharacteristics?.join(', ') || ''}
+` : ''}
+
+${context.brandKnowledge.vocabulary ? `
+VOCABULARY:
+Approved Terms: ${context.brandKnowledge.vocabulary.approvedTerms?.join(', ') || ''}
+Forbidden Phrases: ${context.brandKnowledge.vocabulary.forbiddenPhrases?.join(', ') || ''}
+Industry Terminology: ${context.brandKnowledge.vocabulary.industryTerminology?.join(', ') || ''}
+` : ''}
+
+${context.brandKnowledge.structure ? `
+WRITING STRUCTURE:
+Sentence Structure: ${context.brandKnowledge.structure.sentenceStructure || ''}
+Paragraph Length: ${context.brandKnowledge.structure.paragraphLength || ''}
+Punctuation Style: ${context.brandKnowledge.structure.punctuationStyle || ''}
+` : ''}
+
+⚠️ CRITICAL: The above BRAND_KNOWLEDGE is extracted from the brand's official documentation. 
+This is the PRIMARY source of truth for how this brand communicates. Follow it precisely.
+</BRAND_KNOWLEDGE>` : '';
+
   // Industry-specific guidance for Madison
   const industrySection = industryConfig ? `<INDUSTRY_CONTEXT>
 Industry: ${industryConfig.name}
@@ -179,6 +215,8 @@ Schwartz Stage: ${strategy.schwartzStage}
 ${masterSection}
 
 ${schwartzSection}
+
+${brandKnowledgeSection}
 
 ${brandSection}
 
