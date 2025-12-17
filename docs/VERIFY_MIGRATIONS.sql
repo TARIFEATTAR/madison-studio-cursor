@@ -48,3 +48,5 @@ SELECT 'schwartz_templates', COUNT(*) FROM schwartz_templates;
 
 
 
+
+

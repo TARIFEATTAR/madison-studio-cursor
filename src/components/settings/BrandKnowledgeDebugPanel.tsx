@@ -61,12 +61,26 @@ export function BrandKnowledgeDebugPanel({ organizationId }: BrandKnowledgeDebug
     setTestResult(null);
 
     try {
+      // Fetch organization's industry
+      const { data: orgData } = await supabase
+        .from('organizations')
+        .select('brand_config')
+        .eq('id', organizationId)
+        .maybeSingle();
+      
+      let industry: string | undefined;
+      if (orgData?.brand_config) {
+        const brandConfig = orgData.brand_config as any;
+        industry = brandConfig.industry_config?.id || brandConfig.industry;
+      }
+
       const { data, error } = await supabase.functions.invoke('extract-brand-knowledge', {
         body: {
           extractedText: testText,
           organizationId: organizationId,
           documentName: 'Test Extraction',
-          detectVisualStandards: true
+          detectVisualStandards: true,
+          industry: industry
         }
       });
 

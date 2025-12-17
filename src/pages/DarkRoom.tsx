@@ -26,6 +26,8 @@ import {
   RightPanel,
   DarkRoomHeader,
   MobileDarkRoom,
+  getRandomBackgroundVariation,
+  getCompositionPrompt,
 } from "@/components/darkroom";
 import type { ProModeSettings } from "@/components/darkroom";
 
@@ -170,6 +172,12 @@ export default function DarkRoom() {
     { id: "slot-4", imageUrl: null },
     { id: "slot-5", imageUrl: null },
   ]);
+  
+  // Background preset selection
+  const [selectedBackgroundPreset, setSelectedBackgroundPreset] = useState<string | null>(null);
+  
+  // Composition preset selection (how to arrange products in scene)
+  const [selectedCompositionPreset, setSelectedCompositionPreset] = useState<string | null>(null);
 
   // Prompt
   const [prompt, setPrompt] = useState("");
@@ -232,10 +240,23 @@ export default function DarkRoom() {
 
   // Effects
   useEffect(() => {
-    // Check for initial product from navigation
-    const state = location.state as { product?: Product } | undefined;
+    // Check for initial data from navigation (product or background image)
+    const state = location.state as { 
+      product?: Product;
+      backgroundImage?: { url: string; name: string };
+    } | undefined;
+    
     if (state?.product) {
       setSelectedProduct(state.product);
+    }
+    
+    // If coming from Light Table with a background image, set it
+    if (state?.backgroundImage) {
+      setBackgroundImage({
+        url: state.backgroundImage.url,
+        name: state.backgroundImage.name,
+      });
+      toast.success("Background image loaded from Light Table");
     }
   }, [location.state]);
 
@@ -252,7 +273,31 @@ export default function DarkRoom() {
       return;
     }
 
-    const effectivePrompt = prompt.trim() || "Professional product photography";
+    // Build effective prompt with presets
+    let effectivePrompt = prompt.trim() || "Professional product photography";
+    
+    // Count total products (main product image + product slots)
+    const activeProductSlots = productSlots.filter(slot => slot.imageUrl);
+    const totalProductCount = (productImage ? 1 : 0) + activeProductSlots.length;
+    
+    // If a background preset is selected, add a random variation to the prompt
+    if (selectedBackgroundPreset) {
+      const backgroundVariation = getRandomBackgroundVariation(selectedBackgroundPreset);
+      if (backgroundVariation) {
+        // Append the background style to the user's prompt
+        effectivePrompt = `${effectivePrompt}. Background: ${backgroundVariation}`;
+        console.log("🎨 Background preset applied:", selectedBackgroundPreset, "→", backgroundVariation);
+      }
+    }
+    
+    // If a composition preset is selected, add arrangement instructions
+    if (selectedCompositionPreset && totalProductCount > 0) {
+      const compositionPrompt = getCompositionPrompt(selectedCompositionPreset, totalProductCount);
+      if (compositionPrompt) {
+        effectivePrompt = `${effectivePrompt}. Composition: ${compositionPrompt}`;
+        console.log("📐 Composition preset applied:", selectedCompositionPreset, `(${totalProductCount} products)`);
+      }
+    }
     
     // Trigger camera feedback (sound + flash) immediately on capture
     triggerCameraFeedback();
@@ -288,7 +333,6 @@ export default function DarkRoom() {
       }
       
       // Add multi-product slots (for compositing multiple products into scene)
-      const activeProductSlots = productSlots.filter(slot => slot.imageUrl);
       activeProductSlots.forEach((slot, index) => {
         referenceImages.push({
           url: slot.imageUrl!,
@@ -640,6 +684,10 @@ export default function DarkRoom() {
           isGenerating={isGenerating}
           productSlots={productSlots}
           onProductSlotsChange={setProductSlots}
+          selectedBackgroundPreset={selectedBackgroundPreset}
+          onBackgroundPresetChange={setSelectedBackgroundPreset}
+          selectedCompositionPreset={selectedCompositionPreset}
+          onCompositionPresetChange={setSelectedCompositionPreset}
         />
       </div>
 

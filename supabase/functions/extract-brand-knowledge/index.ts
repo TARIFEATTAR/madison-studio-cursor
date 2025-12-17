@@ -16,7 +16,7 @@ serve(async (req) => {
   }
 
   try {
-    const { extractedText, organizationId, documentName, detectVisualStandards } = await req.json();
+    const { extractedText, organizationId, documentName, detectVisualStandards, industry } = await req.json();
 
     // DEBUG: Check API Key existence
     const apiKey = Deno.env.get('GEMINI_API_KEY');
@@ -28,7 +28,7 @@ serve(async (req) => {
       throw new Error('extractedText and organizationId are required');
     }
 
-    console.log(`Extracting brand knowledge from ${documentName || 'document'} for org: ${organizationId}`);
+    console.log(`Extracting brand knowledge from ${documentName || 'document'} for org: ${organizationId}, industry: ${industry || 'not specified'}`);
     
     // Check if document contains visual standards sections
     const hasVisualStandards = detectVisualStandards || 
@@ -39,7 +39,11 @@ serve(async (req) => {
     
     if (hasVisualStandards) {
       // Extract BOTH brand voice AND visual standards
+      const industryContext = industry ? `This brand operates in the ${industry} industry.` : 'Analyze this brand objectively without assuming any specific industry.';
+      
       extractionPrompt = `You are a brand strategist analyzing comprehensive brand guidelines.
+
+${industryContext}
 
 DOCUMENT TO ANALYZE:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -58,11 +62,10 @@ Return your analysis as a JSON object with this exact structure:
     "keyCharacteristics": ["concise sentences", "sensory language"]
   },
   "vocabulary": {
-    "approvedTerms": ["fragrance", "composition", "notes"],
-    "forbiddenPhrases": ["game-changing", "must-have", "indulge", "treat yourself", "whisper rather than declaration", "embark on a journey"],
-    "industryTerminology": ["olfactory", "sillage"],
-    "preferredPhrasing": {"composition": "formula"},
-    "avoidHistoricalReferences": true
+    "approvedTerms": ["key terms the brand uses"],
+    "forbiddenPhrases": ["phrases to avoid"],
+    "industryTerminology": ["industry-specific terms"],
+    "preferredPhrasing": {"term": "preferred alternative"}
   },
   "examples": {
     "goodExamples": [
@@ -101,46 +104,32 @@ Return your analysis as a JSON object with this exact structure:
         "prompt": "Example prompt template"
       }
     ],
-    "forbidden_elements": ["chrome", "glossy surfaces"],
-    "approved_props": ["aged brass", "matte ceramic"],
+    "forbidden_elements": ["elements to avoid"],
+    "approved_props": ["approved elements"],
     "raw_document": "FULL EXTRACTED TEXT - include everything from visual standards section"
   },
-  "categories": {
-    "personal_fragrance": {
-      "detected": true,
-      "vocabulary": ["wearable", "skin chemistry"],
-      "product_types": ["oil", "spray"],
-      "copy_style_notes": "How to write for personal fragrances"
-    },
-    "home_fragrance": {
-      "detected": false,
-      "vocabulary": [],
-      "product_types": [],
-      "copy_style_notes": ""
-    },
-    "skincare": {
-      "detected": false,
-      "vocabulary": [],
-      "product_types": [],
-      "copy_style_notes": ""
-    }
+  "brandIdentity": {
+    "mission": "What the brand stands for",
+    "values": ["core values"],
+    "targetAudience": "Who they serve",
+    "uniquePositioning": "What makes them different"
   }
 }
 
 CRITICAL INSTRUCTIONS:
 - Extract BOTH voice/vocabulary AND visual standards if present
+- Extract the brand AS IT APPEARS in the document - do NOT impose industry assumptions
+- Do NOT try to fit this into fragrance/beauty categories unless explicitly stated
 - Pay special attention to forbidden phrases and what NOT to write
-- Include historical/religious references in forbiddenPhrases if mentioned
-- For categories, set "detected": true ONLY if explicitly mentioned
 - Return ONLY valid JSON, no additional commentary`;
     } else {
       // Extract brand voice/vocabulary only (no visual standards detected)
-      extractionPrompt = `You are a brand strategist analyzing brand guidelines for a luxury beauty brand to extract structured knowledge.
+      // Build industry context dynamically
+      const industryContext = industry ? `This brand operates in the ${industry} industry.` : 'Analyze this brand objectively without assuming any specific industry.';
+      
+      extractionPrompt = `You are a brand strategist analyzing brand guidelines to extract structured knowledge.
 
-Analyze the following brand document and detect if it contains category-specific information for:
-- **Personal Fragrance**: Perfume oils, sprays, attars, essential oils, solid perfumes
-- **Home Fragrance**: Incense, bakhoor, oud wood chips, candles, reed diffusers, room sprays
-- **Skincare**: Serums, creams, cleansers, toners, masks
+${industryContext}
 
 DOCUMENT TO ANALYZE:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -157,10 +146,10 @@ Return your analysis as a JSON object with this exact structure:
     "keyCharacteristics": ["concise sentences", "sensory language"]
   },
   "vocabulary": {
-    "approvedTerms": ["fragrance", "composition", "notes"],
-    "forbiddenPhrases": ["game-changing", "must-have"],
-    "industryTerminology": ["olfactory", "sillage"],
-    "preferredPhrasing": {"composition": "formula"}
+    "approvedTerms": ["key terms the brand uses"],
+    "forbiddenPhrases": ["phrases to avoid"],
+    "industryTerminology": ["industry-specific terms"],
+    "preferredPhrasing": {"term": "preferred alternative"}
   },
   "examples": {
     "goodExamples": [
@@ -182,32 +171,19 @@ Return your analysis as a JSON object with this exact structure:
     "punctuationStyle": "Strategic use of em-dashes",
     "rhythmPatterns": "Varied cadence"
   },
-  "categories": {
-    "personal_fragrance": {
-      "detected": true,
-      "vocabulary": ["wearable", "skin chemistry", "projection"],
-      "product_types": ["oil", "spray", "attar", "essential_oil", "solid_perfume"],
-      "copy_style_notes": "How to write for personal fragrances"
-    },
-    "home_fragrance": {
-      "detected": false,
-      "vocabulary": [],
-      "product_types": [],
-      "copy_style_notes": ""
-    },
-    "skincare": {
-      "detected": false,
-      "vocabulary": [],
-      "product_types": [],
-      "copy_style_notes": ""
-    }
+  "brandIdentity": {
+    "mission": "What the brand stands for",
+    "values": ["core values"],
+    "targetAudience": "Who they serve",
+    "uniquePositioning": "What makes them different"
   }
 }
 
 CRITICAL INSTRUCTIONS:
-- Set "detected": true ONLY if the document explicitly mentions that category
-- Extract category-specific vocabulary and product types
-- For undetected categories, set detected: false with empty arrays
+- Extract the brand's voice, vocabulary, and identity AS IT APPEARS in the document
+- Do NOT impose assumptions about what industry this brand is in
+- Do NOT try to fit this into fragrance/beauty categories unless explicitly stated
+- Pay attention to what the brand actually does and how they describe themselves
 - Return ONLY valid JSON, no additional commentary`;
     }
 
@@ -264,7 +240,7 @@ CRITICAL INSTRUCTIONS:
           vocabulary: parsedKnowledge.vocabulary,
           examples: parsedKnowledge.examples,
           structure: parsedKnowledge.structure,
-          categories: parsedKnowledge.categories || {}
+          brandIdentity: parsedKnowledge.brandIdentity || {}
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -280,7 +256,7 @@ CRITICAL INSTRUCTIONS:
           vocabulary: parsedKnowledge.vocabulary,
           examples: parsedKnowledge.examples,
           structure: parsedKnowledge.structure,
-          categories: parsedKnowledge.categories || {}
+          brandIdentity: parsedKnowledge.brandIdentity || {}
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

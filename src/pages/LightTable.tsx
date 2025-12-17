@@ -38,6 +38,7 @@ import {
   Edit3,
   Scissors,
   X,
+  ImagePlus,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -593,6 +594,22 @@ export default function LightTable() {
     navigate("/darkroom");
   }, [navigate]);
 
+  // Use current image as background reference in Dark Room
+  const handleUseAsBackground = useCallback(() => {
+    if (!selectedImage) return;
+    
+    // Navigate to Dark Room with background image data
+    navigate("/darkroom", {
+      state: {
+        backgroundImage: {
+          url: selectedImage.imageUrl,
+          name: `Background from Light Table`,
+        },
+      },
+    });
+    toast.success("Background added to Dark Room");
+  }, [selectedImage, navigate]);
+
   // Exit completely to Create page
   const handleExit = useCallback(() => {
     navigate("/create");
@@ -963,12 +980,11 @@ Generate a polished, publication-ready advertisement image where the product and
               <Button 
                 variant="brass" 
                 size="sm" 
-                disabled
-                title="Coming Soon"
-                className="opacity-50 cursor-not-allowed"
+                onClick={handleUseAsBackground}
+                title="Use this image as background in Dark Room"
               >
-                <Film className="w-4 h-4 mr-2" />
-                Coming Soon
+                <ImagePlus className="w-4 h-4 mr-2" />
+                Use as Background
               </Button>
             </div>
           </div>

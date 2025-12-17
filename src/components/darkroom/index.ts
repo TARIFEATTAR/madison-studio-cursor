@@ -5,7 +5,15 @@ export { GenerateButton } from './GenerateButton';
 export { LeftRail } from './LeftRail';
 export { CenterCanvas } from './CenterCanvas';
 export { ThumbnailCarousel } from './ThumbnailCarousel';
-export { RightPanel } from './RightPanel';
+export { 
+  RightPanel, 
+  BACKGROUND_PRESETS, 
+  getRandomBackgroundVariation, 
+  COMPOSITION_PRESETS,
+  getCompositionPrompt,
+  type BackgroundPreset,
+  type CompositionPreset,
+} from './RightPanel';
 export { DarkRoomHeader } from './DarkRoomHeader';
 export { MobileBottomSheet } from './MobileBottomSheet';
 export { MobileTabBar, type MobileTab } from './MobileTabBar';

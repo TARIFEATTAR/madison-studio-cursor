@@ -242,10 +242,13 @@ export async function callGeminiImage(
   const modelToUse = request.model || GEMINI_IMAGE_MODEL;
 
   // Build content parts array
-  const parts: Array<Record<string, unknown>> = [{ text: request.prompt }];
+  // CRITICAL: Reference images MUST come BEFORE the text prompt
+  // This tells Gemini "here are the exact items to preserve" before giving instructions
+  const parts: Array<Record<string, unknown>> = [];
   
-  // Add reference images if provided
+  // Add reference images FIRST if provided (Gemini needs to "see" them before instructions)
   if (request.referenceImages?.length) {
+    console.log(`📸 Adding ${request.referenceImages.length} reference images BEFORE prompt`);
     for (const img of request.referenceImages) {
       parts.push({
         inlineData: {
@@ -255,6 +258,9 @@ export async function callGeminiImage(
       });
     }
   }
+  
+  // Add the text prompt AFTER the images
+  parts.push({ text: request.prompt });
 
   const body: Record<string, unknown> = {
     contents: [{

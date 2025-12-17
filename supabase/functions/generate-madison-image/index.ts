@@ -248,19 +248,28 @@ function buildDirectorModePrompt(
     if (isMultiProduct) {
       // Multi-product compositing mode
       prompt += `🎨 MULTI-PRODUCT COMPOSITE (${categorizedRefs.product.length} products):\n\n`;
-      prompt += "⚠️ CRITICAL: You MUST include ALL provided products in a SINGLE cohesive scene.\n\n";
+      prompt += "╔══════════════════════════════════════════════════════════════════╗\n";
+      prompt += "║  ⚠️ CRITICAL: USE THE EXACT PRODUCTS FROM REFERENCE IMAGES       ║\n";
+      prompt += "║  DO NOT CREATE NEW BOTTLES OR PRODUCTS - USE WHAT IS PROVIDED    ║\n";
+      prompt += "╚══════════════════════════════════════════════════════════════════╝\n\n";
+      prompt += "The reference images provided show the EXACT products you must use.\n";
+      prompt += "DO NOT generate new products, bottles, or containers.\n";
+      prompt += "COPY the exact products from the reference images into the scene.\n\n";
       prompt += "COMPOSITING REQUIREMENTS:\n";
-      prompt += "- Place all products naturally within the scene (arranged artistically, not in a grid)\n";
-      prompt += "- Create visual harmony between products (consistent lighting, shadows, reflections)\n";
+      prompt += "- Place the EXACT products from reference images into the scene\n";
+      prompt += "- Arrange them artistically (not in a grid)\n";
+      prompt += "- Create visual harmony (consistent lighting, shadows, reflections)\n";
       prompt += "- Use varying heights, angles, and positions for visual interest\n";
       prompt += "- Products may overlap slightly or be grouped naturally\n";
       prompt += "- Maintain accurate proportions between all products\n";
       prompt += "- Every product must be clearly visible and identifiable\n\n";
-      prompt += "PRODUCT ACCURACY FOR EACH:\n";
-      prompt += "- Preserve exact shape, proportions, and design of each product\n";
-      prompt += "- Match colors precisely for each product\n";
-      prompt += "- Maintain branding, labels, and decorative elements on each\n";
-      prompt += "- Apply consistent lighting direction across all products\n\n";
+      prompt += "PRODUCT ACCURACY (MANDATORY):\n";
+      prompt += "- ⚠️ PRESERVE the EXACT shape from reference images\n";
+      prompt += "- ⚠️ PRESERVE the EXACT colors from reference images\n";
+      prompt += "- ⚠️ PRESERVE the EXACT design and branding from reference images\n";
+      prompt += "- ⚠️ PRESERVE all labels, text, and decorative elements\n";
+      prompt += "- DO NOT modify, redesign, or reimagine the products\n";
+      prompt += "- The products in output MUST match the reference images exactly\n\n";
       
       categorizedRefs.product.forEach((ref, idx) => {
         prompt += `📦 Product ${idx + 1}: ${ref.label || "Product"}\n`;
@@ -271,12 +280,15 @@ function buildDirectorModePrompt(
       prompt += "\n";
     } else {
       // Single product mode (original behavior)
-      prompt += `PRODUCT REFERENCE (${categorizedRefs.product.length} image):\n`;
-      prompt += "Use the product reference image for visual guidance. Maintain:\n";
-      prompt += "- Product shape, proportions, and overall design\n";
-      prompt += "- Product color accuracy (match hex values precisely)\n";
-      prompt += "- Product texture and material finish\n";
-      prompt += "- Branding, labels, and decorative elements\n";
+      prompt += `PRODUCT REFERENCE (${categorizedRefs.product.length} image):\n\n`;
+      prompt += "⚠️ CRITICAL: Use the EXACT product from the reference image.\n";
+      prompt += "DO NOT create a new product - COPY the exact product shown.\n\n";
+      prompt += "MANDATORY PRESERVATION:\n";
+      prompt += "- EXACT product shape, proportions, and design from reference\n";
+      prompt += "- EXACT product colors (match precisely)\n";
+      prompt += "- EXACT product texture and material finish\n";
+      prompt += "- EXACT branding, labels, and decorative elements\n";
+      prompt += "- The product in output MUST be the same product from reference\n";
       if (productData) {
         const bottleType = detectBottleType(productData);
         if (bottleType.isOil) {
@@ -991,66 +1003,75 @@ serve(async (req) => {
      * -------------------------
      * Order matters: Product → Background → Style
      * This helps Gemini understand the hierarchy
+     * 
+     * IMPORTANT: Handles both:
+     * - Regular URLs (https://...) - fetched and converted
+     * - Base64 Data URLs (data:image/...) - parsed directly (from frontend file uploads)
      */
+    
+    // Helper function to process a reference image URL (handles both URL types)
+    async function processReferenceImage(url: string): Promise<{ data: string; mimeType: string } | null> {
+      if (!url) return null;
+      
+      // Check if it's a base64 data URL (from frontend file upload)
+      if (url.startsWith('data:')) {
+        // Parse data URL: data:image/png;base64,xxxxx
+        const matches = url.match(/^data:([^;]+);base64,(.+)$/);
+        if (matches && matches[1] && matches[2]) {
+          console.log(`✅ Parsed base64 data URL (${matches[1]})`);
+          return {
+            mimeType: matches[1],
+            data: matches[2],
+          };
+        } else {
+          console.warn(`⚠️ Invalid data URL format: ${url.substring(0, 50)}...`);
+          return null;
+        }
+      }
+      
+      // Otherwise, fetch the URL
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          console.warn(`⚠️ Failed to fetch reference: ${url.substring(0, 50)}... (${response.status})`);
+          return null;
+        }
+        const buffer = await response.arrayBuffer();
+        const base64 = encode(new Uint8Array(buffer));
+        console.log(`✅ Fetched and encoded URL reference`);
+        return {
+          data: base64,
+          mimeType: response.headers.get("content-type") || "image/png",
+        };
+      } catch (err) {
+        console.error(`❌ Error processing reference ${url.substring(0, 50)}...:`, err);
+        return null;
+      }
+    }
+    
     const referenceImagesPayload = [];
 
     // Order: Product references first (the "star")
     for (const ref of categorizedRefs.product) {
-      if (!ref.url) continue;
-      try {
-        const response = await fetch(ref.url);
-        if (!response.ok) {
-          console.warn(`Failed to fetch product reference: ${ref.url}`);
-          continue;
-        }
-        const buffer = await response.arrayBuffer();
-        const base64 = encode(new Uint8Array(buffer));
-        referenceImagesPayload.push({
-          data: base64,
-          mimeType: response.headers.get("content-type") || "image/png",
-        });
-      } catch (err) {
-        console.error(`Error processing product reference ${ref.url}:`, err);
+      const processed = await processReferenceImage(ref.url);
+      if (processed) {
+        referenceImagesPayload.push(processed);
       }
     }
 
     // Then: Background references (the "stage")
     for (const ref of categorizedRefs.background) {
-      if (!ref.url) continue;
-      try {
-        const response = await fetch(ref.url);
-        if (!response.ok) {
-          console.warn(`Failed to fetch background reference: ${ref.url}`);
-          continue;
-        }
-        const buffer = await response.arrayBuffer();
-        const base64 = encode(new Uint8Array(buffer));
-        referenceImagesPayload.push({
-          data: base64,
-          mimeType: response.headers.get("content-type") || "image/png",
-        });
-      } catch (err) {
-        console.error(`Error processing background reference ${ref.url}:`, err);
+      const processed = await processReferenceImage(ref.url);
+      if (processed) {
+        referenceImagesPayload.push(processed);
       }
     }
 
     // Finally: Style references (the "direction")
     for (const ref of categorizedRefs.style) {
-      if (!ref.url) continue;
-      try {
-        const response = await fetch(ref.url);
-        if (!response.ok) {
-          console.warn(`Failed to fetch style reference: ${ref.url}`);
-          continue;
-        }
-        const buffer = await response.arrayBuffer();
-        const base64 = encode(new Uint8Array(buffer));
-        referenceImagesPayload.push({
-          data: base64,
-          mimeType: response.headers.get("content-type") || "image/png",
-        });
-      } catch (err) {
-        console.error(`Error processing style reference ${ref.url}:`, err);
+      const processed = await processReferenceImage(ref.url);
+      if (processed) {
+        referenceImagesPayload.push(processed);
       }
     }
 

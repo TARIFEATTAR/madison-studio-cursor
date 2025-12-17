@@ -242,6 +242,27 @@ serve(async (req) => {
     // NEW: Extract structured brand knowledge using AI
     console.log('[CHECKPOINT] Extracting structured brand knowledge with AI...');
     
+    // Fetch organization's industry to guide extraction
+    let organizationIndustry: string | undefined;
+    try {
+      const { data: orgData } = await supabase
+        .from('organizations')
+        .select('brand_config')
+        .eq('id', document.organization_id)
+        .maybeSingle();
+      
+      if (orgData?.brand_config) {
+        const brandConfig = orgData.brand_config as any;
+        // Try new industry_config structure first, then fall back to legacy industry field
+        organizationIndustry = brandConfig.industry_config?.id || brandConfig.industry;
+      }
+      
+      console.log(`Organization industry: ${organizationIndustry || 'not set'}`);
+    } catch (orgError) {
+      console.warn('Could not fetch organization industry:', orgError);
+      // Continue without industry context
+    }
+    
     // Detect if this is a visual standards document
     const isVisualStandards = /visual|photo|image|lighting|color palette|aspect ratio|template|composition|forbidden element/i.test(extractedText.slice(0, 2000));
     
@@ -258,7 +279,8 @@ serve(async (req) => {
             extractedText,
             organizationId: document.organization_id,
             documentName: document.file_name,
-            detectVisualStandards: isVisualStandards
+            detectVisualStandards: isVisualStandards,
+            industry: organizationIndustry
           }
         }
       );

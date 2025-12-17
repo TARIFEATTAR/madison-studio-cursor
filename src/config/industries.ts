@@ -230,9 +230,13 @@ export const LEGACY_INDUSTRY_MAP: Record<string, IndustryId> = {
   "Home Fragrance": "fragrance-beauty",
   "Wellness": "fragrance-beauty",
   "Fashion": "luxury-goods",
-  "Other": "fragrance-beauty", // Default fallback
+  "Consulting": "expert-brands",
+  "Agency": "expert-brands",
+  "Marketing": "expert-brands",
+  "Other": "expert-brands", // Default fallback - most generic category
 };
 
 export function migrateIndustry(oldIndustry: string): IndustryId {
-  return LEGACY_INDUSTRY_MAP[oldIndustry] || "fragrance-beauty";
+  // Default to expert-brands (most generic) instead of fragrance-beauty
+  return LEGACY_INDUSTRY_MAP[oldIndustry] || "expert-brands";
 }

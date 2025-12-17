@@ -24,6 +24,7 @@ import {
   Plus,
   ImagePlus,
   Layers,
+  Sparkles,
 } from "lucide-react";
 import { 
   LEDIndicator, 
@@ -93,6 +94,187 @@ const RESOLUTION_OPTIONS = [
 // Use centralized aspect ratios from imageSettings.ts
 const ASPECT_RATIO_OPTIONS = COMMON_ASPECT_RATIOS;
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// BACKGROUND PRESETS - E-commerce Best Practice Styles
+// ═══════════════════════════════════════════════════════════════════════════════
+// These are curated background styles based on high-performing e-commerce photography.
+// Each preset has multiple variations that are randomly selected for visual diversity.
+
+export interface BackgroundPreset {
+  id: string;
+  label: string;
+  icon: string; // Emoji for quick visual recognition
+  description: string;
+  variations: string[]; // Multiple prompt variations for diversity
+}
+
+export const BACKGROUND_PRESETS: BackgroundPreset[] = [
+  {
+    id: "studio-clean",
+    label: "Studio Clean",
+    icon: "⬜",
+    description: "Pure white/neutral backdrop",
+    variations: [
+      "clean white studio backdrop, professional product photography, soft even lighting, no shadows",
+      "pure white infinity curve background, commercial studio setup, diffused overhead lighting",
+      "minimalist white cyclorama, high-key photography, clean and bright, professional e-commerce",
+      "crisp white seamless paper backdrop, soft natural light from windows, no distractions",
+    ],
+  },
+  {
+    id: "natural-stone",
+    label: "Natural Stone",
+    icon: "🪨",
+    description: "Sandstone, marble, slate textures",
+    variations: [
+      "warm sandstone surface with natural texture, soft directional light casting gentle shadow",
+      "polished white marble surface with subtle grey veining, elegant and minimal",
+      "raw concrete slab background with industrial texture, modern minimalist aesthetic",
+      "natural travertine stone surface, warm cream tones, organic texture, sophisticated",
+      "grey slate tile background with subtle texture, cool neutral tones, contemporary",
+      "beige limestone surface, smooth natural stone, warm ambient lighting",
+    ],
+  },
+  {
+    id: "organic-props",
+    label: "Organic Props",
+    icon: "🌿",
+    description: "Plants, botanicals, natural elements",
+    variations: [
+      "neutral backdrop with single eucalyptus branch, soft shadow play, minimal elegant styling",
+      "dried pampas grass arrangement on cream background, soft natural light, bohemian refined",
+      "fresh green leaf accent on white surface, clean botanical styling, natural shadow",
+      "subtle dried flower petals scattered on linen, romantic soft aesthetic, diffused light",
+      "olive branch with small leaves on stone surface, Mediterranean elegance, warm tones",
+      "simple succulent in corner, white background, modern minimal plant styling",
+    ],
+  },
+  {
+    id: "luxury-material",
+    label: "Luxury Surface",
+    icon: "✨",
+    description: "Velvet, silk, premium textures",
+    variations: [
+      "deep charcoal velvet fabric surface, luxurious texture, dramatic side lighting",
+      "cream silk fabric backdrop with gentle folds, soft diffused lighting, romantic",
+      "black matte leather surface, premium texture, professional product showcase",
+      "ivory linen texture background, natural woven pattern, soft warm lighting",
+      "champagne satin fabric backdrop, elegant reflective surface, sophisticated",
+      "dusty rose velvet surface, rich jewel tone, warm intimate lighting",
+    ],
+  },
+  {
+    id: "warm-wood",
+    label: "Warm Wood",
+    icon: "🪵",
+    description: "Natural wood grains and textures",
+    variations: [
+      "light oak wood surface with natural grain, warm Scandinavian aesthetic, soft lighting",
+      "rich walnut wood backdrop, dark luxurious grain, warm directional light",
+      "weathered driftwood surface, coastal organic texture, natural soft tones",
+      "blonde maple wood surface, clean minimal, bright contemporary styling",
+      "reclaimed wood plank background, rustic charm, warm golden hour lighting",
+      "dark ebony wood surface, dramatic contrast, luxury Japanese aesthetic",
+    ],
+  },
+  {
+    id: "shadow-play",
+    label: "Shadow Play",
+    icon: "🌤️",
+    description: "Dramatic window light & shadows",
+    variations: [
+      "white surface with dramatic window blind shadows, golden hour light streaming in",
+      "neutral backdrop with plant leaf shadows cast across, dappled natural light",
+      "cream background with venetian blind shadow stripes, warm afternoon sun",
+      "pale grey surface with soft diagonal shadow lines, architectural light play",
+      "white wall with eucalyptus shadow silhouette, morning light, organic patterns",
+      "light background with geometric shadow patterns from window frame, modern artistic",
+    ],
+  },
+];
+
+// Helper to get a random variation from a preset
+export function getRandomBackgroundVariation(presetId: string): string {
+  const preset = BACKGROUND_PRESETS.find(p => p.id === presetId);
+  if (!preset) return "";
+  const randomIndex = Math.floor(Math.random() * preset.variations.length);
+  return preset.variations[randomIndex];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// COMPOSITION PRESETS - How to arrange products in the scene
+// ═══════════════════════════════════════════════════════════════════════════════
+// These define HOW products should be placed in the background/scene.
+// Works with 1-6 products - the AI adapts the arrangement to the product count.
+
+export interface CompositionPreset {
+  id: string;
+  label: string;
+  icon: string;
+  description: string;
+  // Prompt instructions for the AI - describes arrangement style
+  singleProduct: string; // For 1 product
+  multiProduct: string;  // For 2-6 products
+}
+
+export const COMPOSITION_PRESETS: CompositionPreset[] = [
+  {
+    id: "hero-center",
+    label: "Hero Center",
+    icon: "🎯",
+    description: "Product as the star, front & center",
+    singleProduct: "Place the product prominently in the center of the frame as the hero subject. The product should dominate the composition, perfectly centered with the background scene framing it. Create visual focus on the product with professional product photography composition.",
+    multiProduct: "Arrange all products in a centered hero composition. The largest or primary product should be in the center-front, with other products artistically grouped around it. Create a cohesive product family shot with all items clearly visible and the group centered in the frame.",
+  },
+  {
+    id: "rule-of-thirds",
+    label: "Rule of Thirds",
+    icon: "📐",
+    description: "Classic photography composition",
+    singleProduct: "Position the product at one of the rule-of-thirds intersection points, allowing the background to breathe and create visual interest. Use negative space intentionally for an editorial, magazine-quality composition.",
+    multiProduct: "Arrange products along the rule-of-thirds grid lines. Place the primary product at a power point intersection, with supporting products creating visual flow across the frame. Balance the composition with intentional negative space.",
+  },
+  {
+    id: "diagonal-flow",
+    label: "Dynamic Diagonal",
+    icon: "↗️",
+    description: "Energetic, flowing arrangement",
+    singleProduct: "Position the product along a diagonal line from corner to corner, creating dynamic visual energy. Angle the product slightly to follow the diagonal, suggesting movement and sophistication.",
+    multiProduct: "Arrange products along a diagonal line flowing from one corner toward the opposite. Vary heights and sizes to create a cascading effect. Products should overlap slightly where natural, creating depth and visual rhythm along the diagonal.",
+  },
+  {
+    id: "pyramid",
+    label: "Pyramid Stack",
+    icon: "🔺",
+    description: "Tiered height arrangement",
+    singleProduct: "Place the product on an elevated surface or use camera angle to create a sense of importance and hierarchy. The product should feel elevated and prestigious.",
+    multiProduct: "Arrange products in a pyramid formation - tallest in the back-center, medium heights on the sides, smallest in front. Create depth with overlapping products and varying distances from camera. This classic still-life arrangement showcases the entire product range.",
+  },
+  {
+    id: "scattered-organic",
+    label: "Organic Scatter",
+    icon: "🍃",
+    description: "Natural, effortless arrangement",
+    singleProduct: "Place the product in a natural, slightly off-center position that feels discovered rather than staged. Let it interact organically with the background elements, as if photographed in its natural habitat.",
+    multiProduct: "Scatter products organically across the scene in a natural, unstaged arrangement. Products should feel casually but intentionally placed, as if discovered in a lifestyle moment. Vary angles and orientations for authenticity. Some products can be lying down, others upright.",
+  },
+  {
+    id: "tight-group",
+    label: "Intimate Group",
+    icon: "🤝",
+    description: "Products close together, touching",
+    singleProduct: "Frame the product tightly in the composition, filling more of the frame for an intimate, detailed view. The background becomes secondary, with focus on product details.",
+    multiProduct: "Group all products closely together, allowing them to touch or nearly touch. Create an intimate product family portrait where the products relate to each other. This tight composition emphasizes that they belong together as a collection or set.",
+  },
+];
+
+// Helper to get composition prompt based on product count
+export function getCompositionPrompt(presetId: string, productCount: number): string {
+  const preset = COMPOSITION_PRESETS.find(p => p.id === presetId);
+  if (!preset) return "";
+  return productCount === 1 ? preset.singleProduct : preset.multiProduct;
+}
+
 type RightPanelTab = "madison" | "settings";
 
 interface RightPanelProps {
@@ -123,6 +305,14 @@ interface RightPanelProps {
   // Multi-product slots for compositing
   productSlots?: ProductSlot[];
   onProductSlotsChange?: (slots: ProductSlot[]) => void;
+  
+  // Background preset selection
+  selectedBackgroundPreset?: string | null;
+  onBackgroundPresetChange?: (presetId: string | null) => void;
+  
+  // Composition preset selection (how to arrange products)
+  selectedCompositionPreset?: string | null;
+  onCompositionPresetChange?: (presetId: string | null) => void;
 }
 
 // Quick Preset Button
@@ -414,6 +604,10 @@ export function RightPanel({
   isGenerating = false,
   productSlots,
   onProductSlotsChange,
+  selectedBackgroundPreset,
+  onBackgroundPresetChange,
+  selectedCompositionPreset,
+  onCompositionPresetChange,
 }: RightPanelProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -1018,6 +1212,154 @@ export function RightPanel({
                   );
                 })}
               </div>
+            </div>
+
+            {/* Background Presets - E-commerce Best Practices */}
+            <div className="camera-panel p-2.5 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <LEDIndicator 
+                    state={selectedBackgroundPreset ? "active" : "ready"} 
+                    size="sm"
+                  />
+                  <Sparkles className="w-3 h-3 text-[var(--darkroom-accent)]" />
+                  <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Background Style</span>
+                </div>
+                {selectedBackgroundPreset && (
+                  <button
+                    onClick={() => onBackgroundPresetChange?.(null)}
+                    className="text-[9px] text-[var(--darkroom-text-dim)] hover:text-[var(--led-error)] font-medium px-1.5 py-0.5 rounded hover:bg-white/5 transition-colors"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              
+              {/* Preset Grid - 2x3 */}
+              <div className="grid grid-cols-2 gap-1.5">
+                {BACKGROUND_PRESETS.map((preset) => {
+                  const isSelected = selectedBackgroundPreset === preset.id;
+                  return (
+                    <motion.button
+                      key={preset.id}
+                      onClick={() => onBackgroundPresetChange?.(isSelected ? null : preset.id)}
+                      disabled={isGenerating}
+                      className={cn(
+                        "p-2 rounded text-left transition-all border group relative overflow-hidden",
+                        isSelected
+                          ? "bg-[var(--led-active)]/10 border-[var(--led-active)]/30"
+                          : "bg-[var(--camera-body-deep)] border-white/[0.04] hover:border-white/[0.12] hover:bg-white/[0.03]"
+                      )}
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                    >
+                      {/* Selection indicator */}
+                      {isSelected && (
+                        <motion.div 
+                          className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[var(--led-active)]"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                        />
+                      )}
+                      
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="text-sm">{preset.icon}</span>
+                        <span className={cn(
+                          "text-[10px] font-medium",
+                          isSelected ? "text-[var(--led-active)]" : "text-[var(--darkroom-text)]"
+                        )}>
+                          {preset.label}
+                        </span>
+                      </div>
+                      <p className={cn(
+                        "text-[9px] leading-tight",
+                        isSelected ? "text-[var(--led-active)]/70" : "text-[var(--darkroom-text-dim)]"
+                      )}>
+                        {preset.description}
+                      </p>
+                    </motion.button>
+                  );
+                })}
+              </div>
+              
+              {/* Helper text */}
+              <p className="text-[9px] text-[var(--darkroom-text-dim)] pt-1 border-t border-white/[0.04]">
+                <span className="text-[var(--darkroom-accent)]">✦</span> Auto-varies each generation for diversity
+              </p>
+            </div>
+
+            {/* Composition Presets - How to arrange products */}
+            <div className="camera-panel p-2.5 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <LEDIndicator 
+                    state={selectedCompositionPreset ? "active" : "ready"} 
+                    size="sm"
+                  />
+                  <Layers className="w-3 h-3 text-[var(--darkroom-accent)]" />
+                  <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Arrangement</span>
+                </div>
+                {selectedCompositionPreset && (
+                  <button
+                    onClick={() => onCompositionPresetChange?.(null)}
+                    className="text-[9px] text-[var(--darkroom-text-dim)] hover:text-[var(--led-error)] font-medium px-1.5 py-0.5 rounded hover:bg-white/5 transition-colors"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              
+              {/* Preset Grid - 2x3 */}
+              <div className="grid grid-cols-2 gap-1.5">
+                {COMPOSITION_PRESETS.map((preset) => {
+                  const isSelected = selectedCompositionPreset === preset.id;
+                  return (
+                    <motion.button
+                      key={preset.id}
+                      onClick={() => onCompositionPresetChange?.(isSelected ? null : preset.id)}
+                      disabled={isGenerating}
+                      className={cn(
+                        "p-2 rounded text-left transition-all border group relative overflow-hidden",
+                        isSelected
+                          ? "bg-[var(--led-active)]/10 border-[var(--led-active)]/30"
+                          : "bg-[var(--camera-body-deep)] border-white/[0.04] hover:border-white/[0.12] hover:bg-white/[0.03]"
+                      )}
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                    >
+                      {/* Selection indicator */}
+                      {isSelected && (
+                        <motion.div 
+                          className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[var(--led-active)]"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                        />
+                      )}
+                      
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="text-sm">{preset.icon}</span>
+                        <span className={cn(
+                          "text-[10px] font-medium",
+                          isSelected ? "text-[var(--led-active)]" : "text-[var(--darkroom-text)]"
+                        )}>
+                          {preset.label}
+                        </span>
+                      </div>
+                      <p className={cn(
+                        "text-[9px] leading-tight",
+                        isSelected ? "text-[var(--led-active)]/70" : "text-[var(--darkroom-text-dim)]"
+                      )}>
+                        {preset.description}
+                      </p>
+                    </motion.button>
+                  );
+                })}
+              </div>
+              
+              {/* Helper text */}
+              <p className="text-[9px] text-[var(--darkroom-text-dim)] pt-1 border-t border-white/[0.04]">
+                <span className="text-[var(--darkroom-accent)]">✦</span> Tells AI how to place products in scene
+              </p>
             </div>
           </div>
         )}
