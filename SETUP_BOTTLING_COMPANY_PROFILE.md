@@ -187,3 +187,4 @@ Once you've customized the template and uploaded it, Madison will understand:
 - ✅ Content should be technical, partnership-focused, B2B
 
 The template is comprehensive and battle-tested. Just fill in the specific details and you're good to go! 🎯
+

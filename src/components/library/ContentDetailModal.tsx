@@ -631,7 +631,7 @@ export function ContentDetailModal({
                 category === 'derivative'
               ) && (
                 <PublishToLinkedIn
-                  content={displayContent}
+                  content={getContentText()}
                   contentId={content.id}
                   contentTable={category === 'master' ? 'master_content' : category === 'derivative' ? 'derivative_assets' : 'outputs'}
                   variant="outline"
