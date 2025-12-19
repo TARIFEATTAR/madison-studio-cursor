@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Edit2, Send, Copy, Check, FileDown, Calendar, MessageSquare, Download, Trash2, X, Mail, Linkedin } from "lucide-react";
+import { Edit2, Send, Copy, Check, FileDown, Calendar, MessageSquare, Download, Trash2, X, Mail, Linkedin, Globe, GlobeIcon } from "lucide-react";
 import { PublishToLinkedIn } from "./PublishToLinkedIn";
 import {
   Dialog,
@@ -72,6 +72,8 @@ export function ContentDetailModal({
     derivatives: number;
     scheduled: number;
   }>({ derivatives: 0, scheduled: 0 });
+  const [isPublished, setIsPublished] = useState(content?.status === 'published');
+  const [isPublishing, setIsPublishing] = useState(false);
   const [orgData, setOrgData] = useState<{
     name?: string;
     brandColor?: string;
@@ -430,6 +432,48 @@ export function ContentDetailModal({
     }
   };
 
+  // Handle publish/unpublish to website
+  const handleTogglePublish = async () => {
+    if (category !== 'master') return;
+    
+    setIsPublishing(true);
+    const newStatus = isPublished ? 'draft' : 'published';
+    
+    try {
+      const { error } = await supabase
+        .from('master_content')
+        .update({ 
+          status: newStatus,
+          published_at: newStatus === 'published' ? new Date().toISOString() : null
+        })
+        .eq('id', content.id);
+
+      if (error) throw error;
+
+      setIsPublished(!isPublished);
+      toast({
+        title: newStatus === 'published' ? "Published to Website!" : "Unpublished",
+        description: newStatus === 'published' 
+          ? "This content is now available on your website's blog feed."
+          : "Content removed from public website feed.",
+      });
+      onUpdate?.();
+    } catch (error: any) {
+      toast({
+        title: "Error updating status",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  // Update isPublished when content changes
+  useEffect(() => {
+    setIsPublished(content?.status === 'published');
+  }, [content?.status]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -485,6 +529,13 @@ export function ContentDetailModal({
                 {content.collection && (
                   <Badge variant="secondary">
                     {content.collection}
+                  </Badge>
+                )}
+                {/* Published status badge */}
+                {category === 'master' && isPublished && (
+                  <Badge className="bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700">
+                    <Globe className="w-3 h-3 mr-1" />
+                    Published
                   </Badge>
                 )}
               </div>
@@ -619,6 +670,20 @@ export function ContentDetailModal({
                 >
                   <Mail className="w-4 h-4 mr-2" />
                   Publish
+                </Button>
+              )}
+
+              {/* Publish to Website - for master content only */}
+              {category === 'master' && (
+                <Button
+                  onClick={handleTogglePublish}
+                  variant={isPublished ? "default" : "outline"}
+                  size="sm"
+                  disabled={isPublishing}
+                  className={isPublished ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+                >
+                  <Globe className="w-4 h-4 mr-2" />
+                  {isPublishing ? "Updating..." : isPublished ? "Published ✓" : "Publish to Website"}
                 </Button>
               )}
 
