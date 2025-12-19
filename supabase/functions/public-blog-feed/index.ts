@@ -21,7 +21,8 @@ interface BlogPost {
   id: string;
   title: string;
   slug: string;
-  content: string;
+  content: string;           // Raw content (markdown/plain text)
+  content_html: string;      // Pre-rendered HTML for display
   excerpt: string;
   content_type: string;
   published_at: string;
@@ -181,11 +182,15 @@ function formatPost(post: any): BlogPost {
   // Extract excerpt from content (first 200 chars, strip markdown/html)
   const excerpt = extractExcerpt(post.full_content, 200);
   
+  // Convert content to beautiful HTML
+  const contentHtml = convertToHtml(post.full_content);
+  
   return {
     id: post.id,
     title: post.title,
     slug: slug,
     content: post.full_content,
+    content_html: contentHtml,
     excerpt: excerpt,
     content_type: post.content_type,
     published_at: post.published_at || post.created_at,
@@ -206,6 +211,110 @@ function generateSlug(title: string): string {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .trim();
+}
+
+/**
+ * Convert markdown-style content to semantic HTML
+ * 
+ * Handles:
+ * - Headers (# ## ###)
+ * - Bold (**text**)
+ * - Italic (*text* or _text_)
+ * - Links [text](url)
+ * - Bullet lists (- or *)
+ * - Numbered lists (1. 2. etc)
+ * - Blockquotes (>)
+ * - Code blocks (```)
+ * - Inline code (`code`)
+ * - Paragraphs (double newlines)
+ */
+function convertToHtml(content: string): string {
+  if (!content) return '';
+  
+  // If content is already HTML, return as-is
+  if (content.trim().startsWith('<') && /<[a-z][\s\S]*>/i.test(content)) {
+    return content;
+  }
+  
+  let html = content;
+  
+  // Normalize line endings
+  html = html.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  
+  // Escape HTML entities first (before we add our own tags)
+  html = html
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  
+  // Code blocks (``` ... ```) - must be done before other processing
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    return `<pre><code class="language-${lang || 'text'}">${code.trim()}</code></pre>`;
+  });
+  
+  // Inline code (`code`)
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  
+  // Headers (must restore > for blockquotes first)
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+  
+  // Bold (**text** or __text__)
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+  
+  // Italic (*text* or _text_) - be careful not to match bold markers
+  html = html.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+  html = html.replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>');
+  
+  // Links [text](url)
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  
+  // Blockquotes (&gt; at start of line, we escaped > earlier)
+  html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+  // Merge consecutive blockquotes
+  html = html.replace(/<\/blockquote>\n<blockquote>/g, '\n');
+  
+  // Horizontal rule (--- or ***)
+  html = html.replace(/^(---|\*\*\*)$/gm, '<hr>');
+  
+  // Bullet lists (- or * at start of line)
+  html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+  
+  // Numbered lists (1. 2. etc)
+  html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+  
+  // Wrap consecutive <li> in <ul> or <ol>
+  html = html.replace(/(<li>[\s\S]*?<\/li>(\n|$))+/g, (match) => {
+    return `<ul>${match}</ul>`;
+  });
+  
+  // Split into paragraphs (double newlines)
+  const blocks = html.split(/\n\n+/);
+  
+  html = blocks.map(block => {
+    const trimmed = block.trim();
+    if (!trimmed) return '';
+    
+    // Don't wrap if it's already a block element
+    if (
+      trimmed.startsWith('<h') ||
+      trimmed.startsWith('<ul') ||
+      trimmed.startsWith('<ol') ||
+      trimmed.startsWith('<blockquote') ||
+      trimmed.startsWith('<pre') ||
+      trimmed.startsWith('<hr')
+    ) {
+      return trimmed;
+    }
+    
+    // Convert single newlines to <br> within paragraphs
+    const withBreaks = trimmed.replace(/\n/g, '<br>');
+    return `<p>${withBreaks}</p>`;
+  }).filter(Boolean).join('\n');
+  
+  return html;
 }
 
 function extractExcerpt(content: string, maxLength: number): string {

@@ -32,7 +32,8 @@ GET https://likkskifwsrvszxdvufw.supabase.co/functions/v1/public-blog-feed
       "id": "uuid",
       "title": "Blog Post Title",
       "slug": "blog-post-title",
-      "content": "Full markdown content...",
+      "content": "Raw markdown/plain text content...",
+      "content_html": "<h2>Rendered HTML</h2><p>Beautiful formatted content...</p>",
       "excerpt": "First 200 characters...",
       "content_type": "blog_article",
       "published_at": "2025-12-18T00:00:00Z",
@@ -53,6 +54,10 @@ GET https://likkskifwsrvszxdvufw.supabase.co/functions/v1/public-blog-feed
 }
 ```
 
+**Key fields:**
+- `content` - Raw content (markdown/plain text) for custom rendering
+- `content_html` - **Pre-rendered HTML** ready to display directly
+
 ---
 
 ## Integration Code for Asala
@@ -70,7 +75,8 @@ export interface BlogPost {
   id: string;
   title: string;
   slug: string;
-  content: string;
+  content: string;           // Raw markdown/text
+  content_html: string;      // Pre-rendered HTML (use this for display!)
   excerpt: string;
   content_type: string;
   published_at: string;
@@ -338,7 +344,7 @@ export function BlogList() {
 }
 ```
 
-### 4. Single Blog Post Page
+### 4. Single Blog Post Page (Uses Pre-Rendered HTML!)
 
 Create `src/pages/BlogPost.tsx`:
 
@@ -346,9 +352,8 @@ Create `src/pages/BlogPost.tsx`:
 // src/pages/BlogPost.tsx
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, Clock, Share2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Share2 } from 'lucide-react';
 import { useBlogPost } from '../hooks/useBlog';
-import ReactMarkdown from 'react-markdown';
 
 export function BlogPostPage() {
   const { id } = useParams<{ id: string }>();
@@ -416,14 +421,23 @@ export function BlogPostPage() {
         </div>
       </header>
 
-      {/* Content */}
-      <div className="prose prose-lg prose-stone max-w-none">
-        <ReactMarkdown>{post.content}</ReactMarkdown>
-      </div>
+      {/* Content - Uses pre-rendered HTML from the API! */}
+      <div 
+        className="prose prose-lg prose-stone max-w-none
+          prose-headings:font-serif prose-headings:text-inkBlack
+          prose-p:text-stone-700 prose-p:leading-relaxed
+          prose-a:text-agedBrass prose-a:no-underline hover:prose-a:underline
+          prose-strong:text-inkBlack
+          prose-blockquote:border-l-agedBrass prose-blockquote:text-stone-600
+          prose-code:bg-stone-100 prose-code:px-1 prose-code:rounded"
+        dangerouslySetInnerHTML={{ __html: post.content_html }}
+      />
     </motion.article>
   );
 }
 ```
+
+**Note:** No external markdown library needed! The API returns `content_html` which is already rendered.
 
 ---
 
@@ -444,11 +458,11 @@ Copy the files above into your Asala project:
 - `src/components/Blog/BlogList.tsx`
 - `src/pages/BlogPost.tsx`
 
-### 3. Install Dependencies (if needed)
+### 3. Install Dependencies
 
-```bash
-npm install react-markdown
-```
+No additional dependencies needed! The API returns pre-rendered HTML.
+
+(If you want custom markdown rendering, you can optionally use `content` field with `react-markdown`)
 
 ### 4. Add Routes
 
@@ -488,12 +502,119 @@ Adjust as needed to match your exact brand tokens.
 
 ---
 
+---
+
+## Styling the Blog Content
+
+The API returns semantic HTML that works beautifully with Tailwind's `prose` classes.
+
+### Recommended Prose Styling
+
+Add to your Asala's global CSS:
+
+```css
+/* src/styles/blog.css */
+
+/* Beautiful blog typography using Asala brand */
+.prose-asala {
+  /* Headings */
+  --tw-prose-headings: #1A1816; /* inkBlack */
+  
+  /* Body text */
+  --tw-prose-body: #374151; /* stone-700 */
+  
+  /* Links */
+  --tw-prose-links: #B8956A; /* agedBrass */
+  
+  /* Blockquote border */
+  --tw-prose-quote-borders: #B8956A;
+  
+  /* Code backgrounds */
+  --tw-prose-pre-bg: #F5F1E8; /* vellum */
+}
+
+/* Custom blockquote styling */
+.prose blockquote {
+  border-left-width: 4px;
+  font-style: italic;
+  padding-left: 1.5rem;
+}
+
+/* Code block styling */
+.prose pre {
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+}
+
+.prose code {
+  font-size: 0.875em;
+  padding: 0.2em 0.4em;
+  border-radius: 0.25rem;
+}
+
+/* Links with Asala gold hover */
+.prose a {
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.prose a:hover {
+  text-decoration: underline;
+}
+```
+
+### Using with Tailwind Prose
+
+```tsx
+<div 
+  className="prose prose-lg max-w-none
+    prose-headings:font-serif 
+    prose-headings:text-inkBlack
+    prose-p:text-stone-700 
+    prose-p:leading-relaxed
+    prose-a:text-agedBrass 
+    prose-a:no-underline 
+    hover:prose-a:underline
+    prose-strong:text-inkBlack
+    prose-blockquote:border-l-agedBrass 
+    prose-blockquote:text-stone-600 
+    prose-blockquote:italic
+    prose-code:bg-vellum 
+    prose-code:px-1 
+    prose-code:rounded
+    prose-pre:bg-vellum"
+  dangerouslySetInnerHTML={{ __html: post.content_html }}
+/>
+```
+
+---
+
+## How Formatting is Guaranteed
+
+The Madison API automatically converts your content to beautiful HTML:
+
+| You Write (in Madison) | API Returns (HTML) |
+|------------------------|-------------------|
+| `# Heading` | `<h1>Heading</h1>` |
+| `## Subheading` | `<h2>Subheading</h2>` |
+| `**bold text**` | `<strong>bold text</strong>` |
+| `*italic text*` | `<em>italic text</em>` |
+| `[link](url)` | `<a href="url">link</a>` |
+| `> quote` | `<blockquote>quote</blockquote>` |
+| `- item` | `<ul><li>item</li></ul>` |
+| ` ```code``` ` | `<pre><code>code</code></pre>` |
+| Double newlines | `<p>paragraph</p>` |
+
+---
+
 ## Questions?
 
 This integration gives you:
 - ✅ Real-time blog content from Madison
-- ✅ SEO-friendly with proper meta tags
+- ✅ **Pre-rendered HTML** - no client-side parsing needed
+- ✅ SEO-friendly with proper semantic tags
 - ✅ Responsive grid layout
 - ✅ Pagination support
 - ✅ Loading states with skeletons
 - ✅ Error handling
+- ✅ Beautiful typography out of the box
