@@ -73,21 +73,37 @@ export interface ProductBackgroundOutput {
 // HELPER: Call generate-with-claude edge function
 // ═══════════════════════════════════════════════════════════════════════════════
 
-async function callClaudeAPI(prompt: string): Promise<string> {
+async function callClaudeAPI(prompt: string, organizationId?: string): Promise<string> {
+  console.log('[VisualPrompts] Calling edge function with organizationId:', organizationId || 'none');
+  console.log('[VisualPrompts] Prompt length:', prompt.length);
+  
   const { data, error } = await supabase.functions.invoke('generate-with-claude', {
     body: {
       prompt,
+      organizationId,
       mode: 'generate',
       styleOverlay: 'brand-voice',
     },
   });
 
   if (error) {
-    console.error('[VisualPrompts] Edge function error:', error);
-    throw new Error(error.message || 'Failed to generate content');
+    console.error('[VisualPrompts] Edge function error:', {
+      error,
+      message: error.message,
+      name: error.name,
+      context: error.context,
+    });
+    // Try to get more details from the error
+    const errorDetail = error.message || error.context?.body || 'Failed to generate content';
+    throw new Error(errorDetail);
   }
 
   if (!data?.generatedContent) {
+    console.error('[VisualPrompts] No content in response:', data);
+    // If there's an error in the data, show it
+    if (data?.error) {
+      throw new Error(data.error);
+    }
     throw new Error('No content received from AI');
   }
 
@@ -98,7 +114,7 @@ async function callClaudeAPI(prompt: string): Promise<string> {
 // CONTENT ANALYZER
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export async function analyzeContent(content: string, title?: string): Promise<ContentAnalysis> {
+export async function analyzeContent(content: string, title?: string, organizationId?: string): Promise<ContentAnalysis> {
   const prompt = `You are Madison's Visual Intelligence module. Analyze this content and extract its visual DNA - the themes, mood, colors, textures, and atmosphere that would translate into compelling imagery.
 
 <CONTENT>
@@ -119,7 +135,7 @@ Extract and return a JSON object with:
 
 Return ONLY the JSON object, no other text.`;
 
-  const responseText = await callClaudeAPI(prompt);
+  const responseText = await callClaudeAPI(prompt, organizationId);
   
   try {
     // Extract JSON from response (handle potential markdown wrapping)
@@ -151,7 +167,8 @@ Return ONLY the JSON object, no other text.`;
 export async function generateImagePack(
   content: string,
   analysis: ContentAnalysis,
-  brandColors?: string[]
+  brandColors?: string[],
+  organizationId?: string
 ): Promise<ImagePackOutput> {
   const colorContext = brandColors?.length 
     ? `Brand colors to incorporate: ${brandColors.join(', ')}`
@@ -199,7 +216,7 @@ Return JSON:
 
 Return ONLY the JSON object.`;
 
-  const responseText = await callClaudeAPI(prompt);
+  const responseText = await callClaudeAPI(prompt, organizationId);
   
   try {
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
@@ -219,7 +236,8 @@ Return ONLY the JSON object.`;
 
 export async function generateVideoScript(
   content: string,
-  analysis: ContentAnalysis
+  analysis: ContentAnalysis,
+  organizationId?: string
 ): Promise<VideoScriptOutput> {
   const prompt = `You are Madison's Video Prompt specialist. Create prompts for AI video generation that bring written content to life.
 
@@ -262,7 +280,7 @@ Return JSON:
 
 Return ONLY the JSON object.`;
 
-  const responseText = await callClaudeAPI(prompt);
+  const responseText = await callClaudeAPI(prompt, organizationId);
   
   try {
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
@@ -283,7 +301,8 @@ Return ONLY the JSON object.`;
 export async function generateProductBackgrounds(
   content: string,
   analysis: ContentAnalysis,
-  productType?: string
+  productType?: string,
+  organizationId?: string
 ): Promise<ProductBackgroundOutput> {
   const productContext = productType 
     ? `Product type (for context only, DO NOT include in background): ${productType}`
@@ -337,7 +356,7 @@ IMPORTANT: All prompts must end with "--no product --no bottle --no package --no
 
 Return ONLY the JSON object.`;
 
-  const responseText = await callClaudeAPI(prompt);
+  const responseText = await callClaudeAPI(prompt, organizationId);
   
   try {
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
@@ -361,14 +380,15 @@ Return ONLY the JSON object.`;
 export async function generateImagePackFromContent(
   content: string,
   title?: string,
-  brandColors?: string[]
+  brandColors?: string[],
+  organizationId?: string
 ): Promise<{ analysis: ContentAnalysis; images: ImagePackOutput }> {
-  console.log('[VisualPrompts] Generating Image Pack...');
+  console.log('[VisualPrompts] Generating Image Pack...', { organizationId });
   
-  const analysis = await analyzeContent(content, title);
+  const analysis = await analyzeContent(content, title, organizationId);
   console.log('[VisualPrompts] Content analyzed:', analysis.mood, analysis.themes);
   
-  const images = await generateImagePack(content, analysis, brandColors);
+  const images = await generateImagePack(content, analysis, brandColors, organizationId);
   console.log('[VisualPrompts] Image Pack generated');
   
   return { analysis, images };
@@ -379,14 +399,15 @@ export async function generateImagePackFromContent(
  */
 export async function generateVideoScriptFromContent(
   content: string,
-  title?: string
+  title?: string,
+  organizationId?: string
 ): Promise<{ analysis: ContentAnalysis; videos: VideoScriptOutput }> {
-  console.log('[VisualPrompts] Generating Video Scripts...');
+  console.log('[VisualPrompts] Generating Video Scripts...', { organizationId });
   
-  const analysis = await analyzeContent(content, title);
+  const analysis = await analyzeContent(content, title, organizationId);
   console.log('[VisualPrompts] Content analyzed:', analysis.mood, analysis.actions);
   
-  const videos = await generateVideoScript(content, analysis);
+  const videos = await generateVideoScript(content, analysis, organizationId);
   console.log('[VisualPrompts] Video Scripts generated');
   
   return { analysis, videos };
@@ -398,14 +419,15 @@ export async function generateVideoScriptFromContent(
 export async function generateProductBackgroundsFromContent(
   content: string,
   title?: string,
-  productType?: string
+  productType?: string,
+  organizationId?: string
 ): Promise<{ analysis: ContentAnalysis; backgrounds: ProductBackgroundOutput }> {
-  console.log('[VisualPrompts] Generating Product Backgrounds...');
+  console.log('[VisualPrompts] Generating Product Backgrounds...', { organizationId });
   
-  const analysis = await analyzeContent(content, title);
+  const analysis = await analyzeContent(content, title, organizationId);
   console.log('[VisualPrompts] Content analyzed:', analysis.mood, analysis.surfaces);
   
-  const backgrounds = await generateProductBackgrounds(content, analysis, productType);
+  const backgrounds = await generateProductBackgrounds(content, analysis, productType, organizationId);
   console.log('[VisualPrompts] Product Backgrounds generated');
   
   return { analysis, backgrounds };

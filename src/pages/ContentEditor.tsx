@@ -15,7 +15,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Check, Loader2, MessageSquare, X } from "lucide-react";
+import { ArrowLeft, Save, Check, Loader2, MessageSquare, X, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
 import QualityRating from "@/components/QualityRating";
@@ -29,6 +29,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { MadisonEditor } from "@/components/editor";
+import { ImageLibraryPicker } from "@/components/email-composer/ImageLibraryPicker";
 import type { JSONContent } from '@tiptap/react';
 
 /**
@@ -52,12 +53,14 @@ export default function ContentEditorPage() {
   const [title, setTitle] = useState("");
   const [contentType, setContentType] = useState("");
   const [productName, setProductName] = useState("");
+  const [featuredImageUrl, setFeaturedImageUrl] = useState("");
 
   // Editor state
   const [wordCount, setWordCount] = useState(0);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [qualityRating, setQualityRating] = useState(0);
   const [isEditorReady, setIsEditorReady] = useState(false);
+  const [showImagePicker, setShowImagePicker] = useState(false);
 
   // Store editor JSON content for persistence
   const editorContentRef = useRef<JSONContent | null>(null);
@@ -122,6 +125,7 @@ export default function ContentEditorPage() {
           setContentType(data.content_type || "Blog Post");
           setContentId(data.id);
           setQualityRating(data.quality_rating || 0);
+          setFeaturedImageUrl(data.featured_image_url || "");
           setIsLoading(false);
           return;
         } catch (error) {
@@ -406,6 +410,34 @@ export default function ContentEditorPage() {
     setAssistantOpen((prev) => !prev);
   }, []);
 
+  /**
+   * Handle featured image change
+   */
+  const handleFeaturedImageChange = useCallback(async (url: string) => {
+    setFeaturedImageUrl(url);
+    
+    // Auto-save featured image if we have a contentId
+    if (contentId) {
+      const { error } = await supabase
+        .from('master_content')
+        .update({ featured_image_url: url || null } as any)
+        .eq('id', contentId);
+      
+      if (error) {
+        toast({
+          title: "Error saving image",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: url ? "Featured image set" : "Featured image removed",
+          description: url ? "Your featured image has been saved." : "Featured image cleared.",
+        });
+      }
+    }
+  }, [contentId, toast]);
+
   // Loading state
   if (isLoading) {
     return (
@@ -441,16 +473,32 @@ export default function ContentEditorPage() {
             </span>
           </div>
 
-          {/* Center: Editorial Assistant Toggle */}
-          <Button
-            variant={assistantOpen ? "default" : "ghost"}
-            onClick={handleToggleAssistant}
-            className="gap-2 h-8 hidden lg:flex"
-          >
-            <MessageSquare className="w-4 h-4" />
-            <span className="hidden xl:inline">Editorial Assistant</span>
-            <span className="xl:hidden">Assistant</span>
-          </Button>
+          {/* Center: Featured Image & Editorial Assistant */}
+          <div className="flex items-center gap-2">
+            {/* Featured Image Toggle */}
+            <Button
+              variant={showImagePicker ? "default" : "ghost"}
+              onClick={() => setShowImagePicker(!showImagePicker)}
+              className="gap-2 h-8"
+              title="Set featured image"
+            >
+              <ImageIcon className="w-4 h-4" />
+              <span className="hidden lg:inline">
+                {featuredImageUrl ? "Change Image" : "Add Image"}
+              </span>
+            </Button>
+            
+            {/* Editorial Assistant Toggle */}
+            <Button
+              variant={assistantOpen ? "default" : "ghost"}
+              onClick={handleToggleAssistant}
+              className="gap-2 h-8 hidden lg:flex"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span className="hidden xl:inline">Editorial Assistant</span>
+              <span className="xl:hidden">Assistant</span>
+            </Button>
+          </div>
 
           {/* Right: Word Count, Quality Rating, Save, Next */}
           <div className="flex items-center gap-1 sm:gap-2">
@@ -512,6 +560,57 @@ export default function ContentEditorPage() {
           </div>
         </div>
       </div>
+
+      {/* Featured Image Picker Panel */}
+      {showImagePicker && (
+        <div className="border-b border-border bg-card/50 p-4 flex-shrink-0">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <ImageIcon className="w-4 h-4 text-primary" />
+                Featured Image
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowImagePicker(false)}
+                className="h-6 w-6 p-0"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            {/* Current Image Preview */}
+            {featuredImageUrl && (
+              <div className="mb-3 relative rounded-lg overflow-hidden border border-border max-w-xs">
+                <img 
+                  src={featuredImageUrl} 
+                  alt="Featured" 
+                  className="w-full h-32 object-cover"
+                />
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleFeaturedImageChange("")}
+                  className="absolute top-2 right-2 h-6 px-2 text-xs"
+                >
+                  Remove
+                </Button>
+              </div>
+            )}
+            
+            {/* Image Library Picker */}
+            <ImageLibraryPicker
+              value={featuredImageUrl}
+              onChange={handleFeaturedImageChange}
+            />
+            
+            <p className="text-xs text-muted-foreground mt-2">
+              Select an image from your library or paste an image URL. This will be used as the featured/hero image for your blog post.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Main Content Area */}
       <div className="flex flex-1 min-h-0">

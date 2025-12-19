@@ -23,6 +23,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 import { FloatingToolbar } from './FloatingToolbar';
 import { SlashCommandMenu } from './SlashCommandMenu';
 import { 
@@ -149,8 +150,11 @@ export function MadisonEditor({
   
   const [slashMenuOpen, setSlashMenuOpen] = useState(false);
   const [slashMenuPosition, setSlashMenuPosition] = useState({ top: 0, left: 0 });
+  const [isAIProcessing, setIsAIProcessing] = useState(false);
   const slashStartPosRef = useRef<number | null>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
+  const handleAIActionRef = useRef<((action: MadisonInlineAction) => void) | null>(null);
+  const { toast } = useToast();
 
   // ─────────────────────────────────────────────────────────────────────────
   // CONTENT PARSING
@@ -224,8 +228,46 @@ export function MadisonEditor({
           'font-serif text-foreground leading-loose'
         ),
       },
-      // Handle "/" key for slash commands
+      // Handle "/" key for slash commands and keyboard shortcuts
       handleKeyDown: (view, event) => {
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        const modKey = isMac ? event.metaKey : event.ctrlKey;
+        
+        // ═══════════════════════════════════════════════════════════════════
+        // KEYBOARD SHORTCUTS FOR AI ACTIONS
+        // Ctrl/Cmd + . = Refine (polish selected text)
+        // Ctrl/Cmd + Shift + . = Rewrite (completely rewrite)
+        // Ctrl/Cmd + Enter = Continue writing
+        // ═══════════════════════════════════════════════════════════════════
+        if (handleAIActionRef.current) {
+          // Cmd/Ctrl + . = Refine
+          if (modKey && event.key === '.') {
+            event.preventDefault();
+            event.stopPropagation();
+            console.log('[MadisonEditor] Keyboard shortcut: Refine');
+            handleAIActionRef.current('refine');
+            return true;
+          }
+          
+          // Cmd/Ctrl + Shift + . = Rewrite
+          if (modKey && event.shiftKey && event.key === '>') {
+            event.preventDefault();
+            event.stopPropagation();
+            console.log('[MadisonEditor] Keyboard shortcut: Rewrite');
+            handleAIActionRef.current('rewrite');
+            return true;
+          }
+          
+          // Cmd/Ctrl + Enter = Continue writing
+          if (modKey && event.key === 'Enter') {
+            event.preventDefault();
+            event.stopPropagation();
+            console.log('[MadisonEditor] Keyboard shortcut: Continue');
+            handleAIActionRef.current('continue');
+            return true;
+          }
+        }
+        
         // ═══════════════════════════════════════════════════════════════════
         // SLASH COMMAND TRIGGER
         // ═══════════════════════════════════════════════════════════════════
@@ -329,10 +371,30 @@ export function MadisonEditor({
       slashStartPosRef.current = null;
     }
 
+    // Check if action requires selection
+    const actionsRequiringSelection = ['refine', 'rewrite', 'shorten', 'expand', 'email', 'product', 'instagram', 'tone'];
+    const hasSelection = editor.state.selection && !editor.state.selection.empty;
+    
+    if (actionsRequiringSelection.includes(action) && !hasSelection) {
+      toast({
+        title: 'Select some text first',
+        description: `To ${action} text, highlight the text you want Madison to work with.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     // Build context for the AI action
     const context: Partial<MadisonActionContext> = {
       organizationId,
     };
+
+    // Show loading state
+    setIsAIProcessing(true);
+    toast({
+      title: `Madison is ${action === 'refine' ? 'refining' : action === 'rewrite' ? 'rewriting' : action === 'continue' ? 'continuing' : 'processing'}...`,
+      description: 'This usually takes a few seconds',
+    });
 
     try {
       // Execute the AI action
@@ -344,13 +406,34 @@ export function MadisonEditor({
           mode: result.mode,
           contentLength: result.content.length,
         });
+        toast({
+          title: 'Done!',
+          description: `Text has been ${action === 'refine' ? 'refined' : action === 'rewrite' ? 'rewritten' : action === 'continue' ? 'continued' : 'processed'}`,
+        });
       } else {
         console.warn('[MadisonEditor] AI action returned no result');
+        toast({
+          title: 'No changes made',
+          description: 'Something went wrong. Please try again.',
+          variant: 'destructive',
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('[MadisonEditor] AI action error:', error);
+      toast({
+        title: 'AI processing failed',
+        description: error?.message || 'Please try again in a moment',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAIProcessing(false);
     }
-  }, [editor, slashMenuOpen, organizationId]);
+  }, [editor, slashMenuOpen, organizationId, toast]);
+
+  // Keep ref updated for keyboard shortcuts
+  useEffect(() => {
+    handleAIActionRef.current = handleAIAction;
+  }, [handleAIAction]);
 
   /**
    * Close slash menu and refocus editor

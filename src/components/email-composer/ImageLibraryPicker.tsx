@@ -157,35 +157,67 @@ export function ImageLibraryPicker({ value, onChange }: ImageLibraryPickerProps)
 
   return (
     <div className="space-y-2">
-      <Label>Image</Label>
+      {/* Clickable Image Selection Area */}
+      {value ? (
+        /* When image is selected - show preview with click to change */
+        <div 
+          onClick={() => setOpen(true)}
+          className="relative group cursor-pointer rounded-lg overflow-hidden border-2 border-border hover:border-primary transition-all"
+        >
+          <img
+            src={value}
+            alt="Featured image"
+            className="w-full h-40 object-cover"
+          />
+          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
+            <ImageIcon className="w-8 h-8 text-white mb-2" />
+            <span className="text-white font-medium text-sm">Click to change image</span>
+          </div>
+          {/* Remove button */}
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onChange("");
+            }}
+            className="absolute top-2 right-2 h-7 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            Remove
+          </Button>
+        </div>
+      ) : (
+        /* When no image - show clickable placeholder */
+        <div
+          onClick={() => setOpen(true)}
+          className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-border hover:border-primary rounded-lg cursor-pointer transition-all bg-muted/30 hover:bg-muted/50"
+        >
+          <ImageIcon className="w-8 h-8 text-muted-foreground mb-2" />
+          <span className="text-sm font-medium text-muted-foreground">Click to add featured image</span>
+          <span className="text-xs text-muted-foreground mt-1">Browse library or upload</span>
+        </div>
+      )}
       
+      {/* URL input for direct paste (collapsed by default) */}
       <div className="flex gap-2">
         <Input
           type="url"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="https://example.com/image.jpg"
-          className="flex-1"
+          placeholder="Or paste image URL here..."
+          className="flex-1 text-xs h-8"
         />
         <Button
           type="button"
           variant="outline"
+          size="sm"
           onClick={() => setOpen(true)}
+          className="h-8"
         >
-          <ImageIcon className="w-4 h-4 mr-2" />
-          Browse
+          <ImageIcon className="w-4 h-4" />
         </Button>
       </div>
-
-      {value && (
-        <div className="mt-2 border border-border rounded-lg overflow-hidden">
-          <img
-            src={value}
-            alt="Preview"
-            className="w-full h-48 object-cover"
-          />
-        </div>
-      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh]">

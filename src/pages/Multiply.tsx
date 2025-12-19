@@ -29,6 +29,7 @@ import { DerivativeFullModal } from "@/components/amplify/DerivativeFullModal";
 import { DerivativeTypeSelector } from "@/components/multiply/DerivativeTypeSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { useOrganization } from "@/hooks/useOrganization";
 import { parseEmailSequence } from "@/lib/emailSequence";
 import fannedPagesImage from "@/assets/fanned-pages-new.jpg";
 import ticketIcon from "@/assets/ticket-icon.png";
@@ -661,21 +662,21 @@ export default function Multiply() {
 
       if (selectedVisualTypes.has('image_pack')) {
         promises.push(
-          generateImagePackFromContent(content, title)
+          generateImagePackFromContent(content, title, undefined, currentOrganizationId || undefined)
             .then(result => setImagePackResult(result))
         );
       }
 
       if (selectedVisualTypes.has('video_script')) {
         promises.push(
-          generateVideoScriptFromContent(content, title)
+          generateVideoScriptFromContent(content, title, currentOrganizationId || undefined)
             .then(result => setVideoScriptResult(result))
         );
       }
 
       if (selectedVisualTypes.has('product_backgrounds')) {
         promises.push(
-          generateProductBackgroundsFromContent(content, title)
+          generateProductBackgroundsFromContent(content, title, undefined, currentOrganizationId || undefined)
             .then(result => setProductBgResult(result))
         );
       }
