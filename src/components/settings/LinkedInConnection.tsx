@@ -116,7 +116,7 @@ export function LinkedInConnection({ organizationId }: LinkedInConnectionProps) 
     if (isRefresh) {
       setRefreshing(true);
     } else {
-      setLoading(true);
+    setLoading(true);
     }
     
     try {

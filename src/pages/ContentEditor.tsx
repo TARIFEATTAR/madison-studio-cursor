@@ -227,7 +227,7 @@ export default function ContentEditorPage() {
     
     // Update state to trigger re-render so useAutoSave sees the new content
     setEditableContent(text);
-
+    
     // Calculate word count
     const words = text.trim().split(/\s+/).filter(word => word.length > 0);
     setWordCount(words.length);
@@ -555,15 +555,15 @@ export default function ContentEditorPage() {
             </Button>
             
             {/* Editorial Assistant Toggle */}
-            <Button
-              variant={assistantOpen ? "default" : "ghost"}
-              onClick={handleToggleAssistant}
-              className="gap-2 h-8 hidden lg:flex"
-            >
-              <MessageSquare className="w-4 h-4" />
-              <span className="hidden xl:inline">Editorial Assistant</span>
-              <span className="xl:hidden">Assistant</span>
-            </Button>
+          <Button
+            variant={assistantOpen ? "default" : "ghost"}
+            onClick={handleToggleAssistant}
+            className="gap-2 h-8 hidden lg:flex"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span className="hidden xl:inline">Editorial Assistant</span>
+            <span className="xl:hidden">Assistant</span>
+          </Button>
           </div>
 
           {/* Right: Word Count, Quality Rating, Save, Next */}

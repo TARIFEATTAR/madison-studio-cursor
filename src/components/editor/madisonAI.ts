@@ -287,7 +287,7 @@ export async function resolveMadisonAction({
     return data.generatedContent;
   } catch (error) {
     console.error('[Madison AI] Error resolving action:', error);
-    
+  
     // Fallback to a helpful error message that still makes sense in context
     if (action === 'continue') {
       return '\n\n[Madison is thinking... Please try again in a moment.]';

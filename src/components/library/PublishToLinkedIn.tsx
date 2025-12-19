@@ -126,9 +126,9 @@ export function PublishToLinkedIn({
       // Build the request body with optional image and article
       const requestBody: any = {
         organizationId: organizationId,
-        text: editedContent,
-        contentId,
-        contentTable,
+          text: editedContent,
+          contentId,
+          contentTable,
       };
 
       // Add image if selected
@@ -209,34 +209,34 @@ export function PublishToLinkedIn({
 
           {/* Scrollable Content Area */}
           <div className="flex-1 overflow-y-auto min-h-0 -mx-6 px-6">
-            {/* Success State */}
-            {publishResult ? (
-              <div className="space-y-4 py-4">
-                <div className="flex flex-col items-center justify-center gap-4 py-8">
-                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                    <Check className="w-8 h-8 text-green-600" />
-                  </div>
-                  <div className="text-center">
-                    <h3 className="font-semibold text-lg">Published Successfully!</h3>
-                    <p className="text-muted-foreground">Your post is now live on LinkedIn</p>
-                  </div>
+          {/* Success State */}
+          {publishResult ? (
+            <div className="space-y-4 py-4">
+              <div className="flex flex-col items-center justify-center gap-4 py-8">
+                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                  <Check className="w-8 h-8 text-green-600" />
                 </div>
-                <div className="flex justify-center gap-2">
-                  <Button variant="outline" asChild>
-                    <a href={publishResult.postUrl} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      View Post
-                    </a>
-                  </Button>
-                  <Button onClick={() => setDialogOpen(false)}>
-                    Done
-                  </Button>
+                <div className="text-center">
+                  <h3 className="font-semibold text-lg">Published Successfully!</h3>
+                  <p className="text-muted-foreground">Your post is now live on LinkedIn</p>
                 </div>
               </div>
-            ) : loadingConnection ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              <div className="flex justify-center gap-2">
+                <Button variant="outline" asChild>
+                  <a href={publishResult.postUrl} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    View Post
+                  </a>
+                </Button>
+                <Button onClick={() => setDialogOpen(false)}>
+                  Done
+                </Button>
               </div>
+            </div>
+          ) : loadingConnection ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
           ) : !connection ? (
             <div className="space-y-4 py-4">
               <Alert>
