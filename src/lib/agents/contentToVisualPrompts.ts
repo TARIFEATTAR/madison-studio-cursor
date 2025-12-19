@@ -15,6 +15,34 @@
 import { supabase } from '@/integrations/supabase/client';
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// VISUAL MASTERS - Photographer Styles for Variety
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const VISUAL_MASTERS = [
+  { id: 'AVEDON_ISOLATION', name: 'Richard Avedon', style: 'Stark white backgrounds, isolated subjects, pure minimalism, clinical elegance' },
+  { id: 'PENN_STILL_LIFE', name: 'Irving Penn', style: 'Sculptural compositions, textural detail, museum-quality luxury, timeless refinement' },
+  { id: 'TESTINO_LUXURY', name: 'Mario Testino', style: 'Golden hour warmth, aspirational glamour, sun-kissed tones, effortless chic' },
+  { id: 'NEWTON_GLAMOUR', name: 'Helmut Newton', style: 'High contrast drama, powerful poses, sophisticated edge, striking compositions' },
+  { id: 'MEISEL_EDITORIAL', name: 'Steven Meisel', style: 'Avant-garde concepts, transformative beauty, high fashion polish, trendsetting' },
+  { id: 'LEIBOVITZ_ENVIRONMENT', name: 'Annie Leibovitz', style: 'Environmental narratives, theatrical staging, cinematic storytelling, rich detail' },
+  { id: 'ANDERSON_SYMMETRY', name: 'Wes Anderson', style: 'Perfect symmetry, pastel palettes, whimsical precision, nostalgic charm' },
+  { id: 'WEBER_INTIMATE', name: 'Bruce Weber', style: 'Natural intimacy, candid moments, warm authenticity, lifestyle ease' },
+];
+
+// Rotate through masters to ensure variety
+let lastMasterIndex = -1;
+function getRandomVisualMaster() {
+  // Pick a different master than last time
+  let newIndex;
+  do {
+    newIndex = Math.floor(Math.random() * VISUAL_MASTERS.length);
+  } while (newIndex === lastMasterIndex && VISUAL_MASTERS.length > 1);
+  
+  lastMasterIndex = newIndex;
+  return VISUAL_MASTERS[newIndex];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -130,8 +158,44 @@ Extract and return a JSON object with:
   "actions": ["3-5 movements or transformations for video"],
   "surfaces": ["3-5 materials/textures for product backgrounds"],
   "atmosphere": "2-3 sentence description of the overall atmosphere",
-  "suggestedVisualMaster": "AVEDON_ISOLATION | LEIBOVITZ_ENVIRONMENT | RICHARDSON_RAW | ANDERSON_SYMMETRY"
+  "suggestedVisualMaster": "Choose ONE based on content mood"
 }
+
+VISUAL MASTER OPTIONS (choose the BEST match for this specific content):
+
+1. AVEDON_ISOLATION - Richard Avedon style
+   Best for: Minimalist, clean, product-focused, stark white backgrounds
+   Mood: Pure, clinical, focused, elegant simplicity
+   
+2. LEIBOVITZ_ENVIRONMENT - Annie Leibovitz style  
+   Best for: Narrative scenes, environmental context, storytelling
+   Mood: Theatrical, dramatic, cinematic, rich detail
+   
+3. RICHARDSON_RAW - Terry Richardson style
+   Best for: Edgy, authentic, bold, flash photography
+   Mood: Raw, unfiltered, energetic, provocative
+   
+4. ANDERSON_SYMMETRY - Wes Anderson style
+   Best for: Whimsical, vintage, pastel palettes, precise compositions
+   Mood: Quirky, nostalgic, playful, meticulously styled
+
+5. PENN_STILL_LIFE - Irving Penn style
+   Best for: Luxury products, textural detail, sculptural compositions
+   Mood: Timeless, refined, artistic, museum-quality
+
+6. NEWTON_GLAMOUR - Helmut Newton style
+   Best for: Fashion-forward, bold, high contrast, dramatic lighting
+   Mood: Provocative, powerful, sophisticated, striking
+
+7. MEISEL_EDITORIAL - Steven Meisel style
+   Best for: High fashion, conceptual, transformative beauty
+   Mood: Avant-garde, polished, influential, trendsetting
+
+8. TESTINO_LUXURY - Mario Testino style
+   Best for: Aspirational luxury, golden hour, warm tones
+   Mood: Glamorous, sun-kissed, effortlessly chic
+
+Choose the style that BEST matches the content's themes and mood. Avoid defaulting to the same style repeatedly.
 
 Return ONLY the JSON object, no other text.`;
 
@@ -146,7 +210,17 @@ Return ONLY the JSON object, no other text.`;
     throw new Error('No JSON found in response');
   } catch (error) {
     console.error('[ContentAnalyzer] Failed to parse analysis:', error);
-    // Return default analysis
+    // Return default analysis with random visual master for variety
+    const visualMasters = [
+      'AVEDON_ISOLATION',
+      'LEIBOVITZ_ENVIRONMENT', 
+      'PENN_STILL_LIFE',
+      'TESTINO_LUXURY',
+      'ANDERSON_SYMMETRY',
+      'NEWTON_GLAMOUR',
+    ];
+    const randomMaster = visualMasters[Math.floor(Math.random() * visualMasters.length)];
+    
     return {
       themes: ['elegance', 'quality', 'craftsmanship'],
       mood: 'sophisticated',
@@ -155,7 +229,7 @@ Return ONLY the JSON object, no other text.`;
       actions: ['slow reveal', 'gentle movement', 'light play'],
       surfaces: ['marble', 'wood', 'linen'],
       atmosphere: 'A refined, contemplative atmosphere with attention to detail and quiet luxury.',
-      suggestedVisualMaster: 'LEIBOVITZ_ENVIRONMENT',
+      suggestedVisualMaster: randomMaster,
     };
   }
 }
@@ -174,6 +248,10 @@ export async function generateImagePack(
     ? `Brand colors to incorporate: ${brandColors.join(', ')}`
     : `Suggested palette: ${analysis.colorPalette.join(', ')}`;
 
+  // FORCE variety by randomly selecting a visual master
+  const selectedMaster = getRandomVisualMaster();
+  console.log('[ImagePack] Using visual master:', selectedMaster.name);
+
   const prompt = `You are Madison's Image Prompt specialist. Create prompts for AI image generation that capture the soul of written content.
 
 Based on this content analysis, generate 3 image prompts:
@@ -184,8 +262,13 @@ Mood: ${analysis.mood}
 Visual Elements: ${analysis.visualElements.join(', ')}
 ${colorContext}
 Atmosphere: ${analysis.atmosphere}
-Suggested Style: ${analysis.suggestedVisualMaster}
 </ANALYSIS>
+
+MANDATORY VISUAL STYLE - You MUST use this photographer's aesthetic:
+Photographer: ${selectedMaster.name}
+Style: ${selectedMaster.style}
+
+Apply ${selectedMaster.name}'s distinctive visual language to ALL prompts below.
 
 Generate prompts for:
 1. HERO (16:9) - Editorial quality for website/blog headers
@@ -239,6 +322,10 @@ export async function generateVideoScript(
   analysis: ContentAnalysis,
   organizationId?: string
 ): Promise<VideoScriptOutput> {
+  // FORCE variety by randomly selecting a visual master for video aesthetic
+  const selectedMaster = getRandomVisualMaster();
+  console.log('[VideoScript] Using visual master:', selectedMaster.name);
+
   const prompt = `You are Madison's Video Prompt specialist. Create prompts for AI video generation that bring written content to life.
 
 Based on this content analysis, generate 3 video prompts:
@@ -250,6 +337,10 @@ Visual Elements: ${analysis.visualElements.join(', ')}
 Actions/Movements: ${analysis.actions.join(', ')}
 Atmosphere: ${analysis.atmosphere}
 </ANALYSIS>
+
+MANDATORY VISUAL STYLE - Apply this cinematographer/photographer aesthetic:
+Reference: ${selectedMaster.name}
+Style: ${selectedMaster.style}
 
 Generate prompts for:
 1. HERO (10-15s) - Cinematic for website/landing page
@@ -308,6 +399,10 @@ export async function generateProductBackgrounds(
     ? `Product type (for context only, DO NOT include in background): ${productType}`
     : 'General luxury product';
 
+  // FORCE variety by randomly selecting a visual master
+  const selectedMaster = getRandomVisualMaster();
+  console.log('[ProductBG] Using visual master:', selectedMaster.name);
+
   const prompt = `You are Madison's Product Background specialist. Create scene/background prompts for product photography that capture the mood of written content WITHOUT including the product itself.
 
 Based on this content analysis, generate 3 product background prompts:
@@ -321,6 +416,10 @@ Colors: ${analysis.colorPalette.join(', ')}
 Atmosphere: ${analysis.atmosphere}
 ${productContext}
 </ANALYSIS>
+
+MANDATORY VISUAL STYLE - Apply this photographer's background aesthetic:
+Reference: ${selectedMaster.name}
+Style: ${selectedMaster.style}
 
 Generate BACKGROUND-ONLY prompts for:
 1. PRODUCT HERO (1:1) - Clean, centered space for main product shot

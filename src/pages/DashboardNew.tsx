@@ -9,6 +9,7 @@ import { useOrganization } from "@/hooks/useOrganization";
 // New Dashboard Components (Phase 2)
 import { DashboardHero } from "@/components/dashboard/DashboardHero";
 import { SmartMomentumTracker } from "@/components/dashboard/SmartMomentumTracker";
+import { QuickLinksWidget } from "@/components/dashboard/QuickLinksWidget";
 
 // Existing Components (Updated in Phase 1)
 import { BrandHealthCard } from "@/components/dashboard/BrandHealthCard";
@@ -132,14 +133,15 @@ export default function DashboardNew() {
       <div className="flex-1 overflow-auto px-4 md:px-8 py-4 md:py-6 pb-24 md:pb-6 main-content">
         <div className="max-w-[1400px] mx-auto space-y-4 md:space-y-6">
           
-          {/* 1. HERO SECTION + BRAND HEALTH SIDE BY SIDE */}
+          {/* 1. HERO SECTION + QUICK LINKS & BRAND HEALTH */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4 animate-slide-up stagger-1">
-            {/* Hero takes 9 columns (3/4 width) */}
-            <div className="col-span-1 md:col-span-9">
+            {/* Hero takes 8 columns on desktop */}
+            <div className="col-span-1 md:col-span-8">
               <DashboardHero />
             </div>
-            {/* Brand Health takes 3 columns (1/4 width) */}
-            <div className="col-span-1 md:col-span-3">
+            {/* Right column: Quick Links + Brand Health stacked (4 columns) */}
+            <div className="col-span-1 md:col-span-4 space-y-4">
+              <QuickLinksWidget />
               <BrandHealthCard compact />
             </div>
           </div>

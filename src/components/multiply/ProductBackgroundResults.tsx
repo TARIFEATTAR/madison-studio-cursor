@@ -40,8 +40,9 @@ export function ProductBackgroundResults({
   };
 
   const openInImageStudio = (prompt: string) => {
+    // Navigate to Dark Room (new Image Studio) with prompt pre-filled
     const encodedPrompt = encodeURIComponent(prompt);
-    window.open(`/image-studio?prompt=${encodedPrompt}`, '_blank');
+    window.open(`/darkroom?prompt=${encodedPrompt}`, '_blank');
   };
 
   const bgConfigs = [

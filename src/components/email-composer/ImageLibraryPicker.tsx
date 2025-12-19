@@ -199,12 +199,25 @@ export function ImageLibraryPicker({ value, onChange }: ImageLibraryPickerProps)
         </div>
       )}
       
-      {/* URL input for direct paste (collapsed by default) */}
+      {/* URL input for direct paste - uses local state to avoid triggering onChange on every keystroke */}
       <div className="flex gap-2">
         <Input
           type="url"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          value={urlInput || value}
+          onChange={(e) => setUrlInput(e.target.value)}
+          onBlur={() => {
+            // Only update parent when user finishes typing (on blur)
+            if (urlInput && urlInput !== value) {
+              onChange(urlInput);
+              setUrlInput("");
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && urlInput) {
+              onChange(urlInput);
+              setUrlInput("");
+            }
+          }}
           placeholder="Or paste image URL here..."
           className="flex-1 text-xs h-8"
         />
@@ -256,9 +269,10 @@ export function ImageLibraryPicker({ value, onChange }: ImageLibraryPickerProps)
                         key={image.id}
                         type="button"
                         onClick={() => {
+                          // Call onChange but let parent handle success/error toast
                           onChange(image.url);
                           setOpen(false);
-                          toast.success("Image selected");
+                          // Don't show success toast here - let parent component handle it after save
                         }}
                         className="relative group aspect-square rounded-lg overflow-hidden border-2 border-border hover:border-primary transition-all"
                       >

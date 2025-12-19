@@ -15,6 +15,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Save, Check, Loader2, MessageSquare, X, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EditorialAssistantPanel } from "@/components/assistant/EditorialAssistantPanel";
@@ -42,9 +43,21 @@ const USE_TIPTAP_EDITOR = true;
 export default function ContentEditorPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const { currentOrganizationId } = useOnboarding();
+
+  /**
+   * Invalidate library cache and navigate away
+   * This ensures Archives shows fresh data after editing
+   */
+  const handleExit = useCallback((destination: string = "/") => {
+    // Invalidate the library content cache so Archives fetches fresh data
+    queryClient.invalidateQueries({ queryKey: ["library-content"] });
+    console.log('[ContentEditor] Invalidated library-content cache, navigating to:', destination);
+    navigate(destination);
+  }, [queryClient, navigate]);
 
   // Content state
   const [isLoading, setIsLoading] = useState(true);
@@ -54,6 +67,7 @@ export default function ContentEditorPage() {
   const [contentType, setContentType] = useState("");
   const [productName, setProductName] = useState("");
   const [featuredImageUrl, setFeaturedImageUrl] = useState("");
+  const [category, setCategory] = useState<"master" | "derivative" | "output">(location.state?.category || "master");
 
   // Editor state
   const [wordCount, setWordCount] = useState(0);
@@ -70,14 +84,30 @@ export default function ContentEditorPage() {
    * Get content for saving - returns plain text
    */
   const getContentForSave = useCallback(() => {
-    return plainTextContentRef.current || editableContent;
+    const content = plainTextContentRef.current || editableContent;
+    console.log('[ContentEditor] getContentForSave called, content length:', content?.length, 'preview:', content?.substring(0, 100));
+    return content;
   }, [editableContent]);
 
-  // Auto-save hook
+  // Determine table and field based on category
+  const tableName = category === "master" 
+    ? "master_content" 
+    : category === "derivative" 
+    ? "derivative_assets" 
+    : "outputs";
+  
+  const fieldName = category === "master" ? "full_content" : "generated_content";
+
+  // Log for debugging
+  console.log('[ContentEditor] Save config:', { category, tableName, fieldName, contentId });
+
+  // Auto-save hook - now uses correct table based on category!
   const { saveStatus, lastSavedAt, forceSave } = useAutoSave({
     content: getContentForSave(),
     contentId,
     contentName: title,
+    tableName,
+    fieldName,
     delay: AUTOSAVE_CONFIG.AGGRESSIVE_DELAY
   });
 
@@ -94,13 +124,14 @@ export default function ContentEditorPage() {
       // Load from navigation state
       if (location.state?.content) {
         const content = location.state.content;
-        console.log("[ContentEditor] Loading from location.state, content length:", content.length);
+        console.log("[ContentEditor] Loading from location.state, content length:", content.length, "category:", location.state.category);
         setEditableContent(content);
         plainTextContentRef.current = content;
         setTitle(location.state.contentName || "Untitled Content");
         setContentType(location.state.contentType || "Blog Post");
         setProductName(location.state.productName || "Product");
         setContentId(location.state.contentId);
+        setCategory(location.state.category || "master"); // Set category for correct table targeting
         setIsLoading(false);
         return;
       }
@@ -168,6 +199,17 @@ export default function ContentEditorPage() {
   }, [location.state, location.search, navigate, toast]);
 
   /**
+   * Invalidate library cache when component unmounts
+   * This ensures Archives shows fresh data when user navigates away (including browser back button)
+   */
+  useEffect(() => {
+    return () => {
+      console.log('[ContentEditor] Unmounting - invalidating library-content cache');
+      queryClient.invalidateQueries({ queryKey: ["library-content"] });
+    };
+  }, [queryClient]);
+
+  /**
    * Handle editor content change
    */
   const handleEditorChange = useCallback((json: JSONContent) => {
@@ -176,10 +218,16 @@ export default function ContentEditorPage() {
 
   /**
    * Handle editor text change - update word count and plain text
+   * IMPORTANT: Also update editableContent state to trigger re-render for auto-save!
    */
   const handleTextChange = useCallback((text: string) => {
+    console.log('[ContentEditor] handleTextChange called, text length:', text?.length, 'preview:', text?.substring(0, 100));
+    
     plainTextContentRef.current = text;
     
+    // Update state to trigger re-render so useAutoSave sees the new content
+    setEditableContent(text);
+
     // Calculate word count
     const words = text.trim().split(/\s+/).filter(word => word.length > 0);
     setWordCount(words.length);
@@ -193,25 +241,43 @@ export default function ContentEditorPage() {
   }, []);
 
   /**
-   * Manual save handler
+   * Manual save handler - respects category for correct table/field
    */
   const handleSave = async () => {
     const contentToSave = getContentForSave();
 
     if (contentId) {
-      const { error } = await supabase
-        .from('master_content')
-        .update({
-          full_content: contentToSave,
-          quality_rating: qualityRating > 0 ? qualityRating : null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', contentId);
+      console.log('[ContentEditor] Manual save to:', tableName, fieldName, 'id:', contentId);
+      
+      // Build update payload based on category
+      const updatePayload: Record<string, any> = {
+        [fieldName]: contentToSave,
+      };
+      
+      // Add quality_rating for master_content
+      if (category === 'master') {
+        updatePayload.quality_rating = qualityRating > 0 ? qualityRating : null;
+        updatePayload.updated_at = new Date().toISOString();
+      }
+
+      const { data, error } = await supabase
+        .from(tableName)
+        .update(updatePayload)
+        .eq('id', contentId)
+        .select();
+
+      console.log('[ContentEditor] Manual save response:', { data, error, rowsAffected: data?.length });
 
       if (error) {
         toast({
           title: "Save failed",
           description: error.message,
+          variant: "destructive"
+        });
+      } else if (!data || data.length === 0) {
+        toast({
+          title: "Save may have failed",
+          description: "No rows were updated. Check permissions.",
           variant: "destructive"
         });
       } else {
@@ -458,7 +524,7 @@ export default function ContentEditorPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate("/")}
+              onClick={() => handleExit("/")}
               className="h-8 w-8 p-0"
               title="Exit Editor"
             >

@@ -204,12 +204,34 @@ export function ContentDetailModal({
           ? "full_content"
           : "generated_content";
 
-      const { error } = await supabase
+      console.log('[ContentDetailModal] Saving content:', {
+        table,
+        field,
+        contentId: content.id,
+        contentLength: editedContent?.length,
+      });
+
+      const { data, error } = await supabase
         .from(table)
         .update({ [field]: editedContent })
-        .eq("id", content.id);
+        .eq("id", content.id)
+        .select();
+
+      console.log('[ContentDetailModal] Save response:', { data, error });
 
       if (error) throw error;
+
+      // Update the content object locally so it reflects immediately
+      if (content) {
+        content[field] = editedContent;
+        // Also update the aliased fields
+        if (field === 'full_content') {
+          content.generated_content = editedContent;
+        }
+        if (field === 'generated_content') {
+          content.full_content = editedContent;
+        }
+      }
 
       toast({
         title: "Content updated",
@@ -219,6 +241,7 @@ export function ContentDetailModal({
       setIsEditing(false);
       onUpdate?.();
     } catch (error: any) {
+      console.error('[ContentDetailModal] Save error:', error);
       toast({
         title: "Error updating content",
         description: error.message,
@@ -295,7 +318,11 @@ export function ContentDetailModal({
 
   // Fetch organization data and dependency counts when modal opens
   useEffect(() => {
-    if (open && content?.organization_id) {
+    // Validate organization_id is a valid UUID before querying
+    const isValidUUID = content?.organization_id && 
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(content.organization_id);
+    
+    if (open && isValidUUID) {
       supabase
         .from("organizations")
         .select("name, brand_config")
@@ -557,30 +584,41 @@ export function ContentDetailModal({
               
               <ImageLibraryPicker
                 value={featuredImageUrl}
-                onChange={(url) => {
-                  setFeaturedImageUrl(url);
-                  // Auto-save when image is selected
-                  if (url !== content?.featured_image_url) {
-                    supabase
-                      .from('master_content')
-                      .update({ featured_image_url: url || null } as any)
-                      .eq('id', content.id)
-                      .then(({ error }) => {
-                        if (error) {
-                          toast({
-                            title: "Error saving image",
-                            description: error.message,
-                            variant: "destructive",
-                          });
-                        } else {
-                          toast({
-                            title: "Featured image updated",
-                            description: url ? "Image saved." : "Image removed.",
-                          });
-                          onUpdate?.();
-                        }
-                      });
+                onChange={async (url) => {
+                  // Only update if the value actually changed
+                  if (url === content?.featured_image_url) return;
+                  
+                  console.log('[FeaturedImage] Saving:', { contentId: content.id, url: url?.substring(0, 50) });
+                  
+                  // Try to save to database first - use type assertion to bypass generated types
+                  const { data, error } = await supabase
+                    .from('master_content')
+                    .update({ featured_image_url: url || null } as any)
+                    .eq('id', content.id)
+                    .select();
+                  
+                  console.log('[FeaturedImage] Response:', { data, error });
+                  
+                  if (error) {
+                    console.error('[FeaturedImage] Save error:', error);
+                    toast({
+                      title: "Error saving image",
+                      description: error.message.includes('column') 
+                        ? "Database needs migration. Run: ALTER TABLE master_content ADD COLUMN featured_image_url TEXT;"
+                        : error.message,
+                      variant: "destructive",
+                    });
+                    // Don't update local state if save failed
+                    return;
                   }
+                  
+                  // Only update local state after successful save
+                  setFeaturedImageUrl(url);
+                  toast({
+                    title: "Featured image updated",
+                    description: url ? "Image saved." : "Image removed.",
+                  });
+                  onUpdate?.();
                 }}
               />
             </div>

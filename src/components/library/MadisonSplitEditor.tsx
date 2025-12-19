@@ -12,20 +12,32 @@ interface MadisonSplitEditorProps {
   title: string;
   initialContent: string;
   contentId?: string;
+  category?: "master" | "derivative" | "output"; // Which type of content
   onSave: (content: string) => void;
   onClose: () => void;
 }
 
-export function MadisonSplitEditor({ open, title, initialContent, contentId, onSave, onClose }: MadisonSplitEditorProps) {
+export function MadisonSplitEditor({ open, title, initialContent, contentId, category = "master", onSave, onClose }: MadisonSplitEditorProps) {
   const [content, setContent] = useState(initialContent);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-save with standard delay
+  // Determine table and field based on category
+  const tableName = category === "master" 
+    ? "master_content" 
+    : category === "derivative" 
+    ? "derivative_assets" 
+    : "outputs";
+  
+  const fieldName = category === "master" ? "full_content" : "generated_content";
+
+  // Auto-save with standard delay - now uses correct table!
   const { saveStatus, lastSavedAt, forceSave } = useAutoSave({
     content,
     contentId,
     contentName: title,
-    delay: AUTOSAVE_CONFIG.STANDARD_DELAY
+    delay: AUTOSAVE_CONFIG.STANDARD_DELAY,
+    tableName,
+    fieldName
   });
 
   useEffect(() => {

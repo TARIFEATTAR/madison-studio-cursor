@@ -28,6 +28,7 @@ export interface LibraryContentItem {
   goalType?: string;
   aspectRatio?: string;
   finalPrompt?: string;
+  featuredImageUrl?: string; // For blog posts
 }
 
 export const useLibraryContent = (groupBySessions = false, page = 1, limit = 30) => {
@@ -50,7 +51,7 @@ export const useLibraryContent = (groupBySessions = false, page = 1, limit = 30)
       ] = await Promise.all([
         supabase
           .from("master_content")
-          .select("id, title, content_type, collection, full_content, created_at, updated_at, quality_rating, is_archived, status, published_to, external_urls, publish_notes, brand_consistency_score, brand_analysis, last_brand_check_at")
+          .select("id, title, content_type, collection, full_content, created_at, updated_at, quality_rating, is_archived, status, published_to, external_urls, publish_notes, brand_consistency_score, brand_analysis, last_brand_check_at, featured_image_url")
           .order("created_at", { ascending: false })
           .range(offset, offset + limit - 1),
         
@@ -71,7 +72,7 @@ export const useLibraryContent = (groupBySessions = false, page = 1, limit = 30)
         logger.error("Error fetching master content:", masterError);
       } else if (masterContent) {
         items.push(
-          ...masterContent.map((item) => {
+          ...masterContent.map((item: any) => {
             const deliverable = getDeliverableByValue(item.content_type);
             return {
               id: item.id,
@@ -92,6 +93,7 @@ export const useLibraryContent = (groupBySessions = false, page = 1, limit = 30)
               brandConsistencyScore: item.brand_consistency_score || undefined,
               brandAnalysis: item.brand_analysis || undefined,
               lastBrandCheckAt: item.last_brand_check_at || undefined,
+              featuredImageUrl: item.featured_image_url || undefined,
             };
           })
         );
@@ -127,6 +129,20 @@ export const useLibraryContent = (groupBySessions = false, page = 1, limit = 30)
       if (derivativesError) {
         logger.error("Error fetching derivatives:", derivativesError);
       } else if (derivatives) {
+        // Debug: Log raw derivative data - check for the specific ID
+        console.log('[useLibraryContent] 📥 Fetched derivatives count:', derivatives.length);
+        const linkedInPosts = derivatives.filter((d: any) => d.asset_type?.toLowerCase().includes('linkedin'));
+        linkedInPosts.forEach((d: any) => {
+          const content = d.generated_content || '';
+          console.log('[useLibraryContent] LinkedIn post:', {
+            id: d.id,
+            contentLength: content.length,
+            contentPreview: content.substring(0, 200),
+            hasReadMore: content.toLowerCase().includes('read more'),
+            hasUrl: content.includes('http')
+          });
+        });
+        
         items.push(
           ...derivatives.map((item) => {
             const deliverable = getDeliverableByValue(item.asset_type);
@@ -163,7 +179,7 @@ export const useLibraryContent = (groupBySessions = false, page = 1, limit = 30)
 
       return items;
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 30 * 1000, // Cache for 30 seconds - ensures fresher data after edits
     enabled: !!user,
   });
 };

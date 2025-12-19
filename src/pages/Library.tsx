@@ -733,12 +733,22 @@ export default function Library() {
             word_count: selectedContent.wordCount,
             quality_rating: selectedContent.rating,
             collection: selectedContent.collection,
-            organization_id: selectedContent.sourceTable,
+            is_archived: selectedContent.archived,
+            status: selectedContent.status,
+            featured_image_url: selectedContent.featuredImageUrl,
           }}
           category={selectedContent.sourceTable === "master_content" ? "master" : selectedContent.sourceTable === "outputs" ? "output" : "derivative"}
-          onUpdate={() => {
-            refetch();
-            setSelectedContent(null);
+          onUpdate={async () => {
+            // Refetch and wait for it to complete
+            const result = await refetch();
+            
+            // Update selectedContent with fresh data from refetch
+            if (result.data && selectedContent) {
+              const updatedContent = result.data.find(item => item.id === selectedContent.id);
+              if (updatedContent) {
+                setSelectedContent(updatedContent);
+              }
+            }
           }}
           onRepurpose={(id) => {
             navigate(`/multiply?id=${id}`);
@@ -784,6 +794,15 @@ export default function Library() {
             }
           }}
           onEditWithMadison={(content, category) => {
+            console.log('[Library] onEditWithMadison called:', {
+              contentId: content.id,
+              category,
+              sourceTable: content.sourceTable,
+              hasFullContent: !!content.full_content,
+              hasGeneratedContent: !!content.generated_content,
+              contentPreview: (content.generated_content || content.full_content)?.substring(0, 150)
+            });
+            
             setSelectedContent(null);
             
             // Determine text content based on category
@@ -793,6 +812,13 @@ export default function Library() {
             } else if (category === 'derivative' || category === 'output') {
               initialText = content.generated_content;
             }
+            
+            console.log('[Library] Navigating to editor with:', {
+              contentId: content.id,
+              category,
+              initialTextLength: initialText?.length,
+              initialTextPreview: initialText?.substring(0, 150)
+            });
             
             // Get content type from the content object
             const contentType = content.content_type || content.asset_type || 'Content';
@@ -844,6 +870,8 @@ export default function Library() {
           open={madisonOpen}
           title={madisonContext.title}
           initialContent={madisonContext.initialText}
+          contentId={madisonContext.id}
+          category={madisonContext.category}
           onSave={async (newContent) => {
             try {
               const table = madisonContext.category === 'master' 
@@ -894,6 +922,7 @@ export default function Library() {
           initialContent={emailSequenceContext.initialText}
           contentId={emailSequenceContext.id}
           contentType={emailSequenceContext.contentType}
+          category={emailSequenceContext.category}
           onSave={async (newContent) => {
             try {
               const table = emailSequenceContext.category === 'master' 

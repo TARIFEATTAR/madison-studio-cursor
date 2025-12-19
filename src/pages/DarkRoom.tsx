@@ -179,8 +179,11 @@ export default function DarkRoom() {
   // Composition preset selection (how to arrange products in scene)
   const [selectedCompositionPreset, setSelectedCompositionPreset] = useState<string | null>(null);
 
-  // Prompt
-  const [prompt, setPrompt] = useState("");
+  // Prompt - initialize from URL if provided
+  const [prompt, setPrompt] = useState(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get('prompt') || "";
+  });
 
   // State
   const [isGenerating, setIsGenerating] = useState(false);

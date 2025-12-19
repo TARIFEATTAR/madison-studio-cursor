@@ -28,6 +28,7 @@ interface EmailSequenceEditorProps {
   initialContent: string;
   contentId?: string;
   contentType?: string;
+  category?: "master" | "derivative" | "output"; // Which type of content
   onSave: (content: string) => void;
   onClose: () => void;
 }
@@ -65,12 +66,22 @@ export function EmailSequenceEditor({
   initialContent, 
   contentId,
   contentType,
+  category = "master",
   onSave, 
   onClose 
 }: EmailSequenceEditorProps) {
   const { toast } = useToast();
   const [emailParts, setEmailParts] = useState<EmailPart[]>([]);
   const [selectedEmailIndex, setSelectedEmailIndex] = useState(0);
+
+  // Determine table and field based on category
+  const tableName = category === "master" 
+    ? "master_content" 
+    : category === "derivative" 
+    ? "derivative_assets" 
+    : "outputs";
+  
+  const fieldName = category === "master" ? "full_content" : "generated_content";
 
   // Auto-save configuration
   const getContentForSave = () => serializeEmailParts(emailParts);
@@ -79,7 +90,9 @@ export function EmailSequenceEditor({
     content: getContentForSave(),
     contentId,
     contentName: title,
-    delay: AUTOSAVE_CONFIG.STANDARD_DELAY
+    delay: AUTOSAVE_CONFIG.STANDARD_DELAY,
+    tableName,
+    fieldName
   });
 
   // Initialize email parts from content

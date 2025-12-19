@@ -34,6 +34,7 @@ interface ContentCardProps {
     imageUrl?: string;
     aspectRatio?: string;
     finalPrompt?: string;
+    featuredImageUrl?: string; // For blog posts
   };
   onClick: () => void;
   viewMode?: "grid" | "list";
@@ -386,6 +387,20 @@ export function ContentCard({
                 "{content.finalPrompt.substring(0, 120)}..."
               </p>
             )}
+          </div>
+        ) : content.featuredImageUrl ? (
+          /* Master Content with Featured Image (Blog posts, etc.) */
+          <div className="space-y-3">
+            <div className="relative w-full h-36 rounded-lg overflow-hidden bg-muted border border-border">
+              <img
+                src={content.featuredImageUrl}
+                alt={content.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed">
+              {previewText}
+            </p>
           </div>
         ) : (
           /* Regular Content Preview */

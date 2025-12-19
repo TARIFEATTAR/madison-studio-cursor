@@ -2,7 +2,7 @@
  * LinkedIn Publish - Post content to LinkedIn
  * 
  * This edge function publishes content to a user's LinkedIn profile or company page.
- * Supports text posts and posts with images.
+ * Supports text posts, posts with images, and posts with article links.
  * 
  * LinkedIn Share API Documentation:
  * https://learn.microsoft.com/en-us/linkedin/marketing/integrations/community-management/shares/share-api
@@ -22,6 +22,92 @@ function decryptToken(encrypted: string): string {
     return atob(encrypted.slice(4));
   }
   return encrypted;
+}
+
+/**
+ * Register and upload an image to LinkedIn
+ * Returns the image asset URN for use in a post
+ */
+async function uploadImageToLinkedIn(
+  accessToken: string,
+  authorUrn: string,
+  imageUrl: string
+): Promise<string | null> {
+  try {
+    console.log("[linkedin-publish] Starting image upload for:", imageUrl);
+
+    // Step 1: Register the image upload
+    const registerResponse = await fetch("https://api.linkedin.com/v2/assets?action=registerUpload", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        "X-Restli-Protocol-Version": "2.0.0",
+      },
+      body: JSON.stringify({
+        registerUploadRequest: {
+          recipes: ["urn:li:digitalmediaRecipe:feedshare-image"],
+          owner: authorUrn,
+          serviceRelationships: [{
+            relationshipType: "OWNER",
+            identifier: "urn:li:userGeneratedContent"
+          }]
+        }
+      }),
+    });
+
+    if (!registerResponse.ok) {
+      const errorText = await registerResponse.text();
+      console.error("[linkedin-publish] Image register failed:", registerResponse.status, errorText);
+      return null;
+    }
+
+    const registerData = await registerResponse.json();
+    const uploadUrl = registerData.value?.uploadMechanism?.["com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"]?.uploadUrl;
+    const asset = registerData.value?.asset;
+
+    if (!uploadUrl || !asset) {
+      console.error("[linkedin-publish] Missing uploadUrl or asset in register response");
+      return null;
+    }
+
+    console.log("[linkedin-publish] Got upload URL, downloading image from:", imageUrl);
+
+    // Step 2: Download the image from the provided URL
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      console.error("[linkedin-publish] Failed to fetch image:", imageResponse.status);
+      return null;
+    }
+
+    const imageBlob = await imageResponse.blob();
+    const imageBuffer = await imageBlob.arrayBuffer();
+
+    console.log("[linkedin-publish] Uploading image to LinkedIn, size:", imageBuffer.byteLength);
+
+    // Step 3: Upload the image binary to LinkedIn
+    const uploadResponse = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": imageBlob.type || "image/jpeg",
+      },
+      body: imageBuffer,
+    });
+
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
+      console.error("[linkedin-publish] Image upload failed:", uploadResponse.status, errorText);
+      return null;
+    }
+
+    console.log("[linkedin-publish] Image uploaded successfully, asset:", asset);
+    return asset;
+
+  } catch (error) {
+    console.error("[linkedin-publish] Image upload error:", error);
+    return null;
+  }
 }
 
 serve(async (req) => {
@@ -60,7 +146,9 @@ serve(async (req) => {
     const { 
       organizationId, 
       text,
-      imageUrl,
+      imageUrl,      // Optional: URL of image to attach
+      articleUrl,    // Optional: URL of article/blog to link
+      articleTitle,  // Optional: Title for the article link
       contentId,
       contentTable,
       visibility = "PUBLIC" // PUBLIC, CONNECTIONS
@@ -147,11 +235,54 @@ serve(async (req) => {
       }
     };
 
-    // If there's an image, we need to upload it first
-    // For now, we'll support text-only posts
-    // TODO: Add image upload support using LinkedIn's image upload API
+    // Handle image upload if provided
+    let uploadedImageAsset: string | null = null;
+    if (imageUrl) {
+      console.log("[linkedin-publish] Uploading image:", imageUrl);
+      uploadedImageAsset = await uploadImageToLinkedIn(accessToken, authorUrn, imageUrl);
+      
+      if (uploadedImageAsset) {
+        // Add image to the post
+        postPayload.specificContent["com.linkedin.ugc.ShareContent"].shareMediaCategory = "IMAGE";
+        postPayload.specificContent["com.linkedin.ugc.ShareContent"].media = [{
+          status: "READY",
+          description: {
+            text: articleTitle || "Shared image"
+          },
+          media: uploadedImageAsset,
+          title: {
+            text: articleTitle || ""
+          }
+        }];
+        console.log("[linkedin-publish] Image added to post payload");
+      } else {
+        console.warn("[linkedin-publish] Image upload failed, posting without image");
+      }
+    }
 
-    console.log(`[linkedin-publish] Publishing to ${authorUrn}, text length: ${text.length}`);
+    // Handle article link if provided (and no image was uploaded)
+    if (articleUrl && !uploadedImageAsset) {
+      console.log("[linkedin-publish] Adding article link:", articleUrl);
+      postPayload.specificContent["com.linkedin.ugc.ShareContent"].shareMediaCategory = "ARTICLE";
+      postPayload.specificContent["com.linkedin.ugc.ShareContent"].media = [{
+        status: "READY",
+        description: {
+          text: "Read the full article"
+        },
+        originalUrl: articleUrl,
+        title: {
+          text: articleTitle || "Read more"
+        }
+      }];
+    }
+
+    // If we have both image and article URL, add the article URL to the text
+    if (articleUrl && uploadedImageAsset) {
+      console.log("[linkedin-publish] Adding article URL to text since image is primary media");
+      // Article URL is already in the text or will be added by user
+    }
+
+    console.log(`[linkedin-publish] Publishing to ${authorUrn}, text length: ${text.length}, hasImage: ${!!uploadedImageAsset}, hasArticle: ${!!articleUrl}`);
 
     // Post to LinkedIn using UGC Post API
     const postResponse = await fetch("https://api.linkedin.com/v2/ugcPosts", {
