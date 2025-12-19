@@ -51,7 +51,7 @@ export function PublishToLinkedIn({
   onSuccess,
 }: PublishToLinkedInProps) {
   const { toast } = useToast();
-  const { currentOrganizationId } = useOrganization();
+  const { organizationId } = useOrganization();
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editedContent, setEditedContent] = useState(content);
@@ -66,14 +66,14 @@ export function PublishToLinkedIn({
     setPublishResult(null);
     setDialogOpen(true);
     
-    if (!currentOrganizationId) return;
+    if (!organizationId) return;
     
     setLoadingConnection(true);
     try {
       const { data, error } = await supabase
         .from("linkedin_connections")
         .select("*")
-        .eq("organization_id", currentOrganizationId)
+        .eq("organization_id", organizationId)
         .eq("is_active", true)
         .maybeSingle();
 
@@ -90,13 +90,13 @@ export function PublishToLinkedIn({
   };
 
   const handlePublish = async () => {
-    if (!currentOrganizationId || !editedContent.trim()) return;
+    if (!organizationId || !editedContent.trim()) return;
 
     setPublishing(true);
     try {
       const { data, error } = await supabase.functions.invoke("linkedin-publish", {
         body: {
-          organizationId: currentOrganizationId,
+          organizationId: organizationId,
           text: editedContent,
           contentId,
           contentTable,
