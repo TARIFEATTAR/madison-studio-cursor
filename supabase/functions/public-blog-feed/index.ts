@@ -77,6 +77,7 @@ serve(async (req) => {
           published_at,
           created_at,
           updated_at,
+          featured_image_url,
           organization_id,
           organizations!inner(slug, name)
         `)
@@ -110,6 +111,7 @@ serve(async (req) => {
         published_at,
         created_at,
         updated_at,
+        featured_image_url,
         organization_id,
         organizations!inner(slug, name)
       `, { count: 'exact' })
@@ -194,9 +196,8 @@ function formatPost(post: any): BlogPost {
     published_at: post.published_at || post.created_at,
     created_at: post.created_at,
     updated_at: post.updated_at,
-    // These can be added later when available in the schema
     author: undefined,
-    featured_image: undefined,
+    featured_image: post.featured_image_url || undefined,
     tags: [],
     meta_description: excerpt,
   };

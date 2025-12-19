@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Edit2, Send, Copy, Check, FileDown, Calendar, MessageSquare, Download, Trash2, X, Mail, Linkedin, Globe, GlobeIcon } from "lucide-react";
+import { Edit2, Send, Copy, Check, FileDown, Calendar, MessageSquare, Download, Trash2, X, Mail, Linkedin, Globe, Image as ImageIcon } from "lucide-react";
 import { PublishToLinkedIn } from "./PublishToLinkedIn";
 import {
   Dialog,
@@ -74,6 +74,9 @@ export function ContentDetailModal({
   }>({ derivatives: 0, scheduled: 0 });
   const [isPublished, setIsPublished] = useState(content?.status === 'published');
   const [isPublishing, setIsPublishing] = useState(false);
+  const [featuredImageUrl, setFeaturedImageUrl] = useState(content?.featured_image_url || '');
+  const [isEditingImage, setIsEditingImage] = useState(false);
+  const [isSavingImage, setIsSavingImage] = useState(false);
   const [orgData, setOrgData] = useState<{
     name?: string;
     brandColor?: string;
@@ -469,10 +472,41 @@ export function ContentDetailModal({
     }
   };
 
-  // Update isPublished when content changes
+  // Update isPublished and featuredImageUrl when content changes
   useEffect(() => {
     setIsPublished(content?.status === 'published');
-  }, [content?.status]);
+    setFeaturedImageUrl(content?.featured_image_url || '');
+  }, [content?.status, content?.featured_image_url]);
+
+  // Handle saving featured image
+  const handleSaveFeaturedImage = async () => {
+    if (category !== 'master') return;
+    
+    setIsSavingImage(true);
+    try {
+      const { error } = await supabase
+        .from('master_content')
+        .update({ featured_image_url: featuredImageUrl || null } as any)
+        .eq('id', content.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Featured image updated",
+        description: featuredImageUrl ? "Image saved successfully." : "Image removed.",
+      });
+      setIsEditingImage(false);
+      onUpdate?.();
+    } catch (error: any) {
+      toast({
+        title: "Error saving image",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingImage(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -544,6 +578,77 @@ export function ContentDetailModal({
         </DialogHeader>
 
         <div className="space-y-4 mt-6">
+          {/* Featured Image Section - Only for master content */}
+          {category === 'master' && (
+            <div className="border border-border/40 rounded-lg p-4 bg-muted/20">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <ImageIcon className="w-4 h-4" />
+                  Featured Image
+                </div>
+                {!isEditingImage && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setIsEditingImage(true)}
+                  >
+                    <Edit2 className="w-3 h-3 mr-1" />
+                    {featuredImageUrl ? 'Change' : 'Add'}
+                  </Button>
+                )}
+              </div>
+              
+              {isEditingImage ? (
+                <div className="space-y-3">
+                  <input
+                    type="url"
+                    value={featuredImageUrl}
+                    onChange={(e) => setFeaturedImageUrl(e.target.value)}
+                    placeholder="Paste image URL (e.g., https://...)"
+                    className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Tip: Upload your image to the Image Library first, then copy its URL here.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={handleSaveFeaturedImage} 
+                      size="sm"
+                      disabled={isSavingImage}
+                    >
+                      {isSavingImage ? 'Saving...' : 'Save'}
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        setIsEditingImage(false);
+                        setFeaturedImageUrl(content?.featured_image_url || '');
+                      }} 
+                      variant="ghost" 
+                      size="sm"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : featuredImageUrl ? (
+                <div className="relative">
+                  <img 
+                    src={featuredImageUrl} 
+                    alt="Featured" 
+                    className="w-full h-40 object-cover rounded-md"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23ddd" width="100" height="100"/><text fill="%23999" x="50%" y="50%" text-anchor="middle" dy=".3em" font-size="12">Image Error</text></svg>';
+                    }}
+                  />
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">
+                  No featured image set. Add one for your blog posts.
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Content Display/Edit */}
           {isVisualAsset && !isEditing ? (
             <div className="space-y-4">
