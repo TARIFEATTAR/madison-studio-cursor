@@ -7,10 +7,12 @@
  * - Video Script: Hero, Reel, Story video prompts
  * - Product Backgrounds: Scene prompts for product photography
  * 
+ * Uses the generate-with-claude edge function for AI generation.
+ * 
  * @module contentToVisualPrompts
  */
 
-import Anthropic from '@anthropic-ai/sdk';
+import { supabase } from '@/integrations/supabase/client';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -68,26 +70,36 @@ export interface ProductBackgroundOutput {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// HELPER: Call generate-with-claude edge function
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function callClaudeAPI(prompt: string): Promise<string> {
+  const { data, error } = await supabase.functions.invoke('generate-with-claude', {
+    body: {
+      prompt,
+      mode: 'generate',
+      styleOverlay: 'brand-voice',
+    },
+  });
+
+  if (error) {
+    console.error('[VisualPrompts] Edge function error:', error);
+    throw new Error(error.message || 'Failed to generate content');
+  }
+
+  if (!data?.generatedContent) {
+    throw new Error('No content received from AI');
+  }
+
+  return data.generatedContent;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // CONTENT ANALYZER
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const ANALYSIS_SYSTEM_PROMPT = `You are Madison's Visual Intelligence module. Your job is to analyze written content and extract its visual DNA - the themes, mood, colors, textures, and atmosphere that would translate into compelling imagery.
-
-You have a deep understanding of:
-- Visual storytelling and composition
-- Color psychology and mood
-- Photography styles (Avedon's isolation, Leibovitz's environmental, Richardson's bold, Anderson's symmetry)
-- Cinematic language and movement
-- Product photography and styling
-
-Extract the essence that makes this content unique and translate it into visual language.`;
-
 export async function analyzeContent(content: string, title?: string): Promise<ContentAnalysis> {
-  const anthropic = new Anthropic({
-    apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY,
-  });
-
-  const userPrompt = `Analyze this content and extract its visual DNA:
+  const prompt = `You are Madison's Visual Intelligence module. Analyze this content and extract its visual DNA - the themes, mood, colors, textures, and atmosphere that would translate into compelling imagery.
 
 <CONTENT>
 ${title ? `Title: ${title}\n\n` : ''}${content}
@@ -107,14 +119,7 @@ Extract and return a JSON object with:
 
 Return ONLY the JSON object, no other text.`;
 
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 1024,
-    system: ANALYSIS_SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: userPrompt }],
-  });
-
-  const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+  const responseText = await callClaudeAPI(prompt);
   
   try {
     // Extract JSON from response (handle potential markdown wrapping)
@@ -143,36 +148,18 @@ Return ONLY the JSON object, no other text.`;
 // IMAGE PACK GENERATOR
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const IMAGE_PACK_SYSTEM_PROMPT = `You are Madison's Image Prompt specialist. You create prompts for AI image generation that capture the soul of written content.
-
-Your prompts follow this structure:
-- Subject: What is the main focus
-- Setting: Environment and context
-- Lighting: Quality, direction, mood
-- Style: Photography reference or aesthetic
-- Technical: Resolution, aspect ratio hints
-
-You know how to optimize prompts for different platforms:
-- Hero images: Editorial quality, can be complex and layered
-- Social: Bold, scroll-stopping, centered subject, high contrast
-- Email headers: Clean, minimal, horizontal, draws eye to content below
-
-Never include text or logos in prompts. Focus on visual storytelling.`;
-
 export async function generateImagePack(
   content: string,
   analysis: ContentAnalysis,
   brandColors?: string[]
 ): Promise<ImagePackOutput> {
-  const anthropic = new Anthropic({
-    apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY,
-  });
-
   const colorContext = brandColors?.length 
     ? `Brand colors to incorporate: ${brandColors.join(', ')}`
     : `Suggested palette: ${analysis.colorPalette.join(', ')}`;
 
-  const userPrompt = `Based on this content analysis, generate 3 image prompts:
+  const prompt = `You are Madison's Image Prompt specialist. Create prompts for AI image generation that capture the soul of written content.
+
+Based on this content analysis, generate 3 image prompts:
 
 <ANALYSIS>
 Themes: ${analysis.themes.join(', ')}
@@ -212,14 +199,7 @@ Return JSON:
 
 Return ONLY the JSON object.`;
 
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 2048,
-    system: IMAGE_PACK_SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: userPrompt }],
-  });
-
-  const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+  const responseText = await callClaudeAPI(prompt);
   
   try {
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
@@ -237,32 +217,13 @@ Return ONLY the JSON object.`;
 // VIDEO SCRIPT GENERATOR
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const VIDEO_SCRIPT_SYSTEM_PROMPT = `You are Madison's Video Prompt specialist. You create prompts for AI video generation that bring written content to life.
-
-Your video prompts follow best practices:
-- Subject: Clear description of what/who is in frame
-- Action: What is happening (movement, transformation)
-- Setting: Environment and context
-- Camera: Shot type, movement, angle
-- Mood/Lighting: Atmosphere and visual tone
-- Duration hint: Pacing guidance
-
-You optimize for different formats:
-- Hero (10-15s): Cinematic, can have multiple shots, editorial quality
-- Reel (5-8s): Single compelling action, vertical-friendly, attention-grabbing
-- Story (3-5s): Quick, punchy, one clear moment
-
-Focus on movement and transformation. AI video excels at: slow motion, time-lapse, gentle movements, atmospheric effects.`;
-
 export async function generateVideoScript(
   content: string,
   analysis: ContentAnalysis
 ): Promise<VideoScriptOutput> {
-  const anthropic = new Anthropic({
-    apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY,
-  });
+  const prompt = `You are Madison's Video Prompt specialist. Create prompts for AI video generation that bring written content to life.
 
-  const userPrompt = `Based on this content analysis, generate 3 video prompts:
+Based on this content analysis, generate 3 video prompts:
 
 <ANALYSIS>
 Themes: ${analysis.themes.join(', ')}
@@ -301,14 +262,7 @@ Return JSON:
 
 Return ONLY the JSON object.`;
 
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 2048,
-    system: VIDEO_SCRIPT_SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: userPrompt }],
-  });
-
-  const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+  const responseText = await callClaudeAPI(prompt);
   
   try {
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
@@ -326,37 +280,18 @@ Return ONLY the JSON object.`;
 // PRODUCT BACKGROUND GENERATOR
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const BACKGROUND_SYSTEM_PROMPT = `You are Madison's Product Background specialist. You create scene/background prompts for product photography that capture the mood of written content WITHOUT including the product itself.
-
-These backgrounds are designed for:
-- Composite product shots (product added digitally later)
-- AI background removal/replacement
-- Lifestyle context scenes
-
-Your prompts focus on:
-- Surface/Material: What the product would sit on
-- Environment: Surrounding context (studio, nature, interior)
-- Props/Elements: Complementary objects that enhance the story (NOT the product)
-- Lighting: Direction, quality, color temperature
-- Mood: Atmosphere that matches the content
-
-CRITICAL: Never include the actual product. These are BACKGROUNDS ONLY.
-Always end prompts with "--no product --no bottle --no package" or similar.`;
-
 export async function generateProductBackgrounds(
   content: string,
   analysis: ContentAnalysis,
   productType?: string
 ): Promise<ProductBackgroundOutput> {
-  const anthropic = new Anthropic({
-    apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY,
-  });
-
   const productContext = productType 
     ? `Product type (for context only, DO NOT include in background): ${productType}`
     : 'General luxury product';
 
-  const userPrompt = `Based on this content analysis, generate 3 product background prompts:
+  const prompt = `You are Madison's Product Background specialist. Create scene/background prompts for product photography that capture the mood of written content WITHOUT including the product itself.
+
+Based on this content analysis, generate 3 product background prompts:
 
 <ANALYSIS>
 Themes: ${analysis.themes.join(', ')}
@@ -402,14 +337,7 @@ IMPORTANT: All prompts must end with "--no product --no bottle --no package --no
 
 Return ONLY the JSON object.`;
 
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 2048,
-    system: BACKGROUND_SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: userPrompt }],
-  });
-
-  const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+  const responseText = await callClaudeAPI(prompt);
   
   try {
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
