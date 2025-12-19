@@ -67,6 +67,7 @@ export function LinkedInConnection({ organizationId }: LinkedInConnectionProps) 
   
   const [connection, setConnection] = useState<LinkedInConnectionData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
 
@@ -109,10 +110,15 @@ export function LinkedInConnection({ organizationId }: LinkedInConnectionProps) 
     }
   }, [organizationId]);
 
-  const fetchConnection = async () => {
+  const fetchConnection = async (isRefresh = false) => {
     if (!organizationId) return;
     
-    setLoading(true);
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+    
     try {
       const { data, error } = await supabase
         .from("linkedin_connections")
@@ -126,10 +132,27 @@ export function LinkedInConnection({ organizationId }: LinkedInConnectionProps) 
       }
       
       setConnection(data);
+      
+      if (isRefresh) {
+        toast({
+          title: "Refreshed",
+          description: data 
+            ? `Connection to ${data.linkedin_org_name || data.linkedin_user_name} is active` 
+            : "No active LinkedIn connection found",
+        });
+      }
     } catch (err) {
       console.error("Error:", err);
+      if (isRefresh) {
+        toast({
+          title: "Refresh failed",
+          description: "Could not refresh connection status",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -396,11 +419,11 @@ export function LinkedInConnection({ organizationId }: LinkedInConnectionProps) 
         <Button 
           variant="outline" 
           size="sm"
-          onClick={fetchConnection}
-          disabled={loading}
+          onClick={() => fetchConnection(true)}
+          disabled={refreshing}
         >
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Refresh
+          <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+          {refreshing ? "Refreshing..." : "Refresh"}
         </Button>
         
         {isTokenExpiring && (
@@ -416,6 +439,7 @@ export function LinkedInConnection({ organizationId }: LinkedInConnectionProps) 
     </div>
   );
 }
+
 
 
 

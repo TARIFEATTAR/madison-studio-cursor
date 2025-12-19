@@ -64,22 +64,22 @@ export async function assemblerAgent(
   ] = await Promise.all([
     // 1. Fetch full master documents (Silo A - no chunking!)
     fetchMasterDocuments(strategy.primaryCopyMaster, strategy.secondaryCopyMaster),
-
+    
     // 2. Fetch Schwartz stage template (Silo A)
     fetchSchwartzTemplate(strategy.schwartzStage),
-
+    
     // 3. Fetch product data (Silo B - exact lookup)
     fetchProductData(strategy.productId, orgId),
-
+    
     // 4. Fetch brand DNA (Silo B)
     fetchBrandDNA(orgId),
-
+    
     // 5. Fetch design tokens (Silo B)
     fetchDesignTokens(orgId),
-
+    
     // 6. Fetch relevant writing examples (Silo C - semantic search)
     fetchWritingExamples(orgId, userBrief),
-
+    
     // 7. Fetch relevant visual examples (Silo C - semantic search)
     fetchVisualExamples(orgId, userBrief),
 

@@ -46,7 +46,7 @@ export function BrandGuidelinesTab() {
 
               {/* Debug Panel */}
               <BrandKnowledgeDebugPanel organizationId={currentOrganizationId} />
-            </div>
+          </div>
           )}
         </div>
       )}

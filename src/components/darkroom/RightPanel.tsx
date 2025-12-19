@@ -1224,7 +1224,7 @@ export function RightPanel({
                   />
                   <Sparkles className="w-3 h-3 text-[var(--darkroom-accent)]" />
                   <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Background Style</span>
-                </div>
+          </div>
                 {selectedBackgroundPreset && (
                   <button
                     onClick={() => onBackgroundPresetChange?.(null)}

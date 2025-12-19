@@ -481,7 +481,7 @@ export interface ContextPackage {
   // From Silo A (full documents)
   masterDocuments: string[];
   schwartzTemplate: string;
-
+  
   // From Silo B (structured data)
   productData: ProductSpecs | null;
   brandDNA: BrandDNA;
@@ -501,7 +501,7 @@ export interface ContextPackage {
     examples?: any;
     structure?: any;
   };
-
+  
   // From Silo C (semantic search)
   writingExamples: BrandWritingExample[];
   visualExamples: BrandVisualExample[];

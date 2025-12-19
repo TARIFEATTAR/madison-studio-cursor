@@ -622,13 +622,15 @@ export function ContentDetailModal({
                 </Button>
               )}
 
-              {/* Publish to LinkedIn - available for social posts and general content */}
-              {contentType && (
-                contentType.toLowerCase().includes('social') || 
-                contentType.toLowerCase().includes('linkedin') || 
-                contentType.toLowerCase().includes('post') ||
+              {/* Publish to LinkedIn - available for master/derivative content and social posts */}
+              {(
                 category === 'master' ||
-                category === 'derivative'
+                category === 'derivative' ||
+                (contentType && (
+                  contentType.toLowerCase().includes('social') || 
+                  contentType.toLowerCase().includes('linkedin') || 
+                  contentType.toLowerCase().includes('post')
+                ))
               ) && (
                 <PublishToLinkedIn
                   content={getContentText()}

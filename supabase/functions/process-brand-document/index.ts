@@ -368,16 +368,16 @@ serve(async (req) => {
       
       // CRITICAL: Save brandIdentity (mission, values, target audience, positioning)
       if (extractionData.brandIdentity) {
-        knowledgeInserts.push({
-          organization_id: document.organization_id,
-          document_id: documentId,
+          knowledgeInserts.push({
+            organization_id: document.organization_id,
+            document_id: documentId,
           knowledge_type: 'brandIdentity',
           content: extractionData.brandIdentity,
-          is_active: true,
-          version: 1
-        });
-      }
-      
+            is_active: true,
+            version: 1
+          });
+        }
+        
       // REMOVED: Old fragrance-specific categories (no longer extracted)
       // These were causing Madison to misinterpret brands as fragrance companies
       

@@ -126,7 +126,7 @@ ${context.schwartzTemplate}
   // Get industry-specific context if available
   const industryId = context.industryConfig?.id;
   const industryConfig = industryId ? getIndustryById(industryId) : null;
-  
+
   const brandSection = context.brandDNA ? `<BRAND_DNA>
 Mission: ${context.brandDNA.essence?.mission || 'Create beautiful things'}
 Tone: ${context.brandDNA.essence?.tone || 'sophisticated'}

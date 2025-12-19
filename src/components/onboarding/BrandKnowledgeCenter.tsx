@@ -39,7 +39,7 @@ export function BrandKnowledgeCenter({ organizationId }: BrandKnowledgeCenterPro
   // Uploaded documents state
   const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocument[]>([]);
   const [loadingDocuments, setLoadingDocuments] = useState(false);
-  
+
   // Brand knowledge state (extracted insights)
   const [brandKnowledge, setBrandKnowledge] = useState<Array<{
     id: string;

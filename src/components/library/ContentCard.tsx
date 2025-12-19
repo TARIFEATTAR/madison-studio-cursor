@@ -2,13 +2,12 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
-import { Star, Archive, ArchiveRestore, Send, Mail } from "lucide-react";
+import { Star, Archive, ArchiveRestore, Mail } from "lucide-react";
 import { collections } from "@/data/mockLibraryContent";
 import { getDeliverableByValue } from "@/config/deliverableFormats";
 import { cn } from "@/lib/utils";
 import { PublishingStatus } from "./PublishingStatus";
-import { PublishingDrawer } from "./PublishingDrawer";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { getContentSubtypeLabel, getContentCategoryLabel } from "@/utils/contentSubtypeLabels";
 import { deserializeEmailState } from "@/utils/emailStateSerializer";
 
@@ -55,7 +54,6 @@ export function ContentCard({
   onArchive,
   onPublishSuccess
 }: ContentCardProps) {
-  const [publishDrawerOpen, setPublishDrawerOpen] = useState(false);
   const deliverableFormat = getDeliverableByValue(content.contentType);
   const collectionInfo = collections.find(c => c.id === content.collection);
   
@@ -222,8 +220,6 @@ export function ContentCard({
   return (
     <Card
       onClick={(e) => {
-        // Prevent opening detail modal while publish drawer is open
-        if (publishDrawerOpen) return;
         // Don't trigger card click if clicking checkbox
         if (!(e.target as HTMLElement).closest('input[type="checkbox"]')) {
           onClick();
@@ -241,18 +237,6 @@ export function ContentCard({
       <div className="absolute top-3 right-3 z-10 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onClick={(e) => e.stopPropagation()}>
         {/* Action Buttons */}
         <div className="flex items-center bg-card/90 backdrop-blur-sm rounded-lg border border-border/30 p-1 gap-0.5">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            setPublishDrawerOpen(true);
-          }}
-            className="h-7 w-7 p-0 hover:bg-brand-brass/10 rounded-md"
-          title={content.status === "published" ? "Update Publishing" : "Mark as Published"}
-        >
-            <Send className="w-3.5 h-3.5 text-muted-foreground hover:text-brand-brass transition-colors" />
-        </Button>
         {onArchive && (
           <Button
             variant="ghost"
@@ -449,20 +433,6 @@ export function ContentCard({
         </div>
       </div>
 
-      {/* Publishing Drawer */}
-      {content.sourceTable && (
-        <PublishingDrawer
-          open={publishDrawerOpen}
-          onOpenChange={setPublishDrawerOpen}
-          contentId={content.id}
-          contentTitle={content.title}
-          sourceTable={content.sourceTable}
-          onSuccess={() => {
-            onPublishSuccess?.();
-            window.location.reload();
-          }}
-        />
-      )}
     </Card>
   );
 }

@@ -94,7 +94,7 @@ export const IndustrySelector = () => {
       if (updateError) throw updateError;
 
       setIsExpanded(false);
-      
+
       toast({
         title: "Industry updated",
         description: "Your organization's industry has been updated successfully.",
@@ -209,10 +209,10 @@ export const IndustrySelector = () => {
             {industries.map((industry) => {
               const IconComponent = industry.icon;
               return (
-                <button
+              <button
                   key={industry.id}
                   onClick={() => handleIndustrySelect(industry.id)}
-                  className={`relative p-4 rounded-lg border-2 text-left transition-all hover:border-brass ${
+                className={`relative p-4 rounded-lg border-2 text-left transition-all hover:border-brass ${
                     selectedIndustry === industry.id
                       ? "border-brass bg-brass/5"
                       : "border-stone/30 bg-white hover:bg-parchment/50"
@@ -227,18 +227,18 @@ export const IndustrySelector = () => {
                       }`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-charcoal">{industry.name}</span>
                         {selectedIndustry === industry.id && (
                           <Check className="w-4 h-4 text-brass flex-shrink-0" />
-                        )}
+                  )}
                       </div>
                       <p className="text-xs text-charcoal/60 mt-0.5 line-clamp-2">
                         {industry.description}
                       </p>
                     </div>
-                  </div>
-                </button>
+                </div>
+              </button>
               );
             })}
           </div>
