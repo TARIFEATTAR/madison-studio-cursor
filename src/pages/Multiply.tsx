@@ -20,7 +20,7 @@ import {
   Sparkles, Archive, Mail, MessageSquare, Tag,
   FileText, CheckCircle2, XCircle, ChevronDown, ChevronRight, Copy, 
   Calendar, Edit, Loader2, AlertCircle, Video, Bookmark,
-  Briefcase, Share2, ArrowLeft
+  Briefcase, Share2, ArrowLeft, Image as ImageIcon, Film, Layers
 } from "lucide-react";
 import { EditorialDirectorSplitScreen } from "@/components/multiply/EditorialDirectorSplitScreen";
 import { SavePromptDialog } from "@/components/prompt-library/SavePromptDialog";
@@ -34,6 +34,20 @@ import fannedPagesImage from "@/assets/fanned-pages-new.jpg";
 import ticketIcon from "@/assets/ticket-icon.png";
 import envelopeIcon from "@/assets/envelope-icon.png";
 import instagramIcon from "@/assets/instagram-icon-clean.png";
+
+// Visual prompt imports
+import { ImagePackResults } from "@/components/multiply/ImagePackResults";
+import { VideoScriptResults } from "@/components/multiply/VideoScriptResults";
+import { ProductBackgroundResults } from "@/components/multiply/ProductBackgroundResults";
+import {
+  generateImagePackFromContent,
+  generateVideoScriptFromContent,
+  generateProductBackgroundsFromContent,
+  type ImagePackOutput,
+  type VideoScriptOutput,
+  type ProductBackgroundOutput,
+  type ContentAnalysis,
+} from "@/lib/agents/contentToVisualPrompts";
 
 interface DerivativeType {
   id: string;
@@ -128,6 +142,31 @@ const TOP_DERIVATIVE_TYPES: DerivativeType[] = [
     icon: Share2,
     iconColor: "#1877F2",
     charLimit: 2000,
+  },
+];
+
+// Visual prompt derivative types
+const VISUAL_DERIVATIVE_TYPES: DerivativeType[] = [
+  {
+    id: "image_pack",
+    name: "Image Pack",
+    description: "Hero + Social + Email image prompts",
+    icon: ImageIcon,
+    iconColor: "#B8956A",
+  },
+  {
+    id: "video_script",
+    name: "Video Script",
+    description: "AI video prompts for multiple formats",
+    icon: Film,
+    iconColor: "#9333EA",
+  },
+  {
+    id: "product_backgrounds",
+    name: "Product Backgrounds",
+    description: "Scene prompts for product photography",
+    icon: Layers,
+    iconColor: "#059669",
   },
 ];
 
@@ -263,6 +302,13 @@ export default function Multiply() {
   // Modal state for derivative viewing/editing
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDerivativeForModal, setSelectedDerivativeForModal] = useState<DerivativeContent | null>(null);
+
+  // Visual prompt state
+  const [selectedVisualTypes, setSelectedVisualTypes] = useState<Set<string>>(new Set());
+  const [isGeneratingVisual, setIsGeneratingVisual] = useState(false);
+  const [imagePackResult, setImagePackResult] = useState<{ analysis: ContentAnalysis; images: ImagePackOutput } | null>(null);
+  const [videoScriptResult, setVideoScriptResult] = useState<{ analysis: ContentAnalysis; videos: VideoScriptOutput } | null>(null);
+  const [productBgResult, setProductBgResult] = useState<{ analysis: ContentAnalysis; backgrounds: ProductBackgroundOutput } | null>(null);
 
   // Track if we selected master via navigation
   const selectedViaNavigationRef = useRef(false);
@@ -576,6 +622,91 @@ export default function Multiply() {
       newSet.add(typeId);
     }
     setExpandedTypes(newSet);
+  };
+
+  // Visual prompt generation handler
+  const generateVisualPrompts = async () => {
+    if (selectedVisualTypes.size === 0) {
+      toast({
+        title: "No visual types selected",
+        description: "Please select at least one visual prompt type",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const sourceContent = selectedMaster || userContent;
+    if (!sourceContent?.content) {
+      toast({
+        title: "No content available",
+        description: "Please select master content or enter your own",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsGeneratingVisual(true);
+    
+    // Clear previous results
+    setImagePackResult(null);
+    setVideoScriptResult(null);
+    setProductBgResult(null);
+
+    try {
+      const content = sourceContent.content;
+      const title = sourceContent.title;
+
+      // Generate each selected type in parallel
+      const promises: Promise<void>[] = [];
+
+      if (selectedVisualTypes.has('image_pack')) {
+        promises.push(
+          generateImagePackFromContent(content, title)
+            .then(result => setImagePackResult(result))
+        );
+      }
+
+      if (selectedVisualTypes.has('video_script')) {
+        promises.push(
+          generateVideoScriptFromContent(content, title)
+            .then(result => setVideoScriptResult(result))
+        );
+      }
+
+      if (selectedVisualTypes.has('product_backgrounds')) {
+        promises.push(
+          generateProductBackgroundsFromContent(content, title)
+            .then(result => setProductBgResult(result))
+        );
+      }
+
+      await Promise.all(promises);
+
+      toast({
+        title: "Visual prompts generated!",
+        description: `Generated ${selectedVisualTypes.size} visual prompt pack${selectedVisualTypes.size > 1 ? 's' : ''}`,
+      });
+
+    } catch (error: any) {
+      console.error('[Multiply] Visual prompt generation error:', error);
+      toast({
+        title: "Generation failed",
+        description: error.message || "Failed to generate visual prompts",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingVisual(false);
+    }
+  };
+
+  const toggleVisualType = (typeId: string) => {
+    const newSet = new Set(selectedVisualTypes);
+    if (newSet.has(typeId)) {
+      newSet.delete(typeId);
+    } else {
+      newSet.add(typeId);
+    }
+    setSelectedVisualTypes(newSet);
   };
 
   const handleOpenModal = (derivative: DerivativeContent) => {
@@ -1261,6 +1392,78 @@ export default function Multiply() {
                         onToggleMoreOptions={setShowMoreOptions}
                       />
                     )}
+
+                    {/* Visual Prompts Section */}
+                    <div className="mt-8 pt-8 border-t border-border/40">
+                      <h3 className="font-serif text-xl mb-4">Visual Prompts</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Generate image, video, and background prompts from your content
+                      </p>
+                      
+                      <div className="grid grid-cols-3 gap-3 mb-4">
+                        {VISUAL_DERIVATIVE_TYPES.map((type) => (
+                          <Card
+                            key={type.id}
+                            onClick={() => toggleVisualType(type.id)}
+                            className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedVisualTypes.has(type.id) ? "ring-2 ring-primary bg-primary/5" : ""}`}
+                          >
+                            <div className="space-y-2">
+                              <div className="flex items-start justify-between">
+                                <Checkbox checked={selectedVisualTypes.has(type.id)} className="mt-1" />
+                                {type.icon && (
+                                  <type.icon className="w-8 h-8" style={{ color: type.iconColor }} />
+                                )}
+                              </div>
+                              <div>
+                                <h4 className="font-medium">{type.name}</h4>
+                                <p className="text-xs text-muted-foreground">{type.description}</p>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+
+                      <Button
+                        onClick={generateVisualPrompts}
+                        disabled={isGeneratingVisual || selectedVisualTypes.size === 0 || (!selectedMaster && !userContent)}
+                        size="lg"
+                        className="w-full gap-2"
+                      >
+                        {isGeneratingVisual ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                        {isGeneratingVisual ? "Generating..." : `Generate ${selectedVisualTypes.size} Visual Pack${selectedVisualTypes.size !== 1 ? "s" : ""}`}
+                      </Button>
+
+                      {/* Visual Prompt Results */}
+                      {imagePackResult && (
+                        <div className="mt-6">
+                          <h4 className="font-medium mb-3">Image Pack</h4>
+                          <ImagePackResults
+                            images={imagePackResult.images}
+                            analysis={imagePackResult.analysis}
+                          />
+                        </div>
+                      )}
+
+                      {videoScriptResult && (
+                        <div className="mt-6">
+                          <h4 className="font-medium mb-3">Video Scripts</h4>
+                          <VideoScriptResults
+                            videos={videoScriptResult.videos}
+                            analysis={videoScriptResult.analysis}
+                          />
+                        </div>
+                      )}
+
+                      {productBgResult && (
+                        <div className="mt-6">
+                          <h4 className="font-medium mb-3">Product Backgrounds</h4>
+                          <ProductBackgroundResults
+                            backgrounds={productBgResult.backgrounds}
+                            analysis={productBgResult.analysis}
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </ScrollArea>
