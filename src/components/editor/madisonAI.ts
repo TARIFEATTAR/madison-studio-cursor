@@ -6,13 +6,14 @@
  * 
  * Architecture:
  * - Single command handler for all AI actions
- * - Placeholder resolver (no actual AI calls yet)
+ * - Connected to generate-with-claude edge function
  * - Clean content replacement with undo support
  * 
  * @module madisonAI
  */
 
 import type { Editor } from '@tiptap/react';
+import { supabase } from '@/integrations/supabase/client';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -162,25 +163,81 @@ export const SLASH_COMMANDS = [
 ] as const;
 
 // ═══════════════════════════════════════════════════════════════════════════
-// PLACEHOLDER AI RESOLVER
+// AI RESOLVER - Connected to Claude API
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Placeholder AI resolver - returns marked-up content for testing
+ * Build the appropriate prompt for each inline action type
+ */
+function buildActionPrompt(action: MadisonInlineAction, content: string): string {
+  const prompts: Record<MadisonInlineAction, string> = {
+    refine: `Polish and improve the following text. Make it more eloquent, precise, and impactful while preserving the original meaning and intent. Fix any grammatical issues and enhance clarity:
+
+"${content}"
+
+Return ONLY the refined text with no explanations or preamble.`,
+
+    continue: content.trim() 
+      ? `Continue writing from where this text leaves off. Maintain the same voice, tone, and style. Write 2-3 additional paragraphs that flow naturally:
+
+"${content}"
+
+Return ONLY the continuation with no explanations.`
+      : `Write an engaging opening paragraph for a piece of content. The writing should be sophisticated and compelling.
+
+Return ONLY the opening text with no explanations.`,
+
+    rewrite: `Completely rewrite the following text with fresh language and structure while preserving the core message. Make it more engaging and effective:
+
+"${content}"
+
+Return ONLY the rewritten text with no explanations.`,
+
+    email: `Transform the following content into a professional email format. Include a compelling subject line and body that's suitable for marketing or customer communication:
+
+"${content}"
+
+Return ONLY the email content (Subject line followed by body) with no explanations.`,
+
+    product: `Transform the following content into an engaging product description. Make it compelling for e-commerce, highlighting benefits and creating desire:
+
+"${content}"
+
+Return ONLY the product description with no explanations.`,
+
+    instagram: `Transform the following content into an Instagram caption. Make it engaging, with appropriate line breaks for readability. Include a call-to-action but NO hashtags:
+
+"${content}"
+
+Return ONLY the caption with no explanations.`,
+
+    shorten: `Make the following text more concise without losing key information. Aim to reduce length by 30-50% while maintaining impact:
+
+"${content}"
+
+Return ONLY the shortened text with no explanations.`,
+
+    expand: `Expand on the following text by adding more detail, context, and depth. Approximately double the length while maintaining quality:
+
+"${content}"
+
+Return ONLY the expanded text with no explanations.`,
+
+    tone: `Adjust the tone of the following text to be more sophisticated and brand-appropriate. Elevate the language while keeping it accessible:
+
+"${content}"
+
+Return ONLY the adjusted text with no explanations.`,
+  };
+
+  return prompts[action] || `Process the following text:\n\n"${content}"`;
+}
+
+/**
+ * Madison AI resolver - calls the generate-with-claude edge function
  * 
- * This function simulates AI responses without making actual API calls.
- * It wraps content with action markers so we can validate:
- * - UX flows
- * - Content replacement
- * - Undo/redo behavior
- * 
- * TODO: Replace with Madison AI logic
- * - Connect to generate-with-claude edge function
- * - Add brand rules injection
- * - Add Brand Health scoring
- * - Add multi-step reasoning
- * - Add format-aware transforms
- * - Add cost-aware model routing
+ * This function connects inline editor actions to the real Claude API,
+ * applying brand context and Madison's editorial expertise.
  * 
  * @param action - The AI action to perform
  * @param content - The text content to process
@@ -195,33 +252,50 @@ export async function resolveMadisonAction({
   content: string;
   context?: Partial<MadisonActionContext>;
 }): Promise<string> {
-  // Simulate a brief delay (feels more natural)
-  await new Promise(resolve => setTimeout(resolve, 300));
+  console.log('[Madison AI] Resolving action:', { action, contentLength: content.length, context });
 
-  // For 'continue' action with no content, provide placeholder continuation
-  if (action === 'continue' && !content.trim()) {
-    return 'This is a sample continuation of your writing. Madison will generate thoughtful, well-structured content that flows naturally from where you left off.\n\nThe AI will maintain your voice and style while adding depth and clarity to your message. Each paragraph will be properly formatted and separated for easy reading.';
+  try {
+    // Build the prompt for this action
+    const prompt = buildActionPrompt(action, content);
+
+    // Call the generate-with-claude edge function
+    const { data, error } = await supabase.functions.invoke('generate-with-claude', {
+      body: {
+        prompt,
+        organizationId: context?.organizationId,
+        mode: 'generate',
+        styleOverlay: 'brand-voice',
+        contentType: action === 'email' ? 'email' : action === 'instagram' ? 'instagram_caption' : 'blog_post',
+      },
+    });
+
+    if (error) {
+      console.error('[Madison AI] Edge function error:', error);
+      throw new Error(error.message || 'Failed to generate content');
+    }
+
+    if (!data?.generatedContent) {
+      console.error('[Madison AI] No content in response:', data);
+      throw new Error('No content received from AI');
+    }
+
+    console.log('[Madison AI] Successfully generated content:', {
+      action,
+      resultLength: data.generatedContent.length,
+    });
+
+    return data.generatedContent;
+  } catch (error) {
+    console.error('[Madison AI] Error resolving action:', error);
+    
+    // Fallback to a helpful error message that still makes sense in context
+    if (action === 'continue') {
+      return '\n\n[Madison is thinking... Please try again in a moment.]';
+    }
+    
+    // Re-throw to let the caller handle it
+    throw error;
   }
-
-  // Return marked content for testing - this shows the action worked
-  // In production, this will be actual AI-generated content
-  const actionLabels: Record<MadisonInlineAction, string> = {
-    refine: '✨ REFINED',
-    continue: '→ CONTINUED',
-    rewrite: '🔄 REWRITTEN',
-    email: '📧 EMAIL',
-    product: '📦 PRODUCT',
-    instagram: '📸 INSTAGRAM',
-    shorten: '📐 SHORTENED',
-    expand: '📝 EXPANDED',
-    tone: '🎭 TONE ADJUSTED',
-  };
-
-  const label = actionLabels[action] || action.toUpperCase();
-  
-  // Format the placeholder response with multiple paragraphs for testing
-  // This demonstrates proper paragraph formatting
-  return `[${label}]\n\n${content}\n\nThis is an example of how Madison formats longer content. Each paragraph is properly separated, making the text easy to read and edit.\n\nThe formatting system automatically detects paragraph breaks and structures the content accordingly.`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

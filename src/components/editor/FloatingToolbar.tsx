@@ -4,6 +4,7 @@
  * Appears when text is selected, providing:
  * - Text formatting options
  * - Madison AI actions
+ * - Hyperlink support
  * 
  * Design principles:
  * - Calm and editorial
@@ -12,6 +13,7 @@
  * - Hides immediately on blur
  */
 
+import { useState, useCallback } from 'react';
 import { Editor } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import { 
@@ -24,9 +26,14 @@ import {
   Quote, 
   Sparkles,
   RefreshCw,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Link2,
+  Unlink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import type { MadisonInlineAction } from './madisonAI';
 
 interface FloatingToolbarProps {
@@ -49,9 +56,13 @@ export function FloatingToolbar({
   onAIAction,
   disabled = false 
 }: FloatingToolbarProps) {
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
+
   if (!editor) return null;
 
   const isEditable = editor.isEditable;
+  const isLinkActive = editor.isActive('link');
 
   // Handler for AI actions
   const handleAIAction = (action: MadisonInlineAction) => {
@@ -62,6 +73,46 @@ export function FloatingToolbar({
     console.log('[FloatingToolbar] Triggering AI action:', action);
     onAIAction?.(action);
   };
+
+  // Handler to set a link on selected text
+  const handleSetLink = useCallback(() => {
+    if (!linkUrl.trim()) {
+      // If empty, remove the link
+      editor.chain().focus().unsetLink().run();
+      setLinkPopoverOpen(false);
+      return;
+    }
+
+    // Ensure URL has a protocol
+    let url = linkUrl.trim();
+    if (!/^https?:\/\//i.test(url)) {
+      url = 'https://' + url;
+    }
+
+    editor
+      .chain()
+      .focus()
+      .extendMarkRange('link')
+      .setLink({ href: url })
+      .run();
+
+    setLinkUrl('');
+    setLinkPopoverOpen(false);
+  }, [editor, linkUrl]);
+
+  // Handler to remove a link
+  const handleUnsetLink = useCallback(() => {
+    editor.chain().focus().unsetLink().run();
+  }, [editor]);
+
+  // When opening the popover, pre-fill with existing link URL if any
+  const handleLinkPopoverOpen = useCallback((open: boolean) => {
+    if (open) {
+      const existingUrl = editor.getAttributes('link').href || '';
+      setLinkUrl(existingUrl);
+    }
+    setLinkPopoverOpen(open);
+  }, [editor]);
 
   return (
     <BubbleMenu
@@ -233,6 +284,85 @@ export function FloatingToolbar({
       >
         <Quote className="w-4 h-4" />
       </FormatButton>
+
+      <ToolbarDivider />
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          LINK ACTIONS
+          ═══════════════════════════════════════════════════════════════════ */}
+
+      {isLinkActive ? (
+        /* Remove Link - shown when link is active */
+        <FormatButton
+          onClick={handleUnsetLink}
+          isActive={true}
+          disabled={disabled || !isEditable}
+          title="Remove Link"
+        >
+          <Unlink className="w-4 h-4" />
+        </FormatButton>
+      ) : (
+        /* Add Link - shown when no link is active */
+        <Popover open={linkPopoverOpen} onOpenChange={handleLinkPopoverOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              disabled={disabled || !isEditable}
+              title="Add Link"
+              className={cn(
+                "p-1.5 rounded transition-colors",
+                "hover:bg-muted",
+                "disabled:opacity-50 disabled:cursor-not-allowed"
+              )}
+            >
+              <Link2 className="w-4 h-4" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent 
+            className="w-80 p-3" 
+            side="top" 
+            align="start"
+            onOpenAutoFocus={(e) => e.preventDefault()}
+          >
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-foreground">Add Link</p>
+              <Input
+                type="url"
+                placeholder="https://example.com"
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSetLink();
+                  }
+                  if (e.key === 'Escape') {
+                    setLinkPopoverOpen(false);
+                  }
+                }}
+                className="bg-background"
+                autoFocus
+              />
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setLinkPopoverOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleSetLink}
+                >
+                  Add Link
+                </Button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+      )}
     </BubbleMenu>
   );
 }

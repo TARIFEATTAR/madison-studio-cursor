@@ -21,6 +21,7 @@ import { useCallback, useEffect, useState, useRef } from 'react';
 import { useEditor, EditorContent, JSONContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
+import Link from '@tiptap/extension-link';
 import { cn } from '@/lib/utils';
 import { FloatingToolbar } from './FloatingToolbar';
 import { SlashCommandMenu } from './SlashCommandMenu';
@@ -200,6 +201,14 @@ export function MadisonEditor({
       Placeholder.configure({
         placeholder,
         emptyEditorClass: 'madison-editor-empty',
+      }),
+      Link.configure({
+        openOnClick: false, // Don't open links while editing
+        HTMLAttributes: {
+          class: 'text-primary underline cursor-pointer',
+          target: '_blank',
+          rel: 'noopener noreferrer',
+        },
       }),
     ],
     content: parseInitialContent(),
