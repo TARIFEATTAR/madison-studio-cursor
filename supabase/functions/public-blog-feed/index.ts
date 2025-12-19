@@ -122,13 +122,11 @@ serve(async (req) => {
       query = query.eq("organizations.slug", orgSlug);
     }
 
-    // Filter by content type (blog posts)
+    // Filter by content type if specified
     if (contentType) {
       query = query.ilike("content_type", `%${contentType}%`);
-    } else {
-      // Default: only blog-related content
-      query = query.or("content_type.ilike.%blog%,content_type.ilike.%article%");
     }
+    // If no type filter, return ALL published content (not just blogs)
 
     // Apply pagination
     query = query.range(offset, offset + limit - 1);
