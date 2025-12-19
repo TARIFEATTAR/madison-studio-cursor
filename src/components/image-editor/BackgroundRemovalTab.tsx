@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBackgroundRemoval } from "@/hooks/useBackgroundRemoval";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -115,9 +116,6 @@ export function BackgroundRemovalTab({
       // Fetch the processed image
       const response = await fetch(displayUrl);
       const blob = await response.blob();
-      
-      // Import supabase client
-      const { supabase } = await import("@/integrations/supabase/client");
       
       // Generate a unique filename
       const fileName = `bg-removed/${Date.now()}-${Math.random().toString(36).substring(7)}.png`;

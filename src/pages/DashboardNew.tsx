@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, LayoutDashboard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useAuth } from "@/hooks/useAuth";
 import { useOrganization } from "@/hooks/useOrganization";
@@ -102,6 +103,22 @@ export default function DashboardNew() {
       <div className="hidden md:flex h-16 border-b border-[#E0E0E0] px-8 items-center justify-between bg-white">
         <h1 className="text-xl font-semibold text-[#1C150D]">Dashboard</h1>
         <div className="flex items-center gap-3">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard-custom')}
+                className="gap-2"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                Customize
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Try the new customizable dashboard</p>
+            </TooltipContent>
+          </Tooltip>
           <BrandQuickViewTrigger variant="minimal" />
           <Button
             size="sm"

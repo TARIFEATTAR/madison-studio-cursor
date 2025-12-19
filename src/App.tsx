@@ -4,55 +4,68 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense, lazy } from "react";
 import React from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
+import { Loader2 } from "lucide-react";
 
 import Navigation from "./components/Navigation";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./components/AppSidebar";
 
+// Critical path - keep as static imports for fast initial load
 import Index from "./pages/Index";
 import DashboardNew from "./pages/DashboardNew";
-import Library from "./pages/Library";
-import Create from "./pages/Create";
-import ContentEditor from "./pages/ContentEditor";
-import Repurpose from "./pages/Repurpose";
-import Multiply from "./pages/Multiply";
-import Templates from "./pages/Templates";
-import Calendar from "./pages/Calendar";
-import Settings from "./pages/Settings";
-import NotFound from "./pages/NotFound";
-import MeetMadison from "./pages/MeetMadison";
-import HelpCenter from "./pages/HelpCenter";
-import ThinkMode from "./pages/ThinkMode";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
-import Marketplace from "./pages/Marketplace";
-import MarketplaceLibrary from "./pages/MarketplaceLibrary";
-import CreateEtsyListing from "./pages/marketplace/CreateEtsyListing";
-import CreateTikTokShopListing from "./pages/marketplace/CreateTikTokShopListing";
-import CreateShopifyListing from "./pages/marketplace/CreateShopifyListing";
-import BrandHealth from "./pages/BrandHealth";
-import BrandBuilder from "./pages/BrandBuilder";
-import ImageEditor from "./pages/ImageEditor";
-import DarkRoom from "./pages/DarkRoom";
-import LightTable from "./pages/LightTable";
-import VideoProject from "./pages/VideoProject";
-import ImageLibrary from "./pages/ImageLibrary";
-import EmailBuilderV2 from "./pages/EmailBuilderV2";
+import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
-import ComponentDemo from "./pages/ComponentDemo";
-import MadisonTest from "./pages/MadisonTest";
-import BrandReport from "./pages/BrandReport";
+
+// Lazy-loaded pages - split into separate chunks
+const Library = lazy(() => import("./pages/Library"));
+const Create = lazy(() => import("./pages/Create"));
+const ContentEditor = lazy(() => import("./pages/ContentEditor"));
+const Repurpose = lazy(() => import("./pages/Repurpose"));
+const Multiply = lazy(() => import("./pages/Multiply"));
+const Templates = lazy(() => import("./pages/Templates"));
+const Calendar = lazy(() => import("./pages/Calendar"));
+const Settings = lazy(() => import("./pages/Settings"));
+const MeetMadison = lazy(() => import("./pages/MeetMadison"));
+const HelpCenter = lazy(() => import("./pages/HelpCenter"));
+const ThinkMode = lazy(() => import("./pages/ThinkMode"));
+const Marketplace = lazy(() => import("./pages/Marketplace"));
+const MarketplaceLibrary = lazy(() => import("./pages/MarketplaceLibrary"));
+const CreateEtsyListing = lazy(() => import("./pages/marketplace/CreateEtsyListing"));
+const CreateTikTokShopListing = lazy(() => import("./pages/marketplace/CreateTikTokShopListing"));
+const CreateShopifyListing = lazy(() => import("./pages/marketplace/CreateShopifyListing"));
+const BrandHealth = lazy(() => import("./pages/BrandHealth"));
+const BrandBuilder = lazy(() => import("./pages/BrandBuilder"));
+const ImageEditor = lazy(() => import("./pages/ImageEditor"));
+const DarkRoom = lazy(() => import("./pages/DarkRoom"));
+const LightTable = lazy(() => import("./pages/LightTable"));
+const VideoProject = lazy(() => import("./pages/VideoProject"));
+const ImageLibrary = lazy(() => import("./pages/ImageLibrary"));
+const EmailBuilderV2 = lazy(() => import("./pages/EmailBuilderV2"));
+const ComponentDemo = lazy(() => import("./pages/ComponentDemo"));
+const MadisonTest = lazy(() => import("./pages/MadisonTest"));
+const BrandReport = lazy(() => import("./pages/BrandReport"));
+const WidgetDashboard = lazy(() => import("./pages/WidgetDashboard"));
+
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EcommerceGuard } from "./components/guards/EcommerceGuard";
 import { OnboardingTooltipProvider } from "./components/onboarding/OnboardingTooltipProvider";
+
+// Loading fallback for lazy routes
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
+    <Loader2 className="w-8 h-8 animate-spin text-[#B8956A]" />
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -315,9 +328,11 @@ const AppContent = () => {
             <AppSidebar />
             <main className="flex-1 overflow-auto pt-0">
               <div className="pt-16 md:pt-0">
+                <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><RootRoute /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/dashboard" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><DashboardNew /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/dashboard-custom" element={<ProtectedRoute><RouteErrorBoundary routeName="Widget Dashboard"><WidgetDashboard /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/library" element={<ProtectedRoute><RouteErrorBoundary routeName="Library"><Library /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/create" element={<ProtectedRoute><RouteErrorBoundary routeName="Create"><Create /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Editor"><ContentEditor /></RouteErrorBoundary></ProtectedRoute>} />
@@ -353,17 +368,20 @@ const AppContent = () => {
                   {/* <Route path="/email-builder-v2" element={<Navigate to="/email-builder" replace />} /> */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                </Suspense>
               </div>
             </main>
           </div>
         </SidebarProvider>
       ) : (
         <>
+          <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<ProtectedRoute><RouteErrorBoundary routeName="Onboarding"><Onboarding /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/" element={<Index />} />
             <Route path="/dashboard" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><DashboardNew /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/dashboard-custom" element={<ProtectedRoute><RouteErrorBoundary routeName="Widget Dashboard"><WidgetDashboard /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/library" element={<ProtectedRoute><RouteErrorBoundary routeName="Library"><Library /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><RouteErrorBoundary routeName="Create"><Create /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Editor"><ContentEditor /></RouteErrorBoundary></ProtectedRoute>} />
@@ -399,6 +417,7 @@ const AppContent = () => {
             {/* <Route path="/email-builder-v2" element={<Navigate to="/email-builder" replace />} /> */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
         </>
       )}
 

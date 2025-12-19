@@ -10,8 +10,6 @@
 
 import { useState, useEffect } from "react";
 import { 
-  ChevronDown, 
-  ChevronUp, 
   Plus, 
   X, 
   ExternalLink, 
@@ -19,7 +17,6 @@ import {
   Video,
   BookOpen,
   Link2,
-  GripVertical,
   Pencil
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,11 +30,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -106,7 +98,6 @@ export function QuickLinksWidget() {
   const { toast } = useToast();
   const { organizationId } = useOrganization();
   
-  const [isExpanded, setIsExpanded] = useState(true);
   const [links, setLinks] = useState<QuickLink[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -272,123 +263,109 @@ export function QuickLinksWidget() {
   
   return (
     <>
-      <Card className="bg-card border border-border shadow-level-1 transition-all duration-300">
-        <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Link2 className="w-4 h-4 text-primary" />
-                Quick Links
-              </CardTitle>
-              <div className="flex items-center gap-1">
-                {links.length < MAX_LINKS && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0"
+      <Card className="h-full flex flex-col bg-card border border-border">
+        <CardHeader className="pb-2 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Link2 className="w-4 h-4 text-primary" />
+              Quick Links
+            </CardTitle>
+            {links.length < MAX_LINKS && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={() => {
+                  setEditingLink(null);
+                  setNewUrl("");
+                  setNewTitle("");
+                  setIsAddDialogOpen(true);
+                }}
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        
+        <CardContent className="flex-1 overflow-auto pt-0">
+          {isLoading ? (
+            <div className="h-full flex items-center justify-center">
+              <p className="text-sm text-muted-foreground">Loading...</p>
+            </div>
+          ) : links.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center py-4">
+              <Link2 className="w-8 h-8 text-muted-foreground/50 mb-2" />
+              <p className="text-sm text-muted-foreground mb-3">No links added yet</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsAddDialogOpen(true)}
+                className="gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add Link
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {links.map((link) => (
+                <div key={link.id} className="group">
+                  {/* Link Item */}
+                  <div 
+                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
                     onClick={() => {
-                      setEditingLink(null);
-                      setNewUrl("");
-                      setNewTitle("");
-                      setIsAddDialogOpen(true);
+                      if (link.type === "youtube") {
+                        setExpandedEmbed(expandedEmbed === link.id ? null : link.id);
+                      } else {
+                        window.open(link.url, "_blank");
+                      }
                     }}
                   >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                )}
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                    {isExpanded ? (
-                      <ChevronUp className="w-4 h-4" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4" />
-                    )}
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
-            </div>
-          </CardHeader>
-          
-          <CollapsibleContent>
-            <CardContent className="pt-0 space-y-2">
-              {isLoading ? (
-                <div className="text-center py-4">
-                  <p className="text-sm text-muted-foreground">Loading links...</p>
-                </div>
-              ) : links.length === 0 ? (
-                <div className="text-center py-4">
-                  <p className="text-sm text-muted-foreground mb-2">No links added yet</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsAddDialogOpen(true)}
-                    className="gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add your first link
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {links.map((link) => (
-                    <div key={link.id} className="group">
-                      {/* Link Item */}
-                      <div 
-                        className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                        onClick={() => {
-                          if (link.type === "youtube") {
-                            setExpandedEmbed(expandedEmbed === link.id ? null : link.id);
-                          } else {
-                            window.open(link.url, "_blank");
-                          }
+                    {getLinkIcon(link.type)}
+                    <span className="flex-1 text-sm font-medium truncate">
+                      {link.title}
+                    </span>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditLink(link);
                         }}
                       >
-                        {getLinkIcon(link.type)}
-                        <span className="flex-1 text-sm font-medium truncate">
-                          {link.title}
-                        </span>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditLink(link);
-                            }}
-                          >
-                            <Pencil className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 hover:text-destructive"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveLink(link.id);
-                            }}
-                          >
-                            <X className="w-3 h-3" />
-                          </Button>
-                          {link.type !== "youtube" && (
-                            <ExternalLink className="w-3 h-3 text-muted-foreground" />
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* YouTube Embed (expandable) */}
-                      {link.type === "youtube" && expandedEmbed === link.id && (
-                        <div className="mt-2 px-2">
-                          {renderYouTubeEmbed(link.url)}
-                        </div>
+                        <Pencil className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveLink(link.id);
+                        }}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                      {link.type !== "youtube" && (
+                        <ExternalLink className="w-3 h-3 text-muted-foreground" />
                       )}
                     </div>
-                  ))}
+                  </div>
+                  
+                  {/* YouTube Embed (expandable) */}
+                  {link.type === "youtube" && expandedEmbed === link.id && (
+                    <div className="mt-2 px-2 pb-2">
+                      {renderYouTubeEmbed(link.url)}
+                    </div>
+                  )}
                 </div>
-              )}
-            </CardContent>
-          </CollapsibleContent>
-        </Collapsible>
+              ))}
+            </div>
+          )}
+        </CardContent>
       </Card>
       
       {/* Add/Edit Link Dialog */}

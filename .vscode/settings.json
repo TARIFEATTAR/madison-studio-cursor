@@ -1,0 +1,16 @@
+{
+  "typescript.preferences.includePackageJsonAutoImports": "off",
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true
+  },
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.preferences.excludePackageJsonAutoImports": "on",
+  "typescript.validate.enable": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "files.watcherExclude": {
+    "**/supabase/functions/**": true
+  }
+}

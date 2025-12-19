@@ -1,6 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+import { SafeHTML } from '@/components/ui/SafeHTML';
+
 interface MobilePreviewFrameProps {
   html: string;
   device?: 'iphone' | 'android';
@@ -21,10 +23,7 @@ export function MobilePreviewFrame({ html, device = 'iphone' }: MobilePreviewFra
         
         {/* Screen */}
         <ScrollArea className="h-full w-full">
-          <div 
-            className="p-4"
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
+          <SafeHTML className="p-4" html={html} />
         </ScrollArea>
 
         {/* Home Indicator (iPhone) */}
