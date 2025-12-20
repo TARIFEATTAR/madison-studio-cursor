@@ -73,8 +73,8 @@ export const BUSINESS_TYPE_OPTIONS: BusinessTypeOption[] = [
   },
   {
     value: "marketing_agency",
-    label: "Marketing Agency",
-    description: "Create content & campaigns for beauty/cosmetics brands",
+    label: "Brand & Creative Agency",
+    description: "Create brand strategy & content for beauty/cosmetics clients",
     icon: "briefcase",
   },
 ];

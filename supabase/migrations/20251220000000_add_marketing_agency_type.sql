@@ -11,7 +11,7 @@
 -- Add new enum value
 ALTER TYPE public.business_type ADD VALUE IF NOT EXISTS 'marketing_agency';
 
--- Insert marketing agency configuration
+-- Insert creative agency configuration
 INSERT INTO public.business_type_config (
   business_type,
   display_name,
@@ -26,8 +26,8 @@ INSERT INTO public.business_type_config (
   sort_order
 ) VALUES (
   'marketing_agency',
-  'Marketing Agency',
-  'You create marketing content, campaigns, and brand strategy for beauty/cosmetic client brands',
+  'Brand & Creative Agency',
+  'You create brand strategy, creative content, and campaigns for beauty/cosmetic client brands',
   'briefcase',
   '{
     "products": true,
@@ -70,7 +70,7 @@ INSERT INTO public.business_type_config (
     "target_audience": "End consumers of client brands (beauty enthusiasts, conscious shoppers). Secondary: client brand stakeholders for approvals."
   }'::jsonb,
   '{
-    "welcome_message": "Welcome to Madison Studio for Agencies! Create beautiful content for your beauty & cosmetics clients.",
+    "welcome_message": "Welcome to Madison Studio for Creative Agencies! Create beautiful brand content for your beauty & cosmetics clients.",
     "suggested_first_steps": [
       "Set up your first client brand",
       "Upload brand guidelines",

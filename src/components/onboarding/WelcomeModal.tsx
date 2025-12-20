@@ -26,7 +26,7 @@ const INDUSTRY_OPTIONS = getIndustryOptions();
 
 const BUSINESS_TYPE_OPTIONS = [
   { value: "finished_goods" as BusinessType, label: "Finished Goods Brand", description: "Sell products to consumers", icon: Sparkles },
-  { value: "marketing_agency" as BusinessType, label: "Marketing Agency", description: "Content for beauty brands", icon: Briefcase },
+  { value: "marketing_agency" as BusinessType, label: "Brand & Creative Agency", description: "Strategy & content for clients", icon: Briefcase },
   { value: "bottles_vessels" as BusinessType, label: "Bottles & Vessels", description: "Container manufacturing", icon: FlaskConical },
   { value: "packaging_boxes" as BusinessType, label: "Packaging & Boxes", description: "Secondary packaging", icon: Box },
   { value: "raw_materials" as BusinessType, label: "Raw Materials", description: "Ingredient supplier", icon: FlaskRound },
