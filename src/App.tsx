@@ -56,6 +56,7 @@ const WidgetDashboard = lazy(() => import("./pages/WidgetDashboard"));
 const DAMLibrary = lazy(() => import("./pages/DAMLibrary"));
 const Products = lazy(() => import("./pages/Products"));
 const ProductHub = lazy(() => import("./pages/ProductHub"));
+const Suppliers = lazy(() => import("./pages/Suppliers"));
 
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
@@ -356,6 +357,7 @@ const AppContent = () => {
                   <Route path="/products" element={<ProtectedRoute><RouteErrorBoundary routeName="Products"><Products /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/products/:productId" element={<ProtectedRoute><RouteErrorBoundary routeName="Product Hub"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/products/:productId/edit" element={<ProtectedRoute><RouteErrorBoundary routeName="Edit Product"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/suppliers" element={<ProtectedRoute><RouteErrorBoundary routeName="Suppliers"><Suppliers /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/calendar" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
@@ -409,6 +411,7 @@ const AppContent = () => {
             <Route path="/products" element={<ProtectedRoute><RouteErrorBoundary routeName="Products"><Products /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/products/:productId" element={<ProtectedRoute><RouteErrorBoundary routeName="Product Hub"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/products/:productId/edit" element={<ProtectedRoute><RouteErrorBoundary routeName="Edit Product"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/suppliers" element={<ProtectedRoute><RouteErrorBoundary routeName="Suppliers"><Suppliers /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/calendar" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />

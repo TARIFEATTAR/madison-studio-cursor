@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   FileText,
   AlertTriangle,
@@ -13,11 +13,18 @@ import {
   Copy,
   Check,
   ChevronDown,
-  ChevronUp,
   Shield,
+  Upload,
+  Link,
+  Building2,
+  Mail,
+  ExternalLink,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
@@ -46,6 +53,18 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import {
@@ -56,6 +75,16 @@ import {
   type SDSStatus,
 } from "@/hooks/useSDSPackaging";
 import { useProductIngredients } from "@/hooks/useIngredients";
+import { useSuppliers, type Supplier } from "@/hooks/useSuppliers";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+type SDSSourceType = "generated" | "uploaded" | "linked" | "requested";
 
 interface SDSSectionProps {
   productId: string;
@@ -64,7 +93,402 @@ interface SDSSectionProps {
   brandName?: string;
   sku?: string;
   isEditing?: boolean;
+  supplierId?: string | null;
+  isSelfManufactured?: boolean;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// UPLOAD SDS DIALOG
+// ═══════════════════════════════════════════════════════════════════════════════
+
+interface UploadSDSDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  productId: string;
+  suppliers: Supplier[];
+  onUploaded: () => void;
+}
+
+function UploadSDSDialog({
+  open,
+  onOpenChange,
+  productId,
+  suppliers,
+  onUploaded,
+}: UploadSDSDialogProps) {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [supplierId, setSupplierId] = useState<string>("");
+  const [notes, setNotes] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      // Check file type - allow PDFs and common document types
+      const allowedTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ];
+      if (!allowedTypes.includes(selectedFile.type)) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload a PDF or Word document",
+          variant: "destructive",
+        });
+        return;
+      }
+      // Check file size (max 10MB)
+      if (selectedFile.size > 10 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Maximum file size is 10MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      setFile(selectedFile);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      // Upload file to Supabase Storage
+      const fileName = `sds/${productId}/${Date.now()}_${file.name}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("documents")
+        .upload(fileName, file);
+
+      if (uploadError) {
+        // If bucket doesn't exist, create a placeholder entry without file
+        console.warn("Storage upload failed:", uploadError);
+      }
+
+      // Get public URL if upload succeeded
+      let fileUrl = null;
+      if (uploadData) {
+        const { data: urlData } = supabase.storage
+          .from("documents")
+          .getPublicUrl(fileName);
+        fileUrl = urlData?.publicUrl;
+      }
+
+      // Create SDS record
+      const { error: sdsError } = await supabase.from("product_sds").insert({
+        product_id: productId,
+        source_type: "uploaded",
+        supplier_id: supplierId || null,
+        file_url: fileUrl,
+        file_name: file.name,
+        request_notes: notes || null,
+        status: "draft",
+        version: "1.0",
+      });
+
+      if (sdsError) {
+        throw sdsError;
+      }
+
+      toast({
+        title: "SDS uploaded",
+        description: "The Safety Data Sheet has been added successfully.",
+      });
+
+      onUploaded();
+      onOpenChange(false);
+      setFile(null);
+      setSupplierId("");
+      setNotes("");
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload SDS document",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Upload SDS Document</DialogTitle>
+          <DialogDescription>
+            Upload a Safety Data Sheet from your supplier or manufacturer
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* File Upload */}
+          <div>
+            <Label>SDS Document</Label>
+            <div
+              className={cn(
+                "mt-1.5 border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
+                file
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/50"
+              )}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.doc,.docx"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+              {file ? (
+                <div className="flex items-center justify-center gap-2">
+                  <FileText className="w-5 h-5 text-primary" />
+                  <span className="text-sm font-medium">{file.name}</span>
+                </div>
+              ) : (
+                <>
+                  <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Click to upload or drag and drop
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    PDF or Word (max 10MB)
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Supplier Selection */}
+          <div>
+            <Label>From Supplier (optional)</Label>
+            <Select value={supplierId} onValueChange={setSupplierId}>
+              <SelectTrigger className="mt-1.5">
+                <SelectValue placeholder="Select supplier..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No supplier</SelectItem>
+                {suppliers.map((supplier) => (
+                  <SelectItem key={supplier.id} value={supplier.id}>
+                    {supplier.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <Label>Notes (optional)</Label>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="e.g., Received from supplier on Jan 15, 2025"
+              className="mt-1.5"
+              rows={2}
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleUpload} disabled={!file || isUploading}>
+            {isUploading ? (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="w-4 h-4 mr-2" />
+                Upload SDS
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// REQUEST SDS DIALOG
+// ═══════════════════════════════════════════════════════════════════════════════
+
+interface RequestSDSDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  productId: string;
+  productName: string;
+  sku?: string;
+  suppliers: Supplier[];
+}
+
+function RequestSDSDialog({
+  open,
+  onOpenChange,
+  productId,
+  productName,
+  sku,
+  suppliers,
+}: RequestSDSDialogProps) {
+  const { toast } = useToast();
+  const [supplierId, setSupplierId] = useState<string>("");
+  const [email, setEmail] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const selectedSupplier = suppliers.find((s) => s.id === supplierId);
+
+  // Update email when supplier changes
+  const handleSupplierChange = (id: string) => {
+    setSupplierId(id);
+    const supplier = suppliers.find((s) => s.id === id);
+    if (supplier?.contact_email) {
+      setEmail(supplier.contact_email);
+    }
+  };
+
+  const emailSubject = `SDS Request - ${productName}${sku ? ` (SKU: ${sku})` : ""}`;
+  const emailBody = `Hi${selectedSupplier?.contact_name ? ` ${selectedSupplier.contact_name}` : ""},
+
+I am requesting the Safety Data Sheet (SDS) for the following product:
+
+Product: ${productName}
+${sku ? `SKU: ${sku}\n` : ""}
+Please send the most current version of the SDS document.
+
+Thank you!`;
+
+  const handleCopyEmail = async () => {
+    const fullEmail = `To: ${email}\nSubject: ${emailSubject}\n\n${emailBody}`;
+    await navigator.clipboard.writeText(fullEmail);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    toast({
+      title: "Copied to clipboard",
+      description: "Email content has been copied. Paste it into your email client.",
+    });
+  };
+
+  const handleOpenEmail = () => {
+    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+    window.open(mailtoLink, "_blank");
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Request SDS from Supplier</DialogTitle>
+          <DialogDescription>
+            Send a request to your supplier for the Safety Data Sheet
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Supplier Selection */}
+          <div>
+            <Label>Select Supplier</Label>
+            <Select value={supplierId} onValueChange={handleSupplierChange}>
+              <SelectTrigger className="mt-1.5">
+                <SelectValue placeholder="Choose a supplier..." />
+              </SelectTrigger>
+              <SelectContent>
+                {suppliers.length === 0 ? (
+                  <SelectItem value="none" disabled>
+                    No suppliers added yet
+                  </SelectItem>
+                ) : (
+                  suppliers.map((supplier) => (
+                    <SelectItem key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Email */}
+          <div>
+            <Label>Send to Email</Label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="supplier@example.com"
+              className="mt-1.5"
+            />
+          </div>
+
+          {/* Email Preview */}
+          {email && (
+            <div className="border border-border rounded-lg overflow-hidden">
+              <div className="bg-muted px-3 py-2 border-b border-border">
+                <p className="text-xs text-muted-foreground">
+                  <strong>To:</strong> {email}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  <strong>Subject:</strong> {emailSubject}
+                </p>
+              </div>
+              <div className="p-3 bg-background">
+                <pre className="text-sm whitespace-pre-wrap font-sans">
+                  {emailBody}
+                </pre>
+              </div>
+            </div>
+          )}
+
+          {/* Supplier Portal Link */}
+          {selectedSupplier?.has_sds_portal && selectedSupplier.sds_portal_url && (
+            <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg">
+              <ExternalLink className="w-4 h-4 text-primary" />
+              <span className="text-sm flex-1">
+                This supplier has an SDS portal
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  window.open(selectedSupplier.sds_portal_url!, "_blank")
+                }
+              >
+                Open Portal
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button variant="outline" onClick={handleCopyEmail} disabled={!email}>
+            {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+            {copied ? "Copied!" : "Copy to Clipboard"}
+          </Button>
+          <Button onClick={handleOpenEmail} disabled={!email}>
+            <Mail className="w-4 h-4 mr-2" />
+            Open in Email
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════════
 
 export function SDSSection({
   productId,
@@ -73,7 +497,11 @@ export function SDSSection({
   brandName,
   sku,
   isEditing = false,
+  supplierId,
+  isSelfManufactured = true,
 }: SDSSectionProps) {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const {
     sdsVersions,
     currentSDS,
@@ -84,12 +512,18 @@ export function SDSSection({
   } = useProductSDS(productId);
 
   const { ingredients } = useProductIngredients(productId);
+  const { suppliers, activeSuppliers } = useSuppliers();
 
   const [showHistory, setShowHistory] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [previewContent, setPreviewContent] = useState("");
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [showRequestDialog, setShowRequestDialog] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>(
+    isSelfManufactured ? "generate" : "upload"
+  );
 
   const handleGenerate = async () => {
     setIsGenerating(true);
@@ -145,6 +579,19 @@ export function SDSSection({
     }
   };
 
+  const getSourceLabel = (sourceType: string | null | undefined) => {
+    switch (sourceType) {
+      case "uploaded":
+        return "Uploaded";
+      case "linked":
+        return "External Link";
+      case "requested":
+        return "Requested";
+      default:
+        return "Generated";
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -154,31 +601,47 @@ export function SDSSection({
   }
 
   const needsSDS = !currentSDS;
-  const isOutdated = currentSDS && (
-    currentSDS.status === "expired" ||
-    new Date(currentSDS.created_at) < new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
-  );
+  const isOutdated =
+    currentSDS &&
+    (currentSDS.status === "expired" ||
+      new Date(currentSDS.created_at) <
+        new Date(Date.now() - 365 * 24 * 60 * 60 * 1000));
+
+  // Get linked supplier info
+  const linkedSupplier = supplierId
+    ? suppliers.find((s) => s.id === supplierId)
+    : null;
 
   return (
     <div className="space-y-6">
       {/* Status Card */}
-      <Card className={cn(
-        "border-2",
-        needsSDS ? "border-amber-300 bg-amber-50" :
-        isOutdated ? "border-red-300 bg-red-50" :
-        currentSDS?.status === "approved" ? "border-green-300 bg-green-50" :
-        "border-border bg-card"
-      )}>
+      <Card
+        className={cn(
+          "border-2",
+          needsSDS
+            ? "border-amber-300 bg-amber-50"
+            : isOutdated
+              ? "border-red-300 bg-red-50"
+              : currentSDS?.status === "approved"
+                ? "border-green-300 bg-green-50"
+                : "border-border bg-card"
+        )}
+      >
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center",
-                needsSDS ? "bg-amber-200" :
-                isOutdated ? "bg-red-200" :
-                currentSDS?.status === "approved" ? "bg-green-200" :
-                "bg-muted"
-              )}>
+              <div
+                className={cn(
+                  "w-12 h-12 rounded-full flex items-center justify-center",
+                  needsSDS
+                    ? "bg-amber-200"
+                    : isOutdated
+                      ? "bg-red-200"
+                      : currentSDS?.status === "approved"
+                        ? "bg-green-200"
+                        : "bg-muted"
+                )}
+              >
                 {needsSDS ? (
                   <AlertTriangle className="w-6 h-6 text-amber-700" />
                 ) : isOutdated ? (
@@ -188,16 +651,20 @@ export function SDSSection({
                 )}
               </div>
               <div>
-                <CardTitle className="text-lg">
-                  Safety Data Sheet (SDS)
-                </CardTitle>
+                <CardTitle className="text-lg">Safety Data Sheet (SDS)</CardTitle>
                 <CardDescription>
                   {needsSDS ? (
                     "No SDS document exists for this product"
                   ) : isOutdated ? (
                     "SDS needs to be regenerated"
                   ) : (
-                    `Version ${currentSDS?.version} · ${currentSDS?.revision_date || "Draft"}`
+                    <span className="flex items-center gap-2">
+                      Version {currentSDS?.version} ·{" "}
+                      {currentSDS?.revision_date || "Draft"}
+                      <Badge variant="outline" className="text-xs">
+                        {getSourceLabel((currentSDS as any)?.source_type)}
+                      </Badge>
+                    </span>
                   )}
                 </CardDescription>
               </div>
@@ -206,49 +673,175 @@ export function SDSSection({
             {currentSDS && (
               <Badge className={SDS_STATUS_CONFIG[currentSDS.status].color}>
                 {getStatusIcon(currentSDS.status)}
-                <span className="ml-1">{SDS_STATUS_CONFIG[currentSDS.status].label}</span>
+                <span className="ml-1">
+                  {SDS_STATUS_CONFIG[currentSDS.status].label}
+                </span>
               </Badge>
             )}
           </div>
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={handleGenerate}
-              disabled={isGenerating || ingredients.length === 0}
-            >
-              {isGenerating ? (
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Sparkles className="w-4 h-4 mr-2" />
-              )}
-              {currentSDS ? "Regenerate SDS" : "Generate SDS"}
-            </Button>
+          {/* Options Tabs */}
+          {needsSDS && (
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="generate" className="gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Generate
+                </TabsTrigger>
+                <TabsTrigger value="upload" className="gap-1.5">
+                  <Upload className="w-3.5 h-3.5" />
+                  Upload
+                </TabsTrigger>
+                <TabsTrigger value="request" className="gap-1.5">
+                  <Mail className="w-3.5 h-3.5" />
+                  Request
+                </TabsTrigger>
+              </TabsList>
 
-            {currentSDS && (
-              <>
-                <Button variant="outline" onClick={() => setShowPreview(true)}>
-                  <Eye className="w-4 h-4 mr-2" />
-                  View
-                </Button>
-                <Button variant="outline" onClick={handleDownload}>
+              <TabsContent value="generate" className="mt-4">
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Generate an SDS document based on this product's ingredients.
+                    Best for products you manufacture yourself.
+                  </p>
+                  <Button
+                    onClick={handleGenerate}
+                    disabled={isGenerating || ingredients.length === 0}
+                  >
+                    {isGenerating ? (
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-4 h-4 mr-2" />
+                    )}
+                    Generate SDS
+                  </Button>
+                  {ingredients.length === 0 && (
+                    <p className="text-sm text-amber-700">
+                      ⚠️ Add ingredients to this product before generating an SDS.
+                    </p>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="upload" className="mt-4">
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Upload an SDS document you received from your supplier or
+                    manufacturer. Supports PDF and Word documents.
+                  </p>
+                  <Button onClick={() => setShowUploadDialog(true)}>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload SDS Document
+                  </Button>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="request" className="mt-4">
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Send an email request to your supplier for the SDS document.
+                    We'll help you draft the email.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button onClick={() => setShowRequestDialog(true)}>
+                      <Mail className="w-4 h-4 mr-2" />
+                      Request from Supplier
+                    </Button>
+                    {activeSuppliers.length === 0 && (
+                      <Button
+                        variant="outline"
+                        onClick={() => navigate("/suppliers")}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Supplier First
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          )}
+
+          {/* Action Buttons when SDS exists */}
+          {currentSDS && (
+            <div className="flex flex-wrap gap-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handleGenerate}
+                      disabled={isGenerating || ingredients.length === 0}
+                    >
+                      {isGenerating ? (
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-4 h-4 mr-2" />
+                      )}
+                      Regenerate
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Generate a new version based on current ingredients</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <Button variant="outline" onClick={() => setShowPreview(true)}>
+                <Eye className="w-4 h-4 mr-2" />
+                View
+              </Button>
+
+              {currentSDS.file_url && (
+                <Button
+                  variant="outline"
+                  onClick={() => window.open(currentSDS.file_url!, "_blank")}
+                >
                   <Download className="w-4 h-4 mr-2" />
                   Download
                 </Button>
-                <Button variant="outline" onClick={() => setShowHistory(true)}>
-                  <History className="w-4 h-4 mr-2" />
-                  History ({sdsVersions.length})
-                </Button>
-              </>
-            )}
-          </div>
+              )}
 
-          {ingredients.length === 0 && (
-            <p className="text-sm text-amber-700">
-              ⚠️ Add ingredients to this product before generating an SDS.
-            </p>
+              <Button variant="outline" onClick={() => setShowUploadDialog(true)}>
+                <Upload className="w-4 h-4 mr-2" />
+                Upload New
+              </Button>
+
+              <Button variant="outline" onClick={() => setShowHistory(true)}>
+                <History className="w-4 h-4 mr-2" />
+                History ({sdsVersions.length})
+              </Button>
+            </div>
+          )}
+
+          {/* Linked Supplier Info */}
+          {linkedSupplier && (
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg mt-2">
+              <Building2 className="w-5 h-5 text-muted-foreground" />
+              <div className="flex-1">
+                <p className="text-sm font-medium">
+                  Sourced from: {linkedSupplier.name}
+                </p>
+                {linkedSupplier.contact_email && (
+                  <p className="text-xs text-muted-foreground">
+                    {linkedSupplier.contact_email}
+                  </p>
+                )}
+              </div>
+              {linkedSupplier.has_sds_portal && linkedSupplier.sds_portal_url && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    window.open(linkedSupplier.sds_portal_url!, "_blank")
+                  }
+                >
+                  <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+                  SDS Portal
+                </Button>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>
@@ -266,7 +859,9 @@ export function SDSSection({
             {/* Signal Word */}
             {currentSDS.signal_word && currentSDS.signal_word !== "None" && (
               <div>
-                <p className="text-xs text-muted-foreground uppercase mb-1">Signal Word</p>
+                <p className="text-xs text-muted-foreground uppercase mb-1">
+                  Signal Word
+                </p>
                 <Badge
                   variant="outline"
                   className={cn(
@@ -284,7 +879,9 @@ export function SDSSection({
             {/* Pictograms */}
             {currentSDS.ghs_pictograms && currentSDS.ghs_pictograms.length > 0 && (
               <div>
-                <p className="text-xs text-muted-foreground uppercase mb-2">GHS Pictograms</p>
+                <p className="text-xs text-muted-foreground uppercase mb-2">
+                  GHS Pictograms
+                </p>
                 <div className="flex gap-3">
                   {currentSDS.ghs_pictograms.map((code) => {
                     const picto = GHS_PICTOGRAMS.find((p) => p.code === code);
@@ -294,7 +891,9 @@ export function SDSSection({
                         className="flex flex-col items-center gap-1 p-2 bg-muted rounded"
                       >
                         <span className="text-3xl">{picto?.symbol || "⚠️"}</span>
-                        <span className="text-xs text-muted-foreground">{picto?.name || code}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {picto?.name || code}
+                        </span>
                       </div>
                     );
                   })}
@@ -303,49 +902,53 @@ export function SDSSection({
             )}
 
             {/* Hazard Statements */}
-            {currentSDS.hazard_statements && currentSDS.hazard_statements.length > 0 && (
-              <Collapsible>
-                <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium hover:text-primary">
-                  <ChevronDown className="w-4 h-4" />
-                  Hazard Statements ({currentSDS.hazard_statements.length})
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-2 space-y-1">
-                  {currentSDS.hazard_statements.map((h, i) => (
-                    <p key={i} className="text-sm text-muted-foreground pl-6">
-                      • {h}
-                    </p>
-                  ))}
-                </CollapsibleContent>
-              </Collapsible>
-            )}
+            {currentSDS.hazard_statements &&
+              currentSDS.hazard_statements.length > 0 && (
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium hover:text-primary">
+                    <ChevronDown className="w-4 h-4" />
+                    Hazard Statements ({currentSDS.hazard_statements.length})
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-2 space-y-1">
+                    {currentSDS.hazard_statements.map((h, i) => (
+                      <p key={i} className="text-sm text-muted-foreground pl-6">
+                        • {h}
+                      </p>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
 
             {/* Precautionary Statements */}
-            {currentSDS.precautionary_statements && currentSDS.precautionary_statements.length > 0 && (
-              <Collapsible>
-                <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium hover:text-primary">
-                  <ChevronDown className="w-4 h-4" />
-                  Precautionary Statements ({currentSDS.precautionary_statements.length})
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-2 space-y-1">
-                  {currentSDS.precautionary_statements.map((p, i) => (
-                    <p key={i} className="text-sm text-muted-foreground pl-6">
-                      • {p}
-                    </p>
-                  ))}
-                </CollapsibleContent>
-              </Collapsible>
-            )}
+            {currentSDS.precautionary_statements &&
+              currentSDS.precautionary_statements.length > 0 && (
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium hover:text-primary">
+                    <ChevronDown className="w-4 h-4" />
+                    Precautionary Statements (
+                    {currentSDS.precautionary_statements.length})
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-2 space-y-1">
+                    {currentSDS.precautionary_statements.map((p, i) => (
+                      <p key={i} className="text-sm text-muted-foreground pl-6">
+                        • {p}
+                      </p>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
 
             {/* Not Classified */}
-            {(!currentSDS.ghs_pictograms || currentSDS.ghs_pictograms.length === 0) &&
-             (!currentSDS.signal_word || currentSDS.signal_word === "None") && (
-              <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <span className="text-green-700">
-                  Not classified as hazardous under GHS
-                </span>
-              </div>
-            )}
+            {(!currentSDS.ghs_pictograms ||
+              currentSDS.ghs_pictograms.length === 0) &&
+              (!currentSDS.signal_word || currentSDS.signal_word === "None") && (
+                <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span className="text-green-700">
+                    Not classified as hazardous under GHS
+                  </span>
+                </div>
+              )}
           </CardContent>
         </Card>
       )}
@@ -360,7 +963,10 @@ export function SDSSection({
             <Select
               value={currentSDS.status}
               onValueChange={(val) =>
-                updateStatus.mutate({ sdsId: currentSDS.id, status: val as SDSStatus })
+                updateStatus.mutate({
+                  sdsId: currentSDS.id,
+                  status: val as SDSStatus,
+                })
               }
             >
               <SelectTrigger className="w-full max-w-xs">
@@ -381,6 +987,28 @@ export function SDSSection({
         </Card>
       )}
 
+      {/* Upload Dialog */}
+      <UploadSDSDialog
+        open={showUploadDialog}
+        onOpenChange={setShowUploadDialog}
+        productId={productId}
+        suppliers={activeSuppliers}
+        onUploaded={() => {
+          // Refresh SDS data
+          window.location.reload();
+        }}
+      />
+
+      {/* Request Dialog */}
+      <RequestSDSDialog
+        open={showRequestDialog}
+        onOpenChange={setShowRequestDialog}
+        productId={productId}
+        productName={productName}
+        sku={sku}
+        suppliers={activeSuppliers}
+      />
+
       {/* Preview Dialog */}
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
         <DialogContent className="max-w-3xl max-h-[80vh]">
@@ -399,7 +1027,11 @@ export function SDSSection({
 
           <DialogFooter>
             <Button variant="outline" onClick={handleCopy}>
-              {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+              {copied ? (
+                <Check className="w-4 h-4 mr-2" />
+              ) : (
+                <Copy className="w-4 h-4 mr-2" />
+              )}
               {copied ? "Copied!" : "Copy"}
             </Button>
             <Button variant="outline" onClick={handleDownload}>
@@ -426,7 +1058,9 @@ export function SDSSection({
                 key={sds.id}
                 className={cn(
                   "flex items-center justify-between p-3 rounded-lg border",
-                  sds.id === currentSDS?.id ? "border-primary bg-primary/5" : "border-border"
+                  sds.id === currentSDS?.id
+                    ? "border-primary bg-primary/5"
+                    : "border-border"
                 )}
               >
                 <div>
@@ -434,6 +1068,9 @@ export function SDSSection({
                     <span className="font-medium">v{sds.version}</span>
                     <Badge className={SDS_STATUS_CONFIG[sds.status].color}>
                       {SDS_STATUS_CONFIG[sds.status].label}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {getSourceLabel((sds as any)?.source_type)}
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">

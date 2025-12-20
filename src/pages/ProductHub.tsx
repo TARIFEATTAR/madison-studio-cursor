@@ -84,6 +84,9 @@ import { RoleBadge, YourSectionsHighlight } from "@/components/role";
 import { TaskList } from "@/components/tasks";
 import { useOrganization } from "@/hooks/useOrganization";
 import { ContentPickerModal, type ContentTarget } from "@/components/products/ContentPickerModal";
+import { useSuppliers, COMPANY_TYPES } from "@/hooks/useSuppliers";
+import { Building2, Factory, Truck } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PRODUCT INFO TAB
@@ -97,6 +100,7 @@ interface ProductInfoTabProps {
 
 function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
   const productTypes = product.category ? PRODUCT_TYPES[product.category] || [] : [];
+  const { activeSuppliers, isLoading: suppliersLoading } = useSuppliers();
   
   // Content picker state
   const [showContentPicker, setShowContentPicker] = useState(false);
@@ -221,6 +225,128 @@ function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
         </CardContent>
       </Card>
 
+      {/* Sourcing & Supplier */}
+      <Card className="bg-card border-border">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Building2 className="w-5 h-5" />
+            Product Sourcing
+          </CardTitle>
+          <CardDescription>
+            Where does this product come from? This affects how SDS documents are handled.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Self-Manufactured Toggle */}
+          <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/30">
+            <div className="flex items-center gap-3">
+              <Factory className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <Label htmlFor="is_self_manufactured" className="font-medium">
+                  I manufacture this product
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Enable if you formulate or make this product yourself
+                </p>
+              </div>
+            </div>
+            {isEditing ? (
+              <Switch
+                id="is_self_manufactured"
+                checked={product.is_self_manufactured !== false}
+                onCheckedChange={(checked) => {
+                  onChange("is_self_manufactured", checked);
+                  if (checked) {
+                    onChange("supplier_id", null);
+                  }
+                }}
+              />
+            ) : (
+              <Badge variant={product.is_self_manufactured !== false ? "default" : "secondary"}>
+                {product.is_self_manufactured !== false ? "Yes" : "No"}
+              </Badge>
+            )}
+          </div>
+
+          {/* Supplier Selection (if not self-manufactured) */}
+          {product.is_self_manufactured === false && (
+            <div className="space-y-2 animate-in slide-in-from-top-2">
+              <Label className="flex items-center gap-2">
+                <Truck className="w-4 h-4" />
+                Supplier / Vendor
+              </Label>
+              {isEditing ? (
+                <Select
+                  value={product.supplier_id || "none"}
+                  onValueChange={(val) => onChange("supplier_id", val === "none" ? null : val)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select supplier..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No supplier selected</SelectItem>
+                    {activeSuppliers.map((supplier) => (
+                      <SelectItem key={supplier.id} value={supplier.id}>
+                        <div className="flex items-center gap-2">
+                          <span>{supplier.name}</span>
+                          {supplier.company_type && (
+                            <span className="text-xs text-muted-foreground">
+                              ({COMPANY_TYPES.find(t => t.value === supplier.company_type)?.label || supplier.company_type})
+                            </span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-foreground">
+                  {activeSuppliers.find(s => s.id === product.supplier_id)?.name || "No supplier selected"}
+                </p>
+              )}
+              
+              {activeSuppliers.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  No suppliers added yet.{" "}
+                  <a href="/suppliers" className="text-primary hover:underline">
+                    Add a supplier
+                  </a>
+                </p>
+              )}
+
+              {/* Supplier Info Preview */}
+              {product.supplier_id && (
+                (() => {
+                  const supplier = activeSuppliers.find(s => s.id === product.supplier_id);
+                  if (!supplier) return null;
+                  return (
+                    <div className="p-3 bg-muted/50 rounded-lg text-sm space-y-1">
+                      {supplier.contact_email && (
+                        <p className="text-muted-foreground">
+                          Contact: {supplier.contact_email}
+                        </p>
+                      )}
+                      {supplier.has_sds_portal && supplier.sds_portal_url && (
+                        <p className="text-muted-foreground">
+                          <a 
+                            href={supplier.sds_portal_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            SDS Portal Available →
+                          </a>
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Description */}
       <Card className="bg-card border-border">
         <CardHeader>
@@ -339,6 +465,8 @@ function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
         onOpenChange={setShowContentPicker}
         target={contentTarget}
         onSelect={handleContentSelect}
+        productId={product.id}
+        productName={product.name}
       />
 
       {/* Key Benefits */}
@@ -508,10 +636,48 @@ export default function ProductHub() {
   const handleSave = async () => {
     if (!editedProduct || !productId) return;
 
-    await updateProduct.mutateAsync({
+    // Only send updateable fields, not computed/readonly fields
+    const updatePayload: any = {
       id: productId,
-      ...editedProduct,
-    });
+      name: editedProduct.name,
+      slug: editedProduct.slug,
+      sku: editedProduct.sku,
+      barcode: editedProduct.barcode,
+      short_description: editedProduct.short_description,
+      long_description: editedProduct.long_description,
+      tagline: editedProduct.tagline,
+      price: editedProduct.price,
+      compare_at_price: editedProduct.compare_at_price,
+      cost_per_unit: editedProduct.cost_per_unit,
+      status: editedProduct.status,
+      visibility: editedProduct.visibility,
+      development_stage: editedProduct.development_stage,
+      category: editedProduct.category,
+      subcategory: editedProduct.subcategory,
+      product_type: editedProduct.product_type,
+      product_line: editedProduct.product_line,
+      collections: editedProduct.collections,
+      tags: editedProduct.tags,
+      hero_image_id: editedProduct.hero_image_id,
+      brand_voice_notes: editedProduct.brand_voice_notes,
+      target_audience: editedProduct.target_audience,
+      key_benefits: editedProduct.key_benefits,
+      key_differentiators: editedProduct.key_differentiators,
+      seo_title: editedProduct.seo_title,
+      seo_description: editedProduct.seo_description,
+      seo_keywords: editedProduct.seo_keywords,
+      launch_date: editedProduct.launch_date,
+    };
+
+    // Only include supplier fields if they've been explicitly set
+    if (editedProduct.supplier_id !== undefined) {
+      updatePayload.supplier_id = editedProduct.supplier_id;
+    }
+    if (editedProduct.is_self_manufactured !== undefined) {
+      updatePayload.is_self_manufactured = editedProduct.is_self_manufactured;
+    }
+
+    await updateProduct.mutateAsync(updatePayload);
 
     setHasChanges(false);
     setIsEditing(false);
@@ -848,6 +1014,8 @@ export default function ProductHub() {
                       brandName={displayProduct.brand}
                       sku={displayProduct.sku}
                       isEditing={isEditing && canEdit("compliance")}
+                      supplierId={displayProduct.supplier_id}
+                      isSelfManufactured={displayProduct.is_self_manufactured !== false}
                     />
                     {!canEdit("compliance") && isEditing && (
                       <ViewOnlyBanner section="SDS" />

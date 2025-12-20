@@ -1,4 +1,4 @@
-import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu, ShoppingBag, Store, Image, Mail, ChevronDown, Palette, FolderOpen, BookOpen, HelpCircle, Compass, Camera } from "lucide-react";
+import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu, ShoppingBag, Store, Image, Mail, ChevronDown, Palette, FolderOpen, BookOpen, HelpCircle, Compass, Camera, Package, Building2 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +41,7 @@ export function AppSidebar() {
   // Collapsible state for each group (auto-expand if contains active route)
   const [studioOpen, setStudioOpen] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
+  const [productsOpen, setProductsOpen] = useState(false);
   const [marketplaceOpen, setMarketplaceOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
 
@@ -57,6 +58,10 @@ export function AppSidebar() {
     const libraryItems = [
       { url: "/library" },
       { url: "/templates" },
+    ];
+    const productsItems = [
+      { url: "/products" },
+      { url: "/suppliers" },
     ];
     const marketplaceItems = [
       { url: "/marketplace" },
@@ -78,6 +83,7 @@ export function AppSidebar() {
 
     if (checkGroupActive(studioItems)) setStudioOpen(true);
     if (checkGroupActive(libraryItems)) setLibraryOpen(true);
+    if (checkGroupActive(productsItems)) setProductsOpen(true);
     if (checkGroupActive(marketplaceItems)) setMarketplaceOpen(true);
     if (checkGroupActive(helpItems)) setHelpOpen(true);
   }, [location.pathname]);
@@ -112,6 +118,16 @@ export function AppSidebar() {
       items: [
         { title: "The Archives", url: "/library", icon: Archive },
         { title: "Image Library", url: "/image-library", icon: BookOpen },
+      ]
+    },
+    {
+      title: "Products",
+      icon: Package,
+      open: productsOpen,
+      setOpen: setProductsOpen,
+      items: [
+        { title: "Product Hub", url: "/products", icon: Package },
+        { title: "Suppliers", url: "/suppliers", icon: Building2 },
       ]
     },
     ...(isEcommerce ? [{

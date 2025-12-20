@@ -84,6 +84,10 @@ export interface ProductHub {
   variant_count?: number;
   content_count?: number;
   asset_count?: number;
+  
+  // Supplier (requires migration)
+  supplier_id?: string | null;
+  is_self_manufactured?: boolean;
 }
 
 export interface CreateProductInput {
@@ -124,6 +128,9 @@ export interface UpdateProductInput {
   seo_description?: string;
   seo_keywords?: string[];
   launch_date?: string;
+  // Supplier fields (requires migration)
+  supplier_id?: string | null;
+  is_self_manufactured?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -381,16 +388,47 @@ export function useProducts(options: UseProductsOptions = {}) {
   // Update product
   const updateProduct = useMutation({
     mutationFn: async (input: UpdateProductInput) => {
-      const { id, ...updates } = input;
+      const { id, supplier_id, is_self_manufactured, ...coreUpdates } = input;
 
-      const { data, error } = await supabase
+      // Check if supplier fields were explicitly set in this update
+      const hasSupplierFields = 'supplier_id' in input || 'is_self_manufactured' in input;
+
+      // First try without supplier fields (safe approach until migration is run)
+      // This ensures saves work even before the migration
+      let { data, error } = await supabase
         .from('product_hubs')
-        .update(updates)
+        .update(coreUpdates)
         .eq('id', id)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating product (core fields):', error);
+        throw error;
+      }
+
+      // If supplier fields were set, try to update them separately
+      // This way, core fields are saved even if supplier columns don't exist
+      if (hasSupplierFields) {
+        const supplierUpdates: Record<string, any> = {};
+        if ('supplier_id' in input) {
+          supplierUpdates.supplier_id = supplier_id;
+        }
+        if ('is_self_manufactured' in input) {
+          supplierUpdates.is_self_manufactured = is_self_manufactured;
+        }
+
+        const { error: supplierError } = await supabase
+          .from('product_hubs')
+          .update(supplierUpdates)
+          .eq('id', id);
+
+        if (supplierError) {
+          // Silently ignore if columns don't exist - core save already succeeded
+          console.warn('Supplier fields not saved (columns may not exist yet). Run scripts/apply_suppliers_sds.sql to enable supplier features.', supplierError.message);
+        }
+      }
+
       return data as ProductHub;
     },
     onSuccess: (product) => {
