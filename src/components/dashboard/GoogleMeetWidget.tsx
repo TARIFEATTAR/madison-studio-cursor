@@ -22,6 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TVFrame } from "@/components/ui/tv-frame";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
@@ -203,50 +204,44 @@ export function GoogleMeetWidget({ widgetId = 'google-meet' }: GoogleMeetWidgetP
 
         <CardContent className="flex-1 flex flex-col p-3 pt-0">
           {hasLink ? (
-            <button
-              onClick={() => setIsFullscreen(true)}
-              className="flex-1 flex flex-col items-center justify-center gap-3 p-4 rounded-lg border border-border bg-background hover:bg-muted/50 transition-colors group"
-            >
-              {/* Preview Card */}
-              <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-[#4285F4] to-[#34A853] border border-border flex items-center justify-center">
-                {/* Google Meet Logo/Icon */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Video className="w-16 h-16 text-white/90" />
-                </div>
-                
-                {/* Overlay on hover */}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-background/95 px-4 py-2 rounded-lg text-xs font-medium flex items-center gap-2 shadow-level-2">
-                    <Maximize2 className="w-4 h-4" />
-                    Click to join meeting
-                  </div>
-                </div>
-                
-                {/* Meeting ID badge */}
-                <div className="absolute top-2 left-2 bg-background/90 px-2 py-1 rounded text-xs font-mono text-foreground">
-                  {meetId}
-                </div>
-              </div>
-
-              {/* Meeting Info */}
-              <div className="w-full text-center space-y-2">
-                <p className="text-xs text-muted-foreground truncate">
-                  {meetUrl}
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs"
-                  onClick={(e) => {
-                    e.stopPropagation();
+            <div className="flex-1 flex flex-col items-center justify-center gap-3">
+              {/* TV Frame with Preview */}
+              <button
+                onClick={() => setIsFullscreen(true)}
+                className="w-full group"
+              >
+                <TVFrame 
+                  className="w-full h-full min-h-[280px]"
+                  meetingId={meetId || undefined}
+                  meetingUrl={meetUrl}
+                  onJoinClick={() => {
                     window.open(meetUrl, '_blank');
                   }}
                 >
-                  <ExternalLink className="w-3 h-3 mr-1" />
-                  Open in new tab
-                </Button>
+                  <div className="relative w-full h-full aspect-video rounded overflow-hidden bg-gradient-to-br from-[#4285F4] to-[#34A853] flex items-center justify-center">
+                    {/* Google Meet Logo/Icon */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Video className="w-12 h-12 md:w-16 md:h-16 text-white/90 drop-shadow-lg" />
+                    </div>
+                    
+                    {/* Overlay on hover */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center z-40">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-background/95 px-3 md:px-4 py-2 rounded-lg text-[10px] md:text-xs font-medium flex items-center gap-2 shadow-level-2">
+                        <Maximize2 className="w-3 h-3 md:w-4 md:h-4" />
+                        Click to join meeting
+                      </div>
+                    </div>
+                  </div>
+                </TVFrame>
+              </button>
+
+              {/* Meeting Info */}
+              <div className="w-full text-center space-y-2 mt-2">
+                <p className="text-xs text-muted-foreground truncate">
+                  {meetUrl}
+                </p>
               </div>
-            </button>
+            </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-center">
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">

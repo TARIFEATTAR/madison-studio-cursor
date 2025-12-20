@@ -15,3 +15,4 @@ supabase/.next/
 .supabase/
 node_modules
 pnpm-lock.yaml
+*.tsx
