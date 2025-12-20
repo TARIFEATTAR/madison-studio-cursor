@@ -9,7 +9,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { useScentNotes, type ScentNote, type NoteType } from "@/hooks/useProductHub";
+import { useScentNotes, type ScentNote, type NoteType } from "@/hooks/useFormulation";
 
 interface ScentNoteInputProps {
   noteType: NoteType;
