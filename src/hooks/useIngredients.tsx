@@ -514,21 +514,72 @@ export function useProductCertifications(productId: string | null) {
 // API HELPERS
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// EU 26 Fragrance Allergens that require disclosure
+const EU_26_ALLERGENS = [
+  "LIMONENE", "LINALOOL", "CITRONELLOL", "GERANIOL", "CITRAL", 
+  "EUGENOL", "COUMARIN", "FARNESOL", "BENZYL ALCOHOL", "BENZYL BENZOATE",
+  "BENZYL CINNAMATE", "BENZYL SALICYLATE", "CINNAMAL", "CINNAMYL ALCOHOL",
+  "HYDROXYCITRONELLAL", "ISOEUGENOL", "ALPHA-ISOMETHYL IONONE", "AMYL CINNAMAL",
+  "AMYLCINNAMYL ALCOHOL", "ANISE ALCOHOL", "BUTYLPHENYL METHYLPROPIONAL",
+  "HEXYL CINNAMAL", "HYDROXYISOHEXYL 3-CYCLOHEXENE CARBOXALDEHYDE",
+  "METHYL 2-OCTYNOATE", "EVERNIA PRUNASTRI EXTRACT", "EVERNIA FURFURACEA EXTRACT"
+];
+
 export async function detectAllergens(
   ingredients: Array<{ name: string; inci_name?: string; concentration_percent?: number }>,
   productType: "leave_on" | "rinse_off" = "leave_on"
-) {
-  const { data, error } = await supabase.functions.invoke("detect-allergens", {
-    body: { ingredients, product_type: productType },
-  });
+): Promise<{
+  detected_allergens: DetectedAllergen[];
+  allergen_count: number;
+  requires_disclosure_count: number;
+  warnings: string[];
+  label_allergens: string[];
+}> {
+  // Client-side allergen detection (fallback when Edge Function isn't deployed)
+  // Check ingredients against EU 26 allergens list
+  const detected_allergens: DetectedAllergen[] = [];
+  const label_allergens: string[] = [];
+  const warnings: string[] = [];
 
-  if (error) throw error;
-  return data as {
-    detected_allergens: DetectedAllergen[];
-    allergen_count: number;
-    requires_disclosure_count: number;
-    warnings: string[];
-    label_allergens: string[];
+  // Disclosure thresholds: 0.001% for leave-on, 0.01% for rinse-off
+  const disclosureThreshold = productType === "leave_on" ? 0.001 : 0.01;
+
+  for (const ingredient of ingredients) {
+    const inciName = (ingredient.inci_name || ingredient.name).toUpperCase();
+    
+    // Check if this ingredient is a known allergen
+    const isAllergen = EU_26_ALLERGENS.some(allergen => 
+      inciName.includes(allergen) || allergen.includes(inciName)
+    );
+
+    if (isAllergen) {
+      const concentration = ingredient.concentration_percent ?? 0;
+      const requiresDisclosure = concentration >= disclosureThreshold;
+
+      detected_allergens.push({
+        allergen_name: inciName,
+        source_ingredient: ingredient.name,
+        concentration_percent: concentration,
+        requires_disclosure: requiresDisclosure,
+        regulation: "EU Cosmetics Regulation 1223/2009",
+      });
+
+      if (requiresDisclosure) {
+        label_allergens.push(inciName);
+      }
+    }
+  }
+
+  if (detected_allergens.length > 0) {
+    warnings.push(`${detected_allergens.length} potential allergen(s) detected`);
+  }
+
+  return {
+    detected_allergens,
+    allergen_count: detected_allergens.length,
+    requires_disclosure_count: label_allergens.length,
+    warnings,
+    label_allergens,
   };
 }
 
@@ -536,18 +587,47 @@ export async function generateInciList(
   ingredients: Array<{ name: string; inci_name?: string; concentration_percent?: number; is_allergen?: boolean }>,
   options?: { format?: "eu" | "us" | "simple"; include_percentages?: boolean }
 ) {
-  const { data, error } = await supabase.functions.invoke("generate-inci-list", {
-    body: { ingredients, options },
+  // Client-side INCI list generation (fallback when Edge Function isn't deployed)
+  // Sort by concentration (highest first), then alphabetically
+  const sorted = [...ingredients].sort((a, b) => {
+    const concA = a.concentration_percent ?? 0;
+    const concB = b.concentration_percent ?? 0;
+    if (concB !== concA) return concB - concA;
+    return (a.inci_name || a.name).localeCompare(b.inci_name || b.name);
   });
 
-  if (error) throw error;
-  return data as {
-    formatted_list: string;
-    copy_ready: string;
-    line_break_list: string;
-    ingredient_count: number;
-    allergen_list: string[];
-    allergen_count: number;
+  // Use INCI names (uppercase) or fall back to regular names
+  const inciNames = sorted.map(ing => {
+    const name = ing.inci_name || ing.name;
+    return name.toUpperCase();
+  });
+
+  // Format based on region
+  const format = options?.format || "eu";
+  let formatted_list: string;
+  let copy_ready: string;
+
+  if (format === "simple") {
+    formatted_list = inciNames.join(", ");
+    copy_ready = formatted_list;
+  } else {
+    // EU format: INCI names in descending order of concentration
+    formatted_list = inciNames.join(", ");
+    copy_ready = formatted_list;
+  }
+
+  // Identify allergens
+  const allergen_list = ingredients
+    .filter(ing => ing.is_allergen)
+    .map(ing => (ing.inci_name || ing.name).toUpperCase());
+
+  return {
+    formatted_list,
+    copy_ready,
+    line_break_list: inciNames.join("\n"),
+    ingredient_count: ingredients.length,
+    allergen_list,
+    allergen_count: allergen_list.length,
   };
 }
 
