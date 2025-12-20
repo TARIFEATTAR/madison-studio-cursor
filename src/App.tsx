@@ -53,6 +53,8 @@ const MadisonTest = lazy(() => import("./pages/MadisonTest"));
 const BrandReport = lazy(() => import("./pages/BrandReport"));
 const WidgetDashboard = lazy(() => import("./pages/WidgetDashboard"));
 const DAMLibrary = lazy(() => import("./pages/DAMLibrary"));
+const Products = lazy(() => import("./pages/Products"));
+const ProductHub = lazy(() => import("./pages/ProductHub"));
 
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
@@ -350,6 +352,9 @@ const AppContent = () => {
                   <Route path="/video-project" element={<ProtectedRoute><RouteErrorBoundary routeName="Video Project"><VideoProject /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/image-library" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Library"><ImageLibrary /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/dam" element={<ProtectedRoute><RouteErrorBoundary routeName="Asset Library"><DAMLibrary /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/products" element={<ProtectedRoute><RouteErrorBoundary routeName="Products"><Products /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/products/:productId" element={<ProtectedRoute><RouteErrorBoundary routeName="Product Hub"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/products/:productId/edit" element={<ProtectedRoute><RouteErrorBoundary routeName="Edit Product"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/calendar" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
@@ -400,6 +405,9 @@ const AppContent = () => {
             <Route path="/video-project" element={<ProtectedRoute><RouteErrorBoundary routeName="Video Project"><VideoProject /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/image-library" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Library"><ImageLibrary /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/dam" element={<ProtectedRoute><RouteErrorBoundary routeName="Asset Library"><DAMLibrary /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/products" element={<ProtectedRoute><RouteErrorBoundary routeName="Products"><Products /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/products/:productId" element={<ProtectedRoute><RouteErrorBoundary routeName="Product Hub"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/products/:productId/edit" element={<ProtectedRoute><RouteErrorBoundary routeName="Edit Product"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/calendar" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
