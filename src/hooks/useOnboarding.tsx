@@ -198,6 +198,7 @@ export function useOnboarding() {
     brandName: string;
     industry: string;
     primaryColor: string;
+    businessType?: string;
   }) => {
     if (!user || !currentOrganizationId) return;
 
@@ -205,11 +206,12 @@ export function useOnboarding() {
       // Get industry template configuration
       const industryTemplate = getIndustryTemplate(data.industry);
       
-      // Update organization with brand info and industry configuration
+      // Update organization with brand info, industry configuration, and business type
       await supabase
         .from("organizations")
         .update({
           name: data.brandName,
+          business_type: data.businessType || 'finished_goods',
           brand_config: {
             industry: data.industry,
             primaryColor: data.primaryColor,

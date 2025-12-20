@@ -357,7 +357,8 @@ async function buildBrandContext(organizationId: string) {
       { data: madisonSystemData },
       { data: knowledgeData, error: knowledgeError },
       { data: orgData, error: orgError },
-      { data: docsData, error: docsError }
+      { data: docsData, error: docsError },
+      { data: businessTypeConfigData, error: businessTypeError }
     ] = await Promise.all([
       // Fetch Madison system config
       supabase
@@ -374,10 +375,10 @@ async function buildBrandContext(organizationId: string) {
         .eq('is_active', true)
         .limit(20), // Limit to 20 most recent knowledge entries
       
-      // Fetch organization brand config
+      // Fetch organization brand config and business type
       supabase
         .from('organizations')
-        .select('name, brand_config')
+        .select('name, brand_config, business_type')
         .eq('id', organizationId)
         .single(),
       
@@ -388,7 +389,10 @@ async function buildBrandContext(organizationId: string) {
         .eq('organization_id', organizationId)
         .eq('processing_status', 'completed')
         .order('created_at', { ascending: false })
-        .limit(5)
+        .limit(5),
+      
+      // Fetch business type config based on org's business type (uses RPC for safety)
+      supabase.rpc('get_org_business_type_config', { org_id: organizationId })
     ]);
     
     if (knowledgeError) {
@@ -402,6 +406,23 @@ async function buildBrandContext(organizationId: string) {
     if (docsError) {
       console.error('Error fetching brand documents:', docsError);
     }
+    
+    if (businessTypeError) {
+      console.error('Error fetching business type config:', businessTypeError);
+    }
+    
+    // Parse business type config
+    const businessTypeConfig = businessTypeConfigData as {
+      business_type?: string;
+      display_name?: string;
+      vocabulary?: Record<string, string>;
+      ai_context?: {
+        industry_terms?: string[];
+        content_focus?: string;
+        tone_hints?: string;
+        target_audience?: string;
+      };
+    } | null;
     
     // ✨ BRAND KNOWLEDGE TRANSPARENCY LOGGING
     console.log('[BRAND KNOWLEDGE CHECK]', {
@@ -457,6 +478,50 @@ async function buildBrandContext(organizationId: string) {
     // LAYER 2: Client Brand Knowledge
     if (orgData?.name) {
       contextParts.push(`\n\nORGANIZATION: ${orgData.name}`);
+    }
+    
+    // BUSINESS TYPE CONTEXT - Industry-specific vocabulary and focus
+    if (businessTypeConfig && businessTypeConfig.business_type) {
+      contextParts.push('\n╔══════════════════════════════════════════════════════════════════╗');
+      contextParts.push('║              BUSINESS TYPE CONTEXT                               ║');
+      contextParts.push(`║              Type: ${(businessTypeConfig.display_name || businessTypeConfig.business_type).toUpperCase().padEnd(43)}║`);
+      contextParts.push('╚══════════════════════════════════════════════════════════════════╝');
+      
+      // Vocabulary adaptations
+      if (businessTypeConfig.vocabulary && Object.keys(businessTypeConfig.vocabulary).length > 0) {
+        contextParts.push('\n━━━ VOCABULARY (Use these terms) ━━━');
+        Object.entries(businessTypeConfig.vocabulary).forEach(([key, value]) => {
+          contextParts.push(`• ${key} → "${value}"`);
+        });
+      }
+      
+      // AI context for content focus
+      if (businessTypeConfig.ai_context) {
+        const aiContext = businessTypeConfig.ai_context;
+        
+        if (aiContext.content_focus) {
+          contextParts.push(`\n━━━ CONTENT FOCUS ━━━`);
+          contextParts.push(aiContext.content_focus);
+        }
+        
+        if (aiContext.tone_hints) {
+          contextParts.push(`\n━━━ TONE GUIDANCE ━━━`);
+          contextParts.push(aiContext.tone_hints);
+        }
+        
+        if (aiContext.target_audience) {
+          contextParts.push(`\n━━━ TARGET AUDIENCE ━━━`);
+          contextParts.push(aiContext.target_audience);
+        }
+        
+        if (aiContext.industry_terms && aiContext.industry_terms.length > 0) {
+          contextParts.push(`\n━━━ INDUSTRY TERMINOLOGY ━━━`);
+          contextParts.push(`Relevant terms to understand and use appropriately:`);
+          contextParts.push(aiContext.industry_terms.join(', '));
+        }
+      }
+      
+      console.log('[BUSINESS TYPE] Injected context for:', businessTypeConfig.business_type);
     }
     
     // Add structured brand knowledge with enhanced formatting

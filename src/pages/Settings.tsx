@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Package, Users, Bell, CreditCard, FolderKanban, Sparkles, Target, Plug } from "lucide-react";
+import { Building2, Package, Users, Bell, CreditCard, FolderKanban, Sparkles, Target, Plug, Briefcase } from "lucide-react";
 import { ProductsTab } from "@/components/settings/ProductsTab";
 import { BrandGuidelinesTab } from "@/components/settings/BrandGuidelinesTab";
 import { TeamTab } from "@/components/settings/TeamTab";
@@ -10,6 +10,7 @@ import { CollectionsTab } from "@/components/settings/CollectionsTab";
 import { MadisonTrainingTab } from "@/components/settings/MadisonTrainingTab";
 import { GoalsTab } from "@/components/settings/GoalsTab";
 import { IntegrationsTab } from "@/components/settings/IntegrationsTab";
+import { BusinessTypeTab } from "@/components/settings/BusinessTypeTab";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,6 +69,13 @@ export default function Settings() {
                 >
                   <Building2 className="w-4 h-4" />
                   <span className="hidden sm:inline">Brand</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="business-type" 
+                  className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
+                >
+                  <Briefcase className="w-4 h-4" />
+                  <span className="hidden sm:inline">Business</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="madison"
@@ -130,6 +138,10 @@ export default function Settings() {
 
             <TabsContent value="brand" className="space-y-6">
               <BrandGuidelinesTab />
+            </TabsContent>
+
+            <TabsContent value="business-type" className="space-y-6">
+              <BusinessTypeTab />
             </TabsContent>
 
             <TabsContent value="madison">

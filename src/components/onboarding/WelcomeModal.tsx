@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, Sparkles, FlaskConical, Box, FlaskRound } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getIndustryOptions } from "@/config/industryTemplates";
+import { cn } from "@/lib/utils";
+import type { BusinessType } from "@/hooks/useBusinessType";
 
 interface WelcomeModalProps {
   open: boolean;
@@ -15,17 +17,26 @@ interface WelcomeModalProps {
     industry: string; 
     primaryColor: string;
     websiteUrl?: string;
+    businessType?: BusinessType;
   }) => void;
   onSkip?: () => void;
 }
 
 const INDUSTRY_OPTIONS = getIndustryOptions();
 
+const BUSINESS_TYPE_OPTIONS = [
+  { value: "finished_goods" as BusinessType, label: "Finished Goods Brand", description: "Sell products to consumers", icon: Sparkles },
+  { value: "bottles_vessels" as BusinessType, label: "Bottles & Vessels", description: "Container manufacturing", icon: FlaskConical },
+  { value: "packaging_boxes" as BusinessType, label: "Packaging & Boxes", description: "Secondary packaging", icon: Box },
+  { value: "raw_materials" as BusinessType, label: "Raw Materials", description: "Ingredient supplier", icon: FlaskRound },
+];
+
 export function WelcomeModal({ open, onComplete, onSkip }: WelcomeModalProps) {
   const [userName, setUserName] = useState("");
   const [brandName, setBrandName] = useState("");
   const [industry, setIndustry] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
+  const [businessType, setBusinessType] = useState<BusinessType>("finished_goods");
 
   const handleSubmit = () => {
     if (!userName.trim() || !brandName.trim()) return;
@@ -34,7 +45,8 @@ export function WelcomeModal({ open, onComplete, onSkip }: WelcomeModalProps) {
       brandName: brandName.trim(), 
       industry, 
       primaryColor: "#B8956A",
-      websiteUrl: websiteUrl.trim() || undefined
+      websiteUrl: websiteUrl.trim() || undefined,
+      businessType,
     });
   };
 
@@ -85,6 +97,47 @@ export function WelcomeModal({ open, onComplete, onSkip }: WelcomeModalProps) {
               onChange={(e) => setBrandName(e.target.value)}
               className="bg-input border-border/40"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-foreground">
+              What kind of business are you?
+            </Label>
+            <div className="grid grid-cols-2 gap-2">
+              {BUSINESS_TYPE_OPTIONS.map((option) => {
+                const Icon = option.icon;
+                const isSelected = businessType === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setBusinessType(option.value)}
+                    className={cn(
+                      "flex items-start gap-2 p-3 rounded-lg border text-left transition-all",
+                      isSelected 
+                        ? "border-primary bg-primary/5" 
+                        : "border-border/40 hover:border-border"
+                    )}
+                  >
+                    <Icon className={cn(
+                      "w-4 h-4 mt-0.5 flex-shrink-0",
+                      isSelected ? "text-primary" : "text-muted-foreground"
+                    )} />
+                    <div>
+                      <p className={cn(
+                        "text-sm font-medium",
+                        isSelected ? "text-primary" : "text-foreground"
+                      )}>
+                        {option.label}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {option.description}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="space-y-2">
