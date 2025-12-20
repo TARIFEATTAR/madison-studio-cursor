@@ -14,6 +14,9 @@ import {
   ChevronUp,
   Search,
   BookPlus,
+  Info,
+  CloudOff,
+  Cloud,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +56,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import {
@@ -171,6 +179,19 @@ export function IngredientsSection({
               <CardTitle className="flex items-center gap-2 text-lg">
                 <FlaskConical className="w-5 h-5 text-primary" />
                 Ingredients
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center gap-1 text-xs font-normal text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                      <Cloud className="w-3 h-3" />
+                      Auto-saved
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs text-sm">
+                      Ingredients are saved automatically when you add or remove them. No need to click Save!
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
               </CardTitle>
               <CardDescription>
                 {ingredients.length} ingredient{ingredients.length !== 1 ? "s" : ""} · 
@@ -263,32 +284,69 @@ export function IngredientsSection({
           <CardTitle className="flex items-center gap-2 text-lg">
             <FileText className="w-5 h-5 text-primary" />
             INCI List
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-sm">
+                <p className="font-medium mb-1">What is INCI?</p>
+                <p className="text-sm text-muted-foreground">
+                  INCI (International Nomenclature of Cosmetic Ingredients) is the standardized 
+                  naming system required on cosmetic labels worldwide. This generates a 
+                  copy-ready list sorted by concentration.
+                </p>
+              </TooltipContent>
+            </Tooltip>
           </CardTitle>
           <CardDescription>
-            Copy-ready ingredient list for labels (EU compliant)
+            Generate the official ingredient list for your product labels
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button onClick={generateINCIList} variant="outline" disabled={ingredients.length === 0}>
-            <Sparkles className="w-4 h-4 mr-2" />
-            Generate INCI List
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button onClick={generateINCIList} variant="outline" disabled={ingredients.length === 0}>
+              <Sparkles className="w-4 h-4 mr-2" />
+              Generate INCI List
+            </Button>
+            {ingredients.length === 0 && (
+              <span className="text-sm text-muted-foreground">
+                Add ingredients first to generate
+              </span>
+            )}
+          </div>
 
           {inciList && (
-            <div className="relative">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
+                  Ready to copy to your product label:
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => copyToClipboard(inciList)}
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-4 h-4 mr-2" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy to Clipboard
+                    </>
+                  )}
+                </Button>
+              </div>
               <Textarea
                 value={inciList}
                 readOnly
-                className="min-h-[100px] font-mono text-xs"
+                className="min-h-[100px] font-mono text-xs bg-muted/50"
               />
-              <Button
-                size="sm"
-                variant="ghost"
-                className="absolute top-2 right-2"
-                onClick={() => copyToClipboard(inciList)}
-              >
-                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              </Button>
+              <p className="text-xs text-muted-foreground">
+                ℹ️ Ingredients are listed in descending order of concentration (EU compliant format)
+              </p>
             </div>
           )}
         </CardContent>
@@ -300,36 +358,75 @@ export function IngredientsSection({
           <CardTitle className="flex items-center gap-2 text-lg">
             <Shield className="w-5 h-5 text-primary" />
             Certifications
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center gap-1 text-xs font-normal text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                  <Cloud className="w-3 h-3" />
+                  Auto-saved
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs text-sm">
+                  Certifications are saved automatically when you click them. Click once to add, click again to remove.
+                </p>
+              </TooltipContent>
+            </Tooltip>
           </CardTitle>
           <CardDescription>
-            Claim or display certifications for this product
+            Click to toggle certifications for this product
+            {!isEditing && (
+              <span className="text-amber-600 ml-1">
+                (Enable Edit mode to modify)
+              </span>
+            )}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {!isEditing && (
+            <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+              <Info className="w-4 h-4 flex-shrink-0" />
+              <span>Click "Edit" at the top of the page to add or remove certifications</span>
+            </div>
+          )}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {CERTIFICATION_TYPES.map((cert) => {
               const hasCert = hasCertification(cert.value);
               return (
-                <button
-                  key={cert.value}
-                  type="button"
-                  onClick={() => isEditing && toggleCertification.mutate(cert.value)}
-                  disabled={!isEditing}
-                  className={cn(
-                    "flex items-center gap-2 p-3 rounded-lg border transition-all text-left",
-                    hasCert
-                      ? "bg-primary/10 border-primary text-primary"
-                      : "bg-muted/50 border-border text-muted-foreground hover:border-primary/50",
-                    !isEditing && "cursor-default"
-                  )}
-                >
-                  <span className="text-xl">{cert.icon}</span>
-                  <span className="text-sm font-medium">{cert.label}</span>
-                  {hasCert && <Check className="w-4 h-4 ml-auto" />}
-                </button>
+                <Tooltip key={cert.value}>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => isEditing && toggleCertification.mutate(cert.value)}
+                      disabled={!isEditing}
+                      className={cn(
+                        "flex items-center gap-2 p-3 rounded-lg border transition-all text-left",
+                        hasCert
+                          ? "bg-primary/10 border-primary text-primary"
+                          : "bg-muted/50 border-border text-muted-foreground",
+                        isEditing && !hasCert && "hover:border-primary/50 hover:bg-muted",
+                        !isEditing && "cursor-default opacity-75"
+                      )}
+                    >
+                      <span className="text-xl">{cert.icon}</span>
+                      <span className="text-sm font-medium">{cert.label}</span>
+                      {hasCert && <Check className="w-4 h-4 ml-auto" />}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {isEditing 
+                      ? (hasCert ? `Click to remove ${cert.label}` : `Click to add ${cert.label}`)
+                      : `${cert.label} ${hasCert ? "(active)" : "(not set)"}`
+                    }
+                  </TooltipContent>
+                </Tooltip>
               );
             })}
           </div>
+          {certifications.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              ✓ {certifications.length} certification{certifications.length !== 1 ? "s" : ""} active
+            </p>
+          )}
         </CardContent>
       </Card>
 
