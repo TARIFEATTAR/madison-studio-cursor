@@ -199,19 +199,7 @@ export function useDAM(options: UseDAMOptions = {}) {
       // Show undo toast
       toast({
         title: "Deleted",
-        description: (
-          <div className="flex items-center justify-between">
-            <span>{asset.name} moved to trash</span>
-          </div>
-        ),
-        action: (
-          <button
-            onClick={() => undoDelete(asset.id)}
-            className="text-primary hover:underline font-medium"
-          >
-            Undo
-          </button>
-        ),
+        description: `${asset.name} moved to trash. Click to undo.`,
         duration: 10000, // 10 seconds to undo
       });
 
