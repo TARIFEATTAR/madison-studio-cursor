@@ -165,6 +165,12 @@ export function useIngredientLibrary(options: { query?: string; enabled?: boolea
     queryKey: ["ingredient-library", currentOrganizationId, query],
     queryFn: async () => {
       const searchTerm = query?.trim().toLowerCase() || "";
+      
+      console.log("[IngredientLibrary] Fetching with:", { 
+        orgId: currentOrganizationId, 
+        searchTerm,
+        enabled 
+      });
 
       // Fetch both global ingredients (org_id IS NULL) and org-specific
       const { data, error } = await supabase
@@ -176,29 +182,36 @@ export function useIngredientLibrary(options: { query?: string; enabled?: boolea
             : `organization_id.is.null`
         )
         .order("name", { ascending: true })
-        .limit(200); // Fetch more, filter client-side
+        .limit(200);
+
+      console.log("[IngredientLibrary] Raw response:", { 
+        dataCount: data?.length || 0, 
+        error,
+        firstItem: data?.[0]
+      });
 
       if (error) {
-        console.error("Ingredient library fetch error:", error);
+        console.error("[IngredientLibrary] Fetch error:", error);
         return [];
       }
 
       let results = (data || []) as IngredientLibraryItem[];
 
-      // Client-side search filter for better accuracy
+      // Client-side search filter
       if (searchTerm.length > 0) {
         results = results.filter(
           (ing) =>
             ing.name?.toLowerCase().includes(searchTerm) ||
             ing.inci_name?.toLowerCase().includes(searchTerm)
         );
+        console.log("[IngredientLibrary] After filter:", results.length, "results for", searchTerm);
       }
 
-      return results.slice(0, 50); // Return max 50 results
+      return results.slice(0, 50);
     },
     enabled: enabled,
-    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
-    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 

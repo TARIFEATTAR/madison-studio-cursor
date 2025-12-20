@@ -170,13 +170,8 @@ export function useProductTasks(productId: string | null, organizationId: string
 
       let query = supabase
         .from("product_tasks")
-        .select(`
-          *,
-          assignee:profiles!product_tasks_assignee_id_fkey(id, full_name, email),
-          creator:profiles!product_tasks_created_by_fkey(id, full_name)
-        `)
+        .select("*")
         .eq("organization_id", organizationId)
-        .order("sort_order", { ascending: true })
         .order("created_at", { ascending: false });
 
       if (productId) {
