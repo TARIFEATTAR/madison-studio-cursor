@@ -66,6 +66,7 @@ import {
   type ProductStatus,
   type DevelopmentStage,
 } from "@/hooks/useProducts";
+import { FormulationSection } from "@/components/products/FormulationSection";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PRODUCT INFO TAB
@@ -636,9 +637,10 @@ export default function ProductHub() {
               </TabsContent>
 
               <TabsContent value="formulation">
-                <PlaceholderTab
-                  title="Formulation Details"
-                  description="Coming in Week 9 - Manage ingredients and formulation data"
+                <FormulationSection
+                  productId={productId!}
+                  productCategory={displayProduct.category || displayProduct.product_type}
+                  isEditing={isEditing}
                 />
               </TabsContent>
 
