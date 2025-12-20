@@ -67,6 +67,7 @@ import {
   type DevelopmentStage,
 } from "@/hooks/useProducts";
 import { FormulationSection } from "@/components/products/FormulationSection";
+import { IngredientsSection } from "@/components/products/IngredientsSection";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PRODUCT INFO TAB
@@ -601,6 +602,10 @@ export default function ProductHub() {
                   <Beaker className="w-4 h-4" />
                   Formulation
                 </TabsTrigger>
+                <TabsTrigger value="ingredients" className="gap-2">
+                  <Beaker className="w-4 h-4" />
+                  Ingredients
+                </TabsTrigger>
                 <TabsTrigger value="content" className="gap-2">
                   <Sparkles className="w-4 h-4" />
                   Content
@@ -640,6 +645,14 @@ export default function ProductHub() {
                 <FormulationSection
                   productId={productId!}
                   productCategory={displayProduct.category || displayProduct.product_type}
+                  isEditing={isEditing}
+                />
+              </TabsContent>
+
+              <TabsContent value="ingredients">
+                <IngredientsSection
+                  productId={productId!}
+                  productName={displayProduct.name}
                   isEditing={isEditing}
                 />
               </TabsContent>
