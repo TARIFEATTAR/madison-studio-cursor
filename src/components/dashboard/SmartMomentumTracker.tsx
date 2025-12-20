@@ -35,26 +35,23 @@ export function SmartMomentumTracker() {
 
   if (isLoading) {
     return (
-      <div className="col-span-1 md:col-span-6">
-        <div className="bg-white border border-[#E0E0E0] rounded-xl p-6 h-full">
-          <div className="flex items-center gap-2 mb-4">
-            <Skeleton className="w-8 h-8 rounded-full skeleton-shimmer" />
-            <Skeleton className="h-4 w-28 skeleton-shimmer" />
-          </div>
-          <Skeleton className="h-4 w-full mb-2 skeleton-shimmer" />
-          <Skeleton className="h-2 w-full mb-4 rounded-full skeleton-shimmer" />
-          <Skeleton className="h-4 w-48 mb-4 skeleton-shimmer" />
-          <Skeleton className="h-10 w-full rounded-md skeleton-shimmer" />
+      <div className="bg-white border border-[#E0E0E0] rounded-lg p-6 h-full flex flex-col">
+        <div className="flex items-center gap-2 mb-4">
+          <Skeleton className="w-8 h-8 rounded-full skeleton-shimmer" />
+          <Skeleton className="h-4 w-28 skeleton-shimmer" />
         </div>
+        <Skeleton className="h-4 w-full mb-2 skeleton-shimmer" />
+        <Skeleton className="h-2 w-full mb-4 rounded-full skeleton-shimmer" />
+        <Skeleton className="h-4 w-48 mb-4 skeleton-shimmer" />
+        <Skeleton className="h-10 w-full rounded-md skeleton-shimmer" />
       </div>
     );
   }
 
   return (
-    <div className="col-span-1 md:col-span-6">
-      <div className="bg-white border border-[#E0E0E0] rounded-xl p-6 h-full hover-lift transition-all duration-200">
+    <div className="bg-white border border-[#E0E0E0] rounded-lg p-6 h-full flex flex-col hover-lift transition-all duration-200">
         {/* Header */}
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-4 flex-shrink-0">
           <div className="w-8 h-8 rounded-full bg-[#B8956A]/10 flex items-center justify-center">
             <Flame className="w-4 h-4 text-[#B8956A]" />
           </div>
@@ -62,7 +59,7 @@ export function SmartMomentumTracker() {
         </div>
 
         {/* Goal Progress */}
-        <div className="mb-4">
+        <div className="mb-4 flex-shrink-0">
           <div className="flex justify-between items-center mb-2">
             <p className="text-sm text-[#1C150D]">
               Weekly Goal: {weeklyGoal} pieces
@@ -84,7 +81,7 @@ export function SmartMomentumTracker() {
         </div>
 
         {/* Encouragement Text */}
-        <div className="mb-4">
+        <div className="mb-4 flex-shrink-0">
           {isGoalMet ? (
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#A3C98D]" />
@@ -111,7 +108,7 @@ export function SmartMomentumTracker() {
         {/* CTA Button */}
         <Button
           onClick={() => navigate("/create")}
-          className={`w-full ${
+          className={`w-full flex-shrink-0 ${
             isGoalMet 
               ? 'bg-[#A3C98D] hover:bg-[#8FB87A] text-white' 
               : 'bg-[#B8956A] hover:bg-[#A3865A] text-white'
@@ -132,14 +129,13 @@ export function SmartMomentumTracker() {
 
         {/* Weekly Stats Mini */}
         {stats && (
-          <div className="mt-4 pt-4 border-t border-[#E0E0E0] flex justify-between text-xs text-[#1C150D]/50">
+          <div className="mt-4 pt-4 border-t border-[#E0E0E0] flex justify-between text-xs text-[#1C150D]/50 flex-shrink-0">
             <span>{stats.piecesScheduled} scheduled</span>
             <span>{stats.piecesPublished} published</span>
             <span>{stats.streakDays} day streak</span>
           </div>
         )}
       </div>
-    </div>
   );
 }
 

@@ -50,7 +50,7 @@ export function DashboardRecentActivity({
 
   if (recentActivity.length === 0) {
     return (
-      <div className="bg-white border border-[#E0E0E0] rounded-xl overflow-hidden">
+      <div className="bg-white border border-[#E0E0E0] rounded-lg overflow-hidden h-full flex flex-col">
         {/* Header */}
         <div className="p-4 md:p-6">
           <h3 className="text-sm font-medium text-[#1C150D]/60 mb-4">Recent Activity</h3>
@@ -75,7 +75,7 @@ export function DashboardRecentActivity({
   }
 
   return (
-    <div className="bg-white border border-[#E0E0E0] rounded-xl overflow-hidden transition-all duration-300">
+    <div className="bg-white border border-[#E0E0E0] rounded-lg overflow-hidden transition-all duration-300 h-full flex flex-col">
       {/* Collapsible Header */}
       {collapsible ? (
         <button

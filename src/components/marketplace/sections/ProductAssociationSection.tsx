@@ -36,7 +36,7 @@ export function ProductAssociationSection({ productId, onProductSelect, onProduc
       if (!orgMember) return;
 
       const { data, error } = await supabase
-        .from("brand_products")
+        .from("product_hubs")
         .select("*")
         .eq("organization_id", orgMember.organization_id)
         .order("name");

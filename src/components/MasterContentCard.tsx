@@ -3,7 +3,6 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreVertical, Archive, Trash2, FileText, Sparkles } from "lucide-react";
-import { getCollectionIcon, normalizeCollectionName, formatCollectionDisplay } from "@/utils/collectionIcons";
 import { getContentCategoryLabel, getContentSubtypeLabel } from "@/utils/contentSubtypeLabels";
 
 interface MasterContentCardProps {
@@ -13,7 +12,6 @@ interface MasterContentCardProps {
     content_type: string;
     full_content: string;
     word_count?: number;
-    collection?: string;
     dip_week?: number;
     pillar_focus?: string;
     created_at: string;
@@ -25,16 +23,6 @@ interface MasterContentCardProps {
   onClick?: (id: string) => void;
   onGenerateDerivatives?: (id: string) => void;
 }
-
-const collectionColors: Record<string, string> = {
-  humanities: "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20",
-  cadence: "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20", // Legacy
-  reserve: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20",
-  purity: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20",
-  elemental: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20",
-  sacred_space: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20", // Legacy
-  "sacred space": "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20", // Legacy
-};
 
 const dipWorlds: Record<number, string> = {
   1: "World 1: Foundation",
@@ -88,11 +76,6 @@ export function MasterContentCard({
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
   };
-
-  const normalizedCollection = normalizeCollectionName(content.collection);
-  const collectionColorClass = collectionColors[normalizedCollection] || collectionColors.humanities;
-  const displayCollection = formatCollectionDisplay(content.collection);
-  const CollectionIcon = getCollectionIcon(content.collection);
 
   return (
     <Card 
@@ -156,15 +139,6 @@ export function MasterContentCard({
           )}
         </div>
         <div className="flex flex-wrap gap-2 mt-2">
-          <Badge variant="outline" className={collectionColorClass}>
-            {CollectionIcon && (
-              <span className="flex items-center gap-1.5">
-                <CollectionIcon className="w-3 h-3" />
-                {displayCollection}
-              </span>
-            )}
-            {!CollectionIcon && displayCollection}
-          </Badge>
           {content.dip_week && (
             <Badge variant="outline">
               {dipWorlds[content.dip_week] || `Week ${content.dip_week}`}

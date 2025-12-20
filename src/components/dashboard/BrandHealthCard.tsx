@@ -50,8 +50,8 @@ export function BrandHealthCard({ compact = false }: BrandHealthCardProps) {
 
   if (healthLoading) {
     return (
-      <div className={`bg-white border border-[#E0E0E0] rounded-xl ${compact ? 'h-full' : ''}`}>
-        <Skeleton className="h-full min-h-[200px] rounded-xl skeleton-shimmer" />
+      <div className="bg-white border border-[#E0E0E0] rounded-lg">
+        <Skeleton className="min-h-[120px] rounded-lg skeleton-shimmer" />
       </div>
     );
   }
@@ -59,14 +59,14 @@ export function BrandHealthCard({ compact = false }: BrandHealthCardProps) {
   // Compact mode - vertical layout for sidebar position
   if (compact) {
     return (
-      <div className="bg-white border border-[#E0E0E0] rounded-xl overflow-hidden transition-all duration-300 h-full flex flex-col hover-lift">
+      <div className="bg-white border border-[#E0E0E0] rounded-lg overflow-hidden transition-all duration-300 flex flex-col hover-lift">
         {/* Header - Always Visible & Clickable */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full p-4 md:p-5 text-left flex flex-col items-center hover:bg-[#FAFAFA] transition-colors touch-manipulation"
+          className="w-full p-3 text-left flex flex-col items-center hover:bg-[#FAFAFA] transition-colors touch-manipulation"
         >
           {/* Circular Progress - Centered */}
-          <div className="relative w-16 h-16 md:w-20 md:h-20 mb-3">
+          <div className="relative w-14 h-14 mb-2">
             <svg className="w-full h-full transform -rotate-90">
               <circle
                 cx="50%"
@@ -88,29 +88,28 @@ export function BrandHealthCard({ compact = false }: BrandHealthCardProps) {
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xl md:text-2xl font-semibold text-[#1C150D]">{brandScore}</span>
+              <span className="text-lg font-semibold text-[#1C150D]">{brandScore}</span>
             </div>
           </div>
 
           {/* Title & Rating - Centered */}
-          <div className="text-center">
-            <h3 className="text-xs font-medium text-[#1C150D]/60 mb-1">Brand Health</h3>
-            <p className={`text-sm md:text-base font-semibold ${getBrandHealthColor(brandScore)}`}>
+          <div className="text-center flex items-center gap-2">
+            <h3 className="text-xs font-medium text-[#1C150D]/60">Brand Health</h3>
+            <span className="text-xs text-[#1C150D]/30">•</span>
+            <p className={`text-xs font-semibold ${getBrandHealthColor(brandScore)}`}>
               {getRating(brandScore)}
             </p>
+            <ChevronDown 
+              className={`w-3 h-3 text-[#1C150D]/40 transition-transform duration-200 ${
+                isExpanded ? 'rotate-180' : ''
+              }`}
+            />
           </div>
-
-          {/* Expand/Collapse Icon */}
-          <ChevronDown 
-            className={`w-4 h-4 text-[#1C150D]/40 transition-transform duration-200 mt-2 ${
-              isExpanded ? 'rotate-180' : ''
-            }`}
-          />
         </button>
 
         {/* Expanded Section - Category Breakdown */}
         {isExpanded && (
-          <div className="flex-1 px-4 pb-4 space-y-3 border-t border-[#E0E0E0] pt-3 animate-in slide-in-from-top-2 duration-200 overflow-auto">
+          <div className="px-3 pb-3 space-y-2 border-t border-[#E0E0E0] pt-2 animate-in slide-in-from-top-2 duration-200">
             {categories.map((category) => (
               <div key={category.name}>
                 <div className="flex justify-between items-center mb-1">
@@ -162,7 +161,7 @@ export function BrandHealthCard({ compact = false }: BrandHealthCardProps) {
 
   // Full width mode - horizontal layout (original)
   return (
-    <div className="col-span-1 md:col-span-4 bg-white border border-[#E0E0E0] rounded-xl overflow-hidden transition-all duration-300 hover-lift">
+    <div className="col-span-1 md:col-span-4 bg-white border border-[#E0E0E0] rounded-lg overflow-hidden transition-all duration-300 hover-lift">
       {/* Collapsed Header - Always Visible & Clickable */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}

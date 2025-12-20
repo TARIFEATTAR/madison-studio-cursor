@@ -43,8 +43,8 @@ export function PipelineOverviewWidget() {
   const total = Object.values(pipelineData).reduce((a, b) => a + b, 0);
   
   return (
-    <Card className="bg-card border-border">
-      <CardHeader className="pb-2">
+    <Card className="bg-card border-border h-full flex flex-col">
+      <CardHeader className="pb-2 flex-shrink-0">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Package className="w-4 h-4 text-primary" />
@@ -55,7 +55,7 @@ export function PipelineOverviewWidget() {
           </Badge>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 flex flex-col">
         <div className="space-y-3">
           {Object.entries(pipelineData).map(([stage, count]) => (
             <div key={stage} className="flex items-center gap-3">
@@ -70,7 +70,7 @@ export function PipelineOverviewWidget() {
         <Button 
           variant="outline" 
           size="sm" 
-          className="w-full mt-4"
+          className="w-full mt-auto"
           onClick={() => navigate("/products")}
         >
           View All Products
@@ -89,14 +89,14 @@ export function TeamActivityWidget() {
   ];
   
   return (
-    <Card className="bg-card border-border">
-      <CardHeader className="pb-2">
+    <Card className="bg-card border-border h-full flex flex-col">
+      <CardHeader className="pb-2 flex-shrink-0">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <Users className="w-4 h-4 text-primary" />
           Team Activity
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         <div className="space-y-3">
           {recentActivity.map((item, i) => (
             <div key={i} className="flex items-start gap-2 text-sm">
@@ -428,15 +428,15 @@ export function CampaignPerformanceWidget() {
 
 export function RevenueMetricsWidget() {
   return (
-    <Card className="bg-card border-border">
-      <CardHeader className="pb-2">
+    <Card className="bg-card border-border h-full flex flex-col">
+      <CardHeader className="pb-2 flex-shrink-0">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <DollarSign className="w-4 h-4 text-yellow-600" />
           Revenue Overview
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 gap-4">
+      <CardContent className="flex-1 flex items-center">
+        <div className="grid grid-cols-2 gap-4 w-full">
           <div className="text-center p-3 rounded-lg bg-muted/50">
             <p className="text-2xl font-bold">$24.5K</p>
             <p className="text-xs text-muted-foreground">This Month</p>

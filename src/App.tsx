@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OrganizationProvider } from "@/contexts/OrganizationContext";
+import { DashboardWidgetProvider } from "@/contexts/DashboardWidgetContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState, Suspense, lazy } from "react";
 import React from "react";
@@ -30,7 +31,6 @@ const Create = lazy(() => import("./pages/Create"));
 const ContentEditor = lazy(() => import("./pages/ContentEditor"));
 const Repurpose = lazy(() => import("./pages/Repurpose"));
 const Multiply = lazy(() => import("./pages/Multiply"));
-const Templates = lazy(() => import("./pages/Templates"));
 const Calendar = lazy(() => import("./pages/Calendar"));
 const Settings = lazy(() => import("./pages/Settings"));
 const MeetMadison = lazy(() => import("./pages/MeetMadison"));
@@ -310,7 +310,11 @@ const RootRoute = () => {
     );
   }
 
-  return <DashboardNew />;
+  return (
+    <DashboardWidgetProvider>
+      <DashboardNew />
+    </DashboardWidgetProvider>
+  );
 };
 
 const AppContent = () => {
@@ -336,7 +340,7 @@ const AppContent = () => {
                 <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><RootRoute /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/dashboard" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><DashboardNew /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/dashboard" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><DashboardWidgetProvider><DashboardNew /></DashboardWidgetProvider></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/dashboard-custom" element={<ProtectedRoute><RouteErrorBoundary routeName="Widget Dashboard"><WidgetDashboard /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/library" element={<ProtectedRoute><RouteErrorBoundary routeName="Library"><Library /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/create" element={<ProtectedRoute><RouteErrorBoundary routeName="Create"><Create /></RouteErrorBoundary></ProtectedRoute>} />
@@ -347,7 +351,6 @@ const AppContent = () => {
                   <Route path="/marketplace/etsy" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Etsy Listing"><CreateEtsyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
                   <Route path="/marketplace/tiktok_shop" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create TikTok Shop Listing"><CreateTikTokShopListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
                   <Route path="/marketplace/shopify" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Shopify Listing"><CreateShopifyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
-                  <Route path="/templates" element={<ProtectedRoute><RouteErrorBoundary routeName="Templates"><Templates /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/image-editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Editor"><ImageEditor /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/darkroom" element={<ProtectedRoute><RouteErrorBoundary routeName="Dark Room"><DarkRoom /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/light-table" element={<ProtectedRoute><RouteErrorBoundary routeName="Light Table"><LightTable /></RouteErrorBoundary></ProtectedRoute>} />
@@ -390,7 +393,7 @@ const AppContent = () => {
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<ProtectedRoute><RouteErrorBoundary routeName="Onboarding"><Onboarding /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><DashboardNew /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><DashboardWidgetProvider><DashboardNew /></DashboardWidgetProvider></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/dashboard-custom" element={<ProtectedRoute><RouteErrorBoundary routeName="Widget Dashboard"><WidgetDashboard /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/library" element={<ProtectedRoute><RouteErrorBoundary routeName="Library"><Library /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><RouteErrorBoundary routeName="Create"><Create /></RouteErrorBoundary></ProtectedRoute>} />
@@ -401,7 +404,6 @@ const AppContent = () => {
             <Route path="/marketplace/etsy" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Etsy Listing"><CreateEtsyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
             <Route path="/marketplace/tiktok_shop" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create TikTok Shop Listing"><CreateTikTokShopListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
             <Route path="/marketplace/shopify" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Shopify Listing"><CreateShopifyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
-            <Route path="/templates" element={<ProtectedRoute><RouteErrorBoundary routeName="Templates"><Templates /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/image-editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Editor"><ImageEditor /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/darkroom" element={<ProtectedRoute><RouteErrorBoundary routeName="Dark Room"><DarkRoom /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/light-table" element={<ProtectedRoute><RouteErrorBoundary routeName="Light Table"><LightTable /></RouteErrorBoundary></ProtectedRoute>} />

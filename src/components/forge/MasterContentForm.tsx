@@ -4,25 +4,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BLOG_REPURPOSE_TARGETS } from "@/config/blogPostGuidelines";
-import { useCollections } from "@/hooks/useCollections";
 import { useOnboarding } from "@/hooks/useOnboarding";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
-import { Link } from "react-router-dom";
 import { BrandKnowledgeIndicator } from "./BrandKnowledgeIndicator";
 
 interface MasterContentFormProps {
   title: string;
   contentType: string;
   dipWeek: string;
-  collection: string;
+  collection?: string; // Kept for backward compatibility
   pillar: string;
   masterContent: string;
   selectedDerivatives: string[];
   onTitleChange: (value: string) => void;
   onContentTypeChange: (value: string) => void;
   onDipWeekChange: (value: string) => void;
-  onCollectionChange: (value: string) => void;
+  onCollectionChange?: (value: string) => void; // Kept for backward compatibility
   onPillarChange: (value: string) => void;
   onMasterContentChange: (value: string) => void;
   onDerivativesChange: (derivatives: string[]) => void;
@@ -32,19 +28,16 @@ export function MasterContentForm({
   title,
   contentType,
   dipWeek,
-  collection,
   pillar,
   masterContent,
   selectedDerivatives,
   onTitleChange,
   onContentTypeChange,
   onDipWeekChange,
-  onCollectionChange,
   onPillarChange,
   onMasterContentChange,
   onDerivativesChange,
 }: MasterContentFormProps) {
-  const { collections } = useCollections();
   const { currentOrganizationId } = useOnboarding();
   
   const toggleDerivative = (type: string) => {
@@ -85,42 +78,6 @@ export function MasterContentForm({
             <SelectItem value="product_story">Product Story</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Label htmlFor="collection">Collection (Optional)</Label>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="w-4 h-4 text-muted-foreground cursor-help" />
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs">
-              <p>Collections help organize your brand's product lines or themes. They provide context to AI for more aligned content.</p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
-        <Select value={collection} onValueChange={onCollectionChange}>
-          <SelectTrigger id="collection" className="bg-background/50">
-            <SelectValue placeholder="Select collection..." />
-          </SelectTrigger>
-          <SelectContent>
-            {collections.length === 0 ? (
-              <SelectItem value="_none" disabled>No collections yet - create one first</SelectItem>
-            ) : (
-              collections.map((col) => (
-                <SelectItem key={col.id} value={col.name}>{col.name}</SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
-        {collections.length === 0 && (
-          <p className="text-xs text-muted-foreground">
-            Don't see your collections?{" "}
-            <Link to="/settings" className="text-primary hover:underline">
-              Create them in Settings
-            </Link>
-          </p>
-        )}
       </div>
 
       <div className="space-y-2">

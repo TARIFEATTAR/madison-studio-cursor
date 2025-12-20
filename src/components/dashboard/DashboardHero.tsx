@@ -44,40 +44,40 @@ export function DashboardHero() {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#E0E0E0] rounded-xl p-6 md:p-8 h-full">
+      <div className="bg-white border border-[#E0E0E0] rounded-lg p-4 md:p-6">
         {/* Greeting skeleton */}
-        <div className="mb-6">
-          <Skeleton className="h-8 w-64 mb-2 skeleton-shimmer" />
-          <Skeleton className="h-4 w-48 skeleton-shimmer" />
+        <div className="mb-4">
+          <Skeleton className="h-6 w-56 mb-1 skeleton-shimmer" />
+          <Skeleton className="h-4 w-40 skeleton-shimmer" />
         </div>
         {/* CTAs skeleton */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <Skeleton className="h-11 w-36 skeleton-shimmer" />
-          <Skeleton className="h-11 w-40 skeleton-shimmer" />
-          <Skeleton className="h-11 w-28 skeleton-shimmer" />
+        <div className="flex flex-col sm:flex-row gap-2 mb-4">
+          <Skeleton className="h-9 w-32 skeleton-shimmer" />
+          <Skeleton className="h-9 w-24 skeleton-shimmer" />
+          <Skeleton className="h-9 w-24 skeleton-shimmer" />
         </div>
         {/* Suggestion skeleton */}
-        <Skeleton className="h-20 w-full rounded-lg skeleton-shimmer" />
+        <Skeleton className="h-16 w-full rounded-lg skeleton-shimmer" />
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-[#E0E0E0] rounded-xl p-6 md:p-8 hover-lift transition-all duration-200 h-full">
+    <div className="bg-white border border-[#E0E0E0] rounded-lg p-4 md:p-6 hover-lift transition-all duration-200 h-full flex flex-col">
         {/* Greeting Section */}
-        <div className="mb-6">
-          <h1 className="font-cormorant text-2xl md:text-3xl text-[#1C150D] mb-2">
+        <div className="mb-4">
+          <h1 className="font-cormorant text-xl md:text-2xl text-[#1C150D] mb-1">
             Good {getTimeOfDay()}, {userName || "there"} {getGreetingEmoji()}
           </h1>
-          <p className="font-lato text-sm md:text-base text-[#1C150D]/60">
+          <p className="font-lato text-sm text-[#1C150D]/60">
             {getSubtitle()}
           </p>
         </div>
 
         {/* Primary CTAs */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="flex flex-col sm:flex-row gap-2 mb-4">
           <Button
-            size="lg"
+            size="default"
             onClick={() => navigate("/create")}
             className="bg-[#B8956A] hover:bg-[#A3865A] text-white flex items-center gap-2 shadow-sm flex-1 sm:flex-none"
           >
@@ -87,7 +87,7 @@ export function DashboardHero() {
           
           <Button
             variant="outline"
-            size="lg"
+            size="default"
             onClick={() => {
               // If we have a recent master, go to multiply with it
               if (stats?.recentMaster?.id) {
@@ -99,12 +99,12 @@ export function DashboardHero() {
             className="border-[#B8956A]/30 text-[#1C150D] hover:bg-[#B8956A]/10 flex items-center gap-2 flex-1 sm:flex-none"
           >
             <Zap className="w-4 h-4 text-[#B8956A]" />
-            Multiply Last Piece
+            Multiply
           </Button>
           
           <Button
             variant="ghost"
-            size="lg"
+            size="default"
             onClick={() => navigate("/calendar")}
             className="text-[#1C150D]/70 hover:text-[#1C150D] hover:bg-[#FAFAFA] flex items-center gap-2 flex-1 sm:flex-none"
           >
@@ -115,23 +115,23 @@ export function DashboardHero() {
 
         {/* AI Suggestion */}
         {aiSuggestion && (
-          <div className="flex items-start gap-3 bg-[#FAFAFA] border border-[#E0E0E0] p-4 rounded-lg">
-            <div className="w-10 h-10 rounded-full bg-[#B8956A]/10 flex items-center justify-center flex-shrink-0">
-              <Lightbulb className="w-5 h-5 text-[#B8956A]" />
+          <div className="flex items-start gap-3 bg-[#FAFAFA] border border-[#E0E0E0] p-3 rounded-lg">
+            <div className="w-8 h-8 rounded-full bg-[#B8956A]/10 flex items-center justify-center flex-shrink-0">
+              <Lightbulb className="w-4 h-4 text-[#B8956A]" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-[#1C150D]/50 mb-1">
+              <p className="text-xs text-[#1C150D]/50 mb-0.5">
                 Madison suggests:
               </p>
-              <p className="text-sm md:text-base text-[#1C150D] mb-2">
+              <p className="text-sm text-[#1C150D] mb-1">
                 {aiSuggestion.text}
               </p>
               <button
                 onClick={() => navigate(aiSuggestion.route)}
-                className="text-sm text-[#B8956A] hover:text-[#A3865A] font-medium flex items-center gap-1 transition-colors"
+                className="text-xs text-[#B8956A] hover:text-[#A3865A] font-medium flex items-center gap-1 transition-colors"
               >
                 {aiSuggestion.cta}
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-3 h-3" />
               </button>
             </div>
           </div>

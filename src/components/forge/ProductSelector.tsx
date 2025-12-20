@@ -77,7 +77,7 @@ export function ProductSelector({
                   >
                     {product.name}
                     <span className="ml-auto text-xs text-studio-text-muted">
-                      {product.collection || 'No collection'}
+                      {product.category || 'Uncategorized'}
                     </span>
                   </CommandItem>
                 ))}

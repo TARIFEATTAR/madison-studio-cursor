@@ -45,17 +45,17 @@ export function ContentPipelineCard() {
 
   if (isLoading) {
     return (
-      <Skeleton className="h-[240px] rounded-xl w-full" />
+      <Skeleton className="h-[240px] rounded-lg w-full" />
     );
   }
 
   return (
-    <Card className="p-6 bg-white border border-[#E0E0E0] overflow-hidden rounded-xl h-full hover-lift transition-all duration-200">
-        <div className="mb-5">
+    <Card className="p-6 bg-white border border-[#E0E0E0] overflow-hidden h-full flex flex-col hover-lift transition-all duration-200">
+        <div className="mb-5 flex-shrink-0">
           <h3 className="text-sm font-medium text-[#1C150D]/60">Content Pipeline</h3>
           <p className="text-xs text-[#1C150D]/40 mt-0.5">Master content pieces (blog posts, social posts, etc.)</p>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-3 flex-1">
           {pipelineStages.map((stage) => (
             <button
               key={stage.id}
@@ -82,7 +82,7 @@ export function ContentPipelineCard() {
         </div>
         
         {/* View Library Link */}
-        <div className="mt-5 pt-4 border-t border-[#E0E0E0] text-center">
+        <div className="mt-5 pt-4 border-t border-[#E0E0E0] text-center flex-shrink-0">
           <button
             onClick={() => navigate("/library")}
             className="text-xs text-[#B8956A] hover:text-[#A3865A] transition-colors"

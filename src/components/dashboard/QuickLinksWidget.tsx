@@ -263,18 +263,18 @@ export function QuickLinksWidget() {
   
   return (
     <>
-      <Card className="h-full flex flex-col bg-card border border-border">
-        <CardHeader className="pb-2 flex-shrink-0">
+      <Card className="bg-card border border-border h-full flex flex-col">
+        <CardHeader className="pb-1 pt-3 px-3 flex-shrink-0">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Link2 className="w-4 h-4 text-primary" />
+            <CardTitle className="text-xs font-medium flex items-center gap-2 text-muted-foreground">
+              <Link2 className="w-3 h-3" />
               Quick Links
             </CardTitle>
             {links.length < MAX_LINKS && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0"
+                className="h-6 w-6 p-0"
                 onClick={() => {
                   setEditingLink(null);
                   setNewUrl("");
@@ -282,38 +282,36 @@ export function QuickLinksWidget() {
                   setIsAddDialogOpen(true);
                 }}
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3 h-3" />
               </Button>
             )}
           </div>
         </CardHeader>
         
-        <CardContent className="flex-1 overflow-auto pt-0">
+        <CardContent className="px-3 pb-3 pt-0 flex-1 overflow-auto">
           {isLoading ? (
-            <div className="h-full flex items-center justify-center">
-              <p className="text-sm text-muted-foreground">Loading...</p>
+            <div className="flex items-center justify-center py-2">
+              <p className="text-xs text-muted-foreground">Loading...</p>
             </div>
           ) : links.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center py-4">
-              <Link2 className="w-8 h-8 text-muted-foreground/50 mb-2" />
-              <p className="text-sm text-muted-foreground mb-3">No links added yet</p>
+            <div className="flex items-center justify-center py-2">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => setIsAddDialogOpen(true)}
-                className="gap-2"
+                className="gap-1 text-xs text-muted-foreground h-7"
               >
-                <Plus className="w-4 h-4" />
-                Add Link
+                <Plus className="w-3 h-3" />
+                Add a link
               </Button>
             </div>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {links.map((link) => (
                 <div key={link.id} className="group">
                   {/* Link Item */}
                   <div 
-                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                    className="flex items-center gap-2 p-1.5 rounded hover:bg-muted/50 transition-colors cursor-pointer"
                     onClick={() => {
                       if (link.type === "youtube") {
                         setExpandedEmbed(expandedEmbed === link.id ? null : link.id);
@@ -323,41 +321,38 @@ export function QuickLinksWidget() {
                     }}
                   >
                     {getLinkIcon(link.type)}
-                    <span className="flex-1 text-sm font-medium truncate">
+                    <span className="flex-1 text-xs font-medium truncate">
                       {link.title}
                     </span>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 p-0"
+                        className="h-5 w-5 p-0"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleEditLink(link);
                         }}
                       >
-                        <Pencil className="w-3 h-3" />
+                        <Pencil className="w-2.5 h-2.5" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 p-0 hover:text-destructive"
+                        className="h-5 w-5 p-0 hover:text-destructive"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleRemoveLink(link.id);
                         }}
                       >
-                        <X className="w-3 h-3" />
+                        <X className="w-2.5 h-2.5" />
                       </Button>
-                      {link.type !== "youtube" && (
-                        <ExternalLink className="w-3 h-3 text-muted-foreground" />
-                      )}
                     </div>
                   </div>
                   
                   {/* YouTube Embed (expandable) */}
                   {link.type === "youtube" && expandedEmbed === link.id && (
-                    <div className="mt-2 px-2 pb-2">
+                    <div className="mt-1 px-1 pb-1">
                       {renderYouTubeEmbed(link.url)}
                     </div>
                   )}

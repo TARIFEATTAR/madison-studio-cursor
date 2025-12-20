@@ -55,14 +55,14 @@ export function ThisWeekCard() {
   if (isLoading) {
     return (
       <div className="col-span-1 md:col-span-12">
-        <Skeleton className="h-[180px] rounded-xl" />
+        <Skeleton className="h-[180px] rounded-lg" />
       </div>
     );
   }
 
   return (
     <div className="col-span-1 md:col-span-12">
-      <Card className="p-4 md:p-6 bg-white border border-[#E0E0E0] overflow-hidden rounded-xl min-h-[180px] hover-lift transition-all duration-200">
+      <Card className="p-4 md:p-6 bg-white border border-[#E0E0E0] overflow-hidden h-full flex flex-col hover-lift transition-all duration-200">
         <div className="flex items-center justify-between mb-4 md:mb-5">
           <h3 className="text-sm font-medium text-[#1C150D]/60">This Week</h3>
           {totalScheduled > 0 && (
