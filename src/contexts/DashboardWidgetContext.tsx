@@ -18,9 +18,9 @@ const DashboardWidgetContext = createContext<DashboardWidgetContextType | undefi
 
 // Default widget layout - Hero is first, widgets can be to the right and below
 const DEFAULT_WIDGETS: DashboardWidget[] = [
-  { id: 'hero', type: 'hero-banner', w: 10, h: 2, x: 0, y: 0 }, // Hero takes 10 columns, leaving 2 on right
+  { id: 'hero', type: 'hero-banner', w: 10, h: 1, x: 0, y: 0 }, // Hero takes 10 columns, leaving 2 on right
   { id: 'w1', type: 'strategy-session', w: 2, h: 1, x: 10, y: 0 }, // Compact card - 1 unit high
-  { id: 'w2', type: 'pipeline-overview', w: 4, h: 3, x: 0, y: 2 }, // Below hero
+  { id: 'w2', type: 'pipeline-overview', w: 4, h: 3, x: 0, y: 1 }, // Below hero
   { id: 'w3', type: 'team-activity', w: 4, h: 3, x: 4, y: 2 },
   { id: 'w4', type: 'revenue-overview', w: 4, h: 3, x: 8, y: 2 },
   { id: 'w5', type: 'content-pipeline', w: 6, h: 4, x: 0, y: 5 },
@@ -56,7 +56,7 @@ export function DashboardWidgetProvider({ children }: { children: React.ReactNod
           const hasHero = loadedWidgets.some(w => w.type === 'hero-banner');
           if (!hasHero) {
             // Add hero banner if missing
-            const heroWidget: DashboardWidget = { id: 'hero', type: 'hero-banner', w: 10, h: 2, x: 0, y: 0 };
+            const heroWidget: DashboardWidget = { id: 'hero', type: 'hero-banner', w: 10, h: 1, x: 0, y: 0 };
             // Adjust other widgets to be below hero
             const adjustedWidgets = loadedWidgets.map(w => ({
               ...w,
@@ -135,7 +135,7 @@ export function DashboardWidgetProvider({ children }: { children: React.ReactNod
     if (type === 'hero-banner') return;
 
     const WIDGET_DEFAULTS: Record<DashboardWidgetType, { w: number; h: number }> = {
-      'hero-banner': { w: 10, h: 2 },
+      'hero-banner': { w: 10, h: 1 },
       'pipeline-overview': { w: 4, h: 3 },
       'team-activity': { w: 4, h: 3 },
       'revenue-overview': { w: 4, h: 3 },

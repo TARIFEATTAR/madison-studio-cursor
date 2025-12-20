@@ -106,7 +106,7 @@ const WIDGET_COMPONENTS: Record<DashboardWidgetType, React.ComponentType<any>> =
 };
 
 export const WIDGET_DEFINITIONS: Record<DashboardWidgetType, { name: string; icon: any; defaultW: number; defaultH: number }> = {
-  'hero-banner': { name: 'Hero Banner', icon: Package, defaultW: 10, defaultH: 2 },
+  'hero-banner': { name: 'Hero Banner', icon: Package, defaultW: 10, defaultH: 1 },
   'pipeline-overview': { name: 'Product Pipeline', icon: Package, defaultW: 4, defaultH: 3 },
   'team-activity': { name: 'Team Activity', icon: Package, defaultW: 4, defaultH: 3 },
   'revenue-overview': { name: 'Revenue Overview', icon: Package, defaultW: 4, defaultH: 3 },
@@ -209,7 +209,7 @@ function SortableWidget({ widget, onRemove, onResize, isEditMode }: {
       )}
 
       {/* Widget Content */}
-      <div className={cn('h-full w-full rounded-lg', isEditMode && 'pointer-events-none')}>
+      <div className={cn('h-full w-full min-h-0 rounded-lg', isEditMode && 'pointer-events-none')}>
         {widget.type === 'strategy-session' ? (
           <Component compact />
         ) : widget.type === 'brand-health' ? (
@@ -245,7 +245,7 @@ function ResizeHandles({ widget, onResize }: { widget: DashboardWidget; onResize
       
       const containerWidth = 1200; // Approximate
       const pxPerCol = containerWidth / 12;
-      const pxPerRow = 60;
+      const pxPerRow = 80; // Match gridAutoRows: 'minmax(80px, auto)'
       
       let newW = startW;
       let newH = startH;
@@ -254,7 +254,7 @@ function ResizeHandles({ widget, onResize }: { widget: DashboardWidget; onResize
       const isHero = widget.type === 'hero-banner';
       const minW = isHero ? 6 : 2; // Hero can be narrowed but not too much
       const maxW = 12;
-      const minH = isHero ? 2 : 1; // Allow 1 unit minimum for non-hero widgets
+      const minH = 1; // Allow all widgets to shrink to 1 row
       const maxH = isHero ? 4 : 8; // Hero can be taller but not too much
 
       switch (direction) {
@@ -695,7 +695,7 @@ export function DashboardWidgetSystem({
               {sortedWidgets.map(widget => (
                 <div
                   key={widget.id}
-                  className="h-full min-h-0"
+                  className="h-full min-h-0 flex flex-col"
                   style={{
                     gridColumn: `span ${widget.w}`,
                     gridRow: `span ${widget.h}`,
@@ -774,13 +774,13 @@ export function DashboardWidgetSystem({
           {sortedWidgets.map(widget => (
             <div
               key={widget.id}
-              className="h-full min-h-0"
+              className="h-full min-h-0 flex flex-col"
               style={{
                 gridColumn: `span ${widget.w}`,
                 gridRow: `span ${widget.h}`,
               }}
             >
-              <div className="h-full w-full rounded-lg">
+              <div className="h-full w-full min-h-0 rounded-lg">
                 {widget.type === 'strategy-session' ? (
                   <StrategySessionCard compact />
                 ) : widget.type === 'brand-health' ? (
