@@ -52,6 +52,7 @@ const ComponentDemo = lazy(() => import("./pages/ComponentDemo"));
 const MadisonTest = lazy(() => import("./pages/MadisonTest"));
 const BrandReport = lazy(() => import("./pages/BrandReport"));
 const WidgetDashboard = lazy(() => import("./pages/WidgetDashboard"));
+const DAMLibrary = lazy(() => import("./pages/DAMLibrary"));
 
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useOnboarding } from "@/hooks/useOnboarding";
@@ -348,6 +349,7 @@ const AppContent = () => {
                   <Route path="/light-table" element={<ProtectedRoute><RouteErrorBoundary routeName="Light Table"><LightTable /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/video-project" element={<ProtectedRoute><RouteErrorBoundary routeName="Video Project"><VideoProject /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/image-library" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Library"><ImageLibrary /></RouteErrorBoundary></ProtectedRoute>} />
+                  <Route path="/dam" element={<ProtectedRoute><RouteErrorBoundary routeName="Asset Library"><DAMLibrary /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/calendar" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
@@ -397,6 +399,7 @@ const AppContent = () => {
             <Route path="/light-table" element={<ProtectedRoute><RouteErrorBoundary routeName="Light Table"><LightTable /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/video-project" element={<ProtectedRoute><RouteErrorBoundary routeName="Video Project"><VideoProject /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/image-library" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Library"><ImageLibrary /></RouteErrorBoundary></ProtectedRoute>} />
+            <Route path="/dam" element={<ProtectedRoute><RouteErrorBoundary routeName="Asset Library"><DAMLibrary /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/calendar" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
