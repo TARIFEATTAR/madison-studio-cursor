@@ -70,6 +70,7 @@ import { FormulationSection } from "@/components/products/FormulationSection";
 import { IngredientsSection } from "@/components/products/IngredientsSection";
 import { SDSSection } from "@/components/products/SDSSection";
 import { PackagingSection } from "@/components/products/PackagingSection";
+import { MediaSection } from "@/components/products/MediaSection";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PRODUCT INFO TAB
@@ -631,10 +632,7 @@ export default function ProductHub() {
               </TabsContent>
 
               <TabsContent value="media">
-                <PlaceholderTab
-                  title="Media Management"
-                  description="Coming in Week 6 - Upload and manage product images and videos"
-                />
+                <MediaSection productId={productId!} />
               </TabsContent>
 
               <TabsContent value="variants">
