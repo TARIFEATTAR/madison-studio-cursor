@@ -8,7 +8,8 @@ export type BusinessType =
   | "finished_goods" 
   | "bottles_vessels" 
   | "packaging_boxes" 
-  | "raw_materials";
+  | "raw_materials"
+  | "marketing_agency";
 
 export interface BusinessTypeConfig {
   business_type: BusinessType;
@@ -69,6 +70,12 @@ export const BUSINESS_TYPE_OPTIONS: BusinessTypeOption[] = [
     label: "Raw Materials",
     description: "Ingredient and material supplier to manufacturers",
     icon: "flask-round",
+  },
+  {
+    value: "marketing_agency",
+    label: "Marketing Agency",
+    description: "Create content & campaigns for beauty/cosmetics brands",
+    icon: "briefcase",
   },
 ];
 

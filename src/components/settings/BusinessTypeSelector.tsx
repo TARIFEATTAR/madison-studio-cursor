@@ -5,6 +5,7 @@ import {
   FlaskConical,
   Box,
   FlaskRound,
+  Briefcase,
   Check,
   AlertCircle,
 } from "lucide-react";
@@ -34,6 +35,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   "flask-conical": FlaskConical,
   box: Box,
   "flask-round": FlaskRound,
+  briefcase: Briefcase,
 };
 
 interface BusinessTypeSelectorProps {
