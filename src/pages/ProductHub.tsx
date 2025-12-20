@@ -68,6 +68,8 @@ import {
 } from "@/hooks/useProducts";
 import { FormulationSection } from "@/components/products/FormulationSection";
 import { IngredientsSection } from "@/components/products/IngredientsSection";
+import { SDSSection } from "@/components/products/SDSSection";
+import { PackagingSection } from "@/components/products/PackagingSection";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PRODUCT INFO TAB
@@ -606,6 +608,14 @@ export default function ProductHub() {
                   <Beaker className="w-4 h-4" />
                   Ingredients
                 </TabsTrigger>
+                <TabsTrigger value="sds" className="gap-2">
+                  <FileText className="w-4 h-4" />
+                  SDS
+                </TabsTrigger>
+                <TabsTrigger value="packaging" className="gap-2">
+                  <Package className="w-4 h-4" />
+                  Packaging
+                </TabsTrigger>
                 <TabsTrigger value="content" className="gap-2">
                   <Sparkles className="w-4 h-4" />
                   Content
@@ -651,6 +661,25 @@ export default function ProductHub() {
 
               <TabsContent value="ingredients">
                 <IngredientsSection
+                  productId={productId!}
+                  productName={displayProduct.name}
+                  isEditing={isEditing}
+                />
+              </TabsContent>
+
+              <TabsContent value="sds">
+                <SDSSection
+                  productId={productId!}
+                  productName={displayProduct.name}
+                  productType={displayProduct.product_type}
+                  brandName={displayProduct.brand}
+                  sku={displayProduct.sku}
+                  isEditing={isEditing}
+                />
+              </TabsContent>
+
+              <TabsContent value="packaging">
+                <PackagingSection
                   productId={productId!}
                   productName={displayProduct.name}
                   isEditing={isEditing}
