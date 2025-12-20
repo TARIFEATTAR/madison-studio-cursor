@@ -19,6 +19,8 @@ import {
   Tag,
   Layers,
   Image as ImageIcon,
+  Download,
+  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -471,10 +473,35 @@ export default function Products() {
               Manage your product catalog
             </p>
           </div>
-          <Button onClick={() => setCreateModalOpen(true)} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Add Product
-          </Button>
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Download className="w-4 h-4" />
+                  Templates
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <a href="/templates/product-import-template.csv" download className="flex items-center gap-2 cursor-pointer">
+                    <Download className="w-4 h-4" />
+                    Download CSV Template
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <a href="/templates/product-import-guide.md" download className="flex items-center gap-2 cursor-pointer">
+                    <Download className="w-4 h-4" />
+                    Download Import Guide
+                  </a>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button onClick={() => setCreateModalOpen(true)} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Add Product
+            </Button>
+          </div>
         </div>
 
         {/* Status Tabs */}
