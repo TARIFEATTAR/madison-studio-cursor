@@ -126,7 +126,7 @@ export function TaskCreationModal({
       title: title.trim(),
       description: description.trim() || undefined,
       priority,
-      assignee_id: assigneeId || undefined,
+      assignee_id: (assigneeId && assigneeId !== "unassigned") ? assigneeId : undefined,
       due_date: dueDate?.toISOString(),
       due_date_type: dueDateType,
       section: section || undefined,
@@ -255,7 +255,7 @@ export function TaskCreationModal({
                 <SelectValue placeholder="Select assignee" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Unassigned</SelectItem>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
                 {members?.map((member) => (
                   <SelectItem key={member.user_id} value={member.user_id}>
                     {member.profiles?.full_name || member.profiles?.email || "User"}

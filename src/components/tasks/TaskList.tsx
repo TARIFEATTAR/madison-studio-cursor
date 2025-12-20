@@ -68,7 +68,7 @@ export function TaskList({
 
   // UI state
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterSection, setFilterSection] = useState<string>("");
+  const [filterSection, setFilterSection] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortOption>("due_date");
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   
@@ -111,7 +111,7 @@ export function TaskList({
     }
 
     // Section filter
-    if (filterSection) {
+    if (filterSection && filterSection !== "all") {
       filtered = filtered.filter(t => t.section === filterSection);
     }
 
@@ -202,7 +202,7 @@ export function TaskList({
                 <SelectValue placeholder="All sections" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All sections</SelectItem>
+                <SelectItem value="all">All sections</SelectItem>
                 {TASK_SECTIONS.map((s) => (
                   <SelectItem key={s.value} value={s.value}>
                     {s.label}
