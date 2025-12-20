@@ -159,9 +159,16 @@ CREATE INDEX IF NOT EXISTS idx_dam_assets_campaigns ON public.dam_assets USING G
 CREATE INDEX IF NOT EXISTS idx_dam_assets_created ON public.dam_assets(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_dam_assets_search ON public.dam_assets USING GIN(to_tsvector('english', search_text));
 
--- Vector index for semantic search (using ivfflat for better performance)
-CREATE INDEX IF NOT EXISTS idx_dam_assets_embedding ON public.dam_assets 
-  USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+-- Vector index for semantic search (optional - requires pgvector extension)
+-- Wrapped in DO block to gracefully handle if vector extension not available
+DO $$
+BEGIN
+  -- Try to create the ivfflat index (requires pgvector >= 0.5.0)
+  CREATE INDEX IF NOT EXISTS idx_dam_assets_embedding ON public.dam_assets
+    USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'Vector index not created: %. Semantic search will use sequential scan.', SQLERRM;
+END $$;
 
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- PART 3: DAM ACTIVITY LOG
