@@ -25,6 +25,10 @@ import { PostOnboardingGuide } from "@/components/onboarding/PostOnboardingGuide
 import { usePostOnboardingGuide } from "@/hooks/usePostOnboardingGuide";
 import { logger } from "@/lib/logger";
 
+// Role-based components
+import { RoleDashboardWidgets } from "@/components/dashboard/RoleDashboardWidgets";
+import { useUserRole } from "@/hooks/useUserRole";
+
 import MadisonPanel from "@/components/image-editor/MadisonPanel";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { BrandQuickViewTrigger } from "@/components/brand";
@@ -194,6 +198,13 @@ export default function DashboardNew() {
               <DraftNudge draftCount={stats.totalDrafts} />
             </div>
           )}
+
+          {/* ROLE-SPECIFIC WIDGETS */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 animate-slide-up stagger-5">
+            <div className="col-span-1 md:col-span-12">
+              <RoleDashboardWidgets />
+            </div>
+          </div>
 
           {/* 6. RECENT ACTIVITY (Collapsed by default, hidden on mobile) */}
           <div className="hidden md:grid grid-cols-1 md:grid-cols-12 gap-4 animate-slide-up stagger-6">

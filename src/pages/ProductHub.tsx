@@ -21,6 +21,7 @@ import {
   Archive,
   ExternalLink,
   CheckCircle2,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +55,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import {
@@ -71,6 +77,8 @@ import { IngredientsSection } from "@/components/products/IngredientsSection";
 import { SDSSection } from "@/components/products/SDSSection";
 import { PackagingSection } from "@/components/products/PackagingSection";
 import { MediaSection } from "@/components/products/MediaSection";
+import { useUserRole, type RoleCapabilities } from "@/hooks/useUserRole";
+import { RoleBadge, YourSectionsHighlight } from "@/components/role";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PRODUCT INFO TAB
@@ -339,9 +347,42 @@ function PlaceholderTab({ title, description }: { title: string; description: st
   );
 }
 
+// View-only banner for sections user can't edit
+function ViewOnlyBanner({ section }: { section: string }) {
+  return (
+    <div className="mt-4 p-3 bg-muted/50 border border-border rounded-lg flex items-center gap-2 text-sm text-muted-foreground">
+      <Lock className="w-4 h-4" />
+      <span>
+        You have view-only access to {section}. Contact a team admin to request edit access.
+      </span>
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // MAIN PRODUCT HUB PAGE
 // ═══════════════════════════════════════════════════════════════════════════════
+
+// Tab configuration with role mapping
+type TabSection = keyof RoleCapabilities["sections"];
+interface TabConfig {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  section: TabSection;
+}
+
+const TAB_CONFIG: TabConfig[] = [
+  { id: "info", label: "Info", icon: FileText, section: "info" },
+  { id: "media", label: "Media", icon: ImageIcon, section: "media" },
+  { id: "variants", label: "Variants", icon: Layers, section: "info" },
+  { id: "pricing", label: "Pricing", icon: DollarSign, section: "analytics" },
+  { id: "formulation", label: "Formulation", icon: Beaker, section: "formulation" },
+  { id: "ingredients", label: "Ingredients", icon: Beaker, section: "ingredients" },
+  { id: "sds", label: "SDS", icon: FileText, section: "compliance" },
+  { id: "packaging", label: "Packaging", icon: Package, section: "packaging" },
+  { id: "content", label: "Content", icon: Sparkles, section: "marketing" },
+];
 
 export default function ProductHub() {
   const { productId } = useParams<{ productId: string }>();
@@ -351,11 +392,24 @@ export default function ProductHub() {
 
   const { data: product, isLoading, error } = useProduct(productId || null);
   const { updateProduct, deleteProduct, duplicateProduct } = useProducts();
+  
+  // Role-based access
+  const { 
+    teamRole, 
+    capabilities, 
+    canView, 
+    canEdit, 
+    getAccessLevel,
+    hasFullAccess 
+  } = useUserRole();
 
   const [isEditing, setIsEditing] = useState(isEditMode);
   const [editedProduct, setEditedProduct] = useState<any>(null);
   const [hasChanges, setHasChanges] = useState(false);
-  const [activeTab, setActiveTab] = useState("info");
+  
+  // Filter visible tabs based on role
+  const visibleTabs = TAB_CONFIG.filter(tab => canView(tab.section));
+  const [activeTab, setActiveTab] = useState(visibleTabs[0]?.id || "info");
 
   // Initialize edited product when product loads
   useEffect(() => {
@@ -481,6 +535,7 @@ export default function ProductHub() {
                     {displayProduct.name}
                   </h1>
                   {getStatusBadge(displayProduct.status)}
+                  <RoleBadge size="sm" />
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   {displayProduct.sku && <span>SKU: {displayProduct.sku}</span>}
@@ -584,57 +639,65 @@ export default function ProductHub() {
           {/* Main Content */}
           <div className="flex-1">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="bg-muted/50 mb-6">
-                <TabsTrigger value="info" className="gap-2">
-                  <FileText className="w-4 h-4" />
-                  Info
-                </TabsTrigger>
-                <TabsTrigger value="media" className="gap-2">
-                  <ImageIcon className="w-4 h-4" />
-                  Media
-                </TabsTrigger>
-                <TabsTrigger value="variants" className="gap-2">
-                  <Layers className="w-4 h-4" />
-                  Variants
-                </TabsTrigger>
-                <TabsTrigger value="pricing" className="gap-2">
-                  <DollarSign className="w-4 h-4" />
-                  Pricing
-                </TabsTrigger>
-                <TabsTrigger value="formulation" className="gap-2">
-                  <Beaker className="w-4 h-4" />
-                  Formulation
-                </TabsTrigger>
-                <TabsTrigger value="ingredients" className="gap-2">
-                  <Beaker className="w-4 h-4" />
-                  Ingredients
-                </TabsTrigger>
-                <TabsTrigger value="sds" className="gap-2">
-                  <FileText className="w-4 h-4" />
-                  SDS
-                </TabsTrigger>
-                <TabsTrigger value="packaging" className="gap-2">
-                  <Package className="w-4 h-4" />
-                  Packaging
-                </TabsTrigger>
-                <TabsTrigger value="content" className="gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  Content
-                </TabsTrigger>
+              {/* Your sections highlight */}
+              <div className="mb-4">
+                <YourSectionsHighlight />
+              </div>
+              
+              <TabsList className="bg-muted/50 mb-6 flex-wrap h-auto gap-1 p-1">
+                {visibleTabs.map((tab) => {
+                  const accessLevel = getAccessLevel(tab.section);
+                  const isFullAccess = accessLevel === "full";
+                  const Icon = tab.icon;
+                  
+                  return (
+                    <Tooltip key={tab.id}>
+                      <TooltipTrigger asChild>
+                        <TabsTrigger 
+                          value={tab.id} 
+                          className={cn(
+                            "gap-2 relative",
+                            isFullAccess && "ring-1 ring-primary/20 bg-primary/5"
+                          )}
+                        >
+                          <Icon className="w-4 h-4" />
+                          {tab.label}
+                          {!isFullAccess && (
+                            <Eye className="w-3 h-3 text-muted-foreground ml-1" />
+                          )}
+                        </TabsTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {isFullAccess ? (
+                          <p>Full access - you can edit this section</p>
+                        ) : (
+                          <p>View only - you can see but not edit</p>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
               </TabsList>
 
               {/* Lazy render tabs - only mount content when tab is active */}
+              {/* Role-aware: editing only allowed if user has full access */}
               <TabsContent value="info">
                 <ProductInfoTab
                   product={displayProduct}
-                  isEditing={isEditing}
+                  isEditing={isEditing && canEdit("info")}
                   onChange={handleChange}
                 />
+                {!canEdit("info") && isEditing && (
+                  <ViewOnlyBanner section="Info" />
+                )}
               </TabsContent>
 
               <TabsContent value="media" forceMount>
                 {activeTab === "media" && (
-                  <MediaSection productId={productId!} />
+                  <>
+                    <MediaSection productId={productId!} />
+                    {!canEdit("media") && <ViewOnlyBanner section="Media" />}
+                  </>
                 )}
               </TabsContent>
 
@@ -658,44 +721,64 @@ export default function ProductHub() {
 
               <TabsContent value="formulation" forceMount>
                 {activeTab === "formulation" && (
-                  <FormulationSection
-                    productId={productId!}
-                    productCategory={displayProduct.category || displayProduct.product_type}
-                    isEditing={isEditing}
-                  />
+                  <>
+                    <FormulationSection
+                      productId={productId!}
+                      productCategory={displayProduct.category || displayProduct.product_type}
+                      isEditing={isEditing && canEdit("formulation")}
+                    />
+                    {!canEdit("formulation") && isEditing && (
+                      <ViewOnlyBanner section="Formulation" />
+                    )}
+                  </>
                 )}
               </TabsContent>
 
               <TabsContent value="ingredients" forceMount>
                 {activeTab === "ingredients" && (
-                  <IngredientsSection
-                    productId={productId!}
-                    productName={displayProduct.name}
-                    isEditing={isEditing}
-                  />
+                  <>
+                    <IngredientsSection
+                      productId={productId!}
+                      productName={displayProduct.name}
+                      isEditing={isEditing && canEdit("ingredients")}
+                    />
+                    {!canEdit("ingredients") && isEditing && (
+                      <ViewOnlyBanner section="Ingredients" />
+                    )}
+                  </>
                 )}
               </TabsContent>
 
               <TabsContent value="sds" forceMount>
                 {activeTab === "sds" && (
-                  <SDSSection
-                    productId={productId!}
-                    productName={displayProduct.name}
-                    productType={displayProduct.product_type}
-                    brandName={displayProduct.brand}
-                    sku={displayProduct.sku}
-                    isEditing={isEditing}
-                  />
+                  <>
+                    <SDSSection
+                      productId={productId!}
+                      productName={displayProduct.name}
+                      productType={displayProduct.product_type}
+                      brandName={displayProduct.brand}
+                      sku={displayProduct.sku}
+                      isEditing={isEditing && canEdit("compliance")}
+                    />
+                    {!canEdit("compliance") && isEditing && (
+                      <ViewOnlyBanner section="SDS" />
+                    )}
+                  </>
                 )}
               </TabsContent>
 
               <TabsContent value="packaging" forceMount>
                 {activeTab === "packaging" && (
-                  <PackagingSection
-                    productId={productId!}
-                    productName={displayProduct.name}
-                    isEditing={isEditing}
-                  />
+                  <>
+                    <PackagingSection
+                      productId={productId!}
+                      productName={displayProduct.name}
+                      isEditing={isEditing && canEdit("packaging")}
+                    />
+                    {!canEdit("packaging") && isEditing && (
+                      <ViewOnlyBanner section="Packaging" />
+                    )}
+                  </>
                 )}
               </TabsContent>
 
