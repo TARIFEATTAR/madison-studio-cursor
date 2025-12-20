@@ -22,6 +22,7 @@ import {
   ExternalLink,
   CheckCircle2,
   Lock,
+  ListTodo,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -79,6 +80,8 @@ import { PackagingSection } from "@/components/products/PackagingSection";
 import { MediaSection } from "@/components/products/MediaSection";
 import { useUserRole, type RoleCapabilities } from "@/hooks/useUserRole";
 import { RoleBadge, YourSectionsHighlight } from "@/components/role";
+import { TaskList } from "@/components/tasks";
+import { useOrganization } from "@/hooks/useOrganization";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PRODUCT INFO TAB
@@ -374,6 +377,7 @@ interface TabConfig {
 
 const TAB_CONFIG: TabConfig[] = [
   { id: "info", label: "Info", icon: FileText, section: "info" },
+  { id: "tasks", label: "Tasks", icon: ListTodo, section: "info" },
   { id: "media", label: "Media", icon: ImageIcon, section: "media" },
   { id: "variants", label: "Variants", icon: Layers, section: "info" },
   { id: "pricing", label: "Pricing", icon: DollarSign, section: "analytics" },
@@ -392,6 +396,7 @@ export default function ProductHub() {
 
   const { data: product, isLoading, error } = useProduct(productId || null);
   const { updateProduct, deleteProduct, duplicateProduct } = useProducts();
+  const { organizationId } = useOrganization();
   
   // Role-based access
   const { 
@@ -689,6 +694,15 @@ export default function ProductHub() {
                 />
                 {!canEdit("info") && isEditing && (
                   <ViewOnlyBanner section="Info" />
+                )}
+              </TabsContent>
+
+              <TabsContent value="tasks" forceMount>
+                {activeTab === "tasks" && organizationId && (
+                  <TaskList
+                    productId={productId!}
+                    organizationId={organizationId}
+                  />
                 )}
               </TabsContent>
 
