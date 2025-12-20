@@ -133,13 +133,27 @@ export function TaskCard({
           </span>
         )}
         
-        {task.assignee && (
-          <Avatar className="w-6 h-6">
-            <AvatarFallback className="text-xs bg-primary/10">
-              {getInitials(task.assignee.full_name)}
-            </AvatarFallback>
-          </Avatar>
-        )}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Avatar className="w-6 h-6">
+              <AvatarFallback className={cn(
+                "text-xs",
+                task.assignee ? "bg-primary/10" : "bg-muted"
+              )}>
+                {task.assignee 
+                  ? getInitials(task.assignee.full_name)
+                  : "?"
+                }
+              </AvatarFallback>
+            </Avatar>
+          </TooltipTrigger>
+          <TooltipContent>
+            {task.assignee 
+              ? `Assigned to ${task.assignee.full_name || task.assignee.email}`
+              : "Unassigned"
+            }
+          </TooltipContent>
+        </Tooltip>
       </div>
     );
   }
@@ -274,19 +288,28 @@ export function TaskCard({
               )}
 
               {/* Assignee */}
-              {task.assignee && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1">
-                      <User className="w-3 h-3" />
-                      <span>{task.assignee.full_name || task.assignee.email}</span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    Assigned to {task.assignee.full_name || task.assignee.email}
-                  </TooltipContent>
-                </Tooltip>
-              )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className={cn(
+                    "flex items-center gap-1",
+                    !task.assignee && "text-muted-foreground/60"
+                  )}>
+                    <User className="w-3 h-3" />
+                    <span>
+                      {task.assignee 
+                        ? (task.assignee.full_name || task.assignee.email)
+                        : "Unassigned"
+                      }
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {task.assignee 
+                    ? `Assigned to ${task.assignee.full_name || task.assignee.email}`
+                    : "No one assigned yet"
+                  }
+                </TooltipContent>
+              </Tooltip>
             </div>
 
             {/* Tags */}

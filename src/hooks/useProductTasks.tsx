@@ -168,6 +168,7 @@ export function useProductTasks(productId: string | null, organizationId: string
     queryFn: async () => {
       if (!organizationId) return [];
 
+      // First, fetch tasks
       let query = supabase
         .from("product_tasks")
         .select("*")
@@ -178,16 +179,47 @@ export function useProductTasks(productId: string | null, organizationId: string
         query = query.eq("product_id", productId);
       }
 
-      const { data, error } = await query;
+      const { data: tasksData, error: tasksError } = await query;
 
-      if (error) {
-        if (error.code === "42P01" || error.code === "PGRST116") {
+      if (tasksError) {
+        if (tasksError.code === "42P01" || tasksError.code === "PGRST116") {
           return []; // Table doesn't exist yet
         }
-        throw error;
+        throw tasksError;
       }
 
-      return (data || []) as ProductTask[];
+      if (!tasksData || tasksData.length === 0) {
+        return [];
+      }
+
+      // Get team member profiles to enrich tasks with assignee info
+      const { data: teamMembers, error: teamError } = await supabase.rpc(
+        "get_team_member_profiles",
+        { _org_id: organizationId }
+      );
+
+      if (teamError) {
+        console.error("Error fetching team members:", teamError);
+        // Continue without team member data
+        return tasksData as ProductTask[];
+      }
+
+      // Create a map of user_id -> profile for quick lookup
+      const profileMap = new Map(
+        (teamMembers || []).map((member: any) => [
+          member.user_id,
+          { id: member.user_id, full_name: member.full_name, email: member.email }
+        ])
+      );
+
+      // Enrich tasks with assignee and creator info
+      const enrichedTasks = tasksData.map((task: any) => ({
+        ...task,
+        assignee: task.assignee_id ? profileMap.get(task.assignee_id) : undefined,
+        creator: task.created_by ? profileMap.get(task.created_by) : undefined,
+      }));
+
+      return enrichedTasks as ProductTask[];
     },
     enabled: !!organizationId,
     staleTime: 30 * 1000,
