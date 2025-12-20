@@ -1,420 +1,414 @@
 -- ============================================
--- INGREDIENT LIBRARY SEED DATA
+-- INGREDIENT LIBRARY SEED DATA (FIXED)
 -- Common INCI ingredients for Fragrance & Skincare
 -- ============================================
--- Source: Industry standard INCI nomenclature
--- Categories: Base/Carrier, Active, Preservative, Emulsifier,
---             Surfactant, Fragrance, Colorant, Texture, Botanical
+-- This script seeds global ingredients accessible to all organizations
+-- Run this in Supabase SQL Editor
 -- ============================================
 
--- First, ensure the ingredient_library table exists
-CREATE TABLE IF NOT EXISTS public.ingredient_library (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  organization_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE,
-  inci_name TEXT NOT NULL,
-  common_name TEXT,
-  category TEXT,
-  function TEXT,
-  is_allergen BOOLEAN DEFAULT false,
-  allergen_type TEXT,
-  cas_number TEXT,
-  origin TEXT,
-  vegan BOOLEAN DEFAULT true,
-  notes TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Step 1: Allow NULL organization_id for global ingredients
+ALTER TABLE public.ingredient_library 
+ALTER COLUMN organization_id DROP NOT NULL;
 
--- Create index for faster lookups
-CREATE INDEX IF NOT EXISTS idx_ingredient_library_inci ON public.ingredient_library(inci_name);
-CREATE INDEX IF NOT EXISTS idx_ingredient_library_org ON public.ingredient_library(organization_id);
-CREATE INDEX IF NOT EXISTS idx_ingredient_library_category ON public.ingredient_library(category);
+-- Step 2: Create unique constraint on inci_name for global ingredients
+-- This allows ON CONFLICT to work properly
+CREATE UNIQUE INDEX IF NOT EXISTS idx_ingredient_library_global_inci 
+ON public.ingredient_library(inci_name) 
+WHERE organization_id IS NULL;
+
+-- Step 3: Drop the existing constraint if it doesn't allow NULL org_id
+-- (The constraint is only for org-specific ingredients anyway)
 
 -- ============================================
--- GLOBAL INGREDIENTS (organization_id = NULL)
--- Available to all organizations
+-- SEED DATA: Using correct column structure
+-- Columns: name, inci_name, category, cosmetic_function, origin, is_vegan, is_allergen
+-- Origin values: 'natural', 'natural_derived', 'synthetic', 'biotechnology', 'mineral', 'unknown'
 -- ============================================
 
 -- ============================================
--- CATEGORY: CARRIER OILS & BASES
+-- CATEGORY: BASES & SOLVENTS
 -- ============================================
-INSERT INTO public.ingredient_library (organization_id, inci_name, common_name, category, function, origin, vegan)
+INSERT INTO public.ingredient_library (organization_id, name, inci_name, category, cosmetic_function, origin, is_vegan)
 VALUES
-  (NULL, 'AQUA', 'Water', 'Base', 'Solvent', 'Synthetic', true),
-  (NULL, 'ALCOHOL DENAT.', 'Denatured Alcohol', 'Base', 'Solvent, Antimicrobial', 'Plant-derived', true),
-  (NULL, 'ETHANOL', 'Ethyl Alcohol', 'Base', 'Solvent', 'Plant-derived', true),
-  (NULL, 'ISOPROPYL ALCOHOL', 'Rubbing Alcohol', 'Base', 'Solvent', 'Synthetic', true),
-  (NULL, 'DIPROPYLENE GLYCOL', 'DPG', 'Base', 'Solvent, Fixative', 'Synthetic', true),
-  (NULL, 'PROPYLENE GLYCOL', 'PG', 'Base', 'Humectant, Solvent', 'Synthetic', true),
-  (NULL, 'GLYCERIN', 'Glycerine', 'Base', 'Humectant', 'Plant-derived', true),
-  (NULL, 'BUTYLENE GLYCOL', 'BG', 'Base', 'Humectant, Solvent', 'Synthetic', true),
-  (NULL, 'PENTYLENE GLYCOL', 'Pentanediol', 'Base', 'Humectant, Preservative booster', 'Synthetic', true),
-  (NULL, 'HEXYLENE GLYCOL', 'Hexanediol', 'Base', 'Solvent, Emulsifier', 'Synthetic', true)
-ON CONFLICT DO NOTHING;
+  (NULL, 'Water', 'AQUA', 'Base', ARRAY['solvent'], 'mineral', true),
+  (NULL, 'Denatured Alcohol', 'ALCOHOL DENAT.', 'Base', ARRAY['solvent', 'antimicrobial'], 'natural_derived', true),
+  (NULL, 'Ethyl Alcohol', 'ETHANOL', 'Base', ARRAY['solvent'], 'natural_derived', true),
+  (NULL, 'Rubbing Alcohol', 'ISOPROPYL ALCOHOL', 'Base', ARRAY['solvent'], 'synthetic', true),
+  (NULL, 'DPG', 'DIPROPYLENE GLYCOL', 'Base', ARRAY['solvent', 'fixative'], 'synthetic', true),
+  (NULL, 'Propylene Glycol', 'PROPYLENE GLYCOL', 'Base', ARRAY['humectant', 'solvent'], 'synthetic', true),
+  (NULL, 'Glycerine', 'GLYCERIN', 'Base', ARRAY['humectant'], 'natural_derived', true),
+  (NULL, 'Butylene Glycol', 'BUTYLENE GLYCOL', 'Base', ARRAY['humectant', 'solvent'], 'synthetic', true),
+  (NULL, 'Pentanediol', 'PENTYLENE GLYCOL', 'Base', ARRAY['humectant', 'preservative booster'], 'synthetic', true),
+  (NULL, 'Hexanediol', 'HEXYLENE GLYCOL', 'Base', ARRAY['solvent', 'emulsifier'], 'synthetic', true)
+ON CONFLICT (inci_name) WHERE organization_id IS NULL DO UPDATE SET
+  name = EXCLUDED.name,
+  category = EXCLUDED.category,
+  cosmetic_function = EXCLUDED.cosmetic_function,
+  origin = EXCLUDED.origin,
+  is_vegan = EXCLUDED.is_vegan;
 
 -- ============================================
--- CATEGORY: CARRIER OILS (Plant-Based)
+-- CATEGORY: CARRIER OILS
 -- ============================================
-INSERT INTO public.ingredient_library (organization_id, inci_name, common_name, category, function, origin, vegan)
+INSERT INTO public.ingredient_library (organization_id, name, inci_name, category, cosmetic_function, origin, is_vegan)
 VALUES
-  (NULL, 'PRUNUS AMYGDALUS DULCIS OIL', 'Sweet Almond Oil', 'Carrier Oil', 'Emollient', 'Plant-derived', true),
-  (NULL, 'SIMMONDSIA CHINENSIS SEED OIL', 'Jojoba Oil', 'Carrier Oil', 'Emollient', 'Plant-derived', true),
-  (NULL, 'COCOS NUCIFERA OIL', 'Coconut Oil', 'Carrier Oil', 'Emollient', 'Plant-derived', true),
-  (NULL, 'ARGANIA SPINOSA KERNEL OIL', 'Argan Oil', 'Carrier Oil', 'Emollient, Conditioning', 'Plant-derived', true),
-  (NULL, 'ROSA CANINA SEED OIL', 'Rosehip Oil', 'Carrier Oil', 'Emollient, Antioxidant', 'Plant-derived', true),
-  (NULL, 'HELIANTHUS ANNUUS SEED OIL', 'Sunflower Seed Oil', 'Carrier Oil', 'Emollient', 'Plant-derived', true),
-  (NULL, 'OLEA EUROPAEA FRUIT OIL', 'Olive Oil', 'Carrier Oil', 'Emollient', 'Plant-derived', true),
-  (NULL, 'PERSEA GRATISSIMA OIL', 'Avocado Oil', 'Carrier Oil', 'Emollient', 'Plant-derived', true),
-  (NULL, 'VITIS VINIFERA SEED OIL', 'Grape Seed Oil', 'Carrier Oil', 'Emollient', 'Plant-derived', true),
-  (NULL, 'OENOTHERA BIENNIS OIL', 'Evening Primrose Oil', 'Carrier Oil', 'Emollient', 'Plant-derived', true),
-  (NULL, 'RICINUS COMMUNIS SEED OIL', 'Castor Oil', 'Carrier Oil', 'Emollient', 'Plant-derived', true),
-  (NULL, 'SESAMUM INDICUM SEED OIL', 'Sesame Oil', 'Carrier Oil', 'Emollient', 'Plant-derived', true),
-  (NULL, 'CRAMBE ABYSSINICA SEED OIL', 'Abyssinian Oil', 'Carrier Oil', 'Emollient', 'Plant-derived', true),
-  (NULL, 'CAMELLIA OLEIFERA SEED OIL', 'Camellia Oil', 'Carrier Oil', 'Emollient', 'Plant-derived', true),
-  (NULL, 'MARULA OIL', 'Marula Oil', 'Carrier Oil', 'Emollient', 'Plant-derived', true),
-  (NULL, 'SQUALANE', 'Squalane', 'Carrier Oil', 'Emollient', 'Plant-derived', true),
-  (NULL, 'CAPRYLIC/CAPRIC TRIGLYCERIDE', 'MCT Oil', 'Carrier Oil', 'Emollient', 'Plant-derived', true),
-  (NULL, 'ISOPROPYL MYRISTATE', 'IPM', 'Carrier Oil', 'Emollient, Solvent', 'Synthetic', true),
-  (NULL, 'ISOPROPYL PALMITATE', 'IPP', 'Carrier Oil', 'Emollient', 'Synthetic', true),
-  (NULL, 'CETEARYL ETHYLHEXANOATE', 'Crodamol CAP', 'Carrier Oil', 'Emollient', 'Synthetic', true)
-ON CONFLICT DO NOTHING;
+  (NULL, 'Sweet Almond Oil', 'PRUNUS AMYGDALUS DULCIS OIL', 'Carrier Oil', ARRAY['emollient'], 'natural', true),
+  (NULL, 'Jojoba Oil', 'SIMMONDSIA CHINENSIS SEED OIL', 'Carrier Oil', ARRAY['emollient'], 'natural', true),
+  (NULL, 'Coconut Oil', 'COCOS NUCIFERA OIL', 'Carrier Oil', ARRAY['emollient'], 'natural', true),
+  (NULL, 'Argan Oil', 'ARGANIA SPINOSA KERNEL OIL', 'Carrier Oil', ARRAY['emollient', 'conditioning'], 'natural', true),
+  (NULL, 'Rosehip Oil', 'ROSA CANINA SEED OIL', 'Carrier Oil', ARRAY['emollient', 'antioxidant'], 'natural', true),
+  (NULL, 'Sunflower Seed Oil', 'HELIANTHUS ANNUUS SEED OIL', 'Carrier Oil', ARRAY['emollient'], 'natural', true),
+  (NULL, 'Olive Oil', 'OLEA EUROPAEA FRUIT OIL', 'Carrier Oil', ARRAY['emollient'], 'natural', true),
+  (NULL, 'Avocado Oil', 'PERSEA GRATISSIMA OIL', 'Carrier Oil', ARRAY['emollient'], 'natural', true),
+  (NULL, 'Grape Seed Oil', 'VITIS VINIFERA SEED OIL', 'Carrier Oil', ARRAY['emollient'], 'natural', true),
+  (NULL, 'Evening Primrose Oil', 'OENOTHERA BIENNIS OIL', 'Carrier Oil', ARRAY['emollient'], 'natural', true),
+  (NULL, 'Castor Oil', 'RICINUS COMMUNIS SEED OIL', 'Carrier Oil', ARRAY['emollient'], 'natural', true),
+  (NULL, 'Sesame Oil', 'SESAMUM INDICUM SEED OIL', 'Carrier Oil', ARRAY['emollient'], 'natural', true),
+  (NULL, 'Abyssinian Oil', 'CRAMBE ABYSSINICA SEED OIL', 'Carrier Oil', ARRAY['emollient'], 'natural', true),
+  (NULL, 'Camellia Oil', 'CAMELLIA OLEIFERA SEED OIL', 'Carrier Oil', ARRAY['emollient'], 'natural', true),
+  (NULL, 'Marula Oil', 'SCLEROCARYA BIRREA SEED OIL', 'Carrier Oil', ARRAY['emollient'], 'natural', true),
+  (NULL, 'Squalane', 'SQUALANE', 'Carrier Oil', ARRAY['emollient'], 'natural_derived', true),
+  (NULL, 'MCT Oil', 'CAPRYLIC/CAPRIC TRIGLYCERIDE', 'Carrier Oil', ARRAY['emollient'], 'natural_derived', true),
+  (NULL, 'IPM', 'ISOPROPYL MYRISTATE', 'Carrier Oil', ARRAY['emollient', 'solvent'], 'synthetic', true),
+  (NULL, 'IPP', 'ISOPROPYL PALMITATE', 'Carrier Oil', ARRAY['emollient'], 'synthetic', true)
+ON CONFLICT (inci_name) WHERE organization_id IS NULL DO UPDATE SET
+  name = EXCLUDED.name,
+  category = EXCLUDED.category,
+  cosmetic_function = EXCLUDED.cosmetic_function,
+  origin = EXCLUDED.origin,
+  is_vegan = EXCLUDED.is_vegan;
 
 -- ============================================
--- CATEGORY: ESSENTIAL OILS & FRAGRANCE (ALLERGENS MARKED)
+-- CATEGORY: EU 26 ALLERGENS (FRAGRANCE)
 -- ============================================
-INSERT INTO public.ingredient_library (organization_id, inci_name, common_name, category, function, origin, vegan, is_allergen, allergen_type)
+INSERT INTO public.ingredient_library (organization_id, name, inci_name, category, cosmetic_function, origin, is_vegan, is_allergen, contains_allergens)
 VALUES
-  -- EU 26 Allergens
-  (NULL, 'LIMONENE', 'Limonene', 'Fragrance', 'Fragrance', 'Plant-derived', true, true, 'EU26'),
-  (NULL, 'LINALOOL', 'Linalool', 'Fragrance', 'Fragrance', 'Plant-derived', true, true, 'EU26'),
-  (NULL, 'CITRONELLOL', 'Citronellol', 'Fragrance', 'Fragrance', 'Plant-derived', true, true, 'EU26'),
-  (NULL, 'GERANIOL', 'Geraniol', 'Fragrance', 'Fragrance', 'Plant-derived', true, true, 'EU26'),
-  (NULL, 'CITRAL', 'Citral', 'Fragrance', 'Fragrance', 'Plant-derived', true, true, 'EU26'),
-  (NULL, 'EUGENOL', 'Eugenol', 'Fragrance', 'Fragrance', 'Plant-derived', true, true, 'EU26'),
-  (NULL, 'COUMARIN', 'Coumarin', 'Fragrance', 'Fragrance', 'Plant-derived', true, true, 'EU26'),
-  (NULL, 'CINNAMAL', 'Cinnamaldehyde', 'Fragrance', 'Fragrance', 'Plant-derived', true, true, 'EU26'),
-  (NULL, 'HYDROXYCITRONELLAL', 'Hydroxycitronellal', 'Fragrance', 'Fragrance', 'Synthetic', true, true, 'EU26'),
-  (NULL, 'ISOEUGENOL', 'Isoeugenol', 'Fragrance', 'Fragrance', 'Plant-derived', true, true, 'EU26'),
-  (NULL, 'AMYL CINNAMAL', 'Amyl Cinnamal', 'Fragrance', 'Fragrance', 'Synthetic', true, true, 'EU26'),
-  (NULL, 'BENZYL ALCOHOL', 'Benzyl Alcohol', 'Fragrance', 'Fragrance, Preservative', 'Synthetic', true, true, 'EU26'),
-  (NULL, 'BENZYL BENZOATE', 'Benzyl Benzoate', 'Fragrance', 'Fragrance, Solvent', 'Synthetic', true, true, 'EU26'),
-  (NULL, 'BENZYL CINNAMATE', 'Benzyl Cinnamate', 'Fragrance', 'Fragrance', 'Synthetic', true, true, 'EU26'),
-  (NULL, 'BENZYL SALICYLATE', 'Benzyl Salicylate', 'Fragrance', 'Fragrance', 'Synthetic', true, true, 'EU26'),
-  (NULL, 'CINNAMYL ALCOHOL', 'Cinnamyl Alcohol', 'Fragrance', 'Fragrance', 'Synthetic', true, true, 'EU26'),
-  (NULL, 'FARNESOL', 'Farnesol', 'Fragrance', 'Fragrance', 'Plant-derived', true, true, 'EU26'),
-  (NULL, 'HEXYL CINNAMAL', 'Hexyl Cinnamal', 'Fragrance', 'Fragrance', 'Synthetic', true, true, 'EU26'),
-  (NULL, 'BUTYLPHENYL METHYLPROPIONAL', 'Lilial', 'Fragrance', 'Fragrance', 'Synthetic', true, true, 'EU26'),
-  (NULL, 'ALPHA-ISOMETHYL IONONE', 'Alpha-Isomethyl Ionone', 'Fragrance', 'Fragrance', 'Synthetic', true, true, 'EU26'),
-  (NULL, 'EVERNIA PRUNASTRI EXTRACT', 'Oakmoss Extract', 'Fragrance', 'Fragrance', 'Plant-derived', true, true, 'EU26'),
-  (NULL, 'EVERNIA FURFURACEA EXTRACT', 'Treemoss Extract', 'Fragrance', 'Fragrance', 'Plant-derived', true, true, 'EU26'),
-  (NULL, 'METHYL 2-OCTYNOATE', 'Methyl Heptine Carbonate', 'Fragrance', 'Fragrance', 'Synthetic', true, true, 'EU26'),
-  (NULL, 'ANISE ALCOHOL', 'Anise Alcohol', 'Fragrance', 'Fragrance', 'Plant-derived', true, true, 'EU26'),
-  
-  -- Common Essential Oils
-  (NULL, 'LAVANDULA ANGUSTIFOLIA OIL', 'Lavender Essential Oil', 'Essential Oil', 'Fragrance', 'Plant-derived', true, false, NULL),
-  (NULL, 'CITRUS AURANTIUM DULCIS PEEL OIL', 'Sweet Orange Oil', 'Essential Oil', 'Fragrance', 'Plant-derived', true, false, NULL),
-  (NULL, 'CITRUS LIMON PEEL OIL', 'Lemon Essential Oil', 'Essential Oil', 'Fragrance', 'Plant-derived', true, false, NULL),
-  (NULL, 'MENTHA PIPERITA OIL', 'Peppermint Oil', 'Essential Oil', 'Fragrance', 'Plant-derived', true, false, NULL),
-  (NULL, 'EUCALYPTUS GLOBULUS LEAF OIL', 'Eucalyptus Oil', 'Essential Oil', 'Fragrance', 'Plant-derived', true, false, NULL),
-  (NULL, 'MELALEUCA ALTERNIFOLIA LEAF OIL', 'Tea Tree Oil', 'Essential Oil', 'Fragrance, Antimicrobial', 'Plant-derived', true, false, NULL),
-  (NULL, 'ROSMARINUS OFFICINALIS LEAF OIL', 'Rosemary Oil', 'Essential Oil', 'Fragrance', 'Plant-derived', true, false, NULL),
-  (NULL, 'THYMUS VULGARIS OIL', 'Thyme Oil', 'Essential Oil', 'Fragrance', 'Plant-derived', true, false, NULL),
-  (NULL, 'CEDRUS ATLANTICA BARK OIL', 'Cedarwood Oil', 'Essential Oil', 'Fragrance', 'Plant-derived', true, false, NULL),
-  (NULL, 'SANTALUM ALBUM OIL', 'Sandalwood Oil', 'Essential Oil', 'Fragrance', 'Plant-derived', true, false, NULL),
-  (NULL, 'VETIVERIA ZIZANOIDES ROOT OIL', 'Vetiver Oil', 'Essential Oil', 'Fragrance', 'Plant-derived', true, false, NULL),
-  (NULL, 'PELARGONIUM GRAVEOLENS OIL', 'Geranium Oil', 'Essential Oil', 'Fragrance', 'Plant-derived', true, false, NULL),
-  (NULL, 'CITRUS BERGAMIA PEEL OIL', 'Bergamot Oil', 'Essential Oil', 'Fragrance', 'Plant-derived', true, false, NULL),
-  (NULL, 'YLANG YLANG OIL', 'Ylang Ylang Oil', 'Essential Oil', 'Fragrance', 'Plant-derived', true, false, NULL),
-  (NULL, 'JASMINUM OFFICINALE OIL', 'Jasmine Oil', 'Essential Oil', 'Fragrance', 'Plant-derived', true, false, NULL),
-  (NULL, 'ROSA DAMASCENA FLOWER OIL', 'Rose Otto', 'Essential Oil', 'Fragrance', 'Plant-derived', true, false, NULL),
-  (NULL, 'BOSWELLIA CARTERII OIL', 'Frankincense Oil', 'Essential Oil', 'Fragrance', 'Plant-derived', true, false, NULL),
-  (NULL, 'COMMIPHORA MYRRHA OIL', 'Myrrh Oil', 'Essential Oil', 'Fragrance', 'Plant-derived', true, false, NULL),
-  (NULL, 'POGOSTEMON CABLIN OIL', 'Patchouli Oil', 'Essential Oil', 'Fragrance', 'Plant-derived', true, false, NULL),
-  (NULL, 'CITRUS AURANTIUM AMARA FLOWER OIL', 'Neroli Oil', 'Essential Oil', 'Fragrance', 'Plant-derived', true, false, NULL),
-  
-  -- Fragrance Compound
-  (NULL, 'PARFUM', 'Fragrance', 'Fragrance', 'Fragrance', 'Mixed', true, false, NULL)
-ON CONFLICT DO NOTHING;
+  (NULL, 'Limonene', 'LIMONENE', 'Fragrance', ARRAY['fragrance'], 'natural_derived', true, true, ARRAY['EU26']),
+  (NULL, 'Linalool', 'LINALOOL', 'Fragrance', ARRAY['fragrance'], 'natural_derived', true, true, ARRAY['EU26']),
+  (NULL, 'Citronellol', 'CITRONELLOL', 'Fragrance', ARRAY['fragrance'], 'natural_derived', true, true, ARRAY['EU26']),
+  (NULL, 'Geraniol', 'GERANIOL', 'Fragrance', ARRAY['fragrance'], 'natural_derived', true, true, ARRAY['EU26']),
+  (NULL, 'Citral', 'CITRAL', 'Fragrance', ARRAY['fragrance'], 'natural_derived', true, true, ARRAY['EU26']),
+  (NULL, 'Eugenol', 'EUGENOL', 'Fragrance', ARRAY['fragrance'], 'natural_derived', true, true, ARRAY['EU26']),
+  (NULL, 'Coumarin', 'COUMARIN', 'Fragrance', ARRAY['fragrance'], 'natural_derived', true, true, ARRAY['EU26']),
+  (NULL, 'Cinnamaldehyde', 'CINNAMAL', 'Fragrance', ARRAY['fragrance'], 'natural_derived', true, true, ARRAY['EU26']),
+  (NULL, 'Hydroxycitronellal', 'HYDROXYCITRONELLAL', 'Fragrance', ARRAY['fragrance'], 'synthetic', true, true, ARRAY['EU26']),
+  (NULL, 'Isoeugenol', 'ISOEUGENOL', 'Fragrance', ARRAY['fragrance'], 'natural_derived', true, true, ARRAY['EU26']),
+  (NULL, 'Amyl Cinnamal', 'AMYL CINNAMAL', 'Fragrance', ARRAY['fragrance'], 'synthetic', true, true, ARRAY['EU26']),
+  (NULL, 'Benzyl Alcohol', 'BENZYL ALCOHOL', 'Fragrance', ARRAY['fragrance', 'preservative'], 'synthetic', true, true, ARRAY['EU26']),
+  (NULL, 'Benzyl Benzoate', 'BENZYL BENZOATE', 'Fragrance', ARRAY['fragrance', 'solvent'], 'synthetic', true, true, ARRAY['EU26']),
+  (NULL, 'Benzyl Cinnamate', 'BENZYL CINNAMATE', 'Fragrance', ARRAY['fragrance'], 'synthetic', true, true, ARRAY['EU26']),
+  (NULL, 'Benzyl Salicylate', 'BENZYL SALICYLATE', 'Fragrance', ARRAY['fragrance'], 'synthetic', true, true, ARRAY['EU26']),
+  (NULL, 'Cinnamyl Alcohol', 'CINNAMYL ALCOHOL', 'Fragrance', ARRAY['fragrance'], 'synthetic', true, true, ARRAY['EU26']),
+  (NULL, 'Farnesol', 'FARNESOL', 'Fragrance', ARRAY['fragrance'], 'natural_derived', true, true, ARRAY['EU26']),
+  (NULL, 'Hexyl Cinnamal', 'HEXYL CINNAMAL', 'Fragrance', ARRAY['fragrance'], 'synthetic', true, true, ARRAY['EU26']),
+  (NULL, 'Lilial', 'BUTYLPHENYL METHYLPROPIONAL', 'Fragrance', ARRAY['fragrance'], 'synthetic', true, true, ARRAY['EU26']),
+  (NULL, 'Alpha-Isomethyl Ionone', 'ALPHA-ISOMETHYL IONONE', 'Fragrance', ARRAY['fragrance'], 'synthetic', true, true, ARRAY['EU26']),
+  (NULL, 'Oakmoss Extract', 'EVERNIA PRUNASTRI EXTRACT', 'Fragrance', ARRAY['fragrance'], 'natural', true, true, ARRAY['EU26']),
+  (NULL, 'Treemoss Extract', 'EVERNIA FURFURACEA EXTRACT', 'Fragrance', ARRAY['fragrance'], 'natural', true, true, ARRAY['EU26']),
+  (NULL, 'Methyl Heptine Carbonate', 'METHYL 2-OCTYNOATE', 'Fragrance', ARRAY['fragrance'], 'synthetic', true, true, ARRAY['EU26']),
+  (NULL, 'Anise Alcohol', 'ANISE ALCOHOL', 'Fragrance', ARRAY['fragrance'], 'natural_derived', true, true, ARRAY['EU26'])
+ON CONFLICT (inci_name) WHERE organization_id IS NULL DO UPDATE SET
+  name = EXCLUDED.name,
+  category = EXCLUDED.category,
+  cosmetic_function = EXCLUDED.cosmetic_function,
+  origin = EXCLUDED.origin,
+  is_vegan = EXCLUDED.is_vegan,
+  is_allergen = EXCLUDED.is_allergen,
+  contains_allergens = EXCLUDED.contains_allergens;
+
+-- ============================================
+-- CATEGORY: ESSENTIAL OILS
+-- ============================================
+INSERT INTO public.ingredient_library (organization_id, name, inci_name, category, cosmetic_function, origin, is_vegan)
+VALUES
+  (NULL, 'Lavender Essential Oil', 'LAVANDULA ANGUSTIFOLIA OIL', 'Essential Oil', ARRAY['fragrance'], 'natural', true),
+  (NULL, 'Sweet Orange Oil', 'CITRUS AURANTIUM DULCIS PEEL OIL', 'Essential Oil', ARRAY['fragrance'], 'natural', true),
+  (NULL, 'Lemon Essential Oil', 'CITRUS LIMON PEEL OIL', 'Essential Oil', ARRAY['fragrance'], 'natural', true),
+  (NULL, 'Peppermint Oil', 'MENTHA PIPERITA OIL', 'Essential Oil', ARRAY['fragrance'], 'natural', true),
+  (NULL, 'Eucalyptus Oil', 'EUCALYPTUS GLOBULUS LEAF OIL', 'Essential Oil', ARRAY['fragrance'], 'natural', true),
+  (NULL, 'Tea Tree Oil', 'MELALEUCA ALTERNIFOLIA LEAF OIL', 'Essential Oil', ARRAY['fragrance', 'antimicrobial'], 'natural', true),
+  (NULL, 'Rosemary Oil', 'ROSMARINUS OFFICINALIS LEAF OIL', 'Essential Oil', ARRAY['fragrance'], 'natural', true),
+  (NULL, 'Thyme Oil', 'THYMUS VULGARIS OIL', 'Essential Oil', ARRAY['fragrance'], 'natural', true),
+  (NULL, 'Cedarwood Oil', 'CEDRUS ATLANTICA BARK OIL', 'Essential Oil', ARRAY['fragrance'], 'natural', true),
+  (NULL, 'Sandalwood Oil', 'SANTALUM ALBUM OIL', 'Essential Oil', ARRAY['fragrance'], 'natural', true),
+  (NULL, 'Vetiver Oil', 'VETIVERIA ZIZANOIDES ROOT OIL', 'Essential Oil', ARRAY['fragrance'], 'natural', true),
+  (NULL, 'Geranium Oil', 'PELARGONIUM GRAVEOLENS OIL', 'Essential Oil', ARRAY['fragrance'], 'natural', true),
+  (NULL, 'Bergamot Oil', 'CITRUS BERGAMIA PEEL OIL', 'Essential Oil', ARRAY['fragrance'], 'natural', true),
+  (NULL, 'Ylang Ylang Oil', 'CANANGA ODORATA FLOWER OIL', 'Essential Oil', ARRAY['fragrance'], 'natural', true),
+  (NULL, 'Jasmine Oil', 'JASMINUM OFFICINALE OIL', 'Essential Oil', ARRAY['fragrance'], 'natural', true),
+  (NULL, 'Rose Otto', 'ROSA DAMASCENA FLOWER OIL', 'Essential Oil', ARRAY['fragrance'], 'natural', true),
+  (NULL, 'Frankincense Oil', 'BOSWELLIA CARTERII OIL', 'Essential Oil', ARRAY['fragrance'], 'natural', true),
+  (NULL, 'Myrrh Oil', 'COMMIPHORA MYRRHA OIL', 'Essential Oil', ARRAY['fragrance'], 'natural', true),
+  (NULL, 'Patchouli Oil', 'POGOSTEMON CABLIN OIL', 'Essential Oil', ARRAY['fragrance'], 'natural', true),
+  (NULL, 'Neroli Oil', 'CITRUS AURANTIUM AMARA FLOWER OIL', 'Essential Oil', ARRAY['fragrance'], 'natural', true),
+  (NULL, 'Fragrance', 'PARFUM', 'Fragrance', ARRAY['fragrance'], 'unknown', true)
+ON CONFLICT (inci_name) WHERE organization_id IS NULL DO UPDATE SET
+  name = EXCLUDED.name,
+  category = EXCLUDED.category,
+  cosmetic_function = EXCLUDED.cosmetic_function,
+  origin = EXCLUDED.origin,
+  is_vegan = EXCLUDED.is_vegan;
 
 -- ============================================
 -- CATEGORY: PRESERVATIVES
 -- ============================================
-INSERT INTO public.ingredient_library (organization_id, inci_name, common_name, category, function, origin, vegan)
+INSERT INTO public.ingredient_library (organization_id, name, inci_name, category, cosmetic_function, origin, is_vegan)
 VALUES
-  (NULL, 'PHENOXYETHANOL', 'Phenoxyethanol', 'Preservative', 'Preservative', 'Synthetic', true),
-  (NULL, 'ETHYLHEXYLGLYCERIN', 'Ethylhexylglycerin', 'Preservative', 'Preservative booster', 'Synthetic', true),
-  (NULL, 'SODIUM BENZOATE', 'Sodium Benzoate', 'Preservative', 'Preservative', 'Synthetic', true),
-  (NULL, 'POTASSIUM SORBATE', 'Potassium Sorbate', 'Preservative', 'Preservative', 'Synthetic', true),
-  (NULL, 'SORBIC ACID', 'Sorbic Acid', 'Preservative', 'Preservative', 'Synthetic', true),
-  (NULL, 'BENZOIC ACID', 'Benzoic Acid', 'Preservative', 'Preservative', 'Synthetic', true),
-  (NULL, 'DEHYDROACETIC ACID', 'DHA', 'Preservative', 'Preservative', 'Synthetic', true),
-  (NULL, 'BENZISOTHIAZOLINONE', 'BIT', 'Preservative', 'Preservative', 'Synthetic', true),
-  (NULL, 'METHYLISOTHIAZOLINONE', 'MIT', 'Preservative', 'Preservative', 'Synthetic', true),
-  (NULL, 'CAPRYLYL GLYCOL', 'Caprylyl Glycol', 'Preservative', 'Preservative booster', 'Synthetic', true),
-  (NULL, 'TOCOPHEROL', 'Vitamin E', 'Preservative', 'Antioxidant', 'Plant-derived', true),
-  (NULL, 'ASCORBIC ACID', 'Vitamin C', 'Preservative', 'Antioxidant', 'Synthetic', true),
-  (NULL, 'CITRIC ACID', 'Citric Acid', 'Preservative', 'pH adjuster, Chelating', 'Plant-derived', true),
-  (NULL, 'SODIUM HYDROXYMETHYLGLYCINATE', 'Suttocide A', 'Preservative', 'Preservative', 'Synthetic', true)
-ON CONFLICT DO NOTHING;
+  (NULL, 'Phenoxyethanol', 'PHENOXYETHANOL', 'Preservative', ARRAY['preservative'], 'synthetic', true),
+  (NULL, 'Ethylhexylglycerin', 'ETHYLHEXYLGLYCERIN', 'Preservative', ARRAY['preservative booster'], 'synthetic', true),
+  (NULL, 'Sodium Benzoate', 'SODIUM BENZOATE', 'Preservative', ARRAY['preservative'], 'synthetic', true),
+  (NULL, 'Potassium Sorbate', 'POTASSIUM SORBATE', 'Preservative', ARRAY['preservative'], 'synthetic', true),
+  (NULL, 'Sorbic Acid', 'SORBIC ACID', 'Preservative', ARRAY['preservative'], 'synthetic', true),
+  (NULL, 'Benzoic Acid', 'BENZOIC ACID', 'Preservative', ARRAY['preservative'], 'synthetic', true),
+  (NULL, 'Dehydroacetic Acid', 'DEHYDROACETIC ACID', 'Preservative', ARRAY['preservative'], 'synthetic', true),
+  (NULL, 'Caprylyl Glycol', 'CAPRYLYL GLYCOL', 'Preservative', ARRAY['preservative booster'], 'synthetic', true),
+  (NULL, 'Vitamin E', 'TOCOPHEROL', 'Preservative', ARRAY['antioxidant'], 'natural_derived', true),
+  (NULL, 'Vitamin C', 'ASCORBIC ACID', 'Preservative', ARRAY['antioxidant'], 'synthetic', true),
+  (NULL, 'Citric Acid', 'CITRIC ACID', 'Preservative', ARRAY['ph adjuster', 'chelating'], 'natural_derived', true)
+ON CONFLICT (inci_name) WHERE organization_id IS NULL DO UPDATE SET
+  name = EXCLUDED.name,
+  category = EXCLUDED.category,
+  cosmetic_function = EXCLUDED.cosmetic_function,
+  origin = EXCLUDED.origin,
+  is_vegan = EXCLUDED.is_vegan;
 
 -- ============================================
 -- CATEGORY: EMULSIFIERS & THICKENERS
 -- ============================================
-INSERT INTO public.ingredient_library (organization_id, inci_name, common_name, category, function, origin, vegan)
+INSERT INTO public.ingredient_library (organization_id, name, inci_name, category, cosmetic_function, origin, is_vegan)
 VALUES
-  (NULL, 'CETEARYL ALCOHOL', 'Cetearyl Alcohol', 'Emulsifier', 'Emulsifier, Thickener', 'Plant-derived', true),
-  (NULL, 'CETYL ALCOHOL', 'Cetyl Alcohol', 'Emulsifier', 'Emulsifier, Thickener', 'Plant-derived', true),
-  (NULL, 'STEARYL ALCOHOL', 'Stearyl Alcohol', 'Emulsifier', 'Emulsifier, Thickener', 'Plant-derived', true),
-  (NULL, 'GLYCERYL STEARATE', 'Glyceryl Stearate', 'Emulsifier', 'Emulsifier', 'Plant-derived', true),
-  (NULL, 'GLYCERYL STEARATE SE', 'Glyceryl Stearate SE', 'Emulsifier', 'Emulsifier', 'Plant-derived', true),
-  (NULL, 'PEG-100 STEARATE', 'PEG-100 Stearate', 'Emulsifier', 'Emulsifier', 'Synthetic', true),
-  (NULL, 'POLYSORBATE 20', 'Tween 20', 'Emulsifier', 'Solubilizer', 'Synthetic', true),
-  (NULL, 'POLYSORBATE 80', 'Tween 80', 'Emulsifier', 'Solubilizer', 'Synthetic', true),
-  (NULL, 'SORBITAN OLEATE', 'Span 80', 'Emulsifier', 'Emulsifier', 'Synthetic', true),
-  (NULL, 'CETEARETH-20', 'Ceteareth-20', 'Emulsifier', 'Emulsifier', 'Synthetic', true),
-  (NULL, 'STEARETH-21', 'Steareth-21', 'Emulsifier', 'Emulsifier', 'Synthetic', true),
-  (NULL, 'LECITHIN', 'Lecithin', 'Emulsifier', 'Emulsifier', 'Plant-derived', true),
-  (NULL, 'XANTHAN GUM', 'Xanthan Gum', 'Thickener', 'Thickener, Stabilizer', 'Fermentation', true),
-  (NULL, 'CARBOMER', 'Carbomer', 'Thickener', 'Thickener', 'Synthetic', true),
-  (NULL, 'HYDROXYETHYLCELLULOSE', 'HEC', 'Thickener', 'Thickener', 'Plant-derived', true),
-  (NULL, 'SODIUM POLYACRYLATE', 'Sodium Polyacrylate', 'Thickener', 'Thickener', 'Synthetic', true),
-  (NULL, 'ACRYLATES/C10-30 ALKYL ACRYLATE CROSSPOLYMER', 'Pemulen', 'Thickener', 'Thickener, Emulsifier', 'Synthetic', true),
-  (NULL, 'HYDROXYPROPYL METHYLCELLULOSE', 'HPMC', 'Thickener', 'Thickener', 'Plant-derived', true),
-  (NULL, 'CELLULOSE GUM', 'Carboxymethyl Cellulose', 'Thickener', 'Thickener', 'Plant-derived', true),
-  (NULL, 'SCLEROTIUM GUM', 'Sclerotium Gum', 'Thickener', 'Thickener', 'Fermentation', true)
-ON CONFLICT DO NOTHING;
+  (NULL, 'Cetearyl Alcohol', 'CETEARYL ALCOHOL', 'Emulsifier', ARRAY['emulsifier', 'thickener'], 'natural_derived', true),
+  (NULL, 'Cetyl Alcohol', 'CETYL ALCOHOL', 'Emulsifier', ARRAY['emulsifier', 'thickener'], 'natural_derived', true),
+  (NULL, 'Stearyl Alcohol', 'STEARYL ALCOHOL', 'Emulsifier', ARRAY['emulsifier', 'thickener'], 'natural_derived', true),
+  (NULL, 'Glyceryl Stearate', 'GLYCERYL STEARATE', 'Emulsifier', ARRAY['emulsifier'], 'natural_derived', true),
+  (NULL, 'Glyceryl Stearate SE', 'GLYCERYL STEARATE SE', 'Emulsifier', ARRAY['emulsifier'], 'natural_derived', true),
+  (NULL, 'Tween 20', 'POLYSORBATE 20', 'Emulsifier', ARRAY['solubilizer'], 'synthetic', true),
+  (NULL, 'Tween 80', 'POLYSORBATE 80', 'Emulsifier', ARRAY['solubilizer'], 'synthetic', true),
+  (NULL, 'Span 80', 'SORBITAN OLEATE', 'Emulsifier', ARRAY['emulsifier'], 'synthetic', true),
+  (NULL, 'Lecithin', 'LECITHIN', 'Emulsifier', ARRAY['emulsifier'], 'natural', true),
+  (NULL, 'Xanthan Gum', 'XANTHAN GUM', 'Thickener', ARRAY['thickener', 'stabilizer'], 'biotechnology', true),
+  (NULL, 'Carbomer', 'CARBOMER', 'Thickener', ARRAY['thickener'], 'synthetic', true),
+  (NULL, 'HEC', 'HYDROXYETHYLCELLULOSE', 'Thickener', ARRAY['thickener'], 'natural_derived', true),
+  (NULL, 'Sodium Polyacrylate', 'SODIUM POLYACRYLATE', 'Thickener', ARRAY['thickener'], 'synthetic', true),
+  (NULL, 'Sclerotium Gum', 'SCLEROTIUM GUM', 'Thickener', ARRAY['thickener'], 'biotechnology', true)
+ON CONFLICT (inci_name) WHERE organization_id IS NULL DO UPDATE SET
+  name = EXCLUDED.name,
+  category = EXCLUDED.category,
+  cosmetic_function = EXCLUDED.cosmetic_function,
+  origin = EXCLUDED.origin,
+  is_vegan = EXCLUDED.is_vegan;
 
 -- ============================================
--- CATEGORY: ACTIVE INGREDIENTS (SKINCARE)
+-- CATEGORY: ACTIVE INGREDIENTS
 -- ============================================
-INSERT INTO public.ingredient_library (organization_id, inci_name, common_name, category, function, origin, vegan)
+INSERT INTO public.ingredient_library (organization_id, name, inci_name, category, cosmetic_function, origin, is_vegan)
 VALUES
-  -- Vitamins
-  (NULL, 'RETINOL', 'Vitamin A', 'Active', 'Anti-aging', 'Synthetic', true),
-  (NULL, 'RETINYL PALMITATE', 'Vitamin A Palmitate', 'Active', 'Anti-aging', 'Synthetic', true),
-  (NULL, 'ASCORBYL GLUCOSIDE', 'Vitamin C Derivative', 'Active', 'Brightening, Antioxidant', 'Synthetic', true),
-  (NULL, 'SODIUM ASCORBYL PHOSPHATE', 'SAP', 'Active', 'Brightening, Antioxidant', 'Synthetic', true),
-  (NULL, 'ASCORBYL TETRAISOPALMITATE', 'VC-IP', 'Active', 'Brightening, Antioxidant', 'Synthetic', true),
-  (NULL, 'NIACINAMIDE', 'Vitamin B3', 'Active', 'Brightening, Barrier repair', 'Synthetic', true),
-  (NULL, 'PANTHENOL', 'Pro-Vitamin B5', 'Active', 'Moisturizing, Healing', 'Synthetic', true),
-  (NULL, 'TOCOPHERYL ACETATE', 'Vitamin E Acetate', 'Active', 'Antioxidant', 'Synthetic', true),
-  
-  -- Acids
-  (NULL, 'HYALURONIC ACID', 'Hyaluronic Acid', 'Active', 'Hydrating', 'Fermentation', true),
-  (NULL, 'SODIUM HYALURONATE', 'Sodium Hyaluronate', 'Active', 'Hydrating', 'Fermentation', true),
-  (NULL, 'GLYCOLIC ACID', 'Glycolic Acid', 'Active', 'Exfoliant (AHA)', 'Synthetic', true),
-  (NULL, 'LACTIC ACID', 'Lactic Acid', 'Active', 'Exfoliant (AHA)', 'Fermentation', true),
-  (NULL, 'SALICYLIC ACID', 'Salicylic Acid', 'Active', 'Exfoliant (BHA)', 'Plant-derived', true),
-  (NULL, 'MANDELIC ACID', 'Mandelic Acid', 'Active', 'Exfoliant (AHA)', 'Plant-derived', true),
-  (NULL, 'AZELAIC ACID', 'Azelaic Acid', 'Active', 'Brightening, Anti-acne', 'Synthetic', true),
-  (NULL, 'KOJIC ACID', 'Kojic Acid', 'Active', 'Brightening', 'Fermentation', true),
-  (NULL, 'TRANEXAMIC ACID', 'Tranexamic Acid', 'Active', 'Brightening', 'Synthetic', true),
-  (NULL, 'FERULIC ACID', 'Ferulic Acid', 'Active', 'Antioxidant', 'Plant-derived', true),
-  
-  -- Peptides
-  (NULL, 'PALMITOYL TRIPEPTIDE-1', 'Matrixyl 3000 component', 'Active', 'Anti-aging', 'Synthetic', true),
-  (NULL, 'PALMITOYL TETRAPEPTIDE-7', 'Matrixyl 3000 component', 'Active', 'Anti-aging', 'Synthetic', true),
-  (NULL, 'ACETYL HEXAPEPTIDE-8', 'Argireline', 'Active', 'Anti-wrinkle', 'Synthetic', true),
-  (NULL, 'COPPER TRIPEPTIDE-1', 'GHK-Cu', 'Active', 'Anti-aging, Healing', 'Synthetic', true),
-  (NULL, 'PALMITOYL PENTAPEPTIDE-4', 'Matrixyl', 'Active', 'Anti-aging', 'Synthetic', true),
-  
-  -- Other Actives
-  (NULL, 'CERAMIDE NP', 'Ceramide 3', 'Active', 'Barrier repair', 'Synthetic', true),
-  (NULL, 'CERAMIDE AP', 'Ceramide 6 II', 'Active', 'Barrier repair', 'Synthetic', true),
-  (NULL, 'CERAMIDE EOP', 'Ceramide 1', 'Active', 'Barrier repair', 'Synthetic', true),
-  (NULL, 'BAKUCHIOL', 'Bakuchiol', 'Active', 'Retinol alternative', 'Plant-derived', true),
-  (NULL, 'ADENOSINE', 'Adenosine', 'Active', 'Anti-wrinkle', 'Fermentation', true),
-  (NULL, 'ALLANTOIN', 'Allantoin', 'Active', 'Soothing', 'Synthetic', true),
-  (NULL, 'BISABOLOL', 'Alpha-Bisabolol', 'Active', 'Soothing', 'Plant-derived', true),
-  (NULL, 'CENTELLA ASIATICA EXTRACT', 'Cica Extract', 'Active', 'Soothing, Healing', 'Plant-derived', true),
-  (NULL, 'CAFFEINE', 'Caffeine', 'Active', 'Circulation, De-puffing', 'Plant-derived', true),
-  (NULL, 'COLLAGEN', 'Collagen', 'Active', 'Moisturizing', 'Animal-derived', false),
-  (NULL, 'ZINC OXIDE', 'Zinc Oxide', 'Active', 'UV protection, Soothing', 'Mineral', true),
-  (NULL, 'TITANIUM DIOXIDE', 'Titanium Dioxide', 'Active', 'UV protection', 'Mineral', true)
-ON CONFLICT DO NOTHING;
+  (NULL, 'Retinol', 'RETINOL', 'Active', ARRAY['anti-aging'], 'synthetic', true),
+  (NULL, 'Vitamin A Palmitate', 'RETINYL PALMITATE', 'Active', ARRAY['anti-aging'], 'synthetic', true),
+  (NULL, 'Vitamin C Derivative', 'ASCORBYL GLUCOSIDE', 'Active', ARRAY['brightening', 'antioxidant'], 'synthetic', true),
+  (NULL, 'SAP', 'SODIUM ASCORBYL PHOSPHATE', 'Active', ARRAY['brightening', 'antioxidant'], 'synthetic', true),
+  (NULL, 'Vitamin B3', 'NIACINAMIDE', 'Active', ARRAY['brightening', 'barrier repair'], 'synthetic', true),
+  (NULL, 'Pro-Vitamin B5', 'PANTHENOL', 'Active', ARRAY['moisturizing', 'healing'], 'synthetic', true),
+  (NULL, 'Vitamin E Acetate', 'TOCOPHERYL ACETATE', 'Active', ARRAY['antioxidant'], 'synthetic', true),
+  (NULL, 'Hyaluronic Acid', 'HYALURONIC ACID', 'Active', ARRAY['hydrating'], 'biotechnology', true),
+  (NULL, 'Sodium Hyaluronate', 'SODIUM HYALURONATE', 'Active', ARRAY['hydrating'], 'biotechnology', true),
+  (NULL, 'Glycolic Acid', 'GLYCOLIC ACID', 'Active', ARRAY['exfoliant'], 'synthetic', true),
+  (NULL, 'Lactic Acid', 'LACTIC ACID', 'Active', ARRAY['exfoliant'], 'biotechnology', true),
+  (NULL, 'Salicylic Acid', 'SALICYLIC ACID', 'Active', ARRAY['exfoliant'], 'natural_derived', true),
+  (NULL, 'Mandelic Acid', 'MANDELIC ACID', 'Active', ARRAY['exfoliant'], 'natural_derived', true),
+  (NULL, 'Azelaic Acid', 'AZELAIC ACID', 'Active', ARRAY['brightening', 'anti-acne'], 'synthetic', true),
+  (NULL, 'Kojic Acid', 'KOJIC ACID', 'Active', ARRAY['brightening'], 'biotechnology', true),
+  (NULL, 'Tranexamic Acid', 'TRANEXAMIC ACID', 'Active', ARRAY['brightening'], 'synthetic', true),
+  (NULL, 'Ferulic Acid', 'FERULIC ACID', 'Active', ARRAY['antioxidant'], 'natural_derived', true),
+  (NULL, 'Matrixyl 3000 (Part 1)', 'PALMITOYL TRIPEPTIDE-1', 'Active', ARRAY['anti-aging'], 'synthetic', true),
+  (NULL, 'Matrixyl 3000 (Part 2)', 'PALMITOYL TETRAPEPTIDE-7', 'Active', ARRAY['anti-aging'], 'synthetic', true),
+  (NULL, 'Argireline', 'ACETYL HEXAPEPTIDE-8', 'Active', ARRAY['anti-wrinkle'], 'synthetic', true),
+  (NULL, 'GHK-Cu', 'COPPER TRIPEPTIDE-1', 'Active', ARRAY['anti-aging', 'healing'], 'synthetic', true),
+  (NULL, 'Ceramide 3', 'CERAMIDE NP', 'Active', ARRAY['barrier repair'], 'synthetic', true),
+  (NULL, 'Ceramide 6 II', 'CERAMIDE AP', 'Active', ARRAY['barrier repair'], 'synthetic', true),
+  (NULL, 'Bakuchiol', 'BAKUCHIOL', 'Active', ARRAY['anti-aging'], 'natural', true),
+  (NULL, 'Adenosine', 'ADENOSINE', 'Active', ARRAY['anti-wrinkle'], 'biotechnology', true),
+  (NULL, 'Allantoin', 'ALLANTOIN', 'Active', ARRAY['soothing'], 'synthetic', true),
+  (NULL, 'Alpha-Bisabolol', 'BISABOLOL', 'Active', ARRAY['soothing'], 'natural_derived', true),
+  (NULL, 'Cica Extract', 'CENTELLA ASIATICA EXTRACT', 'Active', ARRAY['soothing', 'healing'], 'natural', true),
+  (NULL, 'Caffeine', 'CAFFEINE', 'Active', ARRAY['circulation', 'de-puffing'], 'natural_derived', true),
+  (NULL, 'Zinc Oxide', 'ZINC OXIDE', 'Active', ARRAY['uv protection', 'soothing'], 'mineral', true),
+  (NULL, 'Titanium Dioxide', 'TITANIUM DIOXIDE', 'Active', ARRAY['uv protection'], 'mineral', true)
+ON CONFLICT (inci_name) WHERE organization_id IS NULL DO UPDATE SET
+  name = EXCLUDED.name,
+  category = EXCLUDED.category,
+  cosmetic_function = EXCLUDED.cosmetic_function,
+  origin = EXCLUDED.origin,
+  is_vegan = EXCLUDED.is_vegan;
 
 -- ============================================
 -- CATEGORY: BOTANICAL EXTRACTS
 -- ============================================
-INSERT INTO public.ingredient_library (organization_id, inci_name, common_name, category, function, origin, vegan)
+INSERT INTO public.ingredient_library (organization_id, name, inci_name, category, cosmetic_function, origin, is_vegan)
 VALUES
-  (NULL, 'ALOE BARBADENSIS LEAF JUICE', 'Aloe Vera', 'Botanical', 'Soothing, Hydrating', 'Plant-derived', true),
-  (NULL, 'ALOE BARBADENSIS LEAF EXTRACT', 'Aloe Vera Extract', 'Botanical', 'Soothing, Hydrating', 'Plant-derived', true),
-  (NULL, 'CAMELLIA SINENSIS LEAF EXTRACT', 'Green Tea Extract', 'Botanical', 'Antioxidant', 'Plant-derived', true),
-  (NULL, 'CHAMOMILLA RECUTITA FLOWER EXTRACT', 'Chamomile Extract', 'Botanical', 'Soothing', 'Plant-derived', true),
-  (NULL, 'CALENDULA OFFICINALIS FLOWER EXTRACT', 'Calendula Extract', 'Botanical', 'Soothing, Healing', 'Plant-derived', true),
-  (NULL, 'HAMAMELIS VIRGINIANA EXTRACT', 'Witch Hazel', 'Botanical', 'Astringent', 'Plant-derived', true),
-  (NULL, 'GLYCYRRHIZA GLABRA ROOT EXTRACT', 'Licorice Root Extract', 'Botanical', 'Brightening, Soothing', 'Plant-derived', true),
-  (NULL, 'SYMPHYTUM OFFICINALE EXTRACT', 'Comfrey Extract', 'Botanical', 'Soothing', 'Plant-derived', true),
-  (NULL, 'ECHINACEA PURPUREA EXTRACT', 'Echinacea Extract', 'Botanical', 'Immune support', 'Plant-derived', true),
-  (NULL, 'GINKGO BILOBA LEAF EXTRACT', 'Ginkgo Extract', 'Botanical', 'Antioxidant', 'Plant-derived', true),
-  (NULL, 'PANAX GINSENG ROOT EXTRACT', 'Ginseng Extract', 'Botanical', 'Revitalizing', 'Plant-derived', true),
-  (NULL, 'ARCTOSTAPHYLOS UVA URSI LEAF EXTRACT', 'Bearberry Extract', 'Botanical', 'Brightening', 'Plant-derived', true),
-  (NULL, 'MORUS ALBA ROOT EXTRACT', 'Mulberry Root Extract', 'Botanical', 'Brightening', 'Plant-derived', true),
-  (NULL, 'CURCUMA LONGA ROOT EXTRACT', 'Turmeric Extract', 'Botanical', 'Antioxidant, Brightening', 'Plant-derived', true),
-  (NULL, 'HIBISCUS SABDARIFFA FLOWER EXTRACT', 'Hibiscus Extract', 'Botanical', 'Antioxidant', 'Plant-derived', true),
-  (NULL, 'ROSA CANINA FRUIT EXTRACT', 'Rosehip Extract', 'Botanical', 'Antioxidant', 'Plant-derived', true),
-  (NULL, 'PUNICA GRANATUM EXTRACT', 'Pomegranate Extract', 'Botanical', 'Antioxidant', 'Plant-derived', true),
-  (NULL, 'VACCINIUM MYRTILLUS FRUIT EXTRACT', 'Bilberry Extract', 'Botanical', 'Antioxidant', 'Plant-derived', true),
-  (NULL, 'VITIS VINIFERA FRUIT EXTRACT', 'Grape Extract', 'Botanical', 'Antioxidant', 'Plant-derived', true),
-  (NULL, 'COFFEE ARABICA SEED EXTRACT', 'Coffee Extract', 'Botanical', 'Antioxidant, Stimulating', 'Plant-derived', true)
-ON CONFLICT DO NOTHING;
+  (NULL, 'Aloe Vera', 'ALOE BARBADENSIS LEAF JUICE', 'Botanical', ARRAY['soothing', 'hydrating'], 'natural', true),
+  (NULL, 'Aloe Vera Extract', 'ALOE BARBADENSIS LEAF EXTRACT', 'Botanical', ARRAY['soothing', 'hydrating'], 'natural', true),
+  (NULL, 'Green Tea Extract', 'CAMELLIA SINENSIS LEAF EXTRACT', 'Botanical', ARRAY['antioxidant'], 'natural', true),
+  (NULL, 'Chamomile Extract', 'CHAMOMILLA RECUTITA FLOWER EXTRACT', 'Botanical', ARRAY['soothing'], 'natural', true),
+  (NULL, 'Calendula Extract', 'CALENDULA OFFICINALIS FLOWER EXTRACT', 'Botanical', ARRAY['soothing', 'healing'], 'natural', true),
+  (NULL, 'Witch Hazel', 'HAMAMELIS VIRGINIANA EXTRACT', 'Botanical', ARRAY['astringent'], 'natural', true),
+  (NULL, 'Licorice Root Extract', 'GLYCYRRHIZA GLABRA ROOT EXTRACT', 'Botanical', ARRAY['brightening', 'soothing'], 'natural', true),
+  (NULL, 'Ginkgo Extract', 'GINKGO BILOBA LEAF EXTRACT', 'Botanical', ARRAY['antioxidant'], 'natural', true),
+  (NULL, 'Ginseng Extract', 'PANAX GINSENG ROOT EXTRACT', 'Botanical', ARRAY['revitalizing'], 'natural', true),
+  (NULL, 'Bearberry Extract', 'ARCTOSTAPHYLOS UVA URSI LEAF EXTRACT', 'Botanical', ARRAY['brightening'], 'natural', true),
+  (NULL, 'Mulberry Root Extract', 'MORUS ALBA ROOT EXTRACT', 'Botanical', ARRAY['brightening'], 'natural', true),
+  (NULL, 'Turmeric Extract', 'CURCUMA LONGA ROOT EXTRACT', 'Botanical', ARRAY['antioxidant', 'brightening'], 'natural', true),
+  (NULL, 'Hibiscus Extract', 'HIBISCUS SABDARIFFA FLOWER EXTRACT', 'Botanical', ARRAY['antioxidant'], 'natural', true),
+  (NULL, 'Rosehip Extract', 'ROSA CANINA FRUIT EXTRACT', 'Botanical', ARRAY['antioxidant'], 'natural', true),
+  (NULL, 'Pomegranate Extract', 'PUNICA GRANATUM EXTRACT', 'Botanical', ARRAY['antioxidant'], 'natural', true),
+  (NULL, 'Coffee Extract', 'COFFEA ARABICA SEED EXTRACT', 'Botanical', ARRAY['antioxidant', 'stimulating'], 'natural', true)
+ON CONFLICT (inci_name) WHERE organization_id IS NULL DO UPDATE SET
+  name = EXCLUDED.name,
+  category = EXCLUDED.category,
+  cosmetic_function = EXCLUDED.cosmetic_function,
+  origin = EXCLUDED.origin,
+  is_vegan = EXCLUDED.is_vegan;
 
 -- ============================================
--- CATEGORY: SURFACTANTS (CLEANSERS)
+-- CATEGORY: SURFACTANTS
 -- ============================================
-INSERT INTO public.ingredient_library (organization_id, inci_name, common_name, category, function, origin, vegan)
+INSERT INTO public.ingredient_library (organization_id, name, inci_name, category, cosmetic_function, origin, is_vegan)
 VALUES
-  (NULL, 'SODIUM LAURYL SULFATE', 'SLS', 'Surfactant', 'Cleansing', 'Synthetic', true),
-  (NULL, 'SODIUM LAURETH SULFATE', 'SLES', 'Surfactant', 'Cleansing', 'Synthetic', true),
-  (NULL, 'COCAMIDOPROPYL BETAINE', 'CAPB', 'Surfactant', 'Cleansing (gentle)', 'Plant-derived', true),
-  (NULL, 'SODIUM COCOYL ISETHIONATE', 'SCI', 'Surfactant', 'Cleansing (gentle)', 'Plant-derived', true),
-  (NULL, 'DECYL GLUCOSIDE', 'Decyl Glucoside', 'Surfactant', 'Cleansing (gentle)', 'Plant-derived', true),
-  (NULL, 'COCO-GLUCOSIDE', 'Coco Glucoside', 'Surfactant', 'Cleansing (gentle)', 'Plant-derived', true),
-  (NULL, 'LAURYL GLUCOSIDE', 'Lauryl Glucoside', 'Surfactant', 'Cleansing (gentle)', 'Plant-derived', true),
-  (NULL, 'SODIUM LAUROYL SARCOSINATE', 'SLS (mild)', 'Surfactant', 'Cleansing (mild)', 'Synthetic', true),
-  (NULL, 'SODIUM COCOYL GLUTAMATE', 'SCG', 'Surfactant', 'Cleansing (amino acid)', 'Plant-derived', true),
-  (NULL, 'DISODIUM LAURETH SULFOSUCCINATE', 'DLS', 'Surfactant', 'Cleansing (mild)', 'Synthetic', true)
-ON CONFLICT DO NOTHING;
+  (NULL, 'SLS', 'SODIUM LAURYL SULFATE', 'Surfactant', ARRAY['cleansing'], 'synthetic', true),
+  (NULL, 'SLES', 'SODIUM LAURETH SULFATE', 'Surfactant', ARRAY['cleansing'], 'synthetic', true),
+  (NULL, 'CAPB', 'COCAMIDOPROPYL BETAINE', 'Surfactant', ARRAY['cleansing'], 'natural_derived', true),
+  (NULL, 'SCI', 'SODIUM COCOYL ISETHIONATE', 'Surfactant', ARRAY['cleansing'], 'natural_derived', true),
+  (NULL, 'Decyl Glucoside', 'DECYL GLUCOSIDE', 'Surfactant', ARRAY['cleansing'], 'natural_derived', true),
+  (NULL, 'Coco Glucoside', 'COCO-GLUCOSIDE', 'Surfactant', ARRAY['cleansing'], 'natural_derived', true),
+  (NULL, 'Lauryl Glucoside', 'LAURYL GLUCOSIDE', 'Surfactant', ARRAY['cleansing'], 'natural_derived', true)
+ON CONFLICT (inci_name) WHERE organization_id IS NULL DO UPDATE SET
+  name = EXCLUDED.name,
+  category = EXCLUDED.category,
+  cosmetic_function = EXCLUDED.cosmetic_function,
+  origin = EXCLUDED.origin,
+  is_vegan = EXCLUDED.is_vegan;
 
 -- ============================================
 -- CATEGORY: BUTTERS & WAXES
 -- ============================================
-INSERT INTO public.ingredient_library (organization_id, inci_name, common_name, category, function, origin, vegan)
+INSERT INTO public.ingredient_library (organization_id, name, inci_name, category, cosmetic_function, origin, is_vegan)
 VALUES
-  (NULL, 'BUTYROSPERMUM PARKII BUTTER', 'Shea Butter', 'Butter', 'Emollient', 'Plant-derived', true),
-  (NULL, 'THEOBROMA CACAO SEED BUTTER', 'Cocoa Butter', 'Butter', 'Emollient', 'Plant-derived', true),
-  (NULL, 'MANGIFERA INDICA SEED BUTTER', 'Mango Butter', 'Butter', 'Emollient', 'Plant-derived', true),
-  (NULL, 'CUPUACU BUTTER', 'Cupuacu Butter', 'Butter', 'Emollient', 'Plant-derived', true),
-  (NULL, 'GARCINIA INDICA SEED BUTTER', 'Kokum Butter', 'Butter', 'Emollient', 'Plant-derived', true),
-  (NULL, 'SHOREA STENOPTERA SEED BUTTER', 'Illipe Butter', 'Butter', 'Emollient', 'Plant-derived', true),
-  (NULL, 'CERA ALBA', 'Beeswax', 'Wax', 'Thickener, Emollient', 'Animal-derived', false),
-  (NULL, 'CANDELILLA CERA', 'Candelilla Wax', 'Wax', 'Thickener', 'Plant-derived', true),
-  (NULL, 'COPERNICIA CERIFERA CERA', 'Carnauba Wax', 'Wax', 'Thickener', 'Plant-derived', true),
-  (NULL, 'ORYZA SATIVA BRAN WAX', 'Rice Bran Wax', 'Wax', 'Thickener', 'Plant-derived', true),
-  (NULL, 'SIMMONDSIA CHINENSIS SEED WAX', 'Jojoba Wax', 'Wax', 'Thickener', 'Plant-derived', true),
-  (NULL, 'MICROCRYSTALLINE WAX', 'Microcrystalline Wax', 'Wax', 'Thickener', 'Mineral', true),
-  (NULL, 'PARAFFIN', 'Paraffin Wax', 'Wax', 'Thickener', 'Mineral', true),
-  (NULL, 'PETROLATUM', 'Petroleum Jelly', 'Wax', 'Occlusive', 'Mineral', true),
-  (NULL, 'LANOLIN', 'Lanolin', 'Wax', 'Emollient', 'Animal-derived', false)
-ON CONFLICT DO NOTHING;
+  (NULL, 'Shea Butter', 'BUTYROSPERMUM PARKII BUTTER', 'Butter', ARRAY['emollient'], 'natural', true),
+  (NULL, 'Cocoa Butter', 'THEOBROMA CACAO SEED BUTTER', 'Butter', ARRAY['emollient'], 'natural', true),
+  (NULL, 'Mango Butter', 'MANGIFERA INDICA SEED BUTTER', 'Butter', ARRAY['emollient'], 'natural', true),
+  (NULL, 'Cupuacu Butter', 'CUPUACU BUTTER', 'Butter', ARRAY['emollient'], 'natural', true),
+  (NULL, 'Kokum Butter', 'GARCINIA INDICA SEED BUTTER', 'Butter', ARRAY['emollient'], 'natural', true),
+  (NULL, 'Beeswax', 'CERA ALBA', 'Wax', ARRAY['thickener', 'emollient'], 'natural', false),
+  (NULL, 'Candelilla Wax', 'CANDELILLA CERA', 'Wax', ARRAY['thickener'], 'natural', true),
+  (NULL, 'Carnauba Wax', 'COPERNICIA CERIFERA CERA', 'Wax', ARRAY['thickener'], 'natural', true),
+  (NULL, 'Rice Bran Wax', 'ORYZA SATIVA BRAN WAX', 'Wax', ARRAY['thickener'], 'natural', true),
+  (NULL, 'Jojoba Wax', 'SIMMONDSIA CHINENSIS SEED WAX', 'Wax', ARRAY['thickener'], 'natural', true),
+  (NULL, 'Lanolin', 'LANOLIN', 'Wax', ARRAY['emollient'], 'natural', false)
+ON CONFLICT (inci_name) WHERE organization_id IS NULL DO UPDATE SET
+  name = EXCLUDED.name,
+  category = EXCLUDED.category,
+  cosmetic_function = EXCLUDED.cosmetic_function,
+  origin = EXCLUDED.origin,
+  is_vegan = EXCLUDED.is_vegan;
 
 -- ============================================
 -- CATEGORY: SILICONES
 -- ============================================
-INSERT INTO public.ingredient_library (organization_id, inci_name, common_name, category, function, origin, vegan)
+INSERT INTO public.ingredient_library (organization_id, name, inci_name, category, cosmetic_function, origin, is_vegan)
 VALUES
-  (NULL, 'DIMETHICONE', 'Dimethicone', 'Silicone', 'Emollient, Conditioning', 'Synthetic', true),
-  (NULL, 'CYCLOMETHICONE', 'Cyclomethicone', 'Silicone', 'Emollient, Volatile', 'Synthetic', true),
-  (NULL, 'CYCLOPENTASILOXANE', 'D5', 'Silicone', 'Emollient, Volatile', 'Synthetic', true),
-  (NULL, 'CYCLOHEXASILOXANE', 'D6', 'Silicone', 'Emollient, Volatile', 'Synthetic', true),
-  (NULL, 'PHENYL TRIMETHICONE', 'Phenyl Trimethicone', 'Silicone', 'Emollient, Shine', 'Synthetic', true),
-  (NULL, 'DIMETHICONOL', 'Dimethiconol', 'Silicone', 'Conditioning', 'Synthetic', true),
-  (NULL, 'AMODIMETHICONE', 'Amodimethicone', 'Silicone', 'Conditioning (hair)', 'Synthetic', true),
-  (NULL, 'CETYL DIMETHICONE', 'Cetyl Dimethicone', 'Silicone', 'Emollient', 'Synthetic', true),
-  (NULL, 'CAPRYLYL METHICONE', 'Caprylyl Methicone', 'Silicone', 'Emollient, Light', 'Synthetic', true),
-  (NULL, 'PEG-10 DIMETHICONE', 'PEG-10 Dimethicone', 'Silicone', 'Emulsifier', 'Synthetic', true)
-ON CONFLICT DO NOTHING;
+  (NULL, 'Dimethicone', 'DIMETHICONE', 'Silicone', ARRAY['emollient', 'conditioning'], 'synthetic', true),
+  (NULL, 'Cyclomethicone', 'CYCLOMETHICONE', 'Silicone', ARRAY['emollient'], 'synthetic', true),
+  (NULL, 'D5', 'CYCLOPENTASILOXANE', 'Silicone', ARRAY['emollient'], 'synthetic', true),
+  (NULL, 'Phenyl Trimethicone', 'PHENYL TRIMETHICONE', 'Silicone', ARRAY['emollient', 'shine'], 'synthetic', true),
+  (NULL, 'Dimethiconol', 'DIMETHICONOL', 'Silicone', ARRAY['conditioning'], 'synthetic', true),
+  (NULL, 'Amodimethicone', 'AMODIMETHICONE', 'Silicone', ARRAY['conditioning'], 'synthetic', true)
+ON CONFLICT (inci_name) WHERE organization_id IS NULL DO UPDATE SET
+  name = EXCLUDED.name,
+  category = EXCLUDED.category,
+  cosmetic_function = EXCLUDED.cosmetic_function,
+  origin = EXCLUDED.origin,
+  is_vegan = EXCLUDED.is_vegan;
 
 -- ============================================
--- CATEGORY: COLORANTS (CI Numbers)
+-- CATEGORY: COLORANTS
 -- ============================================
-INSERT INTO public.ingredient_library (organization_id, inci_name, common_name, category, function, origin, vegan)
+INSERT INTO public.ingredient_library (organization_id, name, inci_name, category, cosmetic_function, origin, is_vegan)
 VALUES
-  (NULL, 'CI 77891', 'Titanium Dioxide (white)', 'Colorant', 'Pigment', 'Mineral', true),
-  (NULL, 'CI 77491', 'Iron Oxide Red', 'Colorant', 'Pigment', 'Mineral', true),
-  (NULL, 'CI 77492', 'Iron Oxide Yellow', 'Colorant', 'Pigment', 'Mineral', true),
-  (NULL, 'CI 77499', 'Iron Oxide Black', 'Colorant', 'Pigment', 'Mineral', true),
-  (NULL, 'CI 77007', 'Ultramarines', 'Colorant', 'Pigment', 'Mineral', true),
-  (NULL, 'CI 77742', 'Manganese Violet', 'Colorant', 'Pigment', 'Mineral', true),
-  (NULL, 'CI 77288', 'Chromium Oxide Green', 'Colorant', 'Pigment', 'Mineral', true),
-  (NULL, 'CI 77289', 'Chromium Hydroxide Green', 'Colorant', 'Pigment', 'Mineral', true),
-  (NULL, 'CI 75470', 'Carmine', 'Colorant', 'Pigment', 'Animal-derived', false),
-  (NULL, 'CI 19140', 'Tartrazine (Yellow 5)', 'Colorant', 'Dye', 'Synthetic', true),
-  (NULL, 'CI 16035', 'Allura Red', 'Colorant', 'Dye', 'Synthetic', true),
-  (NULL, 'CI 42090', 'Brilliant Blue', 'Colorant', 'Dye', 'Synthetic', true),
-  (NULL, 'MICA', 'Mica', 'Colorant', 'Pearlescent', 'Mineral', true),
-  (NULL, 'BISMUTH OXYCHLORIDE', 'Bismuth Oxychloride', 'Colorant', 'Pearlescent', 'Mineral', true)
-ON CONFLICT DO NOTHING;
+  (NULL, 'Titanium Dioxide White', 'CI 77891', 'Colorant', ARRAY['pigment'], 'mineral', true),
+  (NULL, 'Iron Oxide Red', 'CI 77491', 'Colorant', ARRAY['pigment'], 'mineral', true),
+  (NULL, 'Iron Oxide Yellow', 'CI 77492', 'Colorant', ARRAY['pigment'], 'mineral', true),
+  (NULL, 'Iron Oxide Black', 'CI 77499', 'Colorant', ARRAY['pigment'], 'mineral', true),
+  (NULL, 'Ultramarines', 'CI 77007', 'Colorant', ARRAY['pigment'], 'mineral', true),
+  (NULL, 'Manganese Violet', 'CI 77742', 'Colorant', ARRAY['pigment'], 'mineral', true),
+  (NULL, 'Chromium Oxide Green', 'CI 77288', 'Colorant', ARRAY['pigment'], 'mineral', true),
+  (NULL, 'Carmine', 'CI 75470', 'Colorant', ARRAY['pigment'], 'natural', false),
+  (NULL, 'Mica', 'MICA', 'Colorant', ARRAY['pearlescent'], 'mineral', true)
+ON CONFLICT (inci_name) WHERE organization_id IS NULL DO UPDATE SET
+  name = EXCLUDED.name,
+  category = EXCLUDED.category,
+  cosmetic_function = EXCLUDED.cosmetic_function,
+  origin = EXCLUDED.origin,
+  is_vegan = EXCLUDED.is_vegan;
 
 -- ============================================
--- CATEGORY: pH ADJUSTERS & CHELATORS
+-- CATEGORY: AROMA CHEMICALS
 -- ============================================
-INSERT INTO public.ingredient_library (organization_id, inci_name, common_name, category, function, origin, vegan)
+INSERT INTO public.ingredient_library (organization_id, name, inci_name, category, cosmetic_function, origin, is_vegan)
 VALUES
-  (NULL, 'SODIUM HYDROXIDE', 'Lye', 'pH Adjuster', 'pH adjuster (alkaline)', 'Synthetic', true),
-  (NULL, 'POTASSIUM HYDROXIDE', 'Potash', 'pH Adjuster', 'pH adjuster (alkaline)', 'Synthetic', true),
-  (NULL, 'TRIETHANOLAMINE', 'TEA', 'pH Adjuster', 'pH adjuster, Neutralizer', 'Synthetic', true),
-  (NULL, 'AMINOMETHYL PROPANOL', 'AMP', 'pH Adjuster', 'pH adjuster, Neutralizer', 'Synthetic', true),
-  (NULL, 'LACTIC ACID', 'Lactic Acid', 'pH Adjuster', 'pH adjuster (acidic)', 'Fermentation', true),
-  (NULL, 'PHOSPHORIC ACID', 'Phosphoric Acid', 'pH Adjuster', 'pH adjuster (acidic)', 'Synthetic', true),
-  (NULL, 'DISODIUM EDTA', 'EDTA', 'Chelator', 'Chelating agent', 'Synthetic', true),
-  (NULL, 'TETRASODIUM EDTA', 'Tetrasodium EDTA', 'Chelator', 'Chelating agent', 'Synthetic', true),
-  (NULL, 'PHYTIC ACID', 'Phytic Acid', 'Chelator', 'Chelating agent (natural)', 'Plant-derived', true),
-  (NULL, 'SODIUM PHYTATE', 'Sodium Phytate', 'Chelator', 'Chelating agent (natural)', 'Plant-derived', true)
-ON CONFLICT DO NOTHING;
-
--- ============================================
--- CATEGORY: FRAGRANCE AROMA CHEMICALS (Non-allergen)
--- ============================================
-INSERT INTO public.ingredient_library (organization_id, inci_name, common_name, category, function, origin, vegan)
-VALUES
-  (NULL, 'ISO E SUPER', 'Iso E Super', 'Aroma Chemical', 'Fragrance (woody)', 'Synthetic', true),
-  (NULL, 'HEDIONE', 'Hedione', 'Aroma Chemical', 'Fragrance (jasmine)', 'Synthetic', true),
-  (NULL, 'AMBROXAN', 'Ambroxan', 'Aroma Chemical', 'Fragrance (amber)', 'Synthetic', true),
-  (NULL, 'GALAXOLIDE', 'Galaxolide', 'Aroma Chemical', 'Fragrance (musk)', 'Synthetic', true),
-  (NULL, 'ETHYLENE BRASSYLATE', 'Ethylene Brassylate', 'Aroma Chemical', 'Fragrance (musk)', 'Synthetic', true),
-  (NULL, 'MUSCONE', 'Muscone', 'Aroma Chemical', 'Fragrance (musk)', 'Synthetic', true),
-  (NULL, 'CASHMERAN', 'Cashmeran', 'Aroma Chemical', 'Fragrance (woody-musky)', 'Synthetic', true),
-  (NULL, 'JAVANOL', 'Javanol', 'Aroma Chemical', 'Fragrance (sandalwood)', 'Synthetic', true),
-  (NULL, 'DIHYDROMYRCENOL', 'Dihydromyrcenol', 'Aroma Chemical', 'Fragrance (citrus-woody)', 'Synthetic', true),
-  (NULL, 'CALONE', 'Calone', 'Aroma Chemical', 'Fragrance (marine)', 'Synthetic', true),
-  (NULL, 'METHYL DIHYDROJASMONATE', 'Hedione HC', 'Aroma Chemical', 'Fragrance (jasmine)', 'Synthetic', true),
-  (NULL, 'VANILLIN', 'Vanillin', 'Aroma Chemical', 'Fragrance (vanilla)', 'Synthetic', true),
-  (NULL, 'ETHYL VANILLIN', 'Ethyl Vanillin', 'Aroma Chemical', 'Fragrance (vanilla)', 'Synthetic', true),
-  (NULL, 'HELIOTROPIN', 'Heliotropin', 'Aroma Chemical', 'Fragrance (almond-vanilla)', 'Synthetic', true),
-  (NULL, 'IONONE', 'Ionone', 'Aroma Chemical', 'Fragrance (violet)', 'Synthetic', true),
-  (NULL, 'METHYL IONONE', 'Methyl Ionone', 'Aroma Chemical', 'Fragrance (orris)', 'Synthetic', true),
-  (NULL, 'DAMASCONE', 'Damascone', 'Aroma Chemical', 'Fragrance (rose-fruity)', 'Synthetic', true),
-  (NULL, 'DAMASCENONE', 'Damascenone', 'Aroma Chemical', 'Fragrance (rose)', 'Synthetic', true)
-ON CONFLICT DO NOTHING;
+  (NULL, 'Iso E Super', 'ISO E SUPER', 'Aroma Chemical', ARRAY['fragrance'], 'synthetic', true),
+  (NULL, 'Hedione', 'HEDIONE', 'Aroma Chemical', ARRAY['fragrance'], 'synthetic', true),
+  (NULL, 'Ambroxan', 'AMBROXAN', 'Aroma Chemical', ARRAY['fragrance'], 'synthetic', true),
+  (NULL, 'Galaxolide', 'GALAXOLIDE', 'Aroma Chemical', ARRAY['fragrance'], 'synthetic', true),
+  (NULL, 'Muscone', 'MUSCONE', 'Aroma Chemical', ARRAY['fragrance'], 'synthetic', true),
+  (NULL, 'Cashmeran', 'CASHMERAN', 'Aroma Chemical', ARRAY['fragrance'], 'synthetic', true),
+  (NULL, 'Javanol', 'JAVANOL', 'Aroma Chemical', ARRAY['fragrance'], 'synthetic', true),
+  (NULL, 'Vanillin', 'VANILLIN', 'Aroma Chemical', ARRAY['fragrance'], 'synthetic', true),
+  (NULL, 'Ethyl Vanillin', 'ETHYL VANILLIN', 'Aroma Chemical', ARRAY['fragrance'], 'synthetic', true),
+  (NULL, 'Ionone', 'IONONE', 'Aroma Chemical', ARRAY['fragrance'], 'synthetic', true),
+  (NULL, 'Damascone', 'DAMASCONE', 'Aroma Chemical', ARRAY['fragrance'], 'synthetic', true)
+ON CONFLICT (inci_name) WHERE organization_id IS NULL DO UPDATE SET
+  name = EXCLUDED.name,
+  category = EXCLUDED.category,
+  cosmetic_function = EXCLUDED.cosmetic_function,
+  origin = EXCLUDED.origin,
+  is_vegan = EXCLUDED.is_vegan;
 
 -- ============================================
 -- CATEGORY: MISCELLANEOUS
 -- ============================================
-INSERT INTO public.ingredient_library (organization_id, inci_name, common_name, category, function, origin, vegan)
+INSERT INTO public.ingredient_library (organization_id, name, inci_name, category, cosmetic_function, origin, is_vegan)
 VALUES
-  (NULL, 'SODIUM CHLORIDE', 'Salt', 'Miscellaneous', 'Thickener, Viscosity control', 'Mineral', true),
-  (NULL, 'MAGNESIUM SULFATE', 'Epsom Salt', 'Miscellaneous', 'Exfoliant, Muscle relaxant', 'Mineral', true),
-  (NULL, 'KAOLIN', 'Kaolin Clay', 'Miscellaneous', 'Absorbent, Cleansing', 'Mineral', true),
-  (NULL, 'BENTONITE', 'Bentonite Clay', 'Miscellaneous', 'Absorbent, Cleansing', 'Mineral', true),
-  (NULL, 'MONTMORILLONITE', 'Montmorillonite Clay', 'Miscellaneous', 'Absorbent', 'Mineral', true),
-  (NULL, 'CHARCOAL POWDER', 'Activated Charcoal', 'Miscellaneous', 'Absorbent, Detoxifying', 'Plant-derived', true),
-  (NULL, 'TALC', 'Talc', 'Miscellaneous', 'Absorbent, Texture', 'Mineral', true),
-  (NULL, 'SILICA', 'Silica', 'Miscellaneous', 'Absorbent, Texture', 'Mineral', true),
-  (NULL, 'ALUMINUM STARCH OCTENYLSUCCINATE', 'Modified Starch', 'Miscellaneous', 'Absorbent, Texture', 'Plant-derived', true),
-  (NULL, 'TAPIOCA STARCH', 'Tapioca Starch', 'Miscellaneous', 'Absorbent, Texture', 'Plant-derived', true),
-  (NULL, 'ZEA MAYS STARCH', 'Corn Starch', 'Miscellaneous', 'Absorbent, Texture', 'Plant-derived', true),
-  (NULL, 'HONEY', 'Honey', 'Miscellaneous', 'Humectant, Antimicrobial', 'Animal-derived', false),
-  (NULL, 'MEL', 'Honey (INCI)', 'Miscellaneous', 'Humectant, Antimicrobial', 'Animal-derived', false),
-  (NULL, 'ROYAL JELLY', 'Royal Jelly', 'Miscellaneous', 'Nourishing', 'Animal-derived', false),
-  (NULL, 'PROPOLIS', 'Propolis', 'Miscellaneous', 'Antimicrobial', 'Animal-derived', false)
-ON CONFLICT DO NOTHING;
+  (NULL, 'Salt', 'SODIUM CHLORIDE', 'Miscellaneous', ARRAY['thickener'], 'mineral', true),
+  (NULL, 'Epsom Salt', 'MAGNESIUM SULFATE', 'Miscellaneous', ARRAY['exfoliant'], 'mineral', true),
+  (NULL, 'Kaolin Clay', 'KAOLIN', 'Miscellaneous', ARRAY['absorbent', 'cleansing'], 'mineral', true),
+  (NULL, 'Bentonite Clay', 'BENTONITE', 'Miscellaneous', ARRAY['absorbent', 'cleansing'], 'mineral', true),
+  (NULL, 'Activated Charcoal', 'CHARCOAL POWDER', 'Miscellaneous', ARRAY['absorbent', 'detoxifying'], 'natural_derived', true),
+  (NULL, 'Silica', 'SILICA', 'Miscellaneous', ARRAY['absorbent', 'texture'], 'mineral', true),
+  (NULL, 'Tapioca Starch', 'TAPIOCA STARCH', 'Miscellaneous', ARRAY['absorbent', 'texture'], 'natural', true),
+  (NULL, 'Corn Starch', 'ZEA MAYS STARCH', 'Miscellaneous', ARRAY['absorbent', 'texture'], 'natural', true),
+  (NULL, 'Sodium Hydroxide', 'SODIUM HYDROXIDE', 'pH Adjuster', ARRAY['ph adjuster'], 'synthetic', true),
+  (NULL, 'Potassium Hydroxide', 'POTASSIUM HYDROXIDE', 'pH Adjuster', ARRAY['ph adjuster'], 'synthetic', true),
+  (NULL, 'TEA', 'TRIETHANOLAMINE', 'pH Adjuster', ARRAY['ph adjuster'], 'synthetic', true),
+  (NULL, 'EDTA', 'DISODIUM EDTA', 'Chelator', ARRAY['chelating'], 'synthetic', true)
+ON CONFLICT (inci_name) WHERE organization_id IS NULL DO UPDATE SET
+  name = EXCLUDED.name,
+  category = EXCLUDED.category,
+  cosmetic_function = EXCLUDED.cosmetic_function,
+  origin = EXCLUDED.origin,
+  is_vegan = EXCLUDED.is_vegan;
 
 -- ============================================
--- Verify counts
+-- VERIFY: Count seeded ingredients
 -- ============================================
 SELECT 
   category,
-  COUNT(*) as ingredient_count
+  COUNT(*) as count
 FROM public.ingredient_library
 WHERE organization_id IS NULL
 GROUP BY category
-ORDER BY ingredient_count DESC;
+ORDER BY count DESC;
 
--- ============================================
--- Total count
--- ============================================
+-- Total global ingredients
 SELECT COUNT(*) as total_global_ingredients 
 FROM public.ingredient_library 
 WHERE organization_id IS NULL;
