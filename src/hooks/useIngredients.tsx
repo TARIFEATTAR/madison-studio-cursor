@@ -165,12 +165,6 @@ export function useIngredientLibrary(options: { query?: string; enabled?: boolea
     queryKey: ["ingredient-library", currentOrganizationId, query],
     queryFn: async () => {
       const searchTerm = query?.trim().toLowerCase() || "";
-      
-      console.log("[IngredientLibrary] Fetching with:", { 
-        orgId: currentOrganizationId, 
-        searchTerm,
-        enabled 
-      });
 
       // Fetch both global ingredients (org_id IS NULL) and org-specific
       const { data, error } = await supabase
@@ -183,12 +177,6 @@ export function useIngredientLibrary(options: { query?: string; enabled?: boolea
         )
         .order("name", { ascending: true })
         .limit(200);
-
-      console.log("[IngredientLibrary] Raw response:", { 
-        dataCount: data?.length || 0, 
-        error,
-        firstItem: data?.[0]
-      });
 
       if (error) {
         console.error("[IngredientLibrary] Fetch error:", error);
@@ -204,7 +192,6 @@ export function useIngredientLibrary(options: { query?: string; enabled?: boolea
             ing.name?.toLowerCase().includes(searchTerm) ||
             ing.inci_name?.toLowerCase().includes(searchTerm)
         );
-        console.log("[IngredientLibrary] After filter:", results.length, "results for", searchTerm);
       }
 
       return results.slice(0, 50);
