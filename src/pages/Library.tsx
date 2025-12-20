@@ -562,7 +562,7 @@ export default function Library() {
 
       {/* Content Grid */}
       <div className={cn(
-        "container mx-auto py-8",
+        "container mx-auto py-4 md:py-6 lg:py-8",
         isMobile ? "px-4" : "px-6"
       )}>
         {isLoading ? (
@@ -573,9 +573,9 @@ export default function Library() {
           <>
             {/* Bulk Actions Toolbar - Always available when there's content */}
             {filteredContent.length > 0 && (
-              <div className="mb-6 flex items-center justify-between gap-4 p-4 bg-card/80 backdrop-blur-sm border border-border/40 rounded-lg">
-                <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
+              <div className="mb-4 md:mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4 p-3 md:p-4 bg-card/80 backdrop-blur-sm border border-border/40 rounded-lg">
+                <div className="flex items-center gap-3 md:gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer select-none min-h-[44px]">
                     <input
                       type="checkbox"
                       checked={selectedItems.size === filteredContent.length && filteredContent.length > 0}
@@ -596,25 +596,30 @@ export default function Library() {
                 </div>
 
                 {selectedItems.size > 0 && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setSelectedItems(new Set())}
-                      className="gap-2"
+                      className="gap-2 min-h-[44px]"
                     >
                       <X className="w-4 h-4" />
-                      Clear
+                      <span className="hidden sm:inline">Clear</span>
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={handleBulkArchive}
                       disabled={isDeleting}
-                      className="gap-2"
+                      className="gap-2 min-h-[44px] flex-1 sm:flex-initial"
                     >
                       <Archive className="w-4 h-4" />
-                      {isDeleting ? 'Processing...' : `${showArchived ? 'Unarchive' : 'Archive'} ${selectedItems.size} item${selectedItems.size > 1 ? 's' : ''}`}
+                      <span className="hidden sm:inline">
+                        {isDeleting ? 'Processing...' : `${showArchived ? 'Unarchive' : 'Archive'} ${selectedItems.size} item${selectedItems.size > 1 ? 's' : ''}`}
+                      </span>
+                      <span className="sm:hidden">
+                        {isDeleting ? 'Processing...' : showArchived ? 'Unarchive' : 'Archive'}
+                      </span>
                     </Button>
                     {showArchived && (
                       <Button
@@ -622,10 +627,15 @@ export default function Library() {
                         size="sm"
                         onClick={handleBulkDelete}
                         disabled={isDeleting}
-                        className="gap-2"
+                        className="gap-2 min-h-[44px] flex-1 sm:flex-initial"
                       >
                         <Trash2 className="w-4 h-4" />
-                        {isDeleting ? 'Deleting...' : `Delete ${selectedItems.size} item${selectedItems.size > 1 ? 's' : ''}`}
+                        <span className="hidden sm:inline">
+                          {isDeleting ? 'Deleting...' : `Delete ${selectedItems.size} item${selectedItems.size > 1 ? 's' : ''}`}
+                        </span>
+                        <span className="sm:hidden">
+                          {isDeleting ? 'Deleting...' : 'Delete'}
+                        </span>
                       </Button>
                     )}
                   </div>
@@ -651,8 +661,8 @@ export default function Library() {
         ) : (
           <div
             className={cn(
-              "grid gap-6 transition-all duration-300",
-              viewMode === "grid" && "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+              "grid gap-4 md:gap-6 transition-all duration-300",
+              viewMode === "grid" && "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
               viewMode === "list" && "grid-cols-1"
             )}
           >

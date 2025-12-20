@@ -1,4 +1,4 @@
-import { Star, Calendar, BookOpen, MoreVertical, Archive, Trash2 } from "lucide-react";
+import { Calendar, BookOpen, MoreVertical, Archive, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,16 +8,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getCollectionIcon, normalizeCollectionName, formatCollectionDisplay } from "@/utils/collectionIcons";
 import { getContentCategoryLabel, getContentSubtypeLabel } from "@/utils/contentSubtypeLabels";
 
 interface PromptCardProps {
   prompt: {
     id: string;
     title: string;
-    collection: string;
-    scent_family: string | null;
-    dip_week: number | null;
+    collection?: string; // Kept for backward compatibility
+    scent_family?: string | null;
+    dip_week?: number | null;
     content_type: string;
     prompt_text: string;
     created_at: string;
@@ -28,15 +27,6 @@ interface PromptCardProps {
   onDelete?: (id: string) => void;
   onClick?: (id: string) => void;
 }
-
-const collectionColors: Record<string, string> = {
-  Humanities: "bg-saffron-gold/20 text-saffron-gold border-saffron-gold/30",
-  Cadence: "bg-saffron-gold/20 text-saffron-gold border-saffron-gold/30", // Legacy
-  Reserve: "bg-golden-brown/20 text-golden-brown border-golden-brown/30",
-  Purity: "bg-soft-ivory/80 text-deep-charcoal border-sandstone",
-  Elemental: "bg-stone-beige/60 text-deep-charcoal border-sandstone",
-  "Sacred Space": "bg-stone-beige/60 text-deep-charcoal border-sandstone", // Legacy
-};
 
 const scentFamilyIcons: Record<string, string> = {
   Warm: "Warm",
@@ -135,17 +125,6 @@ const PromptCard = ({ prompt, onArchive, onDelete, onClick }: PromptCardProps) =
       <div onClick={() => onClick?.(prompt.id)} className={onClick ? "cursor-pointer" : ""}>
         {/* Header Tags */}
       <div className="flex flex-wrap gap-2 mb-4 mt-8">
-        <Badge className={collectionColors[prompt.collection] || "bg-muted"}>
-          {(() => {
-            const CollectionIcon = getCollectionIcon(prompt.collection);
-            return CollectionIcon ? (
-              <span className="flex items-center gap-1.5">
-                <CollectionIcon className="w-3 h-3" />
-                {prompt.collection}
-              </span>
-            ) : prompt.collection;
-          })()}
-        </Badge>
         {prompt.scent_family && (
           <Badge variant="outline" className="border-border/60">
             {scentFamilyIcons[prompt.scent_family]} {prompt.scent_family}

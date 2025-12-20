@@ -795,34 +795,38 @@ export default function ProductHub() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               {isEditing ? (
                 <>
-                  <Button variant="outline" onClick={handleCancel}>
-                    Cancel
+                  <Button variant="outline" onClick={handleCancel} className="min-h-[44px]">
+                    <span className="hidden sm:inline">Cancel</span>
+                    <span className="sm:hidden">Cancel</span>
                   </Button>
                   <Button
                     onClick={handleSave}
                     disabled={!hasChanges || updateProduct.isPending}
+                    className="min-h-[44px]"
                   >
                     {updateProduct.isPending ? (
                       "Saving..."
                     ) : (
                       <>
-                        <Save className="w-4 h-4 mr-2" />
-                        Save Changes
+                        <Save className="w-4 h-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Save Changes</span>
+                        <span className="sm:hidden">Save</span>
                       </>
                     )}
                   </Button>
                 </>
               ) : (
                 <>
-                  <Button variant="outline" onClick={() => setIsEditing(true)}>
-                    Edit
+                  <Button variant="outline" onClick={() => setIsEditing(true)} className="min-h-[44px]">
+                    <span className="hidden sm:inline">Edit</span>
+                    <span className="sm:hidden">Edit</span>
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="icon">
+                      <Button variant="outline" size="icon" className="min-h-[44px] min-w-[44px]">
                         <MoreHorizontal className="w-4 h-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -880,17 +884,17 @@ export default function ProductHub() {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
-        <div className="flex gap-6">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4 md:py-6">
+        <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
           {/* Main Content */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               {/* Your sections highlight */}
-              <div className="mb-4">
+              <div className="mb-3 md:mb-4">
                 <YourSectionsHighlight />
               </div>
               
-              <TabsList className="bg-muted/50 mb-6 flex-wrap h-auto gap-1 p-1">
+              <TabsList className="bg-muted/50 mb-4 md:mb-6 flex-wrap h-auto gap-1 p-1 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
                 {visibleTabs.map((tab) => {
                   const accessLevel = getAccessLevel(tab.section);
                   const isFullAccess = accessLevel === "full";

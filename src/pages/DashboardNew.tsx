@@ -1,22 +1,36 @@
 import { useState, useEffect } from "react";
-import { Loader2, Sparkles, LayoutDashboard } from "lucide-react";
+import { Loader2, Edit2, Check, X, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { DashboardWidgetType, WIDGET_DEFINITIONS } from "@/components/dashboard/DashboardWidgetSystem";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useAuth } from "@/hooks/useAuth";
 import { useOrganization } from "@/hooks/useOrganization";
+import { useDashboardWidgets } from "@/contexts/DashboardWidgetContext";
+import { DashboardWidgetSystem } from "@/components/dashboard/DashboardWidgetSystem";
 
 // New Dashboard Components (Phase 2)
 import { DashboardHero } from "@/components/dashboard/DashboardHero";
 import { SmartMomentumTracker } from "@/components/dashboard/SmartMomentumTracker";
 import { QuickLinksWidget } from "@/components/dashboard/QuickLinksWidget";
+import { StrategySessionCard } from "@/components/dashboard/StrategySessionCard";
 
 // Existing Components (Updated in Phase 1)
-import { BrandHealthCard } from "@/components/dashboard/BrandHealthCard";
 import { ContentPipelineCard } from "@/components/dashboard/ContentPipelineCard";
 import { ThisWeekCard } from "@/components/dashboard/ThisWeekCard";
 import { DashboardRecentActivity } from "@/components/dashboard/DashboardRecentActivity";
+
+// Role-based widgets (now handled by widget system)
 
 // Supporting Components
 import { GettingStartedChecklist } from "@/components/onboarding/GettingStartedChecklist";
@@ -29,9 +43,7 @@ import { logger } from "@/lib/logger";
 import { RoleDashboardWidgets } from "@/components/dashboard/RoleDashboardWidgets";
 import { useUserRole } from "@/hooks/useUserRole";
 
-import MadisonPanel from "@/components/image-editor/MadisonPanel";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
-import { BrandQuickViewTrigger } from "@/components/brand";
 
 export default function DashboardNew() {
   const navigate = useNavigate();
@@ -39,9 +51,17 @@ export default function DashboardNew() {
   const { organizationId } = useOrganization();
   const { data: stats, isLoading: statsLoading, error, isError } = useDashboardStats();
   const [showFallback, setShowFallback] = useState(false);
-  const [madisonPanelOpen, setMadisonPanelOpen] = useState(false);
   const [showChecklist, setShowChecklist] = useState(false);
   const { showGuide, dismissGuide } = usePostOnboardingGuide();
+  const { 
+    widgets, 
+    isEditMode, 
+    toggleEditMode, 
+    addWidget, 
+    removeWidget, 
+    updateWidget, 
+    resetWidgets 
+  } = useDashboardWidgets();
 
   // Check if we should show the getting started checklist
   useEffect(() => {
@@ -107,82 +127,165 @@ export default function DashboardNew() {
       <div className="hidden md:flex h-16 border-b border-[#E0E0E0] px-8 items-center justify-between bg-white">
         <h1 className="text-xl font-semibold text-[#1C150D]">Dashboard</h1>
         <div className="flex items-center gap-3">
+          {/* Reset Button (only in edit mode) */}
+          {isEditMode && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={resetWidgets}
+                  className="gap-2"
+                >
+                  <X className="w-4 h-4" />
+                  Reset
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Reset to default layout</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+
+          {/* Edit Layout Button */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="ghost"
+                variant={isEditMode ? "default" : "ghost"}
                 size="sm"
-                onClick={() => navigate('/dashboard-custom')}
+                onClick={toggleEditMode}
                 className="gap-2"
               >
-                <LayoutDashboard className="w-4 h-4" />
-                Customize
+                {isEditMode ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Done Editing
+                  </>
+                ) : (
+                  <>
+                    <Edit2 className="w-4 h-4" />
+                    Edit Layout
+                  </>
+                )}
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Try the new customizable dashboard</p>
+              <p>{isEditMode ? "Save layout changes" : "Edit dashboard layout"}</p>
             </TooltipContent>
           </Tooltip>
-          <BrandQuickViewTrigger variant="minimal" />
-          <Button
-            size="sm"
-            onClick={() => setMadisonPanelOpen(true)}
-            className="bg-[#B8956A] hover:bg-[#A3865A] text-white flex items-center gap-2 shadow-sm"
-          >
-            <Sparkles className="w-4 h-4" />
-            Ask Madison
-          </Button>
+
+          {/* Add Widget Button - Far Right */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Widget
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>Available Widgets</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    {Object.entries(WIDGET_DEFINITIONS).map(([type, def]) => {
+                      const Icon = def.icon;
+                      const isAdded = widgets.some(w => w.type === type);
+                      // Don't show hero-banner in add menu (it's always there)
+                      if (type === 'hero-banner') return null;
+                      return (
+                        <DropdownMenuItem
+                          key={type}
+                          onClick={() => addWidget(type as DashboardWidgetType)}
+                          disabled={isAdded}
+                          className="gap-2"
+                        >
+                          <Icon className="w-4 h-4" />
+                          <span>{def.name}</span>
+                          {isAdded && <span className="ml-auto text-xs text-muted-foreground">Added</span>}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Add a widget to your dashboard</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
 
       {/* Mobile Header - Simplified */}
-      <div className="md:hidden h-14 border-b border-[#E0E0E0] px-4 flex items-center justify-between bg-white">
-        <h1 className="text-lg font-semibold text-[#1C150D]">Dashboard</h1>
+      <div className="md:hidden h-14 border-b border-[#E0E0E0] px-4 flex items-center justify-between bg-white sticky top-0 z-10">
+        <h1 className="text-base sm:text-lg font-semibold text-[#1C150D]">Dashboard</h1>
         <div className="flex items-center gap-2">
-          <BrandQuickViewTrigger variant="icon-only" />
           <Button
+            variant="ghost"
             size="sm"
-            onClick={() => setMadisonPanelOpen(true)}
-            className="bg-[#B8956A] hover:bg-[#A3865A] text-white px-3 py-2"
+            onClick={toggleEditMode}
+            className="px-3 py-2 min-h-[44px] min-w-[44px]"
           >
-            <Sparkles className="w-4 h-4" />
+            {isEditMode ? (
+              <Check className="w-4 h-4" />
+            ) : (
+              <Edit2 className="w-4 h-4" />
+            )}
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="px-3 py-2 min-h-[44px] min-w-[44px]">
+                <Plus className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Available Widgets</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                {Object.entries(WIDGET_DEFINITIONS).map(([type, def]) => {
+                  const Icon = def.icon;
+                  const isAdded = widgets.some(w => w.type === type);
+                  if (type === 'hero-banner') return null;
+                  return (
+                    <DropdownMenuItem
+                      key={type}
+                      onClick={() => addWidget(type as DashboardWidgetType)}
+                      disabled={isAdded}
+                      className="gap-2"
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{def.name}</span>
+                      {isAdded && <span className="ml-auto text-xs text-muted-foreground">Added</span>}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-auto px-4 md:px-8 py-4 md:py-6 pb-24 md:pb-6 main-content">
-        <div className="max-w-[1400px] mx-auto space-y-4 md:space-y-6">
+      <div className="flex-1 overflow-auto px-3 sm:px-4 md:px-8 py-3 sm:py-4 md:py-6 pb-20 sm:pb-24 md:pb-6 main-content">
+        <div className="max-w-[1400px] mx-auto space-y-3 sm:space-y-4 md:space-y-6">
           
-          {/* 1. HERO SECTION + QUICK LINKS & BRAND HEALTH */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 animate-slide-up stagger-1">
-            {/* Hero takes 8 columns on desktop */}
-            <div className="col-span-1 md:col-span-8">
-              <DashboardHero />
-            </div>
-            {/* Right column: Quick Links + Brand Health stacked (4 columns) */}
-            <div className="col-span-1 md:col-span-4 space-y-4">
-              <QuickLinksWidget />
-              <BrandHealthCard compact />
-            </div>
-          </div>
+          {/* WIDGET SYSTEM - All components including hero are widgets */}
+          <DashboardWidgetSystem
+            widgets={widgets}
+            isEditMode={isEditMode}
+            onWidgetsChange={(newWidgets) => {
+              newWidgets.forEach(w => updateWidget(w.id, w));
+            }}
+            onAddWidget={addWidget}
+            onRemoveWidget={removeWidget}
+            onResizeWidget={(id, w, h) => updateWidget(id, { w, h })}
+            showAddButton={false}
+          />
 
-          {/* 2. CONTENT PIPELINE + SMART MOMENTUM TRACKER */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 animate-slide-up stagger-2">
-            <div className="col-span-1 md:col-span-6">
-              <ContentPipelineCard />
-            </div>
-            <SmartMomentumTracker />
-          </div>
-
-          {/* 3. THIS WEEK'S SCHEDULE */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 animate-slide-up stagger-3">
-            <ThisWeekCard />
-          </div>
-
-          {/* 5. GETTING STARTED (New users only - <5 content pieces) */}
+          {/* GETTING STARTED (New users only - <5 content pieces) - Not a widget */}
           {showChecklist && (
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 animate-slide-up stagger-5">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
               <div className="col-span-1 md:col-span-12">
                 <GettingStartedChecklist
                   onDismiss={() => setShowChecklist(false)}
@@ -192,37 +295,18 @@ export default function DashboardNew() {
             </div>
           )}
 
-          {/* Draft Nudge - Only show if 10+ drafts */}
+          {/* Draft Nudge - Only show if 10+ drafts - Not a widget */}
           {stats && stats.totalDrafts >= 10 && (
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 animate-slide-up stagger-5">
-              <DraftNudge draftCount={stats.totalDrafts} />
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+              <div className="col-span-1 md:col-span-12">
+                <DraftNudge draftCount={stats.totalDrafts} />
+              </div>
             </div>
           )}
-
-          {/* ROLE-SPECIFIC WIDGETS */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 animate-slide-up stagger-5">
-            <div className="col-span-1 md:col-span-12">
-              <RoleDashboardWidgets />
-            </div>
-          </div>
-
-          {/* 6. RECENT ACTIVITY (Collapsed by default, hidden on mobile) */}
-          <div className="hidden md:grid grid-cols-1 md:grid-cols-12 gap-4 animate-slide-up stagger-6">
-            <div className="col-span-1 md:col-span-12">
-              <DashboardRecentActivity collapsible={true} defaultExpanded={false} />
-            </div>
-          </div>
 
         </div>
       </div>
 
-      {/* Madison AI Assistant Panel */}
-      <MadisonPanel
-        isOpen={madisonPanelOpen}
-        onToggle={() => setMadisonPanelOpen(!madisonPanelOpen)}
-        sessionCount={0}
-        maxImages={10}
-      />
 
       {/* Mobile Navigation */}
       <BottomNavigation />

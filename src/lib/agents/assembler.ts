@@ -196,11 +196,12 @@ async function fetchProductData(
     return null;
   }
 
+  // Query the product_hubs table (new unified product system)
   const { data, error } = await supabase
-    .from('brand_products')
-    .select('specs')
-    .eq('org_id', orgId)
-    .eq('product_id', productId)
+    .from('product_hubs')
+    .select('*')
+    .eq('organization_id', orgId)
+    .eq('id', productId)
     .single();
 
   if (error) {
@@ -208,7 +209,22 @@ async function fetchProductData(
     return null;
   }
 
-  return data?.specs as ProductSpecs || null;
+  // Transform product_hubs data to ProductSpecs format
+  if (data) {
+    return {
+      name: data.name,
+      tagline: data.tagline,
+      description: data.short_description || data.long_description,
+      category: data.category,
+      product_type: data.product_type,
+      key_benefits: data.key_benefits || [],
+      key_differentiators: data.key_differentiators || [],
+      target_audience: data.target_audience,
+      brand_voice_notes: data.brand_voice_notes,
+    } as ProductSpecs;
+  }
+
+  return null;
 }
 
 async function fetchBrandDNA(orgId: string): Promise<BrandDNA | null> {

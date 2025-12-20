@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Package, Users, Bell, CreditCard, FolderKanban, Sparkles, Target, Plug, Briefcase } from "lucide-react";
-import { ProductsTab } from "@/components/settings/ProductsTab";
+import { Building2, Users, Bell, CreditCard, Sparkles, Target, Plug, Briefcase } from "lucide-react";
 import { BrandGuidelinesTab } from "@/components/settings/BrandGuidelinesTab";
 import { TeamTab } from "@/components/settings/TeamTab";
 import { NotificationsTab } from "@/components/settings/NotificationsTab";
 import { BillingTab } from "@/components/settings/BillingTab";
-import { CollectionsTab } from "@/components/settings/CollectionsTab";
 import { MadisonTrainingTab } from "@/components/settings/MadisonTrainingTab";
 import { GoalsTab } from "@/components/settings/GoalsTab";
 import { IntegrationsTab } from "@/components/settings/IntegrationsTab";
@@ -91,20 +89,6 @@ export default function Settings() {
                   <Target className="w-4 h-4" />
                   <span className="hidden sm:inline">Goals</span>
                 </TabsTrigger>
-                <TabsTrigger
-                  value="collections"
-                  className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
-                >
-                  <FolderKanban className="w-4 h-4" />
-                  <span className="hidden sm:inline">Collections</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="products"
-                  className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
-                >
-                  <Package className="w-4 h-4" />
-                  <span className="hidden sm:inline">Products</span>
-                </TabsTrigger>
                 <TabsTrigger 
                   value="team"
                   className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
@@ -150,14 +134,6 @@ export default function Settings() {
 
             <TabsContent value="goals">
               <GoalsTab />
-            </TabsContent>
-
-            <TabsContent value="collections">
-              <CollectionsTab />
-            </TabsContent>
-
-            <TabsContent value="products">
-              <ProductsTab />
             </TabsContent>
 
             <TabsContent value="team">

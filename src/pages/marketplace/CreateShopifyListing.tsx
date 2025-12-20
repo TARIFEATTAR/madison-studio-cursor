@@ -713,15 +713,15 @@ const CreateShopifyListing = () => {
               productId={productId}
               onProductSelect={setProductId}
               onProductDataChange={(product) => {
-                if (product?.shopify_product_id) {
-                  const normalizedId = String(product.shopify_product_id);
+                if (product?.external_ids?.shopify_product_id) {
+                  const normalizedId = String(product.external_ids.shopify_product_id);
                   setExternalId(normalizedId);
                   
                   handleUpdate({
                     title: product.name || '',
-                    description: product.description || '',
+                    description: product.short_description || product.long_description || '',
                     product_type: product.product_type || '',
-                    vendor: product.collection || product.brand || '',
+                    vendor: product.product_line || product.category || '',
                   });
                   
                   toast.success("Product linked!");
@@ -729,9 +729,9 @@ const CreateShopifyListing = () => {
                   setExternalId(null);
                   handleUpdate({
                     title: product.name || '',
-                    description: product.description || '',
+                    description: product.short_description || product.long_description || '',
                     product_type: product.product_type || '',
-                    vendor: product.collection || product.brand || '',
+                    vendor: product.product_line || product.category || '',
                   });
                   toast.info("Product data loaded");
                 }

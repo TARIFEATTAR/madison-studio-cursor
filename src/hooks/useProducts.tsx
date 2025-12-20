@@ -90,6 +90,9 @@ export interface ProductHub {
   is_self_manufactured?: boolean;
 }
 
+// Type alias for backward compatibility (legacy code used "Product")
+export type Product = ProductHub;
+
 export interface CreateProductInput {
   name: string;
   category?: string;
@@ -550,8 +553,9 @@ export function useProducts(options: UseProductsOptions = {}) {
     statusCounts,
     categories,
     
-    // Loading
+    // Loading (provide both aliases for compatibility)
     isLoading,
+    loading: isLoading,
     error,
     
     // Actions

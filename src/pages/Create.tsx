@@ -848,34 +848,34 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
   };
 
   return (
-    <div className="min-h-screen pb-20 bg-vellum-cream">
-      <div className={`max-w-5xl mx-auto px-6 py-10 transition-opacity duration-300 ${isGenerating ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+    <div className="min-h-screen pb-20 md:pb-20 bg-vellum-cream">
+      <div className={`max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-10 transition-opacity duration-300 ${isGenerating ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         {/* Main Form */}
         <div>
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-6 md:mb-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 md:gap-4">
                 <img 
                   src={penNibIcon} 
                   alt="Pen nib icon" 
-                  className="w-12 h-12 md:w-16 md:h-16 object-contain"
+                  className="w-10 h-10 md:w-16 md:h-16 object-contain flex-shrink-0"
                 />
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-3xl md:text-4xl font-serif font-medium text-ink-black">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+                    <h1 className="text-2xl md:text-3xl lg:text-4xl font-serif font-medium text-ink-black">
                       Create Content
                     </h1>
                     <VideoHelpTrigger videoId="creating-first-content" variant="icon" />
                   </div>
-                  <p className="text-base md:text-lg mt-1 text-warm-gray">
+                  <p className="text-sm md:text-base lg:text-lg mt-1 text-warm-gray">
                     Quick brief to generate your content
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 bg-white/50 px-3 py-2 rounded-lg border border-warm-gray/10 self-start md:self-auto">
-                <Label htmlFor="think-mode-toggle" className="text-sm text-warm-gray font-medium cursor-pointer select-none">Brainstorming Helper</Label>
+              <div className="flex items-center gap-2 md:gap-3 bg-white/50 px-3 py-2 rounded-lg border border-warm-gray/10 self-start md:self-auto w-full md:w-auto justify-between md:justify-start">
+                <Label htmlFor="think-mode-toggle" className="text-xs md:text-sm text-warm-gray font-medium cursor-pointer select-none">Brainstorming Helper</Label>
                 <Switch 
                   id="think-mode-toggle" 
                   checked={showThinkMode} 
@@ -885,7 +885,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
               </div>
             </div>
             
-            <p className="text-base text-warm-gray">
+            <p className="text-sm md:text-base text-warm-gray">
               Fill out the brief below and Madison will craft the perfect content.
             </p>
           </div>
@@ -926,21 +926,21 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                 </div>
 
                 {/* Content */}
-                <div className="p-8 bg-parchment-white">
-                  <div className="text-center max-w-2xl mx-auto mb-6">
-                    <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-brass/10">
-                      <Lightbulb className="w-8 h-8 text-brass" />
+                <div className="p-4 md:p-6 lg:p-8 bg-parchment-white">
+                  <div className="text-center max-w-2xl mx-auto mb-4 md:mb-6">
+                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 bg-brass/10">
+                      <Lightbulb className="w-6 h-6 md:w-8 md:h-8 text-brass" />
                     </div>
-                    <h4 className="text-2xl font-serif mb-3 text-ink-black">
+                    <h4 className="text-xl md:text-2xl font-serif mb-2 md:mb-3 text-ink-black">
                       Madison's here to help
                     </h4>
-                    <p className="text-base text-warm-gray">
+                    <p className="text-sm md:text-base text-warm-gray">
                       Share your ideas, questions, or creative direction. Your Editorial Director will help you explore and refine them.
                     </p>
                   </div>
 
                   {/* Example Prompts */}
-                  <div className="flex flex-wrap gap-3 justify-center mb-6">
+                  <div className="flex flex-wrap gap-2 md:gap-3 justify-center mb-4 md:mb-6">
                     <Button
                       variant="outline"
                       onClick={() => setThinkModeInput("I need a blog post about seasonal fragrance trends")}
@@ -966,26 +966,26 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
 
                   {/* Input Area Wrapper */}
                   {thinkModeMessages.length > 0 && (
-                    <div className="mb-6 space-y-4 max-h-96 overflow-y-auto">
+                    <div className="mb-4 md:mb-6 space-y-3 md:space-y-4 max-h-64 md:max-h-96 overflow-y-auto">
                       {thinkModeMessages.map((msg) => (
                         <div 
                           key={msg.id} 
                           className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
                           <div 
-                            className={`max-w-[80%] p-4 rounded-lg ${
+                            className={`max-w-[85%] md:max-w-[80%] p-3 md:p-4 rounded-lg ${
                               msg.role === 'user' 
                                 ? 'bg-warm-gray/10 text-ink-black' 
                                 : 'bg-brass/10 text-ink-black'
                             }`}
                           >
-                            <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                            <p className="text-xs md:text-sm whitespace-pre-wrap">{msg.content}</p>
                           </div>
                         </div>
                       ))}
                       {isThinking && (
                         <div className="flex justify-start">
-                          <div className="bg-brass/10 p-4 rounded-lg">
+                          <div className="bg-brass/10 p-3 md:p-4 rounded-lg">
                             <div className="flex gap-1">
                               <span className="w-2 h-2 bg-brass rounded-full animate-bounce" />
                               <span className="w-2 h-2 bg-brass rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
@@ -1025,7 +1025,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                         }
                       }}
                       placeholder="Type your thoughts here..."
-                      className="min-h-[120px] pr-12 bg-vellum-cream border-warm-gray/20 text-ink-black resize-none"
+                      className="min-h-[100px] md:min-h-[120px] pr-12 bg-vellum-cream border-warm-gray/20 text-ink-black resize-none text-base"
                     />
                     <Button
                       onClick={handleThinkModeSend}
@@ -1050,7 +1050,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
           )}
 
           {/* Form Container */}
-          <div className="p-8 rounded-xl border border-warm-gray/20 space-y-8 bg-parchment-white">
+          <div className="p-4 md:p-6 lg:p-8 rounded-xl border border-warm-gray/20 space-y-6 md:space-y-8 bg-parchment-white">
             {/* Brand Knowledge Status Indicator */}
             <BrandKnowledgeIndicator organizationId={currentOrganizationId} />
             
@@ -1129,7 +1129,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                     <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[600px] p-0 bg-parchment-white border-warm-gray/20" align="start">
+                <PopoverContent className="w-[calc(100vw-2rem)] md:w-[600px] p-0 bg-parchment-white border-warm-gray/20" align="start">
                   <Command className="bg-parchment-white">
                     <CommandInput 
                       placeholder="Search deliverables..." 

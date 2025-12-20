@@ -12,8 +12,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useToast } from "@/hooks/use-toast";
 import { contentTypeMapping, getContentTypeDisplayName } from "@/utils/contentTypeMapping";
-import { getAllCategories } from "@/config/categoryTemplates";
-import { getCollectionTemplatesForIndustry } from "@/config/collectionTemplates";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Popover,
@@ -54,7 +52,6 @@ export function SavePromptDialog({
   const [description, setDescription] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedContentType, setSelectedContentType] = useState<string>("");
-  const [selectedCollection, setSelectedCollection] = useState<string>("");
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [isTemplate, setIsTemplate] = useState(true);
@@ -72,8 +69,6 @@ export function SavePromptDialog({
     additionalContext: ""
   });
 
-  const [availableCollections, setAvailableCollections] = useState<any[]>([]);
-
   // Common placeholder suggestions
   const placeholderSuggestions = [
     { label: "Product Name", value: "{{PRODUCT_NAME}}" },
@@ -90,25 +85,6 @@ export function SavePromptDialog({
   useEffect(() => {
     setEditedPromptText(promptText);
   }, [promptText]);
-
-  // Load collections from database
-  useEffect(() => {
-    if (currentOrganizationId && open) {
-      loadCollections();
-    }
-  }, [currentOrganizationId, open]);
-
-  const loadCollections = async () => {
-    const { data, error } = await supabase
-      .from("brand_collections")
-      .select("*")
-      .eq("organization_id", currentOrganizationId)
-      .order("sort_order", { ascending: true });
-
-    if (data && !error) {
-      setAvailableCollections(data);
-    }
-  };
 
 // Set suggested title when dialog opens
 useEffect(() => {
@@ -132,7 +108,6 @@ useEffect(() => {
       setDescription("");
       setSelectedCategory("");
       setSelectedContentType("");
-      setSelectedCollection("");
       setTags([]);
       setTagInput("");
       setIsTemplate(true);
@@ -202,15 +177,6 @@ useEffect(() => {
       return;
     }
 
-    if (!selectedCollection) {
-      toast({
-        title: "Error",
-        description: "Please select a collection",
-        variant: "destructive",
-      });
-      return;
-    }
-
 setIsSaving(true);
 
 try {
@@ -219,7 +185,7 @@ try {
     description: description.trim() || null,
     prompt_text: editedPromptText,
     content_type: selectedContentType as any,
-    collection: selectedCollection as any,
+    collection: "general" as any, // Default collection value for backward compatibility
     tags: tags.length > 0 ? tags : null,
     is_template: isTemplate,
     meta_instructions: {
@@ -427,29 +393,6 @@ try {
               </Select>
             </div>
           )}
-
-          {/* Collection */}
-          <div>
-            <Label htmlFor="prompt-collection" className="text-sm font-medium text-ink-black mb-2 block">
-              Collection
-            </Label>
-            <Select value={selectedCollection} onValueChange={setSelectedCollection}>
-              <SelectTrigger className="bg-parchment-white border-warm-gray/20 min-h-[48px] sm:min-h-[40px]">
-                <SelectValue placeholder="Select collection..." />
-              </SelectTrigger>
-              <SelectContent>
-                {availableCollections.length === 0 ? (
-                  <SelectItem value="humanities">Default Collection</SelectItem>
-                ) : (
-                  availableCollections.map((collection) => (
-                    <SelectItem key={collection.id} value={collection.name.toLowerCase().replace(/\s+/g, '_')}>
-                      {collection.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
 
           {/* Tags */}
           <div>

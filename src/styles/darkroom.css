@@ -5195,4 +5195,78 @@
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
+  
+  /* Mobile Darkroom - Ensure proper spacing and organization */
+  .mobile-darkroom {
+    padding-bottom: calc(var(--space-md) + env(safe-area-inset-bottom));
+    gap: var(--space-sm);
+  }
+  
+  /* Mobile Darkroom - Better organized sections */
+  .mobile-darkroom__prompt-area {
+    order: 1;
+  }
+  
+  .mobile-darkroom__hero-preview {
+    order: 2;
+    margin-bottom: var(--space-sm);
+  }
+  
+  .mobile-settings-grid {
+    order: 3;
+    margin-bottom: var(--space-sm);
+  }
+  
+  .mobile-darkroom__film-strip {
+    order: 4;
+    margin-bottom: var(--space-sm);
+  }
+  
+  .mobile-darkroom__generate-btn {
+    order: 5;
+    position: sticky;
+    bottom: 0;
+    margin-top: auto;
+    z-index: 10;
+  }
+}
+
+/* =============================================================================
+   IMAGE LIBRARY MOBILE STYLES - Darkroom aesthetic
+   ============================================================================= */
+@media (max-width: 768px) {
+  /* Image Library - Mobile optimizations */
+  .image-library-mobile {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+  
+  /* Image cards - Better touch targets on mobile */
+  .image-card-mobile {
+    min-height: 200px;
+  }
+  
+  /* Actions always visible on mobile for better UX */
+  .image-actions-mobile {
+    opacity: 1 !important;
+  }
+  
+  /* Ensure ImageLibrary uses darkroom styling on mobile */
+  .min-h-screen.bg-\\[var\\(--darkroom-bg\\)\\] {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+  
+  /* Mobile image grid - better spacing */
+  .grid.gap-3 {
+    gap: 0.75rem;
+  }
+  
+  /* Mobile filters - stack vertically */
+  .flex.flex-col.md\\:flex-row {
+    gap: 0.75rem;
+  }
+  
+  /* Mobile select dropdowns - full width */
+  .w-full.md\\:w-\\[150px\\] {
+    width: 100%;
+  }
 }

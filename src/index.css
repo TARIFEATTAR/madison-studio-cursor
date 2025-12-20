@@ -620,6 +620,51 @@
   animation: slide-in-from-bottom-2 0.2s ease-out;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPREHENSIVE MOBILE RESPONSIVENESS
+   Global mobile fixes across the application
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  /* Global mobile spacing adjustments */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Ensure all cards are touch-friendly on mobile */
+  .rounded-lg {
+    border-radius: 0.5rem;
+  }
+  
+  /* Better touch targets */
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Prevent text overflow on mobile */
+  h1, h2, h3, h4, h5, h6 {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* Better form inputs on mobile */
+  input, textarea, select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  /* Stack flex items on mobile */
+  .flex-row.md\\:flex-row {
+    flex-direction: column;
+  }
+  
+  /* Full width buttons on mobile when in column layout */
+  .flex-col button {
+    width: 100%;
+  }
+}
+
 /* Bottom nav haptic feedback simulation */
 .nav-item:active {
   transform: scale(0.95);

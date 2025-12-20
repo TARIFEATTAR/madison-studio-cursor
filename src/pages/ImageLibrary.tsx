@@ -259,41 +259,42 @@ export default function ImageLibrary() {
     <div className="min-h-screen bg-[var(--darkroom-bg)]">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[var(--darkroom-bg)]/95 backdrop-blur-sm border-b border-[var(--darkroom-border)]">
-        <div className="container mx-auto px-6 py-6 space-y-5">
+        <div className="container mx-auto px-4 md:px-6 py-4 md:py-6 space-y-4 md:space-y-5">
           {/* Title Row */}
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="font-serif text-3xl text-[var(--darkroom-text)]">Image Library</h1>
-              <p className="text-sm text-[var(--darkroom-text)]/60 mt-1">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <h1 className="font-serif text-2xl md:text-3xl text-[var(--darkroom-text)]">Image Library</h1>
+              <p className="text-xs md:text-sm text-[var(--darkroom-text)]/60 mt-1">
                 {filteredImages.length} {filteredImages.length === 1 ? "image" : "images"}
               </p>
             </div>
             <Button
               onClick={() => navigate("/darkroom")}
-              className="bg-[var(--darkroom-accent)] hover:bg-[var(--darkroom-accent-hover)] text-[var(--darkroom-bg)]"
+              className="bg-[var(--darkroom-accent)] hover:bg-[var(--darkroom-accent-hover)] text-[var(--darkroom-bg)] flex-shrink-0"
+              size="sm"
             >
-              <Camera className="w-4 h-4 mr-2" />
-              Create New
+              <Camera className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Create New</span>
             </Button>
           </div>
 
           {/* Search Bar - Full Width */}
           <div className="relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--darkroom-text)]/40 transition-colors group-focus-within:text-[var(--darkroom-accent)]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-[var(--darkroom-text)]/40 transition-colors group-focus-within:text-[var(--darkroom-accent)]" />
               <Input
-              placeholder="Search images by name, prompt, or category..."
+              placeholder="Search images..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 py-2.5 bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] placeholder:text-[var(--darkroom-text)]/40 focus:border-[var(--darkroom-accent)] focus:ring-2 focus:ring-[var(--darkroom-accent)]/20"
+              className="w-full pl-9 md:pl-10 py-2 md:py-2.5 text-sm md:text-base bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] placeholder:text-[var(--darkroom-text)]/40 focus:border-[var(--darkroom-accent)] focus:ring-2 focus:ring-[var(--darkroom-accent)]/20"
               />
             </div>
 
-          {/* Filters Row */}
-          <div className="flex items-center justify-between gap-4">
+          {/* Filters Row - Mobile: Stack, Desktop: Row */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
             {/* Left: Category + Sort */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
             <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as CategoryFilter)}>
-                <SelectTrigger className="w-[150px] bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
+                <SelectTrigger className="w-full md:w-[150px] bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)]">
@@ -307,7 +308,7 @@ export default function ImageLibrary() {
             </Select>
 
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-                <SelectTrigger className="w-[130px] bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
+                <SelectTrigger className="w-full md:w-[130px] bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)]">
@@ -319,7 +320,7 @@ export default function ImageLibrary() {
             </div>
 
             {/* Right: View Mode + Bulk Actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 md:gap-3">
               {/* View Mode Toggle */}
               <div className="flex items-center bg-[var(--darkroom-surface)] border border-[var(--darkroom-border)] rounded-lg p-0.5">
               <button
@@ -349,14 +350,14 @@ export default function ImageLibrary() {
             {/* Bulk Actions */}
             {selectedImages.size > 0 && (
                 <div className="flex items-center gap-2">
-                <Badge variant="outline" className="border-[var(--darkroom-accent)] text-[var(--darkroom-accent)]">
-                  {selectedImages.size} selected
+                <Badge variant="outline" className="border-[var(--darkroom-accent)] text-[var(--darkroom-accent)] text-xs">
+                  {selectedImages.size}
                 </Badge>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setSelectedImages(new Set())}
-                  className="border-[var(--darkroom-border)] text-[var(--darkroom-text)]/60"
+                  className="border-[var(--darkroom-border)] text-[var(--darkroom-text)]/60 h-8 w-8 p-0"
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -364,9 +365,10 @@ export default function ImageLibrary() {
                   variant="destructive"
                   size="sm"
                   onClick={handleBulkArchive}
+                  className="h-8 text-xs"
                 >
-                  <Trash2 className="w-4 h-4 mr-1" />
-                  Archive
+                  <Trash2 className="w-3 h-3 md:mr-1" />
+                  <span className="hidden md:inline">Archive</span>
                 </Button>
               </div>
             )}
@@ -376,16 +378,16 @@ export default function ImageLibrary() {
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-4 md:px-6 py-4 md:py-8 pb-24 md:pb-8">
         {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Sparkles className="w-8 h-8 text-[var(--darkroom-accent)] animate-pulse" />
+          <div className="flex items-center justify-center py-12 md:py-20">
+            <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-[var(--darkroom-accent)] animate-pulse" />
           </div>
         ) : filteredImages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Camera className="w-16 h-16 text-[var(--darkroom-text)]/20 mb-4" />
-            <h3 className="text-xl font-serif text-[var(--darkroom-text)] mb-2">No images yet</h3>
-            <p className="text-[var(--darkroom-text)]/60 mb-6 max-w-md">
+          <div className="flex flex-col items-center justify-center py-12 md:py-20 text-center px-4">
+            <Camera className="w-12 h-12 md:w-16 md:h-16 text-[var(--darkroom-text)]/20 mb-4" />
+            <h3 className="text-lg md:text-xl font-serif text-[var(--darkroom-text)] mb-2">No images yet</h3>
+            <p className="text-sm md:text-base text-[var(--darkroom-text)]/60 mb-6 max-w-md">
               {searchQuery || categoryFilter !== "all"
                 ? "No images match your filters. Try adjusting your search."
                 : "Start creating stunning product images in the Dark Room."}
@@ -393,6 +395,7 @@ export default function ImageLibrary() {
             <Button
               onClick={() => navigate("/darkroom")}
               className="bg-[var(--darkroom-accent)] hover:bg-[var(--darkroom-accent-hover)] text-[var(--darkroom-bg)]"
+              size="sm"
             >
               <Camera className="w-4 h-4 mr-2" />
               Go to Dark Room
@@ -401,10 +404,10 @@ export default function ImageLibrary() {
         ) : (
           <div
             className={cn(
-              "grid gap-4",
+              "grid gap-3 md:gap-4",
               viewMode === "grid"
-                ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-                : "columns-2 md:columns-3 lg:columns-4 xl:columns-5 space-y-4"
+                ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+                : "columns-2 sm:columns-3 md:columns-3 lg:columns-4 xl:columns-5 space-y-3 md:space-y-4"
             )}
           >
             <AnimatePresence mode="popLayout">
@@ -438,10 +441,10 @@ export default function ImageLibrary() {
                     {/* Selection Checkbox */}
                     <div
                       className={cn(
-                        "absolute top-2 left-2 w-6 h-6 rounded border-2 flex items-center justify-center transition-all",
+                        "absolute top-2 left-2 w-6 h-6 md:w-6 md:h-6 rounded border-2 flex items-center justify-center transition-all touch-manipulation z-10",
                         selectedImages.has(image.id)
-                          ? "bg-[var(--darkroom-accent)] border-[var(--darkroom-accent)]"
-                          : "bg-black/40 border-white/40 opacity-0 group-hover:opacity-100"
+                          ? "bg-[var(--darkroom-accent)] border-[var(--darkroom-accent)] opacity-100"
+                          : "bg-black/40 border-white/40 opacity-100 md:opacity-0 md:group-hover:opacity-100"
                       )}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -456,7 +459,7 @@ export default function ImageLibrary() {
                     </div>
 
                     {/* Actions Menu */}
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                           <Button
