@@ -177,12 +177,10 @@ export function IngredientsSection({
                 Sorted by concentration (highest first)
               </CardDescription>
             </div>
-            {isEditing && (
-              <Button onClick={() => setShowAddDialog(true)} size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Ingredient
-              </Button>
-            )}
+            <Button onClick={() => setShowAddDialog(true)} size="sm">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Ingredient
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -592,7 +590,7 @@ function AddIngredientDialog({
       ingredient_id: item.id,
       inci_name: item.inci_name,
       concentration_percent: concentration ? parseFloat(concentration) : undefined,
-      origin: item.origin,
+      origin: item.source || item.origin, // Use 'source' from library, fallback to 'origin'
     });
     resetForm();
   };
@@ -604,7 +602,7 @@ function AddIngredientDialog({
       onAddToLibrary({
         name: name.trim(),
         inci_name: inciName.trim() || undefined,
-        origin: origin || undefined,
+        source: origin || undefined, // Use 'source' for library
       });
     }
 
@@ -703,9 +701,9 @@ function AddIngredientDialog({
                       </div>
                     )}
                     <div className="flex gap-2 mt-1">
-                      {item.origin && (
+                      {(item.source || item.origin) && (
                         <Badge variant="outline" className="text-xs">
-                          {INGREDIENT_ORIGINS.find((o) => o.value === item.origin)?.label}
+                          {INGREDIENT_ORIGINS.find((o) => o.value === (item.source || item.origin))?.label}
                         </Badge>
                       )}
                       {item.is_allergen && (
