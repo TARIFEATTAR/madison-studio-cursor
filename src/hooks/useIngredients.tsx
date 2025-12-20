@@ -282,9 +282,15 @@ export function useProductIngredients(productId: string | null) {
       queryClient.invalidateQueries({ queryKey: ["product-ingredients", productId] });
       toast({ title: "Ingredient added" });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Error adding ingredient:", error);
-      toast({ title: "Error", description: "Failed to add ingredient", variant: "destructive" });
+      // Show more detailed error for debugging
+      const errorMessage = error?.message || error?.details || error?.hint || "Failed to add ingredient";
+      toast({ 
+        title: "Error adding ingredient", 
+        description: errorMessage,
+        variant: "destructive" 
+      });
     },
   });
 
