@@ -196,12 +196,19 @@ export function useProductIngredients(productId: string | null) {
         .eq("product_id", productId)
         .order("sort_order", { ascending: true });
 
-      if (error) throw error;
+      // Handle table not existing gracefully
+      if (error) {
+        if (error.code === "PGRST116" || error.code === "42P01") {
+          return [];
+        }
+        throw error;
+      }
       return (data || []) as ProductIngredient[];
     },
     enabled: !!productId,
     staleTime: 30 * 1000, // Cache for 30 seconds
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    retry: 1, // Only retry once
   });
 
   // Add ingredient to product
@@ -382,12 +389,19 @@ export function useProductCertifications(productId: string | null) {
         .select("*")
         .eq("product_id", productId);
 
-      if (error) throw error;
+      // Handle table not existing gracefully
+      if (error) {
+        if (error.code === "PGRST116" || error.code === "42P01") {
+          return [];
+        }
+        throw error;
+      }
       return (data || []) as Certification[];
     },
     enabled: !!productId,
     staleTime: 60 * 1000, // Cache for 1 minute
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    retry: 1, // Only retry once
   });
 
   const toggleCertification = useMutation({

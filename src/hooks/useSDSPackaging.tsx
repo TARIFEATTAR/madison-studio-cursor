@@ -181,12 +181,20 @@ export function useProductSDS(productId: string | null) {
         .eq("product_id", productId)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      // Handle table not existing gracefully
+      if (error) {
+        if (error.code === "PGRST116" || error.code === "42P01") {
+          // No rows or table doesn't exist - return empty
+          return [];
+        }
+        throw error;
+      }
       return (data || []) as ProductSDS[];
     },
     enabled: !!productId,
     staleTime: 60 * 1000, // Cache for 1 minute
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    retry: 1, // Only retry once on failure
   });
 
   // Get current (latest approved or latest draft) SDS
@@ -338,14 +346,21 @@ export function useProductPackaging(productId: string | null) {
         .from("product_packaging")
         .select("*")
         .eq("product_id", productId)
-        .single();
+        .maybeSingle(); // Use maybeSingle instead of single to avoid errors
 
-      if (error && error.code !== "PGRST116") throw error; // PGRST116 = no rows
+      // Handle table not existing gracefully
+      if (error) {
+        if (error.code === "PGRST116" || error.code === "42P01") {
+          return null;
+        }
+        throw error;
+      }
       return data as ProductPackaging | null;
     },
     enabled: !!productId,
     staleTime: 60 * 1000, // Cache for 1 minute
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    retry: 1, // Only retry once on failure
   });
 
   const savePackaging = useMutation({

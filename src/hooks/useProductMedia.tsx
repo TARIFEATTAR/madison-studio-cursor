@@ -114,12 +114,19 @@ export function useProductMedia(productId: string) {
         .order("position", { ascending: true })
         .order("created_at", { ascending: true });
 
-      if (error) throw error;
+      // Handle table not existing gracefully
+      if (error) {
+        if (error.code === "PGRST116" || error.code === "42P01") {
+          return [];
+        }
+        throw error;
+      }
       return (data || []) as ProductMediaAsset[];
     },
     enabled: !!productId,
     staleTime: 60 * 1000, // Cache for 1 minute
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    retry: 1, // Only retry once
   });
 
   // ─────────────────────────────────────────────────────────────────────────────

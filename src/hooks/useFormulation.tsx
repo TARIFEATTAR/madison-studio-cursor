@@ -270,7 +270,13 @@ export function useProductFormulation(productId: string | null) {
         .limit(1)
         .maybeSingle();
 
-      if (error) throw error;
+      // Handle table not existing gracefully
+      if (error) {
+        if (error.code === "PGRST116" || error.code === "42P01") {
+          return null;
+        }
+        throw error;
+      }
       
       // Parse scent_profile if it's a string
       if (data && typeof data.scent_profile === "string") {
@@ -287,6 +293,7 @@ export function useProductFormulation(productId: string | null) {
     enabled: !!productId,
     staleTime: 30 * 1000, // Cache for 30 seconds
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    retry: 1, // Only retry once
   });
 
   // Create or update formulation
