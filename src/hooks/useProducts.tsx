@@ -165,8 +165,73 @@ export const PRODUCT_TYPES: Record<string, string[]> = {
   'Haircare': ['Shampoo', 'Conditioner', 'Treatment', 'Styling', 'Oil', 'Mask', 'Serum', 'Spray'],
   'Body Care': ['Body Wash', 'Body Lotion', 'Body Oil', 'Body Scrub', 'Hand Cream', 'Deodorant'],
   'Cosmetics': ['Foundation', 'Concealer', 'Powder', 'Blush', 'Bronzer', 'Highlighter', 'Lipstick', 'Lip Gloss', 'Mascara', 'Eyeliner', 'Eyeshadow'],
-  'Fragrance': ['Eau de Parfum', 'Eau de Toilette', 'Body Mist', 'Perfume Oil', 'Room Spray', 'Candle'],
+  'Fragrance': ['Attär', 'Eau de Parfum', 'Eau de Toilette', 'Perfume Oil', 'Body Mist', 'Solid Perfume', 'Room Spray', 'Candle', 'Incense'],
+  'Wellness': ['Aromatherapy', 'Essential Oil', 'Bath Soak', 'Supplement', 'CBD', 'Sleep Aid'],
+  'Sun Care': ['Sunscreen', 'After Sun', 'Self Tanner', 'Bronzing Oil'],
+  'Men\'s Grooming': ['Shave Cream', 'Aftershave', 'Beard Oil', 'Pomade', 'Cologne'],
+  'Nail Care': ['Polish', 'Treatment', 'Remover', 'Cuticle Oil'],
+  'Oral Care': ['Toothpaste', 'Mouthwash', 'Whitening'],
+  'Baby & Kids': ['Lotion', 'Wash', 'Diaper Cream', 'Sunscreen'],
 };
+
+// Product type writing guidance for AI context
+export const PRODUCT_TYPE_WRITING_RULES: Record<string, {
+  description: string;
+  vocabulary: string[];
+  toneNotes: string;
+  avoidTerms?: string[];
+}> = {
+  // Fragrance Types
+  'Attär': {
+    description: 'Traditional botanical perfume oil, often using ancient distillation methods. Derived from flowers, herbs, spices, and woods.',
+    vocabulary: ['attar', 'attär', 'botanical essence', 'natural perfumery', 'traditional distillation', 'hydro-distillation', 'deg-bhapka', 'sandalwood base', 'pure essence', 'artisanal', 'heritage fragrance', 'concentrated oil', 'alcohol-free'],
+    toneNotes: 'Emphasize craftsmanship, tradition, and the artisanal nature. Reference botanical origins and traditional methods. Position as luxury, heritage fragrance.',
+    avoidTerms: ['synthetic', 'chemical', 'spray', 'cologne'],
+  },
+  'Eau de Parfum': {
+    description: 'Concentrated fragrance with 15-20% perfume oil. Long-lasting, sophisticated.',
+    vocabulary: ['EDP', 'sillage', 'longevity', 'top notes', 'heart notes', 'base notes', 'dry down', 'projection', 'concentration', 'parfum'],
+    toneNotes: 'Emphasize luxury, sophistication, and lasting power. Use traditional perfumery language.',
+  },
+  'Eau de Toilette': {
+    description: 'Lighter fragrance concentration (5-15%). Fresh, everyday wear.',
+    vocabulary: ['EDT', 'fresh', 'lighter', 'daytime', 'refreshing', 'versatile', 'everyday luxury'],
+    toneNotes: 'Position as fresh, approachable, and versatile. Good for layering or everyday wear.',
+  },
+  'Perfume Oil': {
+    description: 'Concentrated oil-based fragrance. Intimate, skin-scent focused.',
+    vocabulary: ['roll-on', 'concentrated', 'intimate', 'skin scent', 'alcohol-free', 'long-lasting', 'pure oil', 'personal fragrance'],
+    toneNotes: 'Emphasize intimacy, purity, and personal nature. Highlight alcohol-free benefits for sensitive skin.',
+  },
+  'Solid Perfume': {
+    description: 'Wax-based portable fragrance. Travel-friendly and subtle.',
+    vocabulary: ['portable', 'travel-friendly', 'subtle', 'touch-up', 'compact', 'mess-free', 'TSA-friendly'],
+    toneNotes: 'Emphasize convenience, portability, and discretion. Perfect for on-the-go touch-ups.',
+  },
+  
+  // Skincare Types
+  'Serum': {
+    description: 'Concentrated treatment with active ingredients. Lightweight, fast-absorbing.',
+    vocabulary: ['actives', 'concentrated', 'lightweight', 'fast-absorbing', 'treatment', 'potent', 'targeted', 'efficacy'],
+    toneNotes: 'Lead with science and efficacy. Highlight active ingredients and clinical results.',
+  },
+  'Moisturizer': {
+    description: 'Hydrating cream or lotion for daily use. Barrier support and hydration.',
+    vocabulary: ['hydration', 'moisture barrier', 'nourishing', 'protective', 'daily', 'supple', 'plump'],
+    toneNotes: 'Focus on comfort, hydration, and daily ritual. Emphasize skin health and glow.',
+  },
+  'Cleanser': {
+    description: 'Face wash or cleansing product. First step in skincare routine.',
+    vocabulary: ['gentle', 'purifying', 'removes impurities', 'non-stripping', 'balanced', 'fresh', 'clean'],
+    toneNotes: 'Emphasize gentleness and effectiveness. Position as essential first step.',
+  },
+};
+
+// Helper to get writing rules for a product type
+export function getProductTypeWritingRules(productType: string | null): typeof PRODUCT_TYPE_WRITING_RULES[string] | null {
+  if (!productType) return null;
+  return PRODUCT_TYPE_WRITING_RULES[productType] || null;
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // HOOK

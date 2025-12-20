@@ -18,6 +18,127 @@ const corsHeaders = {
   'Access-Control-Max-Age': '86400',
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// PRODUCT TYPE WRITING RULES
+// Product-type-specific vocabulary and writing guidance for AI context
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const PRODUCT_TYPE_WRITING_RULES: Record<string, {
+  description: string;
+  vocabulary: string[];
+  toneNotes: string;
+  avoidTerms?: string[];
+}> = {
+  // Fragrance Types
+  'Attär': {
+    description: 'Traditional botanical perfume oil, often using ancient distillation methods. Derived from flowers, herbs, spices, and woods.',
+    vocabulary: ['attar', 'attär', 'botanical essence', 'natural perfumery', 'traditional distillation', 'hydro-distillation', 'deg-bhapka', 'sandalwood base', 'pure essence', 'artisanal', 'heritage fragrance', 'concentrated oil', 'alcohol-free'],
+    toneNotes: 'Emphasize craftsmanship, tradition, and the artisanal nature. Reference botanical origins and traditional methods. Position as luxury, heritage fragrance.',
+    avoidTerms: ['synthetic', 'chemical', 'spray', 'cologne'],
+  },
+  'Eau de Parfum': {
+    description: 'Concentrated fragrance with 15-20% perfume oil. Long-lasting, sophisticated.',
+    vocabulary: ['EDP', 'sillage', 'longevity', 'top notes', 'heart notes', 'base notes', 'dry down', 'projection', 'concentration', 'parfum'],
+    toneNotes: 'Emphasize luxury, sophistication, and lasting power. Use traditional perfumery language.',
+  },
+  'Eau de Toilette': {
+    description: 'Lighter fragrance concentration (5-15%). Fresh, everyday wear.',
+    vocabulary: ['EDT', 'fresh', 'lighter', 'daytime', 'refreshing', 'versatile', 'everyday luxury'],
+    toneNotes: 'Position as fresh, approachable, and versatile. Good for layering or everyday wear.',
+  },
+  'Perfume Oil': {
+    description: 'Concentrated oil-based fragrance. Intimate, skin-scent focused.',
+    vocabulary: ['roll-on', 'concentrated', 'intimate', 'skin scent', 'alcohol-free', 'long-lasting', 'pure oil', 'personal fragrance'],
+    toneNotes: 'Emphasize intimacy, purity, and personal nature. Highlight alcohol-free benefits for sensitive skin.',
+  },
+  'Solid Perfume': {
+    description: 'Wax-based portable fragrance. Travel-friendly and subtle.',
+    vocabulary: ['portable', 'travel-friendly', 'subtle', 'touch-up', 'compact', 'mess-free', 'TSA-friendly'],
+    toneNotes: 'Emphasize convenience, portability, and discretion. Perfect for on-the-go touch-ups.',
+  },
+  'Body Mist': {
+    description: 'Light, refreshing fragrance spray. Lower concentration, great for layering.',
+    vocabulary: ['refreshing', 'light', 'layering', 'mist', 'spritz', 'all-over', 'hydrating'],
+    toneNotes: 'Position as casual, refreshing, and perfect for everyday use. Emphasize layering opportunities.',
+  },
+  'Room Spray': {
+    description: 'Home fragrance in spray format. Instant atmosphere creation.',
+    vocabulary: ['atmosphere', 'ambiance', 'home scenting', 'instant', 'refresh', 'room-filling'],
+    toneNotes: 'Focus on transforming spaces and creating atmosphere. Do NOT use perfume pyramid language.',
+  },
+  'Candle': {
+    description: 'Scented candle for home fragrance. Ritual, ambiance, and long-lasting scent.',
+    vocabulary: ['burn time', 'throw', 'wick', 'vessel', 'ambiance', 'ritual', 'glow', 'atmosphere'],
+    toneNotes: 'Emphasize ritual, ambiance, and sensory experience. Mention burn time and throw quality. Do NOT use perfume pyramid language.',
+  },
+  'Incense': {
+    description: 'Traditional burning fragrance. Meditative, ceremonial, atmospheric.',
+    vocabulary: ['burn', 'smoke', 'ceremony', 'meditation', 'ritual', 'ancient', 'sacred', 'grounding'],
+    toneNotes: 'Emphasize tradition, ritual, and meditative qualities. Reference cultural or ceremonial significance.',
+  },
+  
+  // Skincare Types
+  'Serum': {
+    description: 'Concentrated treatment with active ingredients. Lightweight, fast-absorbing.',
+    vocabulary: ['actives', 'concentrated', 'lightweight', 'fast-absorbing', 'treatment', 'potent', 'targeted', 'efficacy'],
+    toneNotes: 'Lead with science and efficacy. Highlight active ingredients and clinical results.',
+  },
+  'Moisturizer': {
+    description: 'Hydrating cream or lotion for daily use. Barrier support and hydration.',
+    vocabulary: ['hydration', 'moisture barrier', 'nourishing', 'protective', 'daily', 'supple', 'plump'],
+    toneNotes: 'Focus on comfort, hydration, and daily ritual. Emphasize skin health and glow.',
+  },
+  'Cleanser': {
+    description: 'Face wash or cleansing product. First step in skincare routine.',
+    vocabulary: ['gentle', 'purifying', 'removes impurities', 'non-stripping', 'balanced', 'fresh', 'clean'],
+    toneNotes: 'Emphasize gentleness and effectiveness. Position as essential first step.',
+  },
+  'Toner': {
+    description: 'Prep step after cleansing. Balances and preps skin.',
+    vocabulary: ['balancing', 'prep', 'pH', 'refreshing', 'skin prep', 'second step'],
+    toneNotes: 'Position as essential prep step. Emphasize balancing and enhancing subsequent product absorption.',
+  },
+  'Mask': {
+    description: 'Intensive treatment applied and removed. Self-care ritual.',
+    vocabulary: ['intensive', 'treatment', 'ritual', 'self-care', 'weekly', 'transformation', 'glow'],
+    toneNotes: 'Emphasize ritual and intensive results. Position as special self-care moment.',
+  },
+  'Oil': {
+    description: 'Face or body oil for nourishment. Luxurious and deeply hydrating.',
+    vocabulary: ['nourishing', 'luxurious', 'glow', 'radiance', 'sealing', 'botanical', 'precious'],
+    toneNotes: 'Emphasize luxury, nourishment, and glow. Highlight botanical or precious ingredients.',
+  },
+};
+
+// Helper function to get product type writing context
+function getProductTypeWritingContext(productType: string | null): string {
+  if (!productType) return '';
+  
+  const rules = PRODUCT_TYPE_WRITING_RULES[productType];
+  if (!rules) return '';
+  
+  const contextParts: string[] = [];
+  
+  contextParts.push('\n━━━ PRODUCT TYPE WRITING RULES ━━━');
+  contextParts.push(`Product Type: ${productType}`);
+  contextParts.push(`\nCategory Context: ${rules.description}`);
+  
+  contextParts.push(`\n✦ VOCABULARY TO USE NATURALLY:`);
+  contextParts.push(`   ${rules.vocabulary.join(', ')}`);
+  
+  contextParts.push(`\n✦ TONE GUIDANCE:`);
+  contextParts.push(`   ${rules.toneNotes}`);
+  
+  if (rules.avoidTerms && rules.avoidTerms.length > 0) {
+    contextParts.push(`\n✦ TERMS TO AVOID FOR THIS PRODUCT TYPE:`);
+    rules.avoidTerms.forEach(term => {
+      contextParts.push(`   ✗ ${term}`);
+    });
+  }
+  
+  return contextParts.join('\n');
+}
+
 // Helper function to verify user has access to organization
 async function verifyOrganizationAccess(userId: string, organizationId: string): Promise<boolean> {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -1485,6 +1606,15 @@ DO NOT invent or reference specific products, SKUs, or product details.
       mandatoryProductSpecs = contextParts.join('\n');
     }
     
+    // Inject product type writing rules (applies to all categories)
+    let productTypeContext = '';
+    if (enrichedProductData && enrichedProductData.product_type) {
+      productTypeContext = getProductTypeWritingContext(enrichedProductData.product_type);
+      if (productTypeContext) {
+        console.log(`[PRODUCT TYPE] Injected writing rules for: ${enrichedProductData.product_type}`);
+      }
+    }
+    
     // Product guidance for system prompt
     const productGuidance = enrichedProductData 
       ? `\n⚠️ PRODUCT-SPECIFIC COPY: This request is for a specific product. Reference product details naturally.`
@@ -1508,6 +1638,7 @@ DO NOT invent or reference specific products, SKUs, or product details.
 ${brandContext}
 
 ${mandatoryProductSpecs}
+${productTypeContext}
 
 ${productContext}
 
