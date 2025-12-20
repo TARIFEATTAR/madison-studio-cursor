@@ -23,6 +23,7 @@ import {
   CheckCircle2,
   Lock,
   ListTodo,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -82,6 +83,7 @@ import { useUserRole, type RoleCapabilities } from "@/hooks/useUserRole";
 import { RoleBadge, YourSectionsHighlight } from "@/components/role";
 import { TaskList } from "@/components/tasks";
 import { useOrganization } from "@/hooks/useOrganization";
+import { ContentPickerModal, type ContentTarget } from "@/components/products/ContentPickerModal";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PRODUCT INFO TAB
@@ -95,6 +97,19 @@ interface ProductInfoTabProps {
 
 function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
   const productTypes = product.category ? PRODUCT_TYPES[product.category] || [] : [];
+  
+  // Content picker state
+  const [showContentPicker, setShowContentPicker] = useState(false);
+  const [contentTarget, setContentTarget] = useState<ContentTarget>("short_description");
+  
+  const openContentPicker = (target: ContentTarget) => {
+    setContentTarget(target);
+    setShowContentPicker(true);
+  };
+  
+  const handleContentSelect = (content: string) => {
+    onChange(contentTarget, content);
+  };
 
   return (
     <div className="space-y-6">
@@ -209,13 +224,43 @@ function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
       {/* Description */}
       <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-lg">Description</CardTitle>
-          <CardDescription>Product descriptions for different uses</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg">Description</CardTitle>
+              <CardDescription>Product descriptions for different uses</CardDescription>
+            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => openContentPicker("long_description")}
+                >
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  Import from Library
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Import content you've created in the Library
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Tagline */}
           <div className="space-y-2">
-            <Label htmlFor="tagline">Tagline</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="tagline">Tagline</Label>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => openContentPicker("tagline")}
+              >
+                <BookOpen className="w-3 h-3 mr-1" />
+                Import
+              </Button>
+            </div>
             {isEditing ? (
               <Input
                 id="tagline"
@@ -230,7 +275,18 @@ function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
 
           {/* Short Description */}
           <div className="space-y-2">
-            <Label htmlFor="short_description">Short Description</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="short_description">Short Description</Label>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => openContentPicker("short_description")}
+              >
+                <BookOpen className="w-3 h-3 mr-1" />
+                Import
+              </Button>
+            </div>
             {isEditing ? (
               <Textarea
                 id="short_description"
@@ -248,7 +304,18 @@ function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
 
           {/* Long Description */}
           <div className="space-y-2">
-            <Label htmlFor="long_description">Full Description</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="long_description">Full Description</Label>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => openContentPicker("long_description")}
+              >
+                <BookOpen className="w-3 h-3 mr-1" />
+                Import
+              </Button>
+            </div>
             {isEditing ? (
               <Textarea
                 id="long_description"
@@ -265,6 +332,14 @@ function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Content Picker Modal */}
+      <ContentPickerModal
+        open={showContentPicker}
+        onOpenChange={setShowContentPicker}
+        target={contentTarget}
+        onSelect={handleContentSelect}
+      />
 
       {/* Key Benefits */}
       <Card className="bg-card border-border">
