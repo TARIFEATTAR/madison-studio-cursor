@@ -17,25 +17,42 @@ export type IngredientOrigin =
 
 export interface IngredientLibraryItem {
   id: string;
-  organization_id: string;
+  organization_id: string | null; // NULL for global ingredients
   name: string;
   inci_name: string | null;
-  cas_number: string | null;
-  description: string | null;
+  common_names?: string[];
   category: string | null;
-  origin: IngredientOrigin | null;
-  source_material: string | null;
-  is_allergen: boolean;
-  contains_allergens: string[];
-  is_vegan: boolean | null;
-  is_cruelty_free: boolean | null;
-  is_organic: boolean | null;
-  is_halal: boolean | null;
-  is_kosher: boolean | null;
-  cosmetic_function: string[];
-  max_usage_percent: number | null;
-  regulatory_notes: string | null;
+  function: string[]; // Actual DB column name
+  description: string | null;
+  benefits?: string[];
+  concerns?: string[];
+  source: string | null; // plant, synthetic, mineral, animal
+  is_natural?: boolean;
+  is_organic_available?: boolean;
+  ewg_score?: number;
+  comedogenic_rating?: number;
+  irritation_potential?: string;
+  hero_claim?: string;
+  story?: string;
+  ai_description?: string;
+  // Compliance fields (may or may not exist)
+  cas_number?: string | null;
+  einecs_number?: string | null;
+  is_allergen?: boolean;
+  allergen_ids?: string[];
+  contains_allergens?: string[];
+  source_material?: string | null;
+  is_vegan?: boolean | null;
+  is_cruelty_free?: boolean | null;
+  is_organic?: boolean | null;
+  is_halal?: boolean | null;
+  is_kosher?: boolean | null;
+  cosmetic_function?: string[];
+  max_usage_percent?: number | null;
+  regulatory_notes?: string | null;
+  metadata?: Record<string, unknown>;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface ProductIngredient {
@@ -147,26 +164,39 @@ export function useIngredientLibrary(options: { query?: string; enabled?: boolea
   return useQuery({
     queryKey: ["ingredient-library", currentOrganizationId, query],
     queryFn: async () => {
-      if (!currentOrganizationId) return [];
+      const searchTerm = query?.trim().toLowerCase() || "";
 
-      let dbQuery = supabase
+      // Fetch both global ingredients (org_id IS NULL) and org-specific
+      const { data, error } = await supabase
         .from("ingredient_library")
         .select("*")
-        .eq("organization_id", currentOrganizationId);
+        .or(
+          currentOrganizationId 
+            ? `organization_id.is.null,organization_id.eq.${currentOrganizationId}`
+            : `organization_id.is.null`
+        )
+        .order("name", { ascending: true })
+        .limit(200); // Fetch more, filter client-side
 
-      if (query && query.trim().length > 0) {
-        dbQuery = dbQuery.or(
-          `name.ilike.%${query.trim()}%,inci_name.ilike.%${query.trim()}%`
+      if (error) {
+        console.error("Ingredient library fetch error:", error);
+        return [];
+      }
+
+      let results = (data || []) as IngredientLibraryItem[];
+
+      // Client-side search filter for better accuracy
+      if (searchTerm.length > 0) {
+        results = results.filter(
+          (ing) =>
+            ing.name?.toLowerCase().includes(searchTerm) ||
+            ing.inci_name?.toLowerCase().includes(searchTerm)
         );
       }
 
-      dbQuery = dbQuery.order("name", { ascending: true }).limit(50);
-
-      const { data, error } = await dbQuery;
-      if (error) throw error;
-      return (data || []) as IngredientLibraryItem[];
+      return results.slice(0, 50); // Return max 50 results
     },
-    enabled: enabled && !!currentOrganizationId,
+    enabled: enabled,
     staleTime: 2 * 60 * 1000, // Cache for 2 minutes
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
@@ -329,8 +359,8 @@ export function useProductIngredients(productId: string | null) {
     mutationFn: async (input: {
       name: string;
       inci_name?: string;
-      origin?: IngredientOrigin;
-      cosmetic_function?: string[];
+      source?: string;
+      function?: string[];
     }) => {
       if (!currentOrganizationId) throw new Error("No organization");
 
@@ -340,8 +370,8 @@ export function useProductIngredients(productId: string | null) {
           organization_id: currentOrganizationId,
           name: input.name,
           inci_name: input.inci_name,
-          origin: input.origin,
-          cosmetic_function: input.cosmetic_function || [],
+          source: input.source,
+          function: input.function || [],
         })
         .select()
         .single();
