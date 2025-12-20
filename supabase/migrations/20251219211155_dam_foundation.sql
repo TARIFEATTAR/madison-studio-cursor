@@ -728,24 +728,22 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Note: Storage bucket creation should be done via Supabase Dashboard or CLI
 -- These are the bucket configurations to create:
-
-/*
-Bucket: dam-assets
-- Public: true
-- File size limit: 50MB
-- Allowed MIME types: image/*, video/*, application/pdf, application/msword, 
-                      application/vnd.openxmlformats-officedocument.*
-
-Bucket: dam-thumbnails
-- Public: true
-- File size limit: 5MB
-- Allowed MIME types: image/*
-
-Storage policies should allow:
-- SELECT for authenticated users where path starts with their org_id
-- INSERT for authenticated users into their org_id folder
-- DELETE for authenticated users in their org_id folder
-*/
+--
+-- Bucket: dam-assets
+-- - Public: true
+-- - File size limit: 50MB
+-- - Allowed MIME types: image/*, video/*, application/pdf, application/msword, 
+--                       application/vnd.openxmlformats-officedocument.*
+--
+-- Bucket: dam-thumbnails
+-- - Public: true
+-- - File size limit: 5MB
+-- - Allowed MIME types: image/*
+--
+-- Storage policies should allow:
+-- - SELECT for authenticated users where path starts with their org_id
+-- - INSERT for authenticated users into their org_id folder
+-- - DELETE for authenticated users in their org_id folder
 
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- COMPLETE
