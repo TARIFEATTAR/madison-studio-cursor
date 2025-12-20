@@ -60,7 +60,7 @@ import {
   type ProductPackaging,
   type BarcodeType,
 } from "@/hooks/useSDSPackaging";
-import { useOnboarding } from "@/hooks/useOnboarding";
+import { useOrganizationId } from "@/contexts/OrganizationContext";
 
 interface PackagingSectionProps {
   productId: string;
@@ -74,7 +74,7 @@ export function PackagingSection({
   isEditing = false,
 }: PackagingSectionProps) {
   const { packaging, isLoading, savePackaging } = useProductPackaging(productId);
-  const { currentOrganizationId } = useOnboarding();
+  const { organizationId } = useOrganizationId();
 
   // Form state
   const [formData, setFormData] = useState<Partial<ProductPackaging>>({});
@@ -113,7 +113,7 @@ export function PackagingSection({
         code: barcodeCode,
         type: barcodeType,
         product_id: productId,
-        organization_id: currentOrganizationId || undefined,
+        organization_id: organizationId || undefined,
         save_to_dam: true,
       });
 

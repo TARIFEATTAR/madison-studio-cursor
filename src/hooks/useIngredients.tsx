@@ -167,6 +167,8 @@ export function useIngredientLibrary(options: { query?: string; enabled?: boolea
       return (data || []) as IngredientLibraryItem[];
     },
     enabled: enabled && !!currentOrganizationId,
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 }
 
@@ -198,6 +200,8 @@ export function useProductIngredients(productId: string | null) {
       return (data || []) as ProductIngredient[];
     },
     enabled: !!productId,
+    staleTime: 30 * 1000, // Cache for 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   // Add ingredient to product
@@ -382,6 +386,8 @@ export function useProductCertifications(productId: string | null) {
       return (data || []) as Certification[];
     },
     enabled: !!productId,
+    staleTime: 60 * 1000, // Cache for 1 minute
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   const toggleCertification = useMutation({

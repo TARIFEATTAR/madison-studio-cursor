@@ -303,6 +303,8 @@ export function useProducts(options: UseProductsOptions = {}) {
       })) as ProductHub[];
     },
     enabled: !!currentOrganizationId,
+    staleTime: 30 * 1000, // Cache for 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   // Fetch single product
@@ -557,5 +559,7 @@ export function useProduct(productId: string | null) {
       } as ProductHub;
     },
     enabled: !!productId && !!currentOrganizationId,
+    staleTime: 30 * 1000, // Cache for 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 }

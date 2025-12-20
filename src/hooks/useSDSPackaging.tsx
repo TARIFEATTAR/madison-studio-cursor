@@ -185,6 +185,8 @@ export function useProductSDS(productId: string | null) {
       return (data || []) as ProductSDS[];
     },
     enabled: !!productId,
+    staleTime: 60 * 1000, // Cache for 1 minute
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   // Get current (latest approved or latest draft) SDS
@@ -342,6 +344,8 @@ export function useProductPackaging(productId: string | null) {
       return data as ProductPackaging | null;
     },
     enabled: !!productId,
+    staleTime: 60 * 1000, // Cache for 1 minute
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   const savePackaging = useMutation({

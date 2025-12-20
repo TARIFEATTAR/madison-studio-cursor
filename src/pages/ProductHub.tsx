@@ -623,6 +623,7 @@ export default function ProductHub() {
                 </TabsTrigger>
               </TabsList>
 
+              {/* Lazy render tabs - only mount content when tab is active */}
               <TabsContent value="info">
                 <ProductInfoTab
                   product={displayProduct}
@@ -631,64 +632,80 @@ export default function ProductHub() {
                 />
               </TabsContent>
 
-              <TabsContent value="media">
-                <MediaSection productId={productId!} />
+              <TabsContent value="media" forceMount>
+                {activeTab === "media" && (
+                  <MediaSection productId={productId!} />
+                )}
               </TabsContent>
 
-              <TabsContent value="variants">
-                <PlaceholderTab
-                  title="Product Variants"
-                  description="Coming in Week 7 - Manage sizes, colors, and other variations"
-                />
+              <TabsContent value="variants" forceMount>
+                {activeTab === "variants" && (
+                  <PlaceholderTab
+                    title="Product Variants"
+                    description="Coming in Week 7 - Manage sizes, colors, and other variations"
+                  />
+                )}
               </TabsContent>
 
-              <TabsContent value="pricing">
-                <PlaceholderTab
-                  title="Pricing & Commerce"
-                  description="Coming in Week 8 - Set prices, manage inventory, and sync with platforms"
-                />
+              <TabsContent value="pricing" forceMount>
+                {activeTab === "pricing" && (
+                  <PlaceholderTab
+                    title="Pricing & Commerce"
+                    description="Coming in Week 8 - Set prices, manage inventory, and sync with platforms"
+                  />
+                )}
               </TabsContent>
 
-              <TabsContent value="formulation">
-                <FormulationSection
-                  productId={productId!}
-                  productCategory={displayProduct.category || displayProduct.product_type}
-                  isEditing={isEditing}
-                />
+              <TabsContent value="formulation" forceMount>
+                {activeTab === "formulation" && (
+                  <FormulationSection
+                    productId={productId!}
+                    productCategory={displayProduct.category || displayProduct.product_type}
+                    isEditing={isEditing}
+                  />
+                )}
               </TabsContent>
 
-              <TabsContent value="ingredients">
-                <IngredientsSection
-                  productId={productId!}
-                  productName={displayProduct.name}
-                  isEditing={isEditing}
-                />
+              <TabsContent value="ingredients" forceMount>
+                {activeTab === "ingredients" && (
+                  <IngredientsSection
+                    productId={productId!}
+                    productName={displayProduct.name}
+                    isEditing={isEditing}
+                  />
+                )}
               </TabsContent>
 
-              <TabsContent value="sds">
-                <SDSSection
-                  productId={productId!}
-                  productName={displayProduct.name}
-                  productType={displayProduct.product_type}
-                  brandName={displayProduct.brand}
-                  sku={displayProduct.sku}
-                  isEditing={isEditing}
-                />
+              <TabsContent value="sds" forceMount>
+                {activeTab === "sds" && (
+                  <SDSSection
+                    productId={productId!}
+                    productName={displayProduct.name}
+                    productType={displayProduct.product_type}
+                    brandName={displayProduct.brand}
+                    sku={displayProduct.sku}
+                    isEditing={isEditing}
+                  />
+                )}
               </TabsContent>
 
-              <TabsContent value="packaging">
-                <PackagingSection
-                  productId={productId!}
-                  productName={displayProduct.name}
-                  isEditing={isEditing}
-                />
+              <TabsContent value="packaging" forceMount>
+                {activeTab === "packaging" && (
+                  <PackagingSection
+                    productId={productId!}
+                    productName={displayProduct.name}
+                    isEditing={isEditing}
+                  />
+                )}
               </TabsContent>
 
-              <TabsContent value="content">
-                <PlaceholderTab
-                  title="Content Hub"
-                  description="Coming in Week 10 - View all content created for this product"
-                />
+              <TabsContent value="content" forceMount>
+                {activeTab === "content" && (
+                  <PlaceholderTab
+                    title="Content Hub"
+                    description="Coming in Week 10 - View all content created for this product"
+                  />
+                )}
               </TabsContent>
             </Tabs>
           </div>
