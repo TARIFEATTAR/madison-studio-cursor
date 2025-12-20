@@ -40,17 +40,8 @@ CREATE TABLE IF NOT EXISTS public.dam_folders (
   -- inbox: Default drop zone for new uploads
   
   -- Smart Folder Configuration (for folder_type = 'smart')
+  -- Example: { "conditions": [{ "field": "file_type", "operator": "in", "value": ["image/jpeg"] }], "match": "all" }
   smart_filter JSONB DEFAULT NULL,
-  /*
-  {
-    "conditions": [
-      { "field": "file_type", "operator": "in", "value": ["image/jpeg", "image/png"] },
-      { "field": "tags", "operator": "contains", "value": "product" },
-      { "field": "created_at", "operator": "gte", "value": "2025-01-01" }
-    ],
-    "match": "all" | "any"
-  }
-  */
   
   -- Agent Access Control
   agent_accessible BOOLEAN DEFAULT true,
@@ -104,12 +95,8 @@ CREATE TABLE IF NOT EXISTS public.dam_assets (
     'derivative',       -- Created from another asset
     'system'            -- System generated
   )),
+  -- Source reference: For 'generated': session_id, prompt, model; For 'external_sync': platform, product_id
   source_ref JSONB DEFAULT NULL,
-  /*
-  For 'generated': { "session_id": "...", "prompt": "...", "model": "flux" }
-  For 'external_sync': { "platform": "shopify", "product_id": "...", "synced_at": "..." }
-  For 'derivative': { "parent_asset_id": "...", "operation": "crop", "params": {...} }
-  */
   
   -- Content Linking (links to Madison content)
   linked_content_ids UUID[] DEFAULT '{}',
@@ -121,19 +108,8 @@ CREATE TABLE IF NOT EXISTS public.dam_assets (
   campaigns TEXT[] DEFAULT '{}', -- Campaign names/IDs this asset is used in
   
   -- AI Analysis Fields (populated by process-dam-asset)
+  -- Contains: description, detected_objects, dominant_colors, sentiment, suggested_tags, etc.
   ai_analysis JSONB DEFAULT NULL,
-  /*
-  {
-    "description": "Auto-generated description",
-    "detected_objects": ["bottle", "hand", "background"],
-    "dominant_colors": ["#F5F1E8", "#B8956A"],
-    "sentiment": "luxury",
-    "brand_consistency_score": 85,
-    "suggested_tags": ["product", "skincare", "minimalist"],
-    "text_content": "Extracted text from image/PDF",
-    "faces_detected": 0
-  }
-  */
   
   -- Vector Embedding for Semantic Search
   embedding vector(1536), -- OpenAI ada-002 compatible
@@ -153,16 +129,8 @@ CREATE TABLE IF NOT EXISTS public.dam_assets (
   parent_version_id UUID REFERENCES public.dam_assets(id),
   
   -- Metadata
+  -- Example: { "dimensions": { "width": 1920, "height": 1080 }, "duration": 30, "pages": 5 }
   metadata JSONB DEFAULT '{}'::jsonb,
-  /*
-  {
-    "dimensions": { "width": 1920, "height": 1080 },
-    "duration": 30, // for video
-    "pages": 5, // for PDF
-    "exif": { ... },
-    "custom": { ... }
-  }
-  */
   
   -- Timestamps
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -170,12 +138,8 @@ CREATE TABLE IF NOT EXISTS public.dam_assets (
   archived_at TIMESTAMPTZ,
   uploaded_by UUID REFERENCES auth.users(id),
   
-  -- Search optimization
-  search_text TEXT GENERATED ALWAYS AS (
-    COALESCE(name, '') || ' ' || 
-    COALESCE(array_to_string(tags, ' '), '') || ' ' ||
-    COALESCE(array_to_string(categories, ' '), '')
-  ) STORED
+  -- Search optimization (populated by trigger)
+  search_text TEXT
 );
 
 -- Indexes for dam_assets
@@ -221,13 +185,8 @@ CREATE TABLE IF NOT EXISTS public.dam_activity_log (
   actor_id UUID, -- user_id or agent_id
   actor_name TEXT, -- Display name for audit trail
   
-  -- Context
+  -- Context: usage details, move operations, agent actions, etc.
   context JSONB DEFAULT '{}'::jsonb,
-  /*
-  For 'use': { "used_in": "blog", "content_id": "...", "content_title": "..." }
-  For 'move': { "from_folder": "...", "to_folder": "..." }
-  For 'agent_action': { "agent_name": "Content Agent", "task": "suggest_images" }
-  */
   
   -- Timestamps
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -283,15 +242,8 @@ CREATE TABLE IF NOT EXISTS public.product_hubs (
   gallery_image_ids UUID[] DEFAULT '{}',
   video_ids UUID[] DEFAULT '{}',
   
-  -- External Syncs
+  -- External Syncs: shopify, etsy, amazon product IDs and sync timestamps
   external_ids JSONB DEFAULT '{}'::jsonb,
-  /*
-  {
-    "shopify": { "product_id": "...", "variant_id": "...", "synced_at": "..." },
-    "etsy": { "listing_id": "...", "synced_at": "..." },
-    "amazon": { "asin": "...", "synced_at": "..." }
-  }
-  */
   
   -- AI & Brand
   brand_voice_notes TEXT, -- Notes for AI when writing about this product
@@ -335,15 +287,8 @@ CREATE TABLE IF NOT EXISTS public.product_specifications (
   weight DECIMAL(10, 4),
   weight_unit TEXT DEFAULT 'oz' CHECK (weight_unit IN ('oz', 'g', 'kg', 'lb', 'ml', 'fl_oz', 'l')),
   
+  -- Dimensions: { "length": 5.5, "width": 2.0, "height": 7.0, "unit": "in" }
   dimensions JSONB DEFAULT NULL,
-  /*
-  {
-    "length": 5.5,
-    "width": 2.0,
-    "height": 7.0,
-    "unit": "in"
-  }
-  */
   
   -- Packaging
   container_type TEXT, -- bottle, jar, tube, pump, dropper, etc.
@@ -674,6 +619,21 @@ CREATE TRIGGER update_product_specs_updated_at
 CREATE TRIGGER update_ingredient_lib_updated_at
   BEFORE UPDATE ON public.ingredient_library
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Search text trigger for dam_assets
+CREATE OR REPLACE FUNCTION public.update_dam_assets_search_text()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.search_text = COALESCE(NEW.name, '') || ' ' || 
+    COALESCE(array_to_string(NEW.tags, ' '), '') || ' ' ||
+    COALESCE(array_to_string(NEW.categories, ' '), '');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_dam_assets_search_text
+  BEFORE INSERT OR UPDATE ON public.dam_assets
+  FOR EACH ROW EXECUTE FUNCTION public.update_dam_assets_search_text();
 
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- PART 10: DEFAULT SYSTEM FOLDERS
