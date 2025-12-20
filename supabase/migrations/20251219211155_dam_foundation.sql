@@ -97,6 +97,11 @@ CREATE TABLE IF NOT EXISTS public.dam_assets (
   )),
   -- Source reference: For 'generated': session_id, prompt, model; For 'external_sync': platform, product_id
   source_ref JSONB DEFAULT NULL,
+  /*
+  For 'generated': { "session_id": "...", "prompt": "...", "model": "flux" }
+  For 'external_sync': { "platform": "shopify", "product_id": "...", "synced_at": "..." }
+  For 'derivative': { "parent_asset_id": "...", "operation": "crop", "params": {...} }
+  */
   
   -- Content Linking (links to Madison content)
   linked_content_ids UUID[] DEFAULT '{}',

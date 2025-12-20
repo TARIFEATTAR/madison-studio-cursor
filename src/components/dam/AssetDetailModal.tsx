@@ -19,6 +19,7 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCw,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,7 @@ interface AssetDetailModalProps {
   onRename: (id: string, name: string) => void;
   onDelete: (id: string) => void;
   onToggleFavorite: (id: string) => void;
+  onUpdateTags?: (id: string, tags: string[]) => void;
   onPrevious?: () => void;
   onNext?: () => void;
   hasPrevious?: boolean;
@@ -54,6 +56,7 @@ export function AssetDetailModal({
   onRename,
   onDelete,
   onToggleFavorite,
+  onUpdateTags,
   onPrevious,
   onNext,
   hasPrevious,
@@ -64,6 +67,35 @@ export function AssetDetailModal({
   const [newName, setNewName] = useState("");
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
+  const [newTag, setNewTag] = useState("");
+  const [isAddingTag, setIsAddingTag] = useState(false);
+
+  const handleAddTag = useCallback(() => {
+    if (asset && newTag.trim() && onUpdateTags) {
+      const cleanTag = newTag.trim().toLowerCase();
+      if (!asset.tags.includes(cleanTag)) {
+        onUpdateTags(asset.id, [...asset.tags, cleanTag]);
+      }
+      setNewTag("");
+      setIsAddingTag(false);
+    }
+  }, [asset, newTag, onUpdateTags]);
+
+  const handleRemoveTag = useCallback((tagToRemove: string) => {
+    if (asset && onUpdateTags) {
+      onUpdateTags(asset.id, asset.tags.filter(t => t !== tagToRemove));
+    }
+  }, [asset, onUpdateTags]);
+
+  const handleAddSuggestedTag = useCallback((tag: string) => {
+    if (asset && onUpdateTags) {
+      const cleanTag = tag.toLowerCase();
+      if (!asset.tags.includes(cleanTag)) {
+        onUpdateTags(asset.id, [...asset.tags, cleanTag]);
+        toast({ title: "Tag added", description: `"${tag}" added to asset` });
+      }
+    }
+  }, [asset, onUpdateTags, toast]);
 
   const typeCategory = asset ? getFileTypeCategory(asset.file_type) : 'default';
   const isImage = typeCategory === 'image';
@@ -336,20 +368,82 @@ export function AssetDetailModal({
 
                 {/* Tags */}
                 <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <Tag className="w-4 h-4" />
-                    Tags
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <Tag className="w-4 h-4" />
+                      Tags
+                    </h3>
+                    {onUpdateTags && !isAddingTag && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-xs"
+                        onClick={() => setIsAddingTag(true)}
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {/* Add tag input */}
+                  {isAddingTag && (
+                    <div className="flex gap-2">
+                      <Input
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        placeholder="Enter tag..."
+                        className="h-7 text-xs"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleAddTag();
+                          if (e.key === 'Escape') {
+                            setIsAddingTag(false);
+                            setNewTag("");
+                          }
+                        }}
+                      />
+                      <Button size="sm" className="h-7 px-2" onClick={handleAddTag}>
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-7 px-2"
+                        onClick={() => {
+                          setIsAddingTag(false);
+                          setNewTag("");
+                        }}
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  )}
+                  
                   {asset.tags.length > 0 ? (
                     <div className="flex flex-wrap gap-1.5">
                       {asset.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-xs">
+                        <Badge 
+                          key={tag} 
+                          variant="secondary" 
+                          className="text-xs group pr-1 flex items-center gap-1"
+                        >
                           {tag}
+                          {onUpdateTags && (
+                            <button
+                              className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleRemoveTag(tag)}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
                         </Badge>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground">No tags</p>
+                    <p className="text-sm text-muted-foreground">
+                      {isAddingTag ? "Type a tag and press Enter" : "No tags yet"}
+                    </p>
                   )}
                 </div>
 
@@ -459,13 +553,32 @@ export function AssetDetailModal({
                     {/* Suggested tags */}
                     {asset.ai_analysis.suggested_tags && asset.ai_analysis.suggested_tags.length > 0 && (
                       <div className="space-y-2">
-                        <h3 className="text-sm font-medium text-muted-foreground">Suggested Tags</h3>
+                        <h3 className="text-sm font-medium text-muted-foreground">
+                          Suggested Tags
+                          {onUpdateTags && <span className="font-normal ml-1">(click to add)</span>}
+                        </h3>
                         <div className="flex flex-wrap gap-1.5">
-                          {asset.ai_analysis.suggested_tags.map((tag) => (
-                            <Badge key={tag} variant="outline" className="text-xs bg-primary/5">
-                              {tag}
-                            </Badge>
-                          ))}
+                          {asset.ai_analysis.suggested_tags
+                            .filter(tag => !asset.tags.includes(tag.toLowerCase()))
+                            .map((tag) => (
+                              <Badge 
+                                key={tag} 
+                                variant="outline" 
+                                className={cn(
+                                  "text-xs bg-primary/5",
+                                  onUpdateTags && "cursor-pointer hover:bg-primary/10 transition-colors"
+                                )}
+                                onClick={() => onUpdateTags && handleAddSuggestedTag(tag)}
+                              >
+                                <Plus className="w-3 h-3 mr-1" />
+                                {tag}
+                              </Badge>
+                            ))}
+                          {asset.ai_analysis.suggested_tags.every(tag => 
+                            asset.tags.includes(tag.toLowerCase())
+                          ) && (
+                            <p className="text-xs text-muted-foreground">All suggestions already added</p>
+                          )}
                         </div>
                       </div>
                     )}

@@ -80,6 +80,93 @@ serve(async (req) => {
       );
     }
 
+    // Also add to DAM (Digital Asset Management)
+    try {
+      console.log('📦 Adding image to DAM...');
+      
+      // Get the AI Generated smart folder or create the asset without a folder
+      const { data: aiFolder } = await supabaseClient
+        .from('dam_folders')
+        .select('id')
+        .eq('organization_id', imageCheck.organization_id)
+        .eq('slug', 'ai-generated')
+        .maybeSingle();
+      
+      // Generate a friendly name from the prompt
+      const promptText = imageCheck.final_prompt || imageCheck.prompt || 'Generated Image';
+      const assetName = promptText.length > 50 
+        ? promptText.substring(0, 47) + '...' 
+        : promptText;
+      
+      // Infer tags from goal_type
+      const baseTags = ['ai-generated', 'image-studio'];
+      const goalType = imageCheck.goal_type || 'product_photography';
+      if (goalType) baseTags.push(goalType.replace('_', '-'));
+      
+      // Create DAM asset
+      const { data: damAsset, error: damError } = await supabaseClient
+        .from('dam_assets')
+        .insert({
+          organization_id: imageCheck.organization_id,
+          folder_id: aiFolder?.id || null,
+          name: assetName,
+          file_type: 'image/png', // Generated images are PNG
+          file_extension: 'png',
+          file_url: imageCheck.image_url,
+          thumbnail_url: imageCheck.thumbnail_url || imageCheck.image_url,
+          source_type: 'generated',
+          source_ref: {
+            generated_image_id: imageId,
+            session_id: imageCheck.session_id,
+            prompt: promptText,
+            model: imageCheck.model || 'freepik',
+            aspect_ratio: imageCheck.aspect_ratio,
+          },
+          tags: baseTags,
+          categories: ['ai-generated'],
+          ai_analysis: {
+            description: promptText,
+            suggested_tags: baseTags,
+            image_type: goalType,
+          },
+          status: 'active',
+          uploaded_by: userId,
+          metadata: {
+            original_name: `generated-${imageId}.png`,
+            aspect_ratio: imageCheck.aspect_ratio,
+            output_format: imageCheck.output_format,
+          },
+        })
+        .select()
+        .single();
+      
+      if (damError) {
+        console.error('❌ Failed to add to DAM:', damError);
+        // Don't fail the whole request, just log it
+      } else {
+        console.log('✅ Image added to DAM:', damAsset?.id);
+        
+        // Log activity
+        await supabaseClient
+          .from('dam_activity_log')
+          .insert({
+            organization_id: imageCheck.organization_id,
+            asset_id: damAsset?.id,
+            action: 'upload',
+            actor_type: 'system',
+            actor_id: userId,
+            actor_name: 'Image Studio',
+            context: {
+              source: 'image_studio',
+              generated_image_id: imageId,
+            },
+          });
+      }
+    } catch (damErr) {
+      console.error('❌ Error in DAM integration:', damErr);
+      // Don't fail the whole request
+    }
+
     // Automatically create recipe if requested
     if (createRecipe) {
       try {

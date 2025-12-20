@@ -133,6 +133,86 @@ export function useDAM(options: UseDAMOptions = {}) {
     },
   });
 
+  // Rename folder mutation
+  const renameFolder = useMutation({
+    mutationFn: async ({ folderId, name }: { folderId: string; name: string }) => {
+      const { error } = await supabase
+        .from("dam_folders")
+        .update({ name })
+        .eq("id", folderId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dam-folders"] });
+      toast({ title: "Renamed", description: "Folder renamed successfully" });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: "Failed to rename folder", variant: "destructive" });
+      console.error(error);
+    },
+  });
+
+  // Delete folder mutation
+  const deleteFolder = useMutation({
+    mutationFn: async (folderId: string) => {
+      const { error } = await supabase
+        .from("dam_folders")
+        .delete()
+        .eq("id", folderId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dam-folders"] });
+      queryClient.invalidateQueries({ queryKey: ["dam-assets"] });
+      toast({ title: "Deleted", description: "Folder has been deleted" });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: "Failed to delete folder", variant: "destructive" });
+      console.error(error);
+    },
+  });
+
+  // Create smart folder mutation
+  const createSmartFolder = useMutation({
+    mutationFn: async ({ 
+      name, 
+      icon,
+      smartFilter,
+    }: { 
+      name: string; 
+      icon?: string;
+      smartFilter: {
+        conditions: Array<{ field: string; operator: string; value: unknown }>;
+        match: 'all' | 'any';
+      };
+    }) => {
+      const { data, error } = await supabase
+        .from("dam_folders")
+        .insert({
+          organization_id: currentOrganizationId,
+          name,
+          icon: icon || "sparkles",
+          folder_type: "smart",
+          smart_filter: smartFilter,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dam-folders"] });
+      toast({ title: "Smart folder created", description: "Your saved search is ready" });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: "Failed to create smart folder", variant: "destructive" });
+      console.error(error);
+    },
+  });
+
   // Rename asset mutation
   const renameAsset = useMutation({
     mutationFn: async ({ assetId, name }: { assetId: string; name: string }) => {
@@ -254,6 +334,80 @@ export function useDAM(options: UseDAMOptions = {}) {
     },
   });
 
+  // Update tags mutation
+  const updateTags = useMutation({
+    mutationFn: async ({ assetId, tags }: { assetId: string; tags: string[] }) => {
+      const { error } = await supabase
+        .from("dam_assets")
+        .update({ tags })
+        .eq("id", assetId);
+
+      if (error) throw error;
+      return tags;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dam-assets"] });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: "Failed to update tags", variant: "destructive" });
+      console.error(error);
+    },
+  });
+
+  // Bulk update tags
+  const bulkUpdateTags = useMutation({
+    mutationFn: async ({ assetIds, tags, mode }: { assetIds: string[]; tags: string[]; mode: 'add' | 'remove' | 'replace' }) => {
+      for (const assetId of assetIds) {
+        const asset = assets.find(a => a.id === assetId);
+        if (!asset) continue;
+
+        let newTags: string[];
+        if (mode === 'add') {
+          newTags = [...new Set([...asset.tags, ...tags])];
+        } else if (mode === 'remove') {
+          newTags = asset.tags.filter(t => !tags.includes(t));
+        } else {
+          newTags = tags;
+        }
+
+        const { error } = await supabase
+          .from("dam_assets")
+          .update({ tags: newTags })
+          .eq("id", assetId);
+
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dam-assets"] });
+      toast({ title: "Tags updated", description: "Tags have been updated on selected assets" });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: "Failed to update tags", variant: "destructive" });
+      console.error(error);
+    },
+  });
+
+  // Bulk move
+  const bulkMove = useMutation({
+    mutationFn: async ({ assetIds, folderId }: { assetIds: string[]; folderId: string | null }) => {
+      const { error } = await supabase
+        .from("dam_assets")
+        .update({ folder_id: folderId })
+        .in("id", assetIds);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dam-assets"] });
+      toast({ title: "Moved", description: "Assets moved successfully" });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: "Failed to move assets", variant: "destructive" });
+      console.error(error);
+    },
+  });
+
   // Selection helpers
   const toggleSelection = useCallback((assetId: string) => {
     setSelectedAssets(prev => {
@@ -280,6 +434,47 @@ export function useDAM(options: UseDAMOptions = {}) {
     return folders.find(f => f.folder_type === "inbox");
   }, [folders]);
 
+  // Track asset usage
+  const trackAssetUsage = useCallback(async (
+    assetId: string, 
+    usedIn: { type: string; id: string; title?: string }
+  ) => {
+    try {
+      // Increment usage count and update last_used
+      const { error } = await supabase.rpc('increment_dam_asset_usage', {
+        asset_id: assetId,
+        used_in_data: usedIn,
+      });
+      
+      // If RPC doesn't exist, fall back to direct update
+      if (error && error.code === '42883') {
+        await supabase
+          .from('dam_assets')
+          .update({ 
+            usage_count: supabase.rpc('increment', { row_id: assetId }),
+            last_used_at: new Date().toISOString(),
+            last_used_in: usedIn,
+          })
+          .eq('id', assetId);
+      }
+      
+      // Log activity
+      await supabase
+        .from('dam_activity_log')
+        .insert({
+          organization_id: currentOrganizationId,
+          asset_id: assetId,
+          action: 'use',
+          actor_type: 'user',
+          context: { used_in: usedIn },
+        });
+        
+      queryClient.invalidateQueries({ queryKey: ['dam-assets'] });
+    } catch (err) {
+      console.error('Failed to track asset usage:', err);
+    }
+  }, [currentOrganizationId, queryClient]);
+
   return {
     // Data
     folders,
@@ -300,10 +495,16 @@ export function useDAM(options: UseDAMOptions = {}) {
     
     // Mutations
     createFolder,
+    renameFolder,
+    deleteFolder,
+    createSmartFolder,
     renameAsset,
     moveAsset,
     deleteAsset,
     toggleFavorite,
+    updateTags,
+    bulkUpdateTags,
+    bulkMove,
     undoDelete,
     
     // Refetch
@@ -311,6 +512,9 @@ export function useDAM(options: UseDAMOptions = {}) {
       refetchFolders();
       refetchAssets();
     },
+    
+    // Usage tracking
+    trackAssetUsage,
     
     // Recently deleted for undo
     recentlyDeleted,
