@@ -4,6 +4,8 @@ import { Lightbulb, FileText, PenTool, X, Send, Loader2, Upload, Search, Chevron
 import penNibIcon from "@/assets/pen-nib-icon-new.png";
 import { createRoot } from "react-dom/client";
 import { ThinkMode } from "@/components/create/ThinkMode";
+import { FormatPicker } from "@/components/create/FormatPicker";
+import { AdvancedOptions } from "@/components/create/AdvancedOptions";
 import MadisonStudioLoadingAnimation from "@/components/forge/MadisonStudioLoadingAnimation";
 import { TransitionLoader } from "@/components/forge/TransitionLoader";
 import { BrandKnowledgeIndicator } from "@/components/forge/BrandKnowledgeIndicator";
@@ -31,20 +33,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { WorksheetUpload } from "@/components/forge/WorksheetUpload";
 import { VideoHelpTrigger } from "@/components/help/VideoHelpTrigger";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DELIVERABLE_CATEGORIES, getDeliverableByValue } from "@/config/deliverableFormats";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import {
@@ -798,90 +786,12 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
             </div>
 
             {/* Deliverable Format - Required */}
-            <div>
-              <Label htmlFor="format" className="text-base mb-2 text-ink-black">
-                Deliverable Format <span className="text-brass">*</span>
-              </Label>
-              <Popover open={formatPickerOpen} onOpenChange={setFormatPickerOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={formatPickerOpen}
-                    className={cn(
-                      "w-full justify-between mt-2 bg-parchment-white border-warm-gray/20 hover:bg-parchment-white/80",
-                      !format && "text-muted-foreground"
-                    )}
-                  >
-                    {format ? (
-                      <span className="flex items-center gap-2">
-                        {(() => {
-                          const deliverable = getDeliverableByValue(format);
-                          const Icon = deliverable?.icon;
-                          return Icon ? <Icon className="h-4 w-4" /> : null;
-                        })()}
-                        {getDeliverableByValue(format)?.label}
-                      </span>
-                    ) : (
-                      "Select format..."
-                    )}
-                    <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[calc(100vw-2rem)] md:w-[600px] p-0 bg-parchment-white border-warm-gray/20" align="start">
-                  <Command className="bg-parchment-white">
-                    <CommandInput
-                      placeholder="Search deliverables..."
-                      className="border-none focus:ring-0"
-                    />
-                    <CommandList className="max-h-[400px]">
-                      <CommandEmpty>No deliverable found.</CommandEmpty>
-                      {DELIVERABLE_CATEGORIES.map((category) => {
-                        const CategoryIcon = category.icon;
-                        return (
-                          <CommandGroup
-                            key={category.name}
-                            heading={
-                              <span className="flex items-center gap-2 text-ink-black/70">
-                                <CategoryIcon className="h-4 w-4" />
-                                {category.name}
-                              </span>
-                            }
-                          >
-                            {category.deliverables.map((deliverable) => {
-                              const DeliverableIcon = deliverable.icon;
-                              return (
-                                <CommandItem
-                                  key={deliverable.value}
-                                  value={`${deliverable.label} ${deliverable.description}`}
-                                  onSelect={() => {
-                                    setFormat(deliverable.value);
-                                    setFormatPickerOpen(false);
-                                  }}
-                                  className="cursor-pointer"
-                                >
-                                  <div className="flex items-start gap-3 w-full">
-                                    <DeliverableIcon className="h-4 w-4 mt-0.5 text-brass shrink-0" />
-                                    <div className="flex-1 min-w-0">
-                                      <div className="font-medium text-ink-black">
-                                        {deliverable.label}
-                                      </div>
-                                      <div className="text-xs text-warm-gray/70">
-                                        {deliverable.description}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </CommandItem>
-                              );
-                            })}
-                          </CommandGroup>
-                        );
-                      })}
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
+            <FormatPicker
+              value={format}
+              onSelect={setFormat}
+              open={formatPickerOpen}
+              onOpenChange={setFormatPickerOpen}
+            />
 
             {/* Target Audience - Optional */}
             <div>
@@ -948,104 +858,15 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
             </div>
 
             {/* Advanced Options Collapsible */}
-            <Collapsible
+            <AdvancedOptions
               open={advancedOptionsOpen}
               onOpenChange={setAdvancedOptionsOpen}
-              className="border-t border-warm-gray/20 pt-6"
-            >
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="w-full flex items-center justify-between hover:bg-brass/5 text-ink-black p-4"
-                >
-                  <span className="text-base font-medium">
-                    Advanced Options
-                  </span>
-                  {advancedOptionsOpen ? (
-                    <ChevronUp className="w-5 h-5 text-brass" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-brass" />
-                  )}
-                </Button>
-              </CollapsibleTrigger>
-
-              <CollapsibleContent className="space-y-6 pt-4">
-                {/* Writing Style - Updated 2024 */}
-                <div>
-                  <Label htmlFor="style" className="text-base mb-2 text-ink-black">
-                    Select Writing Style
-                  </Label>
-                  <Select value={style} onValueChange={setStyle}>
-                    <SelectTrigger
-                      id="style"
-                      className="mt-2 bg-parchment-white border-warm-gray/20"
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      <SelectItem value="brand-voice">
-                        <div className="flex flex-col">
-                          <span className="font-medium">
-                            {brandName ? `${brandName} Voice` : "Your Brand Voice"}
-                          </span>
-                          <span className="text-xs text-warm-gray">Your brand's authentic voice</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="poetic">
-                        <div className="flex flex-col">
-                          <span className="font-medium">Storytelling</span>
-                          <span className="text-xs text-warm-gray">Engaging narratives & romance</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="direct">
-                        <div className="flex flex-col">
-                          <span className="font-medium">Direct Sales</span>
-                          <span className="text-xs text-warm-gray">Conversion-focused & persuasive</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="educational">
-                        <div className="flex flex-col">
-                          <span className="font-medium">Educational</span>
-                          <span className="text-xs text-warm-gray">Explanatory & reason-why</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="minimal">
-                        <div className="flex flex-col">
-                          <span className="font-medium">Minimalist</span>
-                          <span className="text-xs text-warm-gray">Clean, modern & concise</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs italic mt-2 text-warm-gray/70">
-                    Choose the writing style that best fits your content needs
-                  </p>
-                </div>
-
-                {/* Additional Editorial Direction */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Label htmlFor="context" className="text-base text-ink-black">
-                      Additional Editorial Direction
-                    </Label>
-                    <span className="text-xs text-warm-gray/70">
-                      {additionalContext.length} / 1000 characters
-                    </span>
-                  </div>
-                  <Textarea
-                    id="context"
-                    value={additionalContext}
-                    onChange={(e) => setAdditionalContext(e.target.value)}
-                    placeholder="Provide specific requirements or creative mandates..."
-                    className="mt-2 min-h-[120px] bg-vellum-cream border-warm-gray/20 text-ink-black"
-                    maxLength={1000}
-                  />
-                  <p className="text-xs italic mt-2 text-warm-gray/70">
-                    Any specific themes, angles, seasonal notes, or key messages to include (max 1000 characters)
-                  </p>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
+              style={style}
+              onStyleChange={setStyle}
+              additionalContext={additionalContext}
+              onAdditionalContextChange={setAdditionalContext}
+              brandName={brandName}
+            />
           </div>
 
           {/* Actions */}

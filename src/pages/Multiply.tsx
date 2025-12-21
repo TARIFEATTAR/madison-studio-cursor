@@ -16,9 +16,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { 
+import {
   Sparkles, Archive, Mail, MessageSquare, Tag,
-  FileText, CheckCircle2, XCircle, ChevronDown, ChevronRight, Copy, 
+  FileText, CheckCircle2, XCircle, ChevronDown, ChevronRight, Copy,
   Calendar, Edit, Loader2, AlertCircle, Video, Bookmark,
   Briefcase, Share2, ArrowLeft, Image as ImageIcon, Film, Layers
 } from "lucide-react";
@@ -280,7 +280,7 @@ export default function Multiply() {
   const [splitScreenMode, setSplitScreenMode] = useState(false);
   const [selectedDerivativeForDirector, setSelectedDerivativeForDirector] = useState<DerivativeContent | null>(null);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
-  
+
   // 🚧 FEATURE FLAG: Toggle between old and new DerivativeTypeSelector
   // Set to false to test the new component, true to use old code
   const useOldSelector = false;
@@ -289,7 +289,7 @@ export default function Multiply() {
   const [savePromptDialogOpen, setSavePromptDialogOpen] = useState(false);
   const [masterContentList, setMasterContentList] = useState<MasterContent[]>([]);
   const [loadingContent, setLoadingContent] = useState(true);
-  
+
   const [derivativeSaveDialogOpen, setDerivativeSaveDialogOpen] = useState(false);
   const [derivativeToSave, setDerivativeToSave] = useState<DerivativeContent | null>(null);
   const [derivativeSaveTitle, setDerivativeSaveTitle] = useState("");
@@ -317,24 +317,24 @@ export default function Multiply() {
   useEffect(() => {
     const loadMasterContent = async () => {
       if (!currentOrganizationId) return;
-      
+
       // Multi-source master selection: URL → state → localStorage → fallback
       let selectedId: string | null = null;
       let selectionSource: 'url' | 'state' | 'localStorage' | 'fallback' = 'fallback';
-      
+
       // 1. Check URL param
       const urlId = searchParams.get('id');
       if (urlId) {
         selectedId = urlId;
         selectionSource = 'url';
       }
-      
+
       // 2. Check navigation state
       if (!selectedId && location.state?.contentId) {
         selectedId = location.state.contentId;
         selectionSource = 'state';
       }
-      
+
       // 3. Check localStorage
       if (!selectedId) {
         const localId = localStorage.getItem('lastEditedMasterId');
@@ -343,7 +343,7 @@ export default function Multiply() {
           selectionSource = 'localStorage';
         }
       }
-      
+
       // If we have a specific ID from url/state/localStorage, fetch it immediately
       if (selectedId && selectionSource !== 'fallback') {
         try {
@@ -352,9 +352,9 @@ export default function Multiply() {
             .select('id, title, content_type, full_content, word_count, collection')
             .eq('id', selectedId)
             .single();
-          
+
           if (error) throw error;
-          
+
           if (data) {
             const masterContent = {
               id: data.id,
@@ -365,15 +365,15 @@ export default function Multiply() {
               wordCount: data.word_count || 0,
               charCount: data.full_content?.length || 0,
             };
-            
+
             setSelectedMaster(masterContent);
             selectedViaNavigationRef.current = true;
-            
+
             // Update URL if it doesn't have ?id
             if (selectionSource !== 'url') {
               navigate(`/multiply?id=${selectedId}`, { replace: true });
             }
-            
+
             toast({
               title: "Content loaded",
               description: `Loaded master: ${masterContent.title} (${masterContent.charCount} chars)`,
@@ -383,7 +383,7 @@ export default function Multiply() {
           console.error('[Multiply] Error loading specific content:', e);
         }
       }
-      
+
       // Always load the list for dropdown
       setLoadingContent(true);
       try {
@@ -407,9 +407,9 @@ export default function Multiply() {
             wordCount: item.word_count || 0,
             charCount: item.full_content?.length || 0,
           }));
-          
+
           setMasterContentList(formatted);
-          
+
           // Only auto-select from database if we didn't arrive via navigation
           if (!selectedMaster && !selectedViaNavigationRef.current) {
             setSelectedMaster(formatted[0]);
@@ -487,22 +487,22 @@ export default function Multiply() {
         .select('id, title, content_type, full_content, word_count, collection')
         .eq('id', selectedMaster.id)
         .single();
-      
+
       if (fetchError) {
         console.error('[Multiply] Error fetching latest content:', fetchError);
         throw new Error('Failed to fetch latest content');
       }
-      
+
       const contentId = selectedMaster.id;
       const masterContentToUse = latestContent.full_content || selectedMaster.content;
-      
+
       console.log('[Multiply] Invoking repurpose-content edge function:', {
         masterContentId: contentId,
         derivativeTypes: Array.from(selectedTypes),
         contentLength: masterContentToUse?.length || 0,
         hasCollection: !!selectedMaster.collection
       });
-      
+
       const { data, error } = await supabase.functions.invoke('repurpose-content', {
         body: {
           masterContentId: contentId,
@@ -513,7 +513,7 @@ export default function Multiply() {
           }
         }
       });
-      
+
       console.log('[Multiply] Edge function response:', {
         hasError: !!error,
         hasData: !!data,
@@ -533,7 +533,7 @@ export default function Multiply() {
         const typeId = derivative.asset_type;
         const isSequenceType = typeId.includes('email_') && (typeId.includes('3part') || typeId.includes('5part') || typeId.includes('7part'));
         const sequenceEmails = isSequenceType ? buildSequenceEmailsFromDerivative(derivative) : [];
-        
+
         // Defensive check: verify master_content_id matches
         if (derivative.master_content_id && derivative.master_content_id !== selectedMaster.id) {
           console.error('[Multiply] Derivative master_content_id mismatch!', {
@@ -542,7 +542,7 @@ export default function Multiply() {
             selectedMasterId: selectedMaster.id
           });
         }
-        
+
         newDerivatives.push({
           id: derivative.id,
           typeId,
@@ -570,15 +570,15 @@ export default function Multiply() {
       });
     } catch (error: any) {
       console.error('Error generating derivatives:', error);
-      
+
       // Enhanced error handling - extract detailed error message
       let errorMessage = error.message || "Failed to generate derivatives. Please try again.";
-      
+
       // Try to parse structured error from edge function
       if (error.context?.body) {
         try {
-          const parsed = typeof error.context.body === 'string' 
-            ? JSON.parse(error.context.body) 
+          const parsed = typeof error.context.body === 'string'
+            ? JSON.parse(error.context.body)
             : error.context.body;
           if (parsed.error) {
             errorMessage = parsed.error;
@@ -589,7 +589,7 @@ export default function Multiply() {
           console.error('Error parsing backend error:', e);
         }
       }
-      
+
       // Handle specific error types
       if (error.message?.includes('Failed to send a request') || error.message?.includes('NetworkError')) {
         errorMessage = "Unable to connect to the server. Please check your internet connection and try again.";
@@ -604,7 +604,7 @@ export default function Multiply() {
       } else if (error.message?.includes('404') || error.context?.status === 404) {
         errorMessage = "Content not found. Please refresh the page and try again.";
       }
-      
+
       toast({
         title: "Generation failed",
         description: errorMessage,
@@ -647,7 +647,7 @@ export default function Multiply() {
     }
 
     setIsGeneratingVisual(true);
-    
+
     // Clear previous results
     setImagePackResult(null);
     setVideoScriptResult(null);
@@ -717,30 +717,30 @@ export default function Multiply() {
 
   const handleSaveEdit = async (newContent: string) => {
     if (!selectedDerivativeForModal) return;
-    
+
     try {
       // Update database
       const { error } = await supabase
         .from('derivative_assets')
         .update({ generated_content: newContent })
         .eq('id', selectedDerivativeForModal.id);
-      
+
       if (error) throw error;
-      
+
       // Update local state
       setDerivatives(prev =>
-        prev.map(d => 
-          d.id === selectedDerivativeForModal.id 
+        prev.map(d =>
+          d.id === selectedDerivativeForModal.id
             ? { ...d, content: newContent, generated_content: newContent, charCount: newContent.length }
             : d
         )
       );
-      
+
       // Update modal state
-      setSelectedDerivativeForModal(prev => 
+      setSelectedDerivativeForModal(prev =>
         prev ? { ...prev, content: newContent, generated_content: newContent } : null
       );
-      
+
       toast({
         title: "Changes saved",
         description: "Your edits have been saved to the database.",
@@ -756,27 +756,27 @@ export default function Multiply() {
 
   const handleApproveDerivative = async () => {
     if (!selectedDerivativeForModal) return;
-    
+
     try {
       const { error } = await supabase
         .from('derivative_assets')
         .update({ approval_status: 'approved' })
         .eq('id', selectedDerivativeForModal.id);
-      
+
       if (error) throw error;
-      
+
       setDerivatives(prev =>
-        prev.map(d => 
-          d.id === selectedDerivativeForModal.id 
+        prev.map(d =>
+          d.id === selectedDerivativeForModal.id
             ? { ...d, status: 'approved' }
             : d
         )
       );
-      
-      setSelectedDerivativeForModal(prev => 
+
+      setSelectedDerivativeForModal(prev =>
         prev ? { ...prev, status: 'approved' } : null
       );
-      
+
       toast({
         title: "Derivative approved",
         description: "The derivative has been marked as approved.",
@@ -792,27 +792,27 @@ export default function Multiply() {
 
   const handleRejectDerivative = async () => {
     if (!selectedDerivativeForModal) return;
-    
+
     try {
       const { error } = await supabase
         .from('derivative_assets')
         .update({ approval_status: 'rejected' })
         .eq('id', selectedDerivativeForModal.id);
-      
+
       if (error) throw error;
-      
+
       setDerivatives(prev =>
-        prev.map(d => 
-          d.id === selectedDerivativeForModal.id 
+        prev.map(d =>
+          d.id === selectedDerivativeForModal.id
             ? { ...d, status: 'rejected' }
             : d
         )
       );
-      
-      setSelectedDerivativeForModal(prev => 
+
+      setSelectedDerivativeForModal(prev =>
         prev ? { ...prev, status: 'rejected' } : null
       );
-      
+
       toast({
         title: "Derivative rejected",
         description: "The derivative has been marked as rejected.",
@@ -832,22 +832,22 @@ export default function Multiply() {
 
   const handleArchiveDerivative = async () => {
     if (!selectedDerivativeForModal) return;
-    
+
     try {
       const { error } = await supabase
         .from('derivative_assets')
         .update({ is_archived: true })
         .eq('id', selectedDerivativeForModal.id);
-      
+
       if (error) throw error;
-      
+
       setDerivatives(prev =>
         prev.filter(d => d.id !== selectedDerivativeForModal.id)
       );
-      
+
       setModalOpen(false);
       setSelectedDerivativeForModal(null);
-      
+
       toast({
         title: "Derivative archived",
         description: "The derivative has been archived.",
@@ -863,26 +863,26 @@ export default function Multiply() {
 
   const handleDeleteDerivative = async () => {
     if (!selectedDerivativeForModal) return;
-    
+
     if (!confirm('Are you sure you want to delete this derivative? This action cannot be undone.')) {
       return;
     }
-    
+
     try {
       const { error } = await supabase
         .from('derivative_assets')
         .delete()
         .eq('id', selectedDerivativeForModal.id);
-      
+
       if (error) throw error;
-      
+
       setDerivatives(prev =>
         prev.filter(d => d.id !== selectedDerivativeForModal.id)
       );
-      
+
       setModalOpen(false);
       setSelectedDerivativeForModal(null);
-      
+
       toast({
         title: "Derivative deleted",
         description: "The derivative has been permanently deleted.",
@@ -1008,7 +1008,7 @@ export default function Multiply() {
           setSelectedDerivativeForDirector(null);
         }}
         onUpdateDerivative={(updated) => {
-          setDerivatives(derivatives.map(d => 
+          setDerivatives(derivatives.map(d =>
             d.id === updated.id ? updated : d
           ));
         }}
@@ -1102,7 +1102,7 @@ export default function Multiply() {
                     </Button>
                   )}
                 </div>
-                
+
                 {selectedMaster ? (
                   <Card className="flex-1 overflow-hidden flex flex-col">
                     <div className="p-4 border-b space-y-2">
@@ -1197,9 +1197,9 @@ export default function Multiply() {
                                           </span>
                                         </div>
                                         <div className="flex gap-2">
-                                          <Button 
-                                            variant="ghost" 
-                                            size="sm" 
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
                                             onClick={() => handleOpenModal(deriv)}
                                             title="View full details"
                                           >
@@ -1208,9 +1208,9 @@ export default function Multiply() {
                                           <Button variant="ghost" size="sm" onClick={() => copyToClipboard(deriv.content)}>
                                             <Copy className="w-4 h-4" />
                                           </Button>
-                                          <Button 
-                                            variant="ghost" 
-                                            size="sm" 
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
                                             onClick={() => openDirector(deriv)}
                                             title="Open AI Director"
                                           >
@@ -1272,7 +1272,7 @@ export default function Multiply() {
                   {/* Derivative Type Selector - Below Generated Results */}
                   <div className="space-y-4">
                     <Separator />
-                    
+
                     <div className="flex items-center gap-3">
                       <h3 className="font-serif text-xl">
                         {Object.keys(derivativesByType).length > 0 ? "Generate More Derivatives" : "Select Derivative Types"}
@@ -1293,15 +1293,15 @@ export default function Multiply() {
                       /* OLD CODE - Keep for safety */
                       <div className="space-y-4">
                         <h3 className="font-medium">Select derivative types to generate:</h3>
-                        
+
                         {/* Most Popular */}
                         <div>
                           <p className="text-sm font-medium text-muted-foreground mb-3">MOST POPULAR</p>
                           <div className="grid grid-cols-3 gap-3">
                             {TOP_DERIVATIVE_TYPES.map((type) => (
-                              <Card 
-                                key={type.id} 
-                                onClick={() => toggleTypeSelection(type.id)} 
+                              <Card
+                                key={type.id}
+                                onClick={() => toggleTypeSelection(type.id)}
                                 className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedTypes.has(type.id) ? "ring-2 ring-brass bg-brass/5" : ""}`}
                               >
                                 <div className="space-y-2">
@@ -1335,9 +1335,9 @@ export default function Multiply() {
                           <CollapsibleContent className="mt-3">
                             <div className="grid grid-cols-3 gap-3">
                               {ADDITIONAL_DERIVATIVE_TYPES.map((type) => (
-                                <Card 
-                                  key={type.id} 
-                                  onClick={() => toggleTypeSelection(type.id)} 
+                                <Card
+                                  key={type.id}
+                                  onClick={() => toggleTypeSelection(type.id)}
                                   className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedTypes.has(type.id) ? "ring-2 ring-brass bg-brass/5" : ""}`}
                                 >
                                   <div className="space-y-2">
@@ -1368,10 +1368,10 @@ export default function Multiply() {
                           <Button variant="outline" size="sm" onClick={selectAll}>
                             Select All
                           </Button>
-                          <Button 
-                            onClick={generateDerivatives} 
-                            disabled={isGenerating || selectedTypes.size === 0} 
-                            size="lg" 
+                          <Button
+                            onClick={generateDerivatives}
+                            disabled={isGenerating || selectedTypes.size === 0}
+                            size="lg"
                             className="gap-2"
                           >
                             {isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
@@ -1400,7 +1400,7 @@ export default function Multiply() {
                       <p className="text-sm text-muted-foreground mb-4">
                         Generate image, video, and background prompts from your content
                       </p>
-                      
+
                       <div className="grid grid-cols-3 gap-3 mb-4">
                         {VISUAL_DERIVATIVE_TYPES.map((type) => (
                           <Card
@@ -1411,7 +1411,9 @@ export default function Multiply() {
                             <div className="space-y-2">
                               <div className="flex items-start justify-between">
                                 <Checkbox checked={selectedVisualTypes.has(type.id)} className="mt-1" />
-                                {type.icon && (
+                                {type.iconImage ? (
+                                  <img src={type.iconImage} alt={type.name} className="w-8 h-8" />
+                                ) : type.icon && (
                                   <type.icon className="w-8 h-8" style={{ color: type.iconColor }} />
                                 )}
                               </div>
@@ -1498,21 +1500,26 @@ export default function Multiply() {
           {/* Derivative Selector & Results - Mobile */}
           <Card className="p-4 space-y-4">
             <h2 className="font-serif text-xl">Derivative Editions</h2>
-            
+
             <div className="space-y-3">
               <p className="text-sm font-medium">MOST POPULAR</p>
               <div className="grid grid-cols-1 gap-3">
                 {TOP_DERIVATIVE_TYPES.map((type) => (
-                  <Card 
-                    key={type.id} 
-                    onClick={() => toggleTypeSelection(type.id)} 
-                    className={`p-3 cursor-pointer ${selectedTypes.has(type.id) ? "ring-2 ring-brass" : ""}`}
+                  <Card
+                    key={type.id}
+                    onClick={() => toggleTypeSelection(type.id)}
+                    className={`p-3 cursor-pointer transition-all hover:bg-brass/5 ${selectedTypes.has(type.id) ? "ring-2 ring-brass bg-brass/5" : ""}`}
                   >
                     <div className="flex items-start gap-3">
-                      <Checkbox checked={selectedTypes.has(type.id)} />
-                      <div className="flex-1">
+                      <Checkbox checked={selectedTypes.has(type.id)} className="mt-1" />
+                      {type.iconImage ? (
+                        <img src={type.iconImage} alt={type.name} className="w-8 h-8 shrink-0" />
+                      ) : type.icon && (
+                        <type.icon className="w-8 h-8 shrink-0" style={{ color: type.iconColor }} />
+                      )}
+                      <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-sm">{type.name}</h4>
-                        <p className="text-xs text-muted-foreground">{type.description}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{type.description}</p>
                       </div>
                     </div>
                   </Card>
@@ -1528,16 +1535,21 @@ export default function Multiply() {
               <CollapsibleContent className="mt-3">
                 <div className="grid grid-cols-1 gap-3">
                   {ADDITIONAL_DERIVATIVE_TYPES.map((type) => (
-                    <Card 
-                      key={type.id} 
-                      onClick={() => toggleTypeSelection(type.id)} 
-                      className={`p-3 cursor-pointer ${selectedTypes.has(type.id) ? "ring-2 ring-brass" : ""}`}
+                    <Card
+                      key={type.id}
+                      onClick={() => toggleTypeSelection(type.id)}
+                      className={`p-3 cursor-pointer transition-all hover:bg-brass/5 ${selectedTypes.has(type.id) ? "ring-2 ring-brass bg-brass/5" : ""}`}
                     >
                       <div className="flex items-start gap-3">
-                        <Checkbox checked={selectedTypes.has(type.id)} />
-                        <div className="flex-1">
+                        <Checkbox checked={selectedTypes.has(type.id)} className="mt-1" />
+                        {type.iconImage ? (
+                          <img src={type.iconImage} alt={type.name} className="w-8 h-8 shrink-0" />
+                        ) : type.icon && (
+                          <type.icon className="w-8 h-8 shrink-0" style={{ color: type.iconColor }} />
+                        )}
+                        <div className="flex-1 min-w-0">
                           <h4 className="font-medium text-sm">{type.name}</h4>
-                          <p className="text-xs text-muted-foreground">{type.description}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-2">{type.description}</p>
                         </div>
                       </div>
                     </Card>
@@ -1548,9 +1560,9 @@ export default function Multiply() {
 
             <div className="flex flex-col gap-2">
               <Button variant="outline" size="sm" onClick={selectAll} className="w-full">Select All</Button>
-              <Button 
-                onClick={generateDerivatives} 
-                disabled={isGenerating || selectedTypes.size === 0} 
+              <Button
+                onClick={generateDerivatives}
+                disabled={isGenerating || selectedTypes.size === 0}
                 className="gap-2 w-full"
               >
                 {isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
@@ -1592,9 +1604,9 @@ export default function Multiply() {
                               <div className="flex justify-between mb-2">
                                 <Badge variant="secondary" className="text-xs">{deriv.status}</Badge>
                                 <div className="flex gap-1">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
                                     onClick={() => handleOpenModal(deriv)}
                                   >
                                     <FileText className="w-3 h-3" />
@@ -1676,8 +1688,8 @@ export default function Multiply() {
           approval_status: selectedDerivativeForModal.status,
           platform_specs: selectedDerivativeForModal.platformSpecs,
         } : null}
-        label={selectedDerivativeForModal ? 
-          DERIVATIVE_TYPES.find(t => t.id === selectedDerivativeForModal.typeId)?.name || '' 
+        label={selectedDerivativeForModal ?
+          DERIVATIVE_TYPES.find(t => t.id === selectedDerivativeForModal.typeId)?.name || ''
           : ''}
         onApprove={handleApproveDerivative}
         onReject={handleRejectDerivative}
