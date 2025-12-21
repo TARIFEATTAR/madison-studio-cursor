@@ -26,8 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         logger.debug("[AuthProvider] Checking pending invitations for:", userEmail);
 
-        // Call the secure RPC function to handle invitation acceptance
-        // This runs as SECURITY DEFINER, bypassing RLS restrictions
+        // First, try calling the RPC function
         const { data, error } = await supabase
           .rpc("accept_pending_invitations_for_user", {
             _user_id: userId,
@@ -35,13 +34,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
 
         if (error) {
-          logger.error("[AuthProvider] Error accepting invitations via RPC:", error);
-          // Don't throw, just log
+          logger.error("[AuthProvider] RPC failed, trying direct approach:", error);
+
+          // Fallback: Direct database operations
+          // 1. Find pending invitations for this email
+          const { data: invitations, error: fetchError } = await supabase
+            .from("team_invitations")
+            .select("id, organization_id, role")
+            .ilike("email", userEmail)
+            .is("accepted_at", null);
+
+          if (fetchError) {
+            logger.error("[AuthProvider] Failed to fetch invitations:", fetchError);
+            return;
+          }
+
+          if (invitations && invitations.length > 0) {
+            logger.debug("[AuthProvider] Found invitations to accept:", invitations.length);
+
+            for (const invitation of invitations) {
+              // 2. Add user to organization
+              const { error: memberError } = await supabase
+                .from("organization_members")
+                .insert({
+                  organization_id: invitation.organization_id,
+                  user_id: userId,
+                  role: invitation.role
+                })
+                .select()
+                .single();
+
+              if (memberError && !memberError.message.includes("duplicate")) {
+                logger.error("[AuthProvider] Failed to add member:", memberError);
+              } else {
+                logger.debug("[AuthProvider] Added user to org:", invitation.organization_id);
+              }
+
+              // 3. Mark invitation as accepted
+              const { error: updateError } = await supabase
+                .from("team_invitations")
+                .update({ accepted_at: new Date().toISOString() })
+                .eq("id", invitation.id);
+
+              if (updateError) {
+                logger.error("[AuthProvider] Failed to update invitation:", updateError);
+              } else {
+                logger.debug("[AuthProvider] Marked invitation as accepted:", invitation.id);
+              }
+            }
+          }
         } else if (data && data.length > 0) {
-          logger.debug("[AuthProvider] Successfully accepted invitations:", data.length);
-          // Optional: You could trigger a toast here if you had access to the toast hook
+          logger.debug("[AuthProvider] Successfully accepted invitations via RPC:", data.length);
         } else {
-          logger.debug("[AuthProvider] No pending invitations found or accepted.");
+          logger.debug("[AuthProvider] No pending invitations found.");
         }
       } catch (err) {
         logger.error("[AuthProvider] Exception checking invitations:", err);
