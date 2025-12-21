@@ -61,7 +61,7 @@ export default function Create() {
   const { brandName } = useBrandContext(currentOrganizationId);
   const { toast } = useToast();
 
-  
+
   // Form state
   const [product, setProduct] = useState("");
   const [productData, setProductData] = useState<any>(null);
@@ -76,7 +76,7 @@ export default function Create() {
     if (location.state?.prompt) {
       const prompt = location.state.prompt;
       const fieldMappings = location.state?.fieldMappings;
-      
+
       if (fieldMappings) {
         // Smart mapping: populate individual fields
         if (fieldMappings.product) setProduct(fieldMappings.product);
@@ -89,7 +89,7 @@ export default function Create() {
           // Fallback to full prompt text if no specific mapping
           setAdditionalContext(prompt.prompt_text);
         }
-        
+
         toast({
           title: "Template loaded with smart mapping",
           description: `"${prompt.title}" fields auto-populated`,
@@ -127,7 +127,7 @@ export default function Create() {
           description: `"${prompt.title}" applied. Edit details in Advanced Options.`,
         });
       }
-      
+
       // Clear the navigation state
       window.history.replaceState({}, document.title);
     }
@@ -140,18 +140,18 @@ export default function Create() {
       setUploadDialogOpen(true);
     }
   }, [location.search]);
-  
+
   // Dialog state
   const [thinkModeExpanded, setThinkModeExpanded] = useState(false);
   const [thinkModeInput, setThinkModeInput] = useState("");
-  const [thinkModeMessages, setThinkModeMessages] = useState<Array<{id: string, role: string, content: string}>>([]);
+  const [thinkModeMessages, setThinkModeMessages] = useState<Array<{ id: string, role: string, content: string }>>([]);
   const [isThinking, setIsThinking] = useState(false);
   const [showTransitionLoader, setShowTransitionLoader] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [formatPickerOpen, setFormatPickerOpen] = useState(false);
   const [advancedOptionsOpen, setAdvancedOptionsOpen] = useState(false);
-  
+
   const [showThinkMode, setShowThinkMode] = useState(() => {
     const saved = localStorage.getItem('madison-show-think-mode');
     return saved !== 'false';
@@ -172,7 +172,7 @@ export default function Create() {
       });
       return;
     }
-    
+
     // Auto-generate name like Image Studio does
     const contentName = generateSmartName({
       deliverable_format: format,
@@ -180,45 +180,45 @@ export default function Create() {
       style_overlay: style,
       goal: goal
     });
-    
+
     // Directly generate content with auto-name
     handleGenerateContent(contentName);
   };
 
   const handleGenerateContent = async (contentName: string) => {
-      const briefData = {
-        productId: product && product !== "none" ? product : null,
-        productData: product && product !== "none" ? productData : null,
-        deliverableFormat: format,
-        targetAudience: audience,
-        contentGoal: goal,
-        styleOverlay: style,
-        additionalContext,
-        contentName,
-        timestamp: Date.now()
-      };
-    
+    const briefData = {
+      productId: product && product !== "none" ? product : null,
+      productData: product && product !== "none" ? productData : null,
+      deliverableFormat: format,
+      targetAudience: audience,
+      contentGoal: goal,
+      styleOverlay: style,
+      additionalContext,
+      contentName,
+      timestamp: Date.now()
+    };
+
     localStorage.setItem('madison-content-brief', JSON.stringify(briefData));
     setIsGenerating(true);
-    
+
     // Show loading overlay
     const loadingDiv = document.createElement('div');
     loadingDiv.id = 'generating-loader';
     document.body.appendChild(loadingDiv);
-    
+
     // Render the loader component immediately
     const loaderRoot = createRoot(loadingDiv);
     loaderRoot.render(<MadisonStudioLoadingAnimation />);
 
     try {
       // Build AI prompt from brief fields
-    const promptParts = [
-      product && product !== "none" && `Product: ${product}`,
-      `Format: ${format}`,
-      audience && `Target Audience: ${audience}`,
-      goal && `Content Goal: ${goal}`,
-      additionalContext && `\nAdditional Direction: ${additionalContext}`
-    ].filter(Boolean).join('\n');
+      const promptParts = [
+        product && product !== "none" && `Product: ${product}`,
+        `Format: ${format}`,
+        audience && `Target Audience: ${audience}`,
+        goal && `Content Goal: ${goal}`,
+        additionalContext && `\nAdditional Direction: ${additionalContext}`
+      ].filter(Boolean).join('\n');
 
       // Add blog-specific requirements if blog format is selected
       let blogRequirements = '';
@@ -279,14 +279,14 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
           title: autoGeneratedName,
           prompt_text: fullPrompt,
           content_type: format.toLowerCase().includes('email') ? 'email' :
-                        format.toLowerCase().includes('social') ? 'social' :
-                        format.toLowerCase().includes('blog') ? 'blog' :
-                        format.toLowerCase().includes('product') ? 'product' : 'other',
+            format.toLowerCase().includes('social') ? 'social' :
+              format.toLowerCase().includes('blog') ? 'blog' :
+                format.toLowerCase().includes('product') ? 'product' : 'other',
           collection: "auto_saved",
           organization_id: currentOrganizationId,
           is_template: false,
           times_used: 1,
-          
+
           // NEW: Rich metadata for intelligent reuse
           product_id: product && product !== "none" ? product : null,
           deliverable_format: format,
@@ -313,24 +313,24 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
         logger.error("Auto-save failed:", error);
         // Silently fail - don't interrupt user experience
       }
-      
+
       // Verify authentication before calling edge function
       const { data: { user: authUser }, error: authCheckError } = await supabase.auth.getUser();
       if (authCheckError || !authUser) {
         throw new Error("Authentication required. Please sign in again.");
       }
-      
+
       if (!currentOrganizationId) {
         throw new Error("No organization found. Please complete onboarding first.");
       }
-      
+
       // Verify Supabase URL is configured
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       if (!supabaseUrl) {
         logger.error("Missing VITE_SUPABASE_URL environment variable");
         throw new Error("Configuration error. Please contact support.");
       }
-      
+
       logger.debug("Calling edge function with:", {
         hasPrompt: !!fullPrompt,
         promptLength: fullPrompt.length,
@@ -339,10 +339,10 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
         format,
         userId: authUser.id
       });
-      
+
       // Call real AI edge function
       const { data, error } = await supabase.functions.invoke('generate-with-claude', {
-        body: { 
+        body: {
           prompt: fullPrompt,
           organizationId: currentOrganizationId,
           mode: "generate",
@@ -356,7 +356,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
       if (error) {
         // Enhanced error handling - try to extract detailed error message
         let errorMessage = error.message || "Failed to send a request to the Edge Function";
-        
+
         // Try to read the error response body if it's a ReadableStream
         if (error.context?.body && error.context.body instanceof ReadableStream) {
           try {
@@ -364,7 +364,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
             const decoder = new TextDecoder();
             let bodyText = '';
             let done = false;
-            
+
             while (!done) {
               const { value, done: streamDone } = await reader.read();
               done = streamDone;
@@ -372,7 +372,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                 bodyText += decoder.decode(value, { stream: true });
               }
             }
-            
+
             if (bodyText) {
               try {
                 const parsed = JSON.parse(bodyText);
@@ -394,8 +394,8 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
         } else if (error.context?.body) {
           // Handle non-stream body
           try {
-            const parsed = typeof error.context.body === 'string' 
-              ? JSON.parse(error.context.body) 
+            const parsed = typeof error.context.body === 'string'
+              ? JSON.parse(error.context.body)
               : error.context.body;
             if (parsed.error) {
               errorMessage = parsed.error;
@@ -409,7 +409,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
             }
           }
         }
-        
+
         // Check error context for status code
         if (error.context?.status) {
           const status = error.context.status;
@@ -430,17 +430,17 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
             }
           }
         }
-        
+
         // Check for network errors
         if (error.message?.includes('fetch') || error.message?.includes('network') || error.message?.includes('Failed to fetch')) {
           errorMessage = "Network error. Please check your connection and try again.";
         }
-        
+
         // Check for CORS errors
         if (error.message?.includes('CORS') || error.message?.includes('cors')) {
           errorMessage = "CORS error. Please contact support.";
         }
-        
+
         logger.error("Edge function error details:", {
           message: error.message,
           context: error.context,
@@ -448,12 +448,12 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
           bodyType: error.context?.body?.constructor?.name,
           errorMessage
         });
-        
+
         throw new Error(errorMessage);
       }
 
       const generatedContent = stripMarkdown(data?.generatedContent || "");
-      
+
       // Save to database (authUser already verified above)
       if (!authUser) throw new Error("Not authenticated");
 
@@ -503,7 +503,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
       // Navigate immediately with the content ID
       setTimeout(() => {
         navigate("/editor", {
-          state: { 
+          state: {
             contentId: savedContent?.id || null,
             content: generatedContent,
             contentType: format,
@@ -515,7 +515,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
 
     } catch (error: any) {
       logger.error("Error generating content:", error);
-      
+
       // Extract error message with better handling
       let errorMessage = "Please try again";
       if (error instanceof Error) {
@@ -525,7 +525,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
       } else if (error?.message) {
         errorMessage = error.message;
       }
-      
+
       // Show error toast with detailed message
       toast({
         title: "Generation failed",
@@ -533,7 +533,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
         variant: "destructive",
         duration: 8000
       });
-      
+
       // Remove loading overlay
       loaderRoot.unmount();
       const loader = document.getElementById('generating-loader');
@@ -550,7 +550,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
   const handleLoadPrompt = async (prompt: any) => {
     // Check if this is an auto-saved prompt (has rich metadata) or a legacy template
     const isAutoSaved = prompt.is_auto_saved === true;
-    
+
     if (isAutoSaved) {
       // NEW: Auto-saved prompts have rich metadata
       if (prompt.product_id) {
@@ -591,16 +591,16 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
           blog: 'blog_article',
           product: 'product_description'
         };
-        
+
         if (prompt.content_type && contentTypeValueMap[prompt.content_type]) {
           setFormat(contentTypeValueMap[prompt.content_type]);
         }
-        
+
         // Always populate the editorial direction with the template text for legacy items
         if (prompt.prompt_text) {
           setAdditionalContext(prompt.prompt_text);
         }
-        
+
         // Show a gentle notice
         toast({
           title: 'Legacy Template loaded',
@@ -613,7 +613,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
     // Update use count
     await supabase
       .from('prompts')
-      .update({ 
+      .update({
         times_used: (prompt.times_used || 0) + 1,
         last_used_at: new Date().toISOString()
       })
@@ -646,7 +646,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
       }
 
       const extractedData = data.extracted_data as any;
-      
+
       // Auto-fill form fields
       if (extractedData.product) setProduct(extractedData.product);
       if (extractedData.format) setFormat(extractedData.format);
@@ -693,11 +693,11 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
 
   const handleThinkModeSend = async () => {
     if (!thinkModeInput.trim() || isThinking) return;
-    
-    const userMessage = { 
+
+    const userMessage = {
       id: `think-${Date.now()}-user-${Math.random().toString(36).substr(2, 9)}`,
-      role: 'user', 
-      content: thinkModeInput 
+      role: 'user',
+      content: thinkModeInput
     };
     setThinkModeMessages(prev => [...prev, userMessage]);
     setThinkModeInput("");
@@ -724,7 +724,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${accessToken}`
           },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             messages: [...thinkModeMessages, userMessage],
             userName: userName || undefined,
             mode: 'creative'
@@ -748,7 +748,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
 
       const reader = response.body?.getReader();
       if (!reader) throw new Error('No response body');
-      
+
       const decoder = new TextDecoder();
       let aiMessage = "";
       let aiMessageIndex = -1;
@@ -758,7 +758,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
       while (!streamDone) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         textBuffer += decoder.decode(value, { stream: true });
 
         // Process line-by-line as data arrives
@@ -780,25 +780,25 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
           try {
             const parsed = JSON.parse(jsonStr);
             const content = extractThinkModeText(parsed);
-            
+
             if (content) {
               aiMessage += content;
-              
+
               setThinkModeMessages(prev => {
                 const updated = [...prev];
-                
+
                 if (aiMessageIndex === -1) {
-                  const newMsg = { 
+                  const newMsg = {
                     id: `think-${Date.now()}-ai-${Math.random().toString(36).substr(2, 9)}`,
-                    role: 'assistant', 
-                    content: aiMessage 
+                    role: 'assistant',
+                    content: aiMessage
                   };
                   updated.push(newMsg);
                   aiMessageIndex = updated.length - 1;
                 } else {
                   updated[aiMessageIndex].content = aiMessage;
                 }
-                
+
                 return updated;
               });
             }
@@ -848,7 +848,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
   };
 
   return (
-    <div className="min-h-screen pb-20 md:pb-20 bg-vellum-cream">
+    <div className="min-h-screen pb-20 md:pb-20 bg-vellum-cream overflow-x-hidden">
       <div className={`max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-10 transition-opacity duration-300 ${isGenerating ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         {/* Main Form */}
         <div>
@@ -856,9 +856,9 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
           <div className="mb-6 md:mb-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
               <div className="flex items-center gap-3 md:gap-4">
-                <img 
-                  src={penNibIcon} 
-                  alt="Pen nib icon" 
+                <img
+                  src={penNibIcon}
+                  alt="Pen nib icon"
                   className="w-10 h-10 md:w-16 md:h-16 object-contain flex-shrink-0"
                 />
                 <div className="flex-1 min-w-0">
@@ -874,17 +874,17 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 md:gap-3 bg-white/50 px-3 py-2 rounded-lg border border-warm-gray/10 self-start md:self-auto w-full md:w-auto justify-between md:justify-start">
-                <Label htmlFor="think-mode-toggle" className="text-xs md:text-sm text-warm-gray font-medium cursor-pointer select-none">Brainstorming Helper</Label>
-                <Switch 
-                  id="think-mode-toggle" 
-                  checked={showThinkMode} 
-                  onCheckedChange={toggleThinkMode} 
-                  className="data-[state=checked]:bg-brass"
+              <div className="flex items-center gap-2 bg-white/50 px-3 py-2 rounded-lg border border-warm-gray/10 flex-shrink-0">
+                <Label htmlFor="think-mode-toggle" className="text-xs md:text-sm text-warm-gray font-medium cursor-pointer select-none whitespace-nowrap">Brainstorming Helper</Label>
+                <Switch
+                  id="think-mode-toggle"
+                  checked={showThinkMode}
+                  onCheckedChange={toggleThinkMode}
+                  className="data-[state=checked]:bg-brass flex-shrink-0"
                 />
               </div>
             </div>
-            
+
             <p className="text-sm md:text-base text-warm-gray">
               Fill out the brief below and Madison will craft the perfect content.
             </p>
@@ -968,16 +968,15 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                   {thinkModeMessages.length > 0 && (
                     <div className="mb-4 md:mb-6 space-y-3 md:space-y-4 max-h-64 md:max-h-96 overflow-y-auto">
                       {thinkModeMessages.map((msg) => (
-                        <div 
-                          key={msg.id} 
+                        <div
+                          key={msg.id}
                           className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
-                          <div 
-                            className={`max-w-[85%] md:max-w-[80%] p-3 md:p-4 rounded-lg ${
-                              msg.role === 'user' 
-                                ? 'bg-warm-gray/10 text-ink-black' 
-                                : 'bg-brass/10 text-ink-black'
-                            }`}
+                          <div
+                            className={`max-w-[85%] md:max-w-[80%] p-3 md:p-4 rounded-lg ${msg.role === 'user'
+                              ? 'bg-warm-gray/10 text-ink-black'
+                              : 'bg-brass/10 text-ink-black'
+                              }`}
                           >
                             <p className="text-xs md:text-sm whitespace-pre-wrap">{msg.content}</p>
                           </div>
@@ -1053,14 +1052,14 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
           <div className="p-4 md:p-6 lg:p-8 rounded-xl border border-warm-gray/20 space-y-6 md:space-y-8 bg-parchment-white">
             {/* Brand Knowledge Status Indicator */}
             <BrandKnowledgeIndicator organizationId={currentOrganizationId} />
-            
+
             {/* Product - Optional */}
             <div>
               <Label htmlFor="product" className="text-base mb-2 text-ink-black">
                 Product <span className="text-warm-gray text-sm font-normal">(Optional)</span>
               </Label>
-              <Select 
-                value={product} 
+              <Select
+                value={product}
                 onValueChange={(value) => {
                   setProduct(value);
                   const selectedProduct = products.find(p => p.id === value);
@@ -1073,17 +1072,17 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                   className="mt-2 bg-parchment-white border-warm-gray/20"
                 >
                   <SelectValue placeholder={
-                    productsLoading ? "Loading products..." : 
-                    products.length === 0 ? "No products available" : 
-                    "Select a product (or leave blank for brand-level copy)"
+                    productsLoading ? "Loading products..." :
+                      products.length === 0 ? "No products available" :
+                        "Select a product (or leave blank for brand-level copy)"
                   } />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px] overflow-y-auto bg-white">
-              <SelectItem value="none">
-                <div className="flex items-center gap-2">
-                  <span className="text-warm-gray">No specific product (brand-level content)</span>
-                </div>
-              </SelectItem>
+                  <SelectItem value="none">
+                    <div className="flex items-center gap-2">
+                      <span className="text-warm-gray">No specific product (brand-level content)</span>
+                    </div>
+                  </SelectItem>
                   {products.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.name}
@@ -1131,8 +1130,8 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                 </PopoverTrigger>
                 <PopoverContent className="w-[calc(100vw-2rem)] md:w-[600px] p-0 bg-parchment-white border-warm-gray/20" align="start">
                   <Command className="bg-parchment-white">
-                    <CommandInput 
-                      placeholder="Search deliverables..." 
+                    <CommandInput
+                      placeholder="Search deliverables..."
                       className="border-none focus:ring-0"
                     />
                     <CommandList className="max-h-[400px]">
@@ -1140,8 +1139,8 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                       {DELIVERABLE_CATEGORIES.map((category) => {
                         const CategoryIcon = category.icon;
                         return (
-                          <CommandGroup 
-                            key={category.name} 
+                          <CommandGroup
+                            key={category.name}
                             heading={
                               <span className="flex items-center gap-2 text-ink-black/70">
                                 <CategoryIcon className="h-4 w-4" />
@@ -1269,7 +1268,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                   )}
                 </Button>
               </CollapsibleTrigger>
-              
+
               <CollapsibleContent className="space-y-6 pt-4">
                 {/* Writing Style - Updated 2024 */}
                 <div>
@@ -1362,7 +1361,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                 <PenTool className="w-5 h-5" />
                 <span>Generate</span>
               </Button>
-              
+
               <Button
                 variant="ghost"
                 onClick={handleCancel}
@@ -1370,7 +1369,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
               >
                 Cancel
               </Button>
-              
+
               {showThinkMode && (
                 <button
                   onClick={() => setThinkModeExpanded(true)}
@@ -1379,7 +1378,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                   Not sure what to write? Try Think Mode
                 </button>
               )}
-              
+
               <p className="text-xs text-center mt-2 text-warm-gray/70">
                 {!format ? (
                   <span className="text-brass">Select a format to continue</span>
@@ -1435,7 +1434,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
 
       {/* Dialogs and Loaders */}
       {showTransitionLoader && <TransitionLoader onComplete={() => setShowTransitionLoader(false)} />}
-      
+
 
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
         <DialogContent className="max-w-2xl">
@@ -1445,7 +1444,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
               Upload your completed worksheet to auto-fill this form
             </DialogDescription>
           </DialogHeader>
-          
+
           {currentOrganizationId && (
             <WorksheetUpload
               onUploadComplete={handleWorksheetUploaded}
