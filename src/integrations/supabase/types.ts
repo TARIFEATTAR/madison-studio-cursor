@@ -2298,6 +2298,17 @@ export type Database = {
     }
     Functions: {
       cleanup_unsaved_image_sessions: { Args: never; Returns: number }
+      accept_pending_invitations_for_user: {
+        Args: {
+          _user_id: string
+          _user_email: string
+        }
+        Returns: {
+          invitation_id: string
+          organization_id: string
+          role: string
+        }[]
+      }
       get_team_member_profiles: {
         Args: { _org_id: string }
         Returns: {

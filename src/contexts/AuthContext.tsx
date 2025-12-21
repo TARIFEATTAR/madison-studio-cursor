@@ -24,52 +24,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Function to check and accept pending invitations
     const checkPendingInvitations = async (userId: string, userEmail: string) => {
       try {
-        // Check for pending invitations and accept them
-        const { data: invitations, error } = await supabase
-          .from("team_invitations")
-          .select("id, organization_id, role")
-          .eq("email", userEmail.toLowerCase())
-          .is("accepted_at", null)
-          .gt("expires_at", new Date().toISOString());
+        logger.debug("[AuthProvider] Checking pending invitations for:", userEmail);
+
+        // Call the secure RPC function to handle invitation acceptance
+        // This runs as SECURITY DEFINER, bypassing RLS restrictions
+        const { data, error } = await supabase
+          .rpc("accept_pending_invitations_for_user", {
+            _user_id: userId,
+            _user_email: userEmail
+          });
 
         if (error) {
-          logger.error("[AuthProvider] Error checking invitations:", error);
-          return;
-        }
-
-        if (invitations && invitations.length > 0) {
-          logger.debug("[AuthProvider] Found pending invitations:", invitations.length);
-
-          for (const invitation of invitations) {
-            // Add user to organization
-            const { error: memberError } = await supabase
-              .from("organization_members")
-              .upsert({
-                organization_id: invitation.organization_id,
-                user_id: userId,
-                role: invitation.role,
-              }, {
-                onConflict: "organization_id,user_id",
-                ignoreDuplicates: true,
-              });
-
-            if (memberError) {
-              logger.error("[AuthProvider] Error adding member:", memberError);
-              continue;
-            }
-
-            // Mark invitation as accepted
-            const { error: updateError } = await supabase
-              .from("team_invitations")
-              .update({ accepted_at: new Date().toISOString() })
-              .eq("id", invitation.id);
-
-            if (updateError) {
-              logger.error("[AuthProvider] Error updating invitation:", updateError);
-            } else {
-              logger.debug("[AuthProvider] Accepted invitation:", invitation.id);
-            }
-          }
+          logger.error("[AuthProvider] Error accepting invitations via RPC:", error);
+          // Don't throw, just log
+        } else if (data && data.length > 0) {
+          logger.debug("[AuthProvider] Successfully accepted invitations:", data.length);
+          // Optional: You could trigger a toast here if you had access to the toast hook
+        } else {
+          logger.debug("[AuthProvider] No pending invitations found or accepted.");
         }
       } catch (err) {
         logger.error("[AuthProvider] Exception checking invitations:", err);
