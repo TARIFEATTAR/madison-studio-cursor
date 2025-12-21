@@ -11,7 +11,7 @@ interface VaultSidebarBtnProps {
 }
 
 export const VaultSidebarBtn = ({ isActive, onNavigate }: VaultSidebarBtnProps) => {
-    const { open } = useSidebar();
+    const { open, isMobile } = useSidebar();
 
     return (
         <div className="vault-widget-root">
@@ -23,12 +23,9 @@ export const VaultSidebarBtn = ({ isActive, onNavigate }: VaultSidebarBtnProps) 
                 <div className={cn(
                     "sidebar-vault-widget",
                     !open && "is-collapsed",
-                    isActive && "is-active"
+                    isActive && "is-active",
+                    isMobile && "is-mobile"
                 )}>
-                    {/* Corner Brackets */}
-                    <div className="corner-bracket top-left"></div>
-                    <div className="corner-bracket top-right"></div>
-
                     {/* Vault Knob */}
                     <div className="knob-container">
                         <img
@@ -41,12 +38,8 @@ export const VaultSidebarBtn = ({ isActive, onNavigate }: VaultSidebarBtnProps) 
                     {/* Text Labels */}
                     <div className="vault-text-group">
                         <h3 className="vault-title">The Vault</h3>
-                        <span className="vault-subtitle">ASSET LIBRARY</span>
+                        <span className="vault-subtitle">Asset Library</span>
                     </div>
-
-                    {/* Bottom Brackets */}
-                    <div className="corner-bracket bottom-left"></div>
-                    <div className="corner-bracket bottom-right"></div>
                 </div>
             </NavLink>
         </div>

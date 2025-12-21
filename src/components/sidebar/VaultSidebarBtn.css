@@ -1,49 +1,55 @@
-/* --- Variables for easy sizing --- */
+/* ============================================
+   VAULT SIDEBAR BUTTON - CLEAN, MINIMAL DESIGN
+   ============================================ */
+
+/* --- Design Tokens --- */
 .vault-widget-root {
-    --widget-bg: #050508;
-    /* Very dark blue/black from screenshot */
-    --bracket-color: rgba(184, 149, 106, 0.3);
-    /* Madison Brass tone, subtle */
     --text-gold: #B8956A;
-    /* Madison Brass */
     --font-serif: "Cormorant Garamond", serif;
     --font-sans: "Lato", sans-serif;
 }
 
-/* --- Main Widget Container --- */
+/* --- Main Widget Container (Desktop - Expanded) --- */
 .sidebar-vault-widget {
     position: relative;
     width: 100%;
-    max-width: 240px;
-    aspect-ratio: 1 / 1.1;
+    max-width: 220px;
     background: #000000;
-    /* Solid black base */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin: 10px auto;
-    padding: 20px;
+    margin: 12px auto;
+    padding: 24px 16px;
     box-sizing: border-box;
     overflow: hidden;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sidebar-vault-widget:hover {
+    border-color: rgba(184, 149, 106, 0.2);
+    background: #0a0a0a;
 }
 
 .sidebar-vault-widget.is-active {
-    border-color: rgba(184, 149, 106, 0.2);
+    border-color: rgba(184, 149, 106, 0.3);
+    background: #0a0a0a;
 }
 
-/* --- Collapsed State Styles --- */
+/* --- Collapsed State (Desktop - Sidebar minimized) --- */
 .sidebar-vault-widget.is-collapsed {
-    aspect-ratio: 1 / 1;
-    padding: 8px;
-    margin: 4px auto;
     max-width: 48px;
     height: 48px;
+    padding: 8px;
+    margin: 6px auto;
     background: transparent;
     border: none;
+}
+
+.sidebar-vault-widget.is-collapsed .vault-text-group {
+    display: none;
 }
 
 .sidebar-vault-widget.is-collapsed .knob-container {
@@ -52,51 +58,17 @@
     margin-bottom: 0;
 }
 
-.sidebar-vault-widget.is-collapsed .corner-bracket,
-.sidebar-vault-widget.is-collapsed .vault-text-group {
-    display: none;
+.sidebar-vault-widget.is-collapsed:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
 }
 
-/* --- Corner Brackets --- */
-.corner-bracket {
-    position: absolute;
-    width: 15px;
-    height: 15px;
-    border-color: var(--bracket-color);
-    border-style: solid;
-    transition: all 0.3s ease;
-}
-
-.top-left {
-    top: 10px;
-    left: 10px;
-    border-width: 1px 0 0 1px;
-}
-
-.top-right {
-    top: 10px;
-    right: 10px;
-    border-width: 1px 1px 0 0;
-}
-
-.bottom-left {
-    bottom: 10px;
-    left: 10px;
-    border-width: 0 0 1px 1px;
-}
-
-.bottom-right {
-    bottom: 10px;
-    right: 10px;
-    border-width: 0 1px 1px 0;
-}
-
-/* --- The Brass Knob (Image Styling) --- */
+/* --- The Brass Knob --- */
 .knob-container {
     position: relative;
-    width: 110px;
-    height: 110px;
-    margin-bottom: 15px;
+    width: 80px;
+    height: 80px;
+    margin-bottom: 12px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -107,25 +79,14 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
-    /* Use drop-shadow for transparent PNG spokes to follow the shape contours */
-    filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.9));
-    transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+    filter: drop-shadow(0px 3px 6px rgba(0, 0, 0, 0.8));
+    transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
     cursor: pointer;
 }
 
-/* Hover Effect: Rotate the dial like a safe */
+/* Hover Effect: Rotate the dial */
 .sidebar-vault-widget:hover .brass-knob {
-    transform: rotate(90deg);
-}
-
-/* Hover Effect: Brackets glow slightly */
-.sidebar-vault-widget:hover .corner-bracket {
-    border-color: rgba(184, 149, 106, 0.5);
-}
-
-.sidebar-vault-widget:hover {
-    background: #000000;
-    /* Keep it solid black on hover */
+    transform: rotate(45deg);
 }
 
 /* --- Typography --- */
@@ -137,18 +98,122 @@
 .vault-title {
     font-family: var(--font-serif);
     color: #fff;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 500;
     margin: 0;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
 }
 
 .vault-subtitle {
     display: block;
     font-family: var(--font-sans);
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 0.6rem;
-    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 0.55rem;
+    letter-spacing: 1.5px;
     margin-top: 4px;
     text-transform: uppercase;
+}
+
+/* ============================================
+   MOBILE STYLES - BEST PRACTICE COMPACT LAYOUT
+   ============================================ */
+
+/* Mobile: Horizontal bar layout (like standard nav items) */
+.sidebar-vault-widget.is-mobile {
+    flex-direction: row;
+    max-width: 100%;
+    height: auto;
+    padding: 12px 16px;
+    margin: 8px 0;
+    gap: 14px;
+    justify-content: flex-start;
+    align-items: center;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.sidebar-vault-widget.is-mobile .knob-container {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+
+.sidebar-vault-widget.is-mobile .vault-text-group {
+    text-align: left;
+    flex: 1;
+}
+
+.sidebar-vault-widget.is-mobile .vault-title {
+    font-size: 0.95rem;
+    letter-spacing: 0.3px;
+}
+
+.sidebar-vault-widget.is-mobile .vault-subtitle {
+    font-size: 0.5rem;
+    letter-spacing: 1.2px;
+    margin-top: 2px;
+    opacity: 0.6;
+}
+
+/* Mobile + Collapsed (shouldn't happen often, but just in case) */
+.sidebar-vault-widget.is-mobile.is-collapsed {
+    max-width: 44px;
+    height: 44px;
+    padding: 6px;
+    margin: 4px auto;
+    gap: 0;
+}
+
+.sidebar-vault-widget.is-mobile.is-collapsed .knob-container {
+    width: 28px;
+    height: 28px;
+}
+
+/* Media query fallback for edge cases */
+@media (max-width: 768px) {
+    .sidebar-vault-widget:not(.is-collapsed) {
+        flex-direction: row;
+        max-width: 100%;
+        padding: 12px 16px;
+        margin: 8px 0;
+        gap: 14px;
+        justify-content: flex-start;
+        align-items: center;
+    }
+
+    .sidebar-vault-widget:not(.is-collapsed) .knob-container {
+        width: 36px;
+        height: 36px;
+        margin-bottom: 0;
+    }
+
+    .sidebar-vault-widget:not(.is-collapsed) .vault-text-group {
+        text-align: left;
+    }
+
+    .sidebar-vault-widget:not(.is-collapsed) .vault-title {
+        font-size: 0.95rem;
+    }
+
+    .sidebar-vault-widget:not(.is-collapsed) .vault-subtitle {
+        font-size: 0.5rem;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 375px) {
+    .sidebar-vault-widget.is-mobile {
+        padding: 10px 12px;
+        gap: 12px;
+    }
+
+    .sidebar-vault-widget.is-mobile .knob-container {
+        width: 32px;
+        height: 32px;
+    }
+
+    .sidebar-vault-widget.is-mobile .vault-title {
+        font-size: 0.9rem;
+    }
 }
