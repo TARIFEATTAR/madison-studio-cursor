@@ -9,11 +9,11 @@
  */
 
 export const DesignTokens = {
-  
+
   // ============================================
   // COLORS - "Black Books & Cream Paper"
   // ============================================
-  
+
   colors: {
     // Core Neutrals (Foundation - 4 colors)
     neutral: {
@@ -22,27 +22,27 @@ export const DesignTokens = {
       vellum: '#F5F1E8',        // Cream - primary backgrounds
       parchment: '#FFFCF5',     // Lightest - cards, elevated surfaces
     },
-    
+
     // Support Colors
     support: {
       stone: '#E5DFD1',         // Default input borders, subtle dividers
       'stone-dark': '#C4B5A0',  // Tertiary elements, borders
     },
-    
+
     // Brand Accent (Brass Family)
     brand: {
       brass: '#B8956A',         // Primary brand color - interactive elements
       'brass-light': '#C4B5A0', // Subtle backgrounds, tertiary
       'brass-gradient': 'linear-gradient(135deg, #B8956A 0%, #C4B5A0 100%)',
     },
-    
+
     // Semantic/Functional Colors (Muted, sophisticated)
     semantic: {
       success: '#8B9474',       // Muted Sage - approval, positive
       warning: '#C4975C',       // Aged Amber - attention, caution
       error: '#A85C5C',         // Faded Rust - error, deletion
     },
-    
+
     // Platform Badge Colors (Small indicators ONLY)
     platform: {
       email: '#4A90E2',         // Muted blue
@@ -54,11 +54,11 @@ export const DesignTokens = {
       blog: '#6366F1',          // Indigo
     },
   },
-  
+
   // ============================================
   // TYPOGRAPHY
   // ============================================
-  
+
   typography: {
     // Font Families
     fonts: {
@@ -66,7 +66,7 @@ export const DesignTokens = {
       sans: '"Lato", -apple-system, system-ui, sans-serif', // Body, UI
       accent: '"Crimson Text", Georgia, serif',            // Italics, quotes
     },
-    
+
     // Font Sizes (Modular Scale)
     sizes: {
       xxs: '0.625rem',   // 10px - tiny labels
@@ -80,29 +80,29 @@ export const DesignTokens = {
       '4xl': '2.5rem',   // 40px - hero headlines
       '5xl': '3rem',     // 48px - display
     },
-    
+
     // Font Weights
     weights: {
-      light: 300,
-      regular: 400,
-      medium: 500,
-      semibold: 600,
-      bold: 700,
+      light: '300',
+      regular: '400',
+      medium: '500',
+      semibold: '600',
+      bold: '700',
     },
-    
+
     // Line Heights
     leading: {
-      tight: 1.2,    // Headlines
-      snug: 1.4,     // Subheadings
-      normal: 1.6,   // Body text
-      relaxed: 1.8,  // Long-form content
+      tight: '1.2',    // Headlines
+      snug: '1.4',     // Subheadings
+      normal: '1.6',   // Body text
+      relaxed: '1.8',  // Long-form content
     },
   },
-  
+
   // ============================================
   // SPACING (4px base unit)
   // ============================================
-  
+
   spacing: {
     0: '0',
     1: '0.25rem',   // 4px
@@ -118,18 +118,18 @@ export const DesignTokens = {
     20: '5rem',     // 80px
     24: '6rem',     // 96px
   },
-  
+
   // ============================================
   // BORDERS & CORNERS
   // ============================================
-  
+
   borders: {
     width: {
       none: '0',
       thin: '1px',
       medium: '2px',
     },
-    
+
     radius: {
       none: '0',
       sm: '0.125rem',  // 2px - subtle
@@ -139,11 +139,11 @@ export const DesignTokens = {
       full: '9999px',  // Pills, avatars
     },
   },
-  
+
   // ============================================
   // SHADOWS (Sophisticated elevation system)
   // ============================================
-  
+
   shadows: {
     // Level 1: Resting cards
     'level-1': `
@@ -151,36 +151,36 @@ export const DesignTokens = {
       0 1px 2px rgba(26, 24, 22, 0.06),
       0 0 0 1px rgba(184, 149, 106, 0.03)
     `,
-    
+
     // Level 2: Hover state
     'level-2': `
       0 3px 8px rgba(26, 24, 22, 0.12),
       0 1px 3px rgba(184, 149, 106, 0.08)
     `,
-    
+
     // Level 3: Modals, dropdowns
     'level-3': `
       0 8px 24px rgba(26, 24, 22, 0.15),
       0 2px 6px rgba(184, 149, 106, 0.12)
     `,
-    
+
     // Level 4: Maximum elevation
     'level-4': `
       0 16px 48px rgba(26, 24, 22, 0.20),
       0 4px 12px rgba(184, 149, 106, 0.15)
     `,
-    
+
     // Brass glow: Focus/active states
     'brass-glow': `
       0 0 0 3px rgba(184, 149, 106, 0.15),
       0 4px 16px rgba(184, 149, 106, 0.25)
     `,
   },
-  
+
   // ============================================
   // ANIMATIONS & TRANSITIONS
   // ============================================
-  
+
   animations: {
     duration: {
       instant: '100ms',
@@ -189,7 +189,7 @@ export const DesignTokens = {
       slow: '400ms',
       slower: '500ms',
     },
-    
+
     easing: {
       standard: 'cubic-bezier(0.4, 0, 0.2, 1)',
       in: 'cubic-bezier(0.4, 0, 1, 1)',
@@ -197,22 +197,22 @@ export const DesignTokens = {
       bounce: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
     },
   },
-  
+
   // ============================================
   // Z-INDEX LAYERS
   // ============================================
-  
+
   zIndex: {
-    base: 0,
-    dropdown: 1000,
-    sticky: 1020,
-    fixed: 1030,
-    modalBackdrop: 1100,
-    modal: 1101,
-    popover: 1200,
-    tooltip: 1300,
+    base: '0',
+    dropdown: '1000',
+    sticky: '1020',
+    fixed: '1030',
+    modalBackdrop: '1100',
+    modal: '1101',
+    popover: '1200',
+    tooltip: '1300',
   },
-  
+
 } as const;
 
 // Type exports for type-safe access

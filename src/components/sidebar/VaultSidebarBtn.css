@@ -1,0 +1,154 @@
+/* --- Variables for easy sizing --- */
+.vault-widget-root {
+    --widget-bg: #050508;
+    /* Very dark blue/black from screenshot */
+    --bracket-color: rgba(184, 149, 106, 0.3);
+    /* Madison Brass tone, subtle */
+    --text-gold: #B8956A;
+    /* Madison Brass */
+    --font-serif: "Cormorant Garamond", serif;
+    --font-sans: "Lato", sans-serif;
+}
+
+/* --- Main Widget Container --- */
+.sidebar-vault-widget {
+    position: relative;
+    width: 100%;
+    max-width: 240px;
+    aspect-ratio: 1 / 1.1;
+    background: #000000;
+    /* Solid black base */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 10px auto;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow: hidden;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sidebar-vault-widget.is-active {
+    border-color: rgba(184, 149, 106, 0.2);
+}
+
+/* --- Collapsed State Styles --- */
+.sidebar-vault-widget.is-collapsed {
+    aspect-ratio: 1 / 1;
+    padding: 8px;
+    margin: 4px auto;
+    max-width: 48px;
+    height: 48px;
+    background: transparent;
+    border: none;
+}
+
+.sidebar-vault-widget.is-collapsed .knob-container {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 0;
+}
+
+.sidebar-vault-widget.is-collapsed .corner-bracket,
+.sidebar-vault-widget.is-collapsed .vault-text-group {
+    display: none;
+}
+
+/* --- Corner Brackets --- */
+.corner-bracket {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    border-color: var(--bracket-color);
+    border-style: solid;
+    transition: all 0.3s ease;
+}
+
+.top-left {
+    top: 10px;
+    left: 10px;
+    border-width: 1px 0 0 1px;
+}
+
+.top-right {
+    top: 10px;
+    right: 10px;
+    border-width: 1px 1px 0 0;
+}
+
+.bottom-left {
+    bottom: 10px;
+    left: 10px;
+    border-width: 0 0 1px 1px;
+}
+
+.bottom-right {
+    bottom: 10px;
+    right: 10px;
+    border-width: 0 1px 1px 0;
+}
+
+/* --- The Brass Knob (Image Styling) --- */
+.knob-container {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+}
+
+.brass-knob {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    /* Use drop-shadow for transparent PNG spokes to follow the shape contours */
+    filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.9));
+    transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+    cursor: pointer;
+}
+
+/* Hover Effect: Rotate the dial like a safe */
+.sidebar-vault-widget:hover .brass-knob {
+    transform: rotate(90deg);
+}
+
+/* Hover Effect: Brackets glow slightly */
+.sidebar-vault-widget:hover .corner-bracket {
+    border-color: rgba(184, 149, 106, 0.5);
+}
+
+.sidebar-vault-widget:hover {
+    background: #000000;
+    /* Keep it solid black on hover */
+}
+
+/* --- Typography --- */
+.vault-text-group {
+    text-align: center;
+    z-index: 2;
+}
+
+.vault-title {
+    font-family: var(--font-serif);
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin: 0;
+    letter-spacing: 1px;
+}
+
+.vault-subtitle {
+    display: block;
+    font-family: var(--font-sans);
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    margin-top: 4px;
+    text-transform: uppercase;
+}

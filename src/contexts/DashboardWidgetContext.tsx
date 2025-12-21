@@ -42,16 +42,18 @@ export function DashboardWidgetProvider({ children }: { children: React.ReactNod
         setIsLoading(false);
         return;
       }
-      
+
       try {
         const { data } = await supabase
           .from('organizations')
           .select('settings')
           .eq('id', organizationId)
           .single();
-        
-        if (data?.settings?.dashboardWidgets) {
-          const loadedWidgets = data.settings.dashboardWidgets as DashboardWidget[];
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const settings = data?.settings as Record<string, any> | null;
+        if (settings?.dashboardWidgets) {
+          const loadedWidgets = settings.dashboardWidgets as DashboardWidget[];
           // Ensure hero banner is always present
           const hasHero = loadedWidgets.some(w => w.type === 'hero-banner');
           if (!hasHero) {
@@ -78,33 +80,35 @@ export function DashboardWidgetProvider({ children }: { children: React.ReactNod
         setIsLoading(false);
       }
     };
-    
+
     loadWidgets();
   }, [organizationId]);
 
   // Save widgets to database
   const saveWidgets = useCallback(async () => {
     if (!organizationId || isLoading) return;
-    
+
     try {
       const { data: orgData } = await supabase
         .from('organizations')
         .select('settings')
         .eq('id', organizationId)
         .single();
-      
-      const currentSettings = (orgData?.settings && typeof orgData.settings === 'object') 
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const currentSettings = (orgData?.settings && typeof orgData.settings === 'object')
         ? orgData.settings as Record<string, any>
         : {};
-      
+
       const updatedSettings = {
         ...currentSettings,
         dashboardWidgets: widgets,
       };
-      
+
       await supabase
         .from('organizations')
-        .update({ settings: updatedSettings })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .update({ settings: updatedSettings as any })
         .eq('id', organizationId);
     } catch (error) {
       console.error('Error saving dashboard widgets:', error);
@@ -117,7 +121,7 @@ export function DashboardWidgetProvider({ children }: { children: React.ReactNod
       const timeoutId = setTimeout(() => {
         saveWidgets();
       }, 500); // Debounce saves
-      
+
       return () => clearTimeout(timeoutId);
     }
   }, [widgets, isLoading, organizationId, saveWidgets]);
@@ -148,6 +152,7 @@ export function DashboardWidgetProvider({ children }: { children: React.ReactNod
       'google-meet': { w: 4, h: 3 }, // Compact preview
       'brand-health': { w: 4, h: 3 },
       'brand': { w: 4, h: 3 },
+      'yellow-pad': { w: 6, h: 4 },
     };
 
     // Find the next available position
@@ -218,7 +223,7 @@ export function DashboardWidgetProvider({ children }: { children: React.ReactNod
         // Ensure hero is at y: 0 and x: 0
         const hero = widgets.find(w => w.type === 'hero-banner');
         if (hero && (hero.y !== 0 || hero.x !== 0)) {
-          setWidgets(prev => prev.map(w => 
+          setWidgets(prev => prev.map(w =>
             w.type === 'hero-banner' ? { ...w, x: 0, y: 0 } : w
           ));
         }

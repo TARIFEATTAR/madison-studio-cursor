@@ -143,7 +143,7 @@ serve(async (req) => {
     let linkedinOrgId = null;
     let linkedinOrgName = null;
     let linkedinOrgVanityName = null;
-    let linkedinOrgLogoUrl = null;
+    const linkedinOrgLogoUrl = null;
     let connectionType = "personal";
 
     try {
@@ -267,6 +267,7 @@ function createRedirect(baseUrl: string | null, queryParams: string): Response {
     },
   });
 }
+
 
 
 

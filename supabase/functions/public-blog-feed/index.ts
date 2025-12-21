@@ -320,7 +320,7 @@ function extractExcerpt(content: string, maxLength: number): string {
   if (!content) return '';
   
   // Strip markdown/html tags
-  let text = content
+  const text = content
     .replace(/#{1,6}\s/g, '') // Remove markdown headers
     .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold
     .replace(/\*([^*]+)\*/g, '$1') // Remove italic

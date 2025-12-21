@@ -1,5 +1,7 @@
 import type { Config } from "tailwindcss";
 import { DesignTokens } from "./src/design/tokens";
+import tailwindcssAnimate from "tailwindcss-animate";
+import tailwindcssTypography from "@tailwindcss/typography";
 
 export default {
   darkMode: ["class"],
@@ -64,6 +66,16 @@ export default {
           brass: DesignTokens.colors.brand.brass,
           stone: DesignTokens.colors.support.stone,
         },
+        brass: {
+          light: '#D4AF37', // Classic gold/brass
+          DEFAULT: '#B59410',
+          dark: '#7A6305',
+        },
+        steel: {
+          light: '#E5E7EB',
+          DEFAULT: '#9CA3AF',
+          dark: '#4B5563',
+        },
 
         // ───────────────────────────────────────────────────────────────
         // LEGACY / COMPATIBILITY ALIASES (For existing code)
@@ -85,10 +97,6 @@ export default {
         },
         'brass-glow': {
           DEFAULT: DesignTokens.colors.brand.brass,
-        },
-        'brass': {
-          DEFAULT: DesignTokens.colors.brand.brass,
-          light: DesignTokens.colors.brand['brass-light'],
         },
 
         // ───────────────────────────────────────────────────────────────
@@ -136,10 +144,10 @@ export default {
         'derivative-linkedin': {
           DEFAULT: DesignTokens.colors.platform.linkedin,
         },
-        
+
         // Platform colors object for direct access
         platform: DesignTokens.colors.platform,
-        },
+      },
 
       // ═══════════════════════════════════════════════════════════════
       // TYPOGRAPHY - From Design Tokens
@@ -150,7 +158,6 @@ export default {
         accent: ['Crimson Text', 'Georgia', 'serif'],
       },
       fontSize: {
-        'xxs': DesignTokens.typography.sizes.xxs,
         'tiny': '0.6875rem', // 11px - legacy
         ...DesignTokens.typography.sizes,
       },
@@ -172,9 +179,6 @@ export default {
       // BORDERS - From Design Tokens
       // ═══════════════════════════════════════════════════════════════
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
         ...DesignTokens.borders.radius,
       },
       borderWidth: DesignTokens.borders.width,
@@ -188,7 +192,10 @@ export default {
       // ANIMATIONS - From Design Tokens
       // ═══════════════════════════════════════════════════════════════
       transitionDuration: DesignTokens.animations.duration,
-      transitionTimingFunction: DesignTokens.animations.easing,
+      transitionTimingFunction: {
+        ...DesignTokens.animations.easing,
+        'vault-mechanism': 'cubic-bezier(0.25, 1, 0.5, 1)',
+      },
 
       // ═══════════════════════════════════════════════════════════════
       // Z-INDEX - From Design Tokens
@@ -246,5 +253,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+  plugins: [tailwindcssAnimate, tailwindcssTypography],
 } satisfies Config;

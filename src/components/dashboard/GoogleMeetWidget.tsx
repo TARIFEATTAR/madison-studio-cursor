@@ -27,6 +27,12 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/hooks/useOrganization";
 import { cn } from "@/lib/utils";
+import React from "react";
+
+interface OrganizationSettings {
+  googleMeetLinks?: Record<string, string>;
+  [key: string]: unknown;
+}
 
 interface GoogleMeetWidgetProps {
   widgetId?: string;
@@ -35,7 +41,7 @@ interface GoogleMeetWidgetProps {
 // Extract meeting ID from Google Meet URL
 function extractMeetId(url: string): string | null {
   if (!url) return null;
-  
+
   // Handle different Google Meet URL formats
   // https://meet.google.com/abc-defg-hij
   // https://meet.google.com/abc-defg-hij?authuser=0
@@ -62,11 +68,7 @@ export function GoogleMeetWidget({ widgetId = 'google-meet' }: GoogleMeetWidgetP
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadMeetLink();
-  }, [organizationId]);
-
-  const loadMeetLink = async () => {
+  const loadMeetLink = React.useCallback(async () => {
     if (!organizationId) {
       setIsLoading(false);
       return;
@@ -79,15 +81,20 @@ export function GoogleMeetWidget({ widgetId = 'google-meet' }: GoogleMeetWidgetP
         .eq('id', organizationId)
         .single();
 
-      if (data?.settings?.googleMeetLinks?.[widgetId]) {
-        setMeetUrl(data.settings.googleMeetLinks[widgetId]);
+      const settings = data?.settings as unknown as OrganizationSettings | null;
+      if (settings?.googleMeetLinks?.[widgetId]) {
+        setMeetUrl(settings.googleMeetLinks[widgetId]);
       }
     } catch (error) {
       console.error('Error loading Google Meet link:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [organizationId, widgetId]);
+
+  useEffect(() => {
+    loadMeetLink();
+  }, [loadMeetLink]);
 
   const saveMeetLink = async (url: string) => {
     if (!organizationId) return;
@@ -100,7 +107,7 @@ export function GoogleMeetWidget({ widgetId = 'google-meet' }: GoogleMeetWidgetP
         .single();
 
       const currentSettings = (orgData?.settings && typeof orgData.settings === 'object')
-        ? orgData.settings as Record<string, any>
+        ? orgData.settings as unknown as OrganizationSettings
         : {};
 
       const updatedSettings = {
@@ -210,7 +217,7 @@ export function GoogleMeetWidget({ widgetId = 'google-meet' }: GoogleMeetWidgetP
                 onClick={() => setIsFullscreen(true)}
                 className="w-full group"
               >
-                <TVFrame 
+                <TVFrame
                   className="w-full h-full min-h-[280px]"
                   meetingId={meetId || undefined}
                   meetingUrl={meetUrl}
@@ -223,7 +230,7 @@ export function GoogleMeetWidget({ widgetId = 'google-meet' }: GoogleMeetWidgetP
                     <div className="absolute inset-0 flex items-center justify-center">
                       <Video className="w-12 h-12 md:w-16 md:h-16 text-white/90 drop-shadow-lg" />
                     </div>
-                    
+
                     {/* Overlay on hover */}
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center z-40">
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-background/95 px-3 md:px-4 py-2 rounded-lg text-[10px] md:text-xs font-medium flex items-center gap-2 shadow-level-2">

@@ -56,7 +56,7 @@ export function ContentPipelineWidget() {
         const pipelineItems: PipelineItem[] = [];
         let draftCount = 0;
         let reviewCount = 0;
-        let scheduledCount = scheduledContent?.length || 0;
+        const scheduledCount = scheduledContent?.length || 0;
 
         if (masterContent) {
           masterContent.forEach(content => {

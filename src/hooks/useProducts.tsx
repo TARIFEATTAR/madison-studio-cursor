@@ -398,7 +398,7 @@ export function useProducts(options: UseProductsOptions = {}) {
 
       // First try without supplier fields (safe approach until migration is run)
       // This ensures saves work even before the migration
-      let { data, error } = await supabase
+      const { data, error } = await supabase
         .from('product_hubs')
         .update(coreUpdates)
         .eq('id', id)

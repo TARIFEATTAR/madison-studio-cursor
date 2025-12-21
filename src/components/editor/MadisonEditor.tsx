@@ -79,7 +79,7 @@ function convertPlainTextToHtml(text: string): string {
   }
 
   // Normalize line endings (Windows \r\n to Unix \n)
-  let normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   
   // Split by double newlines (paragraph breaks)
   // Also split on single newlines followed by headers

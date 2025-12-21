@@ -1,5 +1,5 @@
 import { Home, Archive, Pencil, Share2, Calendar, FileText, Video, Settings, ChevronLeft, ChevronRight, LogOut, User, Menu, ShoppingBag, Store, Image, Mail, ChevronDown, Palette, FolderOpen, BookOpen, HelpCircle, Camera, Package, Building2 } from "lucide-react";
-import { TheVault } from "@/components/sidebar/TheVault";
+import { VaultSidebarBtn } from "@/components/sidebar/VaultSidebarBtn";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -205,7 +205,7 @@ export function AppSidebar() {
           {open && (
             <div className="px-4 pt-6 pb-4">
               <div className="flex items-center gap-3">
-                <button 
+                <button
                   onClick={toggleSidebar}
                   className="relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(38,33%,56%)]/50 rounded-md"
                   aria-label="Collapse sidebar"
@@ -220,7 +220,7 @@ export function AppSidebar() {
               </div>
             </div>
           )}
-          
+
           {!open && (
             <div className="px-2 pt-6 pb-4 flex flex-col items-center gap-3">
               <NavLink to="/dashboard" className="group">
@@ -250,28 +250,27 @@ export function AppSidebar() {
                       asChild
                       className={`
                         group
-                        ${isActiveRoute 
-                          ? 'border-l-2 border-[hsl(38,33%,56%)] bg-white/8 text-white shadow-[inset_4px_0_8px_rgba(184,149,106,0.1)]' 
+                        ${isActiveRoute
+                          ? 'border-l-2 border-[hsl(38,33%,56%)] bg-white/8 text-white shadow-[inset_4px_0_8px_rgba(184,149,106,0.1)]'
                           : 'text-white/50 hover:text-white/80 hover:bg-white/5 hover:border-l-2 hover:border-[hsl(38,33%,56%)]/40'
                         }
                         ${open ? 'py-2.5 px-3' : 'h-12 justify-center'}
                         transition-all duration-200
                       `}
                     >
-                      <NavLink 
-                        to={item.url} 
+                      <NavLink
+                        to={item.url}
                         onClick={() => {
                           console.log(`AppSidebar → ${item.title.toLowerCase()} click`);
                           if (isMobile) toggleSidebar();
                         }}
                       >
-                        <item.icon 
+                        <item.icon
                           strokeWidth={1}
-                          className={`w-6 h-6 shrink-0 transition-all duration-200 ${
-                            isActiveRoute
+                          className={`w-6 h-6 shrink-0 transition-all duration-200 ${isActiveRoute
                               ? 'text-[hsl(38,33%,56%)] drop-shadow-[0_0_6px_rgba(184,149,106,0.4)]'
                               : 'text-white/50 group-hover:text-white/70 group-hover:drop-shadow-[0_0_4px_rgba(184,149,106,0.2)] group-hover:scale-105'
-                          }`} 
+                            }`}
                         />
                         {open && (
                           <span className="font-semibold text-sm tracking-wide">{item.title}</span>
@@ -286,11 +285,11 @@ export function AppSidebar() {
 
           <Separator className="mx-4 bg-white/10" />
 
-        {/* Collapsible Groups */}
-        <div className="px-2 py-4 space-y-2">
+          {/* Collapsible Groups */}
+          <div className="px-2 py-4 space-y-2">
             {navGroups.map((group) => {
               const hasActiveChild = group.items.some(item => isActive(item.url));
-              
+
               return (
                 <Collapsible
                   key={group.title}
@@ -302,13 +301,13 @@ export function AppSidebar() {
                   <CollapsibleTrigger className="w-full">
                     <div className={`
                       flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200
-                      ${hasActiveChild 
-                        ? 'bg-white/5 text-[hsl(38,33%,56%)]' 
+                      ${hasActiveChild
+                        ? 'bg-white/5 text-[hsl(38,33%,56%)]'
                         : 'text-white/40 hover:text-white/70 hover:bg-white/5'
                       }
                       ${open ? '' : 'justify-center'}
                     `}>
-                      <group.icon 
+                      <group.icon
                         strokeWidth={1}
                         className={`w-5 h-5 shrink-0 ${hasActiveChild ? 'text-[hsl(38,33%,56%)]' : ''}`}
                       />
@@ -317,7 +316,7 @@ export function AppSidebar() {
                           <span className="flex-1 text-left text-xs font-semibold uppercase tracking-wider">
                             {group.title}
                           </span>
-                          <ChevronDown 
+                          <ChevronDown
                             className={`w-4 h-4 transition-transform ${group.open ? 'rotate-180' : ''}`}
                           />
                         </>
@@ -336,16 +335,16 @@ export function AppSidebar() {
                               asChild
                               className={`
                                 group
-                                ${isActiveRoute 
-                                  ? 'border-l-2 border-[hsl(38,33%,56%)] bg-white/8 text-white shadow-[inset_4px_0_8px_rgba(184,149,106,0.1)]' 
+                                ${isActiveRoute
+                                  ? 'border-l-2 border-[hsl(38,33%,56%)] bg-white/8 text-white shadow-[inset_4px_0_8px_rgba(184,149,106,0.1)]'
                                   : 'text-white/50 hover:text-white/80 hover:bg-white/5 hover:border-l-2 hover:border-[hsl(38,33%,56%)]/40'
                                 }
                                 ${open ? 'py-2 px-3 ml-4' : 'h-10 justify-center'}
                                 transition-all duration-200
                               `}
                             >
-                              <NavLink 
-                                to={item.url} 
+                              <NavLink
+                                to={item.url}
                                 onClick={() => {
                                   console.log(`AppSidebar → ${item.title.toLowerCase()} click`);
                                   if (isMobile) toggleSidebar();
@@ -365,17 +364,17 @@ export function AppSidebar() {
                 </Collapsible>
               );
             })}
-        </div>
-        
-        {/* The Vault - Premium DAM Access */}
-        <div className="px-2 pb-4 mt-auto">
-          <TheVault 
-            isActive={isActive("/dam")}
-            onNavigate={() => {
-              if (isMobile) toggleSidebar();
-            }}
-          />
-        </div>
+          </div>
+
+          {/* The Vault - Premium DAM Access */}
+          <div className="px-2 pb-4 mt-auto">
+            <VaultSidebarBtn
+              isActive={isActive("/dam")}
+              onNavigate={() => {
+                if (isMobile) toggleSidebar();
+              }}
+            />
+          </div>
         </SidebarContent>
 
         {/* Footer - User Account Section */}
@@ -411,7 +410,7 @@ export function AppSidebar() {
               )}
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button 
+                  <button
                     onClick={() => navigate('/settings')}
                     className="group text-white/50 hover:text-[hsl(38,33%,56%)] p-2 rounded-lg hover:bg-white/5 transition-all duration-200 hover:drop-shadow-[0_0_8px_rgba(184,149,106,0.3)]"
                     aria-label="Settings"
@@ -426,7 +425,7 @@ export function AppSidebar() {
               {open && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <button 
+                    <button
                       onClick={handleSignOut}
                       className="group text-white/50 hover:text-red-400 p-2 rounded-lg hover:bg-white/5 transition-all duration-200"
                       aria-label="Sign Out"
