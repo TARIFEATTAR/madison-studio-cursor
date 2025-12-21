@@ -11,7 +11,7 @@ export function useTeamMembers(organizationId: string | null) {
     queryKey: ["team-members", organizationId],
     queryFn: async () => {
       if (!organizationId) return [];
-      
+
       // Fetch organization members
       const { data: memberData, error: memberError } = await supabase
         .from("organization_members")
@@ -68,7 +68,7 @@ export function useTeamMembers(organizationId: string | null) {
     queryKey: ["team-invitations", organizationId],
     queryFn: async () => {
       if (!organizationId) return [];
-      
+
       const { data, error } = await supabase
         .from("team_invitations")
         .select("*")
@@ -92,7 +92,7 @@ export function useTeamMembers(organizationId: string | null) {
         .from("organization_members")
         .delete()
         .eq("id", memberId);
-      
+
       if (error) throw error;
     },
     onSuccess: () => {
@@ -111,10 +111,38 @@ export function useTeamMembers(organizationId: string | null) {
     },
   });
 
+  // Cancel invitation mutation
+  const cancelInvitation = useMutation({
+    mutationFn: async (invitationId: string) => {
+      const { error } = await supabase
+        .from("team_invitations")
+        .delete()
+        .eq("id", invitationId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["team-invitations", organizationId] });
+      toast({
+        title: "Invitation cancelled",
+        description: "The invitation has been cancelled successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to cancel invitation: " + error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     members,
     invitations,
     isLoading,
     removeMember: removeMember.mutate,
+    cancelInvitation: cancelInvitation.mutate,
   };
 }
+

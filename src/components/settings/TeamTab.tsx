@@ -5,12 +5,12 @@ import { useCurrentOrganizationId } from "@/hooks/useIndustryConfig";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
 import { InviteMemberDialog } from "./InviteMemberDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Loader2, UserMinus, Mail, Clock } from "lucide-react";
+import { Loader2, UserMinus, Mail, Clock, X } from "lucide-react";
 import { useState } from "react";
 
 export function TeamTab() {
   const { orgId: currentOrganizationId, loading: orgIdLoading } = useCurrentOrganizationId();
-  const { members, invitations, isLoading, removeMember } = useTeamMembers(currentOrganizationId);
+  const { members, invitations, isLoading, removeMember, cancelInvitation } = useTeamMembers(currentOrganizationId);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
 
   const getInitials = (name: string) => {
@@ -64,7 +64,7 @@ export function TeamTab() {
             )}
           </p>
         </div>
-        <Button 
+        <Button
           className="bg-brass hover:bg-brass-light text-charcoal"
           onClick={() => setInviteDialogOpen(true)}
           disabled={memberCount >= MEMBER_LIMIT || isLoading}
@@ -91,7 +91,7 @@ export function TeamTab() {
                   {getInitials((member as any).profiles?.full_name || (member as any).profiles?.email || member.user_id?.slice(0, 2).toUpperCase() || 'U')}
                 </AvatarFallback>
               </Avatar>
-              
+
               <div className="flex-1">
                 <h3 className="font-medium text-charcoal">
                   {(member as any).profiles?.full_name || (member as any).profiles?.email || `User ${member.user_id?.slice(0, 8)}`}
@@ -101,8 +101,8 @@ export function TeamTab() {
                 </p>
               </div>
 
-              <Badge 
-                variant={getRoleBadgeVariant(member.role)} 
+              <Badge
+                variant={getRoleBadgeVariant(member.role)}
                 className="border-cream-dark capitalize"
               >
                 {member.role}
@@ -148,14 +148,14 @@ export function TeamTab() {
           {invitations.map((invitation) => (
             <div
               key={invitation.id}
-              className="flex items-center gap-4 p-4 bg-paper border border-cream-dark rounded-lg opacity-60"
+              className="flex items-center gap-4 p-4 bg-paper border border-cream-dark rounded-lg opacity-75 hover:opacity-100 transition-opacity"
             >
               <Avatar className="h-12 w-12">
                 <AvatarFallback className="bg-neutral-300 text-charcoal font-serif text-base">
                   <Mail className="h-6 w-6" />
                 </AvatarFallback>
               </Avatar>
-              
+
               <div className="flex-1">
                 <h3 className="font-medium text-charcoal">{invitation.email}</h3>
                 <p className="text-sm text-neutral-600">
@@ -166,12 +166,37 @@ export function TeamTab() {
               <Badge variant="outline" className="border-cream-dark capitalize">
                 {invitation.role} (Pending)
               </Badge>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="border-cream-dark hover:bg-red-50 hover:border-red-200 hover:text-red-600">
+                    <X className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Cancel Invitation?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will cancel the invitation sent to <strong>{invitation.email}</strong>. They will no longer be able to join your organization using this invitation.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Keep Invitation</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => cancelInvitation(invitation.id)}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      Cancel Invitation
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           ))}
         </div>
       )}
 
-      <InviteMemberDialog 
+      <InviteMemberDialog
         open={inviteDialogOpen}
         onOpenChange={setInviteDialogOpen}
         organizationId={currentOrganizationId}
