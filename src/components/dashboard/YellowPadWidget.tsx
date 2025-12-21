@@ -53,69 +53,82 @@ const styles = `
     opacity: 0.5;
   }
 
-  /* Task List Styles - FIXED */
+  /* Task List Styles - FINAL FIX using display:contents */
   ul[data-type="taskList"] {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
   
-  li[data-type="taskItem"] {
-    display: flex;
-    align-items: center; /* Align checkbox and text baseline */
-    margin-bottom: 0;
-    min-height: 2rem; /* Matches line height */
+  /* The task item - flex row layout */
+  li[data-type="taskItem"],
+  li.task-item-inline {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: baseline !important;
+    margin-bottom: 0 !important;
+    min-height: 2rem;
+    line-height: 2rem;
+    gap: 0.5rem;
   }
   
-  /* The label wrapper for the checkbox */
-  li[data-type="taskItem"] label {
-    margin-right: 1rem;
+  /* The label containing the checkbox - inline flex */
+  li[data-type="taskItem"] > label,
+  li.task-item-inline > label {
+    display: inline-flex !important;
+    align-items: center;
     height: 2rem;
-    display: flex;
-    align-items: center; 
+    flex-shrink: 0;
     user-select: none;
     cursor: pointer;
-    flex-shrink: 0;
   }
   
-  li[data-type="taskItem"] div {
-    flex: 1 1 auto;
-    margin: 0 !important;
+  /* KEY FIX: The content wrapper div - use display:contents to collapse it */
+  li[data-type="taskItem"] > div,
+  li.task-item-inline > div {
+    display: contents !important;
   }
 
-  /* Clear paragraph margins inside task items to prevent offset */
-  li[data-type="taskItem"] p {
+  /* Paragraphs inside task items - display inline */
+  li[data-type="taskItem"] p,
+  li.task-item-inline p {
     margin: 0 !important;
+    padding: 0 !important;
+    display: inline !important;
+    line-height: 2rem;
   }
 
-  /* The actual checkbox input - Styled as [ ] */
-  li[data-type="taskItem"] input[type="checkbox"] {
+  /* The checkbox input - Custom styled square brackets */
+  li[data-type="taskItem"] input[type="checkbox"],
+  li.task-item-inline input[type="checkbox"] {
     appearance: none;
     -webkit-appearance: none;
     background-color: transparent;
     margin: 0;
     cursor: pointer;
-    width: 1.15rem;
-    height: 1.15rem;
-    border: 2px solid #8D6E63; /* Thicker for architectural feel */
-    border-radius: 2px; /* Sharper corners like [ ] */
-    display: grid;
+    width: 1.1rem;
+    height: 1.1rem;
+    border: 2px solid #8D6E63;
+    border-radius: 2px;
+    display: inline-grid;
     place-content: center;
     transition: all 0.2s;
-    position: relative;
+    vertical-align: middle;
   }
 
   /* Hover state */
-  li[data-type="taskItem"] input[type="checkbox"]:hover {
+  li[data-type="taskItem"] input[type="checkbox"]:hover,
+  li.task-item-inline input[type="checkbox"]:hover {
     border-color: #1C150D;
-    background-color: rgba(184, 149, 106, 0.05);
+    background-color: rgba(184, 149, 106, 0.08);
   }
 
   /* Checkmark styles */
-  li[data-type="taskItem"] input[type="checkbox"]::before {
+  li[data-type="taskItem"] input[type="checkbox"]::before,
+  li.task-item-inline input[type="checkbox"]::before {
     content: "";
-    width: 0.7em;
-    height: 0.7em;
+    width: 0.6em;
+    height: 0.6em;
     transform: scale(0);
     transition: 120ms transform ease-in-out;
     background-color: #1C150D;
@@ -123,23 +136,26 @@ const styles = `
     clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
   }
 
-  li[data-type="taskItem"] input[type="checkbox"]:checked::before {
+  li[data-type="taskItem"] input[type="checkbox"]:checked::before,
+  li.task-item-inline input[type="checkbox"]:checked::before {
     transform: scale(1);
   }
 
-  li[data-type="taskItem"] input[type="checkbox"]:checked {
+  li[data-type="taskItem"] input[type="checkbox"]:checked,
+  li.task-item-inline input[type="checkbox"]:checked {
     border-color: #1C150D;
-    background-color: transparent;
+    background-color: rgba(184, 149, 106, 0.15);
   }
 
   /* Strikethrough for checked items */
-  li[data-type="taskItem"][data-checked="true"] > div {
+  li[data-type="taskItem"][data-checked="true"] p,
+  li.task-item-inline[data-checked="true"] p {
     text-decoration: line-through;
-    opacity: 0.6;
+    opacity: 0.55;
     color: #8D6E63;
   }
   
-  /* Bullet list adjustments for consistent sizing */
+  /* Bullet list adjustments */
   .ProseMirror li p {
     margin: 0;
   }
@@ -267,7 +283,10 @@ export function YellowPadWidget() {
             StarterKit,
             TaskList,
             TaskItem.configure({
-                nested: true,
+                nested: false,
+                HTMLAttributes: {
+                    class: 'task-item-inline',
+                },
             }),
             Placeholder.configure({
                 placeholder: 'Start writing...',
