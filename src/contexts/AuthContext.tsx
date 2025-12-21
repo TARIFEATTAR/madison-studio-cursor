@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signOut: () => Promise<void>;
+  signOut: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,13 +21,79 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     logger.debug("[AuthProvider] Initializing auth context");
 
+    // Function to check and accept pending invitations
+    const checkPendingInvitations = async (userId: string, userEmail: string) => {
+      try {
+        // Check for pending invitations and accept them
+        const { data: invitations, error } = await supabase
+          .from("team_invitations")
+          .select("id, organization_id, role")
+          .eq("email", userEmail.toLowerCase())
+          .is("accepted_at", null)
+          .gt("expires_at", new Date().toISOString());
+
+        if (error) {
+          logger.error("[AuthProvider] Error checking invitations:", error);
+          return;
+        }
+
+        if (invitations && invitations.length > 0) {
+          logger.debug("[AuthProvider] Found pending invitations:", invitations.length);
+
+          for (const invitation of invitations) {
+            // Add user to organization
+            const { error: memberError } = await supabase
+              .from("organization_members")
+              .upsert({
+                organization_id: invitation.organization_id,
+                user_id: userId,
+                role: invitation.role,
+              }, {
+                onConflict: "organization_id,user_id",
+                ignoreDuplicates: true,
+              });
+
+            if (memberError) {
+              logger.error("[AuthProvider] Error adding member:", memberError);
+              continue;
+            }
+
+            // Mark invitation as accepted
+            const { error: updateError } = await supabase
+              .from("team_invitations")
+              .update({ accepted_at: new Date().toISOString() })
+              .eq("id", invitation.id);
+
+            if (updateError) {
+              logger.error("[AuthProvider] Error updating invitation:", updateError);
+            } else {
+              logger.debug("[AuthProvider] Accepted invitation:", invitation.id);
+            }
+          }
+        }
+      } catch (err) {
+        logger.error("[AuthProvider] Exception checking invitations:", err);
+      }
+    };
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        logger.debug("[AuthProvider] Auth state changed", { hasUser: !!session?.user });
+      async (event, session) => {
+        logger.debug("[AuthProvider] Auth state changed", { event, hasUser: !!session?.user });
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Check for pending invitations on SIGNED_IN event
+        if (event === "SIGNED_IN" && session?.user) {
+          const userEmail = session.user.email;
+          if (userEmail) {
+            // Use setTimeout to avoid blocking the auth flow
+            setTimeout(() => {
+              checkPendingInvitations(session.user.id, userEmail);
+            }, 500);
+          }
+        }
       }
     );
 
@@ -53,6 +119,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           logger.debug("[AuthProvider] getSession resolved", { hasUser: !!session?.user });
           setSession(session);
           setUser(session?.user ?? null);
+
+          // Also check invitations on initial session load
+          if (session?.user?.email) {
+            setTimeout(() => {
+              checkPendingInvitations(session.user.id, session.user.email!);
+            }, 500);
+          }
         }
         setLoading(false);
       })
@@ -73,23 +146,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = () => {
     // Make this synchronous and bulletproof - redirect MUST happen
     logger.debug("[AuthProvider] Signing out and clearing all data...");
-    
+
     // IMMEDIATELY clear session state to stop components from making API calls
     setSession(null);
     setUser(null);
-    
+
     // Sign out from Supabase (fire and forget - don't wait)
     supabase.auth.signOut().catch(() => {
       // Silently ignore errors - we're redirecting anyway
     });
-    
+
     // Clear all localStorage (wrap in try-catch to ensure we continue)
     try {
       localStorage.clear(); // Simpler and more reliable than looping
     } catch (err) {
       // Ignore errors - we're redirecting anyway
     }
-    
+
     // CRITICAL: Force immediate redirect - this MUST execute
     // Use both replace and href as fallback, and ensure it's synchronous
     try {
@@ -99,7 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         window.location.replace('/auth');
       }
-      
+
       // Fallback in case replace doesn't work immediately
       setTimeout(() => {
         if (window.location.pathname !== '/auth') {
