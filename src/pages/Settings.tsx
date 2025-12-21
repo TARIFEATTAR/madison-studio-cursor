@@ -14,10 +14,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Settings() {
-  const [searchParams] = useSearchParams();
-  const defaultTab = searchParams.get('tab') || 'brand';
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentTab = searchParams.get('tab') || 'brand';
   const { user } = useAuth();
   const [organizationName, setOrganizationName] = useState<string>("");
+
+  // Handle tab change - update URL
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value }, { replace: true });
+  };
 
   // Fetch organization name
   useEffect(() => {
@@ -57,60 +62,60 @@ export default function Settings() {
 
         {/* Tabs Section - Mobile Optimized */}
         <div className="px-4 md:px-8 py-4 md:py-6">
-          <Tabs defaultValue={defaultTab} className="space-y-4 md:space-y-6">
+          <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-4 md:space-y-6">
             {/* Mobile: Scrollable horizontal tabs */}
             <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
               <TabsList className="bg-white border border-[#E0E0E0] p-1 flex md:flex-wrap gap-1 min-w-max md:w-full rounded-lg">
-                <TabsTrigger 
-                  value="brand" 
+                <TabsTrigger
+                  value="brand"
                   className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
                 >
                   <Building2 className="w-4 h-4" />
                   <span className="hidden sm:inline">Brand</span>
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="business-type" 
+                <TabsTrigger
+                  value="business-type"
                   className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
                 >
                   <Briefcase className="w-4 h-4" />
                   <span className="hidden sm:inline">Business</span>
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="madison"
                   className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span className="hidden sm:inline">Madison</span>
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="goals"
                   className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
                 >
                   <Target className="w-4 h-4" />
                   <span className="hidden sm:inline">Goals</span>
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="team"
                   className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
                 >
                   <Users className="w-4 h-4" />
                   <span className="hidden sm:inline">Team</span>
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="notifications"
                   className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
                 >
                   <Bell className="w-4 h-4" />
                   <span className="hidden sm:inline">Alerts</span>
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="billing"
                   className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
                 >
                   <CreditCard className="w-4 h-4" />
                   <span className="hidden sm:inline">Billing</span>
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="integrations"
                   className="data-[state=active]:bg-brand-brass data-[state=active]:text-white px-3 py-2 gap-2 whitespace-nowrap rounded-md transition-colors text-sm"
                 >

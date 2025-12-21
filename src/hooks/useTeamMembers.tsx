@@ -22,25 +22,26 @@ export function useTeamMembers(organizationId: string | null) {
       if (memberError) throw memberError;
       if (!memberData) return [];
 
-      // Fetch profiles using the SECURITY DEFINER function
+      // Fetch profiles directly (skipping RPC function which may not exist)
       const { data: profiles, error: profileError } = await supabase
-        .rpc("get_team_member_profiles", { _org_id: organizationId });
+        .from("profiles")
+        .select("id, email, full_name")
+        .in("id", memberData.map(m => m.user_id));
 
       if (profileError) {
-        console.error("Error fetching team member profiles:", profileError);
-        // Fallback: return members without profiles if function fails
+        console.error("[useTeamMembers] Error fetching profiles:", profileError);
+        // Return members without profile data if profile fetch fails
         return memberData.map(member => ({
           ...member,
-          profiles: {
-            email: null,
-            full_name: null
-          }
+          profiles: { email: null, full_name: null }
         }));
       }
 
-      // Create a map of user_id -> profile for quick lookup
+      console.log("[useTeamMembers] Fetched profiles:", profiles);
+
+      // Create a map of id -> profile for quick lookup
       const profileMap = new Map(
-        (profiles || []).map(p => [p.user_id, p])
+        (profiles || []).map(p => [p.id, p])
       );
 
       // Merge members with their profiles

@@ -94,10 +94,13 @@ export function TeamTab() {
 
               <div className="flex-1">
                 <h3 className="font-medium text-charcoal">
-                  {(member as any).profiles?.full_name || (member as any).profiles?.email || `User ${member.user_id?.slice(0, 8)}`}
+                  {(member as any).profiles?.full_name ||
+                    (member as any).profiles?.email?.split('@')[0] ||
+                    `Team Member`}
                 </h3>
                 <p className="text-sm text-neutral-600">
-                  {(member as any).profiles?.email || member.user_id || 'No email'}
+                  {(member as any).profiles?.email ||
+                    `ID: ${member.user_id?.slice(0, 8)}...`}
                 </p>
               </div>
 
