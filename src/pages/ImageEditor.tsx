@@ -27,13 +27,13 @@ import { cn } from "@/lib/utils";
 
 // Icons
 import {
-  Download, 
-  Loader2, 
-  Sparkles, 
-  ArrowLeft, 
-  Save, 
+  Download,
+  Loader2,
+  Sparkles,
+  ArrowLeft,
+  Save,
   Heart,
-  Wand2, 
+  Wand2,
   Settings,
   Info,
   Trash2,
@@ -90,14 +90,14 @@ function buildCombinedPrompt(
   product: Product | null
 ): string {
   if (!style) return DEFAULT_PROMPT;
-  
+
   let prompt = style.prompt;
-  
+
   // Add use case context
   if (useCase) {
     prompt += ` For ${useCase.label.toLowerCase()}: ${useCase.description}.`;
   }
-  
+
   // Add bottle type specification if product is selected
   if (product) {
     const bottleType = product.bottle_type?.toLowerCase();
@@ -107,7 +107,7 @@ function buildCombinedPrompt(
       prompt += ` IMPORTANT: This is a spray perfume. Use a spray pump with atomizer and dip tube.`;
     }
   }
-  
+
   return prompt;
 }
 
@@ -144,38 +144,38 @@ export default function ImageEditor() {
   const { orgId } = useCurrentOrganizationId();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
-  
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  
+
   const [marketplace, setMarketplace] = useState<string>("etsy");
-  
+
   // Use Case First: Primary selection
   const [selectedUseCase, setSelectedUseCase] = useState<UseCaseKey>(DEFAULT_USE_CASE);
-  
+
   // Aspect Ratio: Auto-set based on use case
   const currentUseCase = getUseCaseByKey(selectedUseCase);
   const [aspectRatio, setAspectRatio] = useState<string>(currentUseCase.defaultAspectRatio);
-  
+
   const [outputFormat, setOutputFormat] = useState<"png" | "jpeg" | "webp">("png");
-  
+
   // Initialize prompt with default use case + style combination
   const initialStyle = getImageCategoryByKey(DEFAULT_IMAGE_CATEGORY_KEY);
   const initialUseCase = getUseCaseByKey(DEFAULT_USE_CASE);
-  const initialPrompt = initialStyle 
+  const initialPrompt = initialStyle
     ? buildCombinedPrompt(initialUseCase, initialStyle, null)
     : DEFAULT_PROMPT;
-  
+
   const [mainPrompt, setMainPrompt] = useState(initialPrompt);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showProMode, setShowProMode] = useState(false);
-  
+
   // Pro Mode Controls State
   const [proModeControls, setProModeControls] = useState<ProModeControls>({});
-  
+
   // Product Context State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  
+
   // Chain prompting state
   const [selectedForRefinement, setSelectedForRefinement] = useState<GeneratedImage | null>(null);
   const [refinementMode, setRefinementMode] = useState(false);
@@ -188,8 +188,8 @@ export default function ImageEditor() {
     images: [],
     createdAt: Date.now()
   });
-  const [allPrompts, setAllPrompts] = useState<Array<{role: string, content: string}>>([]);
-  
+  const [allPrompts, setAllPrompts] = useState<Array<{ role: string, content: string }>>([]);
+
   type ReferenceImage = {
     url: string;
     description: string;
@@ -205,12 +205,12 @@ export default function ImageEditor() {
   const [selectedImageCategory, setSelectedImageCategory] = useState<string>(
     DEFAULT_IMAGE_CATEGORY_KEY
   );
-  
+
   // Auto-update aspect ratio and prompt when use case changes
   useEffect(() => {
     const useCase = getUseCaseByKey(selectedUseCase);
     setAspectRatio(useCase.defaultAspectRatio);
-    
+
     // Update prompt to combine use case + current style
     const currentStyle = getImageCategoryByKey(selectedImageCategory);
     if (currentStyle) {
@@ -218,7 +218,7 @@ export default function ImageEditor() {
       setMainPrompt(combinedPrompt);
     }
   }, [selectedUseCase, selectedProduct]);
-  
+
   // Update prompt when product changes (to add bottle type info)
   useEffect(() => {
     const useCase = getUseCaseByKey(selectedUseCase);
@@ -228,7 +228,7 @@ export default function ImageEditor() {
       setMainPrompt(combinedPrompt);
     }
   }, [selectedProduct]);
-  
+
   // Load prompt and image from navigation state if present
   useEffect(() => {
     const loadState = async () => {
@@ -236,20 +236,20 @@ export default function ImageEditor() {
         setMainPrompt(location.state.loadedPrompt);
         if (location.state.aspectRatio) setAspectRatio(location.state.aspectRatio);
         if (location.state.outputFormat) setOutputFormat(location.state.outputFormat);
-        
+
         // Handle loaded image for editing
         if (location.state.loadedImage) {
           try {
             const response = await fetch(location.state.loadedImage);
             const blob = await response.blob();
             const file = new File([blob], "original-image.png", { type: blob.type });
-            
+
             // Convert to Base64 for compatibility with edge function
             const reader = new FileReader();
             reader.onloadend = () => {
-              setProductImage({ 
-                file, 
-                url: reader.result as string 
+              setProductImage({
+                file,
+                url: reader.result as string
               });
               toast.success("Image loaded for editing!");
             };
@@ -261,7 +261,7 @@ export default function ImageEditor() {
         } else {
           toast.success("Image recipe loaded!");
         }
-        
+
         // Clear state but keep history
         window.history.replaceState({}, document.title);
       }
@@ -269,7 +269,7 @@ export default function ImageEditor() {
 
     loadState();
   }, [location.state]);
-  
+
   // Fetch brand context
   useEffect(() => {
     const fetchBrandContext = async () => {
@@ -301,7 +301,7 @@ export default function ImageEditor() {
 
     fetchBrandContext();
   }, [orgId]);
-  
+
   // Cleanup reference images on unmount
   useEffect(() => {
     return () => {
@@ -390,11 +390,11 @@ export default function ImageEditor() {
 
         if (insertError) {
           console.error("Supabase insert error details:", JSON.stringify(insertError, null, 2));
-          
+
           // Check if error is due to missing column (PGRST204)
           if (insertError.code === 'PGRST204' && insertError.message.includes('generated_image_id')) {
             console.warn("⚠️ Schema mismatch detected. Falling back to legacy storage format.");
-            
+
             // Attempt 2: Fallback payload (store ID in additional_context instead)
             const fallbackPayload: any = {
               title: `${getUseCaseByKey(useCase).label} - ${new Date().toLocaleDateString()}`,
@@ -413,13 +413,13 @@ export default function ImageEditor() {
                 image_source: 'generated'
               },
             };
-            
+
             const { error: fallbackError } = await supabase
               .from('prompts')
               .insert([fallbackPayload]);
-              
+
             if (fallbackError) throw fallbackError;
-            
+
             console.log("✅ Recipe created successfully (fallback mode)");
           } else {
             throw insertError;
@@ -453,7 +453,7 @@ export default function ImageEditor() {
    */
   const enhancePromptWithControls = (basePrompt: string): string => {
     let enhanced = basePrompt;
-    
+
     // Apply Pro Mode camera/lens preset
     if (proModeControls.camera) {
       const [category, key] = proModeControls.camera.split('.');
@@ -462,7 +462,7 @@ export default function ImageEditor() {
         enhanced += `, ${cameraPreset}`;
       }
     }
-    
+
     // Apply lighting preset
     if (proModeControls.lighting) {
       const [category, key] = proModeControls.lighting.split('.');
@@ -471,7 +471,7 @@ export default function ImageEditor() {
         enhanced += `, ${lightingPreset}`;
       }
     }
-    
+
     // Apply environment preset
     if (proModeControls.environment) {
       const [category, key] = proModeControls.environment.split('.');
@@ -480,7 +480,7 @@ export default function ImageEditor() {
         enhanced += `, ${environmentPreset}`;
       }
     }
-    
+
     return enhanced;
   };
 
@@ -501,14 +501,14 @@ export default function ImageEditor() {
     }
 
     setIsGenerating(true);
-    
+
     try {
       // Don't enhance on frontend - let backend handle Pro Mode
       const finalPrompt = effectivePrompt;
-      
+
       // Prepare reference images array based on mode
       const generationReferenceImages: Array<{ url: string; description: string; label: ReferenceImage["label"] }> = [];
-      
+
       if (productImage) {
         generationReferenceImages.push({
           url: productImage.url,
@@ -516,7 +516,7 @@ export default function ImageEditor() {
           description: 'User-uploaded product for enhancement'
         });
       }
-      
+
       if (referenceImages.length > 0) {
         generationReferenceImages.push(
           ...referenceImages.map((r) => ({
@@ -526,11 +526,11 @@ export default function ImageEditor() {
           }))
         );
       }
-      
+
       // Determine if Pro Mode controls are active
       const hasProModeControls = Object.keys(proModeControls).length > 0;
       const proModePayload = hasProModeControls ? proModeControls : undefined;
-      
+
       // Log generation payload for debugging
       console.log('🎨 Image Generation Payload:', {
         prompt: finalPrompt,
@@ -542,17 +542,17 @@ export default function ImageEditor() {
         hasReferenceImages: generationReferenceImages.length > 0,
         hasBrandContext: !!brandContext
       });
-      
+
       // Show appropriate toast message
       if (hasProModeControls) {
         toast.success("Generating with Pro Mode settings...", {
           description: "Advanced parameters applied"
         });
       }
-      
+
       console.log('🚀 About to invoke generate-madison-image edge function');
       console.log('User:', user?.id, 'Org:', orgId);
-      
+
       const { data: functionData, error: functionError } = await supabase.functions.invoke(
         'generate-madison-image',
         {
@@ -579,19 +579,19 @@ export default function ImageEditor() {
         }
       );
 
-      console.log('✅ Edge function response received:', { 
-        hasError: !!functionError, 
+      console.log('✅ Edge function response received:', {
+        hasError: !!functionError,
         hasData: !!functionData,
         hasImageUrl: !!functionData?.imageUrl,
-        hasSavedId: !!functionData?.savedImageId 
+        hasSavedId: !!functionData?.savedImageId
       });
-      
+
       if (functionError) {
         console.error('❌ Edge function error:', functionError);
-        
+
         // Handle specific error types
         const errorMsg = functionError.message || functionError.toString();
-        
+
         if (errorMsg.includes('Rate limit') || functionError.status === 429) {
           toast.error("Rate limit reached", {
             description: "Please wait a moment before generating another image.",
@@ -645,12 +645,12 @@ export default function ImageEditor() {
       }));
 
       setAllPrompts(prev => [...prev, { role: 'user', content: effectivePrompt }]);
-      
+
       // Automatically create a prompt/recipe linked to the generated image
       ensureImageRecipeForImage(newImage);
-      
+
       toast.success("Image generated successfully!");
-      
+
       // On mobile, transition to full-screen generated view
       if (isMobile) {
         setLatestGeneratedImage(newImage.imageUrl);
@@ -659,7 +659,7 @@ export default function ImageEditor() {
         // Auto-switch to gallery tab on desktop
         setActiveTab("gallery");
       }
-      
+
     } catch (error: any) {
       console.error('❌❌❌ Generation error:', error);
       console.error('User ID:', user?.id);
@@ -671,12 +671,12 @@ export default function ImageEditor() {
         functionError: error.context,
         fullError: error
       });
-      
+
       // Error toast already shown in the functionError handling above
       // Only show generic error if not already handled
-      if (!error.message?.includes('Rate limit') && 
-          !error.message?.includes('credits') && 
-          !error.message?.includes('GEMINI_API_KEY')) {
+      if (!error.message?.includes('Rate limit') &&
+        !error.message?.includes('credits') &&
+        !error.message?.includes('GEMINI_API_KEY')) {
         toast.error(error.message || "Failed to generate image", {
           description: "Check browser console (F12) for full error details",
           duration: 5000
@@ -702,9 +702,9 @@ export default function ImageEditor() {
       ...prev,
       images: prev.images.map(img => {
         if (img.id !== imageId) return img;
-        const nextStatus: ApprovalStatus = 
+        const nextStatus: ApprovalStatus =
           img.approvalStatus === "pending" ? "flagged" :
-          img.approvalStatus === "flagged" ? "rejected" : "pending";
+            img.approvalStatus === "flagged" ? "rejected" : "pending";
         return { ...img, approvalStatus: nextStatus };
       })
     }));
@@ -713,7 +713,7 @@ export default function ImageEditor() {
   const handleDeleteImage = async (imageId: string) => {
     try {
       await supabase.from('generated_images').delete().eq('id', imageId);
-      
+
       setCurrentSession(prev => {
         const newImages = prev.images.filter(img => img.id !== imageId);
         if (newImages.length > 0 && !newImages.some(img => img.isHero)) {
@@ -721,7 +721,7 @@ export default function ImageEditor() {
         }
         return { ...prev, images: newImages };
       });
-      
+
       toast.success("Image deleted");
     } catch (error) {
       toast.error("Failed to delete image");
@@ -749,7 +749,7 @@ export default function ImageEditor() {
         .single();
       const categoryKey =
         image.categoryKey || selectedImageCategory || DEFAULT_IMAGE_CATEGORY_KEY;
-      
+
       // PRIMARY: Use the USE CASE to determine library category
       const useCase = image.useCaseKey || selectedUseCase;
       const broadCategory = mapUseCaseToLibraryCategory(useCase);
@@ -802,7 +802,7 @@ export default function ImageEditor() {
           .from('generated_images')
           .update({ saved_to_library: true })
           .eq('id', image.id);
-        
+
         if (error) throw error;
       }
 
@@ -817,10 +817,10 @@ export default function ImageEditor() {
       for (const image of flaggedImages) {
         await ensureImageRecipeForImage(image);
       }
-      
+
       // Invalidate library content cache
       queryClient.invalidateQueries({ queryKey: ["library-content"] });
-      
+
       // Reset session
       setCurrentSession({
         id: crypto.randomUUID(),
@@ -831,7 +831,7 @@ export default function ImageEditor() {
       setReferenceImages([]);
       setMainPrompt("");
       setProductImage(null);
-      
+
     } catch (error) {
       console.error('Save error:', error);
       toast.error("Failed to save session");
@@ -861,10 +861,10 @@ export default function ImageEditor() {
 
   const handleRefine = async (refinementInstruction: string) => {
     if (!selectedForRefinement || !user) return;
-    
+
     setIsGenerating(true);
     setRefinementMode(false);
-    
+
     try {
       const { data: functionData, error: functionError } = await supabase.functions.invoke(
         'generate-madison-image',
@@ -917,7 +917,7 @@ export default function ImageEditor() {
 
       toast.success("Refinement complete!");
       setSelectedForRefinement(null);
-      
+
     } catch (error: any) {
       console.error('Refinement error:', error);
       toast.error(error.message || "Failed to refine image");
@@ -936,7 +936,7 @@ export default function ImageEditor() {
       toast.error("No image to save");
       return;
     }
-    
+
     setIsSaving(true);
     try {
       console.log('💾 Saving image to library via edge function:', latestImage.id);
@@ -962,21 +962,21 @@ export default function ImageEditor() {
           await new Promise((r) => setTimeout(r, 400 * attempt));
         }
       }
-      
+
       // Update local state to mark as flagged
       setCurrentSession(prev => ({
         ...prev,
-        images: prev.images.map(img => 
-          img.id === latestImage.id 
+        images: prev.images.map(img =>
+          img.id === latestImage.id
             ? { ...img, approvalStatus: 'flagged' as ApprovalStatus }
             : img
         )
       }));
-      
+
       // Invalidate library content cache
       queryClient.invalidateQueries({ queryKey: ["library-content"] });
       await ensureImageRecipeForImage(latestImage);
-      
+
       toast.success("Image saved to library!");
       setShowGeneratedView(false);
       setActiveTab("gallery");
@@ -993,7 +993,7 @@ export default function ImageEditor() {
       toast.error("No image to save");
       return;
     }
-    
+
     setIsSaving(true);
     try {
       console.log('💾 Saving hero image to library via edge function:', heroImage.id);
@@ -1023,17 +1023,17 @@ export default function ImageEditor() {
       // Update local state to mark as flagged
       setCurrentSession(prev => ({
         ...prev,
-        images: prev.images.map(img => 
-          img.id === heroImage.id 
+        images: prev.images.map(img =>
+          img.id === heroImage.id
             ? { ...img, approvalStatus: 'flagged' as ApprovalStatus }
             : img
         )
       }));
-      
+
       // Invalidate library content cache so new image appears immediately
       queryClient.invalidateQueries({ queryKey: ["library-content"] });
       await ensureImageRecipeForImage(heroImage);
-      
+
       toast.success("Image saved to library!");
     } catch (error: any) {
       console.error('❌ Save error after all retries:', error);
@@ -1051,7 +1051,7 @@ export default function ImageEditor() {
 
     try {
       let downloadUrl = heroImage.imageUrl;
-      
+
       // If it's a base64 data URL, use it directly
       if (heroImage.imageUrl.startsWith('data:')) {
         downloadUrl = heroImage.imageUrl;
@@ -1061,19 +1061,19 @@ export default function ImageEditor() {
         const blob = await response.blob();
         downloadUrl = URL.createObjectURL(blob);
       }
-      
+
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.download = `madison-image-${Date.now()}.${outputFormat}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Clean up blob URL if we created one
       if (!heroImage.imageUrl.startsWith('data:')) {
         URL.revokeObjectURL(downloadUrl);
       }
-      
+
       toast.success("Image downloaded!");
     } catch (error) {
       console.error('Download failed:', error);
@@ -1088,7 +1088,7 @@ export default function ImageEditor() {
     }
 
     const latestImage = currentSession.images[currentSession.images.length - 1];
-    
+
     // If no images exist, do a fresh generation
     if (!latestImage) {
       console.log('📸 No existing image, doing fresh generation');
@@ -1100,27 +1100,27 @@ export default function ImageEditor() {
       }
       return;
     }
-    
+
     // Determine if this is a refinement or new generation
     const originalPrompt = latestImage.prompt.trim();
     const trimmedNewPrompt = newPrompt.trim();
-    
+
     // If prompts are identical or new prompt is empty, treat as refinement with default instruction
     const isRefinement = originalPrompt === trimmedNewPrompt || !trimmedNewPrompt;
-    
+
     if (isRefinement) {
       // Chain depth limit check
       if (latestImage.chainDepth >= 5) {
         toast.error("Maximum refinement depth reached (5 iterations). Please start a new generation.");
         return;
       }
-      
+
       // Use a default refinement instruction
       const defaultInstruction = "Enhance this image with better lighting and composition";
       console.log('🔄 Refining with default instruction');
-      
+
       setIsGenerating(true);
-      
+
       try {
         const { data: functionData, error: functionError } = await supabase.functions.invoke(
           'generate-madison-image',
@@ -1169,7 +1169,7 @@ export default function ImageEditor() {
 
         setLatestGeneratedImage(newImage.imageUrl);
         toast.success(`Refinement ${latestImage.chainDepth + 1} complete!`);
-        
+
       } catch (error: any) {
         console.error('❌ Refinement error:', error);
         toast.error(error.message || "Refinement failed. Please try again.");
@@ -1191,14 +1191,14 @@ export default function ImageEditor() {
   const resizeTextarea = useCallback(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
-    
+
     // Reset height to auto to get accurate scrollHeight
     textarea.style.height = 'auto';
-    
+
     // Calculate new height (min 48px, max 250px)
     const newHeight = Math.min(Math.max(textarea.scrollHeight, 48), 250);
     textarea.style.height = `${newHeight}px`;
-    
+
     // Toggle overflow based on whether content exceeds max height
     textarea.style.overflowY = textarea.scrollHeight > 250 ? 'auto' : 'hidden';
   }, []);
@@ -1239,9 +1239,9 @@ export default function ImageEditor() {
     }
 
     return (
-      <div className="flex flex-col min-h-screen bg-studio-charcoal text-aged-paper pb-16">
-        {/* Mobile Header - Compact */}
-        <header className="flex items-center justify-between px-4 py-2 border-b border-studio-border bg-studio-card/50 backdrop-blur-sm sticky top-0 z-20 h-10">
+      <div className="flex flex-col min-h-screen bg-ink-black text-parchment-white pb-16">
+        {/* Mobile Header - Dark Room Theme */}
+        <header className="flex items-center justify-between px-4 py-2 border-b border-charcoal bg-charcoal/50 backdrop-blur-sm sticky top-0 z-20 h-12">
           <h1 className="text-sm font-semibold text-aged-brass pl-2">Image Studio</h1>
           <div className="flex items-center gap-2">
             <Button
@@ -1253,29 +1253,30 @@ export default function ImageEditor() {
               <MessageCircle className="w-4 h-4" />
             </Button>
             {flaggedCount > 0 && (
-              <Button onClick={handleSaveSession} disabled={isSaving} variant="outline" size="sm" className="h-8">
+              <Button onClick={handleSaveSession} disabled={isSaving} variant="outline" size="sm" className="h-8 border-charcoal text-parchment-white">
                 <Save className="w-3.5 h-3.5" />
               </Button>
             )}
           </div>
         </header>
 
-        {/* Mobile Tabs - Compact */}
+        {/* Mobile Tabs - Dark Room Theme */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "create" | "gallery")} className="flex-1 flex flex-col">
-          <TabsList className="w-full grid grid-cols-2 bg-studio-card border-b border-studio-border rounded-none h-10">
-            <TabsTrigger 
-              value="create" 
-              className="data-[state=active]:bg-studio-charcoal data-[state=active]:text-aged-brass data-[state=active]:border-b-2 data-[state=active]:border-aged-brass rounded-none"
+          <TabsList className="w-full grid grid-cols-2 bg-charcoal/70 border-b border-charcoal rounded-none h-10">
+            <TabsTrigger
+              value="create"
+              className="data-[state=active]:bg-ink-black data-[state=active]:text-aged-brass data-[state=active]:border-b-2 data-[state=active]:border-aged-brass rounded-none text-parchment-white/60"
             >
               Create
             </TabsTrigger>
-            <TabsTrigger 
+            <TabsTrigger
               value="gallery"
-              className="data-[state=active]:bg-studio-charcoal data-[state=active]:text-aged-brass data-[state=active]:border-b-2 data-[state=active]:border-aged-brass rounded-none"
+              className="data-[state=active]:bg-ink-black data-[state=active]:text-aged-brass data-[state=active]:border-b-2 data-[state=active]:border-aged-brass rounded-none text-parchment-white/60"
             >
               Gallery ({currentSession.images.length})
             </TabsTrigger>
           </TabsList>
+
 
           {/* Create Tab - Freepik Style */}
           <TabsContent value="create" className="flex-1 flex flex-col mt-0 overflow-hidden">
@@ -1288,7 +1289,7 @@ export default function ImageEditor() {
                 setSelectedImageCategory(shotType.key);
                 setMainPrompt(shotType.prompt);
                 toast.success(`${shotType.label} style applied`);
-                
+
                 try {
                   const { data: { session } } = await supabase.auth.getSession();
                   if (session?.access_token && user?.id && orgId) {
@@ -1345,7 +1346,7 @@ export default function ImageEditor() {
                         onClick={async () => {
                           try {
                             let downloadUrl = heroImage.imageUrl;
-                            
+
                             if (heroImage.imageUrl.startsWith('data:')) {
                               downloadUrl = heroImage.imageUrl;
                             } else {
@@ -1353,18 +1354,18 @@ export default function ImageEditor() {
                               const blob = await response.blob();
                               downloadUrl = URL.createObjectURL(blob);
                             }
-                            
+
                             const link = document.createElement('a');
                             link.href = downloadUrl;
                             link.download = `madison-image-${Date.now()}.webp`;
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
-                            
+
                             if (!heroImage.imageUrl.startsWith('data:')) {
                               URL.revokeObjectURL(downloadUrl);
                             }
-                            
+
                             toast.success("Image downloaded!");
                           } catch (error) {
                             console.error('Download failed:', error);
@@ -1503,7 +1504,7 @@ export default function ImageEditor() {
             <p className="text-xxs text-parchment-white/40">Powered by Nano Banana</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3 flex-shrink-0 ml-4">
           {/* Product Selector */}
           <ProductSelector
@@ -1514,7 +1515,7 @@ export default function ImageEditor() {
             className="w-[200px]"
             buttonClassName="w-[200px] bg-charcoal/50 border-charcoal/70 text-parchment-white hover:bg-charcoal transition-colors justify-between"
           />
-          
+
           {/* Use Case Selector (Primary) */}
           <UseCaseSelector
             value={selectedUseCase}
@@ -1522,30 +1523,30 @@ export default function ImageEditor() {
               setSelectedUseCase(useCase);
               const useCaseDef = getUseCaseByKey(useCase);
               setAspectRatio(useCaseDef.defaultAspectRatio);
-              
+
               // Update prompt to combine use case + current style
               const currentStyle = getImageCategoryByKey(selectedImageCategory);
               if (currentStyle) {
                 const combinedPrompt = buildCombinedPrompt(useCaseDef, currentStyle, selectedProduct);
                 setMainPrompt(combinedPrompt);
               }
-              
+
               toast.success(`${useCaseDef.label} selected`);
             }}
             className="w-[160px] bg-charcoal/50 border-charcoal/70 text-parchment-white"
           />
-          
+
           {/* Shot Type (Secondary - Shows all, highlights recommended) */}
           <ShotTypeDropdown
             useCase={selectedUseCase}
             onSelect={async (shotType) => {
               setSelectedImageCategory(shotType.key);
-              
+
               // Combine use case + style prompts (both work together)
               const useCaseDef = getUseCaseByKey(selectedUseCase);
               const combinedPrompt = buildCombinedPrompt(useCaseDef, shotType, selectedProduct);
               setMainPrompt(combinedPrompt);
-              
+
               // Auto-switch to 1:1 for Flat Lay (Instagram standard)
               if (shotType.key === "flat_lay" && aspectRatio !== "1:1") {
                 setAspectRatio("1:1");
@@ -1553,7 +1554,7 @@ export default function ImageEditor() {
               } else {
                 toast.success(`${shotType.label} style applied`);
               }
-              
+
               // Log shot type selection to backend
               try {
                 const { data: { session } } = await supabase.auth.getSession();
@@ -1583,13 +1584,13 @@ export default function ImageEditor() {
               {(() => {
                 // Get base options from use case
                 let availableRatios = [...currentUseCase.aspectRatioOptions];
-                
+
                 // If Flat Lay style is selected, ensure 1:1 is available (Instagram standard)
                 const isFlatLay = selectedImageCategory === "flat_lay";
                 if (isFlatLay && !availableRatios.includes("1:1")) {
                   availableRatios = ["1:1", ...availableRatios];
                 }
-                
+
                 const labels: Record<string, string> = {
                   "1:1": "1:1 Square",
                   "16:9": "16:9 Landscape",
@@ -1600,14 +1601,14 @@ export default function ImageEditor() {
                   "21:9": "21:9 Ultra Wide",
                   "3:2": "3:2 Classic",
                 };
-                
+
                 return availableRatios.map((ratio) => {
                   const isDefault = ratio === currentUseCase.defaultAspectRatio;
                   const isFlatLayRecommended = isFlatLay && ratio === "1:1";
                   return (
-                    <SelectItem 
-                      key={ratio} 
-                      value={ratio} 
+                    <SelectItem
+                      key={ratio}
+                      value={ratio}
                       className={cn(
                         "hover:bg-aged-brass/10",
                         isDefault && "font-semibold text-aged-brass",
@@ -1638,8 +1639,8 @@ export default function ImageEditor() {
           <Button
             variant="outline"
             onClick={() => setShowProMode(!showProMode)}
-            className={showProMode 
-              ? 'bg-aged-brass/10 border-aged-brass text-aged-brass hover:bg-aged-brass/20' 
+            className={showProMode
+              ? 'bg-aged-brass/10 border-aged-brass text-aged-brass hover:bg-aged-brass/20'
               : 'bg-charcoal/50 border-charcoal/70 text-parchment-white hover:bg-charcoal'
             }
           >
@@ -1711,9 +1712,9 @@ export default function ImageEditor() {
                       className="absolute inset-0 pointer-events-none opacity-30"
                       style={{ background: "radial-gradient(circle at 50% 30%, rgba(255,255,255,0.12), transparent 60%)" }}
                     />
-                    <img 
-                      src={heroImage.imageUrl} 
-                      alt="Generated" 
+                    <img
+                      src={heroImage.imageUrl}
+                      alt="Generated"
                       className="relative z-10 max-w-full max-h-full object-contain"
                     />
                     {/* Quick Action Buttons (Top Right) */}
@@ -1725,8 +1726,8 @@ export default function ImageEditor() {
                         disabled={isSaving || heroImage.approvalStatus === 'flagged'}
                         className={cn(
                           "bg-studio-card/90 backdrop-blur-sm h-9 px-3 transition-all",
-                          heroImage.approvalStatus === 'flagged' 
-                            ? "bg-green-500/20 border-green-500/50 hover:bg-green-500/30 text-green-500" 
+                          heroImage.approvalStatus === 'flagged'
+                            ? "bg-green-500/20 border-green-500/50 hover:bg-green-500/30 text-green-500"
                             : "hover:bg-studio-card"
                         )}
                         title={heroImage.approvalStatus === 'flagged' ? "Saved to Library" : "Save to Library"}
@@ -1804,7 +1805,7 @@ export default function ImageEditor() {
                   );
                   if (serverError) throw serverError;
                   if (!serverData?.success) throw new Error('Save failed');
-                  
+
                   setCurrentSession(prev => ({
                     ...prev,
                     images: prev.images.map(image =>
@@ -1813,11 +1814,11 @@ export default function ImageEditor() {
                         : image
                     )
                   }));
-                  
+
                   // Invalidate library content cache
                   queryClient.invalidateQueries({ queryKey: ["library-content"] });
                   await ensureImageRecipeForImage(imageToSave);
-                  
+
                   toast.success("Image saved to library!");
                 } catch (error) {
                   console.error('Error saving image:', error);
@@ -1873,7 +1874,7 @@ export default function ImageEditor() {
                     onChange={(e) => setMainPrompt(e.target.value)}
                     placeholder="Describe the image you want to create..."
                     className="w-full resize-none bg-charcoal border border-stone/20 text-parchment-white placeholder:text-charcoal/60 focus-visible:ring-brass-glow/50"
-                    style={{ 
+                    style={{
                       color: '#F5F1E8',
                       minHeight: '3rem',
                       maxHeight: '250px',
@@ -1897,10 +1898,10 @@ export default function ImageEditor() {
                   {/* Bottle Type Indicator */}
                   {selectedProduct?.bottle_type && selectedProduct.bottle_type !== 'auto' && (
                     <div className="absolute top-1 right-2 text-xs">
-                      <Badge 
-                        variant="outline" 
-                        className={selectedProduct.bottle_type === 'oil' 
-                          ? "bg-green-500/20 border-green-500/50 text-green-500" 
+                      <Badge
+                        variant="outline"
+                        className={selectedProduct.bottle_type === 'oil'
+                          ? "bg-green-500/20 border-green-500/50 text-green-500"
                           : "bg-blue-500/20 border-blue-500/50 text-blue-500"
                         }
                       >
@@ -1939,11 +1940,11 @@ export default function ImageEditor() {
         {showProMode && (
           <>
             {/* Backdrop */}
-            <div 
+            <div
               className="fixed inset-0 bg-black/40 z-40"
               onClick={() => setShowProMode(false)}
             />
-            
+
             {/* Drawer */}
             <aside className="fixed right-0 top-[69px] bottom-0 w-96 border-l border-charcoal bg-charcoal shadow-2xl z-50 overflow-y-auto animate-in slide-in-from-right duration-300">
               <ScrollArea className="h-full">

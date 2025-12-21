@@ -4,20 +4,20 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { Camera, Image, Sparkles, Upload, X, Wand2, Type, Palette } from "lucide-react";
+import { Camera, Sparkles, Upload, X, Wand2, Type } from "lucide-react";
 import MobileAspectRatioSelector from "./MobileAspectRatioSelector";
 import {
   imageCategories,
   type ImageCategoryDefinition,
 } from "@/data/imageCategories";
 
+// Dark Room themed options - monochromatic with brass accents
 const CREATION_OPTIONS = [
   ...imageCategories.map((category) => ({
     id: category.key,
     label: category.label,
     icon: category.icon || Camera,
     prompt: category.prompt,
-    gradient: category.gradient,
     categoryKey: category.key,
   })),
   {
@@ -25,14 +25,14 @@ const CREATION_OPTIONS = [
     label: "Custom Prompt",
     icon: Type,
     prompt: "",
-    gradient: "from-teal-500 to-cyan-600"
+    categoryKey: undefined as string | undefined,
   },
   {
     id: "magic",
     label: "AI Enhanced",
     icon: Wand2,
     prompt: "Professionally styled product image with cinematic lighting and premium aesthetic.",
-    gradient: "from-yellow-500 to-amber-600"
+    categoryKey: undefined as string | undefined,
   }
 ];
 
@@ -85,6 +85,7 @@ export default function MobileCreateForm({
     }
   };
 
+
   const handleModalClose = () => {
     setSelectedOption(null);
     setIsGeneratingFromModal(false);
@@ -119,8 +120,8 @@ export default function MobileCreateForm({
 
   return (
     <>
-      {/* Card Grid */}
-      <div className="flex-1 p-4 overflow-y-auto">
+      {/* Card Grid - Dark Room Theme */}
+      <div className="flex-1 p-4 overflow-y-auto bg-ink-black">
         <div className="grid grid-cols-2 gap-3">
           {CREATION_OPTIONS.map((option) => {
             const Icon = option.icon;
@@ -129,24 +130,20 @@ export default function MobileCreateForm({
                 key={option.id}
                 onClick={() => handleCardClick(option)}
                 className={cn(
-                  "relative overflow-hidden cursor-pointer transition-all duration-200 border-2",
-                  "bg-studio-card border-studio-border hover:border-aged-brass/50",
-                  "active:scale-95 h-36"
+                  "relative overflow-hidden cursor-pointer transition-all duration-200 border",
+                  "bg-charcoal/60 border-charcoal hover:border-aged-brass/50",
+                  "active:scale-95 h-32"
                 )}
               >
-                <div className={cn(
-                  "absolute inset-0 bg-gradient-to-br opacity-10",
-                  option.gradient
-                )} />
-                
-                <div className="relative h-full p-4 flex flex-col items-center justify-center text-center gap-2">
-                  <div className={cn(
-                    "w-12 h-12 rounded-full bg-gradient-to-br flex items-center justify-center",
-                    option.gradient
-                  )}>
-                    <Icon className="w-6 h-6 text-white" />
+                {/* Subtle dark gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-charcoal/80 to-ink-black/90 opacity-50" />
+
+                <div className="relative h-full p-4 flex flex-col items-center justify-center text-center gap-3">
+                  {/* Icon with brass tint */}
+                  <div className="w-10 h-10 rounded-lg bg-charcoal border border-aged-brass/30 flex items-center justify-center">
+                    <Icon className="w-5 h-5 text-aged-brass" />
                   </div>
-                  <span className="text-sm font-semibold text-studio-text-primary">
+                  <span className="text-sm font-medium text-parchment-white/90">
                     {option.label}
                   </span>
                 </div>
@@ -156,25 +153,22 @@ export default function MobileCreateForm({
         </div>
 
         {imagesCount > 0 && (
-          <p className="text-center text-xs text-studio-text-muted mt-4">
+          <p className="text-center text-xs text-parchment-white/40 mt-4">
             {imagesCount} of {maxImages} images created
           </p>
         )}
       </div>
 
-      {/* Full Screen Creation Modal */}
+      {/* Full Screen Creation Modal - Dark Room Theme */}
       <Dialog open={!!selectedOption} onOpenChange={(open) => { if (!open) handleModalClose(); }}>
-        <DialogContent className="fixed inset-0 bg-studio-charcoal border-none rounded-none p-0 max-w-none w-screen h-[100dvh] flex flex-col transform-none m-0">
+        <DialogContent className="fixed inset-0 bg-ink-black border-none rounded-none p-0 max-w-none w-screen h-[100dvh] flex flex-col transform-none m-0">
           {/* Modal Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-studio-border bg-studio-card/50">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-charcoal bg-charcoal/50">
+            <div className="flex items-center gap-3">
               {selectedOptionData && (
                 <>
-                  <div className={cn(
-                    "w-8 h-8 rounded-full bg-gradient-to-br flex items-center justify-center",
-                    selectedOptionData.gradient
-                  )}>
-                    <selectedOptionData.icon className="w-4 h-4 text-white" />
+                  <div className="w-9 h-9 rounded-lg bg-charcoal border border-aged-brass/30 flex items-center justify-center">
+                    <selectedOptionData.icon className="w-4 h-4 text-aged-brass" />
                   </div>
                   <h2 className="text-base font-semibold text-aged-brass">
                     {selectedOptionData.label}
@@ -186,17 +180,17 @@ export default function MobileCreateForm({
               variant="ghost"
               size="icon"
               onClick={handleModalClose}
-              className="text-studio-text-secondary"
+              className="text-parchment-white/60 hover:text-parchment-white"
             >
               <X className="w-5 h-5" />
             </Button>
           </div>
 
           {/* Modal Content */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-5 bg-ink-black">
             {/* Prompt Input */}
             <div className="space-y-2">
-              <label className="text-xs font-medium text-studio-text-secondary uppercase tracking-wide">
+              <label className="text-xs font-medium text-aged-brass/80 uppercase tracking-wider">
                 Describe Your Image
               </label>
               <Textarea
@@ -204,18 +198,18 @@ export default function MobileCreateForm({
                 onChange={(e) => setModalPrompt(e.target.value)}
                 placeholder="Describe what you want to create..."
                 rows={4}
-                className="w-full bg-studio-card border-studio-border text-studio-text-primary placeholder:text-studio-text-muted resize-none"
+                className="w-full bg-charcoal/80 border-charcoal text-parchment-white placeholder:text-parchment-white/30 resize-none focus:border-aged-brass/50 focus:ring-aged-brass/20"
                 disabled={isGenerating}
               />
             </div>
 
             {/* Reference Image Upload */}
             <div className="space-y-2">
-              <label className="text-xs font-medium text-studio-text-secondary uppercase tracking-wide">
+              <label className="text-xs font-medium text-aged-brass/80 uppercase tracking-wider">
                 Reference Image (Optional)
               </label>
               {referenceImage ? (
-                <div className="relative rounded-lg overflow-hidden border border-studio-border">
+                <div className="relative rounded-lg overflow-hidden border border-charcoal">
                   <img
                     src={referenceImage.url}
                     alt="Reference"
@@ -225,7 +219,7 @@ export default function MobileCreateForm({
                     size="icon"
                     variant="ghost"
                     onClick={onReferenceRemove}
-                    className="absolute top-2 right-2 h-8 w-8 bg-black/60 hover:bg-black/80 text-white"
+                    className="absolute top-2 right-2 h-8 w-8 bg-black/70 hover:bg-black/90 text-parchment-white"
                   >
                     <X className="w-4 h-4" />
                   </Button>
@@ -241,11 +235,11 @@ export default function MobileCreateForm({
                   />
                   <div className={cn(
                     "border-2 border-dashed rounded-lg p-6 cursor-pointer transition-all",
-                    "border-studio-border bg-studio-card hover:border-aged-brass/50"
+                    "border-charcoal bg-charcoal/40 hover:border-aged-brass/40 hover:bg-charcoal/60"
                   )}>
                     <div className="flex flex-col items-center justify-center gap-2">
-                      <Upload className="w-8 h-8 text-studio-text-muted" />
-                      <span className="text-sm text-studio-text-muted">Tap to upload</span>
+                      <Upload className="w-8 h-8 text-parchment-white/40" />
+                      <span className="text-sm text-parchment-white/50">Tap to upload</span>
                     </div>
                   </div>
                 </label>
@@ -254,7 +248,7 @@ export default function MobileCreateForm({
 
             {/* Aspect Ratio */}
             <div className="space-y-2">
-              <label className="text-xs font-medium text-studio-text-secondary uppercase tracking-wide">
+              <label className="text-xs font-medium text-aged-brass/80 uppercase tracking-wider">
                 Image Size
               </label>
               <MobileAspectRatioSelector
@@ -266,13 +260,13 @@ export default function MobileCreateForm({
           </div>
 
           {/* Modal Footer - Generate Button */}
-          <div className="border-t border-studio-border bg-studio-card/50 p-4 pb-safe">
+          <div className="border-t border-charcoal bg-charcoal/50 p-4 pb-safe">
             <Button
               onClick={handleGenerateFromModal}
               disabled={!modalPrompt.trim() || isGenerating || imagesCount >= maxImages}
               type="button"
               size="lg"
-              className="w-full h-12 bg-aged-brass hover:bg-aged-brass/90 text-aged-paper font-semibold"
+              className="w-full h-12 bg-aged-brass hover:bg-aged-brass/90 text-ink-black font-semibold"
             >
               {isGenerating ? (
                 <>
