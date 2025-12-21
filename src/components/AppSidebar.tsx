@@ -204,19 +204,32 @@ export function AppSidebar() {
         <SidebarHeader className="border-b border-white/10 p-0">
           {open && (
             <div className="px-4 pt-6 pb-4">
-              <div className="flex items-center gap-3">
+              {/* Mobile: Logo left, Close right. Desktop: Close left, Logo right */}
+              <div className={`flex items-center ${isMobile ? 'justify-between' : 'gap-3'}`}>
+                {/* On mobile, show logo first */}
+                {isMobile && (
+                  <NavLink to="/dashboard" className="group">
+                    <span className="font-serif text-xl tracking-[0.216em]" style={{ fontWeight: 300, color: '#F5F5DC' }}>MADISON</span>
+                  </NavLink>
+                )}
+
+                {/* Close/Collapse button */}
                 <button
                   onClick={toggleSidebar}
                   className="relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(38,33%,56%)]/50 rounded-md"
-                  aria-label="Collapse sidebar"
+                  aria-label={isMobile ? "Close menu" : "Collapse sidebar"}
                 >
                   <div className="relative w-8 h-8 rounded-md border border-[hsl(38,33%,56%)]/30 bg-white/5 flex items-center justify-center transition-all duration-200 group-hover:border-[hsl(38,33%,56%)] group-hover:bg-white/10 group-hover:shadow-[0_0_12px_rgba(184,149,106,0.3)]">
                     <ChevronLeft className="w-4 h-4 text-[hsl(38,33%,56%)] transition-transform duration-200 group-hover:scale-110" />
                   </div>
                 </button>
-                <NavLink to="/dashboard" className="group">
-                  <span className="font-serif text-xl tracking-[0.216em]" style={{ fontWeight: 300, color: '#F5F5DC' }}>MADISON</span>
-                </NavLink>
+
+                {/* On desktop, show logo after the collapse button */}
+                {!isMobile && (
+                  <NavLink to="/dashboard" className="group">
+                    <span className="font-serif text-xl tracking-[0.216em]" style={{ fontWeight: 300, color: '#F5F5DC' }}>MADISON</span>
+                  </NavLink>
+                )}
               </div>
             </div>
           )}
@@ -236,6 +249,7 @@ export function AppSidebar() {
             </div>
           )}
         </SidebarHeader>
+
 
         {/* Main Navigation */}
         <SidebarContent>
@@ -268,8 +282,8 @@ export function AppSidebar() {
                         <item.icon
                           strokeWidth={1}
                           className={`w-6 h-6 shrink-0 transition-all duration-200 ${isActiveRoute
-                              ? 'text-[hsl(38,33%,56%)] drop-shadow-[0_0_6px_rgba(184,149,106,0.4)]'
-                              : 'text-white/50 group-hover:text-white/70 group-hover:drop-shadow-[0_0_4px_rgba(184,149,106,0.2)] group-hover:scale-105'
+                            ? 'text-[hsl(38,33%,56%)] drop-shadow-[0_0_6px_rgba(184,149,106,0.4)]'
+                            : 'text-white/50 group-hover:text-white/70 group-hover:drop-shadow-[0_0_4px_rgba(184,149,106,0.2)] group-hover:scale-105'
                             }`}
                         />
                         {open && (
