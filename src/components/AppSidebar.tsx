@@ -204,15 +204,8 @@ export function AppSidebar() {
         <SidebarHeader className="border-b border-white/10 p-0">
           {open && (
             <div className="px-4 pt-6 pb-4">
-              {/* Mobile: Logo left, Close right. Desktop: Close left, Logo right */}
-              <div className={`flex items-center ${isMobile ? 'justify-between' : 'gap-3'}`}>
-                {/* On mobile, show logo first */}
-                {isMobile && (
-                  <NavLink to="/dashboard" className="group">
-                    <span className="font-serif text-xl tracking-[0.216em]" style={{ fontWeight: 300, color: '#F5F5DC' }}>MADISON</span>
-                  </NavLink>
-                )}
-
+              {/* On mobile: use flex-row-reverse so close button appears on right */}
+              <div className={`flex items-center ${isMobile ? 'flex-row-reverse justify-between' : 'gap-3'}`}>
                 {/* Close/Collapse button */}
                 <button
                   onClick={toggleSidebar}
@@ -224,15 +217,14 @@ export function AppSidebar() {
                   </div>
                 </button>
 
-                {/* On desktop, show logo after the collapse button */}
-                {!isMobile && (
-                  <NavLink to="/dashboard" className="group">
-                    <span className="font-serif text-xl tracking-[0.216em]" style={{ fontWeight: 300, color: '#F5F5DC' }}>MADISON</span>
-                  </NavLink>
-                )}
+                {/* Logo - always rendered */}
+                <NavLink to="/dashboard" className="group">
+                  <span className="font-serif text-xl tracking-[0.216em]" style={{ fontWeight: 300, color: '#F5F5DC' }}>MADISON</span>
+                </NavLink>
               </div>
             </div>
           )}
+
 
           {!open && (
             <div className="px-2 pt-6 pb-4 flex flex-col items-center gap-3">
