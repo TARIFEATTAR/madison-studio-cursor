@@ -4,7 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DraftNudge } from "./DraftNudge";
+// DraftNudge removed - re-add once proper publish tracking is implemented
+// import { DraftNudge } from "./DraftNudge";
 
 export function ContentFlowZone() {
   const navigate = useNavigate();
@@ -64,12 +65,9 @@ export function ContentFlowZone() {
     );
   }
 
-  const draftCount = stats?.totalDrafts || 0;
-
   return (
     <>
-      {/* Draft Nudge - Full Width */}
-      <DraftNudge draftCount={draftCount} />
+      {/* Draft Nudge removed - re-add once proper publish tracking is implemented */}
 
       {/* Content Pipeline */}
       <Card className="col-span-1 md:col-span-8 p-4 md:p-6 bg-white border border-[#E0E0E0] overflow-hidden rounded-xl min-h-[240px]">
@@ -87,7 +85,7 @@ export function ContentFlowZone() {
                 background: `linear-gradient(to bottom right, ${stage.color}20, ${stage.color}10)`,
               }}
             >
-              <div 
+              <div
                 className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mb-2 transition-transform group-hover:scale-110"
                 style={{ backgroundColor: stage.color }}
               >
@@ -107,7 +105,7 @@ export function ContentFlowZone() {
       {/* This Week Calendar - Improved Mobile */}
       <Card className="col-span-1 md:col-span-4 p-4 md:p-6 bg-white border border-[#E0E0E0] overflow-hidden rounded-xl min-h-[240px]">
         <h3 className="text-sm font-medium text-[#1C150D]/60 mb-4 md:mb-5">This Week</h3>
-        
+
         {/* Mobile: Horizontal Scroll */}
         <div className="md:hidden overflow-x-auto -mx-4 px-4 scrollbar-hide">
           <div className="flex gap-3 min-w-max pb-2">

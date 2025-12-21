@@ -34,7 +34,8 @@ import { DashboardRecentActivity } from "@/components/dashboard/DashboardRecentA
 
 // Supporting Components
 import { GettingStartedChecklist } from "@/components/onboarding/GettingStartedChecklist";
-import { DraftNudge } from "@/components/dashboard/DraftNudge";
+// DraftNudge removed - re-add once proper publish tracking is implemented
+// import { DraftNudge } from "@/components/dashboard/DraftNudge";
 import { PostOnboardingGuide } from "@/components/onboarding/PostOnboardingGuide";
 import { usePostOnboardingGuide } from "@/hooks/usePostOnboardingGuide";
 import { logger } from "@/lib/logger";
@@ -53,14 +54,14 @@ export default function DashboardNew() {
   const [showFallback, setShowFallback] = useState(false);
   const [showChecklist, setShowChecklist] = useState(false);
   const { showGuide, dismissGuide } = usePostOnboardingGuide();
-  const { 
-    widgets, 
-    isEditMode, 
-    toggleEditMode, 
-    addWidget, 
-    removeWidget, 
-    updateWidget, 
-    resetWidgets 
+  const {
+    widgets,
+    isEditMode,
+    toggleEditMode,
+    addWidget,
+    removeWidget,
+    updateWidget,
+    resetWidgets
   } = useDashboardWidgets();
 
   // Check if we should show the getting started checklist
@@ -269,7 +270,7 @@ export default function DashboardNew() {
       {/* Main Content Area */}
       <div className="flex-1 overflow-auto px-3 sm:px-4 md:px-8 py-3 sm:py-4 md:py-6 pb-20 sm:pb-24 md:pb-6 main-content">
         <div className="max-w-[1400px] mx-auto space-y-3 sm:space-y-4 md:space-y-6">
-          
+
           {/* WIDGET SYSTEM - All components including hero are widgets */}
           <DashboardWidgetSystem
             widgets={widgets}
@@ -295,7 +296,7 @@ export default function DashboardNew() {
             </div>
           )}
 
-          {/* Draft Nudge - Only show if 10+ drafts - Not a widget */}
+          {/* Draft Nudge removed - re-add once proper publish tracking is implemented
           {stats && stats.totalDrafts >= 10 && (
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
               <div className="col-span-1 md:col-span-12">
@@ -303,6 +304,7 @@ export default function DashboardNew() {
               </div>
             </div>
           )}
+          */}
 
         </div>
       </div>
