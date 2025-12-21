@@ -53,7 +53,7 @@ const styles = `
     opacity: 0.5;
   }
 
-  /* Task List Styles */
+  /* Task List Styles - FIXED */
   ul[data-type="taskList"] {
     list-style: none;
     padding: 0;
@@ -62,53 +62,64 @@ const styles = `
   
   li[data-type="taskItem"] {
     display: flex;
-    align-items: flex-start;
+    align-items: flex-start; /* Align to top of line height */
     margin-bottom: 0;
+    line-height: 2rem; /* Ensure line height matches text */
   }
   
+  /* The label wrapper for the checkbox */
   li[data-type="taskItem"] label {
-    margin-right: 0.5rem;
-    margin-top: 0.5rem; /* Align checkbox vertically */
+    margin-right: 0.75rem;
+    height: 2rem; /* Match line height */
+    display: flex;
+    align-items: center; /* Center vertically within the line height */
     user-select: none;
     cursor: pointer;
   }
   
   li[data-type="taskItem"] div {
     flex: 1 1 auto;
+    margin: 0 !important; /* Remove any unexpected margins */
   }
 
+  /* The actual checkbox input */
   li[data-type="taskItem"] input[type="checkbox"] {
     appearance: none;
+    -webkit-appearance: none;
     background-color: transparent;
     margin: 0;
     cursor: pointer;
-    width: 1rem;
-    height: 1rem;
-    border: 1.5px solid #B8956A;
+    width: 1.1rem;
+    height: 1.1rem;
+    border: 1.5px solid #8D6E63; /* Darker brown for visibility */
     border-radius: 4px;
     display: grid;
     place-content: center;
     transition: all 0.2s;
+    position: relative;
+    top: 0; /* Remove top offset since we align via flex */
   }
 
+  /* Checkmark styles */
   li[data-type="taskItem"] input[type="checkbox"]::before {
     content: "";
-    width: 0.6em;
-    height: 0.6em;
+    width: 0.65em;
+    height: 0.65em;
     transform: scale(0);
     transition: 120ms transform ease-in-out;
-    box-shadow: inset 1em 1em #2F2A26;
+    background-color: #B8956A;
     transform-origin: center;
     clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
   }
 
   li[data-type="taskItem"] input[type="checkbox"]:checked::before {
     transform: scale(1);
+    background-color: #1C150D; /* Ink black check */
   }
 
   li[data-type="taskItem"] input[type="checkbox"]:checked {
-    background-color: #B8956A;
-    border-color: #B8956A;
+    border-color: #1C150D;
+    background-color: rgba(184, 149, 106, 0.1);
   }
 `;
 
