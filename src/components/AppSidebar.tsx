@@ -203,27 +203,45 @@ export function AppSidebar() {
         {/* Header */}
         <SidebarHeader className="border-b border-white/10 p-0">
           {open && (
-            <div className="px-4 pt-6 pb-4">
-              {/* On mobile: use flex-row-reverse so close button appears on right */}
-              <div className={`flex items-center ${isMobile ? 'flex-row-reverse justify-between' : 'gap-3'}`}>
-                {/* Close/Collapse button */}
-                <button
-                  onClick={toggleSidebar}
-                  className="relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(38,33%,56%)]/50 rounded-md"
-                  aria-label={isMobile ? "Close menu" : "Collapse sidebar"}
-                >
-                  <div className="relative w-8 h-8 rounded-md border border-[hsl(38,33%,56%)]/30 bg-white/5 flex items-center justify-center transition-all duration-200 group-hover:border-[hsl(38,33%,56%)] group-hover:bg-white/10 group-hover:shadow-[0_0_12px_rgba(184,149,106,0.3)]">
-                    <ChevronLeft className="w-4 h-4 text-[hsl(38,33%,56%)] transition-transform duration-200 group-hover:scale-110" />
-                  </div>
-                </button>
+            <div className={`px-4 pt-6 pb-4 ${isMobile ? 'pt-4 pb-3' : ''}`}>
+              {/* Different layouts for mobile vs desktop */}
+              {isMobile ? (
+                // Mobile: Logo left, close button right, with proper spacing
+                <div className="flex items-center justify-between w-full">
+                  <NavLink to="/dashboard" className="group flex-shrink-0">
+                    <span className="font-serif text-lg tracking-[0.18em]" style={{ fontWeight: 300, color: '#F5F5DC' }}>MADISON</span>
+                  </NavLink>
 
-                {/* Logo - always rendered */}
-                <NavLink to="/dashboard" className="group">
-                  <span className="font-serif text-xl tracking-[0.216em]" style={{ fontWeight: 300, color: '#F5F5DC' }}>MADISON</span>
-                </NavLink>
-              </div>
+                  <button
+                    onClick={toggleSidebar}
+                    className="relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(38,33%,56%)]/50 rounded-md flex-shrink-0 ml-4"
+                    aria-label="Close menu"
+                  >
+                    <div className="relative w-8 h-8 rounded-md border border-[hsl(38,33%,56%)]/30 bg-white/5 flex items-center justify-center transition-all duration-200 group-hover:border-[hsl(38,33%,56%)] group-hover:bg-white/10">
+                      <ChevronLeft className="w-4 h-4 text-[hsl(38,33%,56%)]" />
+                    </div>
+                  </button>
+                </div>
+              ) : (
+                // Desktop: Close button left, logo right
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={toggleSidebar}
+                    className="relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(38,33%,56%)]/50 rounded-md"
+                    aria-label="Collapse sidebar"
+                  >
+                    <div className="relative w-8 h-8 rounded-md border border-[hsl(38,33%,56%)]/30 bg-white/5 flex items-center justify-center transition-all duration-200 group-hover:border-[hsl(38,33%,56%)] group-hover:bg-white/10 group-hover:shadow-[0_0_12px_rgba(184,149,106,0.3)]">
+                      <ChevronLeft className="w-4 h-4 text-[hsl(38,33%,56%)] transition-transform duration-200 group-hover:scale-110" />
+                    </div>
+                  </button>
+                  <NavLink to="/dashboard" className="group">
+                    <span className="font-serif text-xl tracking-[0.216em]" style={{ fontWeight: 300, color: '#F5F5DC' }}>MADISON</span>
+                  </NavLink>
+                </div>
+              )}
             </div>
           )}
+
 
 
           {!open && (

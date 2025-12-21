@@ -76,17 +76,17 @@ export default function DAMLibrary() {
   const [assetToRename, setAssetToRename] = useState<string | null>(null);
   const [newAssetName, setNewAssetName] = useState("");
   const [showCelebration, setShowCelebration] = useState(false);
-  
+
   // Filter state
   const [showFilters, setShowFilters] = useState(false);
   const [filterType, setFilterType] = useState<string | null>(null);
   const [filterTags, setFilterTags] = useState<string[]>([]);
-  
+
   // Bulk action dialogs
   const [bulkMoveDialogOpen, setBulkMoveDialogOpen] = useState(false);
   const [bulkTagDialogOpen, setBulkTagDialogOpen] = useState(false);
   const [bulkTagInput, setBulkTagInput] = useState("");
-  
+
   // Smart folder dialog
   const [smartFolderDialogOpen, setSmartFolderDialogOpen] = useState(false);
   const [smartFolderName, setSmartFolderName] = useState("");
@@ -143,7 +143,7 @@ export default function DAMLibrary() {
   // Filter assets client-side
   const filteredAssets = useMemo(() => {
     let result = assets;
-    
+
     // Filter by type
     if (filterType) {
       result = result.filter(a => {
@@ -153,14 +153,14 @@ export default function DAMLibrary() {
         return true;
       });
     }
-    
+
     // Filter by tags
     if (filterTags.length > 0) {
-      result = result.filter(a => 
+      result = result.filter(a =>
         filterTags.every(tag => a.tags?.includes(tag))
       );
     }
-    
+
     return result;
   }, [assets, filterType, filterTags]);
 
@@ -248,9 +248,9 @@ export default function DAMLibrary() {
 
   const handleCreateSmartFolder = useCallback(() => {
     if (!smartFolderName.trim() || !hasActiveFilters) return;
-    
+
     const conditions: Array<{ field: string; operator: string; value: unknown }> = [];
-    
+
     if (filterType) {
       conditions.push({
         field: 'file_type',
@@ -258,7 +258,7 @@ export default function DAMLibrary() {
         value: filterType === 'document' ? 'application' : filterType,
       });
     }
-    
+
     if (filterTags.length > 0) {
       filterTags.forEach(tag => {
         conditions.push({
@@ -268,7 +268,7 @@ export default function DAMLibrary() {
         });
       });
     }
-    
+
     createSmartFolder.mutate({
       name: smartFolderName.trim(),
       smartFilter: {
@@ -276,7 +276,7 @@ export default function DAMLibrary() {
         match: 'all',
       },
     });
-    
+
     setSmartFolderDialogOpen(false);
     setSmartFolderName("");
   }, [smartFolderName, hasActiveFilters, filterType, filterTags, createSmartFolder]);
@@ -288,8 +288,8 @@ export default function DAMLibrary() {
         {showCelebration && <UploadCelebration show={showCelebration} />}
       </AnimatePresence>
 
-      {/* Folder sidebar */}
-      <div className="w-64 border-r border-border bg-card flex-shrink-0">
+      {/* Folder sidebar - hidden on mobile */}
+      <div className="hidden md:block w-64 border-r border-border bg-card flex-shrink-0">
         <FolderSidebar
           folders={folders}
           selectedFolderId={selectedFolderId}
@@ -300,8 +300,9 @@ export default function DAMLibrary() {
         />
       </div>
 
-      {/* Main content */}
+      {/* Main content - full width on mobile */}
       <div className="flex-1 flex flex-col min-w-0">
+
         {/* Header */}
         <div className="border-b border-border bg-card px-6 py-4">
           <div className="flex items-center justify-between mb-4">
@@ -371,8 +372,8 @@ export default function DAMLibrary() {
               </SelectTrigger>
               <SelectContent>
                 {SORT_OPTIONS.map((option) => (
-                  <SelectItem 
-                    key={`${option.field}-${option.direction}`} 
+                  <SelectItem
+                    key={`${option.field}-${option.direction}`}
                     value={`${option.field}-${option.direction}`}
                   >
                     {option.label}
@@ -485,9 +486,9 @@ export default function DAMLibrary() {
                     <span className="text-sm font-medium">Tags:</span>
                     <div className="flex flex-wrap gap-1">
                       {filterTags.map(tag => (
-                        <Badge 
-                          key={tag} 
-                          variant="default" 
+                        <Badge
+                          key={tag}
+                          variant="default"
                           className="cursor-pointer"
                           onClick={() => setFilterTags(filterTags.filter(t => t !== tag))}
                         >
@@ -506,8 +507,8 @@ export default function DAMLibrary() {
                             {allTags
                               .filter(t => !filterTags.includes(t))
                               .map(tag => (
-                                <DropdownMenuItem 
-                                  key={tag} 
+                                <DropdownMenuItem
+                                  key={tag}
                                   onClick={() => setFilterTags([...filterTags, tag])}
                                 >
                                   {tag}
@@ -521,9 +522,9 @@ export default function DAMLibrary() {
 
                   {hasActiveFilters && (
                     <>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                      <Button
+                        variant="outline"
+                        size="sm"
                         className="gap-1.5"
                         onClick={() => setSmartFolderDialogOpen(true)}
                       >
@@ -572,9 +573,9 @@ export default function DAMLibrary() {
                     <Star className="w-4 h-4" />
                     Favorite
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="gap-1.5 text-destructive hover:text-destructive"
                     onClick={handleBulkDelete}
                   >
