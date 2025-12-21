@@ -72,6 +72,8 @@
 */
 .dashboard-grid-editing {
   background-color: #FBFAF8;
+  /* Fill at minimum the viewport, can grow beyond */
+  min-height: calc(100vh - 140px);
   /* Refined vellum tint */
   background-image:
     /* Micro lines (tighter texture) */
