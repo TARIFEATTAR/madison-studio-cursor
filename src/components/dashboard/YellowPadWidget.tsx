@@ -62,64 +62,86 @@ const styles = `
   
   li[data-type="taskItem"] {
     display: flex;
-    align-items: flex-start; /* Align to top of line height */
+    align-items: center; /* Align checkbox and text baseline */
     margin-bottom: 0;
-    line-height: 2rem; /* Ensure line height matches text */
+    min-height: 2rem; /* Matches line height */
   }
   
   /* The label wrapper for the checkbox */
   li[data-type="taskItem"] label {
-    margin-right: 0.75rem;
-    height: 2rem; /* Match line height */
+    margin-right: 1rem;
+    height: 2rem;
     display: flex;
-    align-items: center; /* Center vertically within the line height */
+    align-items: center; 
     user-select: none;
     cursor: pointer;
+    flex-shrink: 0;
   }
   
   li[data-type="taskItem"] div {
     flex: 1 1 auto;
-    margin: 0 !important; /* Remove any unexpected margins */
+    margin: 0 !important;
   }
 
-  /* The actual checkbox input */
+  /* Clear paragraph margins inside task items to prevent offset */
+  li[data-type="taskItem"] p {
+    margin: 0 !important;
+  }
+
+  /* The actual checkbox input - Styled as [ ] */
   li[data-type="taskItem"] input[type="checkbox"] {
     appearance: none;
     -webkit-appearance: none;
     background-color: transparent;
     margin: 0;
     cursor: pointer;
-    width: 1.1rem;
-    height: 1.1rem;
-    border: 1.5px solid #8D6E63; /* Darker brown for visibility */
-    border-radius: 4px;
+    width: 1.15rem;
+    height: 1.15rem;
+    border: 2px solid #8D6E63; /* Thicker for architectural feel */
+    border-radius: 2px; /* Sharper corners like [ ] */
     display: grid;
     place-content: center;
     transition: all 0.2s;
     position: relative;
-    top: 0; /* Remove top offset since we align via flex */
+  }
+
+  /* Hover state */
+  li[data-type="taskItem"] input[type="checkbox"]:hover {
+    border-color: #1C150D;
+    background-color: rgba(184, 149, 106, 0.05);
   }
 
   /* Checkmark styles */
   li[data-type="taskItem"] input[type="checkbox"]::before {
     content: "";
-    width: 0.65em;
-    height: 0.65em;
+    width: 0.7em;
+    height: 0.7em;
     transform: scale(0);
     transition: 120ms transform ease-in-out;
-    background-color: #B8956A;
+    background-color: #1C150D;
     transform-origin: center;
     clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
   }
 
   li[data-type="taskItem"] input[type="checkbox"]:checked::before {
     transform: scale(1);
-    background-color: #1C150D; /* Ink black check */
   }
 
   li[data-type="taskItem"] input[type="checkbox"]:checked {
     border-color: #1C150D;
-    background-color: rgba(184, 149, 106, 0.1);
+    background-color: transparent;
+  }
+
+  /* Strikethrough for checked items */
+  li[data-type="taskItem"][data-checked="true"] > div {
+    text-decoration: line-through;
+    opacity: 0.6;
+    color: #8D6E63;
+  }
+  
+  /* Bullet list adjustments for consistent sizing */
+  .ProseMirror li p {
+    margin: 0;
   }
 `;
 
