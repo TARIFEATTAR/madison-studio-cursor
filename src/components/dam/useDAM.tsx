@@ -15,20 +15,20 @@ export function useDAM(options: UseDAMOptions = {}) {
   const { currentOrganizationId } = useOnboarding();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
   const [recentlyDeleted, setRecentlyDeleted] = useState<DAMAsset[]>([]);
 
   // Fetch folders
-  const { 
-    data: folders = [], 
+  const {
+    data: folders = [],
     isLoading: foldersLoading,
     refetch: refetchFolders,
   } = useQuery({
     queryKey: ["dam-folders", currentOrganizationId],
     queryFn: async () => {
       if (!currentOrganizationId) return [];
-      
+
       const { data, error } = await supabase
         .from("dam_folders")
         .select("*")
@@ -61,15 +61,15 @@ export function useDAM(options: UseDAMOptions = {}) {
   }, [folders]);
 
   // Fetch assets
-  const { 
-    data: assets = [], 
+  const {
+    data: assets = [],
     isLoading: assetsLoading,
     refetch: refetchAssets,
   } = useQuery({
     queryKey: ["dam-assets", currentOrganizationId, options.folderId, options.searchQuery, options.sort],
     queryFn: async () => {
       if (!currentOrganizationId) return [];
-      
+
       let query = supabase
         .from("dam_assets")
         .select("*")
@@ -176,12 +176,12 @@ export function useDAM(options: UseDAMOptions = {}) {
 
   // Create smart folder mutation
   const createSmartFolder = useMutation({
-    mutationFn: async ({ 
-      name, 
+    mutationFn: async ({
+      name,
       icon,
       smartFilter,
-    }: { 
-      name: string; 
+    }: {
+      name: string;
       icon?: string;
       smartFilter: {
         conditions: Array<{ field: string; operator: string; value: unknown }>;
@@ -275,7 +275,7 @@ export function useDAM(options: UseDAMOptions = {}) {
     onSuccess: (asset) => {
       queryClient.invalidateQueries({ queryKey: ["dam-assets"] });
       setRecentlyDeleted(prev => [...prev, asset]);
-      
+
       // Show undo toast
       toast({
         title: "Deleted",
@@ -327,7 +327,7 @@ export function useDAM(options: UseDAMOptions = {}) {
     },
     onSuccess: (isFavorite) => {
       queryClient.invalidateQueries({ queryKey: ["dam-assets"] });
-      toast({ 
+      toast({
         title: isFavorite ? "Added to favorites" : "Removed from favorites",
         duration: 2000,
       });
@@ -436,7 +436,7 @@ export function useDAM(options: UseDAMOptions = {}) {
 
   // Track asset usage
   const trackAssetUsage = useCallback(async (
-    assetId: string, 
+    assetId: string,
     usedIn: { type: string; id: string; title?: string }
   ) => {
     try {
@@ -445,19 +445,19 @@ export function useDAM(options: UseDAMOptions = {}) {
         asset_id: assetId,
         used_in_data: usedIn,
       });
-      
+
       // If RPC doesn't exist, fall back to direct update
       if (error && error.code === '42883') {
         await supabase
           .from('dam_assets')
-          .update({ 
+          .update({
             usage_count: supabase.rpc('increment', { row_id: assetId }),
             last_used_at: new Date().toISOString(),
             last_used_in: usedIn,
           })
           .eq('id', assetId);
       }
-      
+
       // Log activity
       await supabase
         .from('dam_activity_log')
@@ -468,7 +468,7 @@ export function useDAM(options: UseDAMOptions = {}) {
           actor_type: 'user',
           context: { used_in: usedIn },
         });
-        
+
       queryClient.invalidateQueries({ queryKey: ['dam-assets'] });
     } catch (err) {
       console.error('Failed to track asset usage:', err);
@@ -481,18 +481,18 @@ export function useDAM(options: UseDAMOptions = {}) {
     folderTree,
     assets,
     inboxFolder,
-    
+
     // Loading states
     isLoading: foldersLoading || assetsLoading,
     foldersLoading,
     assetsLoading,
-    
+
     // Selection
     selectedAssets,
     toggleSelection,
     selectAll,
     clearSelection,
-    
+
     // Mutations
     createFolder,
     renameFolder,
@@ -506,16 +506,16 @@ export function useDAM(options: UseDAMOptions = {}) {
     bulkUpdateTags,
     bulkMove,
     undoDelete,
-    
+
     // Refetch
     refetch: () => {
       refetchFolders();
       refetchAssets();
     },
-    
+
     // Usage tracking
     trackAssetUsage,
-    
+
     // Recently deleted for undo
     recentlyDeleted,
   };
@@ -526,7 +526,7 @@ export function useDAMUpload() {
   const { currentOrganizationId } = useOnboarding();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const [uploads, setUploads] = useState<UploadProgress[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -541,7 +541,7 @@ export function useDAMUpload() {
     }
 
     const uploadId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
-    
+
     // Add to uploads list
     setUploads(prev => [...prev, {
       id: uploadId,
@@ -562,41 +562,73 @@ export function useDAMUpload() {
         reader.onerror = reject;
       });
       reader.readAsDataURL(file);
-      
+
       // Update progress
-      setUploads(prev => prev.map(u => 
+      setUploads(prev => prev.map(u =>
         u.id === uploadId ? { ...u, progress: 30, status: 'uploading' } : u
       ));
 
       const base64Data = await base64Promise;
 
       // Update progress
-      setUploads(prev => prev.map(u => 
+      setUploads(prev => prev.map(u =>
         u.id === uploadId ? { ...u, progress: 60, status: 'uploading' } : u
       ));
 
-      // Call edge function
+      // Call edge function with timeout
       const { data: { session } } = await supabase.auth.getSession();
-      
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-dam-asset`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session?.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            organizationId: currentOrganizationId,
-            folderId,
-            fileName: file.name,
-            fileType: file.type,
-            fileSize: file.size,
-            fileData: base64Data,
-            tags: tags || [],
-          }),
+
+      if (!session?.access_token) {
+        throw new Error('Not authenticated. Please sign in again.');
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
+      let response: Response;
+      try {
+        response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-dam-asset`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              organizationId: currentOrganizationId,
+              folderId,
+              fileName: file.name,
+              fileType: file.type,
+              fileSize: file.size,
+              fileData: base64Data,
+              tags: tags || [],
+            }),
+            signal: controller.signal,
+          }
+        );
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          throw new Error('Upload timed out. Please try again with a smaller file.');
         }
-      );
+        throw fetchError;
+      }
+
+      clearTimeout(timeoutId);
+
+      // Check HTTP status first
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = `Upload failed (${response.status})`;
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.error || errorJson.message || errorMessage;
+        } catch {
+          if (errorText.length < 200) errorMessage = errorText;
+        }
+        throw new Error(errorMessage);
+      }
 
       const result = await response.json();
 
@@ -605,7 +637,7 @@ export function useDAMUpload() {
       }
 
       // Update progress to processing
-      setUploads(prev => prev.map(u => 
+      setUploads(prev => prev.map(u =>
         u.id === uploadId ? { ...u, progress: 90, status: 'processing' } : u
       ));
 
@@ -613,41 +645,48 @@ export function useDAMUpload() {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Complete!
-      setUploads(prev => prev.map(u => 
+      setUploads(prev => prev.map(u =>
         u.id === uploadId ? { ...u, progress: 100, status: 'complete', asset: result.asset } : u
       ));
 
       // Invalidate cache
       queryClient.invalidateQueries({ queryKey: ["dam-assets"] });
 
-      // Remove from uploads after animation
+      // Remove from uploads after animation - FIXED: use functional update for isUploading
       setTimeout(() => {
-        setUploads(prev => prev.filter(u => u.id !== uploadId));
-        setIsUploading(prev => uploads.filter(u => u.id !== uploadId).some(u => u.status !== 'complete'));
+        setUploads(prev => {
+          const remaining = prev.filter(u => u.id !== uploadId);
+          // Update isUploading based on remaining uploads
+          setIsUploading(remaining.some(u => u.status !== 'complete' && u.status !== 'error'));
+          return remaining;
+        });
       }, 2000);
 
       return result.asset;
     } catch (error) {
       console.error('Upload error:', error);
-      
-      setUploads(prev => prev.map(u => 
-        u.id === uploadId ? { 
-          ...u, 
-          progress: 0, 
-          status: 'error', 
-          error: error instanceof Error ? error.message : 'Upload failed' 
+
+      setUploads(prev => prev.map(u =>
+        u.id === uploadId ? {
+          ...u,
+          progress: 0,
+          status: 'error',
+          error: error instanceof Error ? error.message : 'Upload failed'
         } : u
       ));
 
-      toast({ 
-        title: "Upload failed", 
+      toast({
+        title: "Upload failed",
         description: error instanceof Error ? error.message : 'Unknown error',
-        variant: "destructive" 
+        variant: "destructive"
       });
+
+      // FIXED: Reset isUploading state on error
+      setIsUploading(false);
 
       return null;
     }
-  }, [currentOrganizationId, queryClient, toast, uploads]);
+  }, [currentOrganizationId, queryClient, toast]);
 
   const uploadFiles = useCallback(async (
     files: File[],
@@ -657,7 +696,7 @@ export function useDAMUpload() {
     const results = await Promise.all(
       files.map(file => uploadFile(file, folderId, tags))
     );
-    
+
     const successful = results.filter(Boolean).length;
     if (successful > 0) {
       toast({
@@ -665,7 +704,7 @@ export function useDAMUpload() {
         description: `${successful} file${successful > 1 ? 's' : ''} uploaded successfully`,
       });
     }
-    
+
     return results;
   }, [uploadFile, toast]);
 

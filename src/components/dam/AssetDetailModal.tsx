@@ -27,9 +27,12 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { cn } from "@/lib/utils";
 import type { DAMAsset } from "./types";
 import { formatFileSize, getFileTypeCategory } from "./types";
@@ -139,10 +142,16 @@ export function AssetDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent 
+      <DialogContent
         className="max-w-6xl h-[90vh] p-0 gap-0 overflow-hidden"
         onKeyDown={handleKeyDown}
       >
+        {/* Visually hidden title for accessibility */}
+        <VisuallyHidden.Root>
+          <DialogTitle>Asset Details: {asset.name}</DialogTitle>
+          <DialogDescription>View and manage asset details, tags, and AI analysis</DialogDescription>
+        </VisuallyHidden.Root>
+
         <div className="flex h-full">
           {/* Preview area */}
           <div className="flex-1 bg-muted/30 relative flex items-center justify-center overflow-hidden">
@@ -385,7 +394,7 @@ export function AssetDetailModal({
                       </Button>
                     )}
                   </div>
-                  
+
                   {/* Add tag input */}
                   {isAddingTag && (
                     <div className="flex gap-2">
@@ -406,9 +415,9 @@ export function AssetDetailModal({
                       <Button size="sm" className="h-7 px-2" onClick={handleAddTag}>
                         <CheckCircle2 className="w-3.5 h-3.5" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="h-7 px-2"
                         onClick={() => {
                           setIsAddingTag(false);
@@ -419,13 +428,13 @@ export function AssetDetailModal({
                       </Button>
                     </div>
                   )}
-                  
+
                   {asset.tags.length > 0 ? (
                     <div className="flex flex-wrap gap-1.5">
                       {asset.tags.map((tag) => (
-                        <Badge 
-                          key={tag} 
-                          variant="secondary" 
+                        <Badge
+                          key={tag}
+                          variant="secondary"
                           className="text-xs group pr-1 flex items-center gap-1"
                         >
                           {tag}
@@ -501,7 +510,7 @@ export function AssetDetailModal({
                               className={cn(
                                 "h-full rounded-full",
                                 asset.ai_analysis.quality_score >= 80 ? "bg-green-500" :
-                                asset.ai_analysis.quality_score >= 60 ? "bg-amber-500" : "bg-red-500"
+                                  asset.ai_analysis.quality_score >= 60 ? "bg-amber-500" : "bg-red-500"
                               )}
                               style={{ width: `${asset.ai_analysis.quality_score}%` }}
                             />
@@ -561,9 +570,9 @@ export function AssetDetailModal({
                           {asset.ai_analysis.suggested_tags
                             .filter(tag => !asset.tags.includes(tag.toLowerCase()))
                             .map((tag) => (
-                              <Badge 
-                                key={tag} 
-                                variant="outline" 
+                              <Badge
+                                key={tag}
+                                variant="outline"
                                 className={cn(
                                   "text-xs bg-primary/5",
                                   onUpdateTags && "cursor-pointer hover:bg-primary/10 transition-colors"
@@ -574,11 +583,11 @@ export function AssetDetailModal({
                                 {tag}
                               </Badge>
                             ))}
-                          {asset.ai_analysis.suggested_tags.every(tag => 
+                          {asset.ai_analysis.suggested_tags.every(tag =>
                             asset.tags.includes(tag.toLowerCase())
                           ) && (
-                            <p className="text-xs text-muted-foreground">All suggestions already added</p>
-                          )}
+                              <p className="text-xs text-muted-foreground">All suggestions already added</p>
+                            )}
                         </div>
                       </div>
                     )}
