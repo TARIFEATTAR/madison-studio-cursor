@@ -12,5 +12,8 @@
   },
   "files.watcherExclude": {
     "**/supabase/functions/**": true
-  }
+  },
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "files.trimFinalNewlines": false
 }

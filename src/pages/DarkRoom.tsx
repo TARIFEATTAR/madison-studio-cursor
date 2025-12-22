@@ -624,7 +624,7 @@ export default function DarkRoom() {
         isSaving={isSaving}
         onSaveAll={handleSaveAll}
         heroImage={heroImage}
-        onDownloadHero={heroImage ? () => handleDownload(heroImage) : undefined}
+        onDownloadHero={heroImage ? () => handleDownloadImage(heroImage) : undefined}
         onSaveHero={heroImage ? () => handleSaveImage(heroImage.id) : undefined}
         onRefineHero={heroImage ? () => handleOpenLightTable(heroImage) : undefined}
       />
