@@ -987,11 +987,20 @@ export default function Library() {
           // Images in library are already saved, just refresh
           refetch();
         }}
-        onImageGenerated={(newImage) => {
+        onImageGenerated={async (newImage) => {
+          // Verify the image was saved to database
+          console.log("🖼️ New refined image generated:", newImage);
+          
           // Refresh library to show new refinement
-          refetch();
+          await refetch();
+          
           // Update modal to show new image
           setImageEditorImage(newImage);
+          
+          toast({
+            title: "Refinement saved",
+            description: "Your refined image has been saved to the library.",
+          });
         }}
         source="library"
       />

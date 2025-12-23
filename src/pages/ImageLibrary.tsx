@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { ImageEditorModal, type ImageEditorImage } from "@/components/image-editor/ImageEditorModal";
+import "@/styles/darkroom.css";
 
 interface GeneratedImage {
   id: string;
@@ -536,9 +537,17 @@ export default function ImageLibrary() {
         }}
         image={selectedImage}
         onSave={() => refetch()}
-        onImageGenerated={(newImage) => {
-          refetch();
+        onImageGenerated={async (newImage) => {
+          console.log("🖼️ New refined image generated in ImageLibrary:", newImage);
+          // Refresh the library to show the new refinement
+          await refetch();
+          // Update modal to show the new image
           setSelectedImage(newImage);
+          // Show success message
+          toast({
+            title: "Refinement saved",
+            description: "Your refined image has been saved to the library.",
+          });
         }}
         source="library"
       />
