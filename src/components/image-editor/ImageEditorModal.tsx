@@ -398,8 +398,10 @@ export function ImageEditorModal({
     if (!image) return;
 
     try {
-      // Use displayed image (processed/edited version) or fallback to original
-      const imageUrlToDownload = displayedImage || image.imageUrl;
+      // Calculate displayed image (selected variation or original) inside callback
+      const imageUrlToDownload = selectedVariationId
+        ? variations.find((v) => v.id === selectedVariationId)?.imageUrl || image.imageUrl
+        : image.imageUrl;
 
       // Import the download utility
       const { downloadImage } = await import("@/utils/imageDownload");
@@ -410,7 +412,7 @@ export function ImageEditorModal({
       console.error("Download error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to download");
     }
-  }, [image, displayedImage]);
+  }, [image, selectedVariationId, variations]);
 
   // Copy prompt
   const handleCopyPrompt = useCallback(() => {
