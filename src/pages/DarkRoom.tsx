@@ -1,6 +1,6 @@
 /**
  * Dark Room - Madison Studio's Image Generation Studio
- * 
+ *
  * A clean, sophisticated image generation interface with purposeful animations
  * that mimic darkroom photography processes.
  */
@@ -37,14 +37,14 @@ import { useCameraFeedback } from "@/hooks/useCameraFeedback";
 // Hook to detect mobile
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
-  
+
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 1024);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
-  
+
   return isMobile;
 }
 
@@ -145,7 +145,7 @@ export default function DarkRoom() {
   const { orgId, loading: orgLoading } = useCurrentOrganizationId();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
-  
+
   // Debug: Log org resolution
   console.log("🏢 Organization state:", { orgId, orgLoading, userId: user?.id });
 
@@ -162,7 +162,7 @@ export default function DarkRoom() {
   const [backgroundImage, setBackgroundImage] = useState<UploadedImage | null>(null);
   const [styleReference, setStyleReference] = useState<UploadedImage | null>(null);
   const [proSettings, setProSettings] = useState<ProModeSettings>({});
-  
+
   // Multi-product slots for compositing
   const [productSlots, setProductSlots] = useState<{ id: string; imageUrl: string | null; name?: string }[]>([
     { id: "slot-0", imageUrl: null },
@@ -172,10 +172,10 @@ export default function DarkRoom() {
     { id: "slot-4", imageUrl: null },
     { id: "slot-5", imageUrl: null },
   ]);
-  
+
   // Background preset selection
   const [selectedBackgroundPreset, setSelectedBackgroundPreset] = useState<string | null>(null);
-  
+
   // Composition preset selection (how to arrange products in scene)
   const [selectedCompositionPreset, setSelectedCompositionPreset] = useState<string | null>(null);
 
@@ -244,15 +244,15 @@ export default function DarkRoom() {
   // Effects
   useEffect(() => {
     // Check for initial data from navigation (product or background image)
-    const state = location.state as { 
+    const state = location.state as {
       product?: Product;
       backgroundImage?: { url: string; name: string };
     } | undefined;
-    
+
     if (state?.product) {
       setSelectedProduct(state.product);
     }
-    
+
     // If coming from Light Table with a background image, set it
     if (state?.backgroundImage) {
       setBackgroundImage({
@@ -278,11 +278,11 @@ export default function DarkRoom() {
 
     // Build effective prompt with presets
     let effectivePrompt = prompt.trim() || "Professional product photography";
-    
+
     // Count total products (main product image + product slots)
     const activeProductSlots = productSlots.filter(slot => slot.imageUrl);
     const totalProductCount = (productImage ? 1 : 0) + activeProductSlots.length;
-    
+
     // If a background preset is selected, add a random variation to the prompt
     if (selectedBackgroundPreset) {
       const backgroundVariation = getRandomBackgroundVariation(selectedBackgroundPreset);
@@ -292,7 +292,7 @@ export default function DarkRoom() {
         console.log("🎨 Background preset applied:", selectedBackgroundPreset, "→", backgroundVariation);
       }
     }
-    
+
     // If a composition preset is selected, add arrangement instructions
     if (selectedCompositionPreset && totalProductCount > 0) {
       const compositionPrompt = getCompositionPrompt(selectedCompositionPreset, totalProductCount);
@@ -301,10 +301,10 @@ export default function DarkRoom() {
         console.log("📐 Composition preset applied:", selectedCompositionPreset, `(${totalProductCount} products)`);
       }
     }
-    
+
     // Trigger camera feedback (sound + flash) immediately on capture
     triggerCameraFeedback();
-    
+
     setIsGenerating(true);
 
     try {
@@ -334,7 +334,7 @@ export default function DarkRoom() {
           description: "Style reference for lighting and mood",
         });
       }
-      
+
       // Add multi-product slots (for compositing multiple products into scene)
       activeProductSlots.forEach((slot, index) => {
         referenceImages.push({
@@ -453,7 +453,7 @@ export default function DarkRoom() {
       setImages((prev) => [...prev, newImage]);
       setHeroImageId(newImage.id);
       setNewlyGeneratedId(newImage.id); // Track for developing animation
-      
+
       // Clear newly generated after animation completes (3 seconds)
       setTimeout(() => setNewlyGeneratedId(null), 3000);
 
@@ -516,20 +516,43 @@ export default function DarkRoom() {
   }, [heroImageId]);
 
   const handleDownloadImage = useCallback(async (image: GeneratedImage) => {
+    if (!image || !image.imageUrl) {
+      toast.error("No image to download");
+      return;
+    }
+
     try {
-      const response = await fetch(image.imageUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      let downloadUrl = image.imageUrl;
+
+      // If it's a base64 data URL, use it directly
+      if (image.imageUrl.startsWith('data:')) {
+        downloadUrl = image.imageUrl;
+      } else {
+        // For regular URLs, fetch and convert to blob URL
+        const response = await fetch(image.imageUrl, { mode: 'cors' });
+        if (!response.ok) {
+          throw new Error(`Failed to fetch image: ${response.statusText}`);
+        }
+        const blob = await response.blob();
+        downloadUrl = URL.createObjectURL(blob);
+      }
+
       const link = document.createElement("a");
-      link.href = url;
+      link.href = downloadUrl;
       link.download = `madison-${image.id.slice(0, 8)}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+
+      // Clean up blob URL if we created one
+      if (!image.imageUrl.startsWith('data:')) {
+        URL.revokeObjectURL(downloadUrl);
+      }
+
       toast.success("Image downloaded");
     } catch (err) {
-      toast.error("Download failed");
+      console.error('Download failed:', err);
+      toast.error("Failed to download image. Try right-clicking and 'Save Image As'");
     }
   }, []);
 
