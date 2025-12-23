@@ -1,9 +1,9 @@
 /**
  * Light Table - Madison Studio's Image Refinement & Review Studio
- * 
+ *
  * A full-screen dedicated page for reviewing and refining generated images.
  * Features an animated vertical film strip on the right showing all session images.
- * 
+ *
  * Flow: Dark Room (generate) → Light Table (review/refine) → Library (save) or Video Project (create video)
  */
 
@@ -51,11 +51,11 @@ import { ImageEditorModal, type ImageEditorImage } from "@/components/image-edit
 
 // Ad Overlay components
 import { AdOverlay, AdPresetSelector, type AdOverlayConfig } from "@/components/ad-overlay";
-import { 
-  AD_LAYOUT_PRESETS, 
-  AD_FONT_OPTIONS, 
+import {
+  AD_LAYOUT_PRESETS,
+  AD_FONT_OPTIONS,
   AD_COLOR_PRESETS,
-  type AdLayoutPreset 
+  type AdLayoutPreset
 } from "@/config/adLayoutPresets";
 
 // Styles
@@ -116,7 +116,7 @@ export default function LightTable() {
         const parsed = JSON.parse(saved);
         const sessionAge = Date.now() - (parsed.savedAt || 0);
         const MAX_SESSION_AGE = 30 * 60 * 1000; // 30 minutes
-        
+
         if (parsed.images && parsed.images.length > 0 && sessionAge < MAX_SESSION_AGE) {
           console.log("📷 Restoring session from localStorage:", parsed.images.length, "images, age:", Math.round(sessionAge / 1000), "seconds");
           return {
@@ -133,12 +133,12 @@ export default function LightTable() {
       console.error("Failed to load session from localStorage:", e);
       localStorage.removeItem(LIGHT_TABLE_SESSION_KEY);
     }
-    
+
     return { images: [], selectedId: null, sessionId: uuidv4() };
   }, [locationState]);
 
   const initialSession = useMemo(() => loadSession(), []);
-  
+
   // Images state
   const [images, setImages] = useState<SessionImage[]>(initialSession.images);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(initialSession.selectedId);
@@ -286,24 +286,24 @@ export default function LightTable() {
       toast.error("No image selected");
       return;
     }
-    
+
     if (!user) {
       toast.error("Please sign in to generate images");
       return;
     }
-    
+
     if (!orgId) {
       toast.error("Organization not found. Please complete onboarding.");
       return;
     }
-    
+
     if (!refinementPrompt.trim()) {
       toast.error("Please enter a refinement prompt");
       return;
     }
 
     setIsGenerating(true);
-    
+
     console.log("🎨 Starting refinement:", {
       prompt: refinementPrompt.substring(0, 50) + "...",
       referenceImage: selectedImage.imageUrl.substring(0, 50) + "...",
@@ -403,7 +403,7 @@ export default function LightTable() {
     }
 
     setIsGenerating(true);
-    
+
     console.log("🎨 Starting variations generation for:", selectedImage.id);
 
     // Create placeholder variations
@@ -429,7 +429,7 @@ export default function LightTable() {
       const results = await Promise.allSettled(
         variationPrompts.map(async (prompt, index) => {
           console.log(`  → Variation ${index + 1} starting...`);
-          
+
           const { data, error } = await supabase.functions.invoke("generate-madison-image", {
             body: {
               prompt,
@@ -451,9 +451,9 @@ export default function LightTable() {
             console.error(`  ❌ Variation ${index + 1} error:`, error);
             throw error;
           }
-          
+
           console.log(`  ✅ Variation ${index + 1} complete:`, data?.imageUrl?.substring(0, 50));
-          
+
           return {
             id: placeholders[index].id,
             imageUrl: data?.imageUrl || "",
@@ -547,18 +547,12 @@ export default function LightTable() {
     if (!selectedImage) return;
 
     try {
-      const response = await fetch(selectedImage.imageUrl);
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `madison-studio-${selectedImage.id.slice(0, 8)}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const { downloadImage } = await import("@/utils/imageDownload");
+      await downloadImage(selectedImage.imageUrl, `madison-studio-${selectedImage.id.slice(0, 8)}.png`);
       toast.success("Image downloaded");
     } catch (error) {
       console.error("Download error:", error);
-      toast.error("Failed to download");
+      toast.error(error instanceof Error ? error.message : "Failed to download");
     }
   }, [selectedImage]);
 
@@ -597,7 +591,7 @@ export default function LightTable() {
   // Use current image as background reference in Dark Room
   const handleUseAsBackground = useCallback(() => {
     if (!selectedImage) return;
-    
+
     // Navigate to Dark Room with background image data
     navigate("/darkroom", {
       state: {
@@ -679,7 +673,7 @@ export default function LightTable() {
     try {
       // Build the ad generation prompt with Pomelli-style layout intelligence
       const layoutDescription = `${adConfig.preset.name}: ${adConfig.preset.description}`;
-      
+
       // Text elements with semantic meaning
       const textSpecs = [];
       if (adConfig.headline) textSpecs.push(`PRIMARY HEADLINE: "${adConfig.headline}" (most prominent, attention-grabbing)`);
@@ -689,7 +683,7 @@ export default function LightTable() {
       const colorBlockColor = adConfig.colorBlockColor || adConfig.preset.defaultStyles.colorBlockColor;
       const textColor = adConfig.textColor || adConfig.preset.defaultStyles.textColor;
       const ctaBgColor = adConfig.ctaBackgroundColor || adConfig.preset.defaultStyles.ctaBackgroundColor;
-      
+
       const fontInfo = adConfig.fontFamily || adConfig.preset.defaultStyles.fontFamily;
       const fontLabel = AD_FONT_OPTIONS.find(f => f.value === fontInfo)?.label || fontInfo;
 
@@ -784,9 +778,9 @@ Generate a polished, publication-ready advertisement image where the product and
 
       setImages((prev) => [...prev, newAdImage]);
       setSelectedImageId(newAdImage.id);
-      
+
       toast.success("Ad generated successfully!");
-      
+
       // Reset ad config after successful generation
       handleResetAdConfig();
     } catch (err: any) {
@@ -952,9 +946,9 @@ Generate a polished, publication-ready advertisement image where the product and
 
             {/* Quick Actions */}
             <div className="light-table-quick-actions">
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => {
                   if (selectedImage) {
                     setImageEditorImage({
@@ -977,9 +971,9 @@ Generate a polished, publication-ready advertisement image where the product and
                 <Download className="w-4 h-4 mr-2" />
                 Download
               </Button>
-              <Button 
-                variant="brass" 
-                size="sm" 
+              <Button
+                variant="brass"
+                size="sm"
                 onClick={handleUseAsBackground}
                 title="Use this image as background in Dark Room"
               >

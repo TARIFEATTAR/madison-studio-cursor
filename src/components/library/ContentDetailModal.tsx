@@ -85,9 +85,9 @@ export function ContentDetailModal({
 
   const contentType = content.content_type || content.asset_type;
   const subtypeLabel = contentType ? getContentSubtypeLabel(contentType) : null;
-  
+
   // Detect if this is a visual asset (generated image)
-  const isVisualAsset = content.sourceTable === "generated_images" || 
+  const isVisualAsset = content.sourceTable === "generated_images" ||
                         content.content_type === "visual-asset" ||
                         content.asset_type === "visual-asset";
 
@@ -115,16 +115,16 @@ export function ContentDetailModal({
     if (category === "derivative") return content.generated_content;
     return "";
   };
-  
+
   const getImageUrl = () => {
     if (!content) return null;
     if (content.imageUrl) return content.imageUrl;
     if (content.image_url) return content.image_url;
-    if (content.generated_content && typeof content.generated_content === 'string' && 
+    if (content.generated_content && typeof content.generated_content === 'string' &&
         (content.generated_content.startsWith('data:image/') || content.generated_content.startsWith('http'))) {
       return content.generated_content;
     }
-    if (typeof content.content === 'string' && 
+    if (typeof content.content === 'string' &&
         (content.content.startsWith('data:image/') || content.content.startsWith('http'))) {
       return content.content;
     }
@@ -135,12 +135,12 @@ export function ContentDetailModal({
     setEditedContent(getContentText());
     setIsEditing(true);
   };
-  
+
   const handleEditTitle = () => {
     setEditedTitle(content.title || "");
     setIsEditingTitle(true);
   };
-  
+
   const handleSaveTitle = async () => {
     if (!editedTitle.trim()) {
       toast({
@@ -149,7 +149,7 @@ export function ContentDetailModal({
       });
       return;
     }
-    
+
     try {
       const table =
         category === "prompt"
@@ -173,7 +173,7 @@ export function ContentDetailModal({
         title: "Title updated",
         description: "Content title has been renamed successfully",
       });
-      
+
       content.title = editedTitle.trim(); // Update local content object
       setIsEditingTitle(false);
       onUpdate?.();
@@ -196,7 +196,7 @@ export function ContentDetailModal({
           : category === "derivative"
           ? "derivative_assets"
           : "master_content";
-      
+
       const field =
         category === "prompt"
           ? "prompt_text"
@@ -237,7 +237,7 @@ export function ContentDetailModal({
         title: "Content updated",
         description: "Your changes have been saved successfully.",
       });
-      
+
       setIsEditing(false);
       onUpdate?.();
     } catch (error: any) {
@@ -267,7 +267,7 @@ export function ContentDetailModal({
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   };
-  
+
   const handleDownloadImage = async () => {
     const imageUrl = getImageUrl();
     if (!imageUrl) {
@@ -276,37 +276,23 @@ export function ContentDetailModal({
     }
 
     try {
-      if (imageUrl.startsWith('data:image/')) {
-        const link = document.createElement('a');
-        link.href = imageUrl;
-        link.download = `${content?.title || 'image'}.png`;
-        link.click();
-        toast({ title: "Image downloaded" });
-        return;
-      }
-
-      const response = await fetch(imageUrl);
-      if (!response.ok) throw new Error('Failed to fetch');
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = `${content?.title || 'image'}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+      const { downloadImage } = await import("@/utils/imageDownload");
+      await downloadImage(imageUrl, `${content?.title || 'image'}.png`);
       toast({ title: "Image downloaded" });
     } catch (error) {
       console.error('Download error:', error);
-      toast({ title: "Failed to download. Try right-click 'Save Image As'", variant: "destructive" });
+      toast({
+        title: "Failed to download",
+        description: error instanceof Error ? error.message : "Try right-click 'Save Image As'",
+        variant: "destructive"
+      });
     }
   };
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const cursorPosition = e.target.selectionStart;
     setEditedContent(e.target.value);
-    
+
     // Preserve cursor position after state update
     requestAnimationFrame(() => {
       if (textareaRef.current) {
@@ -319,9 +305,9 @@ export function ContentDetailModal({
   // Fetch organization data and dependency counts when modal opens
   useEffect(() => {
     // Validate organization_id is a valid UUID before querying
-    const isValidUUID = content?.organization_id && 
+    const isValidUUID = content?.organization_id &&
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(content.organization_id);
-    
+
     if (open && isValidUUID) {
       supabase
         .from("organizations")
@@ -336,7 +322,7 @@ export function ContentDetailModal({
               const config = data.brand_config as Record<string, any>;
               brandColor = config.primaryColor as string | undefined;
             }
-            
+
             // Try to load logo as base64
             let logoBase64: string | undefined;
             try {
@@ -360,7 +346,7 @@ export function ContentDetailModal({
           }
         });
     }
-    
+
     // Fetch dependency counts if this is archived master content
     if (open && content?.is_archived && category === "master") {
       Promise.all([
@@ -464,14 +450,14 @@ export function ContentDetailModal({
   // Handle publish/unpublish to website
   const handleTogglePublish = async () => {
     if (category !== 'master') return;
-    
+
     setIsPublishing(true);
     const newStatus = isPublished ? 'draft' : 'published';
-    
+
     try {
       const { error } = await supabase
         .from('master_content')
-        .update({ 
+        .update({
           status: newStatus,
           published_at: newStatus === 'published' ? new Date().toISOString() : null
         })
@@ -482,7 +468,7 @@ export function ContentDetailModal({
       setIsPublished(!isPublished);
       toast({
         title: newStatus === 'published' ? "Published to Website!" : "Unpublished",
-        description: newStatus === 'published' 
+        description: newStatus === 'published'
           ? "This content is now available on your website's blog feed."
           : "Content removed from public website feed.",
       });
@@ -535,9 +521,9 @@ export function ContentDetailModal({
                   <DialogTitle className="text-2xl font-serif">
                     {content.title || "Content Details"}
                   </DialogTitle>
-                  <Button 
-                    onClick={handleEditTitle} 
-                    size="sm" 
+                  <Button
+                    onClick={handleEditTitle}
+                    size="sm"
                     variant="ghost"
                     className="opacity-0 group-hover:opacity-100 transition-opacity"
                   >
@@ -545,7 +531,7 @@ export function ContentDetailModal({
                   </Button>
                 </div>
               )}
-              
+
               {/* Badges */}
               <div className="flex items-center gap-2 flex-wrap">
                 {contentType && (
@@ -581,29 +567,29 @@ export function ContentDetailModal({
                 <ImageIcon className="w-4 h-4" />
                 Featured Image
               </div>
-              
+
               <ImageLibraryPicker
                 value={featuredImageUrl}
                 onChange={async (url) => {
                   // Only update if the value actually changed
                   if (url === content?.featured_image_url) return;
-                  
+
                   console.log('[FeaturedImage] Saving:', { contentId: content.id, url: url?.substring(0, 50) });
-                  
+
                   // Try to save to database first - use type assertion to bypass generated types
                   const { data, error } = await supabase
                     .from('master_content')
                     .update({ featured_image_url: url || null } as any)
                     .eq('id', content.id)
                     .select();
-                  
+
                   console.log('[FeaturedImage] Response:', { data, error });
-                  
+
                   if (error) {
                     console.error('[FeaturedImage] Save error:', error);
                     toast({
                       title: "Error saving image",
-                      description: error.message.includes('column') 
+                      description: error.message.includes('column')
                         ? "Database needs migration. Run: ALTER TABLE master_content ADD COLUMN featured_image_url TEXT;"
                         : error.message,
                       variant: "destructive",
@@ -611,7 +597,7 @@ export function ContentDetailModal({
                     // Don't update local state if save failed
                     return;
                   }
-                  
+
                   // Only update local state after successful save
                   setFeaturedImageUrl(url);
                   toast({
@@ -628,13 +614,13 @@ export function ContentDetailModal({
           {isVisualAsset && !isEditing ? (
             <div className="space-y-4">
               <div className="bg-muted/30 rounded-lg p-6 border border-border/40">
-                <img 
-                  src={getImageUrl()} 
+                <img
+                  src={getImageUrl()}
                   alt={content.title || "Generated image"}
                   className="w-full h-auto rounded-lg"
                 />
               </div>
-              
+
               {/* Image Metadata */}
               <div className="bg-muted/20 rounded-lg p-4 border border-border/30 space-y-2 text-sm">
                 {content.final_prompt && (
@@ -692,8 +678,8 @@ export function ContentDetailModal({
             <div className="flex items-center gap-2 pt-4 border-t border-border/40">
               {/* Special Edit button for Email Composer emails - Temporarily hidden for launch */}
               {/* {isEmailComposer ? (
-                <Button 
-                  onClick={() => window.location.href = `/email-builder?contentId=${content.id}&sourceTable=master_content`} 
+                <Button
+                  onClick={() => window.location.href = `/email-builder?contentId=${content.id}&sourceTable=master_content`}
                   variant="default"
                   size="sm"
                   className="bg-brass hover:bg-brass/90"
@@ -707,14 +693,14 @@ export function ContentDetailModal({
                   Edit
                 </Button>
               )}
-              
+
               {isVisualAsset ? (
                 <Button onClick={handleDownloadImage} variant="outline" size="sm">
                   <Download className="w-4 h-4 mr-2" />
                   Download Image
                 </Button>
               ) : null}
-              
+
               <Button onClick={handleCopy} variant="outline" size="sm">
                 {isCopied ? (
                   <Check className="w-4 h-4 mr-2" />
@@ -772,8 +758,8 @@ export function ContentDetailModal({
                 category === 'master' ||
                 category === 'derivative' ||
                 (contentType && (
-                  contentType.toLowerCase().includes('social') || 
-                  contentType.toLowerCase().includes('linkedin') || 
+                  contentType.toLowerCase().includes('social') ||
+                  contentType.toLowerCase().includes('linkedin') ||
                   contentType.toLowerCase().includes('post')
                 ))
               ) && (
@@ -798,7 +784,7 @@ export function ContentDetailModal({
                 <MessageSquare className="w-4 h-4 mr-2" />
                 Edit with Madison
               </Button>
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" disabled={isExporting}>
@@ -832,7 +818,7 @@ export function ContentDetailModal({
                   Multiply
                 </Button>
               )}
-              
+
               {content.is_archived && (
                 <Button
                   onClick={() => setDeleteDialogOpen(true)}
@@ -869,7 +855,7 @@ export function ContentDetailModal({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this content permanently?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete "{content.title || 'this content'}" 
+              This action cannot be undone. This will permanently delete "{content.title || 'this content'}"
               from the archives.
               {category === "master" && (dependencyCounts.derivatives > 0 || dependencyCounts.scheduled > 0) && (
                 <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-md">

@@ -522,37 +522,12 @@ export default function DarkRoom() {
     }
 
     try {
-      let downloadUrl = image.imageUrl;
-
-      // If it's a base64 data URL, use it directly
-      if (image.imageUrl.startsWith('data:')) {
-        downloadUrl = image.imageUrl;
-      } else {
-        // For regular URLs, fetch and convert to blob URL
-        const response = await fetch(image.imageUrl, { mode: 'cors' });
-        if (!response.ok) {
-          throw new Error(`Failed to fetch image: ${response.statusText}`);
-        }
-        const blob = await response.blob();
-        downloadUrl = URL.createObjectURL(blob);
-      }
-
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.download = `madison-${image.id.slice(0, 8)}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      // Clean up blob URL if we created one
-      if (!image.imageUrl.startsWith('data:')) {
-        URL.revokeObjectURL(downloadUrl);
-      }
-
+      const { downloadImage } = await import("@/utils/imageDownload");
+      await downloadImage(image.imageUrl, `madison-${image.id.slice(0, 8)}.png`);
       toast.success("Image downloaded");
     } catch (err) {
       console.error('Download failed:', err);
-      toast.error("Failed to download image. Try right-clicking and 'Save Image As'");
+      toast.error(err instanceof Error ? err.message : "Failed to download image. Try right-clicking and 'Save Image As'");
     }
   }, []);
 

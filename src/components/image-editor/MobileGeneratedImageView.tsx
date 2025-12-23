@@ -48,13 +48,13 @@ export default function MobileGeneratedImageView({
     }
   };
 
-  const handleDownload = () => {
-    const link = document.createElement("a");
-    link.href = imageUrl;
-    link.download = `generated-${Date.now()}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownload = async () => {
+    try {
+      const { downloadImage } = await import("@/utils/imageDownload");
+      await downloadImage(imageUrl, `generated-${Date.now()}.png`);
+    } catch (error) {
+      console.error('Download failed:', error);
+    }
   };
 
   return (
@@ -64,7 +64,7 @@ export default function MobileGeneratedImageView({
         <Button variant="ghost" size="icon" onClick={onClose} type="button" disabled={isGenerating || isSaving}>
           <X className="w-5 h-5" />
         </Button>
-        
+
         <Button
           onClick={onSave}
           size="lg"
@@ -125,7 +125,7 @@ export default function MobileGeneratedImageView({
               <span className="w-5 h-5 flex items-center justify-center text-lg">G</span>
               <span>Imagen Nano Banana</span>
             </Button>
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -150,7 +150,7 @@ export default function MobileGeneratedImageView({
             className="w-full bg-studio-card border-studio-border text-studio-text-primary text-sm"
             disabled={isGenerating}
           />
-          
+
           <div className="flex gap-2">
             <Button
               onClick={() => onRegenerate(prompt)}

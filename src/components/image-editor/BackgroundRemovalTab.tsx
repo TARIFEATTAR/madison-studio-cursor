@@ -1,9 +1,9 @@
 /**
  * Background Removal Tab
- * 
+ *
  * A tab component for the ImageEditorModal that provides
  * background removal functionality with preview and download.
- * 
+ *
  * Features:
  * - One-click background removal
  * - Before/after comparison slider
@@ -92,18 +92,13 @@ export function BackgroundRemovalTab({
     if (!url) return;
 
     try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const downloadUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = downloadUrl;
-      a.download = `madison-bg-removed-${Date.now()}.png`;
-      a.click();
-      URL.revokeObjectURL(downloadUrl);
+      // Import the download utility
+      const { downloadImage } = await import("@/utils/imageDownload");
+      await downloadImage(url, `madison-bg-removed-${Date.now()}.png`);
       toast.success("Image downloaded");
     } catch (error) {
       console.error("Download error:", error);
-      toast.error("Failed to download image");
+      toast.error(error instanceof Error ? error.message : "Failed to download image");
     }
   };
 
@@ -116,10 +111,10 @@ export function BackgroundRemovalTab({
       // Fetch the processed image
       const response = await fetch(displayUrl);
       const blob = await response.blob();
-      
+
       // Generate a unique filename
       const fileName = `bg-removed/${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
-      
+
       // Upload to storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("generated-images")
@@ -127,21 +122,21 @@ export function BackgroundRemovalTab({
           contentType: "image/png",
           upsert: true,
         });
-      
+
       if (uploadError) {
         throw new Error(`Upload failed: ${uploadError.message}`);
       }
-      
+
       // Get public URL
       const { data: urlData } = supabase.storage
         .from("generated-images")
         .getPublicUrl(fileName);
-      
+
       const publicUrl = urlData.publicUrl;
-      
+
       // Get current user/org for saving to generated_images table
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (user) {
         // Get user's organization
         const { data: orgData } = await supabase
@@ -149,7 +144,7 @@ export function BackgroundRemovalTab({
           .select("organization_id")
           .eq("user_id", user.id)
           .single();
-        
+
         // Save to generated_images table with all required fields
         const { data: savedImage, error: saveError } = await supabase
           .from("generated_images")
@@ -165,13 +160,13 @@ export function BackgroundRemovalTab({
           })
           .select()
           .single();
-        
+
         if (saveError) {
           console.error("Error saving to database:", saveError);
           toast.error("Upload succeeded but failed to save to library");
           return;
         }
-        
+
         toast.success("Saved to library!");
         onImageProcessed?.(publicUrl, savedImage?.id);
       } else {
@@ -391,7 +386,7 @@ export function BackgroundRemovalTab({
                 )}
                 Save to Library
               </Button>
-              
+
               <Button
                 variant="ghost"
                 onClick={handleDownload}

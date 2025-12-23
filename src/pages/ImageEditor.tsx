@@ -1050,34 +1050,12 @@ export default function ImageEditor() {
     }
 
     try {
-      let downloadUrl = heroImage.imageUrl;
-
-      // If it's a base64 data URL, use it directly
-      if (heroImage.imageUrl.startsWith('data:')) {
-        downloadUrl = heroImage.imageUrl;
-      } else {
-        // For regular URLs, fetch and convert to blob URL
-        const response = await fetch(heroImage.imageUrl, { mode: 'cors' });
-        const blob = await response.blob();
-        downloadUrl = URL.createObjectURL(blob);
-      }
-
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = `madison-image-${Date.now()}.${outputFormat}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      // Clean up blob URL if we created one
-      if (!heroImage.imageUrl.startsWith('data:')) {
-        URL.revokeObjectURL(downloadUrl);
-      }
-
+      const { downloadImage } = await import("@/utils/imageDownload");
+      await downloadImage(heroImage.imageUrl, `madison-image-${Date.now()}.${outputFormat}`);
       toast.success("Image downloaded!");
     } catch (error) {
       console.error('Download failed:', error);
-      toast.error("Failed to download image");
+      toast.error(error instanceof Error ? error.message : "Failed to download image");
     }
   };
 
@@ -1345,31 +1323,12 @@ export default function ImageEditor() {
                         variant="secondary"
                         onClick={async () => {
                           try {
-                            let downloadUrl = heroImage.imageUrl;
-
-                            if (heroImage.imageUrl.startsWith('data:')) {
-                              downloadUrl = heroImage.imageUrl;
-                            } else {
-                              const response = await fetch(heroImage.imageUrl, { mode: 'cors' });
-                              const blob = await response.blob();
-                              downloadUrl = URL.createObjectURL(blob);
-                            }
-
-                            const link = document.createElement('a');
-                            link.href = downloadUrl;
-                            link.download = `madison-image-${Date.now()}.webp`;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-
-                            if (!heroImage.imageUrl.startsWith('data:')) {
-                              URL.revokeObjectURL(downloadUrl);
-                            }
-
+                            const { downloadImage } = await import("@/utils/imageDownload");
+                            await downloadImage(heroImage.imageUrl, `madison-image-${Date.now()}.webp`);
                             toast.success("Image downloaded!");
                           } catch (error) {
                             console.error('Download failed:', error);
-                            toast.error("Failed to download image");
+                            toast.error(error instanceof Error ? error.message : "Failed to download image");
                           }
                         }}
                         className="bg-studio-card/90 backdrop-blur-sm h-8 w-8 p-0"

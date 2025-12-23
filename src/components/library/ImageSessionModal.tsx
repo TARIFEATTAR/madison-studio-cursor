@@ -43,20 +43,12 @@ export function ImageSessionModal({
 
   const handleDownloadSingle = async (imageUrl: string, imageName: string) => {
     try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = imageName;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      const { downloadImage } = await import("@/utils/imageDownload");
+      await downloadImage(imageUrl, imageName);
       toast.success('Image downloaded');
     } catch (error) {
       console.error('Download failed:', error);
-      toast.error('Failed to download image');
+      toast.error(error instanceof Error ? error.message : 'Failed to download image');
     }
   };
 
@@ -81,7 +73,7 @@ export function ImageSessionModal({
     setArchiving(true);
     try {
       const imageIds = images.map(img => img.id);
-      
+
       const { error } = await supabase
         .from('generated_images')
         .update({ is_archived: !archived })

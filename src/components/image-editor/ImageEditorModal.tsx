@@ -1,9 +1,9 @@
 /**
  * ImageEditorModal - Universal Image Editor Overlay
- * 
- * A modal that opens when clicking on any image (from Dark Room, Light Table, 
+ *
+ * A modal that opens when clicking on any image (from Dark Room, Light Table,
  * Library, or Video Project) to provide refinement and editing capabilities.
- * 
+ *
  * Features:
  * - Large image preview
  * - Refine with AI (generate variations)
@@ -11,7 +11,7 @@
  * - Create video (link to Video Project)
  * - Generate variations
  * - Save to library / Export
- * 
+ *
  * Keeps users in context by overlaying rather than navigating away.
  */
 
@@ -57,11 +57,11 @@ import { useCurrentOrganizationId } from "@/hooks/useIndustryConfig";
 
 // Ad Overlay components
 import { AdOverlay, AdPresetSelector, type AdOverlayConfig } from "@/components/ad-overlay";
-import { 
-  AD_LAYOUT_PRESETS, 
-  AD_FONT_OPTIONS, 
+import {
+  AD_LAYOUT_PRESETS,
+  AD_FONT_OPTIONS,
   AD_COLOR_PRESETS,
-  type AdLayoutPreset 
+  type AdLayoutPreset
 } from "@/config/adLayoutPresets";
 
 // Background Removal
@@ -114,7 +114,7 @@ export function ImageEditorModal({
 
   // Refine State
   const [refinementPrompt, setRefinementPrompt] = useState("");
-  
+
   // Variations State
   const [variations, setVariations] = useState<Variation[]>([]);
   const [selectedVariationId, setSelectedVariationId] = useState<string | null>(null);
@@ -281,7 +281,7 @@ export function ImageEditorModal({
     if (!image || !user || !orgId) return;
 
     setIsGenerating(true);
-    
+
     // Create placeholder variations
     const placeholders: Variation[] = Array(3)
       .fill(null)
@@ -290,7 +290,7 @@ export function ImageEditorModal({
         imageUrl: "",
         isGenerating: true,
       }));
-    
+
     setVariations(placeholders);
 
     try {
@@ -342,7 +342,7 @@ export function ImageEditorModal({
       }).filter((v) => v.imageUrl);
 
       setVariations(newVariations);
-      
+
       if (newVariations.length > 0) {
         toast.success(`Generated ${newVariations.length} variations`);
       } else {
@@ -393,25 +393,24 @@ export function ImageEditorModal({
     }
   }, [image, onSave]);
 
-  // Download image
+  // Download image - uses displayed image (which may be processed/edited)
   const handleDownload = useCallback(async () => {
     if (!image) return;
 
     try {
-      const response = await fetch(image.imageUrl);
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `madison-studio-${image.id.slice(0, 8)}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
+      // Use displayed image (processed/edited version) or fallback to original
+      const imageUrlToDownload = displayedImage || image.imageUrl;
+
+      // Import the download utility
+      const { downloadImage } = await import("@/utils/imageDownload");
+      await downloadImage(imageUrlToDownload, `madison-studio-${image.id.slice(0, 8)}.png`);
+
       toast.success("Image downloaded");
     } catch (error) {
       console.error("Download error:", error);
-      toast.error("Failed to download");
+      toast.error(error instanceof Error ? error.message : "Failed to download");
     }
-  }, [image]);
+  }, [image, displayedImage]);
 
   // Copy prompt
   const handleCopyPrompt = useCallback(() => {
@@ -434,7 +433,7 @@ export function ImageEditorModal({
         onClose();
       }
     }}>
-      <DialogContent 
+      <DialogContent
         className={cn(
           // Base styles - override default DialogContent styles
           "bg-[var(--darkroom-surface)] border border-[rgba(184,149,106,0.2)] shadow-2xl p-0",
@@ -459,15 +458,15 @@ export function ImageEditorModal({
               <span className="hidden sm:inline">Back to {source === "library" ? "Library" : "Dark Room"}</span>
               <span className="sm:hidden">Back</span>
           </Button>
-            
+
             <DialogTitle className="font-serif text-lg md:text-xl font-medium text-[var(--darkroom-text)] absolute left-1/2 -translate-x-1/2">
             Image Editor
           </DialogTitle>
-            
+
             <DialogDescription className="sr-only">
               Edit and refine your generated image. Generate variations, add text overlays, or create videos.
             </DialogDescription>
-            
+
           <Button
             variant="ghost"
             size="icon"
@@ -507,7 +506,7 @@ export function ImageEditorModal({
                   className="max-w-full max-h-full object-contain rounded-lg"
               />
                 )}
-              
+
               {/* Text Overlay Preview (if set) */}
               {textOverlay.headline && (
                 <div className={cn(
@@ -790,7 +789,7 @@ export function ImageEditorModal({
                         className="bg-[rgba(26,24,22,0.8)] border border-[rgba(184,149,106,0.2)] rounded-lg px-3.5 py-2.5 text-[var(--darkroom-text)] text-sm placeholder:text-[rgba(245,240,230,0.4)] focus:outline-none focus:border-[var(--darkroom-accent)] focus:ring-1 focus:ring-[rgba(184,149,106,0.2)] transition-all"
                     />
                   </div>
-                  
+
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[0.75rem] font-medium text-[rgba(245,240,230,0.7)]">Subtext</label>
                     <input
