@@ -84,7 +84,7 @@ export function DashboardHero() {
             <Flame className="w-3.5 h-3.5 md:w-4 md:h-4" />
             Create Content
           </Button>
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -101,7 +101,7 @@ export function DashboardHero() {
             <Zap className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#B8956A]" />
             Multiply
           </Button>
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -111,7 +111,7 @@ export function DashboardHero() {
             <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4" />
             Schedule
           </Button>
-          
+
           <Button
             variant="ghost"
             size="sm"

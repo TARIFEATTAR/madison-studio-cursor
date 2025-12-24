@@ -1,6 +1,6 @@
 /**
  * Quick Write Widget
- * 
+ *
  * One-click access to the editor for instant writing.
  */
 
@@ -29,9 +29,9 @@ export function QuickWriteWidget() {
         </div>
         <h3 className="font-medium text-foreground mb-1">Quick Write</h3>
         <p className="text-xs text-muted-foreground mb-3">Jump straight into writing</p>
-        <Button 
-          size="sm" 
-          variant="ghost" 
+        <Button
+          size="sm"
+          variant="ghost"
           className="gap-1 text-primary hover:text-primary group-hover:gap-2 transition-all"
         >
           Start Writing

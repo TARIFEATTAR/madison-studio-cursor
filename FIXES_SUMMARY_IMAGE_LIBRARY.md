@@ -17,12 +17,12 @@
 ### 2. ✅ Refined Images Not Auto-Saving to Library
 **Problem:** When users refine images in the Image Studio, the refined images were not automatically appearing in the Image Library.
 
-**Root Cause:** 
+**Root Cause:**
 - The edge function `generate-madison-image` DOES save refined images to the database with `saved_to_library = true`
 - However, the library refresh wasn't working properly after refinement
 - No user feedback when refinement was saved
 
-**Fix:** 
+**Fix:**
 - Improved `onImageGenerated` callback in both `ImageLibrary.tsx` and `Library.tsx`
 - Added proper async/await for refetch
 - Added toast notifications to confirm save

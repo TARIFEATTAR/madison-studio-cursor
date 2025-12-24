@@ -1,9 +1,9 @@
 /**
  * ContentEditor Page - Madison Studio
- * 
+ *
  * Rich text editor page for editing generated content.
  * Now powered by Tiptap for improved editing experience.
- * 
+ *
  * Features:
  * - Tiptap-based rich text editing
  * - Floating selection toolbar
@@ -90,12 +90,12 @@ export default function ContentEditorPage() {
   }, [editableContent]);
 
   // Determine table and field based on category
-  const tableName = category === "master" 
-    ? "master_content" 
-    : category === "derivative" 
-    ? "derivative_assets" 
+  const tableName = category === "master"
+    ? "master_content"
+    : category === "derivative"
+    ? "derivative_assets"
     : "outputs";
-  
+
   const fieldName = category === "master" ? "full_content" : "generated_content";
 
   // Log for debugging
@@ -223,12 +223,12 @@ export default function ContentEditorPage() {
    */
   const handleTextChange = useCallback((text: string) => {
     console.log('[ContentEditor] handleTextChange called, text length:', text?.length, 'preview:', text?.substring(0, 100));
-    
+
     plainTextContentRef.current = text;
-    
+
     // Update state to trigger re-render so useAutoSave sees the new content
     setEditableContent(text);
-    
+
     // Calculate word count
     const words = text.trim().split(/\s+/).filter(word => word.length > 0);
     setWordCount(words.length);
@@ -249,12 +249,12 @@ export default function ContentEditorPage() {
 
     if (contentId) {
       console.log('[ContentEditor] Manual save to:', tableName, fieldName, 'id:', contentId);
-      
+
       // Build update payload based on category
       const updatePayload: Record<string, any> = {
         [fieldName]: contentToSave,
       };
-      
+
       // Add quality_rating for master_content
       if (category === 'master') {
         updatePayload.quality_rating = qualityRating > 0 ? qualityRating : null;
@@ -482,14 +482,14 @@ export default function ContentEditorPage() {
    */
   const handleFeaturedImageChange = useCallback(async (url: string) => {
     setFeaturedImageUrl(url);
-    
+
     // Auto-save featured image if we have a contentId
     if (contentId) {
       const { error } = await supabase
         .from('master_content')
         .update({ featured_image_url: url || null } as any)
         .eq('id', contentId);
-      
+
       if (error) {
         toast({
           title: "Error saving image",
@@ -554,7 +554,7 @@ export default function ContentEditorPage() {
                 {featuredImageUrl ? "Change Image" : "Add Image"}
               </span>
             </Button>
-            
+
             {/* Editorial Assistant Toggle */}
           <Button
             variant={assistantOpen ? "default" : "ghost"}
@@ -646,13 +646,13 @@ export default function ContentEditorPage() {
                 <X className="w-4 h-4" />
               </Button>
             </div>
-            
+
             {/* Current Image Preview */}
             {featuredImageUrl && (
               <div className="mb-3 relative rounded-lg overflow-hidden border border-border max-w-xs">
-                <img 
-                  src={featuredImageUrl} 
-                  alt="Featured" 
+                <img
+                  src={featuredImageUrl}
+                  alt="Featured"
                   className="w-full h-32 object-cover"
                 />
                 <Button
@@ -665,13 +665,13 @@ export default function ContentEditorPage() {
                 </Button>
               </div>
             )}
-            
+
             {/* Image Library Picker */}
             <ImageLibraryPicker
               value={featuredImageUrl}
               onChange={handleFeaturedImageChange}
             />
-            
+
             <p className="text-xs text-muted-foreground mt-2">
               Select an image from your library or paste an image URL. This will be used as the featured/hero image for your blog post.
             </p>

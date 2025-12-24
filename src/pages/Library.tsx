@@ -54,7 +54,7 @@ export default function Library() {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
-  
+
   // Schedule modal states
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [derivativeAssetForSchedule, setDerivativeAssetForSchedule] = useState<any>(null);
@@ -247,7 +247,7 @@ export default function Library() {
     if (selectedItems.size === 0) return;
 
     // Check if all selected items are archived
-    const selectedContentItems = Array.from(selectedItems).map(id => 
+    const selectedContentItems = Array.from(selectedItems).map(id =>
       libraryContent.find(c => c.id === id)
     ).filter(Boolean);
 
@@ -263,7 +263,7 @@ export default function Library() {
     }
 
     setIsDeleting(true);
-    
+
     const deletionResults = {
       successful: 0,
       failed: 0,
@@ -288,7 +288,7 @@ export default function Library() {
 
       // Delete from each table with CASCADE handling dependencies automatically
       // Order: derivative_assets, master_content, outputs, generated_images
-      
+
       // Delete derivative assets first (they may reference master_content)
       if (itemsByTable.derivative_assets.length > 0) {
         logger.debug('[Library] Deleting derivative_assets:', itemsByTable.derivative_assets);
@@ -297,7 +297,7 @@ export default function Library() {
           .delete()
           .in('id', itemsByTable.derivative_assets)
           .select();
-        
+
         if (error) {
           logger.error('[Library] Error deleting derivatives:', error);
           deletionResults.failed += itemsByTable.derivative_assets.length;
@@ -316,7 +316,7 @@ export default function Library() {
           .delete()
           .in('id', itemsByTable.master_content)
           .select();
-        
+
         if (error) {
           logger.error('[Library] Error deleting master content:', error);
           deletionResults.failed += itemsByTable.master_content.length;
@@ -335,7 +335,7 @@ export default function Library() {
           .delete()
           .in('id', itemsByTable.outputs)
           .select();
-        
+
         if (error) {
           logger.error('[Library] Error deleting outputs:', error);
           deletionResults.failed += itemsByTable.outputs.length;
@@ -354,7 +354,7 @@ export default function Library() {
           .delete()
           .in('id', itemsByTable.generated_images)
           .select();
-        
+
         if (error) {
           logger.error('[Library] Error deleting images:', error);
           deletionResults.failed += itemsByTable.generated_images.length;
@@ -417,7 +417,7 @@ export default function Library() {
               <h1 className="font-serif text-2xl text-foreground">The Archives</h1>
               <p className="text-xs text-muted-foreground">Your editorial repository</p>
             </div>
-            
+
             {/* Search Bar */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -482,8 +482,8 @@ export default function Library() {
                 {selectedContentType !== "all" && (
                   <Badge variant="secondary" className="text-xs">
                     {selectedContentType}
-                    <X 
-                      className="w-3 h-3 ml-1 cursor-pointer" 
+                    <X
+                      className="w-3 h-3 ml-1 cursor-pointer"
                       onClick={() => setSelectedContentType("all")}
                     />
                   </Badge>
@@ -491,8 +491,8 @@ export default function Library() {
                 {selectedStatus !== "all" && (
                   <Badge variant="secondary" className="text-xs capitalize">
                     {selectedStatus}
-                    <X 
-                      className="w-3 h-3 ml-1 cursor-pointer" 
+                    <X
+                      className="w-3 h-3 ml-1 cursor-pointer"
                       onClick={() => setSelectedStatus("all")}
                     />
                   </Badge>
@@ -500,8 +500,8 @@ export default function Library() {
                 {showArchived && (
                   <Badge variant="secondary" className="text-xs">
                     Archived
-                    <X 
-                      className="w-3 h-3 ml-1 cursor-pointer" 
+                    <X
+                      className="w-3 h-3 ml-1 cursor-pointer"
                       onClick={() => setShowArchived(false)}
                     />
                   </Badge>
@@ -512,7 +512,7 @@ export default function Library() {
         </div>
       ) : (
         /* Desktop Header */
-        <div 
+        <div
           className="border-b border-border/20 bg-card/30 backdrop-blur-sm sticky top-0 z-10"
           style={{
             backgroundImage: `
@@ -554,7 +554,7 @@ export default function Library() {
                 showArchived={showArchived}
                 onShowArchivedChange={setShowArchived}
               />
-              
+
             </div>
           </div>
         </div>
@@ -588,8 +588,8 @@ export default function Library() {
                       }}
                     />
                     <span className="text-sm text-muted-foreground">
-                      {selectedItems.size > 0 
-                        ? `${selectedItems.size} selected` 
+                      {selectedItems.size > 0
+                        ? `${selectedItems.size} selected`
                         : 'Select all'}
                     </span>
                   </label>
@@ -695,7 +695,7 @@ export default function Library() {
                       const table = content.sourceTable;
                       const { error } = await supabase
                         .from(table)
-                        .update({ 
+                        .update({
                           is_archived: !content.archived,
                           archived_at: !content.archived ? new Date().toISOString() : null
                         })
@@ -751,7 +751,7 @@ export default function Library() {
           onUpdate={async () => {
             // Refetch and wait for it to complete
             const result = await refetch();
-            
+
             // Update selectedContent with fresh data from refetch
             if (result.data && selectedContent) {
               const updatedContent = result.data.find(item => item.id === selectedContent.id);
@@ -765,7 +765,7 @@ export default function Library() {
           }}
           onSchedule={async (content, category) => {
             setSelectedContent(null);
-            
+
             if (category === "derivative") {
               // Fetch derivative asset with master content
               const { data: derivative } = await supabase
@@ -773,7 +773,7 @@ export default function Library() {
                 .select('*, master_content(id, title, full_content)')
                 .eq('id', content.id)
                 .single();
-              
+
               if (derivative) {
                 setDerivativeAssetForSchedule(derivative);
                 setMasterForSchedule(derivative.master_content);
@@ -786,7 +786,7 @@ export default function Library() {
                 .select('*')
                 .eq('id', content.id)
                 .single();
-              
+
               if (master) {
                 setMasterForSchedule(master);
                 setDerivativeAssetForSchedule(null);
@@ -812,9 +812,9 @@ export default function Library() {
               hasGeneratedContent: !!content.generated_content,
               contentPreview: (content.generated_content || content.full_content)?.substring(0, 150)
             });
-            
+
             setSelectedContent(null);
-            
+
             // Determine text content based on category
             let initialText = '';
             if (category === 'master') {
@@ -822,17 +822,17 @@ export default function Library() {
             } else if (category === 'derivative' || category === 'output') {
               initialText = content.generated_content;
             }
-            
+
             console.log('[Library] Navigating to editor with:', {
               contentId: content.id,
               category,
               initialTextLength: initialText?.length,
               initialTextPreview: initialText?.substring(0, 150)
             });
-            
+
             // Get content type from the content object
             const contentType = content.content_type || content.asset_type || 'Content';
-            
+
             // Check if this is an email sequence - open specialized editor
             if (isEmailSequenceType(contentType)) {
               setEmailSequenceContext({
@@ -845,7 +845,7 @@ export default function Library() {
               setEmailSequenceOpen(true);
               return;
             }
-            
+
             // Navigate to ContentEditor with full context for regular content
             navigate('/editor', {
               state: {
@@ -884,14 +884,14 @@ export default function Library() {
           category={madisonContext.category}
           onSave={async (newContent) => {
             try {
-              const table = madisonContext.category === 'master' 
-                ? 'master_content' 
+              const table = madisonContext.category === 'master'
+                ? 'master_content'
                 : madisonContext.category === 'derivative'
                 ? 'derivative_assets'
                 : 'outputs';
-              
-              const field = madisonContext.category === 'master' 
-                ? 'full_content' 
+
+              const field = madisonContext.category === 'master'
+                ? 'full_content'
                 : 'generated_content';
 
               const { error } = await supabase
@@ -905,7 +905,7 @@ export default function Library() {
                 title: "Content saved",
                 description: "Your changes have been saved successfully.",
               });
-              
+
               setMadisonOpen(false);
               setMadisonContext(null);
               refetch();
@@ -935,14 +935,14 @@ export default function Library() {
           category={emailSequenceContext.category}
           onSave={async (newContent) => {
             try {
-              const table = emailSequenceContext.category === 'master' 
-                ? 'master_content' 
+              const table = emailSequenceContext.category === 'master'
+                ? 'master_content'
                 : emailSequenceContext.category === 'derivative'
                 ? 'derivative_assets'
                 : 'outputs';
-              
-              const field = emailSequenceContext.category === 'master' 
-                ? 'full_content' 
+
+              const field = emailSequenceContext.category === 'master'
+                ? 'full_content'
                 : 'generated_content';
 
               const { error } = await supabase
@@ -956,7 +956,7 @@ export default function Library() {
                 title: "Email sequence saved",
                 description: "Your email sequence has been saved successfully.",
               });
-              
+
               setEmailSequenceOpen(false);
               setEmailSequenceContext(null);
               refetch();
@@ -990,13 +990,13 @@ export default function Library() {
         onImageGenerated={async (newImage) => {
           // Verify the image was saved to database
           console.log("🖼️ New refined image generated:", newImage);
-          
+
           // Refresh library to show new refinement
           await refetch();
-          
+
           // Update modal to show new image
           setImageEditorImage(newImage);
-          
+
           toast({
             title: "Refinement saved",
             description: "Your refined image has been saved to the library.",
@@ -1004,7 +1004,7 @@ export default function Library() {
         }}
         source="library"
       />
-      
+
     </div>
   );
 }

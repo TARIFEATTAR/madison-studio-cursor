@@ -79,9 +79,9 @@ export default function ImageLibrary() {
     queryFn: async () => {
       if (!user) return [];
 
-      console.log("📸 Image Library fetching...", { 
+      console.log("📸 Image Library fetching...", {
         organizationId: currentOrganizationId,
-        userId: user.id 
+        userId: user.id
       });
 
       // First try with organization_id if available
@@ -97,7 +97,7 @@ export default function ImageLibrary() {
           console.log(`✅ Image Library loaded ${data.length} images by org`);
           return data as GeneratedImage[];
         }
-        
+
         if (error) {
           console.error("❌ Error fetching by org:", error);
         }
