@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Flame, Zap, Calendar, Lightbulb, ArrowRight } from "lucide-react";
+import { Flame, Zap, Calendar, Lightbulb, ArrowRight, PenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -110,6 +110,23 @@ export function DashboardHero() {
           >
             <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4" />
             Schedule
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/editor", {
+              state: {
+                content: "",
+                contentName: "Untitled",
+                contentType: "Note",
+                category: "master"
+              }
+            })}
+            className="text-[#1C150D]/70 hover:text-[#1C150D] hover:bg-[#FAFAFA] flex items-center gap-1.5 md:gap-2 flex-1 sm:flex-none text-xs md:text-sm h-8 md:h-9"
+          >
+            <PenLine className="w-3.5 h-3.5 md:w-4 md:h-4" />
+            Write
           </Button>
         </div>
 

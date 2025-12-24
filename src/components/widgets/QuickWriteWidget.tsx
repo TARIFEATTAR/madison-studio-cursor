@@ -14,7 +14,14 @@ export function QuickWriteWidget() {
 
   return (
     <Card className="h-full bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 hover:border-primary/40 transition-all cursor-pointer group"
-      onClick={() => navigate('/editor')}
+      onClick={() => navigate('/editor', {
+        state: {
+          content: "",
+          contentName: "Untitled",
+          contentType: "Note",
+          category: "master"
+        }
+      })}
     >
       <CardContent className="h-full flex flex-col items-center justify-center p-4 text-center">
         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
