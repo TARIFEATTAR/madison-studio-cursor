@@ -122,8 +122,9 @@ export default function ContentEditorPage() {
       });
 
       // Load from navigation state
-      if (location.state?.content) {
-        const content = location.state.content;
+      // Check if content property exists (even if empty string) to allow new documents
+      if (location.state && 'content' in location.state) {
+        const content = location.state.content || "";
         console.log("[ContentEditor] Loading from location.state, content length:", content.length, "category:", location.state.category);
         setEditableContent(content);
         plainTextContentRef.current = content;
