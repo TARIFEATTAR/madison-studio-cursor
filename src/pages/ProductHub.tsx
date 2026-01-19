@@ -85,6 +85,7 @@ import { TaskList } from "@/components/tasks";
 import { useOrganization } from "@/hooks/useOrganization";
 import { ContentPickerModal, type ContentTarget } from "@/components/products/ContentPickerModal";
 import { PublishProductToSanity } from "@/components/products/PublishProductToSanity";
+import { VariantsSection } from "@/components/products/VariantsSection";
 import { useSuppliers, COMPANY_TYPES } from "@/hooks/useSuppliers";
 import { Building2, Factory, Truck } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
@@ -102,16 +103,16 @@ interface ProductInfoTabProps {
 function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
   const productTypes = product.category ? PRODUCT_TYPES[product.category] || [] : [];
   const { activeSuppliers, isLoading: suppliersLoading } = useSuppliers();
-  
+
   // Content picker state
   const [showContentPicker, setShowContentPicker] = useState(false);
   const [contentTarget, setContentTarget] = useState<ContentTarget>("short_description");
-  
+
   const openContentPicker = (target: ContentTarget) => {
     setContentTarget(target);
     setShowContentPicker(true);
   };
-  
+
   const handleContentSelect = (content: string) => {
     onChange(contentTarget, content);
   };
@@ -305,7 +306,7 @@ function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
                   {activeSuppliers.find(s => s.id === product.supplier_id)?.name || "No supplier selected"}
                 </p>
               )}
-              
+
               {activeSuppliers.length === 0 && (
                 <p className="text-sm text-muted-foreground">
                   No suppliers added yet.{" "}
@@ -329,9 +330,9 @@ function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
                       )}
                       {supplier.has_sds_portal && supplier.sds_portal_url && (
                         <p className="text-muted-foreground">
-                          <a 
-                            href={supplier.sds_portal_url} 
-                            target="_blank" 
+                          <a
+                            href={supplier.sds_portal_url}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="text-primary hover:underline"
                           >
@@ -358,8 +359,8 @@ function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
             </div>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => openContentPicker("long_description")}
                 >
@@ -378,9 +379,9 @@ function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="tagline">Tagline</Label>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="h-6 text-xs text-muted-foreground hover:text-foreground"
                 onClick={() => openContentPicker("tagline")}
               >
@@ -404,9 +405,9 @@ function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="short_description">Short Description</Label>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="h-6 text-xs text-muted-foreground hover:text-foreground"
                 onClick={() => openContentPicker("short_description")}
               >
@@ -433,9 +434,9 @@ function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="long_description">Full Description</Label>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="h-6 text-xs text-muted-foreground hover:text-foreground"
                 onClick={() => openContentPicker("long_description")}
               >
@@ -601,21 +602,21 @@ export default function ProductHub() {
   const { data: product, isLoading, error } = useProduct(productId || null);
   const { updateProduct, deleteProduct, duplicateProduct } = useProducts();
   const { organizationId } = useOrganization();
-  
+
   // Role-based access
-  const { 
-    teamRole, 
-    capabilities, 
-    canView, 
-    canEdit, 
+  const {
+    teamRole,
+    capabilities,
+    canView,
+    canEdit,
     getAccessLevel,
-    hasFullAccess 
+    hasFullAccess
   } = useUserRole();
 
   const [isEditing, setIsEditing] = useState(isEditMode);
   const [editedProduct, setEditedProduct] = useState<any>(null);
   const [hasChanges, setHasChanges] = useState(false);
-  
+
   // Filter visible tabs based on role
   const visibleTabs = TAB_CONFIG.filter(tab => canView(tab.section));
   const [activeTab, setActiveTab] = useState(visibleTabs[0]?.id || "info");
@@ -825,15 +826,15 @@ export default function ProductHub() {
                     <span className="hidden sm:inline">Edit</span>
                     <span className="sm:hidden">Edit</span>
                   </Button>
-                  
+
                   {/* Push to Sanity - for headless site */}
-                  <PublishProductToSanity 
-                    product={displayProduct} 
+                  <PublishProductToSanity
+                    product={displayProduct}
                     variant="outline"
                     size="default"
                     className="min-h-[44px]"
                   />
-                  
+
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="icon" className="min-h-[44px] min-w-[44px]">
@@ -903,18 +904,18 @@ export default function ProductHub() {
               <div className="mb-3 md:mb-4">
                 <YourSectionsHighlight />
               </div>
-              
+
               <TabsList className="bg-muted/50 mb-4 md:mb-6 flex-wrap h-auto gap-1 p-1 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
                 {visibleTabs.map((tab) => {
                   const accessLevel = getAccessLevel(tab.section);
                   const isFullAccess = accessLevel === "full";
                   const Icon = tab.icon;
-                  
+
                   return (
                     <Tooltip key={tab.id}>
                       <TooltipTrigger asChild>
-                        <TabsTrigger 
-                          value={tab.id} 
+                        <TabsTrigger
+                          value={tab.id}
                           className={cn(
                             "gap-2 relative",
                             isFullAccess && "ring-1 ring-primary/20 bg-primary/5"
@@ -972,18 +973,20 @@ export default function ProductHub() {
 
               <TabsContent value="variants" forceMount>
                 {activeTab === "variants" && (
-                  <PlaceholderTab
-                    title="Product Variants"
-                    description="Coming in Week 7 - Manage sizes, colors, and other variations"
+                  <VariantsSection
+                    product={displayProduct}
+                    isEditing={isEditing && canEdit("info")}
+                    onChange={(field, value) => setEditedProduct(prev => ({ ...prev, [field]: value }))}
                   />
                 )}
               </TabsContent>
 
               <TabsContent value="pricing" forceMount>
                 {activeTab === "pricing" && (
-                  <PlaceholderTab
-                    title="Pricing & Commerce"
-                    description="Coming in Week 8 - Set prices, manage inventory, and sync with platforms"
+                  <VariantsSection
+                    product={displayProduct}
+                    isEditing={isEditing && canEdit("analytics")}
+                    onChange={(field, value) => setEditedProduct(prev => ({ ...prev, [field]: value }))}
                   />
                 )}
               </TabsContent>

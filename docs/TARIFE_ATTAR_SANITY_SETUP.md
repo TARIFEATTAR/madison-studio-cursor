@@ -60,7 +60,7 @@ npx supabase functions deploy push-product-to-sanity
 2. Go to **Library** → Select the content
 3. Click **"Publish to Sanity"**
 4. Choose **"Blog Post"** as the document type
-5. Select **Draft** or **Publish** 
+5. Select **Draft** or **Publish**
 6. Click **Publish to Sanity**
 
 ### Products (from Madison Products):
@@ -361,7 +361,7 @@ Should return your Madison-synced posts.
 **"Missing Sanity configuration"**
 - Verify all 4 secrets are set in Supabase
 
-**"Permission denied"**  
+**"Permission denied"**
 - Check API token has Editor permissions
 
 **"Document type not found"**

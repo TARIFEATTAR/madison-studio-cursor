@@ -138,25 +138,43 @@ serve(async (req) => {
 
     console.log(`Fetching products from Shopify store: ${shop_domain}`);
 
-    // Fetch products from Shopify Admin API
-    const shopifyResponse = await fetch(
-      `https://${shop_domain}/admin/api/2024-01/products.json`,
-      {
+    // Fetch products from Shopify Admin API with all fields including variants and images
+    // Using 2024-01 API version for full variant and inventory support
+    let allProducts: any[] = [];
+    let pageInfo: string | null = null;
+    
+    do {
+      const url = pageInfo 
+        ? `https://${shop_domain}/admin/api/2024-01/products.json?limit=250&page_info=${pageInfo}`
+        : `https://${shop_domain}/admin/api/2024-01/products.json?limit=250`;
+      
+      const shopifyResponse = await fetch(url, {
         headers: {
           'X-Shopify-Access-Token': accessToken,
           'Content-Type': 'application/json',
         },
+      });
+
+      if (!shopifyResponse.ok) {
+        const errorText = await shopifyResponse.text();
+        console.error('Shopify API error:', errorText);
+        throw new Error(`Shopify API error: ${shopifyResponse.status} ${errorText}`);
       }
-    );
 
-    if (!shopifyResponse.ok) {
-      const errorText = await shopifyResponse.text();
-      console.error('Shopify API error:', errorText);
-      throw new Error(`Shopify API error: ${shopifyResponse.status} ${errorText}`);
-    }
-
-    const shopifyData = await shopifyResponse.json();
-    const products = shopifyData.products || [];
+      const shopifyData = await shopifyResponse.json();
+      allProducts = allProducts.concat(shopifyData.products || []);
+      
+      // Check for pagination
+      const linkHeader = shopifyResponse.headers.get('link');
+      if (linkHeader && linkHeader.includes('rel="next"')) {
+        const nextMatch = linkHeader.match(/<[^>]*page_info=([^>&]+)[^>]*>; rel="next"/);
+        pageInfo = nextMatch ? nextMatch[1] : null;
+      } else {
+        pageInfo = null;
+      }
+    } while (pageInfo);
+    
+    const products = allProducts;
 
     console.log(`Fetched ${products.length} products from Shopify`);
 
@@ -167,9 +185,9 @@ serve(async (req) => {
       console.log(`Sample product type: ${sampleProduct.product_type}`);
     }
 
-    // Map Shopify products to brand_products schema
+    // Map Shopify products to brand_products schema with FULL e-commerce data
     const mappedProducts = products.map((product: any) => {
-      const variant = product.variants?.[0] || {};
+      const firstVariant = product.variants?.[0] || {};
       
       // Generate handle from product title if not provided
       const handle = product.handle || product.title
@@ -178,22 +196,22 @@ serve(async (req) => {
         .replace(/^-+|-+$/g, '');
       
       // Parse Shopify tags for Madison-specific metadata
-      const tags = product.tags ? product.tags.split(',').map((t: string) => t.trim()) : [];
+      const rawTags = product.tags ? product.tags.split(',').map((t: string) => t.trim()) : [];
 
       // Extract collection from tags (e.g., "collection:Humanities")
-      const collectionTag = tags.find((tag: string) => tag.startsWith('collection:'));
+      const collectionTag = rawTags.find((tag: string) => tag.startsWith('collection:'));
       const collection = collectionTag 
         ? collectionTag.replace('collection:', '').trim()
         : product.product_type || 'Uncategorized';
 
       // Extract scent_family from tags (e.g., "scent_family:warm")
-      const scentFamilyTag = tags.find((tag: string) => tag.startsWith('scent_family:'));
+      const scentFamilyTag = rawTags.find((tag: string) => tag.startsWith('scent_family:'));
       const scent_family = scentFamilyTag 
         ? scentFamilyTag.replace('scent_family:', '').trim()
         : null;
       
       // Extract tone from tags (e.g., "tone:elegant")
-      const toneTag = tags.find((tag: string) => tag.startsWith('tone:'));
+      const toneTag = rawTags.find((tag: string) => tag.startsWith('tone:'));
       const tone = toneTag ? toneTag.replace('tone:', '').trim() : null;
       
       // Strip HTML from body_html for description
@@ -209,6 +227,54 @@ serve(async (req) => {
             .trim()
         : null;
       
+      // Map ALL variants with full details
+      const variants = (product.variants || []).map((v: any, index: number) => ({
+        id: v.id?.toString(),
+        title: v.title || `Variant ${index + 1}`,
+        sku: v.sku || null,
+        price: parseFloat(v.price) || 0,
+        compare_at_price: v.compare_at_price ? parseFloat(v.compare_at_price) : null,
+        inventory_quantity: v.inventory_quantity || 0,
+        inventory_policy: v.inventory_policy || 'deny',
+        option1: v.option1 || null,
+        option2: v.option2 || null,
+        option3: v.option3 || null,
+        barcode: v.barcode || null,
+        weight: v.weight || null,
+        weight_unit: v.weight_unit || 'lb',
+        requires_shipping: v.requires_shipping !== false,
+        shopify_variant_id: v.id?.toString(),
+        position: v.position || index + 1,
+      }));
+      
+      // Map product options (Size, Color, etc.)
+      const options = (product.options || []).map((opt: any) => ({
+        name: opt.name,
+        values: opt.values || [],
+        position: opt.position,
+      }));
+      
+      // Map product images
+      const images = (product.images || []).map((img: any) => ({
+        id: img.id?.toString(),
+        src: img.src,
+        position: img.position,
+        alt: img.alt || product.title,
+        width: img.width,
+        height: img.height,
+        shopify_image_id: img.id?.toString(),
+      }));
+      
+      // Get featured image
+      const featuredImage = product.image?.src || images[0]?.src || null;
+      
+      // Filter regular tags (exclude Madison-specific tags)
+      const tags = rawTags.filter((tag: string) => 
+        !tag.startsWith('collection:') && 
+        !tag.startsWith('scent_family:') && 
+        !tag.startsWith('tone:')
+      );
+      
       return {
         organization_id,
         name: product.title,
@@ -218,12 +284,33 @@ serve(async (req) => {
         category: 'personal_fragrance',
         product_type: product.product_type,
         shopify_product_id: product.id.toString(),
-        shopify_variant_id: variant.id?.toString(),
+        shopify_variant_id: firstVariant.id?.toString(),
         shopify_sync_status: 'synced',
         last_shopify_sync: new Date().toISOString(),
         description: description,
         usp: null, // To be filled manually with selling points
         tone: tone,
+        // NEW E-COMMERCE FIELDS
+        sku: firstVariant.sku || null,
+        barcode: firstVariant.barcode || null,
+        price: parseFloat(firstVariant.price) || null,
+        compare_at_price: firstVariant.compare_at_price ? parseFloat(firstVariant.compare_at_price) : null,
+        inventory_quantity: firstVariant.inventory_quantity || 0,
+        inventory_policy: firstVariant.inventory_policy || 'deny',
+        track_inventory: firstVariant.inventory_management === 'shopify',
+        weight: firstVariant.weight || null,
+        weight_unit: firstVariant.weight_unit || 'lb',
+        requires_shipping: firstVariant.requires_shipping !== false,
+        variants: JSON.stringify(variants),
+        options: JSON.stringify(options),
+        images: JSON.stringify(images),
+        featured_image_url: featuredImage,
+        vendor: product.vendor || null,
+        status: product.status || 'active',
+        published_at: product.published_at || null,
+        tags: tags,
+        seo_title: product.metafields_global_title_tag || null,
+        seo_description: product.metafields_global_description_tag || null,
       };
     });
 
@@ -234,7 +321,7 @@ serve(async (req) => {
     
     const { data: existingProducts } = await supabase
       .from('brand_products')
-      .select('id, name, handle, shopify_product_id, description, collection, scent_family, tone')
+      .select('id, name, handle, shopify_product_id, description, collection, scent_family, tone, sku, price, variants, images')
       .eq('organization_id', organization_id)
       .in('name', names);
 
@@ -251,17 +338,38 @@ serve(async (req) => {
       const existing = existingByNameMatch || existingByShopifyMatch;
       
       if (existing) {
-        // Update existing product - ONLY update Shopify-specific fields
+        // Update existing product - Update Shopify-specific fields + e-commerce data
         // DO NOT overwrite rich 49-field CSV data (visual DNA, archetypes, etc.)
         const updateData: any = {
+          // Core Shopify sync fields - always update
           shopify_product_id: product.shopify_product_id,
           shopify_variant_id: product.shopify_variant_id,
           shopify_sync_status: product.shopify_sync_status,
           last_shopify_sync: product.last_shopify_sync,
-          handle: product.handle, // Always update handle from Shopify
+          handle: product.handle,
+          
+          // E-commerce fields - always sync from Shopify (source of truth for pricing/inventory)
+          sku: product.sku,
+          barcode: product.barcode,
+          price: product.price,
+          compare_at_price: product.compare_at_price,
+          inventory_quantity: product.inventory_quantity,
+          inventory_policy: product.inventory_policy,
+          track_inventory: product.track_inventory,
+          weight: product.weight,
+          weight_unit: product.weight_unit,
+          requires_shipping: product.requires_shipping,
+          variants: product.variants,
+          options: product.options,
+          images: product.images,
+          featured_image_url: product.featured_image_url,
+          vendor: product.vendor,
+          status: product.status,
+          published_at: product.published_at,
+          tags: product.tags,
         };
         
-        // Only update these fields if they're currently empty
+        // Only update these fields if they're currently empty (preserve manual edits)
         if (!existing.description || existing.description.length < 50) {
           updateData.description = product.description;
         }

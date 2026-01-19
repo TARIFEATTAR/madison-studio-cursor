@@ -99,11 +99,11 @@ export function BillingTab() {
       // Don't show error toast for expected cases (no subscription, no org)
       const errorMessage = error?.message || '';
       if (!errorMessage.includes('No organization') && !errorMessage.includes('No subscription')) {
-      toast({
-        title: "Error",
+        toast({
+          title: "Error",
           description: errorMessage || "Failed to load subscription data",
-        variant: "destructive",
-      });
+          variant: "destructive",
+        });
       } else {
         // Set empty data for expected cases
         setSubscription(null);
@@ -130,47 +130,47 @@ export function BillingTab() {
 
       // Generate features array from tier limits
       const features: string[] = [];
-      
+
       if (tier.masterContent === -1) {
         features.push('Unlimited master content');
       } else {
         features.push(`${tier.masterContent} master content pieces/month`);
       }
-      
+
       if (tier.derivatives === -1) {
         features.push('Unlimited derivatives');
       } else {
         features.push(`${tier.derivatives} derivative assets/month`);
       }
-      
+
       features.push(`${tier.images} AI-generated images/month`);
-      
+
       if (tier.organizations === -1) {
         features.push('Unlimited brands');
       } else {
         features.push(`${tier.organizations} brand${tier.organizations > 1 ? 's' : ''}, ${tier.productsPerOrg === -1 ? 'unlimited' : tier.productsPerOrg} products each`);
       }
-      
+
       features.push(`Madison AI assistant (${tier.madisonQueries} queries/month)`);
-      
+
       if (tier.teamMembers === -1) {
         features.push('Unlimited team members');
       } else {
         features.push(`${tier.teamMembers} team member${tier.teamMembers > 1 ? 's' : ''}`);
       }
-      
+
       if (tier.marketplaceIntegration) {
         features.push('Shopify & Etsy integration');
       }
-      
+
       if (tier.apiAccess) {
         features.push('API access');
       }
-      
+
       if (tier.whiteLabel) {
         features.push('Full white-label included');
       }
-      
+
       // Stripe Price IDs from environment variables
       const priceIds: Record<TierId, { monthly: string; yearly: string }> = {
         essentials: {
@@ -218,7 +218,7 @@ export function BillingTab() {
   useEffect(() => {
     const sessionId = searchParams.get('session_id');
     const canceled = searchParams.get('canceled');
-    
+
     if (sessionId) {
       // Successfully completed checkout
       setSearchParams({}); // Clear params
@@ -275,7 +275,7 @@ export function BillingTab() {
         });
         return;
       }
-      
+
       // If no plans loaded from database, use fallback
       if (!data || data.length === 0) {
         const fallbackPlans = convertTiersToPlans();
@@ -319,7 +319,7 @@ export function BillingTab() {
       }
 
       console.log('[BillingTab] Calling create-checkout-session with:', { planId, billingInterval: 'month' });
-      
+
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: { planId, billingInterval: 'month' },
         headers: {
@@ -428,7 +428,7 @@ export function BillingTab() {
 
   const currentPlan = subscription?.subscription_plans;
   const defaultPaymentMethod = paymentMethods.find(pm => pm.is_default) || paymentMethods[0];
-  
+
   // Handle case where subscription exists but plan was deleted (orphaned subscription)
   const hasValidSubscription = subscription && currentPlan;
 
@@ -466,7 +466,7 @@ export function BillingTab() {
                 Your subscription will end on {formatDate(subscription.current_period_end)}
               </p>
             )}
-            <Button 
+            <Button
               variant="default"
               onClick={handleManagePlan}
               disabled={isLoadingPortal}
@@ -494,31 +494,30 @@ export function BillingTab() {
               {hasValidSubscription ? 'Change Plan' : 'Choose Your Plan'}
             </h3>
             <p className="text-sm text-charcoal/70 mb-6">
-              {hasValidSubscription 
+              {hasValidSubscription
                 ? 'Upgrade or downgrade your subscription anytime'
                 : subscription && !currentPlan
-                ? 'Your subscription needs to be updated. Please select a new plan below.'
-                : 'Select a plan to get started with Madison Studio'
+                  ? 'Your subscription needs to be updated. Please select a new plan below.'
+                  : 'Select a plan to get started with Madison Studio'
               }
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {availablePlans.map((plan) => {
                 const isCurrentPlan = currentPlan?.slug === plan.slug;
-                const isHigherTier = currentPlan && 
-                  ['essentials', 'studio', 'signature'].indexOf(plan.slug) > 
+                const isHigherTier = currentPlan &&
+                  ['essentials', 'studio', 'signature'].indexOf(plan.slug) >
                   ['essentials', 'studio', 'signature'].indexOf(currentPlan.slug);
-                
+
                 // Handle orphaned subscription - don't disable buttons if plan is missing
                 const shouldDisable = isCurrentPlan && !!currentPlan;
-                
+
                 return (
                   <div
                     key={plan.id}
-                    className={`p-6 border-2 rounded-lg bg-parchment-white transition-all ${
-                      isCurrentPlan 
-                        ? 'border-aged-brass bg-gradient-to-br from-aged-brass/10 to-antique-gold/10' 
+                    className={`p-6 border-2 rounded-lg bg-parchment-white transition-all ${isCurrentPlan
+                        ? 'border-aged-brass bg-gradient-to-br from-aged-brass/10 to-antique-gold/10'
                         : 'border-charcoal/20 hover:border-aged-brass/50'
-                    }`}
+                      }`}
                   >
                     {isCurrentPlan && (
                       <Badge className="mb-3 bg-aged-brass text-parchment-white">
@@ -570,6 +569,21 @@ export function BillingTab() {
                         hasValidSubscription ? (isHigherTier ? 'Upgrade' : 'Change Plan') : 'Subscribe'
                       )}
                     </Button>
+
+                    {/* Progressive Disclosure */}
+                    {!isCurrentPlan && (
+                      <p className="text-xs text-charcoal/60 text-center mt-3 px-2">
+                        By subscribing, you agree to our{' '}
+                        <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink-black">
+                          Terms of Service
+                        </a>{' '}
+                        and{' '}
+                        <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink-black">
+                          Privacy Policy
+                        </a>
+                        . Your subscription will auto-renew until cancelled.
+                      </p>
+                    )}
                   </div>
                 );
               })}
@@ -605,9 +619,9 @@ export function BillingTab() {
                   </p>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleManagePlan}
                 disabled={isLoadingPortal}
               >
@@ -639,9 +653,9 @@ export function BillingTab() {
                     </Badge>
                   </div>
                   {invoice.invoice_pdf_url && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => window.open(invoice.invoice_pdf_url!, '_blank')}
                     >
                       <Download className="w-4 h-4 mr-2" />

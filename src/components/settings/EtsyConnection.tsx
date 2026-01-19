@@ -72,6 +72,7 @@ export function EtsyConnection({ organizationId }: EtsyConnectionProps) {
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [updatingSettings, setUpdatingSettings] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   // Check for OAuth callback results
   useEffect(() => {
@@ -219,6 +220,44 @@ export function EtsyConnection({ organizationId }: EtsyConnectionProps) {
       });
     } finally {
       setUpdatingSettings(false);
+    }
+  };
+
+  const handleSyncProducts = async () => {
+    if (!organizationId) return;
+
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-etsy-products", {
+        body: { organization_id: organizationId },
+      });
+
+      if (error) throw error;
+
+      if (!data?.success) {
+        throw new Error(data?.error || "Failed to sync products from Etsy");
+      }
+
+      // Refresh connection to update last_sync_at
+      await fetchConnection();
+
+      const totalSynced = data?.total || 0;
+      const updated = data?.updated || 0;
+      const inserted = data?.inserted || 0;
+
+      toast({
+        title: "Products Synced",
+        description: `Successfully synced ${totalSynced} products (${updated} updated, ${inserted} new) from Etsy`,
+      });
+    } catch (err: any) {
+      console.error("Error syncing Etsy products:", err);
+      toast({
+        title: "Sync Failed",
+        description: err.message || "Failed to sync products from Etsy",
+        variant: "destructive",
+      });
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -407,19 +446,47 @@ export function EtsyConnection({ organizationId }: EtsyConnectionProps) {
         </div>
       </div>
 
-      {/* Refresh Connection */}
-      <Button 
-        variant="outline" 
-        size="sm"
-        onClick={fetchConnection}
-        disabled={loading}
-      >
-        <RefreshCw className="w-4 h-4 mr-2" />
-        Refresh Connection
-      </Button>
+      {/* Sync Products & Refresh */}
+      <div className="flex gap-3 pt-2">
+        <Button 
+          onClick={handleSyncProducts}
+          disabled={syncing}
+          className="bg-[#F56400] hover:bg-[#E55400] text-white"
+        >
+          {syncing ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Syncing Products...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Sync Products from Etsy
+            </>
+          )}
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={fetchConnection}
+          disabled={loading}
+        >
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Refresh
+        </Button>
+      </div>
+      
+      <p className="text-xs text-muted-foreground">
+        Sync will import all active Etsy listings including SKU, pricing, variants, and images into your Product Hub.
+      </p>
     </div>
   );
 }
+
+
+
+
 
 
 

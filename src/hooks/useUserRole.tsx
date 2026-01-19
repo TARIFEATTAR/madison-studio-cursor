@@ -4,7 +4,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { useOrganization } from "./useOrganization";
 
 // Team role types - functional/departmental roles
-export type TeamRole = 
+export type TeamRole =
   | "founder"
   | "creative"
   | "compliance"
@@ -204,11 +204,21 @@ export function useUserRole() {
 
   // Determine effective team role
   // Owners default to founder, others default to general
-  const effectiveRole: TeamRole = teamRoleData || 
+  const effectiveRole: TeamRole = teamRoleData ||
     (permissionRole === "owner" ? "founder" : "general");
 
   // Get capabilities (use fallback for now, can enhance with DB fetch later)
   const capabilities = ROLE_CAPABILITIES_FALLBACK[effectiveRole] || DEFAULT_CAPABILITIES;
+
+  // DEBUG: Log role information to help diagnose permission issues
+  console.log("[useUserRole] Role check:", {
+    permissionRole,
+    teamRoleData,
+    effectiveRole,
+    isLoading: roleLoading,
+    organizationId,
+    userId: user?.id,
+  });
 
   // Owners always get full access regardless of team role
   const isOwnerOrFounder = permissionRole === "owner" || effectiveRole === "founder";
@@ -243,19 +253,19 @@ export function useUserRole() {
     teamRole: effectiveRole,
     permissionRole,
     roleConfig: TEAM_ROLE_CONFIG[effectiveRole],
-    
+
     // Capabilities
     capabilities,
-    
+
     // Helper functions
     canEdit,
     canView,
     isHidden,
     getAccessLevel,
-    
+
     // Loading state
     isLoading: roleLoading,
-    
+
     // Is founder/owner (full access)
     isFounder: effectiveRole === "founder",
     isOwner: permissionRole === "owner",

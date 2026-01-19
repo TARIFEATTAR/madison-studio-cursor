@@ -378,6 +378,10 @@ export function ShopifyConnection() {
             Disconnect
           </Button>
         </div>
+        
+        <p className="text-xs text-muted-foreground">
+          Sync imports all products including SKU, pricing, variants, images, and inventory into your Product Hub.
+        </p>
       </div>
     );
   }

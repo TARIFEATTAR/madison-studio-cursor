@@ -31,7 +31,12 @@ export function useOrganization() {
         .eq("user_id", user.id)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error("[useOrganization] Error fetching membership:", error);
+        throw error;
+      }
+      
+      console.log("[useOrganization] Membership data:", data);
       return data as OrganizationMembership | null;
     },
     enabled: !!user?.id,
