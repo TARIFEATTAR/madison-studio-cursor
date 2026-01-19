@@ -102,9 +102,9 @@ serve(async (req) => {
     // FETCH SHOPIFY PRICING & INVENTORY DATA
     // Look up brand_products to get pricing/inventory by SKU
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     console.log(`[sync-sanity-products] Fetching Shopify pricing/inventory data...`);
-    
+
     // Build a SKU → pricing/inventory lookup map from brand_products (Shopify-synced)
     const { data: shopifyProducts, error: shopifyError } = await supabase
       .from("brand_products")
@@ -112,10 +112,10 @@ serve(async (req) => {
       .eq("organization_id", organization_id);
 
     const skuPricingMap: Record<string, { price: number; compare_at_price: number | null; inventory_quantity: number; image_url?: string }> = {};
-    
+
     if (shopifyProducts && !shopifyError) {
       console.log(`[sync-sanity-products] Found ${shopifyProducts.length} Shopify products to match`);
-      
+
       for (const sp of shopifyProducts) {
         // Add main product SKU
         if (sp.sku) {
@@ -126,7 +126,7 @@ serve(async (req) => {
             image_url: sp.featured_image_url || undefined
           };
         }
-        
+
         // Parse variants and add each variant SKU
         if (sp.variants) {
           try {
@@ -147,7 +147,7 @@ serve(async (req) => {
           }
         }
       }
-      
+
       console.log(`[sync-sanity-products] Built SKU pricing map with ${Object.keys(skuPricingMap).length} SKUs`);
       console.log(`[sync-sanity-products] Sample SKUs:`, Object.keys(skuPricingMap).slice(0, 5));
     } else {
@@ -182,11 +182,11 @@ serve(async (req) => {
         if (product.sku6ml) {
           const sku6mlUpper = product.sku6ml.toUpperCase();
           const shopifyData6ml = skuPricingMap[sku6mlUpper];
-          
+
           if (shopifyData6ml) {
             console.log(`[sync-sanity-products] Found Shopify pricing for ${product.sku6ml}: $${shopifyData6ml.price}, qty: ${shopifyData6ml.inventory_quantity}`);
           }
-          
+
           variants.push({
             id: `sanity-${product._id}-6ml`,
             title: "6ml",
@@ -210,11 +210,11 @@ serve(async (req) => {
         if (product.sku12ml) {
           const sku12mlUpper = product.sku12ml.toUpperCase();
           const shopifyData12ml = skuPricingMap[sku12mlUpper];
-          
+
           if (shopifyData12ml) {
             console.log(`[sync-sanity-products] Found Shopify pricing for ${product.sku12ml}: $${shopifyData12ml.price}, qty: ${shopifyData12ml.inventory_quantity}`);
           }
-          
+
           variants.push({
             id: `sanity-${product._id}-12ml`,
             title: "12ml",
