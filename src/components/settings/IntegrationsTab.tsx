@@ -61,7 +61,7 @@ export function IntegrationsTab() {
 
   const handleScanNow = async () => {
     if (!organizationId) return;
-    
+
     setIsScanning(true);
     try {
       const { data, error } = await supabase.functions.invoke('competitive-intelligence', {
@@ -74,7 +74,7 @@ export function IntegrationsTab() {
         title: "Scan Complete",
         description: `Analysis complete. Check the Dashboard for new insights.`,
       });
-      
+
       refreshData();
     } catch (error: any) {
       console.error('Error scanning competitors:', error);
@@ -225,7 +225,7 @@ export function IntegrationsTab() {
             </div>
           </div>
         </CardHeader>
-        
+
         {preferences?.competitive_intelligence_enabled && (
           <CardContent className="space-y-6">
             <div className="space-y-4">
@@ -256,8 +256,8 @@ export function IntegrationsTab() {
 
             {competitors.length > 0 && (
               <>
-                <Button 
-                  onClick={handleScanNow} 
+                <Button
+                  onClick={handleScanNow}
                   disabled={isScanning}
                   variant="outline"
                   className="w-full"

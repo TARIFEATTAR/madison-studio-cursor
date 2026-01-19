@@ -2,7 +2,7 @@
 -- The error shows your user has 2 organization_members records, which breaks the query
 
 -- Step 1: Find your duplicate records
-SELECT 
+SELECT
   om.id,
   om.user_id,
   om.organization_id,
@@ -20,16 +20,16 @@ ORDER BY om.created_at;
 -- Step 2: After identifying duplicates, keep the one with 'owner' role and delete the other
 -- UNCOMMENT AND RUN THIS AFTER STEP 1 (replace the ID with the duplicate record's ID):
 
--- DELETE FROM organization_members 
+-- DELETE FROM organization_members
 -- WHERE id = 'PUT_DUPLICATE_RECORD_ID_HERE';
 
 -- Step 3: Ensure the remaining record has 'owner' role
--- UPDATE organization_members 
+-- UPDATE organization_members
 -- SET role = 'owner'
 -- WHERE user_id = (SELECT id FROM auth.users WHERE email = 'YOUR_EMAIL_HERE' LIMIT 1);
 
 -- Step 4: Verify the fix
-SELECT 
+SELECT
   om.id,
   om.user_id,
   om.organization_id,
