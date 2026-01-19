@@ -160,7 +160,7 @@ function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
                   {/* Show all variant SKUs if there are variants */}
                   {product.variants && Array.isArray(product.variants) && product.variants.length > 1 && (
                     <div className="mt-2 p-3 rounded-lg bg-muted/50 border border-border">
-                      <p className="text-xs font-medium text-muted-foreground mb-2">All Variant SKUs</p>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Included Variants</p>
                       <div className="flex flex-wrap gap-2">
                         {product.variants.map((variant: any, index: number) => (
                           <div key={variant.id || index} className="flex items-center gap-1.5 px-2 py-1 rounded bg-background border border-border">
