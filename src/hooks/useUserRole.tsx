@@ -210,20 +210,31 @@ export function useUserRole() {
   // Get capabilities (use fallback for now, can enhance with DB fetch later)
   const capabilities = ROLE_CAPABILITIES_FALLBACK[effectiveRole] || DEFAULT_CAPABILITIES;
 
+  // Owners always get full access regardless of team role
+  const isOwnerOrFounder = permissionRole === "owner" || effectiveRole === "founder";
+
   // Helper functions
   const canEdit = (section: keyof RoleCapabilities["sections"]): boolean => {
+    // Owners always have edit access
+    if (isOwnerOrFounder) return true;
     return capabilities.sections[section] === "full";
   };
 
   const canView = (section: keyof RoleCapabilities["sections"]): boolean => {
+    // Owners always have view access
+    if (isOwnerOrFounder) return true;
     return capabilities.sections[section] !== "hidden";
   };
 
   const isHidden = (section: keyof RoleCapabilities["sections"]): boolean => {
+    // Nothing is hidden from owners
+    if (isOwnerOrFounder) return false;
     return capabilities.sections[section] === "hidden";
   };
 
   const getAccessLevel = (section: keyof RoleCapabilities["sections"]): AccessLevel => {
+    // Owners always have full access
+    if (isOwnerOrFounder) return "full";
     return capabilities.sections[section];
   };
 
@@ -247,7 +258,8 @@ export function useUserRole() {
     
     // Is founder/owner (full access)
     isFounder: effectiveRole === "founder",
-    hasFullAccess: effectiveRole === "founder" || permissionRole === "owner",
+    isOwner: permissionRole === "owner",
+    hasFullAccess: isOwnerOrFounder,
   };
 }
 
