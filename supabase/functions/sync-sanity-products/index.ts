@@ -138,8 +138,12 @@ serve(async (req) => {
       );
     }
 
+    // Filter out products without titles
+    const validProducts = products.filter((p: any) => p.title && p.title.trim() !== "");
+    console.log(`[sync-sanity-products] ${validProducts.length} products have valid titles (filtered from ${products.length})`);
+
     // Map Sanity products to Madison brand_products schema
-    const mappedProducts = products.map((product: any) => {
+    const mappedProducts = validProducts.map((product: any) => {
       // Build scent notes string from object
       const scentNotes = product.scentNotes || {};
       const topNotes = scentNotes.top?.join(", ") || null;
@@ -223,14 +227,17 @@ serve(async (req) => {
     });
 
     // Fetch existing products to check for updates
-    const sanityIds = mappedProducts.map((p: any) => `sanity:${p.usp?.replace("sanity:", "") || ""}`);
-    const names = mappedProducts.map((p: any) => p.name);
+    const names = mappedProducts.map((p: any) => p.name).filter(Boolean);
 
-    const { data: existingProducts } = await supabase
+    // Fetch existing products by organization - simpler query to avoid issues
+    const { data: existingProducts, error: fetchError } = await supabase
       .from("brand_products")
       .select("id, name, usp, description")
-      .eq("organization_id", organization_id)
-      .or(`name.in.(${names.map((n: string) => `"${n.replace(/"/g, '\\"')}"`).join(",")})`);
+      .eq("organization_id", organization_id);
+
+    if (fetchError) {
+      console.error("[sync-sanity-products] Error fetching existing products:", fetchError);
+    }
 
     const existingByName = new Map(existingProducts?.map((p) => [p.name, p]) || []);
     const existingByUsp = new Map(existingProducts?.map((p) => [p.usp, p]) || []);
