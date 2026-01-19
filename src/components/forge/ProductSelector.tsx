@@ -15,9 +15,9 @@ interface ProductSelectorProps {
   buttonClassName?: string;
 }
 
-export function ProductSelector({ 
-  value, 
-  onSelect, 
+export function ProductSelector({
+  value,
+  onSelect,
   onProductDataChange,
   showLabel = true,
   className = "",
@@ -29,9 +29,16 @@ export function ProductSelector({
 
   const filteredProducts = useMemo(() => {
     if (!searchValue) return products;
-    return products.filter(product =>
-      product.name.toLowerCase().includes(searchValue.toLowerCase())
-    );
+    return products.filter(product => {
+      const searchLower = searchValue.toLowerCase();
+      const parentSku = (product.metadata?.parent_sku as string)?.toLowerCase();
+
+      return (
+        product.name.toLowerCase().includes(searchLower) ||
+        product.sku?.toLowerCase().includes(searchLower) ||
+        (parentSku && parentSku.includes(searchLower))
+      );
+    });
   }, [searchValue, products]);
 
   return (
@@ -52,8 +59,8 @@ export function ProductSelector({
         </PopoverTrigger>
         <PopoverContent className={`p-0 bg-studio-charcoal border-studio-border z-50 backdrop-blur-sm ${className || "w-[200px]"}`} align="start">
           <Command className="bg-studio-charcoal">
-            <CommandInput 
-              placeholder="Search products..." 
+            <CommandInput
+              placeholder="Search products..."
               value={searchValue}
               onValueChange={setSearchValue}
               className="bg-studio-charcoal text-studio-text-primary"
