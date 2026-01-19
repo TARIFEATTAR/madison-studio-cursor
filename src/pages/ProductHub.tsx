@@ -84,6 +84,7 @@ import { RoleBadge, YourSectionsHighlight } from "@/components/role";
 import { TaskList } from "@/components/tasks";
 import { useOrganization } from "@/hooks/useOrganization";
 import { ContentPickerModal, type ContentTarget } from "@/components/products/ContentPickerModal";
+import { PublishProductToSanity } from "@/components/products/PublishProductToSanity";
 import { useSuppliers, COMPANY_TYPES } from "@/hooks/useSuppliers";
 import { Building2, Factory, Truck } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
@@ -824,6 +825,15 @@ export default function ProductHub() {
                     <span className="hidden sm:inline">Edit</span>
                     <span className="sm:hidden">Edit</span>
                   </Button>
+                  
+                  {/* Push to Sanity - for headless site */}
+                  <PublishProductToSanity 
+                    product={displayProduct} 
+                    variant="outline"
+                    size="default"
+                    className="min-h-[44px]"
+                  />
+                  
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="icon" className="min-h-[44px] min-w-[44px]">

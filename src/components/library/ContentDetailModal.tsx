@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { Edit2, Send, Copy, Check, FileDown, Calendar, MessageSquare, Download, Trash2, X, Mail, Linkedin, Globe, Image as ImageIcon, ImagePlus } from "lucide-react";
 import { ImageLibraryPicker } from "@/components/email-composer/ImageLibraryPicker";
 import { PublishToLinkedIn } from "./PublishToLinkedIn";
+import { PublishToSanity } from "./PublishToSanity";
 import {
   Dialog,
   DialogContent,
@@ -771,6 +772,15 @@ export function ContentDetailModal({
                   size="sm"
                 />
               )}
+
+              {/* Publish to Sanity - available for all content types */}
+              <PublishToSanity
+                content={content}
+                contentType={category === 'master' ? 'master' : category === 'derivative' ? 'derivative' : 'output'}
+                variant="outline"
+                size="sm"
+                buttonText="Publish to Sanity"
+              />
 
               <Button
                 onClick={() => {
