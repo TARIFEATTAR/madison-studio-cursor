@@ -31,9 +31,12 @@ serve(async (req) => {
 
     console.log(`[sync-sanity-products] Starting sync: ${projectId}/${dataset}`);
 
-    // Simple query to get products with titles
-    const query = encodeURIComponent('*[_type in ["product", "tarifeProduct"] && defined(title)]{_id, title, sku, "slug": slug.current, "image": mainImage.asset->url}');
-    const sanityUrl = `https://${projectId}.api.sanity.io/v2024-01-01/data/query/${dataset}?query=${query}`;
+    // Simple query to get products with titles - use simpler query format
+    const query = '*[_type == "product" || _type == "tarifeProduct" || _type == "shopifyProduct"][title != null]{_id, title, sku, "slug": slug.current, "image": mainImage.asset->url}';
+    const encodedQuery = encodeURIComponent(query);
+    const sanityUrl = `https://${projectId}.api.sanity.io/v2024-01-01/data/query/${dataset}?query=${encodedQuery}`;
+    
+    console.log(`[sync-sanity-products] Query URL: ${sanityUrl}`);
 
     console.log(`[sync-sanity-products] Fetching from Sanity...`);
     const sanityResponse = await fetch(sanityUrl);
