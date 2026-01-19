@@ -275,7 +275,8 @@ export function useProducts(options: UseProductsOptions = {}) {
         .from('product_hubs')
         .select(`
           *,
-          hero_image:dam_assets!product_hubs_hero_image_id_fkey(id, file_url, thumbnail_url)
+          hero_image:dam_assets!product_hubs_hero_image_id_fkey(id, file_url, thumbnail_url),
+          hero_image_external_url
         `)
         .eq('organization_id', currentOrganizationId);
 
@@ -306,10 +307,10 @@ export function useProducts(options: UseProductsOptions = {}) {
         throw error;
       }
 
-      // Transform data to include hero_image_url
+      // Transform data to include hero_image_url (DAM asset takes priority, then external URL)
       return (data || []).map((product: any) => ({
         ...product,
-        hero_image_url: product.hero_image?.thumbnail_url || product.hero_image?.file_url || null,
+        hero_image_url: product.hero_image?.thumbnail_url || product.hero_image?.file_url || product.hero_image_external_url || null,
       })) as ProductHub[];
     },
     enabled: !!currentOrganizationId,
@@ -325,7 +326,8 @@ export function useProducts(options: UseProductsOptions = {}) {
       .from('product_hubs')
       .select(`
         *,
-        hero_image:dam_assets!product_hubs_hero_image_id_fkey(id, file_url, thumbnail_url)
+        hero_image:dam_assets!product_hubs_hero_image_id_fkey(id, file_url, thumbnail_url),
+        hero_image_external_url
       `)
       .eq('id', productId)
       .eq('organization_id', currentOrganizationId)
@@ -338,7 +340,7 @@ export function useProducts(options: UseProductsOptions = {}) {
 
     return {
       ...data,
-      hero_image_url: data.hero_image?.thumbnail_url || data.hero_image?.file_url || null,
+      hero_image_url: data.hero_image?.thumbnail_url || data.hero_image?.file_url || data.hero_image_external_url || null,
     } as ProductHub;
   };
 
@@ -584,7 +586,8 @@ export function useProduct(productId: string | null) {
         .from('product_hubs')
         .select(`
           *,
-          hero_image:dam_assets!product_hubs_hero_image_id_fkey(id, file_url, thumbnail_url)
+          hero_image:dam_assets!product_hubs_hero_image_id_fkey(id, file_url, thumbnail_url),
+          hero_image_external_url
         `)
         .eq('id', productId)
         .eq('organization_id', currentOrganizationId)
@@ -597,7 +600,7 @@ export function useProduct(productId: string | null) {
 
       return {
         ...data,
-        hero_image_url: data.hero_image?.thumbnail_url || data.hero_image?.file_url || null,
+        hero_image_url: data.hero_image?.thumbnail_url || data.hero_image?.file_url || data.hero_image_external_url || null,
       } as ProductHub;
     },
     enabled: !!productId && !!currentOrganizationId,

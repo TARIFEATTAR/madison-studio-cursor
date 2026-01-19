@@ -156,7 +156,7 @@ function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
                 <div className="space-y-2">
                   {/* Primary SKU */}
                   <p className="text-foreground">{product.sku || "—"}</p>
-                  
+
                   {/* Show all variant SKUs if there are variants */}
                   {product.variants && Array.isArray(product.variants) && product.variants.length > 1 && (
                     <div className="mt-2 p-3 rounded-lg bg-muted/50 border border-border">

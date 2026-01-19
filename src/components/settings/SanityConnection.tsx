@@ -44,6 +44,9 @@ export function SanityConnection({ organizationId }: SanityConnectionProps) {
         },
       });
 
+      console.log("[SanityConnection] Full response data:", JSON.stringify(data, null, 2));
+      console.log("[SanityConnection] Error:", error);
+
       if (error) throw error;
 
       if (!data?.success) {
