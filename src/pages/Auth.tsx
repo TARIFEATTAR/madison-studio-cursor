@@ -43,22 +43,20 @@ const Auth = () => {
     const isNewUser = (Math.abs(created - signedIn) < 30000) || (Math.abs(confirmed - signedIn) < 30000);
 
     if (isNewUser) {
-      // Send welcome email to new users
-      try {
-        logger.debug("[Auth] Sending welcome email to new user...");
-        await supabase.functions.invoke('send-welcome-email', {
-          body: {
-            userEmail: user.email,
-            userName: user.user_metadata?.full_name || user.email?.split('@')[0],
-          },
-        });
-      } catch (err) {
-        console.error("[Auth] Failed to send welcome email:", err);
-      }
+      // Send welcome email to new users (fire and forget)
+      supabase.functions.invoke('send-welcome-email', {
+        body: {
+          userEmail: user.email,
+          userName: user.user_metadata?.full_name || user.email?.split('@')[0],
+        },
+      }).catch(err => console.error("[Auth] Failed to send welcome email:", err));
 
+      logger.debug("[Auth] New user - redirecting to onboarding");
       navigate("/onboarding", { replace: true });
     } else {
-      navigate("/", { replace: true });
+      // Redirect to dashboard directly instead of "/" to avoid Index.tsx loop
+      logger.debug("[Auth] Existing user - redirecting to dashboard");
+      navigate("/dashboard", { replace: true });
     }
   };
 

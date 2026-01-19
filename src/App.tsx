@@ -103,6 +103,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [verifying, setVerifying] = useState(false);
   const [allowed, setAllowed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasChecked = useRef(false);
 
   useEffect(() => {
     logger.debug("[RouteGuard] ProtectedRoute check", { path: location.pathname, loading, hasUser: !!user });
@@ -112,12 +113,18 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     if (user) {
       setAllowed(true);
       setError(null);
+      hasChecked.current = true;
       return;
     }
+
+    // Prevent multiple checks/redirects
+    if (hasChecked.current || verifying) return;
 
     // Extra safety: double-check session before redirecting to /auth
     setVerifying(true);
     setError(null);
+    hasChecked.current = true;
+    
     supabase.auth.getSession()
       .then(({ data: { session }, error: sessionError }) => {
         logger.debug("[RouteGuard] getSession (guard)", { path: location.pathname, hasUser: !!session?.user });
@@ -139,7 +146,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         navigate("/auth", { replace: true });
       })
       .finally(() => setVerifying(false));
-  }, [loading, user, navigate, location.pathname]);
+  }, [loading, user, navigate, location.pathname, verifying]);
 
   if (loading || verifying) {
     return (
