@@ -124,7 +124,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     setVerifying(true);
     setError(null);
     hasChecked.current = true;
-    
+
     supabase.auth.getSession()
       .then(({ data: { session }, error: sessionError }) => {
         logger.debug("[RouteGuard] getSession (guard)", { path: location.pathname, hasUser: !!session?.user });
@@ -257,7 +257,7 @@ const RootRoute = () => {
           typeof org.brand_config === 'object' &&
           Object.keys(org.brand_config).length > 0 &&
           ('industry' in org.brand_config || 'brandName' in org.brand_config);
-        
+
         // Also check localStorage as a fallback
         const hasCompletedBefore = localStorage.getItem(`onboarding_completed_${user.id}`) === "true";
 

@@ -105,9 +105,9 @@ const Auth = () => {
             variant: "destructive",
           });
         } else {
-          toast({ 
-            title: "✓ Account Verified!", 
-            description: "Your account is ready. Welcome to Madison Studio." 
+          toast({
+            title: "✓ Account Verified!",
+            description: "Your account is ready. Welcome to Madison Studio."
           });
 
           // Send welcome email immediately upon verification
@@ -135,11 +135,11 @@ const Auth = () => {
             userId: data.session.user.id,
             email: data.session.user.email,
           });
-          
+
           // Show clear success toast
-          toast({ 
-            title: "✓ Sign In Successful!", 
-            description: "Welcome back to Madison Studio." 
+          toast({
+            title: "✓ Sign In Successful!",
+            description: "Welcome back to Madison Studio."
           });
 
           // Send welcome email for new users
@@ -168,7 +168,7 @@ const Auth = () => {
       // Always redirect back to /auth to avoid Index.tsx redirect loop
       const redirectUrl = `${window.location.origin}/auth`;
       logger.debug('[Auth] Starting Google OAuth', { redirectUrl, origin: window.location.origin });
-      
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -356,10 +356,10 @@ const Auth = () => {
       <div className="w-full max-w-md">
         {/* Logo & Tagline */}
         <div className="text-center mb-6 sm:mb-8 fade-enter">
-          <img 
-            src={maddiLogo} 
-            alt="Madison" 
-            className="h-24 sm:h-32 md:h-40 w-auto mx-auto mb-3 sm:mb-4" 
+          <img
+            src={maddiLogo}
+            alt="Madison"
+            className="h-24 sm:h-32 md:h-40 w-auto mx-auto mb-3 sm:mb-4"
           />
           <p className="text-sm sm:text-base text-muted-foreground">
             Where brands craft their narrative
@@ -368,10 +368,10 @@ const Auth = () => {
 
         <div className="bg-card/80 backdrop-blur-sm p-5 sm:p-8 rounded-xl border border-border/40 shadow-lg fade-enter">
           {/* Google Sign In - Always visible at top */}
-          <Button 
-            onClick={handleGoogleSignIn} 
-            variant="outline" 
-            className="w-full mb-4 sm:mb-6 h-11 sm:h-12 gap-2 sm:gap-3 text-sm sm:text-base font-medium hover:bg-muted/50 transition-colors" 
+          <Button
+            onClick={handleGoogleSignIn}
+            variant="outline"
+            className="w-full mb-4 sm:mb-6 h-11 sm:h-12 gap-2 sm:gap-3 text-sm sm:text-base font-medium hover:bg-muted/50 transition-colors"
             disabled={loading}
           >
             <svg className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24">
@@ -416,12 +416,12 @@ const Auth = () => {
                     <Label htmlFor="reset-email" className="text-sm font-medium">Email address</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input 
-                        id="reset-email" 
-                        type="email" 
-                        value={email} 
-                        onChange={(e) => setEmail(e.target.value)} 
-                        required 
+                      <Input
+                        id="reset-email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
                         className="pl-10 h-11"
                         placeholder="you@example.com"
                       />
@@ -437,12 +437,12 @@ const Auth = () => {
                     <Label htmlFor="signin-email" className="text-xs sm:text-sm font-medium">Email address</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input 
-                        id="signin-email" 
-                        type="email" 
-                        value={email} 
-                        onChange={(e) => setEmail(e.target.value)} 
-                        required 
+                      <Input
+                        id="signin-email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
                         className="pl-10 h-10 sm:h-11 text-sm"
                         placeholder="you@example.com"
                       />
@@ -453,12 +453,12 @@ const Auth = () => {
                     <Label htmlFor="signin-password" className="text-xs sm:text-sm font-medium">Password</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input 
-                        id="signin-password" 
-                        type={showPassword ? "text" : "password"} 
-                        value={password} 
-                        onChange={(e) => setPassword(e.target.value)} 
-                        required 
+                      <Input
+                        id="signin-password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
                         className="pl-10 pr-10 h-10 sm:h-11 text-sm"
                         placeholder="••••••••"
                       />
@@ -477,16 +477,16 @@ const Auth = () => {
                   </Button>
 
                   <div className="flex items-center justify-between pt-2 gap-2">
-                    <button 
-                      type="button" 
-                      className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors" 
+                    <button
+                      type="button"
+                      className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors"
                       onClick={() => setResetMode(true)}
                     >
                       Forgot password?
                     </button>
-                    <button 
-                      type="button" 
-                      className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1" 
+                    <button
+                      type="button"
+                      className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                       onClick={() => setAuthMode('magic')}
                     >
                       <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
@@ -520,7 +520,7 @@ const Auth = () => {
                       />
                     </svg>
                   </div>
-                  
+
                   {/* Clear Success Message */}
                   <div className="space-y-2">
                     <h3 className="text-xl font-semibold text-foreground">Account Created!</h3>
@@ -528,7 +528,7 @@ const Auth = () => {
                       Welcome to Madison Studio
                     </p>
                   </div>
-                  
+
                   {/* Email Verification Info */}
                   <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                     <p className="text-sm text-muted-foreground">
@@ -536,11 +536,11 @@ const Auth = () => {
                     </p>
                     <p className="font-medium text-foreground">{email}</p>
                   </div>
-                  
+
                   <p className="text-sm text-muted-foreground">
                     Click the link in your email to verify your account and start creating.
                   </p>
-                  
+
                   <Button
                     type="button"
                     variant="outline"
@@ -617,7 +617,7 @@ const Auth = () => {
                 <ArrowLeft className="w-4 h-4" />
                 Back to sign in
               </button>
-              
+
               {magicLinkSent ? (
                 <div className="space-y-4 text-center py-4">
                   <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-2">
@@ -646,12 +646,12 @@ const Auth = () => {
                     <Label htmlFor="magic-email" className="text-sm font-medium">Email address</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input 
-                        id="magic-email" 
-                        type="email" 
-                        value={email} 
-                        onChange={(e) => setEmail(e.target.value)} 
-                        required 
+                      <Input
+                        id="magic-email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
                         className="pl-10 h-11"
                         placeholder="you@example.com"
                       />
