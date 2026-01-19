@@ -825,7 +825,7 @@ export default function ProductHub() {
                   <RoleBadge size="sm" />
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  {displayProduct.sku && <span>SKU: {displayProduct.sku}</span>}
+                  <span>SKU: {(displayProduct.metadata?.parent_sku as string) || displayProduct.sku}</span>
                   {displayProduct.category && (
                     <>
                       <span>•</span>
