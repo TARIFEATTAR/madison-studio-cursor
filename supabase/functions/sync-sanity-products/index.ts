@@ -19,7 +19,7 @@ serve(async (req) => {
     const requestBody = await req.json();
     const { organization_id, sanity_project_id, sanity_dataset } = requestBody;
 
-    console.log("[sync-sanity-products] VERSION 8 - Request body:", JSON.stringify(requestBody));
+    console.log("[sync-sanity-products] VERSION 9 - Request body:", JSON.stringify(requestBody));
 
     if (!organization_id) {
       return new Response(
@@ -98,6 +98,62 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // FETCH SHOPIFY PRICING & INVENTORY DATA
+    // Look up brand_products to get pricing/inventory by SKU
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    console.log(`[sync-sanity-products] Fetching Shopify pricing/inventory data...`);
+    
+    // Build a SKU → pricing/inventory lookup map from brand_products (Shopify-synced)
+    const { data: shopifyProducts, error: shopifyError } = await supabase
+      .from("brand_products")
+      .select("id, name, sku, price, compare_at_price, inventory_quantity, variants, featured_image_url")
+      .eq("organization_id", organization_id);
+
+    const skuPricingMap: Record<string, { price: number; compare_at_price: number | null; inventory_quantity: number; image_url?: string }> = {};
+    
+    if (shopifyProducts && !shopifyError) {
+      console.log(`[sync-sanity-products] Found ${shopifyProducts.length} Shopify products to match`);
+      
+      for (const sp of shopifyProducts) {
+        // Add main product SKU
+        if (sp.sku) {
+          skuPricingMap[sp.sku.toUpperCase()] = {
+            price: sp.price || 0,
+            compare_at_price: sp.compare_at_price || null,
+            inventory_quantity: sp.inventory_quantity || 0,
+            image_url: sp.featured_image_url || undefined
+          };
+        }
+        
+        // Parse variants and add each variant SKU
+        if (sp.variants) {
+          try {
+            const variants = typeof sp.variants === 'string' ? JSON.parse(sp.variants) : sp.variants;
+            if (Array.isArray(variants)) {
+              for (const v of variants) {
+                if (v.sku) {
+                  skuPricingMap[v.sku.toUpperCase()] = {
+                    price: v.price || 0,
+                    compare_at_price: v.compare_at_price || null,
+                    inventory_quantity: v.inventory_quantity || 0
+                  };
+                }
+              }
+            }
+          } catch (e) {
+            console.log(`[sync-sanity-products] Could not parse variants for ${sp.name}`);
+          }
+        }
+      }
+      
+      console.log(`[sync-sanity-products] Built SKU pricing map with ${Object.keys(skuPricingMap).length} SKUs`);
+      console.log(`[sync-sanity-products] Sample SKUs:`, Object.keys(skuPricingMap).slice(0, 5));
+    } else {
+      console.log(`[sync-sanity-products] No Shopify products found or error:`, shopifyError?.message);
+    }
+
     let insertedCount = 0;
     let updatedCount = 0;
     let errorCount = 0;
@@ -118,47 +174,67 @@ serve(async (req) => {
         const slug = product.slugCurrent || product.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
         // Build variants array from SKUs (6ml and 12ml)
+        // Look up pricing/inventory from Shopify data
         const variants: any[] = [];
         let primarySku = null;
+        let primaryPrice = null;
 
         if (product.sku6ml) {
+          const sku6mlUpper = product.sku6ml.toUpperCase();
+          const shopifyData6ml = skuPricingMap[sku6mlUpper];
+          
+          if (shopifyData6ml) {
+            console.log(`[sync-sanity-products] Found Shopify pricing for ${product.sku6ml}: $${shopifyData6ml.price}, qty: ${shopifyData6ml.inventory_quantity}`);
+          }
+          
           variants.push({
             id: `sanity-${product._id}-6ml`,
             title: "6ml",
             sku: product.sku6ml,
-            price: 0, // Pricing can be set later
-            compare_at_price: null,
-            inventory_quantity: 0,
+            price: shopifyData6ml?.price || 0,
+            compare_at_price: shopifyData6ml?.compare_at_price || null,
+            inventory_quantity: shopifyData6ml?.inventory_quantity || 0,
             inventory_policy: "deny",
             option1: "6ml", // Size option value
             position: 1,
             metadata: {
               source: "sanity",
-              sanity_id: product._id
+              sanity_id: product._id,
+              shopify_synced: !!shopifyData6ml
             }
           });
-          primarySku = product.sku6ml; // Use 6ml as primary SKU
+          primarySku = product.sku6ml;
+          primaryPrice = shopifyData6ml?.price || null;
         }
 
         if (product.sku12ml) {
+          const sku12mlUpper = product.sku12ml.toUpperCase();
+          const shopifyData12ml = skuPricingMap[sku12mlUpper];
+          
+          if (shopifyData12ml) {
+            console.log(`[sync-sanity-products] Found Shopify pricing for ${product.sku12ml}: $${shopifyData12ml.price}, qty: ${shopifyData12ml.inventory_quantity}`);
+          }
+          
           variants.push({
             id: `sanity-${product._id}-12ml`,
             title: "12ml",
             sku: product.sku12ml,
-            price: 0, // Pricing can be set later
-            compare_at_price: null,
-            inventory_quantity: 0,
+            price: shopifyData12ml?.price || 0,
+            compare_at_price: shopifyData12ml?.compare_at_price || null,
+            inventory_quantity: shopifyData12ml?.inventory_quantity || 0,
             inventory_policy: "deny",
             option1: "12ml", // Size option value
             position: 2,
             metadata: {
               source: "sanity",
-              sanity_id: product._id
+              sanity_id: product._id,
+              shopify_synced: !!shopifyData12ml
             }
           });
           // If no 6ml, use 12ml as primary
           if (!primarySku) {
             primarySku = product.sku12ml;
+            primaryPrice = shopifyData12ml?.price || null;
           }
         }
 
@@ -206,13 +282,14 @@ serve(async (req) => {
           name: product.title,
           slug: slug,
           sku: primarySku, // Primary SKU (prefer 6ml, fallback to 12ml)
+          price: primaryPrice, // Price from Shopify (if found)
           status: product.inStock === false ? "archived" : "active",
           development_stage: "launched",
           category: "Fragrance",
           product_type: "Attär",
           product_line: productLine,
           hero_image_external_url: heroImageUrl,
-          variants: variants, // Store variants as JSONB array
+          variants: variants, // Store variants as JSONB array with pricing/inventory
           options: options, // Store options as JSONB array
           external_ids: {
             sanity_id: product._id,
@@ -222,6 +299,7 @@ serve(async (req) => {
             source: "sanity",
             imported_at: new Date().toISOString(),
             legacy_name: product.legacyName || null,
+            shopify_pricing_synced: Object.keys(skuPricingMap).length > 0,
             // Keep SKUs in metadata for backward compatibility
             sku_6ml: product.sku6ml || null,
             sku_12ml: product.sku12ml || null
@@ -257,9 +335,10 @@ serve(async (req) => {
             .update({
               sku: productData.sku,
               slug: productData.slug,
+              price: productData.price, // Update price from Shopify
               product_line: productData.product_line,
               hero_image_external_url: productData.hero_image_external_url,
-              variants: productData.variants, // Update variants array
+              variants: productData.variants, // Update variants array with pricing/inventory
               options: productData.options, // Update options array
               external_ids: productData.external_ids,
               metadata: productData.metadata
