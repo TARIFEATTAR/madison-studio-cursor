@@ -47,7 +47,7 @@ The edge functions use `SUPABASE_SERVICE_ROLE_KEY` which **bypasses RLS**, so ac
 
 **Impact**: If you have more than 3 training documents, only the first 3 (oldest) are used.
 
-**Recommendation**: 
+**Recommendation**:
 - Increase limit if needed
 - Add category filtering (writing_style vs visual_identity)
 - Add priority/version system
@@ -70,7 +70,7 @@ If you see `none` or `0 chars`, the query is failing.
 
 ### Step 3: Verify Documents Are Processed
 ```sql
-SELECT file_name, processing_status, 
+SELECT file_name, processing_status,
        LENGTH(extracted_content) as content_length
 FROM madison_training_documents
 WHERE processing_status = 'completed';

@@ -71,15 +71,15 @@ supabase db push
 ## 🐛 Troubleshooting
 
 ### Error: "relation already exists"
-**Meaning:** Some tables already exist  
+**Meaning:** Some tables already exist
 **Fix:** This is okay - the migration will skip existing tables. Continue.
 
 ### Error: "permission denied"
-**Meaning:** You don't have admin access  
+**Meaning:** You don't have admin access
 **Fix:** Make sure you're logged in as project owner/admin
 
 ### Error: "extension vector does not exist"
-**Meaning:** pgvector extension not enabled  
+**Meaning:** pgvector extension not enabled
 **Fix:** Run this first in SQL Editor:
 ```sql
 CREATE EXTENSION IF NOT EXISTS vector;
@@ -91,12 +91,12 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 1. **Verify tables exist:**
 ```sql
-SELECT table_name 
-FROM information_schema.tables 
-WHERE table_schema = 'public' 
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
 AND table_name IN (
-  'madison_masters', 
-  'visual_masters', 
+  'madison_masters',
+  'visual_masters',
   'schwartz_templates',
   'brand_dna',
   'brand_products',
@@ -115,9 +115,9 @@ SELECT name, squad FROM madison_masters; -- Should show 7 masters
 3. **Test RLS policies:**
 ```sql
 -- Should return policies
-SELECT tablename, policyname 
-FROM pg_policies 
-WHERE schemaname = 'public' 
+SELECT tablename, policyname
+FROM pg_policies
+WHERE schemaname = 'public'
 AND tablename IN ('madison_masters', 'brand_dna');
 ```
 

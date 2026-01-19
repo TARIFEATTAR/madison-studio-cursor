@@ -1,8 +1,8 @@
 # Video 1: Welcome to Madison Studio - Filming Guide
 
-**Duration:** 6:00  
-**Target:** Brand new users (first-time login)  
-**Priority:** CRITICAL  
+**Duration:** 6:00
+**Target:** Brand new users (first-time login)
+**Priority:** CRITICAL
 **Script Location:** `TUTORIAL_SCRIPTS_PHASE_1.md` lines 8-56
 
 ---

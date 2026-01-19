@@ -1,9 +1,9 @@
 /**
  * AGENT 1: ROUTER (The Creative Director)
- * 
+ *
  * Analyzes the user brief and creates an execution strategy.
  * Selects ONE primary squad, determines Schwartz stage, and identifies constraints.
- * 
+ *
  * Model: Claude Sonnet 4 (fast, strategic)
  * Cost: ~$0.02 per brief
  */
@@ -32,7 +32,7 @@ Masters: Ogilvy (Specificity), Hopkins (Reason-Why), Caples (Headlines)
 Use When: Price > $100, technical products, skeptical audiences, product pages
 Forbidden: romantic imagery, vague claims, metaphors, wandering narratives
 
-### THE_STORYTELLERS  
+### THE_STORYTELLERS
 Philosophy: Products are portals to adventure, identity, and possibility.
 Masters: Peterman (Romance), Collier (Conversation Hook)
 Use When: Lifestyle products, fragrance, candles, brand building, Instagram
@@ -68,7 +68,7 @@ const SCHWARTZ_STAGES = `
 1. UNAWARE - Customer doesn't know they have a problem
    → Open with relatable observation, reveal hidden problem
 
-2. PROBLEM_AWARE - Knows the problem, unsure of solutions  
+2. PROBLEM_AWARE - Knows the problem, unsure of solutions
    → Validate pain, explain mechanism, provide proof
 
 3. SOLUTION_AWARE - Knows solutions exist, evaluating options
@@ -116,10 +116,10 @@ export async function routerAgent(input: RouterInput): Promise<StrategyJSON> {
   });
 
   // 4. Parse response
-  const responseText = message.content[0].type === 'text' 
-    ? message.content[0].text 
+  const responseText = message.content[0].type === 'text'
+    ? message.content[0].text
     : '';
-  
+
   const strategy = parseStrategyResponse(responseText, brandDNA);
 
   // 5. Enrich with product ID if provided
@@ -214,7 +214,7 @@ function parseStrategyResponse(responseText: string, brandDNA: BrandDNA | null):
       .replace(/```json\n?/g, '')
       .replace(/```\n?/g, '')
       .trim();
-    
+
     const parsed = JSON.parse(cleanedJson);
 
     // Validate and ensure all required fields
@@ -241,7 +241,7 @@ function parseStrategyResponse(responseText: string, brandDNA: BrandDNA | null):
   } catch (error) {
     console.error('[Router] Failed to parse strategy response:', error);
     console.error('[Router] Raw response:', responseText);
-    
+
     // Return sensible defaults
     return getDefaultStrategy(brandDNA);
   }

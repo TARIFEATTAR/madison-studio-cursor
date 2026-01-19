@@ -14,13 +14,13 @@ DO $$
 BEGIN
   -- If brand_dna exists but has organization_id instead of org_id, drop it
   IF EXISTS (
-    SELECT 1 FROM information_schema.tables 
-    WHERE table_schema = 'public' 
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public'
     AND table_name = 'brand_dna'
     AND EXISTS (
-      SELECT 1 FROM information_schema.columns 
-      WHERE table_schema = 'public' 
-      AND table_name = 'brand_dna' 
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public'
+      AND table_name = 'brand_dna'
       AND column_name = 'organization_id'
     )
   ) THEN
@@ -43,9 +43,9 @@ Run just the `CREATE TABLE` statements first, then add RLS policies separately.
 
 ```sql
 -- See what tables exist
-SELECT table_name 
-FROM information_schema.tables 
-WHERE table_schema = 'public' 
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
 AND table_name LIKE '%brand%'
 ORDER BY table_name;
 ```
@@ -54,9 +54,9 @@ ORDER BY table_name;
 
 ```sql
 -- Check column names in brand_dna (if it exists)
-SELECT column_name, data_type 
-FROM information_schema.columns 
-WHERE table_schema = 'public' 
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public'
 AND table_name = 'brand_dna';
 ```
 

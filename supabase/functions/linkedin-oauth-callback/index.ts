@@ -1,9 +1,9 @@
 /**
  * LinkedIn OAuth Callback - Handle OAuth 2.0 Authorization Response
- * 
+ *
  * This edge function receives the authorization code from LinkedIn, exchanges it
  * for access tokens, fetches user/organization info, and stores the connection.
- * 
+ *
  * LinkedIn OAuth 2.0 Documentation:
  * https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow
  */
@@ -72,7 +72,7 @@ serve(async (req) => {
 
     // Exchange code for tokens
     const callbackUrl = `${supabaseUrl}/functions/v1/linkedin-oauth-callback`;
-    
+
     const tokenResponse = await fetch("https://www.linkedin.com/oauth/v2/accessToken", {
       method: "POST",
       headers: {
@@ -244,7 +244,7 @@ serve(async (req) => {
 
     // Redirect back to app with success
     return createRedirect(
-      oauthState.redirect_url, 
+      oauthState.redirect_url,
       `linkedin_success=true&linkedin_name=${encodeURIComponent(displayName)}&connection_type=${connectionType}`
     );
 
@@ -258,7 +258,7 @@ function createRedirect(baseUrl: string | null, queryParams: string): Response {
   const defaultUrl = Deno.env.get("APP_URL") || "https://app.madisonstudio.ai";
   const redirectUrl = baseUrl || `${defaultUrl}/settings?tab=integrations`;
   const separator = redirectUrl.includes("?") ? "&" : "?";
-  
+
   return new Response(null, {
     status: 302,
     headers: {

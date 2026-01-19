@@ -1,9 +1,9 @@
 /**
  * Brand Quick View Trigger
- * 
+ *
  * A button that opens the Brand Quick View Panel.
  * Can be placed in navigation, dashboard, or anywhere in the app.
- * 
+ *
  * Shows a mini preview of brand colors as indicator dots.
  */
 

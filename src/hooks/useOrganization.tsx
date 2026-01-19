@@ -35,7 +35,7 @@ export function useOrganization() {
         console.error("[useOrganization] Error fetching membership:", error);
         throw error;
       }
-      
+
       console.log("[useOrganization] Membership data:", data);
       return data as OrganizationMembership | null;
     },

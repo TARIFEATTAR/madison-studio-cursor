@@ -1,35 +1,35 @@
 /**
  * EtsyConnection - Etsy Integration Settings Component
- * 
+ *
  * Allows users to connect/disconnect their Etsy shop and configure
  * default settings for listing creation.
  */
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { 
-  ExternalLink, 
-  Check, 
-  X, 
-  Loader2, 
-  Store, 
-  Settings2, 
+import {
+  ExternalLink,
+  Check,
+  X,
+  Loader2,
+  Store,
+  Settings2,
   RefreshCw,
-  AlertCircle 
+  AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -66,7 +66,7 @@ export function EtsyConnection({ organizationId }: EtsyConnectionProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   const [connection, setConnection] = useState<EtsyConnection | null>(null);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
@@ -83,8 +83,8 @@ export function EtsyConnection({ organizationId }: EtsyConnectionProps) {
     if (success) {
       toast({
         title: "Etsy Connected!",
-        description: shopName 
-          ? `Successfully connected to ${shopName}` 
+        description: shopName
+          ? `Successfully connected to ${shopName}`
           : "Your Etsy shop is now connected",
       });
       // Clear params
@@ -113,7 +113,7 @@ export function EtsyConnection({ organizationId }: EtsyConnectionProps) {
 
   const fetchConnection = async () => {
     if (!organizationId) return;
-    
+
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -126,7 +126,7 @@ export function EtsyConnection({ organizationId }: EtsyConnectionProps) {
       if (error && error.code !== "PGRST116") {
         console.error("Error fetching Etsy connection:", error);
       }
-      
+
       setConnection(data);
     } catch (err) {
       console.error("Error:", err);
@@ -141,7 +141,7 @@ export function EtsyConnection({ organizationId }: EtsyConnectionProps) {
     setConnecting(true);
     try {
       const { data, error } = await supabase.functions.invoke("etsy-oauth-start", {
-        body: { 
+        body: {
           organizationId,
           redirectUrl: `${window.location.origin}/settings?tab=integrations`
         },
@@ -275,12 +275,12 @@ export function EtsyConnection({ organizationId }: EtsyConnectionProps) {
     return (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Connect your Etsy shop to push listings directly from Madison. 
+          Connect your Etsy shop to push listings directly from Madison.
           Listings are created as drafts so you can review before publishing.
         </p>
-        
-        <Button 
-          onClick={handleConnect} 
+
+        <Button
+          onClick={handleConnect}
           disabled={connecting || !organizationId}
           className="bg-[#F56400] hover:bg-[#E55400] text-white"
         >
@@ -358,7 +358,7 @@ export function EtsyConnection({ organizationId }: EtsyConnectionProps) {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction 
+                <AlertDialogAction
                   onClick={handleDisconnect}
                   disabled={disconnecting}
                   className="bg-red-600 hover:bg-red-700"
@@ -448,7 +448,7 @@ export function EtsyConnection({ organizationId }: EtsyConnectionProps) {
 
       {/* Sync Products & Refresh */}
       <div className="flex gap-3 pt-2">
-        <Button 
+        <Button
           onClick={handleSyncProducts}
           disabled={syncing}
           className="bg-[#F56400] hover:bg-[#E55400] text-white"
@@ -465,9 +465,9 @@ export function EtsyConnection({ organizationId }: EtsyConnectionProps) {
             </>
           )}
         </Button>
-        
-        <Button 
-          variant="outline" 
+
+        <Button
+          variant="outline"
           size="sm"
           onClick={fetchConnection}
           disabled={loading}
@@ -476,7 +476,7 @@ export function EtsyConnection({ organizationId }: EtsyConnectionProps) {
           Refresh
         </Button>
       </div>
-      
+
       <p className="text-xs text-muted-foreground">
         Sync will import all active Etsy listings including SKU, pricing, variants, and images into your Product Hub.
       </p>

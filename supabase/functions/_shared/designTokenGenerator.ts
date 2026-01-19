@@ -1,9 +1,9 @@
 /**
  * DESIGN TOKEN GENERATOR
- * 
+ *
  * Generates Tailwind-compatible design tokens from Brand DNA.
  * Creates semantic color system, typography scale, and spacing.
- * 
+ *
  * Cost: $0.00 (pure computation)
  */
 
@@ -99,7 +99,7 @@ export function generateDesignTokens(visual: BrandVisual): DesignTokens {
       foreground: derivedColors.foreground,
       card: derivedColors.card,
       'card-foreground': derivedColors.foreground,
-      
+
       // Brand colors
       primary: primaryHex,
       'primary-foreground': getContrastColor(primaryHex),
@@ -107,7 +107,7 @@ export function generateDesignTokens(visual: BrandVisual): DesignTokens {
       'secondary-foreground': getContrastColor(secondaryHex),
       accent: accentHex,
       'accent-foreground': getContrastColor(accentHex),
-      
+
       // Utility colors
       muted: derivedColors.muted,
       'muted-foreground': derivedColors.mutedForeground,
@@ -174,24 +174,24 @@ export function generateDesignTokens(visual: BrandVisual): DesignTokens {
  */
 export function generateCSSVariables(tokens: DesignTokens): string {
   const lines: string[] = [':root {'];
-  
+
   // Colors
   Object.entries(tokens.colors).forEach(([key, value]) => {
     lines.push(`  --${key}: ${value};`);
   });
-  
+
   // Typography
   lines.push(`  --font-serif: "${tokens.typography.fontFamily.serif}", Georgia, serif;`);
   lines.push(`  --font-sans: "${tokens.typography.fontFamily.sans}", -apple-system, sans-serif;`);
   lines.push(`  --font-mono: "${tokens.typography.fontFamily.mono}", monospace;`);
-  
+
   // Border radius
   lines.push(`  --radius-lg: ${tokens.borderRadius.lg};`);
   lines.push(`  --radius-md: ${tokens.borderRadius.md};`);
   lines.push(`  --radius-sm: ${tokens.borderRadius.sm};`);
-  
+
   lines.push('}');
-  
+
   return lines.join('\n');
 }
 

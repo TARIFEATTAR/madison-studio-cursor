@@ -1,12 +1,12 @@
 /**
  * MADISON 4-AGENT PIPELINE
- * 
+ *
  * The complete content generation pipeline:
  *   1. ROUTER → Analyzes brief, creates strategy
  *   2. ASSEMBLER → Fetches all context from Three Silos
  *   3. GENERATOR → Creates content using assembled context
  *   4. EDITOR → Validates output against constraints
- * 
+ *
  * Usage:
  *   const result = await madisonPipeline("Write Instagram post for rose candle", orgId);
  *   console.log(result.content);
@@ -54,7 +54,7 @@ export async function madisonPipeline(
   const { channel, productId, includeImagePrompt, skipEditor, verbose } = options;
   const startTime = Date.now();
 
-  const log = verbose 
+  const log = verbose
     ? (msg: string) => console.log(`[Pipeline] ${msg}`)
     : () => {};
 
@@ -64,14 +64,14 @@ export async function madisonPipeline(
   // AGENT 1: ROUTER
   // ═══════════════════════════════════════════════════════════════════════════
   log('Agent 1: Router analyzing brief');
-  
+
   const routerInput: RouterInput = {
     userBrief,
     orgId,
     channel,
     productId,
   };
-  
+
   const strategy = await routerAgent(routerInput);
   log(`Strategy: ${strategy.copySquad} / ${strategy.visualSquad} @ ${strategy.schwartzStage}`);
 
@@ -79,7 +79,7 @@ export async function madisonPipeline(
   // AGENT 2: ASSEMBLER
   // ═══════════════════════════════════════════════════════════════════════════
   log('Agent 2: Assembler fetching context');
-  
+
   const context = await assemblerAgent(strategy, orgId, userBrief);
   log(`Loaded ${context.masterDocuments.length} master docs, ${context.writingExamples.length} examples`);
 
@@ -87,7 +87,7 @@ export async function madisonPipeline(
   // AGENT 3: GENERATOR
   // ═══════════════════════════════════════════════════════════════════════════
   log('Agent 3: Generator creating content');
-  
+
   const draft = await generatorAgent(userBrief, strategy, context);
   log(`Draft generated: ${draft.length} characters`);
 
@@ -95,7 +95,7 @@ export async function madisonPipeline(
   // AGENT 4: EDITOR
   // ═══════════════════════════════════════════════════════════════════════════
   let finalContent: string;
-  
+
   if (skipEditor) {
     log('Agent 4: Editor SKIPPED (per options)');
     finalContent = draft;
@@ -109,7 +109,7 @@ export async function madisonPipeline(
   // OPTIONAL: IMAGE PROMPT
   // ═══════════════════════════════════════════════════════════════════════════
   let imagePrompt: string | undefined;
-  
+
   if (includeImagePrompt) {
     log('Generating image prompt');
     const visualMaster = await fetchVisualMaster(strategy.primaryVisualMaster);
@@ -188,14 +188,14 @@ function extractProductFromBrief(brief: string): string {
     /for (?:the |our |my )?([^,.]+(?:candle|serum|cream|oil|perfume|cologne|soap|lotion))/i,
     /(?:about|featuring|for) (?:the |our |my )?([^,.]+)/i,
   ];
-  
+
   for (const pattern of productPatterns) {
     const match = brief.match(pattern);
     if (match) {
       return match[1].trim();
     }
   }
-  
+
   return 'luxury product';
 }
 

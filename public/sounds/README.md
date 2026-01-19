@@ -40,13 +40,13 @@ import { useCameraFeedback } from '@/hooks/useCameraFeedback';
 
 function CaptureButton() {
   const { trigger, preload, FlashOverlay } = useCameraFeedback();
-  
+
   // Preload on first interaction
   const handleFirstInteraction = () => preload();
-  
+
   // Trigger on capture
   const handleCapture = () => trigger();
-  
+
   return (
     <>
       <button onClick={handleCapture}>Capture</button>

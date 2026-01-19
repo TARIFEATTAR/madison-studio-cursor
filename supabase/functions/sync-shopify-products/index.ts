@@ -63,7 +63,7 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
+
     if (!supabaseUrl || !supabaseKey) {
       console.error('Missing Supabase configuration:', {
         hasUrl: !!supabaseUrl,
@@ -142,12 +142,12 @@ serve(async (req) => {
     // Using 2024-01 API version for full variant and inventory support
     let allProducts: any[] = [];
     let pageInfo: string | null = null;
-    
+
     do {
-      const url = pageInfo 
+      const url = pageInfo
         ? `https://${shop_domain}/admin/api/2024-01/products.json?limit=250&page_info=${pageInfo}`
         : `https://${shop_domain}/admin/api/2024-01/products.json?limit=250`;
-      
+
       const shopifyResponse = await fetch(url, {
         headers: {
           'X-Shopify-Access-Token': accessToken,
@@ -163,7 +163,7 @@ serve(async (req) => {
 
       const shopifyData = await shopifyResponse.json();
       allProducts = allProducts.concat(shopifyData.products || []);
-      
+
       // Check for pagination
       const linkHeader = shopifyResponse.headers.get('link');
       if (linkHeader && linkHeader.includes('rel="next"')) {
@@ -173,7 +173,7 @@ serve(async (req) => {
         pageInfo = null;
       }
     } while (pageInfo);
-    
+
     const products = allProducts;
 
     console.log(`Fetched ${products.length} products from Shopify`);
@@ -188,34 +188,34 @@ serve(async (req) => {
     // Map Shopify products to brand_products schema with FULL e-commerce data
     const mappedProducts = products.map((product: any) => {
       const firstVariant = product.variants?.[0] || {};
-      
+
       // Generate handle from product title if not provided
       const handle = product.handle || product.title
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
-      
+
       // Parse Shopify tags for Madison-specific metadata
       const rawTags = product.tags ? product.tags.split(',').map((t: string) => t.trim()) : [];
 
       // Extract collection from tags (e.g., "collection:Humanities")
       const collectionTag = rawTags.find((tag: string) => tag.startsWith('collection:'));
-      const collection = collectionTag 
+      const collection = collectionTag
         ? collectionTag.replace('collection:', '').trim()
         : product.product_type || 'Uncategorized';
 
       // Extract scent_family from tags (e.g., "scent_family:warm")
       const scentFamilyTag = rawTags.find((tag: string) => tag.startsWith('scent_family:'));
-      const scent_family = scentFamilyTag 
+      const scent_family = scentFamilyTag
         ? scentFamilyTag.replace('scent_family:', '').trim()
         : null;
-      
+
       // Extract tone from tags (e.g., "tone:elegant")
       const toneTag = rawTags.find((tag: string) => tag.startsWith('tone:'));
       const tone = toneTag ? toneTag.replace('tone:', '').trim() : null;
-      
+
       // Strip HTML from body_html for description
-      const description = product.body_html 
+      const description = product.body_html
         ? product.body_html
             .replace(/<[^>]*>/g, '') // Remove HTML tags
             .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
@@ -226,7 +226,7 @@ serve(async (req) => {
             .replace(/&#39;/g, "'")  // Decode &#39;
             .trim()
         : null;
-      
+
       // Map ALL variants with full details
       const variants = (product.variants || []).map((v: any, index: number) => ({
         id: v.id?.toString(),
@@ -246,14 +246,14 @@ serve(async (req) => {
         shopify_variant_id: v.id?.toString(),
         position: v.position || index + 1,
       }));
-      
+
       // Map product options (Size, Color, etc.)
       const options = (product.options || []).map((opt: any) => ({
         name: opt.name,
         values: opt.values || [],
         position: opt.position,
       }));
-      
+
       // Map product images
       const images = (product.images || []).map((img: any) => ({
         id: img.id?.toString(),
@@ -264,17 +264,17 @@ serve(async (req) => {
         height: img.height,
         shopify_image_id: img.id?.toString(),
       }));
-      
+
       // Get featured image
       const featuredImage = product.image?.src || images[0]?.src || null;
-      
+
       // Filter regular tags (exclude Madison-specific tags)
-      const tags = rawTags.filter((tag: string) => 
-        !tag.startsWith('collection:') && 
-        !tag.startsWith('scent_family:') && 
+      const tags = rawTags.filter((tag: string) =>
+        !tag.startsWith('collection:') &&
+        !tag.startsWith('scent_family:') &&
         !tag.startsWith('tone:')
       );
-      
+
       return {
         organization_id,
         name: product.title,
@@ -318,7 +318,7 @@ serve(async (req) => {
 
     // Fetch existing products by NAME (since CSV products don't have handles)
     const names = mappedProducts.map((p: any) => p.name);
-    
+
     const { data: existingProducts } = await supabase
       .from('brand_products')
       .select('id, name, handle, shopify_product_id, description, collection, scent_family, tone, sku, price, variants, images')
@@ -327,7 +327,7 @@ serve(async (req) => {
 
     const existingByName = new Map(existingProducts?.map(p => [p.name, p]) || []);
     const existingByShopifyId = new Map(existingProducts?.map(p => [p.shopify_product_id, p]) || []);
-    
+
     let updatedCount = 0;
     let insertedCount = 0;
 
@@ -336,7 +336,7 @@ serve(async (req) => {
       const existingByNameMatch = existingByName.get(product.name);
       const existingByShopifyMatch = existingByShopifyId.get(product.shopify_product_id);
       const existing = existingByNameMatch || existingByShopifyMatch;
-      
+
       if (existing) {
         // Update existing product - Update Shopify-specific fields + e-commerce data
         // DO NOT overwrite rich 49-field CSV data (visual DNA, archetypes, etc.)
@@ -347,7 +347,7 @@ serve(async (req) => {
           shopify_sync_status: product.shopify_sync_status,
           last_shopify_sync: product.last_shopify_sync,
           handle: product.handle,
-          
+
           // E-commerce fields - always sync from Shopify (source of truth for pricing/inventory)
           sku: product.sku,
           barcode: product.barcode,
@@ -368,7 +368,7 @@ serve(async (req) => {
           published_at: product.published_at,
           tags: product.tags,
         };
-        
+
         // Only update these fields if they're currently empty (preserve manual edits)
         if (!existing.description || existing.description.length < 50) {
           updateData.description = product.description;
@@ -382,12 +382,12 @@ serve(async (req) => {
         if (!existing.tone) {
           updateData.tone = product.tone;
         }
-        
+
         const { error } = await supabase
           .from('brand_products')
           .update(updateData)
           .eq('id', existing.id);
-        
+
         if (error) throw error;
         updatedCount++;
       } else {
@@ -395,7 +395,7 @@ serve(async (req) => {
         const { error } = await supabase
           .from('brand_products')
           .insert([product]);
-        
+
         if (error) throw error;
         insertedCount++;
       }
@@ -406,7 +406,7 @@ serve(async (req) => {
     // Update connection sync timestamp
     await supabase
       .from('shopify_connections')
-      .update({ 
+      .update({
         last_synced_at: new Date().toISOString(),
         sync_status: 'idle'
       })
@@ -426,11 +426,11 @@ serve(async (req) => {
     );
   } catch (error: any) {
     console.error('Error syncing Shopify products:', error);
-    
+
     // Provide more detailed error information
     let errorMessage = error.message || 'Unknown error occurred';
     let statusCode = 400;
-    
+
     // Handle specific error cases
     if (errorMessage.includes('missing encrypted token data')) {
       errorMessage = 'Shopify connection needs to be reconnected. Please disconnect and reconnect your Shopify account.';
@@ -448,7 +448,7 @@ serve(async (req) => {
       errorMessage = 'Shopify connection not found. Please reconnect your Shopify account.';
       statusCode = 404;
     }
-    
+
     return new Response(
       JSON.stringify({
         success: false,

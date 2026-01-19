@@ -1,14 +1,14 @@
 /**
  * useCameraFeedback Hook
- * 
+ *
  * Professional camera capture feedback system inspired by
  * Hasselblad, Canon Pro, and Apple Pro Apps.
- * 
+ *
  * Provides:
  * - Precise mechanical shutter sound (with synthesized fallback)
  * - Sensor acknowledgment flash
  * - Tactile, restrained feedback
- * 
+ *
  * Design Rules:
  * - Feedback should feel tactile, not decorative
  * - If the effect draws attention to itself, reduce it
@@ -34,7 +34,7 @@ export const CAMERA_FEEDBACK_CONFIG = {
     /** Use synthesized sound as fallback */
     useSynthFallback: true,
   },
-  
+
   // Flash Effect
   flash: {
     /** Delay after sound trigger (ms) */
@@ -46,7 +46,7 @@ export const CAMERA_FEEDBACK_CONFIG = {
     /** Fade out duration (ms) */
     fadeOut: 100,
   },
-  
+
   // Sequencing
   timing: {
     /** Minimum time between triggers (debounce) */
@@ -61,12 +61,12 @@ export const CAMERA_FEEDBACK_CONFIG = {
 
 function createSynthShutterSound(audioContext: AudioContext, volume: number = 0.5): void {
   const now = audioContext.currentTime;
-  
+
   // Master gain
   const masterGain = audioContext.createGain();
   masterGain.connect(audioContext.destination);
   masterGain.gain.setValueAtTime(volume, now);
-  
+
   // === PART 1: Initial mechanical "click" ===
   // White noise burst for the initial click
   const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.03, audioContext.sampleRate);
@@ -74,54 +74,54 @@ function createSynthShutterSound(audioContext: AudioContext, volume: number = 0.
   for (let i = 0; i < noiseData.length; i++) {
     noiseData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (noiseData.length * 0.15));
   }
-  
+
   const noiseSource = audioContext.createBufferSource();
   noiseSource.buffer = noiseBuffer;
-  
+
   // Bandpass filter for click character
   const clickFilter = audioContext.createBiquadFilter();
   clickFilter.type = "bandpass";
   clickFilter.frequency.setValueAtTime(3000, now);
   clickFilter.Q.setValueAtTime(2, now);
-  
+
   const clickGain = audioContext.createGain();
   clickGain.gain.setValueAtTime(0.8, now);
   clickGain.gain.setTargetAtTime(0.001, now, 0.008);
-  
+
   noiseSource.connect(clickFilter);
   clickFilter.connect(clickGain);
   clickGain.connect(masterGain);
   noiseSource.start(now);
   noiseSource.stop(now + 0.03);
-  
+
   // === PART 2: Low "thunk" body resonance ===
   const thunk = audioContext.createOscillator();
   thunk.type = "sine";
   thunk.frequency.setValueAtTime(120, now);
   thunk.frequency.exponentialRampToValueAtTime(60, now + 0.05);
-  
+
   const thunkGain = audioContext.createGain();
   thunkGain.gain.setValueAtTime(0.4, now);
   thunkGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-  
+
   thunk.connect(thunkGain);
   thunkGain.connect(masterGain);
   thunk.start(now);
   thunk.stop(now + 0.07);
-  
+
   // === PART 3: High frequency "snap" ===
   const snap = audioContext.createOscillator();
   snap.type = "square";
   snap.frequency.setValueAtTime(4500, now);
-  
+
   const snapGain = audioContext.createGain();
   snapGain.gain.setValueAtTime(0.15, now);
   snapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.01);
-  
+
   const snapFilter = audioContext.createBiquadFilter();
   snapFilter.type = "highpass";
   snapFilter.frequency.setValueAtTime(2000, now);
-  
+
   snap.connect(snapFilter);
   snapFilter.connect(snapGain);
   snapGain.connect(masterGain);
@@ -179,7 +179,7 @@ export function useCameraFeedback(
   const audioContextRef = useRef<AudioContext | null>(null);
   const lastTriggerRef = useRef<number>(0);
   const useSynthRef = useRef<boolean>(false);
-  
+
   // State
   const [isPlaying, setIsPlaying] = useState(false);
   const [isReady, setIsReady] = useState(false);
@@ -188,7 +188,7 @@ export function useCameraFeedback(
   // -------------------------------------------------------------------------
   // Audio Context for Synthesized Sound
   // -------------------------------------------------------------------------
-  
+
   const getAudioContext = useCallback(() => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -199,7 +199,7 @@ export function useCameraFeedback(
   // -------------------------------------------------------------------------
   // Audio Preloading
   // -------------------------------------------------------------------------
-  
+
   const preload = useCallback(() => {
     if (audioRef.current || !soundEnabled) return;
 
@@ -207,10 +207,10 @@ export function useCameraFeedback(
       const audio = new Audio(soundSrc);
       audio.volume = volume;
       audio.preload = "auto";
-      
+
       // Load the audio
       audio.load();
-      
+
       audio.addEventListener("canplaythrough", () => {
         useSynthRef.current = false;
         setIsReady(true);
@@ -223,7 +223,7 @@ export function useCameraFeedback(
       });
 
       audioRef.current = audio;
-      
+
       // Set a timeout - if audio doesn't load in 1s, use synth
       setTimeout(() => {
         if (!isReady) {
@@ -242,7 +242,7 @@ export function useCameraFeedback(
   useEffect(() => {
     // Attempt preload - browsers may block until interaction
     preload();
-    
+
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -258,7 +258,7 @@ export function useCameraFeedback(
   // -------------------------------------------------------------------------
   // Play Shutter Sound (file or synthesized)
   // -------------------------------------------------------------------------
-  
+
   const playSound = useCallback(async () => {
     if (!soundEnabled) {
       console.debug("[CameraFeedback] Sound disabled");
@@ -272,14 +272,14 @@ export function useCameraFeedback(
       try {
         const ctx = getAudioContext();
         console.log("[CameraFeedback] Audio context state:", ctx.state);
-        
+
         // Ensure audio context is running (required by browsers)
         if (ctx.state === "suspended") {
           console.log("[CameraFeedback] Resuming suspended audio context...");
           await ctx.resume();
           console.log("[CameraFeedback] Audio context state after resume:", ctx.state);
         }
-        
+
         // Double-check state after resume
         if (ctx.state === "running") {
           console.log("[CameraFeedback] Creating synthesized shutter sound");
@@ -299,9 +299,9 @@ export function useCameraFeedback(
         const audio = audioRef.current;
         audio.currentTime = 0;
         audio.volume = volume;
-        
+
         const playPromise = audio.play();
-        
+
         if (playPromise !== undefined) {
           playPromise.catch(async () => {
             // Fall back to synth if playback fails
@@ -327,7 +327,7 @@ export function useCameraFeedback(
   // -------------------------------------------------------------------------
   // Trigger Flash Effect
   // -------------------------------------------------------------------------
-  
+
   const triggerFlash = useCallback(() => {
     if (!flashEnabled) {
       console.debug("[CameraFeedback] Flash disabled");
@@ -335,12 +335,12 @@ export function useCameraFeedback(
     }
 
     console.log("[CameraFeedback] Triggering flash...");
-    
+
     // Start flash after configured delay
     setTimeout(() => {
       console.log("[CameraFeedback] Flash ON");
       setShowFlash(true);
-      
+
       // End flash after duration
       setTimeout(() => {
         console.log("[CameraFeedback] Flash OFF");
@@ -352,10 +352,10 @@ export function useCameraFeedback(
   // -------------------------------------------------------------------------
   // Main Trigger Function
   // -------------------------------------------------------------------------
-  
+
   const trigger = useCallback(() => {
     const now = Date.now();
-    
+
     // Debounce rapid triggers
     if (now - lastTriggerRef.current < CAMERA_FEEDBACK_CONFIG.timing.debounceMs) {
       return;
@@ -377,7 +377,7 @@ export function useCameraFeedback(
     } catch (err) {
       console.warn("[CameraFeedback] Audio context error:", err);
     }
-    
+
     // Play sound (async but we don't wait)
     playSound().catch((err) => {
       console.warn("[CameraFeedback] Sound playback failed:", err);
@@ -387,9 +387,9 @@ export function useCameraFeedback(
     triggerFlash();
 
     // 3. Complete callback and reset state
-    const totalDuration = 
-      CAMERA_FEEDBACK_CONFIG.flash.delay + 
-      CAMERA_FEEDBACK_CONFIG.flash.duration + 
+    const totalDuration =
+      CAMERA_FEEDBACK_CONFIG.flash.delay +
+      CAMERA_FEEDBACK_CONFIG.flash.duration +
       CAMERA_FEEDBACK_CONFIG.flash.fadeOut;
 
     setTimeout(() => {
@@ -401,13 +401,13 @@ export function useCameraFeedback(
   // -------------------------------------------------------------------------
   // Flash Overlay Component (must be a component to react to state changes)
   // -------------------------------------------------------------------------
-  
+
   // Create a component that reacts to showFlash state changes
   // Using useMemo to create a stable component reference that updates when showFlash changes
   const FlashOverlayComponent = useMemo(() => {
     const Component: React.FC = () => {
       if (!flashEnabled) return null;
-      
+
       return createElement("div", {
         key: "camera-flash-overlay",
         className: `camera-flash-overlay ${showFlash ? "camera-flash-overlay--active" : ""}`,
@@ -453,7 +453,7 @@ export class CameraFeedback {
         this.audio = new Audio(this.config.sound.src);
         this.audio.volume = this.config.sound.volume;
         this.audio.preload = "auto";
-        
+
         this.audio.addEventListener("canplaythrough", () => {
           this.isReady = true;
           resolve();

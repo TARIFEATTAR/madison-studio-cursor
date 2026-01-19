@@ -12,7 +12,7 @@ Quick reference guide for locating all newly implemented features in the UI.
 **What you'll see:**
 - Top right corner of dashboard
 - Minimal variant button showing color dots (if brand DNA exists)
-- Text: "Brand" 
+- Text: "Brand"
 - Click to open slide-out panel
 
 **Visual:**

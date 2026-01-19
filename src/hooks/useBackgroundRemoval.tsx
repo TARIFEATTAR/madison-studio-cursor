@@ -1,6 +1,6 @@
 /**
  * useBackgroundRemoval Hook
- * 
+ *
  * Provides background removal functionality using the remove-background edge function.
  * Handles loading states, errors, and saving to library.
  */

@@ -1,6 +1,6 @@
 /**
  * VISUAL MASTERS INTEGRATION
- * 
+ *
  * Fetches and applies visual master training for AI image generation.
  * Parallel to madisonMasters.ts but for visual content.
  */
@@ -98,7 +98,7 @@ export const PLATFORM_IMAGE_SPECS: Record<string, PlatformImageSpec> = {
     maxFileSize: '4GB video',
     notes: 'Same as story. Thumbnail matters for feed display.'
   },
-  
+
   // Facebook
   'facebook_feed': {
     aspectRatio: '1:1 or 4:5',
@@ -112,7 +112,7 @@ export const PLATFORM_IMAGE_SPECS: Record<string, PlatformImageSpec> = {
     maxFileSize: '30MB',
     notes: 'Less than 20% text on image for best delivery.'
   },
-  
+
   // LinkedIn
   'linkedin_post': {
     aspectRatio: '1.91:1 (landscape) or 1:1 (square)',
@@ -126,7 +126,7 @@ export const PLATFORM_IMAGE_SPECS: Record<string, PlatformImageSpec> = {
     maxFileSize: '8MB',
     notes: 'Header image for articles.'
   },
-  
+
   // Twitter/X
   'twitter_post': {
     aspectRatio: '16:9 or 1:1',
@@ -134,7 +134,7 @@ export const PLATFORM_IMAGE_SPECS: Record<string, PlatformImageSpec> = {
     maxFileSize: '5MB (GIF: 15MB)',
     notes: 'Single image: 16:9. Multi-image: square.'
   },
-  
+
   // Pinterest
   'pinterest_pin': {
     aspectRatio: '2:3 (vertical)',
@@ -142,7 +142,7 @@ export const PLATFORM_IMAGE_SPECS: Record<string, PlatformImageSpec> = {
     maxFileSize: '32MB',
     notes: 'Vertical performs best. Include text overlay for context.'
   },
-  
+
   // TikTok
   'tiktok_cover': {
     aspectRatio: '9:16',
@@ -150,7 +150,7 @@ export const PLATFORM_IMAGE_SPECS: Record<string, PlatformImageSpec> = {
     maxFileSize: '287.6MB video',
     notes: 'Cover image for video thumbnail.'
   },
-  
+
   // YouTube
   'youtube_thumbnail': {
     aspectRatio: '16:9',
@@ -158,7 +158,7 @@ export const PLATFORM_IMAGE_SPECS: Record<string, PlatformImageSpec> = {
     maxFileSize: '2MB',
     notes: 'High contrast, readable text, expressive faces perform best.'
   },
-  
+
   // Website Banners / Hero Images
   'hero_banner_wide': {
     aspectRatio: '21:9 (ultrawide)',
@@ -178,7 +178,7 @@ export const PLATFORM_IMAGE_SPECS: Record<string, PlatformImageSpec> = {
     maxFileSize: 'No limit for web',
     notes: 'Video-friendly aspect ratio. YouTube covers, presentations.'
   },
-  
+
   // Product Photography
   'product_hero': {
     aspectRatio: '1:1 or 4:3',
@@ -198,7 +198,7 @@ export const PLATFORM_IMAGE_SPECS: Record<string, PlatformImageSpec> = {
     maxFileSize: 'No limit for web',
     notes: 'Product in context/use. Environmental setting.'
   },
-  
+
   // E-commerce
   'shopify_product': {
     aspectRatio: '1:1 (recommended)',
@@ -241,7 +241,7 @@ export const VISUAL_CONTENT_TO_SQUAD: Record<string, VisualSquad> = {
   'product_hero': 'THE_MINIMALISTS',
   'product_detail': 'THE_MINIMALISTS',
   'product_lifestyle': 'THE_STORYTELLERS',
-  
+
   // Social Media
   'instagram_feed': 'THE_STORYTELLERS',
   'instagram_story': 'THE_DISRUPTORS',
@@ -254,18 +254,18 @@ export const VISUAL_CONTENT_TO_SQUAD: Record<string, VisualSquad> = {
   'pinterest_pin': 'THE_STORYTELLERS',
   'tiktok_cover': 'THE_DISRUPTORS',
   'youtube_thumbnail': 'THE_DISRUPTORS',
-  
+
   // E-commerce
   'shopify_product': 'THE_MINIMALISTS',
   'etsy_listing': 'THE_STORYTELLERS',
   'amazon_main': 'THE_MINIMALISTS',
-  
+
   // Campaign/Creative
   'campaign_hero': 'THE_STORYTELLERS',
   'ad_creative': 'THE_DISRUPTORS',
   'email_hero': 'THE_STORYTELLERS',
   'landing_page_hero': 'THE_DISRUPTORS',
-  
+
   // Default
   'default': 'THE_STORYTELLERS'
 };
@@ -399,7 +399,7 @@ export function routeToVisualSquad(
   brandTone?: string
 ): VisualStrategy {
   const briefLower = brief.toLowerCase();
-  
+
   // Check for explicit style mentions in brief
   if (briefLower.includes('minimal') || briefLower.includes('white background') || briefLower.includes('clinical') || briefLower.includes('clean')) {
     return {
@@ -407,14 +407,14 @@ export function routeToVisualSquad(
       primaryVisualMaster: 'AVEDON_ISOLATION'
     };
   }
-  
+
   if (briefLower.includes('lifestyle') || briefLower.includes('natural') || briefLower.includes('warm') || briefLower.includes('cozy')) {
     return {
       visualSquad: 'THE_STORYTELLERS',
       primaryVisualMaster: 'LEIBOVITZ_ENVIRONMENT'
     };
   }
-  
+
   if (briefLower.includes('bold') || briefLower.includes('scroll') || briefLower.includes('attention') || briefLower.includes('ad') || briefLower.includes('tiktok')) {
     const isSymmetric = briefLower.includes('symmetr') || briefLower.includes('flat lay') || briefLower.includes('overhead');
     return {
@@ -422,10 +422,10 @@ export function routeToVisualSquad(
       primaryVisualMaster: isSymmetric ? 'ANDERSON_SYMMETRY' : 'RICHARDSON_RAW'
     };
   }
-  
+
   // Fall back to content type mapping
   const mappedSquad = VISUAL_CONTENT_TO_SQUAD[imageType] || VISUAL_CONTENT_TO_SQUAD['default'];
-  
+
   // Determine primary master based on squad
   let primaryMaster: string;
   switch (mappedSquad) {
@@ -437,14 +437,14 @@ export function routeToVisualSquad(
       break;
     case 'THE_DISRUPTORS':
       // Choose based on content type
-      primaryMaster = imageType.includes('flat') || imageType.includes('overhead') 
-        ? 'ANDERSON_SYMMETRY' 
+      primaryMaster = imageType.includes('flat') || imageType.includes('overhead')
+        ? 'ANDERSON_SYMMETRY'
         : 'RICHARDSON_RAW';
       break;
     default:
       primaryMaster = 'LEIBOVITZ_ENVIRONMENT';
   }
-  
+
   return {
     visualSquad: mappedSquad,
     primaryVisualMaster: primaryMaster
@@ -467,12 +467,12 @@ export async function fetchVisualMaster(
     .select('*')
     .eq('master_name', masterName)
     .maybeSingle();
-  
+
   if (error) {
     console.error(`[Visual Masters] Error fetching ${masterName}:`, error);
     return null;
   }
-  
+
   return data;
 }
 
@@ -487,12 +487,12 @@ export async function fetchVisualMastersBySquad(
     .from('visual_masters')
     .select('*')
     .eq('squad', squad);
-  
+
   if (error) {
     console.error(`[Visual Masters] Error fetching squad ${squad}:`, error);
     return [];
   }
-  
+
   return data || [];
 }
 
@@ -501,28 +501,28 @@ export async function fetchVisualMastersBySquad(
  */
 export function buildVisualMasterContext(master: VisualMaster): string {
   const parts: string[] = [];
-  
+
   parts.push(`━━━ VISUAL MASTER: ${master.master_name} ━━━`);
   parts.push(`Squad: ${master.squad}`);
   parts.push('');
-  
+
   if (master.summary) {
     parts.push(`Summary: ${master.summary}`);
     parts.push('');
   }
-  
+
   if (master.composition_rules) {
     parts.push('COMPOSITION RULES:');
     parts.push(master.composition_rules);
     parts.push('');
   }
-  
+
   if (master.lighting_rules) {
     parts.push('LIGHTING RULES:');
     parts.push(master.lighting_rules);
     parts.push('');
   }
-  
+
   if (master.forbidden_styles && master.forbidden_styles.length > 0) {
     parts.push('FORBIDDEN STYLES (avoid these):');
     master.forbidden_styles.forEach(style => {
@@ -530,13 +530,13 @@ export function buildVisualMasterContext(master: VisualMaster): string {
     });
     parts.push('');
   }
-  
+
   if (master.prompt_template) {
     parts.push('PROMPT TEMPLATE:');
     parts.push(master.prompt_template);
     parts.push('');
   }
-  
+
   return parts.join('\n');
 }
 
@@ -551,14 +551,14 @@ export async function getVisualMasterContext(
 ): Promise<{ strategy: VisualStrategy; masterContext: string; platformSpec?: PlatformImageSpec }> {
   // Route to squad
   const strategy = routeToVisualSquad(imageType, brief, brandTone);
-  
+
   console.log(`[Visual Masters] Routed to: ${strategy.visualSquad}, Primary: ${strategy.primaryVisualMaster}`);
-  
+
   // Fetch the master
   const master = await fetchVisualMaster(supabase, strategy.primaryVisualMaster);
-  
+
   let masterContext = '';
-  
+
   if (master) {
     masterContext = buildVisualMasterContext(master);
   } else {
@@ -566,10 +566,10 @@ export async function getVisualMasterContext(
     masterContext = VISUAL_SQUAD_DEFINITIONS;
     console.log(`[Visual Masters] Master ${strategy.primaryVisualMaster} not found, using squad definitions`);
   }
-  
+
   // Get platform spec if applicable
   const platformSpec = PLATFORM_IMAGE_SPECS[imageType];
-  
+
   return {
     strategy,
     masterContext,
@@ -596,19 +596,19 @@ export async function enhanceImagePrompt(
     imageType,
     userPrompt
   );
-  
+
   const master = await fetchVisualMaster(supabase, strategy.primaryVisualMaster);
-  
+
   if (!master?.prompt_template) {
     // Return user prompt with basic enhancements
     return userPrompt;
   }
-  
+
   // Replace placeholders in template
   let enhancedPrompt = master.prompt_template
     .replace(/\[Product name\]/gi, productName || '[Product]')
     .replace(/\[Product\]/gi, productName || '[Product]');
-  
+
   // Add brand colors if provided
   if (brandColors && brandColors.length > 0) {
     enhancedPrompt = enhancedPrompt.replace(
@@ -616,7 +616,7 @@ export async function enhanceImagePrompt(
       brandColors[0]
     );
   }
-  
+
   // Add aspect ratio if platform spec exists
   if (platformSpec) {
     const arMatch = platformSpec.aspectRatio.match(/(\d+:\d+)/);
@@ -629,11 +629,11 @@ export async function enhanceImagePrompt(
       }
     }
   }
-  
+
   // Blend user prompt with template
   // The template provides structure, user prompt provides specifics
   const finalPrompt = enhancedPrompt.replace('[Product]', userPrompt);
-  
+
   return finalPrompt;
 }
 
@@ -692,7 +692,7 @@ FORBIDDEN:
       'Technical parameters (--ar, --style, etc.)'
     ]
   },
-  
+
   'image_prompt': {
     platformNotes: `
 IMAGE PROMPT (RECIPE) FORMAT:
@@ -721,7 +721,7 @@ NEGATIVE PROMPT: clinical, white background, flash, sterile, generic stock photo
 ---
     `
   },
-  
+
   'campaign_concept_visual': {
     platformNotes: `
 CAMPAIGN VISUAL DIRECTION FORMAT:
@@ -747,7 +747,7 @@ PROVIDE PROMPTS FOR:
 MOOD BOARD REFERENCES: Name 2-3 visual references (brands, photographers, campaigns)
     `
   },
-  
+
   'ad_creative_prompt': {
     platformNotes: `
 AD CREATIVE VISUAL FORMAT:
@@ -785,26 +785,26 @@ ASPECT RATIOS NEEDED:
  */
 export function getImageFormatInstructions(contentType: string): string {
   const spec = IMAGE_DELIVERABLE_SPECS[contentType as keyof typeof IMAGE_DELIVERABLE_SPECS];
-  
+
   if (!spec) {
     return '';
   }
-  
+
   const parts: string[] = [];
-  
+
   parts.push('═══ VISUAL FORMAT REQUIREMENTS ═══');
-  
+
   if (spec.platformNotes) {
     parts.push(spec.platformNotes.trim());
   }
-  
+
   if (spec.structure && spec.structure.length > 0) {
     parts.push('\nREQUIRED ELEMENTS:');
     spec.structure.forEach((item, i) => {
       parts.push(`${i + 1}. ${item}`);
     });
   }
-  
+
   return parts.join('\n');
 }
 

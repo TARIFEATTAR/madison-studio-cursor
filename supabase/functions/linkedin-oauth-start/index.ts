@@ -1,9 +1,9 @@
 /**
  * LinkedIn OAuth Start - Initiate OAuth 2.0 Authorization Flow
- * 
+ *
  * This edge function generates the LinkedIn authorization URL and stores
  * the OAuth state for CSRF protection.
- * 
+ *
  * LinkedIn OAuth 2.0 Documentation:
  * https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow
  */
@@ -73,8 +73,8 @@ serve(async (req) => {
     const clientId = Deno.env.get("LINKEDIN_CLIENT_ID");
     if (!clientId) {
       return new Response(
-        JSON.stringify({ 
-          error: "LinkedIn integration not configured", 
+        JSON.stringify({
+          error: "LinkedIn integration not configured",
           message: "Please add LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET to environment variables.",
           setup_instructions: `
 To enable LinkedIn integration:
@@ -126,7 +126,7 @@ To enable LinkedIn integration:
     // Personal profile posting: w_member_social
     // Company page posting: w_organization_social (requires Marketing Developer Platform approval)
     // Profile info: openid, profile, email
-    const scopes = connectionType === 'organization' 
+    const scopes = connectionType === 'organization'
       ? ['openid', 'profile', 'email', 'w_member_social', 'w_organization_social', 'r_organization_social']
       : ['openid', 'profile', 'email', 'w_member_social'];
 
@@ -142,7 +142,7 @@ To enable LinkedIn integration:
     console.log(`[linkedin-oauth-start] Generated OAuth URL for user ${user.id}, org ${organizationId}, type: ${connectionType}`);
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         authUrl: authUrl.toString(),
         message: "Redirect user to authUrl to authorize LinkedIn access",
         scopes: scopes,

@@ -19,18 +19,18 @@ Run this in SQL Editor to check your current state:
 
 ```sql
 -- Check if brand_dna exists
-SELECT 
-  CASE 
+SELECT
+  CASE
     WHEN EXISTS (
-      SELECT 1 FROM information_schema.tables 
-      WHERE table_schema = 'public' 
+      SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public'
       AND table_name = 'brand_dna'
     ) THEN 'EXISTS'
     ELSE 'DOES NOT EXIST - Safe to create'
   END as brand_dna_status;
 
 -- Check for any broken functions/policies
-SELECT 
+SELECT
   routine_name
 FROM information_schema.routines
 WHERE routine_schema = 'public'
@@ -76,15 +76,15 @@ After migration, verify:
 ```sql
 -- Check brand_dna was created
 SELECT COUNT(*) as table_exists
-FROM information_schema.tables 
-WHERE table_schema = 'public' 
+FROM information_schema.tables
+WHERE table_schema = 'public'
 AND table_name = 'brand_dna';
 
 -- Check it has org_id column
-SELECT column_name 
-FROM information_schema.columns 
-WHERE table_schema = 'public' 
-AND table_name = 'brand_dna' 
+SELECT column_name
+FROM information_schema.columns
+WHERE table_schema = 'public'
+AND table_name = 'brand_dna'
 AND column_name = 'org_id';
 
 -- Should return: 1 row with 'org_id'
@@ -97,7 +97,7 @@ AND column_name = 'org_id';
 ### Error: "relation brand_dna already exists"
 **Fix:** The table exists but might be broken. Run cleanup from Step 2, then retry.
 
-### Error: "column org_id does not exist" 
+### Error: "column org_id does not exist"
 **Fix:** This means the table was created but with wrong columns. Run:
 ```sql
 DROP TABLE IF EXISTS public.brand_dna CASCADE;

@@ -49,7 +49,7 @@ CREATE POLICY "Users can view their organization's LinkedIn connection"
   ON linkedin_connections FOR SELECT
   USING (
     organization_id IN (
-      SELECT organization_id FROM organization_members 
+      SELECT organization_id FROM organization_members
       WHERE user_id = auth.uid()
     )
   );
@@ -60,8 +60,8 @@ CREATE POLICY "Admins can manage LinkedIn connections"
   ON linkedin_connections FOR ALL
   USING (
     organization_id IN (
-      SELECT organization_id FROM organization_members 
-      WHERE user_id = auth.uid() 
+      SELECT organization_id FROM organization_members
+      WHERE user_id = auth.uid()
       AND role IN ('owner', 'admin')
     )
   );
@@ -143,7 +143,7 @@ CREATE POLICY "Users can view their organization's LinkedIn posts"
   ON linkedin_posts FOR SELECT
   USING (
     organization_id IN (
-      SELECT organization_id FROM organization_members 
+      SELECT organization_id FROM organization_members
       WHERE user_id = auth.uid()
     )
   );
@@ -153,7 +153,7 @@ CREATE POLICY "Users can manage their organization's LinkedIn posts"
   ON linkedin_posts FOR ALL
   USING (
     organization_id IN (
-      SELECT organization_id FROM organization_members 
+      SELECT organization_id FROM organization_members
       WHERE user_id = auth.uid()
     )
   );

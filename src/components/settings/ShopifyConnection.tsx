@@ -72,7 +72,7 @@ export function ShopifyConnection() {
             duration: 8000,
           });
         }
-        
+
         setIsConnected(true);
         setShopDomain(data.shop_domain);
         setLastSyncedAt(data.last_synced_at);
@@ -193,7 +193,7 @@ export function ShopifyConnection() {
       if (error) {
         // Try to extract detailed error message from response
         let errorMessage = error.message || "Failed to sync products from Shopify";
-        
+
         // Check error context for response body (might be a ReadableStream)
         if (error.context?.body) {
           try {
@@ -202,13 +202,13 @@ export function ShopifyConnection() {
               const reader = error.context.body.getReader();
               const decoder = new TextDecoder();
               let chunks = '';
-              
+
               while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
                 chunks += decoder.decode(value, { stream: true });
               }
-              
+
               // Parse the JSON response
               try {
                 const parsed = JSON.parse(chunks);
@@ -250,7 +250,7 @@ export function ShopifyConnection() {
             console.error("Error extracting error message:", e);
           }
         }
-        
+
         // Check error context for status code and provide helpful messages
         if (error.context?.status) {
           const status = error.context.status;
@@ -262,8 +262,8 @@ export function ShopifyConnection() {
             errorMessage = errorMessage || "Invalid request. Please check your connection and try again.";
           }
         }
-        
-        logger.error("Sync function error:", { 
+
+        logger.error("Sync function error:", {
           error: error.message,
           status: error.context?.status,
           extractedMessage: errorMessage
@@ -279,7 +279,7 @@ export function ShopifyConnection() {
       // Update last synced timestamp (only if sync was successful)
       await supabase
         .from("shopify_connections")
-        .update({ 
+        .update({
           last_synced_at: new Date().toISOString(),
           sync_status: "idle"
         })
@@ -291,14 +291,14 @@ export function ShopifyConnection() {
       const totalSynced = data?.total || data?.updated + data?.inserted || 0;
       const updated = data?.updated || 0;
       const inserted = data?.inserted || 0;
-      
+
       toast({
         title: "Products Synced",
         description: `Successfully synced ${totalSynced} products (${updated} updated, ${inserted} new) from Shopify`,
       });
     } catch (error: any) {
       logger.error("Error syncing products:", error);
-      
+
       // Reset sync status on error
       await supabase
         .from("shopify_connections")
@@ -307,12 +307,12 @@ export function ShopifyConnection() {
 
       // Extract error message from response if available
       let errorMessage = error.message || "Failed to sync products from Shopify";
-      
+
       // If error has a context with body, try to parse it
       if (error.context?.body) {
         try {
-          const parsed = typeof error.context.body === 'string' 
-            ? JSON.parse(error.context.body) 
+          const parsed = typeof error.context.body === 'string'
+            ? JSON.parse(error.context.body)
             : error.context.body;
           if (parsed.error) {
             errorMessage = parsed.error;
@@ -321,7 +321,7 @@ export function ShopifyConnection() {
           // If parsing fails, use original message
         }
       }
-      
+
       toast({
         title: "Sync Failed",
         description: errorMessage,
@@ -378,7 +378,7 @@ export function ShopifyConnection() {
             Disconnect
           </Button>
         </div>
-        
+
         <p className="text-xs text-muted-foreground">
           Sync imports all products including SKU, pricing, variants, images, and inventory into your Product Hub.
         </p>

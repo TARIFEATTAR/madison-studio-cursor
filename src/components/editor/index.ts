@@ -1,15 +1,15 @@
 /**
  * Madison Editor - Module Exports
- * 
+ *
  * Tiptap-based rich text editor with inline AI for Madison Studio
  */
 
 // Main editor component
-export { 
-  MadisonEditor, 
-  getEditorContent, 
-  getEditorText, 
-  setEditorContent 
+export {
+  MadisonEditor,
+  getEditorContent,
+  getEditorText,
+  setEditorContent
 } from './MadisonEditor';
 
 // Sub-components
@@ -17,7 +17,7 @@ export { FloatingToolbar } from './FloatingToolbar';
 export { SlashCommandMenu } from './SlashCommandMenu';
 
 // AI utilities and types
-export { 
+export {
   // Main handler
   handleMadisonInlineAction,
   // Placeholder resolver
@@ -36,7 +36,7 @@ export {
 } from './madisonAI';
 
 // Type exports
-export type { 
+export type {
   MadisonInlineAction,
   MadisonAction,
   MadisonActionContext,

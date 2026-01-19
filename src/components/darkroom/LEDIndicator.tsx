@@ -1,15 +1,15 @@
 /**
  * LED Indicator Component
- * 
+ *
  * Camera-inspired status LED with pulse animations.
  * Part of the DarkRoom camera body aesthetic.
- * 
+ *
  * Design Rules (from spec):
  * - LEDs only animate when actively processing
  * - No idle blinking
  * - No rainbow effects
  * - Error state is static but intense
- * 
+ *
  * States:
  * - off: Dark, inactive
  * - ready: Green, steady glow (no animation)
@@ -30,8 +30,8 @@ interface LEDIndicatorProps {
   label?: string;
 }
 
-export function LEDIndicator({ 
-  state = "off", 
+export function LEDIndicator({
+  state = "off",
   size = "md",
   className,
   label,
@@ -62,7 +62,7 @@ export function LEDIndicator({
 
 /**
  * LCD Display Component
- * 
+ *
  * Technical readout displays for session counters, exposure indicators, status.
  * Uses monospace font, subtle glow, firmware-level feel.
  */
@@ -93,7 +93,7 @@ export function LCDDisplay({
 
 /**
  * LCD Counter Component
- * 
+ *
  * Frame counter display (e.g., "3 / 10" for images)
  */
 interface LCDCounterProps {
@@ -118,7 +118,7 @@ export function LCDCounter({
 
 /**
  * Camera Panel Header with LED
- * 
+ *
  * Combines a section title with an LED status indicator.
  * Used at the top of camera-panel components.
  */
@@ -140,7 +140,7 @@ export function CameraPanelHeader({
   onClick,
 }: CameraPanelHeaderProps) {
   return (
-    <div 
+    <div
       className={cn("camera-panel__header", className)}
       onClick={onClick}
       role={onClick ? "button" : undefined}
@@ -158,7 +158,7 @@ export function CameraPanelHeader({
 
 /**
  * Settings Row with LED
- * 
+ *
  * A row for displaying a setting with LED status indicator.
  */
 interface SettingsRowProps {
@@ -194,7 +194,7 @@ export function SettingsRow({
 
 /**
  * Mode Dial Button
- * 
+ *
  * Shot type buttons styled like physical camera mode dials.
  * Shows LED glow when active.
  */
@@ -236,7 +236,7 @@ export function ModeDialButton({
 
 /**
  * Firmware Preset Button
- * 
+ *
  * Platform preset buttons styled like firmware profile selectors.
  * Shows amber LED when active.
  */
@@ -267,7 +267,7 @@ export function FirmwarePresetButton({
       onClick={onClick}
       type="button"
     >
-      <span 
+      <span
         className="firmware-preset-btn__label"
         style={color ? { color } : undefined}
       >

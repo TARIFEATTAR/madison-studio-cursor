@@ -1,6 +1,6 @@
 # Deployment Next Steps - After Successful Migrations
 
-**✅ Status:** Database migrations complete!  
+**✅ Status:** Database migrations complete!
 **Next:** Deploy edge functions and configure API keys
 
 ---
@@ -21,9 +21,9 @@
 Run this in SQL Editor to confirm everything:
 
 ```sql
-SELECT table_name 
-FROM information_schema.tables 
-WHERE table_schema = 'public' 
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
 AND table_name IN (
   'madison_masters', 'visual_masters', 'schwartz_templates',
   'brand_dna', 'brand_products', 'design_systems',
@@ -43,7 +43,7 @@ ORDER BY table_name;
 1. Go to **Edge Functions** in left sidebar
 2. For each function folder, click **"Deploy"**:
    - `scan-website-enhanced`
-   - `scan-brand-document`  
+   - `scan-brand-document`
    - `remove-background`
 
 **Option B: Via CLI**

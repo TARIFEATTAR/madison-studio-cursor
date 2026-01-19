@@ -3,8 +3,9 @@ import { ShopifyConnection } from "./ShopifyConnection";
 import { KlaviyoConnection } from "./KlaviyoConnection";
 import { EtsyConnection } from "./EtsyConnection";
 import { LinkedInConnection } from "./LinkedInConnection";
+import { SanityConnection } from "./SanityConnection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, Bot, Plus, Trash2, Sparkles, Store, Linkedin } from "lucide-react";
+import { Package, Bot, Plus, Trash2, Sparkles, Store, Linkedin, Database } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -174,6 +175,26 @@ export function IntegrationsTab() {
         </CardHeader>
         <CardContent>
           <LinkedInConnection organizationId={organizationId} />
+        </CardContent>
+      </Card>
+
+      {/* Sanity.io CMS */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+              <Database className="w-5 h-5 text-purple-500" />
+            </div>
+            <div>
+              <CardTitle>Sanity.io</CardTitle>
+              <CardDescription>
+                Import fragrance products from your Sanity CMS into Madison
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <SanityConnection organizationId={organizationId} />
         </CardContent>
       </Card>
 

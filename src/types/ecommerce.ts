@@ -54,37 +54,37 @@ export interface EcommerceProductFields {
   price: number | null;
   compare_at_price: number | null;
   cost_per_item: number | null;
-  
+
   // Inventory
   inventory_quantity: number;
   inventory_policy: 'deny' | 'continue';
   track_inventory: boolean;
-  
+
   // Physical dimensions
   weight: number | null;
   weight_unit: 'lb' | 'kg' | 'g' | 'oz';
   requires_shipping: boolean;
-  
+
   // Variants and options
   variants: ProductVariant[] | string; // JSONB stored as string
   options: ProductOption[] | string; // JSONB stored as string
-  
+
   // Images
   images: ProductImage[] | string; // JSONB stored as string
   featured_image_url: string | null;
-  
+
   // Vendor/brand
   vendor: string | null;
   brand: string | null;
-  
+
   // SEO
   seo_title: string | null;
   seo_description: string | null;
-  
+
   // Status
   status: 'active' | 'draft' | 'archived';
   published_at: string | null;
-  
+
   // Etsy-specific
   etsy_listing_id: string | null;
   etsy_shop_id: string | null;
@@ -95,7 +95,7 @@ export interface EcommerceProductFields {
   etsy_who_made: string | null;
   etsy_when_made: string | null;
   etsy_is_supply: boolean | null;
-  
+
   // Tags and materials
   tags: string[] | null;
   materials: string[] | null;

@@ -1,6 +1,6 @@
 # Next Steps - Complete Implementation Guide
 
-**Current Status:** Migrations ready, need to apply to database  
+**Current Status:** Migrations ready, need to apply to database
 **Goal:** Get everything working end-to-end
 
 ---
@@ -70,12 +70,12 @@ Run this verification query:
 
 ```sql
 -- Check tables exist
-SELECT table_name 
-FROM information_schema.tables 
-WHERE table_schema = 'public' 
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
 AND table_name IN (
   'madison_masters',
-  'visual_masters', 
+  'visual_masters',
   'schwartz_templates',
   'brand_dna',
   'brand_products',
@@ -87,7 +87,7 @@ AND table_name IN (
 ORDER BY table_name;
 
 -- Check seed data
-SELECT 
+SELECT
   'madison_masters' as table_name, COUNT(*) as count FROM madison_masters
 UNION ALL
 SELECT 'visual_masters', COUNT(*) FROM visual_masters
@@ -150,7 +150,7 @@ ANTHROPIC_API_KEY=your_key_here
 FAL_API_KEY=your_key_here
 # OR
 REPLICATE_API_TOKEN=your_token_here
-# OR  
+# OR
 PHOTOROOM_API_KEY=your_key_here
 ```
 
@@ -262,9 +262,9 @@ npm run build
 
 ## 🐛 If Something Fails
 
-**Migration errors:** See `FIX_MIGRATION_ERROR.md`  
-**Function deployment errors:** Check Supabase logs  
-**Frontend errors:** Check browser console (F12)  
+**Migration errors:** See `FIX_MIGRATION_ERROR.md`
+**Function deployment errors:** Check Supabase logs
+**Frontend errors:** Check browser console (F12)
 **API errors:** Verify environment variables are set
 
 ---

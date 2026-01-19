@@ -1,9 +1,9 @@
 /**
  * SQUAD AUTO-ASSIGNMENT
- * 
+ *
  * Uses Claude Sonnet to intelligently assign copy and visual squads
  * based on brand analysis.
- * 
+ *
  * Cost: ~$0.02 per assignment
  */
 
@@ -60,11 +60,11 @@ COPY SQUADS:
 1. THE_SCIENTISTS - Use for: High-price products ($100+), technical/clinical brands, skeptical audiences
    Masters: OGILVY_SPECIFICITY (data-driven proof), HOPKINS_REASON_WHY (mechanism explanation), CAPLES_HEADLINES (curiosity gaps)
    Best for: Skincare with actives, supplements, professional services
-   
+
 2. THE_STORYTELLERS - Use for: Lifestyle products, fragrance/candles, loyal audiences, brand-building
    Masters: PETERMAN_ROMANCE (sensory narratives), COLLIER_CONVERSATION (enter their mind)
    Best for: Fragrance, candles, luxury goods, heritage brands
-   
+
 3. THE_DISRUPTORS - Use for: Paid ads, attention-grabbing content, bold brands
    Masters: CLOW_DISRUPTION (pattern interruption), HALBERT_URGENCY (stakes-first)
    Best for: Facebook ads, TikTok, launches, scroll-stopping content
@@ -73,11 +73,11 @@ VISUAL SQUADS:
 1. THE_MINIMALISTS - Use for: Luxury skincare, tech products, clinical positioning
    Masters: AVEDON_ISOLATION (white backgrounds, clinical precision)
    Best for: Product pages, high-price items, scientific brands
-   
+
 2. THE_STORYTELLERS - Use for: Lifestyle brands, fragrance, candles, emotional products
    Masters: LEIBOVITZ_ENVIRONMENT (natural settings, warm light)
    Best for: Instagram, brand story, lifestyle imagery
-   
+
 3. THE_DISRUPTORS - Use for: Scroll-stopping social ads, bold brands
    Masters: RICHARDSON_RAW (flash, high contrast), ANDERSON_SYMMETRY (bold colors, perfect symmetry)
    Best for: TikTok, Facebook ads, attention-grabbing visuals
@@ -141,10 +141,10 @@ Return ONLY valid JSON (no markdown):
       messages: [{ role: 'user', content: assignmentPrompt }]
     });
 
-    const responseText = message.content[0].type === 'text' 
-      ? message.content[0].text 
+    const responseText = message.content[0].type === 'text'
+      ? message.content[0].text
       : '';
-    
+
     const cleanedResponse = responseText
       .replace(/```json\n?/g, '')
       .replace(/```\n?/g, '')
@@ -200,10 +200,10 @@ Return ONLY valid JSON with squad assignments and reasoning:
       messages: [{ role: 'user', content: assignmentPrompt }]
     });
 
-    const responseText = message.content[0].type === 'text' 
-      ? message.content[0].text 
+    const responseText = message.content[0].type === 'text'
+      ? message.content[0].text
       : '';
-    
+
     const cleanedResponse = responseText
       .replace(/```json\n?/g, '')
       .replace(/```\n?/g, '')
@@ -259,10 +259,10 @@ Return ONLY valid JSON:
       messages: [{ role: 'user', content: assignmentPrompt }]
     });
 
-    const responseText = message.content[0].type === 'text' 
-      ? message.content[0].text 
+    const responseText = message.content[0].type === 'text'
+      ? message.content[0].text
       : '';
-    
+
     const cleanedResponse = responseText
       .replace(/```json\n?/g, '')
       .replace(/```\n?/g, '')
@@ -345,7 +345,7 @@ function heuristicAssignment(
  */
 function heuristicAssignmentFromText(text: string): SquadAssignment {
   const lowerText = text.toLowerCase();
-  
+
   // Detect tone from keywords
   let tone = 'sophisticated';
   if (lowerText.match(/clinical|scientific|proven|data|research/)) {
@@ -366,7 +366,7 @@ function heuristicAssignmentFromText(text: string): SquadAssignment {
  */
 export function inferToneFromAttributes(attributes: string[]): string {
   const lowerAttrs = attributes.map(a => a.toLowerCase()).join(' ');
-  
+
   if (lowerAttrs.match(/clinical|professional|precise|scientific/)) {
     return 'clinical';
   }
@@ -385,7 +385,7 @@ export function inferToneFromAttributes(attributes: string[]): string {
   if (lowerAttrs.match(/authentic|honest|genuine|real/)) {
     return 'authentic';
   }
-  
+
   return 'sophisticated'; // Default
 }
 

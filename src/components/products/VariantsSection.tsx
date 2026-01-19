@@ -50,10 +50,10 @@ export function VariantsSection({ product, isEditing = false, onChange }: Varian
   const variants = parseVariants(product?.variants);
   const options = parseOptions(product?.options);
   const images = parseImages(product?.images);
-  
+
   const totalInventory = getTotalInventory(variants);
   const priceRange = getPriceRange(variants);
-  
+
   // Sync status indicators
   const hasShopifySync = !!product?.shopify_product_id;
   const hasEtsySync = !!product?.etsy_listing_id;
@@ -80,7 +80,7 @@ export function VariantsSection({ product, isEditing = false, onChange }: Varian
                 <div>
                   <p className="font-medium text-sm">Shopify</p>
                   <p className="text-xs text-muted-foreground">
-                    {lastShopifySync 
+                    {lastShopifySync
                       ? `Synced ${new Date(lastShopifySync).toLocaleDateString()}`
                       : "Connected"}
                   </p>
@@ -90,7 +90,7 @@ export function VariantsSection({ product, isEditing = false, onChange }: Varian
                 </Badge>
               </div>
             )}
-            
+
             {hasEtsySync && (
               <div className="flex items-center gap-2 p-3 border rounded-lg bg-orange-50 border-orange-200">
                 <div className="w-8 h-8 rounded bg-[#F56400] flex items-center justify-center">
@@ -99,7 +99,7 @@ export function VariantsSection({ product, isEditing = false, onChange }: Varian
                 <div>
                   <p className="font-medium text-sm">Etsy</p>
                   <p className="text-xs text-muted-foreground">
-                    {lastEtsySync 
+                    {lastEtsySync
                       ? `Synced ${new Date(lastEtsySync).toLocaleDateString()}`
                       : "Connected"}
                   </p>
@@ -109,7 +109,7 @@ export function VariantsSection({ product, isEditing = false, onChange }: Varian
                 </Badge>
               </div>
             )}
-            
+
             {!hasShopifySync && !hasEtsySync && (
               <p className="text-muted-foreground text-sm">
                 Not synced with any marketplace. Connect Shopify or Etsy in Settings to sync product data.
@@ -255,8 +255,8 @@ export function VariantsSection({ product, isEditing = false, onChange }: Varian
                         {formatPrice(variant.price)}
                       </TableCell>
                       <TableCell className="text-right text-muted-foreground">
-                        {variant.compare_at_price 
-                          ? formatPrice(variant.compare_at_price) 
+                        {variant.compare_at_price
+                          ? formatPrice(variant.compare_at_price)
                           : "—"}
                       </TableCell>
                       <TableCell className="text-right">

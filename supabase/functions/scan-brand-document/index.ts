@@ -1,18 +1,18 @@
 /**
  * BRAND DOCUMENT SCANNER
- * 
+ *
  * Analyzes brand guidelines PDFs using Claude's native PDF support.
  * Extracts voice, mission, constraints, and writing examples.
- * 
+ *
  * Cost: ~$0.05 per document
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Anthropic from "npm:@anthropic-ai/sdk@0.32.1";
-import { 
+import {
   assignSquadsFromDocument,
-  inferToneFromAttributes 
+  inferToneFromAttributes
 } from "../_shared/squadAssignment.ts";
 import { storeDesignTokens } from "../_shared/designTokenGenerator.ts";
 
@@ -59,9 +59,9 @@ const corsHeaders = {
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
-    return new Response(null, { 
+    return new Response(null, {
       status: 200,
-      headers: corsHeaders 
+      headers: corsHeaders
     });
   }
 
@@ -170,10 +170,10 @@ Important:
       }]
     });
 
-    const responseText = message.content[0].type === 'text' 
-      ? message.content[0].text 
+    const responseText = message.content[0].type === 'text'
+      ? message.content[0].text
       : '';
-    
+
     // Clean response
     const cleanedResponse = responseText
       .replace(/```json\n?/g, '')
@@ -209,7 +209,7 @@ Important:
 
     const mergedDNA = {
       org_id: organizationId,
-      
+
       // Visual Identity - prefer existing (from URL scan) or use PDF data
       visual: existingDNA?.visual || {
         logo: { url: null, source: 'manual', variants: {} },
@@ -297,7 +297,7 @@ Important:
     // STEP 6: Store Writing Examples in Silo C
     // ═══════════════════════════════════════════════════════════════════════════
     let examplesStored = 0;
-    
+
     if (analysis.writingExamples && analysis.writingExamples.length > 0) {
       for (const example of analysis.writingExamples) {
         if (example && example.length > 20) { // Only store meaningful examples
@@ -327,7 +327,7 @@ Important:
     // ═══════════════════════════════════════════════════════════════════════════
     if (!existingDNA?.essence?.copySquad) {
       console.log(`[Document Scan] Assigning squads from document analysis`);
-      
+
       try {
         const squadAssignment = await assignSquadsFromDocument({
           mission: analysis.mission || undefined,

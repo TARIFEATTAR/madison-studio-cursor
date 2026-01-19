@@ -1,9 +1,9 @@
 /**
  * AGENT 4: EDITOR (Quality Control)
- * 
+ *
  * Validates Generator output against constraints.
  * Catches forbidden language, verifies structure, and fixes issues.
- * 
+ *
  * Model: Claude Sonnet 4 (fast validation)
  * Cost: ~$0.03 per review
  */
@@ -27,7 +27,7 @@ export async function editorAgent(
 
   // 1. Quick local check for obvious forbidden words
   const forbiddenFound = quickForbiddenCheck(draft, strategy.forbiddenLanguage);
-  
+
   // 2. If no obvious issues, do a lightweight approval
   if (forbiddenFound.length === 0) {
     console.log('[Editor] Draft passed quick check');
@@ -48,8 +48,8 @@ export async function editorAgent(
     messages: [{ role: 'user', content: editorPrompt }],
   });
 
-  let finalContent = message.content[0].type === 'text' 
-    ? message.content[0].text 
+  let finalContent = message.content[0].type === 'text'
+    ? message.content[0].text
     : '';
 
   // 5. Clean up response markers
@@ -66,13 +66,13 @@ export async function editorAgent(
 function quickForbiddenCheck(draft: string, forbiddenLanguage: string[]): string[] {
   const lowerDraft = draft.toLowerCase();
   const found: string[] = [];
-  
+
   for (const word of forbiddenLanguage) {
     if (lowerDraft.includes(word.toLowerCase())) {
       found.push(word);
     }
   }
-  
+
   return found;
 }
 
@@ -114,7 +114,7 @@ ${foundWarning}
 1. ❌ FORBIDDEN LANGUAGE CHECK
    Did the draft accidentally use ${strategy.forbiddenCopySquads[0]} language?
    Scan for: ${strategy.forbiddenLanguage.slice(0, 10).join(', ')}
-   
+
 2. ✅ MASTER PRINCIPLES CHECK
    Does it follow ${strategy.primaryCopyMaster} principles?
    ${masterCriteria}
@@ -161,44 +161,44 @@ function getMasterValidationCriteria(masterName: string): string {
    - Avoids vague claims like "amazing" or "incredible"
    - Includes proof for every benefit
    - Confident tone without hype`,
-    
+
     'HOPKINS_REASON_WHY': `
    - Explains mechanism ("because...")
    - Compares to alternatives
    - Provides concrete proof
    - Respects reader intelligence`,
-    
+
     'CAPLES_HEADLINES': `
    - Headline creates curiosity gap
    - Specific, not generic
    - Promises clear benefit
    - First paragraph delivers on promise`,
-    
+
     'PETERMAN_ROMANCE': `
    - Story comes before product
    - Sensory details (smell, texture, sound)
    - Second person ("you") for immersion
    - No marketing jargon or hype`,
-    
+
     'COLLIER_CONVERSATION': `
    - Opens with reader's existing thought/feeling
    - Smooth bridge to product
    - Personal, intimate tone
    - Appeals to desire before logic`,
-    
+
     'CLOW_DISRUPTION': `
    - Headline 7 words or fewer
    - Challenges an assumption
    - No qualifiers (perhaps, maybe, possibly)
    - Pattern-interrupting`,
-    
+
     'HALBERT_URGENCY': `
    - Stakes clear within opening
    - Urgency backed by facts (not hype)
    - Short paragraphs (3 sentences max)
    - Human-to-human voice`,
   };
-  
+
   return criteria[masterName] || 'Follows master principles correctly';
 }
 
@@ -209,32 +209,32 @@ function getSchwartzValidationCriteria(stage: string): string {
    - Gently reveals hidden problem
    - Shows why it matters
    - Introduces solution category (not product pitch)`,
-    
+
     'problem_aware': `
    - Validates their pain immediately
    - Explains why problem persists (mechanism)
    - Presents unique approach
    - Includes proof/evidence`,
-    
+
     'solution_aware': `
    - Acknowledges they're evaluating options
    - Leads with unique selling proposition
    - Compares approaches (not brands)
    - Removes final objections`,
-    
+
     'product_aware': `
    - Reinforces their good judgment
    - Adds new information they didn't know
    - Creates genuine urgency (not fake scarcity)
    - Makes purchase easy`,
-    
+
     'most_aware': `
    - Offer is clear and prominent
    - Includes bonuses/guarantees
    - Single, obvious CTA
    - Minimal convincing copy`,
   };
-  
+
   return criteria[stage] || 'Follows awareness stage structure';
 }
 
@@ -245,13 +245,13 @@ function getSchwartzValidationCriteria(stage: string): string {
 function cleanEditorResponse(response: string): string {
   // Remove "APPROVED:" marker if present
   let cleaned = response.replace(/^APPROVED:?\s*/i, '');
-  
+
   // Remove any markdown code blocks if the AI wrapped the response
   cleaned = cleaned.replace(/^```[\w]*\n?/g, '').replace(/\n?```$/g, '');
-  
+
   // Trim whitespace
   cleaned = cleaned.trim();
-  
+
   return cleaned;
 }
 
@@ -307,7 +307,7 @@ export function suggestAlternatives(
   if (wordAlts && wordAlts[context]) {
     return wordAlts[context];
   }
-  
+
   return ['[find appropriate alternative]'];
 }
 

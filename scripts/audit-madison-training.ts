@@ -92,15 +92,15 @@ async function auditTrainingDocuments() {
 
       // Check file_name for category indicators
       const fileNameLower = doc.file_name.toLowerCase();
-      const isWritingStyle = fileNameLower.includes('writing') || 
-                            fileNameLower.includes('style') || 
+      const isWritingStyle = fileNameLower.includes('writing') ||
+                            fileNameLower.includes('style') ||
                             fileNameLower.includes('voice') ||
                             fileNameLower.includes('copy') ||
                             fileNameLower.includes('halbert') ||
                             fileNameLower.includes('ogilvy') ||
                             fileNameLower.includes('hopkins');
-      
-      const isVisualIdentity = fileNameLower.includes('visual') || 
+
+      const isVisualIdentity = fileNameLower.includes('visual') ||
                                fileNameLower.includes('identity') ||
                                fileNameLower.includes('brand') ||
                                fileNameLower.includes('design');
@@ -139,7 +139,7 @@ async function auditTrainingDocuments() {
       console.log(`   Status: ${doc.processing_status || 'unknown'}`);
       console.log(`   Created: ${createdDate.toLocaleDateString()} (${Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24))} days ago)`);
       console.log(`   Active? ${activeStatus}`);
-      
+
       if (isGaryHalbert) {
         console.log(`   ⚠️  GARY HALBERT REFERENCE DETECTED`);
       }

@@ -1,18 +1,18 @@
 /**
  * Madison 4-Agent Pipeline
- * 
+ *
  * The intelligent content generation system powered by Claude.
- * 
+ *
  * @example
  * ```typescript
  * import { madisonPipeline } from '@/lib/agents';
- * 
+ *
  * const result = await madisonPipeline(
  *   "Write an Instagram caption for our new rose candle",
  *   orgId,
  *   { channel: 'instagram', includeImagePrompt: true }
  * );
- * 
+ *
  * console.log(result.content);
  * console.log(result.strategy.copySquad); // "THE_STORYTELLERS"
  * ```

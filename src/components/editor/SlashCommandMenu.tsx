@@ -1,10 +1,10 @@
 /**
  * SlashCommandMenu - Command palette for Madison Editor
- * 
+ *
  * Appears when user types "/" providing quick access to:
  * - Madison AI actions
  * - Formatting options
- * 
+ *
  * Design principles:
  * - Calm and editorial (not dev-tool like)
  * - Keyboard navigable
@@ -14,11 +14,11 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Editor } from '@tiptap/react';
-import { 
-  Sparkles, 
-  ArrowRight, 
-  RefreshCw, 
-  Mail, 
+import {
+  Sparkles,
+  ArrowRight,
+  RefreshCw,
+  Mail,
   Package,
   Instagram,
   Heading2,
@@ -53,7 +53,7 @@ interface CommandItem {
 
 /**
  * Slash command menu
- * 
+ *
  * Behavior:
  * - "/" opens menu
  * - Escape closes menu
@@ -61,12 +61,12 @@ interface CommandItem {
  * - ↑↓ navigate items
  * - Typing filters items
  */
-export function SlashCommandMenu({ 
-  editor, 
-  isOpen, 
-  onClose, 
+export function SlashCommandMenu({
+  editor,
+  isOpen,
+  onClose,
   position,
-  onAIAction 
+  onAIAction
 }: SlashCommandMenuProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [filter, setFilter] = useState('');
@@ -228,7 +228,7 @@ export function SlashCommandMenu({
   ];
 
   // Filter commands based on typed input
-  const filteredCommands = commands.filter(cmd => 
+  const filteredCommands = commands.filter(cmd =>
     cmd.label.toLowerCase().includes(filter.toLowerCase()) ||
     cmd.description.toLowerCase().includes(filter.toLowerCase())
   );
@@ -245,19 +245,19 @@ export function SlashCommandMenu({
       case 'ArrowDown':
         e.preventDefault();
         e.stopPropagation();
-        setSelectedIndex(i => 
+        setSelectedIndex(i =>
           i < filteredCommands.length - 1 ? i + 1 : 0
         );
         break;
-        
+
       case 'ArrowUp':
         e.preventDefault();
         e.stopPropagation();
-        setSelectedIndex(i => 
+        setSelectedIndex(i =>
           i > 0 ? i - 1 : filteredCommands.length - 1
         );
         break;
-        
+
       case 'Enter':
         e.preventDefault();
         e.stopPropagation();
@@ -265,7 +265,7 @@ export function SlashCommandMenu({
           filteredCommands[selectedIndex].action();
         }
         break;
-        
+
       case 'Escape':
         e.preventDefault();
         e.stopPropagation();
@@ -324,7 +324,7 @@ export function SlashCommandMenu({
   // Scroll selected item into view
   useEffect(() => {
     if (!isOpen || !menuRef.current) return;
-    
+
     const selected = menuRef.current.querySelector('[data-selected="true"]');
     if (selected) {
       selected.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -364,7 +364,7 @@ export function SlashCommandMenu({
           {aiCommands.map((cmd) => {
             const currentIndex = flatIndex++;
             const isSelected = selectedIndex === currentIndex;
-            
+
             return (
               <CommandMenuItem
                 key={cmd.id}
@@ -394,7 +394,7 @@ export function SlashCommandMenu({
           {formatCommands.map((cmd) => {
             const currentIndex = flatIndex++;
             const isSelected = selectedIndex === currentIndex;
-            
+
             return (
               <CommandMenuItem
                 key={cmd.id}
@@ -453,8 +453,8 @@ function CommandMenuItem({
         "w-full flex items-center gap-3 px-2 py-2 rounded-md",
         "text-left text-sm transition-colors",
         "disabled:opacity-50 disabled:cursor-not-allowed",
-        isSelected 
-          ? "bg-muted text-foreground" 
+        isSelected
+          ? "bg-muted text-foreground"
           : "hover:bg-muted/50 text-foreground"
       )}
     >
@@ -466,7 +466,7 @@ function CommandMenuItem({
       )}>
         {item.icon}
       </div>
-      
+
       {/* Label & description */}
       <div className="flex-1 min-w-0">
         <div className="font-medium">{item.label}</div>

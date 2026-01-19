@@ -1,6 +1,6 @@
 /**
  * Sync Etsy Products - Pull all listings from Etsy into Madison Studio
- * 
+ *
  * This edge function fetches all active listings from an Etsy shop
  * and syncs them to the brand_products table with full details including
  * SKU, pricing, variants, images, and inventory.
@@ -31,7 +31,7 @@ async function refreshAccessToken(
   // Check if token is still valid (with 5 min buffer)
   const tokenExpiry = new Date(connection.token_expiry);
   const now = new Date(Date.now() + 5 * 60 * 1000);
-  
+
   if (tokenExpiry > now) {
     return { accessToken: decryptToken(connection.encrypted_access_token) };
   }
@@ -149,10 +149,10 @@ serve(async (req) => {
     let allListings: any[] = [];
     let offset = 0;
     const limit = 100;
-    
+
     do {
       const listingsUrl = `https://openapi.etsy.com/v3/application/shops/${shopId}/listings/active?limit=${limit}&offset=${offset}&includes=Images,Inventory,Videos`;
-      
+
       const listingsResponse = await fetch(listingsUrl, {
         headers: {
           "Authorization": `Bearer ${accessToken}`,
@@ -168,7 +168,7 @@ serve(async (req) => {
 
       const data = await listingsResponse.json();
       allListings = allListings.concat(data.results || []);
-      
+
       // Check if there are more pages
       if (data.results?.length < limit) {
         break;
@@ -194,7 +194,7 @@ serve(async (req) => {
       // Extract inventory/variants from offerings
       const inventory = listing.inventory || {};
       const offerings = inventory.products || [];
-      
+
       const variants = offerings.flatMap((product: any, pIndex: number) => {
         return (product.offerings || []).map((offering: any, oIndex: number) => ({
           id: offering.offering_id?.toString(),
@@ -242,7 +242,7 @@ serve(async (req) => {
       // Extract unique options
       const optionNames = new Set<string>();
       const optionValues: Record<string, Set<string>> = {};
-      
+
       (offerings || []).forEach((product: any) => {
         (product.property_values || []).forEach((pv: any) => {
           if (pv.property_name) {
@@ -267,7 +267,7 @@ serve(async (req) => {
 
       // Parse tags
       const tags = listing.tags || [];
-      
+
       // Map materials
       const materials = listing.materials || [];
 
@@ -286,7 +286,7 @@ serve(async (req) => {
         product_type: listing.taxonomy_path?.join(" > ") || "Uncategorized",
         collection: listing.taxonomy_path?.[0] || "Uncategorized",
         category: listing.taxonomy_path?.[1] || null,
-        
+
         // E-commerce fields
         sku: primarySku,
         barcode: null,
@@ -298,26 +298,26 @@ serve(async (req) => {
         weight: listing.item_weight?.value || null,
         weight_unit: listing.item_weight?.unit || "oz",
         requires_shipping: !listing.is_digital,
-        
+
         // Variants and options
         variants: JSON.stringify(variants),
         options: JSON.stringify(options),
-        
+
         // Images
         images: JSON.stringify(images),
         featured_image_url: images[0]?.src || null,
-        
+
         // Vendor info
         vendor: connection.shop_name || null,
-        
+
         // Status
         status: listing.state === "active" ? "active" : "draft",
         published_at: listing.state === "active" ? new Date().toISOString() : null,
-        
+
         // Tags and materials
         tags,
         materials,
-        
+
         // Etsy-specific fields
         etsy_listing_id: listing.listing_id?.toString(),
         etsy_shop_id: shopId?.toString(),

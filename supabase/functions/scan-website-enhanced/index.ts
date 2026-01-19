@@ -1,28 +1,28 @@
 /**
  * ENHANCED BRAND SCANNER (Pomelli-Style)
- * 
+ *
  * Uses Gemini Flash for pixel-based visual analysis.
  * Extracts colors, fonts, and brand DNA directly from screenshots.
- * 
+ *
  * Supports three modes:
  * 1. URL + Screenshot API (automatic)
  * 2. URL + User-provided screenshot (manual)
  * 3. Screenshot only (for testing)
- * 
+ *
  * Cost: ~$0.03 per full scan
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { 
-  analyzeScreenshot, 
-  buildBrandVisual, 
+import {
+  analyzeScreenshot,
+  buildBrandVisual,
   fetchLogoWithFallback,
-  type VisualAnalysis 
+  type VisualAnalysis
 } from "../_shared/visualAnalyzer.ts";
-import { 
+import {
   assignSquadsFromAnalysis,
-  type SquadAssignment 
+  type SquadAssignment
 } from "../_shared/squadAssignment.ts";
 import { storeDesignTokens } from "../_shared/designTokenGenerator.ts";
 
@@ -77,9 +77,9 @@ const corsHeaders = {
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
-    return new Response(null, { 
+    return new Response(null, {
       status: 200,
-      headers: corsHeaders 
+      headers: corsHeaders
     });
   }
 
@@ -129,7 +129,7 @@ serve(async (req) => {
         if (scannedAt) {
           const scanAge = Date.now() - new Date(scannedAt).getTime();
           const twentyFourHours = 24 * 60 * 60 * 1000;
-          
+
           if (scanAge < twentyFourHours) {
             console.log(`[Enhanced Scan] Returning cached result (${Math.round(scanAge / 1000 / 60)} minutes old)`);
             return new Response(
@@ -159,17 +159,17 @@ serve(async (req) => {
       // Try to capture screenshot via API
       console.log(`[Enhanced Scan] Capturing screenshot for ${normalizedUrl}`);
       const screenshotResult = await captureScreenshotWithFallback(normalizedUrl);
-      
+
       if (!screenshotResult) {
         return new Response(
-          JSON.stringify({ 
+          JSON.stringify({
             error: "Could not capture screenshot",
             message: "Please provide a screenshot manually or configure SCREENSHOT_API_KEY"
           }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      
+
       screenshotBase64 = screenshotResult;
     } else {
       return new Response(
@@ -183,13 +183,13 @@ serve(async (req) => {
     // ═══════════════════════════════════════════════════════════════════════════
     console.log(`[Enhanced Scan] Analyzing screenshot with Gemini Flash`);
     let visualAnalysis: VisualAnalysis;
-    
+
     try {
       visualAnalysis = await analyzeScreenshot(screenshotBase64, mimeType);
     } catch (error) {
       console.error(`[Enhanced Scan] Visual analysis failed:`, error);
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: "Visual analysis failed",
           details: error instanceof Error ? error.message : 'Unknown error'
         }),
@@ -221,7 +221,7 @@ serve(async (req) => {
     // ═══════════════════════════════════════════════════════════════════════════
     console.log(`[Enhanced Scan] Auto-assigning squads`);
     let squadAssignment: SquadAssignment;
-    
+
     try {
       squadAssignment = await assignSquadsFromAnalysis(visualAnalysis, normalizedUrl || 'manual');
       console.log(`[Enhanced Scan] Squad assigned: ${squadAssignment.copySquad} / ${squadAssignment.visualSquad}`);
@@ -244,7 +244,7 @@ serve(async (req) => {
 
     const brandDNA: BrandDNA = {
       org_id: organizationId,
-      
+
       visual: brandVisual,
 
       essence: {
@@ -278,7 +278,7 @@ serve(async (req) => {
     // STEP 6: Store in Database
     // ═══════════════════════════════════════════════════════════════════════════
     console.log(`[Enhanced Scan] Storing brand DNA`);
-    
+
     const { data, error } = await supabase
       .from('brand_dna')
       .upsert(brandDNA, { onConflict: 'org_id' })
@@ -294,7 +294,7 @@ serve(async (req) => {
     // STEP 7: Generate Design Tokens
     // ═══════════════════════════════════════════════════════════════════════════
     console.log(`[Enhanced Scan] Generating design tokens`);
-    
+
     try {
       await storeDesignTokens(organizationId, brandVisual);
     } catch (error) {
@@ -385,20 +385,20 @@ async function captureScreenshotWithFallback(url: string): Promise<string | null
 
 async function captureWithScreenshotApi(url: string, apiKey: string): Promise<string | null> {
   const apiUrl = `https://shot.screenshotapi.net/screenshot?token=${apiKey}&url=${encodeURIComponent(url)}&width=1920&height=1080&output=base64&full_page=false`;
-  
+
   const response = await fetch(apiUrl);
   if (!response.ok) return null;
-  
+
   const data = await response.json();
   return data.screenshot || null;
 }
 
 async function captureWithScreenshotMachine(url: string, apiKey: string): Promise<string | null> {
   const apiUrl = `https://api.screenshotmachine.com?key=${apiKey}&url=${encodeURIComponent(url)}&dimension=1920x1080&format=png`;
-  
+
   const response = await fetch(apiUrl);
   if (!response.ok) return null;
-  
+
   const arrayBuffer = await response.arrayBuffer();
   const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
   return base64;
@@ -406,17 +406,17 @@ async function captureWithScreenshotMachine(url: string, apiKey: string): Promis
 
 async function captureWithMicrolink(url: string): Promise<string | null> {
   const apiUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false&embed=screenshot.url`;
-  
+
   const response = await fetch(apiUrl);
   if (!response.ok) return null;
-  
+
   const data = await response.json();
   if (!data.data?.screenshot?.url) return null;
-  
+
   // Fetch the image and convert to base64
   const imageResponse = await fetch(data.data.screenshot.url);
   if (!imageResponse.ok) return null;
-  
+
   const arrayBuffer = await imageResponse.arrayBuffer();
   const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
   return base64;

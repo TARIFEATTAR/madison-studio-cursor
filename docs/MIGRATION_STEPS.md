@@ -1,6 +1,6 @@
 # Migration Steps - Apply to Remote Supabase
 
-**Issue:** Local Supabase requires Docker (which isn't running)  
+**Issue:** Local Supabase requires Docker (which isn't running)
 **Solution:** Apply migrations directly to your remote/production Supabase project
 
 ---
@@ -60,9 +60,9 @@ Run this verification query in SQL Editor:
 
 ```sql
 -- Check tables exist
-SELECT 
-  'madison_masters' as table_name, 
-  COUNT(*) as row_count 
+SELECT
+  'madison_masters' as table_name,
+  COUNT(*) as row_count
 FROM madison_masters
 UNION ALL
 SELECT 'visual_masters', COUNT(*) FROM visual_masters
@@ -74,7 +74,7 @@ SELECT 'brand_dna', COUNT(*) FROM brand_dna;
 
 **Expected Results:**
 - `madison_masters`: 7 rows
-- `visual_masters`: 4 rows  
+- `visual_masters`: 4 rows
 - `schwartz_templates`: 5 rows
 - `brand_dna`: 0 rows (empty until you scan a brand)
 
@@ -105,11 +105,11 @@ After running migrations, verify:
 ## 🐛 Troubleshooting
 
 ### Error: "relation already exists"
-**Meaning:** Some tables might already exist  
+**Meaning:** Some tables might already exist
 **Fix:** This is okay - the migration uses `CREATE TABLE IF NOT EXISTS`. Continue.
 
 ### Error: "permission denied"
-**Meaning:** You don't have admin access  
+**Meaning:** You don't have admin access
 **Fix:** Make sure you're logged in as project owner/admin
 
 ### Error: "extension vector does not exist"

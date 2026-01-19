@@ -64,8 +64,8 @@ After reviewing the audit results:
 
 ### Archive Old Documents
 ```sql
-UPDATE madison_training_documents 
-SET processing_status = 'archived' 
+UPDATE madison_training_documents
+SET processing_status = 'archived'
 WHERE created_at < NOW() - INTERVAL '12 months'
    OR processing_status != 'completed';
 ```
@@ -73,19 +73,19 @@ WHERE created_at < NOW() - INTERVAL '12 months'
 ### Add Schema Columns (if missing)
 ```sql
 -- Add category column
-ALTER TABLE madison_training_documents 
+ALTER TABLE madison_training_documents
 ADD COLUMN IF NOT EXISTS category TEXT;
 
 -- Add slug column
-ALTER TABLE madison_training_documents 
+ALTER TABLE madison_training_documents
 ADD COLUMN IF NOT EXISTS slug TEXT UNIQUE;
 
 -- Add name column
-ALTER TABLE madison_training_documents 
+ALTER TABLE madison_training_documents
 ADD COLUMN IF NOT EXISTS name TEXT;
 
 -- Add version column
-ALTER TABLE madison_training_documents 
+ALTER TABLE madison_training_documents
 ADD COLUMN IF NOT EXISTS version INTEGER DEFAULT 1;
 ```
 

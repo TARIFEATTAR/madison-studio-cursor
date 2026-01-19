@@ -3,7 +3,7 @@
 
 -- Step 1: Find the user ID for jordan@tarifatar.com
 -- Run this first to see what exists:
-SELECT 
+SELECT
   id as user_id,
   email,
   created_at,
@@ -13,7 +13,7 @@ WHERE email = 'jordan@tarifeattar.com';
 
 -- Step 2: Find organizations associated with this user
 -- Replace USER_ID_HERE with the ID from Step 1
-SELECT 
+SELECT
   o.id as org_id,
   o.name,
   o.brand_config,
@@ -23,7 +23,7 @@ FROM organizations o
 WHERE o.created_by = 'USER_ID_HERE';
 
 -- Step 3: Check organization memberships
-SELECT 
+SELECT
   om.organization_id,
   om.user_id,
   om.created_at
@@ -67,7 +67,7 @@ WHERE created_by = 'USER_ID_HERE';
 
 -- Update profile to clear any cached data
 UPDATE profiles
-SET 
+SET
   full_name = NULL,
   updated_at = now()
 WHERE id = 'USER_ID_HERE';

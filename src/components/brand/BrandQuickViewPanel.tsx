@@ -1,13 +1,13 @@
 /**
  * Brand Quick View Panel
- * 
+ *
  * A slide-out panel that displays the brand's visual identity at a glance:
  * - Logo
  * - Color palette with swatches
  * - Typography preview
  * - Squad assignments
  * - Scan confidence
- * 
+ *
  * Following Madison design system: "Black Books & Cream Paper"
  */
 

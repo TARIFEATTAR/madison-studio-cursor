@@ -5,12 +5,12 @@ ALTER TABLE public.brand_products
 ADD COLUMN IF NOT EXISTS bottle_type TEXT CHECK (bottle_type IN ('oil', 'spray', 'auto'));
 
 -- Add comment explaining the column
-COMMENT ON COLUMN public.brand_products.bottle_type IS 
+COMMENT ON COLUMN public.brand_products.bottle_type IS
 'Explicit bottle type: "oil" = dropper/roller (no spray), "spray" = atomizer (no dropper), "auto" = auto-detect from other fields (default). If NULL, defaults to "auto".';
 
 -- Create index for better query performance
-CREATE INDEX IF NOT EXISTS idx_brand_products_bottle_type 
-ON public.brand_products(bottle_type) 
+CREATE INDEX IF NOT EXISTS idx_brand_products_bottle_type
+ON public.brand_products(bottle_type)
 WHERE bottle_type IS NOT NULL;
 
 -- Set default to 'auto' for existing products (backward compatible)

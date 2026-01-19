@@ -50,12 +50,12 @@ Run this verification:
 
 ```sql
 -- Check tables were created
-SELECT table_name 
-FROM information_schema.tables 
-WHERE table_schema = 'public' 
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
 AND table_name IN (
   'madison_masters',
-  'visual_masters', 
+  'visual_masters',
   'schwartz_templates',
   'brand_dna',
   'brand_products',
@@ -83,7 +83,7 @@ SELECT COUNT(*) as schwartz_templates FROM schwartz_templates; -- Should be 5
 
 - [ ] Cleanup query ran without errors
 - [ ] Schema migration ran successfully
-- [ ] Seed migration ran successfully  
+- [ ] Seed migration ran successfully
 - [ ] Verification queries show correct counts
 - [ ] No errors in SQL Editor
 
