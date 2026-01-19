@@ -14,29 +14,29 @@ export type DevelopmentStage = 'concept' | 'formulation' | 'testing' | 'producti
 export interface ProductHub {
   id: string;
   organization_id: string;
-  
+
   // Basic Info
   name: string;
   slug: string | null;
   sku: string | null;
   barcode: string | null;
-  
+
   // Description
   short_description: string | null;
   long_description: string | null;
   tagline: string | null;
-  
+
   // Pricing
   price: number | null;
   compare_at_price: number | null;
   cost_per_unit: number | null;
   currency: string;
-  
+
   // Status
   status: ProductStatus;
   visibility: ProductVisibility;
   development_stage: DevelopmentStage;
-  
+
   // Categorization
   category: string | null;
   subcategory: string | null;
@@ -44,47 +44,47 @@ export interface ProductHub {
   product_line: string | null;
   collections: string[];
   tags: string[];
-  
+
   // Media
   hero_image_id: string | null;
   hero_image_url?: string | null;
   gallery_image_ids: string[];
   video_ids: string[];
-  
+
   // External
   external_ids: Record<string, unknown>;
-  
+
   // AI & Brand
   brand_voice_notes: string | null;
   target_audience: string | null;
   key_benefits: string[];
   key_differentiators: string[];
-  
+
   // SEO
   seo_title: string | null;
   seo_description: string | null;
   seo_keywords: string[];
-  
+
   // Dates
   launch_date: string | null;
   published_at: string | null;
   discontinued_at: string | null;
   created_at: string;
   updated_at: string;
-  
+
   // Hierarchy
   parent_product_id: string | null;
   sort_order: number;
-  
+
   // Metadata
   metadata: Record<string, unknown>;
   created_by: string | null;
-  
+
   // Computed/joined
   variant_count?: number;
   content_count?: number;
   asset_count?: number;
-  
+
   // Supplier (requires migration)
   supplier_id?: string | null;
   is_self_manufactured?: boolean;
@@ -131,10 +131,12 @@ export interface UpdateProductInput {
   seo_description?: string;
   seo_keywords?: string[];
   launch_date?: string;
+  metadata?: Record<string, unknown>;
   // Supplier fields (requires migration)
   supplier_id?: string | null;
   is_self_manufactured?: boolean;
 }
+
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -157,7 +159,7 @@ export const DEVELOPMENT_STAGE_OPTIONS: { value: DevelopmentStage; label: string
 
 export const PRODUCT_CATEGORIES = [
   'Skincare',
-  'Haircare', 
+  'Haircare',
   'Body Care',
   'Cosmetics',
   'Fragrance',
@@ -218,7 +220,7 @@ export const PRODUCT_TYPE_WRITING_RULES: Record<string, {
     vocabulary: ['portable', 'travel-friendly', 'subtle', 'touch-up', 'compact', 'mess-free', 'TSA-friendly'],
     toneNotes: 'Emphasize convenience, portability, and discretion. Perfect for on-the-go touch-ups.',
   },
-  
+
   // Skincare Types
   'Serum': {
     description: 'Concentrated treatment with active ingredients. Lightweight, fast-absorbing.',
@@ -554,12 +556,12 @@ export function useProducts(options: UseProductsOptions = {}) {
     products,
     statusCounts,
     categories,
-    
+
     // Loading (provide both aliases for compatibility)
     isLoading,
     loading: isLoading,
     error,
-    
+
     // Actions
     fetchProduct,
     createProduct,

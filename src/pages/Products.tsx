@@ -71,7 +71,7 @@ import {
 function ProductStatusBadge({ status }: { status: ProductStatus }) {
   const option = PRODUCT_STATUS_OPTIONS.find(o => o.value === status);
   if (!option) return null;
-  
+
   return (
     <Badge variant="secondary" className={cn("text-xs", option.color)}>
       {option.label}
@@ -135,6 +135,10 @@ function ProductCard({
                 </div>
                 <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
                   {product.sku && <span>SKU: {product.sku}</span>}
+                  {(product.metadata?.parent_sku) && (
+                    <span className="text-muted-foreground">• Parent: {String(product.metadata.parent_sku)}</span>
+                  )}
+
                   {product.category && (
                     <span className="flex items-center gap-1">
                       <Tag className="w-3 h-3" />
@@ -203,7 +207,7 @@ function ProductCard({
       animate={{ opacity: 1, scale: 1 }}
       className="group"
     >
-      <Card 
+      <Card
         className="bg-card border-border hover:border-primary/30 hover:shadow-level-2 transition-all cursor-pointer overflow-hidden"
         onClick={onView}
       >
@@ -220,7 +224,7 @@ function ProductCard({
               <Package className="w-12 h-12 text-muted-foreground/50" />
             </div>
           )}
-          
+
           {/* Status badge overlay */}
           <div className="absolute top-2 left-2">
             <ProductStatusBadge status={product.status} />
@@ -248,8 +252,8 @@ function ProductCard({
                   <Archive className="w-4 h-4 mr-2" />
                   Archive
                 </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={(e) => { e.stopPropagation(); onDelete(); }} 
+                <DropdownMenuItem
+                  onClick={(e) => { e.stopPropagation(); onDelete(); }}
                   className="text-destructive"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
@@ -266,7 +270,13 @@ function ProductCard({
             <span className="text-sm text-muted-foreground">
               {product.category || 'Uncategorized'}
             </span>
+            {(product.metadata?.parent_sku) && (
+              <span className="text-xs text-muted-foreground block mt-1">
+                Parent: {String(product.metadata.parent_sku)}
+              </span>
+            )}
             {product.price ? (
+
               <span className="font-medium text-sm">
                 ${product.price.toFixed(2)}
               </span>
@@ -439,7 +449,7 @@ export default function Products() {
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(p => 
+      result = result.filter(p =>
         p.name.toLowerCase().includes(query) ||
         p.sku?.toLowerCase().includes(query) ||
         p.tags.some(t => t.toLowerCase().includes(query))
@@ -505,8 +515,8 @@ export default function Products() {
         </div>
 
         {/* Status Tabs */}
-        <Tabs 
-          value={statusFilter} 
+        <Tabs
+          value={statusFilter}
           onValueChange={(val) => setStatusFilter(val as ProductStatus | 'all')}
           className="mb-6"
         >
@@ -591,8 +601,8 @@ export default function Products() {
         {isLoading ? (
           <div className={cn(
             "gap-4",
-            viewMode === 'grid' 
-              ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4" 
+            viewMode === 'grid'
+              ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
               : "flex flex-col"
           )}>
             {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -623,8 +633,8 @@ export default function Products() {
         ) : (
           <div className={cn(
             "gap-4",
-            viewMode === 'grid' 
-              ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4" 
+            viewMode === 'grid'
+              ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
               : "flex flex-col"
           )}>
             <AnimatePresence mode="popLayout">
@@ -666,8 +676,8 @@ export default function Products() {
             <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={handleDeleteProduct}
               disabled={deleteProduct.isPending}
             >

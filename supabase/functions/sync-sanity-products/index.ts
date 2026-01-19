@@ -36,7 +36,8 @@ serve(async (req) => {
 
     // Query with all relevant fields: title, SKUs, image, Shopify IDs, collection, slug
     // GROQ: *[_type == "product" && title != null][0...100]{_id, title, sku6ml, sku12ml, "slugCurrent": slug.current, collectionType, mainImage, shopifyProductId, legacyName, inStock}
-    const groqQuery = '*[_type == "product" && title != null][0...100]{_id, title, sku6ml, sku12ml, "slugCurrent": slug.current, collectionType, mainImage, shopifyProductId, legacyName, inStock}';
+    const groqQuery = '*[_type == "product" && title != null][0...100]{_id, title, sku6ml, sku12ml, "parentSku": parentSku, "slugCurrent": slug.current, collectionType, mainImage, shopifyProductId, legacyName, inStock}';
+
     const fullUrl = `https://${projectId}.api.sanity.io/v2024-01-01/data/query/${dataset}?query=${encodeURIComponent(groqQuery)}`;
 
     console.log(`[sync-sanity-products] Fetching: ${fullUrl}`);
@@ -167,7 +168,8 @@ serve(async (req) => {
         }
 
         console.log(`[sync-sanity-products] Processing: ${product.title}`);
-        console.log(`[sync-sanity-products] SKU 6ml: ${product.sku6ml}, SKU 12ml: ${product.sku12ml}`);
+        console.log(`[sync-sanity-products] SKU 6ml: ${product.sku6ml}, SKU 12ml: ${product.sku12ml}, Parent SKU: ${product.parentSku}`);
+
         console.log(`[sync-sanity-products] Main image ref: ${JSON.stringify(product.mainImage)}`);
 
         // Generate slug from Sanity or title
@@ -302,8 +304,10 @@ serve(async (req) => {
             shopify_pricing_synced: Object.keys(skuPricingMap).length > 0,
             // Keep SKUs in metadata for backward compatibility
             sku_6ml: product.sku6ml || null,
-            sku_12ml: product.sku12ml || null
+            sku_12ml: product.sku12ml || null,
+            parent_sku: product.parentSku || null
           }
+
         };
 
         // Check if exists by name or slug

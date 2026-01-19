@@ -175,6 +175,25 @@ function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
               )}
             </div>
 
+            {/* Parent SKU */}
+            <div className="space-y-2">
+              <Label htmlFor="parent_sku">Parent SKU</Label>
+              {isEditing ? (
+                <Input
+                  id="parent_sku"
+                  value={(product.metadata?.parent_sku as string) || ""}
+                  onChange={(e) => {
+                    const currentMetadata = product.metadata || {};
+                    onChange("metadata", { ...currentMetadata, parent_sku: e.target.value });
+                  }}
+                  placeholder="Parent SKU Group"
+                />
+              ) : (
+                <p className="text-foreground">{(product.metadata?.parent_sku as string) || "—"}</p>
+              )}
+            </div>
+
+
             {/* Barcode */}
             <div className="space-y-2">
               <Label htmlFor="barcode">Barcode</Label>
@@ -687,7 +706,9 @@ export default function ProductHub() {
       seo_description: editedProduct.seo_description,
       seo_keywords: editedProduct.seo_keywords,
       launch_date: editedProduct.launch_date,
+      metadata: editedProduct.metadata,
     };
+
 
     // Only include supplier fields if they've been explicitly set
     if (editedProduct.supplier_id !== undefined) {
