@@ -116,8 +116,8 @@ function textToPortableText(text: string): any[] {
 function parseScentNotes(product: any, formulation: any): { top: string[]; heart: string[]; base: string[] } | null {
   // Check formulation first (primary source)
   if (formulation?.scent_profile) {
-    const profile = typeof formulation.scent_profile === 'string' 
-      ? JSON.parse(formulation.scent_profile) 
+    const profile = typeof formulation.scent_profile === 'string'
+      ? JSON.parse(formulation.scent_profile)
       : formulation.scent_profile;
     if (profile.top?.length || profile.heart?.length || profile.base?.length) {
       return profile;
@@ -260,6 +260,9 @@ function transformProductToSanity(product: any, formulation: any, shopifyData?: 
   const sku6ml = (product.metadata?.sku_6ml as string) || null;
   const sku12ml = (product.metadata?.sku_12ml as string) || null;
 
+  // Legacy name (formerly known as) - preserved from Sanity
+  const legacyName = (product.metadata?.legacy_name as string) || null;
+
   const doc: any = {
     _type: "tarifeProduct",
     _id: `madison-product-${product.id}`,
@@ -268,6 +271,8 @@ function transformProductToSanity(product: any, formulation: any, shopifyData?: 
       _type: "slug",
       current: product.slug || product.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
     },
+    // Legacy name (e.g., "Oud Fire" for ADEN)
+    legacyName: legacyName,
     // Parent SKU (no size - e.g., "PETAL-RITUAL")
     parentSku: parentSku,
     // Primary variant SKU (default size - e.g., "PETAL-RITUAL-6ML")
@@ -293,7 +298,7 @@ function transformProductToSanity(product: any, formulation: any, shopifyData?: 
   // ═══════════════════════════════════════════════════════════════════════════════
   // SCENT PROFILE DATA (from formulation)
   // ═══════════════════════════════════════════════════════════════════════════════
-  
+
   // Scent notes (from formulation or product metadata)
   const scentNotes = parseScentNotes(product, formulation);
   if (scentNotes) {
@@ -320,12 +325,12 @@ function transformProductToSanity(product: any, formulation: any, shopifyData?: 
   // ═══════════════════════════════════════════════════════════════════════════════
   // CONCENTRATION & BASE (from formulation)
   // ═══════════════════════════════════════════════════════════════════════════════
-  
+
   if (formulation?.concentration_type) {
     doc.concentrationType = mapConcentrationType(formulation.concentration_type);
     console.log(`[push-product-to-sanity] Concentration: ${doc.concentrationType}`);
   }
-  
+
   if (formulation?.base_carrier) {
     doc.baseCarrier = mapBaseCarrier(formulation.base_carrier);
     console.log(`[push-product-to-sanity] Base carrier: ${doc.baseCarrier}`);
@@ -334,12 +339,12 @@ function transformProductToSanity(product: any, formulation: any, shopifyData?: 
   // ═══════════════════════════════════════════════════════════════════════════════
   // PERFORMANCE (from formulation)
   // ═══════════════════════════════════════════════════════════════════════════════
-  
+
   if (formulation?.longevity) {
     doc.longevity = mapLongevity(formulation.longevity);
     console.log(`[push-product-to-sanity] Longevity: ${doc.longevity}`);
   }
-  
+
   if (formulation?.sillage) {
     doc.sillage = mapSillage(formulation.sillage);
     console.log(`[push-product-to-sanity] Sillage: ${doc.sillage}`);
@@ -348,12 +353,12 @@ function transformProductToSanity(product: any, formulation: any, shopifyData?: 
   // ═══════════════════════════════════════════════════════════════════════════════
   // BEST FOR (seasons & occasions from formulation)
   // ═══════════════════════════════════════════════════════════════════════════════
-  
+
   if (formulation?.season_suitability?.length > 0) {
     doc.bestSeasons = mapSeasons(formulation.season_suitability);
     console.log(`[push-product-to-sanity] Best seasons: ${doc.bestSeasons.join(', ')}`);
   }
-  
+
   if (formulation?.occasion_suitability?.length > 0) {
     doc.bestOccasions = mapOccasions(formulation.occasion_suitability);
     console.log(`[push-product-to-sanity] Best occasions: ${doc.bestOccasions.join(', ')}`);
@@ -362,7 +367,7 @@ function transformProductToSanity(product: any, formulation: any, shopifyData?: 
   // ═══════════════════════════════════════════════════════════════════════════════
   // COLLECTION & CATEGORIES
   // ═══════════════════════════════════════════════════════════════════════════════
-  
+
   if (product.collections?.length > 0) {
     const collectionMap: Record<string, string> = {
       "terra": "terra",
