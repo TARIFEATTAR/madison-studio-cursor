@@ -135,14 +135,13 @@ export function PublishToSanity({
 
   const getSanityStudioUrl = () => {
     // TODO: Make this configurable per organization via settings
-    // Currently supporting: Tarife Attar (8h5l91ut), Best Bottles (gv4os6ef)
-    const projectId = "8h5l91ut"; // Tarife Attar Sanity project
-    const dataset = "production";
+    // Tarife Attar uses a self-hosted Sanity Studio at their website
+    const studioBaseUrl = "https://www.tarifeattar.com/studio";
     if (syncStatus?.sanityDocumentId) {
       // Link directly to the document in Sanity Studio
-      return `https://${projectId}.sanity.studio/desk/post;${syncStatus.sanityDocumentId}`;
+      return `${studioBaseUrl}/structure/post;${syncStatus.sanityDocumentId}`;
     }
-    return `https://${projectId}.sanity.studio`;
+    return studioBaseUrl;
   };
 
   return (

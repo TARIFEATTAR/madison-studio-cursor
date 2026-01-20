@@ -93,11 +93,13 @@ export function PublishProductToSanity({
   };
 
   const getSanityStudioUrl = () => {
-    const projectId = "8h5l91ut"; // Tarife Attar
+    // Tarife Attar uses a self-hosted Sanity Studio at their website
+    const studioBaseUrl = "https://www.tarifeattar.com/studio";
     if (syncStatus?.sanityDocumentId) {
-      return `https://${projectId}.sanity.studio/desk/tarifeProduct;${syncStatus.sanityDocumentId}`;
+      // Link directly to the product document in the studio
+      return `${studioBaseUrl}/structure/product;${syncStatus.sanityDocumentId}`;
     }
-    return `https://${projectId}.sanity.studio`;
+    return studioBaseUrl;
   };
 
   // Check if product was previously synced

@@ -514,14 +514,14 @@ serve(async (req) => {
     // FIND EXISTING PRODUCT IN SANITY BY TITLE
     // ═══════════════════════════════════════════════════════════════════════════════
     console.log(`[push-product-to-sanity] Searching for existing product "${product.name}" in Sanity...`);
-    
+
     const existingProducts = await sanityClient.fetch(
       `*[_type == "product" && title == $title][0...2]{_id, title, _type}`,
       { title: product.name }
     );
 
     let sanityDocId: string | null = null;
-    
+
     if (existingProducts && existingProducts.length > 0) {
       // Use the first match (prefer non-draft if available)
       const nonDraft = existingProducts.find((p: any) => !p._id.startsWith('drafts.'));
@@ -534,7 +534,7 @@ serve(async (req) => {
       const sanityDoc = transformProductToSanity(product, formulation);
       console.log(`[push-product-to-sanity] Creating new tarifeProduct: ${sanityDoc._id}`);
       const result = await sanityClient.createOrReplace(sanityDoc);
-      
+
       await supabase
         .from("product_hubs")
         .update({
@@ -565,7 +565,7 @@ serve(async (req) => {
     // BUILD PATCH FOR EXISTING PRODUCT
     // ═══════════════════════════════════════════════════════════════════════════════
     console.log(`[push-product-to-sanity] Building patch for existing product...`);
-    
+
     const patchData: Record<string, any> = {
       madisonProductId: product.id,
       madisonSyncedAt: new Date().toISOString(),
