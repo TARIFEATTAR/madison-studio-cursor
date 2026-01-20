@@ -1,5 +1,6 @@
 /**
  * Push Product to Sanity Edge Function
+ * VERSION 2 - Now includes full formulation data (scent profile, concentration, performance)
  *
  * Pushes Madison Studio product data to Sanity.io as `tarifeProduct` documents
  * Includes rich descriptions, scent notes, variants, and SEO data
@@ -15,6 +16,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient as createSanityClient } from "https://esm.sh/@sanity/client@6.8.6";
 import { createClient as createSupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const VERSION = "2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -108,19 +111,28 @@ function textToPortableText(text: string): any[] {
 }
 
 /**
- * Parse scent notes from product metadata or description
+ * Parse scent notes from formulation or product metadata
  */
-function parseScentNotes(product: any): { top: string[]; heart: string[]; base: string[] } | null {
-  // Check metadata first
+function parseScentNotes(product: any, formulation: any): { top: string[]; heart: string[]; base: string[] } | null {
+  // Check formulation first (primary source)
+  if (formulation?.scent_profile) {
+    const profile = typeof formulation.scent_profile === 'string' 
+      ? JSON.parse(formulation.scent_profile) 
+      : formulation.scent_profile;
+    if (profile.top?.length || profile.heart?.length || profile.base?.length) {
+      return profile;
+    }
+  }
+
+  // Then check metadata
   if (product.metadata?.scent_notes) {
     return product.metadata.scent_notes;
   }
 
-  // Try to parse from description
+  // Try to parse from description as fallback
   const description = product.long_description || product.short_description || "";
   const notes = { top: [] as string[], heart: [] as string[], base: [] as string[] };
 
-  // Common patterns: "Top Notes: X, Y" or "Top: X, Y"
   const topMatch = description.match(/top\s*notes?:?\s*([^.\n]+)/i);
   const heartMatch = description.match(/(?:heart|middle)\s*notes?:?\s*([^.\n]+)/i);
   const baseMatch = description.match(/base\s*notes?:?\s*([^.\n]+)/i);
@@ -133,19 +145,121 @@ function parseScentNotes(product: any): { top: string[]; heart: string[]; base: 
 }
 
 /**
- * Map Madison product to Sanity tarifeProduct document
+ * Map Madison longevity values to Sanity-friendly display values
  */
-function transformProductToSanity(product: any, shopifyData?: any): any {
+function mapLongevity(longevity: string | null): string | null {
+  if (!longevity) return null;
+  const map: Record<string, string> = {
+    "fleeting": "1-2 hours",
+    "moderate": "3-4 hours",
+    "long_lasting": "4-8 hours",
+    "very_long": "8-12 hours",
+    "extreme": "12+ hours",
+  };
+  return map[longevity] || longevity;
+}
+
+/**
+ * Map Madison sillage to Sanity schema values
+ */
+function mapSillage(sillage: string | null): string | null {
+  if (!sillage) return null;
+  const map: Record<string, string> = {
+    "intimate": "intimate",
+    "moderate": "moderate",
+    "strong": "strong",
+    "enormous": "beast",
+  };
+  return map[sillage] || sillage;
+}
+
+/**
+ * Map concentration type to display text
+ */
+function mapConcentrationType(type: string | null): string | null {
+  if (!type) return null;
+  const map: Record<string, string> = {
+    "parfum": "Parfum (20-30%)",
+    "eau_de_parfum": "Eau de Parfum (15-20%)",
+    "eau_de_toilette": "Eau de Toilette (5-15%)",
+    "eau_de_cologne": "Eau de Cologne (2-5%)",
+    "eau_fraiche": "Eau Fraîche (1-3%)",
+    "perfume_oil": "Perfume Oil",
+    "attar": "Attär",
+    "solid_perfume": "Solid Perfume",
+    "body_mist": "Body Mist",
+  };
+  return map[type] || type;
+}
+
+/**
+ * Map base carrier to display text
+ */
+function mapBaseCarrier(carrier: string | null): string | null {
+  if (!carrier) return null;
+  const map: Record<string, string> = {
+    "alcohol": "Alcohol",
+    "fractionated_coconut": "Fractionated Coconut Oil",
+    "jojoba": "Jojoba Oil",
+    "sweet_almond": "Sweet Almond Oil",
+    "argan": "Argan Oil",
+    "squalane": "Squalane",
+    "sandalwood_oil": "Sandalwood Oil",
+    "dpg": "DPG (Dipropylene Glycol)",
+    "custom": "Custom Blend",
+  };
+  return map[carrier] || carrier;
+}
+
+/**
+ * Map seasons to display text
+ */
+function mapSeasons(seasons: string[] | null): string[] {
+  if (!seasons || seasons.length === 0) return [];
+  const map: Record<string, string> = {
+    "spring": "🌸 Spring",
+    "summer": "☀️ Summer",
+    "fall": "🍂 Fall",
+    "winter": "❄️ Winter",
+    "all_season": "🌍 All Season",
+  };
+  return seasons.map(s => map[s] || s);
+}
+
+/**
+ * Map occasions to display text
+ */
+function mapOccasions(occasions: string[] | null): string[] {
+  if (!occasions || occasions.length === 0) return [];
+  const map: Record<string, string> = {
+    "daily": "Daily Wear",
+    "office": "Office/Work",
+    "evening": "Evening",
+    "special_occasion": "Special Occasion",
+    "romantic": "Romantic",
+    "casual": "Casual",
+    "formal": "Formal",
+  };
+  return occasions.map(o => map[o] || o);
+}
+
+/**
+ * Map Madison product + formulation to Sanity tarifeProduct document
+ */
+function transformProductToSanity(product: any, formulation: any, shopifyData?: any): any {
+  console.log(`[push-product-to-sanity v${VERSION}] Transforming product: ${product.name}`);
+  console.log(`[push-product-to-sanity] Formulation data:`, formulation ? 'found' : 'not found');
+
   // Parent SKU (no size suffix) - for the product family
   const parentSku = (product.metadata?.parent_sku as string) || null;
-  
+
   // Primary SKU (default variant - typically 6ml)
   const primarySku = product.sku || null;
-  
+
   // Extract variant SKUs from metadata (6ml and 12ml)
   const sku6ml = (product.metadata?.sku_6ml as string) || null;
   const sku12ml = (product.metadata?.sku_12ml as string) || null;
-  
+
   const doc: any = {
     _type: "tarifeProduct",
     _id: `madison-product-${product.id}`,
@@ -176,13 +290,79 @@ function transformProductToSanity(product: any, shopifyData?: any): any {
     doc.longDescription = textToPortableText(product.long_description);
   }
 
-  // Scent notes
-  const scentNotes = parseScentNotes(product);
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // SCENT PROFILE DATA (from formulation)
+  // ═══════════════════════════════════════════════════════════════════════════════
+  
+  // Scent notes (from formulation or product metadata)
+  const scentNotes = parseScentNotes(product, formulation);
   if (scentNotes) {
     doc.scentNotes = scentNotes;
+    console.log(`[push-product-to-sanity] Scent notes: top=${scentNotes.top?.length || 0}, heart=${scentNotes.heart?.length || 0}, base=${scentNotes.base?.length || 0}`);
   }
 
-  // Collection mapping
+  // Scent family from formulation
+  if (formulation?.scent_family) {
+    const scentFamilyMap: Record<string, string> = {
+      "woody": "woody",
+      "floral": "floral",
+      "fresh": "fresh",
+      "oriental": "oriental",
+      "aquatic": "aquatic",
+      "spicy": "spicy",
+      "gourmand": "gourmand",
+    };
+    const family = formulation.scent_family.toLowerCase();
+    doc.scentFamily = scentFamilyMap[family] || family;
+    console.log(`[push-product-to-sanity] Scent family: ${doc.scentFamily}`);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // CONCENTRATION & BASE (from formulation)
+  // ═══════════════════════════════════════════════════════════════════════════════
+  
+  if (formulation?.concentration_type) {
+    doc.concentrationType = mapConcentrationType(formulation.concentration_type);
+    console.log(`[push-product-to-sanity] Concentration: ${doc.concentrationType}`);
+  }
+  
+  if (formulation?.base_carrier) {
+    doc.baseCarrier = mapBaseCarrier(formulation.base_carrier);
+    console.log(`[push-product-to-sanity] Base carrier: ${doc.baseCarrier}`);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // PERFORMANCE (from formulation)
+  // ═══════════════════════════════════════════════════════════════════════════════
+  
+  if (formulation?.longevity) {
+    doc.longevity = mapLongevity(formulation.longevity);
+    console.log(`[push-product-to-sanity] Longevity: ${doc.longevity}`);
+  }
+  
+  if (formulation?.sillage) {
+    doc.sillage = mapSillage(formulation.sillage);
+    console.log(`[push-product-to-sanity] Sillage: ${doc.sillage}`);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // BEST FOR (seasons & occasions from formulation)
+  // ═══════════════════════════════════════════════════════════════════════════════
+  
+  if (formulation?.season_suitability?.length > 0) {
+    doc.bestSeasons = mapSeasons(formulation.season_suitability);
+    console.log(`[push-product-to-sanity] Best seasons: ${doc.bestSeasons.join(', ')}`);
+  }
+  
+  if (formulation?.occasion_suitability?.length > 0) {
+    doc.bestOccasions = mapOccasions(formulation.occasion_suitability);
+    console.log(`[push-product-to-sanity] Best occasions: ${doc.bestOccasions.join(', ')}`);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // COLLECTION & CATEGORIES
+  // ═══════════════════════════════════════════════════════════════════════════════
+  
   if (product.collections?.length > 0) {
     const collectionMap: Record<string, string> = {
       "terra": "terra",
@@ -196,8 +376,8 @@ function transformProductToSanity(product: any, shopifyData?: any): any {
     if (collection) doc.collection = collectionMap[collection.toLowerCase()];
   }
 
-  // Product type → scent family mapping
-  if (product.product_type) {
+  // Fallback: product type → scent family mapping (if not set from formulation)
+  if (!doc.scentFamily && product.product_type) {
     const scentFamilyMap: Record<string, string> = {
       "woody": "woody",
       "floral": "floral",
@@ -251,6 +431,8 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  console.log(`[push-product-to-sanity v${VERSION}] Starting...`);
+
   try {
     const { productId, publish = false }: PushProductRequest = await req.json();
 
@@ -270,6 +452,7 @@ serve(async (req) => {
     const supabase = createSupabaseClient(supabaseUrl, supabaseKey);
 
     // Fetch product from Madison
+    console.log(`[push-product-to-sanity] Fetching product: ${productId}`);
     const { data: product, error: productError } = await supabase
       .from("product_hubs")
       .select("*")
@@ -287,6 +470,30 @@ serve(async (req) => {
       );
     }
 
+    console.log(`[push-product-to-sanity] Found product: ${product.name}`);
+
+    // Fetch formulation data (scent profile, concentration, performance)
+    console.log(`[push-product-to-sanity] Fetching formulation for product...`);
+    const { data: formulation, error: formulationError } = await supabase
+      .from("product_formulations")
+      .select("*")
+      .eq("product_id", productId)
+      .order("version", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (formulationError) {
+      console.warn(`[push-product-to-sanity] Formulation fetch warning (non-critical):`, formulationError.message);
+    } else if (formulation) {
+      console.log(`[push-product-to-sanity] Found formulation v${formulation.version}: ${formulation.formula_name || 'unnamed'}`);
+      console.log(`[push-product-to-sanity] - Scent profile:`, formulation.scent_profile ? 'present' : 'empty');
+      console.log(`[push-product-to-sanity] - Concentration:`, formulation.concentration_type || 'not set');
+      console.log(`[push-product-to-sanity] - Longevity:`, formulation.longevity || 'not set');
+      console.log(`[push-product-to-sanity] - Sillage:`, formulation.sillage || 'not set');
+    } else {
+      console.log(`[push-product-to-sanity] No formulation found for product`);
+    }
+
     // Get Sanity config and client
     const sanityConfig = getSanityConfig();
     const sanityClient = createSanityClient({
@@ -297,17 +504,16 @@ serve(async (req) => {
       useCdn: false,
     });
 
-    // Transform and push to Sanity
-    const sanityDoc = transformProductToSanity(product);
-    console.log("Pushing product to Sanity:", sanityDoc._id);
+    // Transform and push to Sanity (now includes formulation data!)
+    const sanityDoc = transformProductToSanity(product, formulation);
+    console.log(`[push-product-to-sanity] Pushing to Sanity:`, sanityDoc._id);
+    console.log(`[push-product-to-sanity] Document keys:`, Object.keys(sanityDoc).join(', '));
 
     const result = await sanityClient.createOrReplace(sanityDoc);
 
     // Optionally publish
     if (publish) {
-      // Sanity doesn't have a direct publish action via API
-      // The document is already created - "publish" would involve removing draft prefix
-      console.log("Document created/updated:", result._id);
+      console.log(`[push-product-to-sanity] Document created/updated:`, result._id);
     }
 
     // Update Madison product with Sanity sync status
@@ -322,12 +528,15 @@ serve(async (req) => {
       })
       .eq("id", productId);
 
+    console.log(`[push-product-to-sanity] ✅ Success! Product "${product.name}" synced to Sanity`);
+
     return new Response(
       JSON.stringify({
         success: true,
         sanityDocumentId: result._id,
         sanityDocument: result,
-        message: `Product "${product.name}" synced to Sanity`,
+        message: `Product "${product.name}" synced to Sanity with formulation data`,
+        formulationIncluded: !!formulation,
       }),
       {
         status: 200,
@@ -335,10 +544,11 @@ serve(async (req) => {
       }
     );
   } catch (error: any) {
-    console.error("Error pushing product to Sanity:", error);
+    console.error(`[push-product-to-sanity] ❌ Error:`, error);
     return new Response(
       JSON.stringify({
         error: error.message || "Failed to push product to Sanity",
+        details: error.stack || null,
       }),
       {
         status: 500,
