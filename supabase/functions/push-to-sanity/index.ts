@@ -33,14 +33,18 @@ interface PushRequest {
   contentId: string;
   contentType: "master" | "derivative" | "output";
   sanityDocumentType: string;
+  organizationId?: string;
+  linkedProductId?: string;
+  linkedProductName?: string;
   publish?: boolean;
   fieldMapping?: Record<string, string>; // Custom field mapping
 }
 
 /**
- * Get Sanity configuration from Supabase secrets
+ * Get Sanity configuration from Supabase secrets or DB
+ * TODO: Fetch from organizations.brand_config if available
  */
-async function getSanityConfig(): Promise<SanityConfig> {
+async function getSanityConfig(organizationId?: string): Promise<SanityConfig> {
   const projectId = Deno.env.get("SANITY_PROJECT_ID") || "8h5l91ut";
   const dataset = Deno.env.get("SANITY_DATASET") || "production";
   const token = Deno.env.get("SANITY_WRITE_TOKEN");
@@ -62,159 +66,115 @@ async function getSanityConfig(): Promise<SanityConfig> {
 function markdownToPortableText(markdown: string): any[] {
   if (!markdown) return [];
 
-  const lines = markdown.split("\n");
+  // Remove potential HTML tags if any (very simple)
+  const cleanMarkdown = markdown.replace(/<[^>]*>/g, "");
+  const lines = cleanMarkdown.split("\n");
   const blocks: any[] = [];
   let currentParagraph: string[] = [];
+
+  const flushParagraph = () => {
+    if (currentParagraph.length > 0) {
+      const text = currentParagraph.join(" ");
+      blocks.push(buildTextBlock(text, "normal"));
+      currentParagraph = [];
+    }
+  };
+
+  const buildTextBlock = (text: string, style: string) => {
+    // Basic bold/italic parsing
+    // This is still simple but handles standard markdown patterns
+    const children = [];
+    let lastIndex = 0;
+
+    // Pattern for bold (** or __) and italic (* or _)
+    // Simplified regex for basic cases
+    const regex = /(\*\*|__)(.*?)\1|(\*|_)(.*?)\3/g;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+      // Add plain text before match
+      if (match.index > lastIndex) {
+        children.push({
+          _type: "span",
+          _key: crypto.randomUUID().substring(0, 10),
+          text: text.substring(lastIndex, match.index),
+          marks: [],
+        });
+      }
+
+      const isBold = match[1] === "**" || match[1] === "__";
+      const isItalic = match[3] === "*" || match[3] === "_";
+      const content = isBold ? match[2] : match[4];
+
+      children.push({
+        _type: "span",
+        _key: crypto.randomUUID().substring(0, 10),
+        text: content,
+        marks: isBold ? ["strong"] : isItalic ? ["em"] : [],
+      });
+
+      lastIndex = regex.lastIndex;
+    }
+
+    // Add remaining plain text
+    if (lastIndex < text.length) {
+      children.push({
+        _type: "span",
+        _key: crypto.randomUUID().substring(0, 10),
+        text: text.substring(lastIndex),
+        marks: [],
+      });
+    }
+
+    return {
+      _type: "block",
+      _key: crypto.randomUUID().substring(0, 10),
+      style: style,
+      children: children.length > 0 ? children : [{
+        _type: "span",
+        _key: crypto.randomUUID().substring(0, 10),
+        text: text,
+        marks: [],
+      }],
+    };
+  };
 
   for (const line of lines) {
     const trimmed = line.trim();
 
-    // Headings
     if (trimmed.startsWith("# ")) {
-      if (currentParagraph.length > 0) {
-        blocks.push({
-          _type: "block",
-          _key: crypto.randomUUID().replace(/-/g, "").substring(0, 10),
-          style: "normal",
-          children: [
-            {
-              _type: "span",
-              _key: crypto.randomUUID().replace(/-/g, "").substring(0, 10),
-              text: currentParagraph.join(" "),
-              marks: [],
-            },
-          ],
-        });
-        currentParagraph = [];
-      }
-      blocks.push({
-        _type: "block",
-        _key: crypto.randomUUID().replace(/-/g, "").substring(0, 10),
-        style: "h1",
-        children: [
-          {
-            _type: "span",
-            _key: crypto.randomUUID().replace(/-/g, "").substring(0, 10),
-            text: trimmed.substring(2),
-            marks: [],
-          },
-        ],
-      });
+      flushParagraph();
+      blocks.push(buildTextBlock(trimmed.substring(2), "h1"));
     } else if (trimmed.startsWith("## ")) {
-      if (currentParagraph.length > 0) {
-        blocks.push({
-          _type: "block",
-          _key: crypto.randomUUID().replace(/-/g, "").substring(0, 10),
-          style: "normal",
-          children: [
-            {
-              _type: "span",
-              _key: crypto.randomUUID().replace(/-/g, "").substring(0, 10),
-              text: currentParagraph.join(" "),
-              marks: [],
-            },
-          ],
-        });
-        currentParagraph = [];
-      }
-      blocks.push({
-        _type: "block",
-        _key: crypto.randomUUID().replace(/-/g, "").substring(0, 10),
-        style: "h2",
-        children: [
-          {
-            _type: "span",
-            _key: crypto.randomUUID().replace(/-/g, "").substring(0, 10),
-            text: trimmed.substring(3),
-            marks: [],
-          },
-        ],
-      });
+      flushParagraph();
+      blocks.push(buildTextBlock(trimmed.substring(3), "h2"));
     } else if (trimmed.startsWith("### ")) {
-      if (currentParagraph.length > 0) {
-        blocks.push({
-          _type: "block",
-          _key: crypto.randomUUID().replace(/-/g, "").substring(0, 10),
-          style: "normal",
-          children: [
-            {
-              _type: "span",
-              _key: crypto.randomUUID().replace(/-/g, "").substring(0, 10),
-              text: currentParagraph.join(" "),
-              marks: [],
-            },
-          ],
-        });
-        currentParagraph = [];
-      }
+      flushParagraph();
+      blocks.push(buildTextBlock(trimmed.substring(4), "h3"));
+    } else if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+      flushParagraph();
       blocks.push({
-        _type: "block",
-        _key: crypto.randomUUID().replace(/-/g, "").substring(0, 10),
-        style: "h3",
-        children: [
-          {
-            _type: "span",
-            _key: crypto.randomUUID().replace(/-/g, "").substring(0, 10),
-            text: trimmed.substring(4),
-            marks: [],
-          },
-        ],
+        ...buildTextBlock(trimmed.substring(2), "normal"),
+        listItem: "bullet",
+        level: 1,
+      });
+    } else if (/^\d+\. /.test(trimmed)) {
+      flushParagraph();
+      blocks.push({
+        ...buildTextBlock(trimmed.replace(/^\d+\. /, ""), "normal"),
+        listItem: "number",
+        level: 1,
       });
     } else if (trimmed === "") {
-      // Empty line - end current paragraph
-      if (currentParagraph.length > 0) {
-        blocks.push({
-          _type: "block",
-          _key: crypto.randomUUID().replace(/-/g, "").substring(0, 10),
-          style: "normal",
-          children: [
-            {
-              _type: "span",
-              _key: crypto.randomUUID().replace(/-/g, "").substring(0, 10),
-              text: currentParagraph.join(" "),
-              marks: [],
-            },
-          ],
-        });
-        currentParagraph = [];
-      }
+      flushParagraph();
     } else {
       currentParagraph.push(trimmed);
     }
   }
 
-  // Add remaining paragraph
-  if (currentParagraph.length > 0) {
-    blocks.push({
-      _type: "block",
-      _key: crypto.randomUUID().replace(/-/g, "").substring(0, 10),
-      style: "normal",
-      children: [
-        {
-          _type: "span",
-          _key: crypto.randomUUID().replace(/-/g, "").substring(0, 10),
-          text: currentParagraph.join(" "),
-          marks: [],
-        },
-      ],
-    });
-  }
+  flushParagraph();
 
-  return blocks.length > 0 ? blocks : [
-    {
-      _type: "block",
-      _key: crypto.randomUUID().replace(/-/g, "").substring(0, 10),
-      style: "normal",
-      children: [
-        {
-          _type: "span",
-          _key: crypto.randomUUID().replace(/-/g, "").substring(0, 10),
-          text: markdown,
-          marks: [],
-        },
-      ],
-    },
-  ];
+  return blocks.length > 0 ? blocks : [buildTextBlock(markdown, "normal")];
 }
 
 /**
@@ -225,7 +185,8 @@ async function transformContentToSanity(
   contentType: string,
   sanityDocumentType: string,
   sanityClient: any,
-  extraMetadata?: any
+  extraMetadata?: any,
+  linkedProduct?: { id: string; name: string; sanityId: string }
 ): Promise<any> {
   const baseDoc: any = {
     _type: sanityDocumentType,
@@ -242,7 +203,7 @@ async function transformContentToSanity(
   };
 
   // Add content based on document type
-  if (sanityDocumentType === "post" || sanityDocumentType === "article" || sanityDocumentType === "blog_article") {
+  if (sanityDocumentType === "post" || sanityDocumentType === "article" || sanityDocumentType === "blog_article" || sanityDocumentType === "journal" || sanityDocumentType === "fieldJournal") {
     // Standard fields for Sanity Inboxes/Workflows
     mappings.status = 'draft';
     mappings.readyForReview = true;
@@ -252,7 +213,9 @@ async function transformContentToSanity(
       ? content.full_content
       : content.generated_content || content.content || "";
 
-    mappings.content = markdownToPortableText(contentField);
+    const portableText = markdownToPortableText(contentField);
+    mappings.content = portableText;
+    mappings.body = portableText; // Some schemas use 'body' instead of 'content'
     mappings.slug = {
       _type: "slug",
       current: content.title
@@ -277,18 +240,34 @@ async function transformContentToSanity(
           filename: content.title ? `${content.title.substring(0, 20)}.jpg` : 'featured-image.jpg'
         });
 
-        mappings.featuredImage = {
+        const imageRef = {
           _type: "image",
           asset: {
             _type: "reference",
             _ref: asset._id,
           },
         };
+
+        mappings.featuredImage = imageRef;
+        mappings.mainImage = imageRef;
+        mappings.image = imageRef;
+
         console.log("[push-to-sanity] Image uploaded successfully:", asset._id);
       } catch (imgError) {
         console.error("[push-to-sanity] Image upload failed, skipping image:", imgError);
         // We continue without the image rather than failing the whole push
       }
+    }
+
+    // Add product reference if linked
+    if (linkedProduct?.sanityId) {
+      const productRef = {
+        _type: "reference",
+        _ref: linkedProduct.sanityId,
+      };
+      mappings.product = productRef;
+      mappings.perfume = productRef; // Some schemas use 'perfume'
+      mappings.relatedProduct = productRef;
     }
   } else if (sanityDocumentType === "emailCampaign") {
     mappings.subject = content.metadata?.subject || content.title;
@@ -364,6 +343,9 @@ serve(async (req) => {
       contentId,
       contentType,
       sanityDocumentType,
+      organizationId,
+      linkedProductId,
+      linkedProductName,
       publish = false,
       fieldMapping,
     }: PushRequest = await req.json();
@@ -380,7 +362,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("[push-to-sanity] Request received:", { contentId, contentType, sanityDocumentType, publish });
+    console.log("[push-to-sanity] Request received:", { contentId, contentType, sanityDocumentType, organizationId, publish });
 
     // Get Supabase config
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -399,7 +381,7 @@ serve(async (req) => {
     console.log("[push-to-sanity] Content fetched:", content?.title || content?.id);
 
     // Get Sanity config
-    const sanityConfig = await getSanityConfig();
+    const sanityConfig = await getSanityConfig(organizationId);
 
     // Initialize Sanity client
     const sanityClient = createClient({
@@ -409,6 +391,28 @@ serve(async (req) => {
       apiVersion: sanityConfig.apiVersion as string,
       useCdn: false,
     });
+
+    // Lookup linked product in Sanity if provided
+    let linkedProductData = null;
+    if (linkedProductId && linkedProductName) {
+      console.log(`[push-to-sanity] Looking up linked product: ${linkedProductName}`);
+      try {
+        const existingProducts = await sanityClient.fetch(
+          `*[_type in ["product", "tarifeProduct"] && (title == $title || sku == $sku || madisonProductId == $id)][0]`,
+          { title: linkedProductName, id: linkedProductId, sku: linkedProductId }
+        );
+        if (existingProducts) {
+          linkedProductData = {
+            id: linkedProductId,
+            name: linkedProductName,
+            sanityId: existingProducts._id
+          };
+          console.log(`[push-to-sanity] Found linked product in Sanity: ${existingProducts._id}`);
+        }
+      } catch (err) {
+        console.warn(`[push-to-sanity] Failed to lookup linked product:`, err);
+      }
+    }
 
     // Standard fields for Sanity Inboxes/Workflows
     const inboxMetadata = {
@@ -425,7 +429,8 @@ serve(async (req) => {
       contentType,
       sanityDocumentType,
       sanityClient,
-      inboxMetadata
+      inboxMetadata,
+      linkedProductData
     );
 
     // Create or update document in Sanity

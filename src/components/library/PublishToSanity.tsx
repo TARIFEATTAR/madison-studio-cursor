@@ -25,6 +25,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { ProductSelector } from "@/components/forge/ProductSelector";
+import type { Product } from "@/hooks/useProducts";
 import { Loader2, CheckCircle2, XCircle, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -67,6 +69,7 @@ export function PublishToSanity({
   const [sanityDocumentType, setSanityDocumentType] = useState<string>("");
   const [publish, setPublish] = useState(false);
   const [isPushing, setIsPushing] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [syncStatus, setSyncStatus] = useState<{
     success: boolean;
     sanityDocumentId?: string;
@@ -94,6 +97,9 @@ export function PublishToSanity({
           contentId: content.id,
           contentType,
           sanityDocumentType,
+          organizationId: content.organization_id,
+          linkedProductId: selectedProduct?.id,
+          linkedProductName: selectedProduct?.name,
           publish,
         },
       });
@@ -177,6 +183,21 @@ export function PublishToSanity({
               <div className="text-xs text-muted-foreground">
                 Type: {content.content_type || content.asset_type || contentType}
               </div>
+            </div>
+
+            {/* Product Linking */}
+            <div className="space-y-2">
+              <Label>Link to Product (Optional)</Label>
+              <ProductSelector
+                value={selectedProduct?.name || ""}
+                onSelect={setSelectedProduct}
+                buttonClassName="w-full justify-between"
+                className="w-full"
+                showLabel={false}
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Linking to a product helps Sanity display this entry on that fragrance's page.
+              </p>
             </div>
 
             {/* Document Type Selection */}
