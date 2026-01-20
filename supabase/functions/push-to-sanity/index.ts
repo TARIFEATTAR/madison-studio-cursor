@@ -214,15 +214,28 @@ async function transformContentToSanity(
       : content.generated_content || content.content || "";
 
     const portableText = markdownToPortableText(contentField);
+
+    // Brute force content mapping to cover all possible schema names
     mappings.content = portableText;
-    mappings.body = portableText; // Some schemas use 'body' instead of 'content'
-    mappings.slug = {
+    mappings.body = portableText;
+    mappings.longDescription = portableText;
+    mappings.description = portableText;
+    mappings.text = portableText;
+    mappings.blocks = portableText;
+    mappings.article_body = portableText;
+
+    const slugValue = content.title
+      ?.toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "") || `post-${content.id.substring(0, 8)}`;
+
+    const slugRef = {
       _type: "slug",
-      current: content.title
-        ?.toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "") || `post-${content.id.substring(0, 8)}`,
+      current: slugValue,
     };
+
+    mappings.slug = slugRef;
+    mappings.path = slugRef; // Some schemas use 'path'
     mappings.publishedAt = content.published_at || content.created_at || new Date().toISOString();
 
     if (content.featured_image_url) {
@@ -248,9 +261,17 @@ async function transformContentToSanity(
           },
         };
 
+        // Brute force image mapping
         mappings.featuredImage = imageRef;
         mappings.mainImage = imageRef;
         mappings.image = imageRef;
+        mappings.media = imageRef;
+        mappings.heroImage = imageRef;
+        mappings.thumbnail = imageRef;
+        mappings.coverImage = imageRef;
+        mappings.asset = imageRef;
+        mappings.landscape_image = imageRef;
+        mappings.article_image = imageRef;
 
         console.log("[push-to-sanity] Image uploaded successfully:", asset._id);
       } catch (imgError) {

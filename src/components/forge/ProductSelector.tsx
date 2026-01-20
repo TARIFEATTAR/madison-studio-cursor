@@ -57,7 +57,11 @@ export function ProductSelector({
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className={`p-0 bg-studio-charcoal border-studio-border z-50 backdrop-blur-sm ${className || "w-[200px]"}`} align="start">
+        <PopoverContent
+          className={`p-0 bg-studio-charcoal border-studio-border z-[9999] pointer-events-auto backdrop-blur-sm ${className || "w-[300px]"}`}
+          align="start"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           <Command className="bg-studio-charcoal">
             <CommandInput
               placeholder="Search products..."
