@@ -40,6 +40,8 @@ const SANITY_DOCUMENT_TYPES = {
   master: [
     { value: "post", label: "Blog Post" },
     { value: "blog_article", label: "Blog Article" },
+    { value: "journal", label: "Journal Entry" },
+    { value: "fieldJournal", label: "Field Journal" },
     { value: "article", label: "Article" },
     { value: "emailCampaign", label: "Email Campaign" },
   ],
@@ -218,8 +220,8 @@ export function PublishToSanity({
             {syncStatus && (
               <div
                 className={`rounded-lg border p-3 ${syncStatus.success
-                    ? "border-green-500 bg-green-50 dark:bg-green-950"
-                    : "border-red-500 bg-red-50 dark:bg-red-950"
+                  ? "border-green-500 bg-green-50 dark:bg-green-950"
+                  : "border-red-500 bg-red-50 dark:bg-red-950"
                   }`}
               >
                 <div className="flex items-center gap-2">
