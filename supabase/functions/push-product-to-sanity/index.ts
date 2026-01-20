@@ -1,9 +1,9 @@
 /**
  * Push Product to Sanity Edge Function
- * VERSION 2 - Now includes full formulation data (scent profile, concentration, performance)
+ * VERSION 3 - Updates EXISTING product documents in Sanity (not tarifeProduct)
  *
- * Pushes Madison Studio product data to Sanity.io as `tarifeProduct` documents
- * Includes rich descriptions, scent notes, variants, and SEO data
+ * Finds existing Sanity product by title and patches it with Madison formulation data
+ * This allows immediate display on the website without code changes
  *
  * Usage:
  * POST /functions/v1/push-product-to-sanity
@@ -17,7 +17,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient as createSanityClient } from "https://esm.sh/@sanity/client@6.8.6";
 import { createClient as createSupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const VERSION = "2.0.0";
+const VERSION = "3.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -510,17 +510,130 @@ serve(async (req) => {
       useCdn: false,
     });
 
-    // Transform and push to Sanity (now includes formulation data!)
-    const sanityDoc = transformProductToSanity(product, formulation);
-    console.log(`[push-product-to-sanity] Pushing to Sanity:`, sanityDoc._id);
-    console.log(`[push-product-to-sanity] Document keys:`, Object.keys(sanityDoc).join(', '));
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // FIND EXISTING PRODUCT IN SANITY BY TITLE
+    // ═══════════════════════════════════════════════════════════════════════════════
+    console.log(`[push-product-to-sanity] Searching for existing product "${product.name}" in Sanity...`);
+    
+    const existingProducts = await sanityClient.fetch(
+      `*[_type == "product" && title == $title][0...2]{_id, title, _type}`,
+      { title: product.name }
+    );
 
-    const result = await sanityClient.createOrReplace(sanityDoc);
+    let sanityDocId: string | null = null;
+    
+    if (existingProducts && existingProducts.length > 0) {
+      // Use the first match (prefer non-draft if available)
+      const nonDraft = existingProducts.find((p: any) => !p._id.startsWith('drafts.'));
+      const target = nonDraft || existingProducts[0];
+      sanityDocId = target._id;
+      console.log(`[push-product-to-sanity] ✅ Found existing product: ${sanityDocId}`);
+    } else {
+      console.log(`[push-product-to-sanity] ⚠️ No existing product found with title "${product.name}"`);
+      // Fall back to creating a new tarifeProduct document
+      const sanityDoc = transformProductToSanity(product, formulation);
+      console.log(`[push-product-to-sanity] Creating new tarifeProduct: ${sanityDoc._id}`);
+      const result = await sanityClient.createOrReplace(sanityDoc);
+      
+      await supabase
+        .from("product_hubs")
+        .update({
+          metadata: {
+            ...product.metadata,
+            sanity_synced_at: new Date().toISOString(),
+            sanity_document_id: result._id,
+          },
+        })
+        .eq("id", productId);
 
-    // Optionally publish
-    if (publish) {
-      console.log(`[push-product-to-sanity] Document created/updated:`, result._id);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          sanityDocumentId: result._id,
+          message: `Product "${product.name}" created as new tarifeProduct (no existing product found)`,
+          formulationIncluded: !!formulation,
+          isNewDocument: true,
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // BUILD PATCH FOR EXISTING PRODUCT
+    // ═══════════════════════════════════════════════════════════════════════════════
+    console.log(`[push-product-to-sanity] Building patch for existing product...`);
+    
+    const patchData: Record<string, any> = {
+      madisonProductId: product.id,
+      madisonSyncedAt: new Date().toISOString(),
+    };
+
+    // Add description if available
+    if (product.short_description) {
+      patchData.shortDescription = product.short_description;
+    }
+
+    // Add scent notes from formulation
+    const scentNotes = parseScentNotes(product, formulation);
+    if (scentNotes && (scentNotes.top?.length || scentNotes.heart?.length || scentNotes.base?.length)) {
+      patchData.scentNotes = scentNotes;
+      console.log(`[push-product-to-sanity] Adding scent notes: top=${scentNotes.top?.length || 0}, heart=${scentNotes.heart?.length || 0}, base=${scentNotes.base?.length || 0}`);
+    }
+
+    // Add scent family
+    if (formulation?.scent_family) {
+      patchData.scentFamily = formulation.scent_family.toLowerCase();
+      console.log(`[push-product-to-sanity] Adding scent family: ${patchData.scentFamily}`);
+    }
+
+    // Add concentration type
+    if (formulation?.concentration_type) {
+      patchData.productFormat = mapConcentrationType(formulation.concentration_type);
+      console.log(`[push-product-to-sanity] Adding concentration: ${patchData.productFormat}`);
+    }
+
+    // Add base carrier
+    if (formulation?.base_carrier) {
+      patchData.baseCarrier = mapBaseCarrier(formulation.base_carrier);
+      console.log(`[push-product-to-sanity] Adding base carrier: ${patchData.baseCarrier}`);
+    }
+
+    // Add performance data
+    if (formulation?.longevity) {
+      patchData.longevity = mapLongevity(formulation.longevity);
+      console.log(`[push-product-to-sanity] Adding longevity: ${patchData.longevity}`);
+    }
+
+    if (formulation?.sillage) {
+      patchData.sillage = mapSillage(formulation.sillage);
+      console.log(`[push-product-to-sanity] Adding sillage: ${patchData.sillage}`);
+    }
+
+    // Add seasons and occasions
+    if (formulation?.season_suitability?.length > 0) {
+      patchData.bestSeasons = mapSeasons(formulation.season_suitability);
+      console.log(`[push-product-to-sanity] Adding seasons: ${patchData.bestSeasons.join(', ')}`);
+    }
+
+    if (formulation?.occasion_suitability?.length > 0) {
+      patchData.bestOccasions = mapOccasions(formulation.occasion_suitability);
+      console.log(`[push-product-to-sanity] Adding occasions: ${patchData.bestOccasions.join(', ')}`);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // APPLY PATCH TO EXISTING DOCUMENT
+    // ═══════════════════════════════════════════════════════════════════════════════
+    console.log(`[push-product-to-sanity] Patching document ${sanityDocId} with:`, Object.keys(patchData).join(', '));
+
+    const result = await sanityClient
+      .patch(sanityDocId)
+      .set(patchData)
+      .commit();
+
+    console.log(`[push-product-to-sanity] ✅ Patch successful!`);
 
     // Update Madison product with Sanity sync status
     await supabase
@@ -529,20 +642,21 @@ serve(async (req) => {
         metadata: {
           ...product.metadata,
           sanity_synced_at: new Date().toISOString(),
-          sanity_document_id: result._id,
+          sanity_document_id: sanityDocId,
         },
       })
       .eq("id", productId);
 
-    console.log(`[push-product-to-sanity] ✅ Success! Product "${product.name}" synced to Sanity`);
+    console.log(`[push-product-to-sanity] ✅ Success! Product "${product.name}" updated in Sanity`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        sanityDocumentId: result._id,
-        sanityDocument: result,
-        message: `Product "${product.name}" synced to Sanity with formulation data`,
+        sanityDocumentId: sanityDocId,
+        message: `Product "${product.name}" updated in Sanity with formulation data`,
         formulationIncluded: !!formulation,
+        fieldsUpdated: Object.keys(patchData),
+        isNewDocument: false,
       }),
       {
         status: 200,
