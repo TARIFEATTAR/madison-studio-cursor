@@ -131,8 +131,11 @@ export function PublishProductToSanity({
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-medium text-foreground">{product.name}</h3>
-                  {product.sku && (
-                    <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>
+                  {/* Show parent SKU (no size suffix) instead of variant SKU */}
+                  {((product.metadata?.parent_sku as string) || product.sku) && (
+                    <p className="text-xs text-muted-foreground">
+                      SKU: {(product.metadata?.parent_sku as string) || product.sku}
+                    </p>
                   )}
                 </div>
                 <Badge variant={product.status === "active" ? "default" : "secondary"}>

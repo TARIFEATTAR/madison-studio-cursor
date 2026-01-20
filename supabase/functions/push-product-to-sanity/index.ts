@@ -136,6 +136,16 @@ function parseScentNotes(product: any): { top: string[]; heart: string[]; base: 
  * Map Madison product to Sanity tarifeProduct document
  */
 function transformProductToSanity(product: any, shopifyData?: any): any {
+  // Parent SKU (no size suffix) - for the product family
+  const parentSku = (product.metadata?.parent_sku as string) || null;
+  
+  // Primary SKU (default variant - typically 6ml)
+  const primarySku = product.sku || null;
+  
+  // Extract variant SKUs from metadata (6ml and 12ml)
+  const sku6ml = (product.metadata?.sku_6ml as string) || null;
+  const sku12ml = (product.metadata?.sku_12ml as string) || null;
+  
   const doc: any = {
     _type: "tarifeProduct",
     _id: `madison-product-${product.id}`,
@@ -144,7 +154,13 @@ function transformProductToSanity(product: any, shopifyData?: any): any {
       _type: "slug",
       current: product.slug || product.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
     },
-    sku: product.sku || null,
+    // Parent SKU (no size - e.g., "PETAL-RITUAL")
+    parentSku: parentSku,
+    // Primary variant SKU (default size - e.g., "PETAL-RITUAL-6ML")
+    sku: primarySku,
+    // Individual variant SKUs
+    sku6ml: sku6ml,
+    sku12ml: sku12ml,
     shortDescription: product.short_description || product.tagline || null,
     price: product.price || null,
     compareAtPrice: product.compare_at_price || null,
