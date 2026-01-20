@@ -43,12 +43,13 @@ interface PushProductRequest {
 function getSanityConfig(): SanityConfig {
   const projectId = Deno.env.get("SANITY_PROJECT_ID");
   const dataset = Deno.env.get("SANITY_DATASET") || "production";
-  const token = Deno.env.get("SANITY_API_TOKEN");
+  // Support both SANITY_WRITE_TOKEN and SANITY_API_TOKEN for backward compatibility
+  const token = Deno.env.get("SANITY_WRITE_TOKEN") || Deno.env.get("SANITY_API_TOKEN");
   const apiVersion = Deno.env.get("SANITY_API_VERSION") || "2024-01-01";
 
   if (!projectId || !token) {
     throw new Error(
-      "Missing Sanity configuration. Set SANITY_PROJECT_ID and SANITY_API_TOKEN in Supabase secrets."
+      "Missing Sanity configuration. Set SANITY_PROJECT_ID and SANITY_WRITE_TOKEN in Supabase secrets."
     );
   }
 
