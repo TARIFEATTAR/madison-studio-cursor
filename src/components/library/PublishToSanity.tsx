@@ -39,6 +39,7 @@ interface PublishToSanityProps {
 const SANITY_DOCUMENT_TYPES = {
   master: [
     { value: "post", label: "Blog Post" },
+    { value: "blog_article", label: "Blog Article" },
     { value: "article", label: "Article" },
     { value: "emailCampaign", label: "Email Campaign" },
   ],
@@ -216,11 +217,10 @@ export function PublishToSanity({
             {/* Sync Status */}
             {syncStatus && (
               <div
-                className={`rounded-lg border p-3 ${
-                  syncStatus.success
+                className={`rounded-lg border p-3 ${syncStatus.success
                     ? "border-green-500 bg-green-50 dark:bg-green-950"
                     : "border-red-500 bg-red-50 dark:bg-red-950"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   {syncStatus.success ? (

@@ -41,14 +41,14 @@ interface PushRequest {
  * Get Sanity configuration from Supabase secrets
  */
 async function getSanityConfig(): Promise<SanityConfig> {
-  const projectId = Deno.env.get("SANITY_PROJECT_ID");
+  const projectId = Deno.env.get("SANITY_PROJECT_ID") || "8h5l91ut";
   const dataset = Deno.env.get("SANITY_DATASET") || "production";
-  const token = Deno.env.get("SANITY_API_TOKEN");
+  const token = Deno.env.get("SANITY_WRITE_TOKEN");
   const apiVersion = Deno.env.get("SANITY_API_VERSION") || "2024-01-01";
 
   if (!projectId || !token) {
     throw new Error(
-      "Missing Sanity configuration. Set SANITY_PROJECT_ID and SANITY_API_TOKEN in Supabase secrets."
+      "Missing Sanity configuration. Set SANITY_PROJECT_ID and SANITY_WRITE_TOKEN in Supabase secrets."
     );
   }
 
@@ -224,7 +224,8 @@ async function transformContentToSanity(
   content: any,
   contentType: string,
   sanityDocumentType: string,
-  fieldMapping?: Record<string, string>
+  sanityClient: any,
+  extraMetadata?: any
 ): Promise<any> {
   const baseDoc: any = {
     _type: sanityDocumentType,
@@ -241,7 +242,12 @@ async function transformContentToSanity(
   };
 
   // Add content based on document type
-  if (sanityDocumentType === "post" || sanityDocumentType === "article") {
+  if (sanityDocumentType === "post" || sanityDocumentType === "article" || sanityDocumentType === "blog_article") {
+    // Standard fields for Sanity Inboxes/Workflows
+    mappings.status = 'draft';
+    mappings.readyForReview = true;
+    mappings.lastSyncedFromMadison = new Date().toISOString();
+
     const contentField = contentType === "master"
       ? content.full_content
       : content.generated_content || content.content || "";
@@ -257,13 +263,32 @@ async function transformContentToSanity(
     mappings.publishedAt = content.published_at || content.created_at || new Date().toISOString();
 
     if (content.featured_image_url) {
-      mappings.featuredImage = {
-        _type: "image",
-        asset: {
-          _type: "reference",
-          _ref: content.featured_image_url, // Note: This assumes image is already in Sanity
-        },
-      };
+      try {
+        console.log("[push-to-sanity] Uploading image to Sanity:", content.featured_image_url);
+
+        // Fetch the image from the URL
+        const imageRes = await fetch(content.featured_image_url);
+        if (!imageRes.ok) throw new Error(`Failed to fetch image: ${imageRes.statusText}`);
+
+        const imageBlob = await imageRes.blob();
+
+        // Upload to Sanity
+        const asset = await sanityClient.assets.upload('image', imageBlob, {
+          filename: content.title ? `${content.title.substring(0, 20)}.jpg` : 'featured-image.jpg'
+        });
+
+        mappings.featuredImage = {
+          _type: "image",
+          asset: {
+            _type: "reference",
+            _ref: asset._id,
+          },
+        };
+        console.log("[push-to-sanity] Image uploaded successfully:", asset._id);
+      } catch (imgError) {
+        console.error("[push-to-sanity] Image upload failed, skipping image:", imgError);
+        // We continue without the image rather than failing the whole push
+      }
     }
   } else if (sanityDocumentType === "emailCampaign") {
     mappings.subject = content.metadata?.subject || content.title;
@@ -276,13 +301,10 @@ async function transformContentToSanity(
     mappings.scheduledAt = content.scheduled_date || null;
   }
 
-  // Apply custom field mapping if provided
-  if (fieldMapping) {
-    Object.entries(fieldMapping).forEach(([sanityField, madisonField]) => {
-      const value = madisonField.split(".").reduce((obj: any, key: string) => obj?.[key], content);
-      if (value !== undefined) {
-        mappings[sanityField] = value;
-      }
+  // Apply extra metadata if provided
+  if (extraMetadata) {
+    Object.entries(extraMetadata).forEach(([key, value]) => {
+      mappings[key] = value;
     });
   }
 
@@ -358,53 +380,82 @@ serve(async (req) => {
       );
     }
 
+    console.log("[push-to-sanity] Request received:", { contentId, contentType, sanityDocumentType, publish });
+
     // Get Supabase config
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    console.log("[push-to-sanity] Supabase URL exists:", !!supabaseUrl);
+    console.log("[push-to-sanity] Service key exists:", !!supabaseKey);
 
     if (!supabaseUrl || !supabaseKey) {
       throw new Error("Missing Supabase configuration");
     }
 
     // Fetch content from Supabase
+    console.log("[push-to-sanity] Fetching content from table...");
     const content = await fetchContent(supabaseUrl, supabaseKey, contentId, contentType);
+    console.log("[push-to-sanity] Content fetched:", content?.title || content?.id);
 
     // Get Sanity config
     const sanityConfig = await getSanityConfig();
 
     // Initialize Sanity client
     const sanityClient = createClient({
-      projectId: sanityConfig.projectId,
-      dataset: sanityConfig.dataset,
-      token: sanityConfig.token,
-      apiVersion: sanityConfig.apiVersion,
-      useCdn: false, // Use API for writes
+      projectId: sanityConfig.projectId as string,
+      dataset: sanityConfig.dataset as string,
+      token: sanityConfig.token as string,
+      apiVersion: sanityConfig.apiVersion as string,
+      useCdn: false,
     });
+
+    // Standard fields for Sanity Inboxes/Workflows
+    const inboxMetadata = {
+      status: 'inbox',
+      state: 'inbox',
+      workflow: 'inbox',
+      readyForReview: true,
+      lastSyncedFromMadison: new Date().toISOString(),
+    };
 
     // Transform content to Sanity format
     const sanityDoc = await transformContentToSanity(
       content,
       contentType,
       sanityDocumentType,
-      fieldMapping
+      sanityClient,
+      inboxMetadata
     );
 
     // Create or update document in Sanity
-    const result = await sanityClient.createOrReplace(sanityDoc);
+    // We prefix with drafts. to ensure it shows up in the Sanity Studio inbox
+    const draftId = `drafts.madison-${content.id}`;
+    const finalDoc = { ...sanityDoc, _id: draftId };
 
-    // Publish if requested
+    console.log("[push-to-sanity] Attempting createOrReplace for:", draftId);
+    const result = await sanityClient.createOrReplace(finalDoc);
+
+    // Verify it exists right after creation
+    const verify = await sanityClient.getDocument(result._id);
+    console.log("[push-to-sanity] Verification - Document exists in Sanity:", !!verify);
+
+    // Publish if requested (this removes the drafts. prefix for a live version)
     if (publish) {
-      await sanityClient
-        .patch(result._id)
-        .set({ publishedAt: new Date().toISOString() })
-        .commit();
+      console.log("[push-to-sanity] Publishing document...");
+      await sanityClient.createOrReplace({
+        ...result,
+        _id: `madison-${content.id}`
+      });
+      // Optionally delete the draft after publishing
+      await sanityClient.delete(draftId);
     }
 
     return new Response(
       JSON.stringify({
         success: true,
         sanityDocumentId: result._id,
-        sanityDocument: result,
+        verified: !!verify,
         published: publish,
       }),
       {
