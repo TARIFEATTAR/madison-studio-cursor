@@ -6,7 +6,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { OrganizationProvider } from "@/contexts/OrganizationContext";
 import { DashboardWidgetProvider } from "@/contexts/DashboardWidgetContext";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect, useState, Suspense, lazy } from "react";
+import { useEffect, useState, Suspense, lazy, useRef } from "react";
 import React from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
