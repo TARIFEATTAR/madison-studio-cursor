@@ -1415,8 +1415,35 @@ export default function Multiply() {
                           </Button>
                         </div>
                       </div>
+                    ) : MULTIPLY_FEATURE_FLAGS.CATEGORY_ACCORDION ? (
+                      /* Phase 2: Category-based accordion grouping */
+                      <div className="space-y-4">
+                        <DerivativeCategoryAccordion
+                          allTypes={[...TOP_DERIVATIVE_TYPES, ...ADDITIONAL_DERIVATIVE_TYPES]}
+                          selectedTypes={selectedTypes}
+                          onToggleType={toggleTypeSelection}
+                        />
+
+                        {/* Quick actions below accordion - hidden when unified button is enabled */}
+                        {!MULTIPLY_FEATURE_FLAGS.UNIFIED_GENERATE_BUTTON && (
+                          <div className="flex items-center justify-between pt-4">
+                            <Button variant="outline" size="sm" onClick={selectAll}>
+                              Select All
+                            </Button>
+                            <Button
+                              onClick={generateDerivatives}
+                              disabled={isGenerating || selectedTypes.size === 0}
+                              size="lg"
+                              className="gap-2"
+                            >
+                              {isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                              {isGenerating ? "Generating..." : `Generate ${selectedTypes.size} Derivative${selectedTypes.size !== 1 ? "s" : ""}`}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     ) : (
-                      /* NEW COMPONENT - Testing */
+                      /* Original DerivativeTypeSelector component */
                       <DerivativeTypeSelector
                         topTypes={TOP_DERIVATIVE_TYPES}
                         additionalTypes={ADDITIONAL_DERIVATIVE_TYPES}

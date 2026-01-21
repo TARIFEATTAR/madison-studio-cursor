@@ -35,7 +35,7 @@ export const MULTIPLY_FEATURE_FLAGS = {
     VISUAL_PROMPTS_TOGGLE: true,
 
     // Phase 2 - Category Grouping (A/B test)
-    CATEGORY_ACCORDION: false,
+    CATEGORY_ACCORDION: true,
 
     // Phase 3 - AI Guidance
     MADISON_SUGGESTIONS: false,
