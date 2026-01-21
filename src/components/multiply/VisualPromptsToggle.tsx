@@ -129,7 +129,7 @@ export function VisualPromptsToggle({
             {/* Visual Type Cards - Shown when enabled */}
             <Collapsible open={isEnabled}>
                 <CollapsibleContent>
-                    <div className="grid grid-cols-3 gap-3 pt-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-2">
                         {VISUAL_TYPES.map((type) => {
                             const Icon = type.icon;
                             const isSelected = selectedTypes.has(type.id);
@@ -147,6 +147,7 @@ export function VisualPromptsToggle({
                                         <div className="flex items-start justify-between">
                                             <Checkbox
                                                 checked={isSelected}
+                                                onCheckedChange={() => onToggleType(type.id)}
                                                 className="mt-1"
                                                 onClick={(e) => e.stopPropagation()}
                                             />

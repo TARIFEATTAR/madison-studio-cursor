@@ -138,6 +138,7 @@ export function DerivativeCategoryAccordion({
                                                 <div className="flex items-start justify-between">
                                                     <Checkbox
                                                         checked={isSelected}
+                                                        onCheckedChange={() => onToggleType(type.id)}
                                                         className="mt-1"
                                                         onClick={(e) => e.stopPropagation()}
                                                     />
