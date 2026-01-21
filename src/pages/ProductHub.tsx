@@ -89,6 +89,7 @@ import { VariantsSection } from "@/components/products/VariantsSection";
 import { useSuppliers, COMPANY_TYPES } from "@/hooks/useSuppliers";
 import { Building2, Factory, Truck } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { ProductInternalSidebar } from "@/components/products/ProductInternalSidebar";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PRODUCT INFO TAB
@@ -618,14 +619,14 @@ interface TabConfig {
 }
 
 const TAB_CONFIG: TabConfig[] = [
-  { id: "info", label: "Info", icon: FileText, section: "info" },
+  { id: "core", label: "Core Details", icon: FileText, section: "info" },
   { id: "tasks", label: "Tasks", icon: ListTodo, section: "info" },
   { id: "media", label: "Media", icon: ImageIcon, section: "media" },
   { id: "variants", label: "Variants", icon: Layers, section: "info" },
   { id: "pricing", label: "Pricing", icon: DollarSign, section: "analytics" },
-  { id: "formulation", label: "Formulation", icon: Beaker, section: "formulation" },
+  { id: "formulation", label: "Scent Profile", icon: Beaker, section: "formulation" },
   { id: "ingredients", label: "Ingredients", icon: Beaker, section: "ingredients" },
-  { id: "sds", label: "SDS", icon: FileText, section: "compliance" },
+  { id: "sds", label: "Compliance", icon: FileText, section: "compliance" },
   { id: "packaging", label: "Packaging", icon: Package, section: "packaging" },
   { id: "content", label: "Content", icon: Sparkles, section: "marketing" },
 ];
@@ -933,198 +934,206 @@ export default function ProductHub() {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4 md:py-6">
-        <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
-          {/* Main Content */}
-          <div className="flex-1 min-w-0">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              {/* Your sections highlight */}
-              <div className="mb-3 md:mb-4">
-                <YourSectionsHighlight />
-              </div>
+      {/* Content - New Sidebar Layout */}
+      <div className="flex flex-1">
+        {/* Left Sidebar - Product Internal Navigation */}
+        <div className="hidden lg:flex flex-shrink-0 border-r border-border">
+          <ProductInternalSidebar
+            productId={productId!}
+            productName={displayProduct.name}
+            activeSection={activeTab}
+            onSectionChange={setActiveTab}
+            accessLevels={Object.fromEntries(
+              TAB_CONFIG.map(t => [t.section, getAccessLevel(t.section)])
+            )}
+          />
+        </div>
 
-              <TabsList className="bg-muted/50 mb-4 md:mb-6 flex-wrap h-auto gap-1 p-1 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
-                {visibleTabs.map((tab) => {
-                  const accessLevel = getAccessLevel(tab.section);
-                  const isFullAccess = accessLevel === "full";
-                  const Icon = tab.icon;
+        {/* Mobile Tab Navigation (fallback for small screens) */}
+        <div className="lg:hidden w-full px-4 py-2 border-b border-border overflow-x-auto">
+          <div className="flex gap-1">
+            {visibleTabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <Button
+                  key={tab.id}
+                  variant={activeTab === tab.id ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setActiveTab(tab.id)}
+                  className="flex-shrink-0 gap-2"
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
 
-                  return (
-                    <Tooltip key={tab.id}>
-                      <TooltipTrigger asChild>
-                        <TabsTrigger
-                          value={tab.id}
-                          className={cn(
-                            "gap-2 relative",
-                            isFullAccess && "ring-1 ring-primary/20 bg-primary/5"
-                          )}
-                        >
-                          <Icon className="w-4 h-4" />
-                          {tab.label}
-                          {!isFullAccess && (
-                            <Eye className="w-3 h-3 text-muted-foreground ml-1" />
-                          )}
-                        </TabsTrigger>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {isFullAccess ? (
-                          <p>Full access - you can edit this section</p>
-                        ) : (
-                          <p>View only - you can see but not edit</p>
-                        )}
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                })}
-              </TabsList>
+        {/* Main Content Area */}
+        <div className="flex-1 min-w-0 p-4 md:p-6">
+          <div className="max-w-4xl">
+            {/* Your sections highlight */}
+            <div className="mb-4">
+              <YourSectionsHighlight />
+            </div>
 
-              {/* Lazy render tabs - only mount content when tab is active */}
-              {/* Role-aware: editing only allowed if user has full access */}
-              <TabsContent value="info">
+            {/* Section Content - Render based on activeTab */}
+            {activeTab === "core" && (
+              <>
                 <ProductInfoTab
                   product={displayProduct}
                   isEditing={isEditing && canEdit("info")}
                   onChange={handleChange}
                 />
                 {!canEdit("info") && isEditing && (
-                  <ViewOnlyBanner section="Info" />
+                  <ViewOnlyBanner section="Core Details" />
                 )}
-              </TabsContent>
+              </>
+            )}
 
-              <TabsContent value="tasks" forceMount>
-                {activeTab === "tasks" && organizationId && (
-                  <TaskList
-                    productId={productId!}
-                    organizationId={organizationId}
-                  />
-                )}
-              </TabsContent>
 
-              <TabsContent value="media" forceMount>
-                {activeTab === "media" && (
-                  <>
-                    <MediaSection productId={productId!} />
-                    {!canEdit("media") && <ViewOnlyBanner section="Media" />}
-                  </>
-                )}
-              </TabsContent>
+            {activeTab === "tasks" && organizationId && (
+              <TaskList
+                productId={productId!}
+                organizationId={organizationId}
+              />
+            )}
 
-              <TabsContent value="variants" forceMount>
-                {activeTab === "variants" && (
-                  <VariantsSection
-                    product={displayProduct}
-                    isEditing={isEditing && canEdit("info")}
-                    onChange={(field, value) => setEditedProduct(prev => ({ ...prev, [field]: value }))}
-                  />
-                )}
-              </TabsContent>
+            {activeTab === "media" && (
+              <>
+                <MediaSection productId={productId!} />
+                {!canEdit("media") && <ViewOnlyBanner section="Media" />}
+              </>
+            )}
 
-              <TabsContent value="pricing" forceMount>
-                {activeTab === "pricing" && (
-                  <VariantsSection
-                    product={displayProduct}
-                    isEditing={isEditing && canEdit("analytics")}
-                    onChange={(field, value) => setEditedProduct(prev => ({ ...prev, [field]: value }))}
-                  />
-                )}
-              </TabsContent>
+            {activeTab === "variants" && (
+              <VariantsSection
+                product={displayProduct}
+                isEditing={isEditing && canEdit("info")}
+                onChange={(field, value) => setEditedProduct(prev => ({ ...prev, [field]: value }))}
+              />
+            )}
 
-              <TabsContent value="formulation" forceMount>
-                {activeTab === "formulation" && (
-                  <>
-                    <FormulationSection
-                      productId={productId!}
-                      productCategory={displayProduct.category || displayProduct.product_type}
-                      isEditing={isEditing && canEdit("formulation")}
-                    />
-                    {!canEdit("formulation") && isEditing && (
-                      <ViewOnlyBanner section="Formulation" />
-                    )}
-                  </>
-                )}
-              </TabsContent>
+            {activeTab === "pricing" && (
+              <VariantsSection
+                product={displayProduct}
+                isEditing={isEditing && canEdit("analytics")}
+                onChange={(field, value) => setEditedProduct(prev => ({ ...prev, [field]: value }))}
+              />
+            )}
 
-              <TabsContent value="ingredients" forceMount>
-                {activeTab === "ingredients" && (
-                  <>
-                    <IngredientsSection
-                      productId={productId!}
-                      productName={displayProduct.name}
-                      isEditing={isEditing && canEdit("ingredients")}
-                    />
-                    {!canEdit("ingredients") && isEditing && (
-                      <ViewOnlyBanner section="Ingredients" />
-                    )}
-                  </>
+            {activeTab === "formulation" && (
+              <>
+                <FormulationSection
+                  productId={productId!}
+                  productCategory={displayProduct.category || displayProduct.product_type}
+                  isEditing={isEditing && canEdit("formulation")}
+                />
+                {!canEdit("formulation") && isEditing && (
+                  <ViewOnlyBanner section="Scent Profile" />
                 )}
-              </TabsContent>
+              </>
+            )}
 
-              <TabsContent value="sds" forceMount>
-                {activeTab === "sds" && (
-                  <>
-                    <SDSSection
-                      productId={productId!}
-                      productName={displayProduct.name}
-                      productType={displayProduct.product_type}
-                      brandName={displayProduct.brand}
-                      sku={displayProduct.sku}
-                      isEditing={isEditing && canEdit("compliance")}
-                      supplierId={displayProduct.supplier_id}
-                      isSelfManufactured={displayProduct.is_self_manufactured !== false}
-                    />
-                    {!canEdit("compliance") && isEditing && (
-                      <ViewOnlyBanner section="SDS" />
-                    )}
-                  </>
+            {activeTab === "ingredients" && (
+              <>
+                <IngredientsSection
+                  productId={productId!}
+                  productName={displayProduct.name}
+                  isEditing={isEditing && canEdit("ingredients")}
+                />
+                {!canEdit("ingredients") && isEditing && (
+                  <ViewOnlyBanner section="Ingredients" />
                 )}
-              </TabsContent>
+              </>
+            )}
 
-              <TabsContent value="packaging" forceMount>
-                {activeTab === "packaging" && (
-                  <>
-                    <PackagingSection
-                      productId={productId!}
-                      productName={displayProduct.name}
-                      isEditing={isEditing && canEdit("packaging")}
-                    />
-                    {!canEdit("packaging") && isEditing && (
-                      <ViewOnlyBanner section="Packaging" />
-                    )}
-                  </>
+            {activeTab === "sds" && (
+              <>
+                <SDSSection
+                  productId={productId!}
+                  productName={displayProduct.name}
+                  productType={displayProduct.product_type}
+                  brandName={displayProduct.brand}
+                  sku={displayProduct.sku}
+                  isEditing={isEditing && canEdit("compliance")}
+                  supplierId={displayProduct.supplier_id}
+                  isSelfManufactured={displayProduct.is_self_manufactured !== false}
+                />
+                {!canEdit("compliance") && isEditing && (
+                  <ViewOnlyBanner section="Compliance" />
                 )}
-              </TabsContent>
+              </>
+            )}
 
-              <TabsContent value="content" forceMount>
-                {activeTab === "content" && (
-                  <PlaceholderTab
-                    title="Content Hub"
-                    description="Coming in Week 10 - View all content created for this product"
-                  />
+            {activeTab === "packaging" && (
+              <>
+                <PackagingSection
+                  productId={productId!}
+                  productName={displayProduct.name}
+                  isEditing={isEditing && canEdit("packaging")}
+                />
+                {!canEdit("packaging") && isEditing && (
+                  <ViewOnlyBanner section="Packaging" />
                 )}
-              </TabsContent>
-            </Tabs>
+              </>
+            )}
+
+            {activeTab === "content" && (
+              <PlaceholderTab
+                title="Content Hub"
+                description="Coming in Week 10 - View all content created for this product"
+              />
+            )}
           </div>
+        </div>
 
-          {/* Sidebar */}
-          <div className="w-72 flex-shrink-0 hidden lg:block">
-            <div className="sticky top-24 space-y-4">
-              {/* Status Card */}
-              <Card className="bg-card border-border">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Status</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
+        {/* Sidebar */}
+        <div className="w-72 flex-shrink-0 hidden lg:block">
+          <div className="sticky top-24 space-y-4">
+            {/* Status Card */}
+            <Card className="bg-card border-border">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Status</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {isEditing ? (
+                  <Select
+                    value={displayProduct.status}
+                    onValueChange={(val) => handleChange("status", val)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PRODUCT_STATUS_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  getStatusBadge(displayProduct.status)
+                )}
+
+                <Separator />
+
+                <div>
+                  <Label className="text-xs text-muted-foreground">
+                    Development Stage
+                  </Label>
                   {isEditing ? (
                     <Select
-                      value={displayProduct.status}
-                      onValueChange={(val) => handleChange("status", val)}
+                      value={displayProduct.development_stage}
+                      onValueChange={(val) => handleChange("development_stage", val)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="mt-1">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {PRODUCT_STATUS_OPTIONS.map((option) => (
+                        {DEVELOPMENT_STAGE_OPTIONS.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
                           </SelectItem>
@@ -1132,76 +1141,49 @@ export default function ProductHub() {
                       </SelectContent>
                     </Select>
                   ) : (
-                    getStatusBadge(displayProduct.status)
-                  )}
-
-                  <Separator />
-
-                  <div>
-                    <Label className="text-xs text-muted-foreground">
-                      Development Stage
-                    </Label>
-                    {isEditing ? (
-                      <Select
-                        value={displayProduct.development_stage}
-                        onValueChange={(val) => handleChange("development_stage", val)}
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DEVELOPMENT_STAGE_OPTIONS.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <p className="text-sm font-medium mt-1">
-                        {stageInfo?.label || displayProduct.development_stage}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Visibility</Label>
-                    <p className="text-sm font-medium capitalize mt-1">
-                      {displayProduct.visibility}
+                    <p className="text-sm font-medium mt-1">
+                      {stageInfo?.label || displayProduct.development_stage}
                     </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Quick Stats */}
-              <Card className="bg-card border-border">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Quick Stats</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Created</span>
-                    <span>
-                      {new Date(displayProduct.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Updated</span>
-                    <span>
-                      {new Date(displayProduct.updated_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                  {displayProduct.launch_date && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Launch Date</span>
-                      <span>
-                        {new Date(displayProduct.launch_date).toLocaleDateString()}
-                      </span>
-                    </div>
                   )}
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+
+                <div>
+                  <Label className="text-xs text-muted-foreground">Visibility</Label>
+                  <p className="text-sm font-medium capitalize mt-1">
+                    {displayProduct.visibility}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Stats */}
+            <Card className="bg-card border-border">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Quick Stats</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Created</span>
+                  <span>
+                    {new Date(displayProduct.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Updated</span>
+                  <span>
+                    {new Date(displayProduct.updated_at).toLocaleDateString()}
+                  </span>
+                </div>
+                {displayProduct.launch_date && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Launch Date</span>
+                    <span>
+                      {new Date(displayProduct.launch_date).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

@@ -71,14 +71,14 @@ export function AssetGrid({
   isLoading,
   emptyMessage = "No assets yet",
 }: AssetGridProps) {
-  const gridClass = viewMode.type === 'list' 
+  const gridClass = viewMode.type === 'list'
     ? 'flex flex-col gap-2'
     : cn(
-        'grid gap-4',
-        viewMode.size === 'small' && 'grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8',
-        viewMode.size === 'medium' && 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
-        viewMode.size === 'large' && 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
-      );
+      'grid gap-4',
+      viewMode.size === 'small' && 'grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8',
+      viewMode.size === 'medium' && 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
+      viewMode.size === 'large' && 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
+    );
 
   if (isLoading) {
     return (
@@ -111,7 +111,7 @@ export function AssetGrid({
 
   return (
     <div className={gridClass}>
-      <AnimatePresence mode="popLayout">
+      <AnimatePresence>
         {assets.map((asset, index) => (
           viewMode.type === 'list' ? (
             <AssetListItem

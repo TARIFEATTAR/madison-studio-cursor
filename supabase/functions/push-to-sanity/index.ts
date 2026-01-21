@@ -38,6 +38,7 @@ interface PushRequest {
   linkedProductName?: string;
   publish?: boolean;
   fieldMapping?: Record<string, string>; // Custom field mapping
+  category?: string; // Journal category (field-notes, behind-the-blend, etc.)
 }
 
 /**
@@ -188,12 +189,26 @@ async function transformContentToSanity(
   extraMetadata?: any,
   linkedProduct?: { id: string; name: string; sanityId: string }
 ): Promise<any> {
+  // -------------------------------------------------------------------------
+  // SCHEMA ALIGNMENT FIX:
+  // If the user selects "Field Journal", we map it to "journalEntry"
+  // based on the console warnings seen in Sanity Studio.
+  // -------------------------------------------------------------------------
+  let finalDocumentType = sanityDocumentType;
+  if (sanityDocumentType === "fieldJournal" || sanityDocumentType === "journal") {
+    finalDocumentType = "journalEntry";
+    console.log("[push-to-sanity] Aliasing to 'journalEntry' to match schema.");
+  }
+
   const baseDoc: any = {
-    _type: sanityDocumentType,
+    _type: finalDocumentType,
     _id: `madison-${content.id}`,
   };
 
-  // Default field mappings
+  if (extraMetadata) {
+    Object.assign(baseDoc, extraMetadata);
+  }
+
   const mappings: Record<string, any> = {
     title: content.title || "Untitled",
     madisonId: content.id,
@@ -203,11 +218,16 @@ async function transformContentToSanity(
   };
 
   // Add content based on document type
-  if (sanityDocumentType === "post" || sanityDocumentType === "article" || sanityDocumentType === "blog_article" || sanityDocumentType === "journal" || sanityDocumentType === "fieldJournal") {
-    // Standard fields for Sanity Inboxes/Workflows
-    mappings.status = 'draft';
+  if (finalDocumentType === "post" || finalDocumentType === "article" || finalDocumentType === "blog_article" || finalDocumentType === "journalEntry") {
+    // RESTORED INBOX METADATA & GENERATION SOURCE:
+    mappings.status = 'inbox';
+    mappings.state = 'inbox';
+    mappings.workflow = 'inbox';
     mappings.readyForReview = true;
     mappings.lastSyncedFromMadison = new Date().toISOString();
+
+    // keys found in your console warnings:
+    mappings.generationSource = "madison-studio";
 
     const contentField = contentType === "master"
       ? content.full_content
@@ -215,14 +235,26 @@ async function transformContentToSanity(
 
     const portableText = markdownToPortableText(contentField);
 
-    // Brute force content mapping to cover all possible schema names
-    mappings.content = portableText;
-    mappings.body = portableText;
-    mappings.longDescription = portableText;
-    mappings.description = portableText;
-    mappings.text = portableText;
-    mappings.blocks = portableText;
-    mappings.article_body = portableText;
+    if (finalDocumentType === "journalEntry") {
+      // Use category from request, default to field-notes
+      mappings.category = extraMetadata.category || "field-notes";
+      // Content body - restored from ULTRA-SAFE MODE
+      mappings.body = portableText;
+      mappings.description = contentField;
+    } else {
+      // blog_article and others support travelLog
+      mappings.travelLog = portableText;
+      mappings.body = portableText;
+      mappings.content = portableText;
+    }
+
+    // Removed "Brute Force" fields to prevent "Unknown Field" errors in strict schemas:
+    // mappings.content = portableText;
+    // mappings.longDescription = portableText;
+    // mappings.description = portableText;
+    // mappings.text = portableText;
+    // mappings.blocks = portableText;
+    // mappings.article_body = portableText;
 
     const slugValue = content.title
       ?.toLowerCase()
@@ -237,6 +269,48 @@ async function transformContentToSanity(
     mappings.slug = slugRef;
     mappings.path = slugRef; // Some schemas use 'path'
     mappings.publishedAt = content.published_at || content.created_at || new Date().toISOString();
+    mappings.date = mappings.publishedAt;
+
+    // Automated Location Detection (Tarife Attar Specific)
+    const locationCoords: Record<string, { lat: number; lng: number; name: string }> = {
+      "havana": { lat: 23.1136, lng: -82.3666, name: "Havana, Cuba" },
+      "riyadh": { lat: 24.7136, lng: 46.6753, name: "Riyadh, Saudi Arabia" },
+      "kashmir": { lat: 34.0837, lng: 74.7973, name: "Kashmir, India" },
+      "aden": { lat: 12.7855, lng: 45.0186, name: "Aden, Yemen" },
+      "makkah": { lat: 21.3891, lng: 39.8579, name: "Makkah, Saudi Arabia" },
+      "medina": { lat: 24.5247, lng: 39.5692, name: "Medina, Saudi Arabia" },
+      "taif": { lat: 21.2854, lng: 40.4248, name: "Taif, Saudi Arabia" },
+      "oman": { lat: 23.5859, lng: 58.4059, name: "Muscat, Oman" },
+    };
+
+    const searchKey = (content.title || "").toLowerCase();
+    const detectedLocation = Object.keys(locationCoords).find(loc => searchKey.includes(loc));
+
+    if (detectedLocation) {
+      const coords = locationCoords[detectedLocation];
+      console.log(`[push-to-sanity] Detected location "${detectedLocation}", adding coordinates:`, coords);
+
+      // Exact field names from Sanity schema
+      mappings.locationName = coords.name;
+      mappings.latitude = coords.lat.toString();
+      mappings.longitude = coords.lng.toString();
+
+      // Format: "23.1136° N, 82.3666° W"
+      const latDir = coords.lat >= 0 ? "N" : "S";
+      const lngDir = coords.lng >= 0 ? "E" : "W";
+      const formattedCoords = `${Math.abs(coords.lat).toFixed(4)}° ${latDir}, ${Math.abs(coords.lng).toFixed(4)}° ${lngDir}`;
+      mappings.displayFormat = formattedCoords;
+
+      // Map based on screenshot labels (Inspiration Point)
+      mappings.inspirationPoint = formattedCoords; // String format for frontend
+      mappings.gpsCoordinates = formattedCoords;   // String format for frontend
+
+      // Removed "Brute Force" coordinates to prevent "Unknown Field" errors
+      // mappings.coordinates = { _type: "geopoint", lat: coords.lat, lng: coords.lng };
+      // mappings.location = { _type: "geopoint", lat: coords.lat, lng: coords.lng };
+      // mappings.lat = coords.lat;
+      // mappings.lng = coords.lng;
+    }
 
     if (content.featured_image_url) {
       try {
@@ -261,9 +335,17 @@ async function transformContentToSanity(
           },
         };
 
-        // Brute force image mapping
+        // Targeted Image Mapping (Reduced Noise)
         mappings.featuredImage = imageRef;
         mappings.mainImage = imageRef;
+        // mappings.image = imageRef;
+        // mappings.media = imageRef;
+        // mappings.heroImage = imageRef;
+        // mappings.thumbnail = imageRef;
+        // mappings.coverImage = imageRef;
+        // mappings.asset = imageRef;
+        // mappings.landscape_image = imageRef;
+        // mappings.article_image = imageRef;
         mappings.image = imageRef;
         mappings.media = imageRef;
         mappings.heroImage = imageRef;
@@ -369,6 +451,7 @@ serve(async (req) => {
       linkedProductName,
       publish = false,
       fieldMapping,
+      category,
     }: PushRequest = await req.json();
 
     if (!contentId || !contentType || !sanityDocumentType) {
@@ -413,15 +496,41 @@ serve(async (req) => {
       useCdn: false,
     });
 
+    // Discovery: Sniff out the Sanity schema for fieldJournal/post
+    console.log(`[push-to-sanity] Sniffing out existing documents for schema discovery...`);
+    try {
+      const sample = await sanityClient.fetch(
+        `*[_type in ["fieldJournal", "post", "blog_article", "journal"]][0]`
+      );
+      if (sample) {
+        console.log(`[push-to-sanity] SCHEMA DISCOVERY - Found document type "${sample._type}":`, JSON.stringify(Object.keys(sample)));
+        // Log coordinates if they exist
+        if (sample.coordinates) console.log(`[push-to-sanity] SCHEMA DISCOVERY - Coordinates structure:`, JSON.stringify(sample.coordinates));
+        if (sample.location) console.log(`[push-to-sanity] SCHEMA DISCOVERY - Location structure:`, JSON.stringify(sample.location));
+      } else {
+        console.log(`[push-to-sanity] SCHEMA DISCOVERY - No existing documents found to sniff.`);
+      }
+    } catch (sniffErr) {
+      console.warn(`[push-to-sanity] Schema sniffing failed:`, sniffErr);
+    }
+
     // Lookup linked product in Sanity if provided
     let linkedProductData = null;
     if (linkedProductId && linkedProductName) {
-      console.log(`[push-to-sanity] Looking up linked product: ${linkedProductName}`);
+      console.log(`[push-to-sanity] Looking up linked product: ${linkedProductName} (ID: ${linkedProductId})`);
       try {
+        // More robust lookup: check title (case-insensitive), madisonProductId, and SKU
         const existingProducts = await sanityClient.fetch(
-          `*[_type in ["product", "tarifeProduct"] && (title == $title || sku == $sku || madisonProductId == $id)][0]`,
+          `*[_type in ["product", "tarifeProduct"] && (
+            lower(title) == lower($title) ||
+            sku == $sku ||
+            madisonProductId == $id ||
+            _id == $id ||
+            _id == "drafts." + $id
+          )][0]`,
           { title: linkedProductName, id: linkedProductId, sku: linkedProductId }
         );
+
         if (existingProducts) {
           linkedProductData = {
             id: linkedProductId,
@@ -429,6 +538,8 @@ serve(async (req) => {
             sanityId: existingProducts._id
           };
           console.log(`[push-to-sanity] Found linked product in Sanity: ${existingProducts._id}`);
+        } else {
+          console.log(`[push-to-sanity] ⚠️ Could not find product "${linkedProductName}" in Sanity. Connection will be skipped.`);
         }
       } catch (err) {
         console.warn(`[push-to-sanity] Failed to lookup linked product:`, err);
@@ -442,6 +553,7 @@ serve(async (req) => {
       workflow: 'inbox',
       readyForReview: true,
       lastSyncedFromMadison: new Date().toISOString(),
+      category: category || undefined,
     };
 
     // Transform content to Sanity format
@@ -460,11 +572,49 @@ serve(async (req) => {
     const finalDoc = { ...sanityDoc, _id: draftId };
 
     console.log("[push-to-sanity] Attempting createOrReplace for:", draftId);
-    const result = await sanityClient.createOrReplace(finalDoc);
+    console.log("[push-to-sanity] Payload Preview:", JSON.stringify(finalDoc, null, 2));
+
+    // TYPE SAFETY CHECK:
+    // Sanity does not allow changing _type of an existing document.
+    // We must check if it exists with a different type and delete it first.
+    try {
+      // Check draft
+      const existingDraft = await sanityClient.getDocument(draftId);
+      if (existingDraft && existingDraft._type !== finalDoc._type) {
+        console.warn(`[push-to-sanity] Type mismatch on DRAFT! Existing: ${existingDraft._type}, New: ${finalDoc._type}. Deleting to allow type change.`);
+        await sanityClient.delete(draftId);
+      }
+
+      // Check published (just in case, as they should match)
+      const publishedId = `madison-${content.id}`;
+      const existingPublished = await sanityClient.getDocument(publishedId);
+      if (existingPublished && existingPublished._type !== finalDoc._type) {
+        console.warn(`[push-to-sanity] Type mismatch on PUBLISHED! Existing: ${existingPublished._type}, New: ${finalDoc._type}. Deleting to allow type change.`);
+        await sanityClient.delete(publishedId);
+      }
+
+    } catch (checkErr) {
+      console.warn("[push-to-sanity] Error checking existing document types:", checkErr);
+    }
+
+    let result;
+    try {
+      result = await sanityClient.createOrReplace(finalDoc);
+      console.log("[push-to-sanity] Sanity Response:", result);
+    } catch (err) {
+      console.error("[push-to-sanity] FATAL Sanity Error:", err);
+      throw err;
+    }
 
     // Verify it exists right after creation
     const verify = await sanityClient.getDocument(result._id);
     console.log("[push-to-sanity] Verification - Document exists in Sanity:", !!verify);
+
+    // -------------------------------------------------------------------------
+    // STRATEGY UPDATE:
+    // We strictly CREATE the journal entry. We do NOT patch the product.
+    // Madison = Storytelling. Sanity = Product Data.
+    // -------------------------------------------------------------------------
 
     // Publish if requested (this removes the drafts. prefix for a live version)
     if (publish) {

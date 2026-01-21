@@ -121,8 +121,11 @@ function ProductCard({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Package className="w-6 h-6 text-muted-foreground" />
+                  /* Empty State: Brand-palette placeholder */
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#F5F1E8] to-[#E8E2D4]">
+                    <span className="font-serif text-xs font-medium text-[#8B7355]/60 text-center leading-tight line-clamp-2 px-1">
+                      {product.name.split(' ').slice(0, 2).join(' ')}
+                    </span>
                   </div>
                 )}
               </div>
@@ -211,7 +214,7 @@ function ProductCard({
         className="bg-card border-border hover:border-primary/30 hover:shadow-level-2 transition-all cursor-pointer overflow-hidden"
         onClick={onView}
       >
-        {/* Image */}
+        {/* Image Area */}
         <div className="aspect-square bg-muted relative overflow-hidden">
           {product.hero_image_url ? (
             <img
@@ -220,8 +223,13 @@ function ProductCard({
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Package className="w-12 h-12 text-muted-foreground/50" />
+            /* Empty State: Brand-palette placeholder with elegant typography */
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#F5F1E8] via-[#EDE8DC] to-[#E8E2D4]">
+              <div className="text-center px-4">
+                <p className="font-serif text-lg font-medium text-[#8B7355]/70 leading-tight line-clamp-3">
+                  {product.name}
+                </p>
+              </div>
             </div>
           )}
 
@@ -230,18 +238,22 @@ function ProductCard({
             <ProductStatusBadge status={product.status} />
           </div>
 
-          {/* Actions overlay */}
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          {/* Quick Actions - Hidden by default, visible on hover */}
+          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <DropdownMenu>
               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button variant="secondary" size="sm" className="h-7 w-7 p-0">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="h-7 w-7 p-0 bg-white/90 hover:bg-white shadow-sm backdrop-blur-sm"
+                >
                   <MoreHorizontal className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="w-40">
                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(); }}>
                   <Pencil className="w-4 h-4 mr-2" />
-                  Edit
+                  Edit Product
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDuplicate(); }}>
                   <Copy className="w-4 h-4 mr-2" />
@@ -254,7 +266,7 @@ function ProductCard({
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                  className="text-destructive"
+                  className="text-destructive focus:text-destructive"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Delete
@@ -264,23 +276,31 @@ function ProductCard({
           </div>
         </div>
 
-        <CardContent className="p-4">
-          <h3 className="font-medium truncate">{product.name}</h3>
-          <div className="flex items-center justify-between mt-2">
-            <span className="text-sm text-muted-foreground">
-              {product.category || 'Uncategorized'}
-            </span>
-            {(product.metadata?.parent_sku) && (
-              <span className="text-xs text-muted-foreground block mt-1">
-                Parent: {String(product.metadata.parent_sku)}
-              </span>
-            )}
-            {product.price ? (
+        {/* Text Content Area - Increased Data Density */}
+        <CardContent className="p-3 space-y-1">
+          {/* Product Name */}
+          <h3 className="font-medium text-sm leading-tight truncate" title={product.name}>
+            {product.name}
+          </h3>
 
-              <span className="font-medium text-sm">
+          {/* Category Row */}
+          <p className="text-xs text-muted-foreground truncate">
+            {product.category || 'Uncategorized'}
+            {product.product_type && ` · ${product.product_type}`}
+          </p>
+
+          {/* Metadata Row: SKU · Price */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground/80 pt-0.5">
+            <span className="truncate">
+              {product.sku ? `SKU: ${product.sku}` : 'No SKU'}
+            </span>
+            {product.price ? (
+              <span className="font-medium text-foreground/80 flex-shrink-0 ml-2">
                 ${product.price.toFixed(2)}
               </span>
-            ) : null}
+            ) : (
+              <span className="text-muted-foreground/60 flex-shrink-0 ml-2">—</span>
+            )}
           </div>
         </CardContent>
       </Card>

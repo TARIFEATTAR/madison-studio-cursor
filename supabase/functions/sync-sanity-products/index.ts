@@ -10,6 +10,17 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Helper: Convert Portable Text to plain string
+function portableTextToPlain(blocks: any[]): string {
+  if (!blocks || !Array.isArray(blocks)) return "";
+  return blocks
+    .map(block => {
+      if (block._type !== "block" || !block.children) return "";
+      return block.children.map((child: any) => child.text).join("");
+    })
+    .join("\n\n");
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -19,7 +30,7 @@ serve(async (req) => {
     const requestBody = await req.json();
     const { organization_id, sanity_project_id, sanity_dataset } = requestBody;
 
-    console.log("[sync-sanity-products] VERSION 9 - Request body:", JSON.stringify(requestBody));
+    console.log("[sync-sanity-products] VERSION 10 - Request body:", JSON.stringify(requestBody));
 
     if (!organization_id) {
       return new Response(
@@ -34,9 +45,77 @@ serve(async (req) => {
     console.log(`[sync-sanity-products] Input project: ${sanity_project_id}, Input dataset: ${sanity_dataset}`);
     console.log(`[sync-sanity-products] Using project: ${projectId}, dataset: ${dataset}`);
 
-    // Query with all relevant fields: title, SKUs, image, Shopify IDs, collection, slug
-    // GROQ: *[_type == "product" && title != null][0...100]{_id, title, sku6ml, sku12ml, "slugCurrent": slug.current, collectionType, mainImage, shopifyProductId, legacyName, inStock}
-    const groqQuery = '*[_type == "product" && title != null][0...100]{_id, title, sku6ml, sku12ml, "parentSku": parentSku, "slugCurrent": slug.current, collectionType, mainImage, shopifyProductId, legacyName, inStock}';
+    // Expanded GROQ query to fetch comprehensive product data
+    const groqQuery = `*[_type == "product" && title != null][0...100]{
+      _id,
+      title,
+      legacyName,
+      internalName,
+      "slugCurrent": slug.current,
+      collectionType,
+
+      // SKUs
+      sku,
+      sku6ml,
+      sku12ml,
+      "parentSku": parentSku,
+
+      // Media
+      mainImage,
+      "galleryImages": gallery[]{asset},
+      shopifyPreviewImageUrl,
+
+      // Commerce
+      price,
+      compareAtPrice,
+      inStock,
+      scarcityNote,
+      shopifyProductId,
+      shopifyHandle,
+      shopifyVariantId,
+      shopifyVariant6mlId,
+      shopifyVariant12mlId,
+
+      // General Info
+      volume,
+      scentProfile,
+      shortDescription,
+      longDescription,
+      inspiredBy,
+      productFormat,
+      perfumer,
+      year,
+
+      // Fragrance Architecture
+      notes,
+      scentFamily,
+      longevity,
+      sillage,
+      bestSeasons,
+      bestOccasions,
+      baseCarrier,
+      keyBenefits,
+      features,
+
+      // Atlas Collection Data
+      "atlasAtmosphere": atlasData.atmosphere,
+      "atlasGps": atlasData.gpsCoordinates,
+      "atlasStory": atlasData.travelLog,
+      "atlasBadges": atlasData.badges,
+
+      // Relic Collection Data
+      "relicOrigin": relicData.originRegion,
+      "relicGps": relicData.gpsCoordinates,
+      "relicStory": relicData.museumDescription,
+      "relicBadges": relicData.badges,
+      "relicDistillationYear": relicData.distillationYear,
+      "relicViscosity": relicData.viscosity,
+      "relicIsHeritage": relicData.isHeritageDistillation,
+      "relicHeritageType": relicData.heritageType,
+
+      // SEO
+      seo
+    }`;
 
     const fullUrl = `https://${projectId}.api.sanity.io/v2024-01-01/data/query/${dataset}?query=${encodeURIComponent(groqQuery)}`;
 
@@ -46,7 +125,6 @@ serve(async (req) => {
     const responseText = await sanityResponse.text();
 
     console.log(`[sync-sanity-products] Response status: ${sanityResponse.status}`);
-    console.log(`[sync-sanity-products] Response body (first 500 chars): ${responseText.substring(0, 500)}`);
 
     if (!sanityResponse.ok) {
       throw new Error(`Sanity API error: ${sanityResponse.status} - ${responseText}`);
@@ -72,14 +150,10 @@ serve(async (req) => {
           total: 0,
           inserted: 0,
           updated: 0,
-          version: 7,
+          version: 10,
           debug: {
             sanityUrl: fullUrl,
-            sanityStatus: sanityResponse.status,
-            totalFromSanity: allProducts.length,
-            afterDraftFilter: products.length,
-            rawResponsePreview: responseText.substring(0, 500),
-            sampleRaw: allProducts.slice(0, 3)
+            sanityStatus: sanityResponse.status
           }
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -90,9 +164,6 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-    console.log(`[sync-sanity-products] Supabase URL exists: ${!!supabaseUrl}`);
-    console.log(`[sync-sanity-products] Service key exists: ${!!serviceRoleKey}`);
-
     if (!supabaseUrl || !serviceRoleKey) {
       throw new Error("Missing Supabase configuration");
     }
@@ -101,12 +172,10 @@ serve(async (req) => {
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // FETCH SHOPIFY PRICING & INVENTORY DATA
-    // Look up brand_products to get pricing/inventory by SKU
     // ═══════════════════════════════════════════════════════════════════════════════
 
     console.log(`[sync-sanity-products] Fetching Shopify pricing/inventory data...`);
 
-    // Build a SKU → pricing/inventory lookup map from brand_products (Shopify-synced)
     const { data: shopifyProducts, error: shopifyError } = await supabase
       .from("brand_products")
       .select("id, name, sku, price, compare_at_price, inventory_quantity, variants, featured_image_url")
@@ -115,10 +184,7 @@ serve(async (req) => {
     const skuPricingMap: Record<string, { price: number; compare_at_price: number | null; inventory_quantity: number; image_url?: string }> = {};
 
     if (shopifyProducts && !shopifyError) {
-      console.log(`[sync-sanity-products] Found ${shopifyProducts.length} Shopify products to match`);
-
       for (const sp of shopifyProducts) {
-        // Add main product SKU
         if (sp.sku) {
           skuPricingMap[sp.sku.toUpperCase()] = {
             price: sp.price || 0,
@@ -127,8 +193,6 @@ serve(async (req) => {
             image_url: sp.featured_image_url || undefined
           };
         }
-
-        // Parse variants and add each variant SKU
         if (sp.variants) {
           try {
             const variants = typeof sp.variants === 'string' ? JSON.parse(sp.variants) : sp.variants;
@@ -144,15 +208,10 @@ serve(async (req) => {
               }
             }
           } catch (e) {
-            console.log(`[sync-sanity-products] Could not parse variants for ${sp.name}`);
+            // Ignore parsing errors
           }
         }
       }
-
-      console.log(`[sync-sanity-products] Built SKU pricing map with ${Object.keys(skuPricingMap).length} SKUs`);
-      console.log(`[sync-sanity-products] Sample SKUs:`, Object.keys(skuPricingMap).slice(0, 5));
-    } else {
-      console.log(`[sync-sanity-products] No Shopify products found or error:`, shopifyError?.message);
     }
 
     let insertedCount = 0;
@@ -162,21 +221,14 @@ serve(async (req) => {
 
     for (const product of products) {
       try {
-        if (!product.title) {
-          console.log(`[sync-sanity-products] Skipping product without title: ${product._id}`);
-          continue;
-        }
+        if (!product.title) continue;
 
         console.log(`[sync-sanity-products] Processing: ${product.title}`);
-        console.log(`[sync-sanity-products] SKU 6ml: ${product.sku6ml}, SKU 12ml: ${product.sku12ml}, Parent SKU: ${product.parentSku}`);
 
-        console.log(`[sync-sanity-products] Main image ref: ${JSON.stringify(product.mainImage)}`);
-
-        // Generate slug from Sanity or title
+        // Generate slug
         const slug = product.slugCurrent || product.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-        // Build variants array from SKUs (6ml and 12ml)
-        // Look up pricing/inventory from Shopify data
+        // Build Variants (same logic as before)
         const variants: any[] = [];
         let primarySku = null;
         let primaryPrice = null;
@@ -184,11 +236,6 @@ serve(async (req) => {
         if (product.sku6ml) {
           const sku6mlUpper = product.sku6ml.toUpperCase();
           const shopifyData6ml = skuPricingMap[sku6mlUpper];
-
-          if (shopifyData6ml) {
-            console.log(`[sync-sanity-products] Found Shopify pricing for ${product.sku6ml}: $${shopifyData6ml.price}, qty: ${shopifyData6ml.inventory_quantity}`);
-          }
-
           variants.push({
             id: `sanity-${product._id}-6ml`,
             title: "6ml",
@@ -197,13 +244,9 @@ serve(async (req) => {
             compare_at_price: shopifyData6ml?.compare_at_price || null,
             inventory_quantity: shopifyData6ml?.inventory_quantity || 0,
             inventory_policy: "deny",
-            option1: "6ml", // Size option value
+            option1: "6ml",
             position: 1,
-            metadata: {
-              source: "sanity",
-              sanity_id: product._id,
-              shopify_synced: !!shopifyData6ml
-            }
+            metadata: { source: "sanity", sanity_id: product._id, shopify_synced: !!shopifyData6ml }
           });
           primarySku = product.sku6ml;
           primaryPrice = shopifyData6ml?.price || null;
@@ -212,11 +255,6 @@ serve(async (req) => {
         if (product.sku12ml) {
           const sku12mlUpper = product.sku12ml.toUpperCase();
           const shopifyData12ml = skuPricingMap[sku12mlUpper];
-
-          if (shopifyData12ml) {
-            console.log(`[sync-sanity-products] Found Shopify pricing for ${product.sku12ml}: $${shopifyData12ml.price}, qty: ${shopifyData12ml.inventory_quantity}`);
-          }
-
           variants.push({
             id: `sanity-${product._id}-12ml`,
             title: "12ml",
@@ -225,57 +263,64 @@ serve(async (req) => {
             compare_at_price: shopifyData12ml?.compare_at_price || null,
             inventory_quantity: shopifyData12ml?.inventory_quantity || 0,
             inventory_policy: "deny",
-            option1: "12ml", // Size option value
+            option1: "12ml",
             position: 2,
-            metadata: {
-              source: "sanity",
-              sanity_id: product._id,
-              shopify_synced: !!shopifyData12ml
-            }
+            metadata: { source: "sanity", sanity_id: product._id, shopify_synced: !!shopifyData12ml }
           });
-          // If no 6ml, use 12ml as primary
           if (!primarySku) {
             primarySku = product.sku12ml;
             primaryPrice = shopifyData12ml?.price || null;
           }
         }
 
-        // Create product options for Size
         const options: any[] = [];
         if (variants.length > 0) {
           const sizeValues = variants.map(v => v.option1).filter(Boolean);
-          if (sizeValues.length > 0) {
-            options.push({
-              name: "Size",
-              values: sizeValues,
-              position: 1
-            });
-          }
+          if (sizeValues.length > 0) options.push({ name: "Size", values: sizeValues, position: 1 });
         }
 
-        console.log(`[sync-sanity-products] Created ${variants.length} variants for ${product.title}`);
-        console.log(`[sync-sanity-products] Variants:`, variants.map(v => ({ title: v.title, sku: v.sku })));
-
-        // Build Sanity CDN image URL from asset reference
-        // Format: image-{id}-{dimensions}-{format} → https://cdn.sanity.io/images/{project}/{dataset}/{id}-{dimensions}.{format}
+        // Image URL
         let heroImageUrl = null;
         if (product.mainImage?.asset?._ref) {
           const ref = product.mainImage.asset._ref;
-          console.log(`[sync-sanity-products] Parsing image ref: ${ref}`);
-          // Parse: image-380aadb0fb77f34d43713b9c9e6f7711d8c5cfaa-2048x2048-jpg
           const match = ref.match(/^image-([a-f0-9]+)-(\d+x\d+)-(\w+)$/);
           if (match) {
             const [, id, dimensions, format] = match;
             heroImageUrl = `https://cdn.sanity.io/images/${projectId}/${dataset}/${id}-${dimensions}.${format}`;
-            console.log(`[sync-sanity-products] Built image URL: ${heroImageUrl}`);
-          } else {
-            console.log(`[sync-sanity-products] Failed to parse image ref: ${ref}`);
           }
-        } else {
-          console.log(`[sync-sanity-products] No mainImage found for ${product.title}`);
         }
 
-        // Map collection type to product line
+        // --- STORYTELLING EXTRACTION ---
+        // Prioritize Atlas story, then Relic story, then raw description
+        let rawStory = "";
+        if (product.atlasStory) rawStory = portableTextToPlain(product.atlasStory);
+        else if (product.relicStory) rawStory = portableTextToPlain(product.relicStory);
+        else if (product.description) rawStory = product.description;
+
+        // If no story but we have scent profile/notes, construct a basic one for context
+        if (!rawStory && product.notes) {
+          const top = product.notes.top?.join(", ");
+          const heart = product.notes.heart?.join(", ");
+          const base = product.notes.base?.join(", ");
+          rawStory = `Fragrance Profile for ${product.title}.\nTop Notes: ${top || 'N/A'}\nHeart Notes: ${heart || 'N/A'}\nBase Notes: ${base || 'N/A'}`;
+        }
+
+        // --- END STORYTELLING EXTRACTION ---
+
+        // Use Sanity price if available, otherwise fallback to Shopify pricing
+        const finalPrice = product.price || primaryPrice;
+        const finalCompareAt = product.compareAtPrice || null;
+
+        // Build tags from badges
+        const tags: string[] = [];
+        if (product.atlasBadges) tags.push(...product.atlasBadges);
+        if (product.relicBadges) tags.push(...product.relicBadges);
+        if (product.features) tags.push(...product.features);
+
+        // Short description / tagline
+        const shortDesc = product.shortDescription || product.scentProfile || null;
+
+        // Product line from collection type
         const productLine = product.collectionType ?
           product.collectionType.charAt(0).toUpperCase() + product.collectionType.slice(1) : null;
 
@@ -283,34 +328,81 @@ serve(async (req) => {
           organization_id: organization_id,
           name: product.title,
           slug: slug,
-          sku: primarySku, // Primary SKU (prefer 6ml, fallback to 12ml)
-          price: primaryPrice, // Price from Shopify (if found)
+          sku: product.parentSku || product.sku || primarySku,
+          price: finalPrice,
+          compare_at_price: finalCompareAt,
           status: product.inStock === false ? "archived" : "active",
           development_stage: "launched",
           category: "Fragrance",
-          product_type: "Attär",
+          product_type: product.productFormat || "Attär",
           product_line: productLine,
           hero_image_external_url: heroImageUrl,
-          variants: variants, // Store variants as JSONB array with pricing/inventory
-          options: options, // Store options as JSONB array
+          short_description: shortDesc,
+          tagline: product.scentProfile || null,
+          long_description: rawStory || (product.longDescription ? portableTextToPlain(product.longDescription) : null),
+          tags: tags.length > 0 ? tags : null,
+          key_benefits: product.keyBenefits || null,
+          variants: variants,
+          options: options,
           external_ids: {
             sanity_id: product._id,
-            shopify_product_id: product.shopifyProductId || null
+            shopify_product_id: product.shopifyProductId || null,
+            shopify_handle: product.shopifyHandle || null,
+            shopify_variant_id: product.shopifyVariantId || null,
+            shopify_variant_6ml_id: product.shopifyVariant6mlId || null,
+            shopify_variant_12ml_id: product.shopifyVariant12mlId || null,
           },
           metadata: {
             source: "sanity",
             imported_at: new Date().toISOString(),
             legacy_name: product.legacyName || null,
+            internal_name: product.internalName || null,
             shopify_pricing_synced: Object.keys(skuPricingMap).length > 0,
-            // Keep SKUs in metadata for backward compatibility
+
+            // SKUs
             sku_6ml: product.sku6ml || null,
             sku_12ml: product.sku12ml || null,
-            parent_sku: product.parentSku || null
-          }
+            parent_sku: product.parentSku || null,
 
+            // Fragrance Architecture
+            scent_notes: product.notes || null,
+            scent_profile_summary: product.scentProfile || null,
+            scent_family: product.scentFamily || null,
+            longevity: product.longevity || null,
+            sillage: product.sillage || null,
+            best_seasons: product.bestSeasons || null,
+            best_occasions: product.bestOccasions || null,
+            base_carrier: product.baseCarrier || null,
+
+            // Product Details
+            volume: product.volume || null,
+            inspired_by: product.inspiredBy || null,
+            perfumer: product.perfumer || null,
+            year: product.year || null,
+            scarcity_note: product.scarcityNote || null,
+
+            // Collection-Specific Data
+            collection_type: product.collectionType || null,
+
+            // Atlas Data
+            atlas_atmosphere: product.atlasAtmosphere || null,
+            atlas_gps: product.atlasGps || null,
+            atlas_badges: product.atlasBadges || null,
+
+            // Relic Data
+            relic_origin_region: product.relicOrigin || null,
+            relic_gps: product.relicGps || null,
+            relic_distillation_year: product.relicDistillationYear || null,
+            relic_viscosity: product.relicViscosity || null,
+            relic_is_heritage: product.relicIsHeritage || null,
+            relic_heritage_type: product.relicHeritageType || null,
+            relic_badges: product.relicBadges || null,
+
+            // SEO
+            seo: product.seo || null,
+          }
         };
 
-        // Check if exists by name or slug
         const { data: existing, error: selectError } = await supabase
           .from("product_hubs")
           .select("id")
@@ -326,24 +418,24 @@ serve(async (req) => {
         }
 
         if (existing) {
-          console.log(`[sync-sanity-products] Updating existing product: ${product.title} (ID: ${existing.id})`);
-          console.log(`[sync-sanity-products] Update data:`, {
-            sku: productData.sku,
-            variants_count: variants.length,
-            hero_image_external_url: productData.hero_image_external_url,
-            product_line: productData.product_line
-          });
-
+          console.log(`[sync-sanity-products] Updating existing product: ${product.title}`);
           const { error: updateError } = await supabase
             .from("product_hubs")
             .update({
               sku: productData.sku,
               slug: productData.slug,
-              price: productData.price, // Update price from Shopify
+              price: productData.price,
+              compare_at_price: productData.compare_at_price,
+              product_type: productData.product_type,
               product_line: productData.product_line,
               hero_image_external_url: productData.hero_image_external_url,
-              variants: productData.variants, // Update variants array with pricing/inventory
-              options: productData.options, // Update options array
+              short_description: productData.short_description,
+              tagline: productData.tagline,
+              long_description: productData.long_description,
+              tags: productData.tags,
+              key_benefits: productData.key_benefits,
+              variants: productData.variants,
+              options: productData.options,
               external_ids: productData.external_ids,
               metadata: productData.metadata
             })
@@ -354,7 +446,6 @@ serve(async (req) => {
             errors.push(`Update ${product.title}: ${updateError.message}`);
             errorCount++;
           } else {
-            console.log(`[sync-sanity-products] Successfully updated ${product.title}`);
             updatedCount++;
           }
         } else {
@@ -385,15 +476,7 @@ serve(async (req) => {
         inserted: insertedCount,
         updated: updatedCount,
         errors: errorCount,
-        total: insertedCount + updatedCount,
-        errorDetails: errors.slice(0, 5),
-        debug: {
-          sanityUrl: fullUrl,
-          sanityStatus: sanityResponse.status,
-          totalFromSanity: allProducts.length,
-          afterDraftFilter: products.length,
-          sampleProducts: products.slice(0, 3).map((p: any) => ({ id: p._id, title: p.title }))
-        }
+        errorDetails: errors.slice(0, 5)
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
@@ -401,11 +484,7 @@ serve(async (req) => {
   } catch (error: any) {
     console.error("[sync-sanity-products] Fatal error:", error);
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message || "Unknown error",
-        stack: error.stack
-      }),
+      JSON.stringify({ success: false, error: error.message || "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

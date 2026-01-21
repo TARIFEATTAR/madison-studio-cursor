@@ -67,6 +67,7 @@ export function PublishToSanity({
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [sanityDocumentType, setSanityDocumentType] = useState<string>("");
+  const [category, setCategory] = useState<string>(""); // New Category State
   const [publish, setPublish] = useState(false);
   const [isPushing, setIsPushing] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -97,6 +98,8 @@ export function PublishToSanity({
           contentId: content.id,
           contentType,
           sanityDocumentType,
+          // Pass category if selected
+          category: category || undefined,
           organizationId: content.organization_id,
           linkedProductId: selectedProduct?.id,
           linkedProductName: selectedProduct?.name,
@@ -153,6 +156,9 @@ export function PublishToSanity({
     return studioBaseUrl;
   };
 
+  // Check if we need to show category selector
+  const showCategorySelector = sanityDocumentType === "journal" || sanityDocumentType === "fieldJournal";
+
   return (
     <>
       <Button
@@ -169,7 +175,7 @@ export function PublishToSanity({
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Publish to Sanity</DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-sm text-muted-foreground mt-2">
               Push this content to your Sanity.io project. Choose the document type and publishing option.
             </DialogDescription>
           </DialogHeader>
@@ -220,6 +226,28 @@ export function PublishToSanity({
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Category Selection (Conditional) */}
+            {showCategorySelector && (
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Select
+                  value={category}
+                  onValueChange={setCategory}
+                  disabled={isPushing}
+                >
+                  <SelectTrigger id="category">
+                    <SelectValue placeholder="Select journal category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="field-notes">Field Notes</SelectItem>
+                    <SelectItem value="behind-the-blend">Behind the Blend</SelectItem>
+                    <SelectItem value="territory-spotlight">Territory Spotlight</SelectItem>
+                    <SelectItem value="collector-archives">Collector Archives</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Publish Option */}
             <div className="flex items-center space-x-2">

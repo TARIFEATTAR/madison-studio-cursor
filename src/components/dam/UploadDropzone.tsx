@@ -28,7 +28,7 @@ const ACCEPTED_TYPES = [
   'application/pdf',
 ];
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export function UploadDropzone({
   onUpload,
@@ -50,7 +50,7 @@ export function UploadDropzone({
         continue;
       }
       if (file.size > MAX_FILE_SIZE) {
-        errors.push(`${file.name}: File too large (max 50MB)`);
+        errors.push(`${file.name}: File too large (max 10MB)`);
         continue;
       }
       valid.push(file);
@@ -160,7 +160,7 @@ export function UploadDropzone({
           onChange={handleFileSelect}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
-        
+
         <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
           <motion.div
             animate={isDragging ? { scale: 1.1, y: -5 } : { scale: 1, y: 0 }}
@@ -210,8 +210,8 @@ export function UploadDropzone({
                 <p className="text-sm font-medium">
                   Drag and drop files here, or click to browse
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Images, videos, and PDFs up to 50MB
+                <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
+                  Images, videos, and PDFs <span className="font-medium text-amber-600 dark:text-amber-500">(Max 10MB)</span>
                 </p>
               </motion.div>
             )}
