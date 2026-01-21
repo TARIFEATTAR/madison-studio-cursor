@@ -27,6 +27,16 @@ import { SavePromptDialog } from "@/components/prompt-library/SavePromptDialog";
 import { ScheduleButton } from "@/components/forge/ScheduleButton";
 import { DerivativeFullModal } from "@/components/amplify/DerivativeFullModal";
 import { DerivativeTypeSelector } from "@/components/multiply/DerivativeTypeSelector";
+
+// Phase 1-3 UX Redesign Components
+import {
+  CollapsibleMasterContent,
+  UnifiedGenerateButton,
+  VisualPromptsToggle,
+  DerivativeCategoryAccordion,
+  MadisonSuggestionCard,
+  MULTIPLY_FEATURE_FLAGS,
+} from "@/components/multiply";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useOrganization } from "@/hooks/useOrganization";
@@ -1089,11 +1099,6 @@ export default function Multiply() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="space-y-1">
                     <h2 className="font-serif text-2xl">Master Content</h2>
-                    {selectedMaster && (
-                      <Badge variant="secondary" className="text-xs">
-                        Using: {selectedMaster.title}
-                      </Badge>
-                    )}
                   </div>
                   {selectedMaster && (
                     <Button onClick={handleSaveToLibrary} disabled={isSavingMaster} size="sm" variant="outline" className="gap-2">
@@ -1104,28 +1109,45 @@ export default function Multiply() {
                 </div>
 
                 {selectedMaster ? (
-                  <Card className="flex-1 overflow-hidden flex flex-col">
-                    <div className="p-4 border-b space-y-2">
-                      <h3 className="font-semibold text-lg">{selectedMaster.title}</h3>
-                      <div className="flex gap-2">
-                        {selectedMaster.contentType && (
-                          <Badge variant="secondary">{selectedMaster.contentType}</Badge>
-                        )}
-                        {selectedMaster.collection && (
-                          <Badge variant="outline">{selectedMaster.collection}</Badge>
-                        )}
+                  /* Phase 1: Use CollapsibleMasterContent for reduced cognitive load */
+                  MULTIPLY_FEATURE_FLAGS.COLLAPSED_MASTER_CONTENT ? (
+                    <CollapsibleMasterContent
+                      content={{
+                        id: selectedMaster.id,
+                        title: selectedMaster.title,
+                        contentType: selectedMaster.contentType,
+                        collection: selectedMaster.collection,
+                        content: selectedMaster.content,
+                        wordCount: selectedMaster.wordCount,
+                        charCount: selectedMaster.charCount,
+                      }}
+                      defaultExpanded={false}
+                    />
+                  ) : (
+                    /* Original verbose panel */
+                    <Card className="flex-1 overflow-hidden flex flex-col">
+                      <div className="p-4 border-b space-y-2">
+                        <h3 className="font-semibold text-lg">{selectedMaster.title}</h3>
+                        <div className="flex gap-2">
+                          {selectedMaster.contentType && (
+                            <Badge variant="secondary">{selectedMaster.contentType}</Badge>
+                          )}
+                          {selectedMaster.collection && (
+                            <Badge variant="outline">{selectedMaster.collection}</Badge>
+                          )}
+                        </div>
+                        <div className="flex gap-4 text-sm text-muted-foreground">
+                          <span>{selectedMaster.wordCount} words</span>
+                          <span>{selectedMaster.charCount} characters</span>
+                        </div>
                       </div>
-                      <div className="flex gap-4 text-sm text-muted-foreground">
-                        <span>{selectedMaster.wordCount} words</span>
-                        <span>{selectedMaster.charCount} characters</span>
-                      </div>
-                    </div>
-                    <ScrollArea className="flex-1">
-                      <div className="p-4">
-                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{selectedMaster.content}</p>
-                      </div>
-                    </ScrollArea>
-                  </Card>
+                      <ScrollArea className="flex-1">
+                        <div className="p-4">
+                          <p className="text-sm whitespace-pre-wrap leading-relaxed">{selectedMaster.content}</p>
+                        </div>
+                      </ScrollArea>
+                    </Card>
+                  )
                 ) : (
                   <div className="flex-1 flex items-center justify-center">
                     <div className="text-center text-muted-foreground">
@@ -1147,6 +1169,20 @@ export default function Multiply() {
                     <h2 className="font-serif text-2xl">Derivative Editions</h2>
                     <VideoHelpTrigger videoId="understanding-derivatives" variant="icon" />
                   </div>
+
+                  {/* Phase 3: Madison's Suggestion Card - AI-guided one-click path */}
+                  {MULTIPLY_FEATURE_FLAGS.MADISON_SUGGESTIONS && selectedMaster && derivatives.length === 0 && (
+                    <MadisonSuggestionCard
+                      contentTitle={selectedMaster.title}
+                      contentType={selectedMaster.contentType}
+                      suggestions={[]} // Will use default suggestions based on content type
+                      onUseSuggestions={(typeIds) => {
+                        // Auto-select the suggested types
+                        const newSelected = new Set(typeIds);
+                        setSelectedTypes(newSelected);
+                      }}
+                    />
+                  )}
 
                   {/* Generated Derivatives - Show Above Selector */}
                   {Object.keys(derivativesByType).length > 0 && (
@@ -1394,47 +1430,57 @@ export default function Multiply() {
                       />
                     )}
 
-                    {/* Visual Prompts Section */}
+                    {/* Visual Prompts Section - Phase 1: Use collapsible toggle */}
                     <div className="mt-8 pt-8 border-t border-border/40">
-                      <h3 className="font-serif text-xl mb-4">Visual Prompts</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Generate image, video, and background prompts from your content
-                      </p>
+                      {MULTIPLY_FEATURE_FLAGS.VISUAL_PROMPTS_TOGGLE ? (
+                        <VisualPromptsToggle
+                          selectedTypes={selectedVisualTypes}
+                          onToggleType={toggleVisualType}
+                        />
+                      ) : (
+                        /* Original Visual Prompts section */
+                        <>
+                          <h3 className="font-serif text-xl mb-4">Visual Prompts</h3>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Generate image, video, and background prompts from your content
+                          </p>
 
-                      <div className="grid grid-cols-3 gap-3 mb-4">
-                        {VISUAL_DERIVATIVE_TYPES.map((type) => (
-                          <Card
-                            key={type.id}
-                            onClick={() => toggleVisualType(type.id)}
-                            className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedVisualTypes.has(type.id) ? "ring-2 ring-primary bg-primary/5" : ""}`}
+                          <div className="grid grid-cols-3 gap-3 mb-4">
+                            {VISUAL_DERIVATIVE_TYPES.map((type) => (
+                              <Card
+                                key={type.id}
+                                onClick={() => toggleVisualType(type.id)}
+                                className={`p-4 cursor-pointer transition-all hover:shadow-md ${selectedVisualTypes.has(type.id) ? "ring-2 ring-primary bg-primary/5" : ""}`}
+                              >
+                                <div className="space-y-2">
+                                  <div className="flex items-start justify-between">
+                                    <Checkbox checked={selectedVisualTypes.has(type.id)} className="mt-1" />
+                                    {type.iconImage ? (
+                                      <img src={type.iconImage} alt={type.name} className="w-8 h-8" />
+                                    ) : type.icon && (
+                                      <type.icon className="w-8 h-8" style={{ color: type.iconColor }} />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <h4 className="font-medium">{type.name}</h4>
+                                    <p className="text-xs text-muted-foreground">{type.description}</p>
+                                  </div>
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+
+                          <Button
+                            onClick={generateVisualPrompts}
+                            disabled={isGeneratingVisual || selectedVisualTypes.size === 0 || (!selectedMaster && !userContent)}
+                            size="lg"
+                            className="w-full gap-2"
                           >
-                            <div className="space-y-2">
-                              <div className="flex items-start justify-between">
-                                <Checkbox checked={selectedVisualTypes.has(type.id)} className="mt-1" />
-                                {type.iconImage ? (
-                                  <img src={type.iconImage} alt={type.name} className="w-8 h-8" />
-                                ) : type.icon && (
-                                  <type.icon className="w-8 h-8" style={{ color: type.iconColor }} />
-                                )}
-                              </div>
-                              <div>
-                                <h4 className="font-medium">{type.name}</h4>
-                                <p className="text-xs text-muted-foreground">{type.description}</p>
-                              </div>
-                            </div>
-                          </Card>
-                        ))}
-                      </div>
-
-                      <Button
-                        onClick={generateVisualPrompts}
-                        disabled={isGeneratingVisual || selectedVisualTypes.size === 0 || (!selectedMaster && !userContent)}
-                        size="lg"
-                        className="w-full gap-2"
-                      >
-                        {isGeneratingVisual ? <Loader2 className="animate-spin" /> : <Sparkles />}
-                        {isGeneratingVisual ? "Generating..." : `Generate ${selectedVisualTypes.size} Visual Pack${selectedVisualTypes.size !== 1 ? "s" : ""}`}
-                      </Button>
+                            {isGeneratingVisual ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                            {isGeneratingVisual ? "Generating..." : `Generate ${selectedVisualTypes.size} Visual Pack${selectedVisualTypes.size !== 1 ? "s" : ""}`}
+                          </Button>
+                        </>
+                      )}
 
                       {/* Visual Prompt Results */}
                       {imagePackResult && (
@@ -1467,6 +1513,28 @@ export default function Multiply() {
                         </div>
                       )}
                     </div>
+
+                    {/* Phase 1: Unified Generate Button */}
+                    {MULTIPLY_FEATURE_FLAGS.UNIFIED_GENERATE_BUTTON && (
+                      <div className="mt-8 pt-6 border-t flex justify-center">
+                        <UnifiedGenerateButton
+                          selectedContentCount={selectedTypes.size}
+                          selectedVisualCount={selectedVisualTypes.size}
+                          isGenerating={isGenerating || isGeneratingVisual}
+                          onGenerate={async () => {
+                            // Generate content derivatives first
+                            if (selectedTypes.size > 0) {
+                              await generateDerivatives();
+                            }
+                            // Then generate visual prompts
+                            if (selectedVisualTypes.size > 0) {
+                              await generateVisualPrompts();
+                            }
+                          }}
+                          data-generate-button
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               </ScrollArea>
