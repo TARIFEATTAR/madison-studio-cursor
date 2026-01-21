@@ -80,7 +80,7 @@ import { SDSSection } from "@/components/products/SDSSection";
 import { PackagingSection } from "@/components/products/PackagingSection";
 import { MediaSection } from "@/components/products/MediaSection";
 import { useUserRole, type RoleCapabilities } from "@/hooks/useUserRole";
-import { RoleBadge, YourSectionsHighlight } from "@/components/role";
+import { RoleBadge } from "@/components/role";
 import { TaskList } from "@/components/tasks";
 import { useOrganization } from "@/hooks/useOrganization";
 import { ContentPickerModal, type ContentTarget } from "@/components/products/ContentPickerModal";
@@ -973,10 +973,7 @@ export default function ProductHub() {
         {/* Main Content Area */}
         <div className="flex-1 min-w-0 p-4 md:p-6">
           <div className="max-w-4xl">
-            {/* Your sections highlight */}
-            <div className="mb-4">
-              <YourSectionsHighlight />
-            </div>
+
 
             {/* Section Content - Render based on activeTab */}
             {activeTab === "core" && (
