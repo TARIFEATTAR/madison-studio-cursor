@@ -38,5 +38,5 @@ export const MULTIPLY_FEATURE_FLAGS = {
     CATEGORY_ACCORDION: true,
 
     // Phase 3 - AI Guidance
-    MADISON_SUGGESTIONS: false,
+    MADISON_SUGGESTIONS: true,
 } as const;
