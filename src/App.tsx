@@ -47,6 +47,7 @@ const ImageEditor = lazy(() => import("./pages/ImageEditor"));
 const DarkRoom = lazy(() => import("./pages/DarkRoom"));
 const LightTable = lazy(() => import("./pages/LightTable"));
 const VideoProject = lazy(() => import("./pages/VideoProject"));
+const Studio = lazy(() => import("./pages/Studio"));
 const ImageLibrary = lazy(() => import("./pages/ImageLibrary"));
 const EmailBuilderV2 = lazy(() => import("./pages/EmailBuilderV2"));
 const ComponentDemo = lazy(() => import("./pages/ComponentDemo"));
@@ -64,6 +65,7 @@ import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EcommerceGuard } from "./components/guards/EcommerceGuard";
 import { OnboardingTooltipProvider } from "./components/onboarding/OnboardingTooltipProvider";
+import { AgentContextProvider } from "./components/agent";
 
 // Loading fallback for lazy routes
 const PageLoader = () => (
@@ -345,49 +347,50 @@ const AppContent = () => {
             <main className="flex-1 overflow-auto pt-0">
               <div className="pt-16 md:pt-0">
                 <Suspense fallback={<PageLoader />}>
-                <Routes>
-                  <Route path="/" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><RootRoute /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/dashboard" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><DashboardWidgetProvider><DashboardNew /></DashboardWidgetProvider></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/dashboard-custom" element={<ProtectedRoute><RouteErrorBoundary routeName="Widget Dashboard"><WidgetDashboard /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/library" element={<ProtectedRoute><RouteErrorBoundary routeName="Library"><Library /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/create" element={<ProtectedRoute><RouteErrorBoundary routeName="Create"><Create /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Editor"><ContentEditor /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/multiply" element={<ProtectedRoute><RouteErrorBoundary routeName="Multiply"><Multiply /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/marketplace" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Marketplace"><Marketplace /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
-                  <Route path="/marketplace-library" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Listing Templates"><MarketplaceLibrary /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
-                  <Route path="/marketplace/etsy" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Etsy Listing"><CreateEtsyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
-                  <Route path="/marketplace/tiktok_shop" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create TikTok Shop Listing"><CreateTikTokShopListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
-                  <Route path="/marketplace/shopify" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Shopify Listing"><CreateShopifyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
-                  <Route path="/image-editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Editor"><ImageEditor /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/darkroom" element={<ProtectedRoute><RouteErrorBoundary routeName="Dark Room"><DarkRoom /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/light-table" element={<ProtectedRoute><RouteErrorBoundary routeName="Light Table"><LightTable /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/video-project" element={<ProtectedRoute><RouteErrorBoundary routeName="Video Project"><VideoProject /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/image-library" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Library"><ImageLibrary /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/dam" element={<ProtectedRoute><RouteErrorBoundary routeName="Asset Library"><DAMLibrary /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/products" element={<ProtectedRoute><RouteErrorBoundary routeName="Products"><Products /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/products/:productId" element={<ProtectedRoute><RouteErrorBoundary routeName="Product Hub"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/products/:productId/edit" element={<ProtectedRoute><RouteErrorBoundary routeName="Edit Product"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/suppliers" element={<ProtectedRoute><RouteErrorBoundary routeName="Suppliers"><Suppliers /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/calendar" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/meet-madison" element={<ProtectedRoute><RouteErrorBoundary routeName="Meet Madison"><MeetMadison /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/help-center" element={<ProtectedRoute><RouteErrorBoundary routeName="Help Center"><HelpCenter /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/think-mode" element={<ProtectedRoute><RouteErrorBoundary routeName="Think Mode"><ThinkMode /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/privacy" element={<PrivacyPolicy />} />
-                  <Route path="/terms" element={<TermsOfService />} />
-                  <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/reports/:domainId" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Report"><BrandReport /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/component-demo" element={<ProtectedRoute><RouteErrorBoundary routeName="Component Demo"><ComponentDemo /></RouteErrorBoundary></ProtectedRoute>} />
-                  <Route path="/madison-test" element={<ProtectedRoute><RouteErrorBoundary routeName="Madison Test"><MadisonTest /></RouteErrorBoundary></ProtectedRoute>} />
-                  {/* Email Builder routes - Temporarily hidden for launch */}
-                  {/* <Route path="/email-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Builder"><EmailBuilderV2 /></RouteErrorBoundary></ProtectedRoute>} /> */}
-                  {/* Legacy redirects */}
-                  {/* <Route path="/email-composer" element={<Navigate to="/email-builder" replace />} /> */}
-                  {/* <Route path="/email-builder-v2" element={<Navigate to="/email-builder" replace />} /> */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                  <Routes>
+                    <Route path="/" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><RootRoute /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/dashboard" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><DashboardWidgetProvider><DashboardNew /></DashboardWidgetProvider></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/dashboard-custom" element={<ProtectedRoute><RouteErrorBoundary routeName="Widget Dashboard"><WidgetDashboard /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/library" element={<ProtectedRoute><RouteErrorBoundary routeName="Library"><Library /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/create" element={<ProtectedRoute><RouteErrorBoundary routeName="Create"><Create /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Editor"><ContentEditor /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/multiply" element={<ProtectedRoute><RouteErrorBoundary routeName="Multiply"><Multiply /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/marketplace" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Marketplace"><Marketplace /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
+                    <Route path="/marketplace-library" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Listing Templates"><MarketplaceLibrary /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
+                    <Route path="/marketplace/etsy" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Etsy Listing"><CreateEtsyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
+                    <Route path="/marketplace/tiktok_shop" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create TikTok Shop Listing"><CreateTikTokShopListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
+                    <Route path="/marketplace/shopify" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Shopify Listing"><CreateShopifyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
+                    <Route path="/image-editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Editor"><ImageEditor /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/darkroom" element={<ProtectedRoute><RouteErrorBoundary routeName="Dark Room"><DarkRoom /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/studio" element={<ProtectedRoute><RouteErrorBoundary routeName="Studio"><Studio /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/light-table" element={<ProtectedRoute><RouteErrorBoundary routeName="Light Table"><LightTable /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/video-project" element={<ProtectedRoute><RouteErrorBoundary routeName="Video Project"><VideoProject /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/image-library" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Library"><ImageLibrary /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/dam" element={<ProtectedRoute><RouteErrorBoundary routeName="Asset Library"><DAMLibrary /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/products" element={<ProtectedRoute><RouteErrorBoundary routeName="Products"><Products /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/products/:productId" element={<ProtectedRoute><RouteErrorBoundary routeName="Product Hub"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/products/:productId/edit" element={<ProtectedRoute><RouteErrorBoundary routeName="Edit Product"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/suppliers" element={<ProtectedRoute><RouteErrorBoundary routeName="Suppliers"><Suppliers /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/calendar" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/meet-madison" element={<ProtectedRoute><RouteErrorBoundary routeName="Meet Madison"><MeetMadison /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/help-center" element={<ProtectedRoute><RouteErrorBoundary routeName="Help Center"><HelpCenter /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/think-mode" element={<ProtectedRoute><RouteErrorBoundary routeName="Think Mode"><ThinkMode /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/privacy" element={<PrivacyPolicy />} />
+                    <Route path="/terms" element={<TermsOfService />} />
+                    <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/reports/:domainId" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Report"><BrandReport /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/component-demo" element={<ProtectedRoute><RouteErrorBoundary routeName="Component Demo"><ComponentDemo /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/madison-test" element={<ProtectedRoute><RouteErrorBoundary routeName="Madison Test"><MadisonTest /></RouteErrorBoundary></ProtectedRoute>} />
+                    {/* Email Builder routes - Temporarily hidden for launch */}
+                    {/* <Route path="/email-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Builder"><EmailBuilderV2 /></RouteErrorBoundary></ProtectedRoute>} /> */}
+                    {/* Legacy redirects */}
+                    {/* <Route path="/email-composer" element={<Navigate to="/email-builder" replace />} /> */}
+                    {/* <Route path="/email-builder-v2" element={<Navigate to="/email-builder" replace />} /> */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
                 </Suspense>
               </div>
             </main>
@@ -396,57 +399,61 @@ const AppContent = () => {
       ) : (
         <>
           <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/onboarding" element={<ProtectedRoute><RouteErrorBoundary routeName="Onboarding"><Onboarding /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><DashboardWidgetProvider><DashboardNew /></DashboardWidgetProvider></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/dashboard-custom" element={<ProtectedRoute><RouteErrorBoundary routeName="Widget Dashboard"><WidgetDashboard /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/library" element={<ProtectedRoute><RouteErrorBoundary routeName="Library"><Library /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/create" element={<ProtectedRoute><RouteErrorBoundary routeName="Create"><Create /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Editor"><ContentEditor /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/multiply" element={<ProtectedRoute><RouteErrorBoundary routeName="Multiply"><Multiply /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/marketplace" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Marketplace"><Marketplace /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
-            <Route path="/marketplace-library" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Listing Templates"><MarketplaceLibrary /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
-            <Route path="/marketplace/etsy" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Etsy Listing"><CreateEtsyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
-            <Route path="/marketplace/tiktok_shop" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create TikTok Shop Listing"><CreateTikTokShopListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
-            <Route path="/marketplace/shopify" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Shopify Listing"><CreateShopifyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
-            <Route path="/image-editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Editor"><ImageEditor /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/darkroom" element={<ProtectedRoute><RouteErrorBoundary routeName="Dark Room"><DarkRoom /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/light-table" element={<ProtectedRoute><RouteErrorBoundary routeName="Light Table"><LightTable /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/video-project" element={<ProtectedRoute><RouteErrorBoundary routeName="Video Project"><VideoProject /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/image-library" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Library"><ImageLibrary /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/dam" element={<ProtectedRoute><RouteErrorBoundary routeName="Asset Library"><DAMLibrary /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/products" element={<ProtectedRoute><RouteErrorBoundary routeName="Products"><Products /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/products/:productId" element={<ProtectedRoute><RouteErrorBoundary routeName="Product Hub"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/products/:productId/edit" element={<ProtectedRoute><RouteErrorBoundary routeName="Edit Product"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/suppliers" element={<ProtectedRoute><RouteErrorBoundary routeName="Suppliers"><Suppliers /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/calendar" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/meet-madison" element={<ProtectedRoute><RouteErrorBoundary routeName="Meet Madison"><MeetMadison /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/help-center" element={<ProtectedRoute><RouteErrorBoundary routeName="Help Center"><HelpCenter /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/think-mode" element={<ProtectedRoute><RouteErrorBoundary routeName="Think Mode"><ThinkMode /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/reports/:domainId" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Report"><BrandReport /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/component-demo" element={<ProtectedRoute><RouteErrorBoundary routeName="Component Demo"><ComponentDemo /></RouteErrorBoundary></ProtectedRoute>} />
-            <Route path="/madison-test" element={<ProtectedRoute><RouteErrorBoundary routeName="Madison Test"><MadisonTest /></RouteErrorBoundary></ProtectedRoute>} />
-            {/* Email Builder routes - Temporarily hidden for launch */}
-            {/* <Route path="/email-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Builder"><EmailBuilderV2 /></RouteErrorBoundary></ProtectedRoute>} /> */}
-            {/* Legacy redirects */}
-            {/* <Route path="/email-composer" element={<Navigate to="/email-builder" replace />} /> */}
-            {/* <Route path="/email-builder-v2" element={<Navigate to="/email-builder" replace />} /> */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/onboarding" element={<ProtectedRoute><RouteErrorBoundary routeName="Onboarding"><Onboarding /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/" element={<Index />} />
+              <Route path="/dashboard" element={<ProtectedRoute><RouteErrorBoundary routeName="Dashboard"><DashboardWidgetProvider><DashboardNew /></DashboardWidgetProvider></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/dashboard-custom" element={<ProtectedRoute><RouteErrorBoundary routeName="Widget Dashboard"><WidgetDashboard /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/library" element={<ProtectedRoute><RouteErrorBoundary routeName="Library"><Library /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/create" element={<ProtectedRoute><RouteErrorBoundary routeName="Create"><Create /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Editor"><ContentEditor /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/multiply" element={<ProtectedRoute><RouteErrorBoundary routeName="Multiply"><Multiply /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/marketplace" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Marketplace"><Marketplace /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
+              <Route path="/marketplace-library" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Listing Templates"><MarketplaceLibrary /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
+              <Route path="/marketplace/etsy" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Etsy Listing"><CreateEtsyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
+              <Route path="/marketplace/tiktok_shop" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create TikTok Shop Listing"><CreateTikTokShopListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
+              <Route path="/marketplace/shopify" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Shopify Listing"><CreateShopifyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
+              <Route path="/image-editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Editor"><ImageEditor /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/darkroom" element={<ProtectedRoute><RouteErrorBoundary routeName="Dark Room"><DarkRoom /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/studio" element={<ProtectedRoute><RouteErrorBoundary routeName="Studio"><Studio /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/light-table" element={<ProtectedRoute><RouteErrorBoundary routeName="Light Table"><LightTable /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/video-project" element={<ProtectedRoute><RouteErrorBoundary routeName="Video Project"><VideoProject /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/image-library" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Library"><ImageLibrary /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/dam" element={<ProtectedRoute><RouteErrorBoundary routeName="Asset Library"><DAMLibrary /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/products" element={<ProtectedRoute><RouteErrorBoundary routeName="Products"><Products /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/products/:productId" element={<ProtectedRoute><RouteErrorBoundary routeName="Product Hub"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/products/:productId/edit" element={<ProtectedRoute><RouteErrorBoundary routeName="Edit Product"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/suppliers" element={<ProtectedRoute><RouteErrorBoundary routeName="Suppliers"><Suppliers /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/calendar" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/meet-madison" element={<ProtectedRoute><RouteErrorBoundary routeName="Meet Madison"><MeetMadison /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/help-center" element={<ProtectedRoute><RouteErrorBoundary routeName="Help Center"><HelpCenter /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/think-mode" element={<ProtectedRoute><RouteErrorBoundary routeName="Think Mode"><ThinkMode /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/brand-health" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Health"><BrandHealth /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/brand-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Builder"><BrandBuilder /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/reports/:domainId" element={<ProtectedRoute><RouteErrorBoundary routeName="Brand Report"><BrandReport /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/component-demo" element={<ProtectedRoute><RouteErrorBoundary routeName="Component Demo"><ComponentDemo /></RouteErrorBoundary></ProtectedRoute>} />
+              <Route path="/madison-test" element={<ProtectedRoute><RouteErrorBoundary routeName="Madison Test"><MadisonTest /></RouteErrorBoundary></ProtectedRoute>} />
+              {/* Email Builder routes - Temporarily hidden for launch */}
+              {/* <Route path="/email-builder" element={<ProtectedRoute><RouteErrorBoundary routeName="Email Builder"><EmailBuilderV2 /></RouteErrorBoundary></ProtectedRoute>} /> */}
+              {/* Legacy redirects */}
+              {/* <Route path="/email-composer" element={<Navigate to="/email-builder" replace />} /> */}
+              {/* <Route path="/email-builder-v2" element={<Navigate to="/email-builder" replace />} /> */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
           </Suspense>
         </>
       )}
 
       {/* Onboarding Tooltips - Show for authenticated users */}
       {user && <OnboardingTooltipProvider />}
+
+      {/* Madison Agent - Proactive suggestions for authenticated users */}
+      {user && <AgentContextProvider enabled={true} idleThresholdMinutes={10} />}
     </>
   );
 };

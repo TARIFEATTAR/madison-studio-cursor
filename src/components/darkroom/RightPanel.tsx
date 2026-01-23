@@ -26,11 +26,11 @@ import {
   Layers,
   Sparkles,
 } from "lucide-react";
-import { 
-  LEDIndicator, 
-  ModeDialButton, 
+import {
+  LEDIndicator,
+  ModeDialButton,
   FirmwarePresetButton,
-  type LEDState 
+  type LEDState
 } from "./LEDIndicator";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -296,20 +296,20 @@ interface RightPanelProps {
   hasBackground: boolean;
   hasStyle: boolean;
   proSettingsCount: number;
-  
+
   // Pro Settings (NEW)
   proSettings?: ProModeSettings;
   onProSettingsChange?: (settings: ProModeSettings) => void;
   isGenerating?: boolean;
-  
+
   // Multi-product slots for compositing
   productSlots?: ProductSlot[];
   onProductSlotsChange?: (slots: ProductSlot[]) => void;
-  
+
   // Background preset selection
   selectedBackgroundPreset?: string | null;
   onBackgroundPresetChange?: (presetId: string | null) => void;
-  
+
   // Composition preset selection (how to arrange products)
   selectedCompositionPreset?: string | null;
   onCompositionPresetChange?: (presetId: string | null) => void;
@@ -539,8 +539,8 @@ function StyleReferencesSection({ onApplyStyle }: { onApplyStyle: (style: string
                 <div className="style-upload-mount">
                   <Palette className="style-upload-mount__icon" />
                   <span className="style-upload-mount__text">
-                    {styleImages.length > 0 
-                      ? "Attach another filter" 
+                    {styleImages.length > 0
+                      ? "Attach another filter"
                       : "Attach style reference"}
                   </span>
                   <span className="style-upload-mount__subtext">
@@ -613,12 +613,12 @@ export function RightPanel({
   const [showHistory, setShowHistory] = useState(false);
   const [activeTab, setActiveTab] = useState<RightPanelTab>("madison");
   const productSlotInputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  
+
   // Get photography options
   const cameraOptions = getCameraOptions();
   const lightingOptions = getLightingOptions();
   const environmentOptions = getEnvironmentOptions();
-  
+
   // Handle settings change
   const handleSettingChange = (key: keyof ProModeSettings, value: string | undefined) => {
     if (onProSettingsChange && proSettings) {
@@ -661,10 +661,10 @@ export function RightPanel({
       </AnimatePresence>
 
       {/* Drawer Panel */}
-      <motion.aside 
+      <motion.aside
         className={cn("right-panel", isCollapsed && "right-panel--collapsed")}
         initial={false}
-        animate={{ 
+        animate={{
           width: isCollapsed ? 0 : "auto",
           opacity: isCollapsed ? 0 : 1,
         }}
@@ -674,17 +674,17 @@ export function RightPanel({
         <div className="relative px-2 py-1.5 border-b border-[var(--darkroom-border)] bg-[var(--camera-body)]">
           {/* Subtle top highlight */}
           <div className="absolute top-0 left-0 right-0 h-px bg-white/[0.04]" />
-          
+
           <div className="relative flex items-center gap-1">
             {/* Collapse button - Left side */}
-            <button 
+            <button
               className="w-7 h-7 flex items-center justify-center rounded bg-black/20 border border-white/[0.04] text-[var(--darkroom-text-dim)] hover:text-[var(--darkroom-text)] hover:bg-white/5 transition-colors"
               onClick={() => setIsCollapsed(true)}
               title="Collapse panel"
             >
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
-            
+
             {/* Tab Buttons - Compact firmware style */}
             <div className="flex-1 flex gap-0.5 p-0.5 rounded bg-black/20 border border-white/[0.04]">
               <button
@@ -715,657 +715,689 @@ export function RightPanel({
           </div>
         </div>
 
-      {/* Content */}
-      <div className="right-panel__content">
-        
-        {/* === SETTINGS TAB - Compact Firmware Layout === */}
-        {activeTab === "settings" && proSettings && onProSettingsChange && (
-          <div className="space-y-2">
-            {/* Status Header */}
-            <div className="camera-panel">
-              <div className="flex items-center justify-between p-2.5">
-                <div className="flex items-center gap-2">
-                  <LEDIndicator 
-                    state={isGenerating ? "processing" : Object.values(proSettings).filter(Boolean).length > 0 ? "ready" : "off"} 
+        {/* Content */}
+        <div className="right-panel__content">
+
+          {/* === SETTINGS TAB - Compact Firmware Layout === */}
+          {activeTab === "settings" && proSettings && onProSettingsChange && (
+            <div className="space-y-2">
+              {/* Status Header */}
+              <div className="camera-panel">
+                <div className="flex items-center justify-between p-2.5">
+                  <div className="flex items-center gap-2">
+                    <LEDIndicator
+                      state={isGenerating ? "processing" : Object.values(proSettings).filter(Boolean).length > 0 ? "ready" : "off"}
+                      size="sm"
+                    />
+                    <div>
+                      <span className="text-[11px] font-medium text-[var(--darkroom-text)] block">
+                        {isGenerating ? "Processing..." : `${Object.values(proSettings).filter(Boolean).length} Active`}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => onProSettingsChange({
+                      aiProvider: "auto",
+                      resolution: "standard",
+                      aspectRatio: "1:1",
+                      camera: undefined,
+                      lighting: undefined,
+                      environment: undefined,
+                      characterId: undefined,
+                    })}
+                    className="text-[10px] text-[var(--darkroom-text-dim)] hover:text-[var(--led-error)] font-medium flex items-center gap-1 px-2 py-1 rounded hover:bg-white/5 transition-colors"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    Reset
+                  </button>
+                </div>
+              </div>
+
+              {/* AI Model */}
+              <div className="camera-panel p-2.5 space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <LEDIndicator
+                    state={proSettings.aiProvider && proSettings.aiProvider !== "auto" ? "active" : "ready"}
                     size="sm"
                   />
-                  <div>
-                    <span className="text-[11px] font-medium text-[var(--darkroom-text)] block">
-                      {isGenerating ? "Processing..." : `${Object.values(proSettings).filter(Boolean).length} Active`}
-                    </span>
-                  </div>
+                  <Cpu className="w-3 h-3 text-[var(--darkroom-accent)]" />
+                  <span className="text-[11px] font-medium text-[var(--darkroom-text)]">AI Model</span>
                 </div>
-                <button
-                  onClick={() => onProSettingsChange({
-                    aiProvider: "auto",
-                    resolution: "standard",
-                    aspectRatio: "1:1",
-                    camera: undefined,
-                    lighting: undefined,
-                    environment: undefined,
-                    characterId: undefined,
-                  })}
-                  className="text-[10px] text-[var(--darkroom-text-dim)] hover:text-[var(--led-error)] font-medium flex items-center gap-1 px-2 py-1 rounded hover:bg-white/5 transition-colors"
+                <Select
+                  value={proSettings.aiProvider || "auto"}
+                  onValueChange={(v) => handleSettingChange("aiProvider", v)}
+                  disabled={isGenerating}
                 >
-                  <RefreshCw className="w-3 h-3" />
-                  Reset
-                </button>
-              </div>
-            </div>
+                  <SelectTrigger className="w-full h-8 bg-[var(--camera-body-deep)] border-white/[0.06] text-[var(--darkroom-text)] text-[11px] rounded">
+                    <SelectValue placeholder="Select model..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] max-h-[280px]">
+                    {AI_MODEL_OPTIONS.map((option, idx) => {
+                      const prevOption = idx > 0 ? AI_MODEL_OPTIONS[idx - 1] : null;
+                      const showGroupHeader = !prevOption || prevOption.group !== option.group;
+                      const groupLabels: Record<string, string> = {
+                        "gemini": "Google Gemini",
+                        "freepik": "Freepik Models",
+                      };
 
-            {/* AI Model */}
-            <div className="camera-panel p-2.5 space-y-2">
-              <div className="flex items-center gap-1.5">
-                <LEDIndicator 
-                  state={proSettings.aiProvider && proSettings.aiProvider !== "auto" ? "active" : "ready"} 
-                  size="sm"
-                />
-                <Cpu className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                <span className="text-[11px] font-medium text-[var(--darkroom-text)]">AI Model</span>
+                      return (
+                        <div key={option.value}>
+                          {showGroupHeader && option.group !== "auto" && (
+                            <div className="px-2 py-1 text-[9px] uppercase tracking-wider text-[var(--darkroom-text-dim)] font-medium border-t border-[var(--darkroom-border)] mt-1 first:mt-0 first:border-t-0">
+                              {groupLabels[option.group] || option.group}
+                            </div>
+                          )}
+                          <SelectItem value={option.value} className="text-[var(--darkroom-text)] text-[11px]">
+                            <span className="flex items-center gap-1.5">
+                              <span>{option.label}</span>
+                              {option.badge && (
+                                <span className={cn(
+                                  "text-[8px] px-1 py-0.5 rounded font-medium",
+                                  option.badge === "BEST" && "bg-purple-500/20 text-purple-400",
+                                  option.badge === "FREE" && "bg-emerald-500/20 text-emerald-400",
+                                  option.badge === "DEFAULT" && "bg-white/10 text-[var(--darkroom-text-muted)]",
+                                  option.badge === "NEW" && "bg-emerald-500/20 text-emerald-400",
+                                  option.badge === "FAST" && "bg-cyan-500/20 text-cyan-400",
+                                  option.badge === "4K" && "bg-amber-500/20 text-amber-400",
+                                  option.badge === "POPULAR" && "bg-blue-500/20 text-blue-400"
+                                )}>
+                                  {option.badge}
+                                </span>
+                              )}
+                            </span>
+                          </SelectItem>
+                        </div>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
               </div>
-              <Select
-                value={proSettings.aiProvider || "auto"}
-                onValueChange={(v) => handleSettingChange("aiProvider", v)}
-                disabled={isGenerating}
-              >
-                <SelectTrigger className="w-full h-8 bg-[var(--camera-body-deep)] border-white/[0.06] text-[var(--darkroom-text)] text-[11px] rounded">
-                  <SelectValue placeholder="Select model..." />
-                </SelectTrigger>
-                <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] max-h-[280px]">
-                  {AI_MODEL_OPTIONS.map((option, idx) => {
-                    const prevOption = idx > 0 ? AI_MODEL_OPTIONS[idx - 1] : null;
-                    const showGroupHeader = !prevOption || prevOption.group !== option.group;
-                    const groupLabels: Record<string, string> = {
-                      "gemini": "Google Gemini",
-                      "freepik": "Freepik Models",
-                    };
-                    
+
+              {/* Resolution */}
+              <div className="camera-panel p-2.5 space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <LEDIndicator
+                    state={proSettings.resolution && proSettings.resolution !== "standard" ? "active" : "off"}
+                    size="sm"
+                  />
+                  <Maximize2 className="w-3 h-3 text-[var(--darkroom-accent)]" />
+                  <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Resolution</span>
+                </div>
+                <div className="flex gap-1">
+                  {RESOLUTION_OPTIONS.map((option) => {
+                    const isSelected = proSettings.resolution === option.value ||
+                      (!proSettings.resolution && option.value === "standard");
+
                     return (
-                      <div key={option.value}>
-                        {showGroupHeader && option.group !== "auto" && (
-                          <div className="px-2 py-1 text-[9px] uppercase tracking-wider text-[var(--darkroom-text-dim)] font-medium border-t border-[var(--darkroom-border)] mt-1 first:mt-0 first:border-t-0">
-                            {groupLabels[option.group] || option.group}
-                          </div>
+                      <button
+                        key={option.value}
+                        onClick={() => handleSettingChange("resolution", option.value)}
+                        disabled={isGenerating}
+                        className={cn(
+                          "flex-1 py-2 px-1.5 rounded transition-all text-center border",
+                          isSelected
+                            ? "bg-white/[0.06] border-white/[0.12]"
+                            : "bg-[var(--camera-body-deep)] border-white/[0.04] hover:border-white/[0.08]"
                         )}
-                        <SelectItem value={option.value} className="text-[var(--darkroom-text)] text-[11px]">
-                          <span className="flex items-center gap-1.5">
-                            <span>{option.label}</span>
-                            {option.badge && (
-                              <span className={cn(
-                                "text-[8px] px-1 py-0.5 rounded font-medium",
-                                option.badge === "BEST" && "bg-purple-500/20 text-purple-400",
-                                option.badge === "FREE" && "bg-emerald-500/20 text-emerald-400",
-                                option.badge === "DEFAULT" && "bg-white/10 text-[var(--darkroom-text-muted)]",
-                                option.badge === "NEW" && "bg-emerald-500/20 text-emerald-400",
-                                option.badge === "FAST" && "bg-cyan-500/20 text-cyan-400",
-                                option.badge === "4K" && "bg-amber-500/20 text-amber-400",
-                                option.badge === "POPULAR" && "bg-blue-500/20 text-blue-400"
-                              )}>
-                                {option.badge}
-                              </span>
-                            )}
-                          </span>
-                        </SelectItem>
-                      </div>
+                      >
+                        <span className={cn(
+                          "text-[11px] font-medium block",
+                          isSelected ? "text-[var(--darkroom-text)]" : "text-[var(--darkroom-text-muted)]"
+                        )}>
+                          {option.label}
+                        </span>
+                        {option.badge && (
+                          <span className="text-[9px] text-purple-400 block">{option.badge}</span>
+                        )}
+                      </button>
                     );
                   })}
-                </SelectContent>
-              </Select>
-            </div>
+                </div>
+              </div>
 
-            {/* Resolution */}
-            <div className="camera-panel p-2.5 space-y-2">
-              <div className="flex items-center gap-1.5">
-                <LEDIndicator 
-                  state={proSettings.resolution && proSettings.resolution !== "standard" ? "active" : "off"} 
-                  size="sm"
-                />
-                <Maximize2 className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Resolution</span>
-              </div>
-              <div className="flex gap-1">
-                {RESOLUTION_OPTIONS.map((option) => {
-                  const isSelected = proSettings.resolution === option.value || 
-                    (!proSettings.resolution && option.value === "standard");
-                  
-                  return (
-                    <button
-                      key={option.value}
-                      onClick={() => handleSettingChange("resolution", option.value)}
-                      disabled={isGenerating}
-                      className={cn(
-                        "flex-1 py-2 px-1.5 rounded transition-all text-center border",
-                        isSelected 
-                          ? "bg-white/[0.06] border-white/[0.12]" 
-                          : "bg-[var(--camera-body-deep)] border-white/[0.04] hover:border-white/[0.08]"
-                      )}
-                    >
-                      <span className={cn(
-                        "text-[11px] font-medium block",
-                        isSelected ? "text-[var(--darkroom-text)]" : "text-[var(--darkroom-text-muted)]"
-                      )}>
-                        {option.label}
-                      </span>
-                      {option.badge && (
-                        <span className="text-[9px] text-purple-400 block">{option.badge}</span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Aspect Ratio */}
-            <div className="camera-panel p-2.5 space-y-2">
-              <div className="flex items-center gap-1.5">
-                <LEDIndicator 
-                  state={proSettings.aspectRatio && proSettings.aspectRatio !== "1:1" ? "active" : "off"} 
-                  size="sm"
-                />
-                <Aperture className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Aspect Ratio</span>
-              </div>
-              <div className="grid grid-cols-3 gap-1">
-                {ASPECT_RATIO_OPTIONS.map((option) => {
-                  const isSelected = proSettings.aspectRatio === option.value ||
-                    (!proSettings.aspectRatio && option.value === "1:1");
-                  return (
-                    <button
-                      key={option.value}
-                      onClick={() => handleSettingChange("aspectRatio", option.value)}
-                      disabled={isGenerating}
-                      className={cn(
-                        "py-1.5 px-1 rounded text-center transition-all border",
-                        isSelected
-                          ? "bg-white/[0.06] border-white/[0.12]"
-                          : "bg-[var(--camera-body-deep)] border-white/[0.04] hover:border-white/[0.08]"
-                      )}
-                    >
-                      <span className={cn(
-                        "text-[10px] font-medium block",
-                        isSelected ? "text-[var(--darkroom-text)]" : "text-[var(--darkroom-text-muted)]"
-                      )}>{option.label}</span>
-                      <span className={cn(
-                        "text-[9px] font-mono block",
-                        isSelected ? "text-[var(--darkroom-text-muted)]" : "text-[var(--darkroom-text-dim)]"
-                      )}>{option.value}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Pro Controls - Collapsible */}
-            <div className="camera-panel">
-              <button 
-                onClick={() => setShowHistory(!showHistory)}
-                className="w-full flex items-center justify-between p-2.5"
-              >
+              {/* Aspect Ratio */}
+              <div className="camera-panel p-2.5 space-y-2">
                 <div className="flex items-center gap-1.5">
-                  <LEDIndicator 
-                    state={proSettings.camera || proSettings.lighting || proSettings.environment ? "active" : "off"} 
+                  <LEDIndicator
+                    state={proSettings.aspectRatio && proSettings.aspectRatio !== "1:1" ? "active" : "off"}
                     size="sm"
                   />
-                  <Camera className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                  <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Pro Controls</span>
+                  <Aperture className="w-3 h-3 text-[var(--darkroom-accent)]" />
+                  <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Aspect Ratio</span>
                 </div>
-                <motion.div
-                  animate={{ rotate: showHistory ? 180 : 0 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <ChevronDown className="w-3.5 h-3.5 text-[var(--darkroom-text-dim)]" />
-                </motion.div>
-              </button>
-              
-              <AnimatePresence>
-                {showHistory && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="px-2.5 pb-2.5 space-y-2 border-t border-white/[0.04] pt-2">
-                      {/* Camera */}
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5">
-                          <Camera className="w-3 h-3 text-[var(--darkroom-text-dim)]" />
-                          <span className="text-[10px] text-[var(--darkroom-text-muted)]">Camera Style</span>
-                        </div>
-                        <Select
-                          value={proSettings.camera || "none"}
-                          onValueChange={(v) => handleSettingChange("camera", v === "none" ? undefined : v)}
-                          disabled={isGenerating}
-                        >
-                          <SelectTrigger className="w-full h-7 bg-[var(--camera-body-deep)] border-white/[0.06] text-[var(--darkroom-text)] text-[10px] rounded">
-                            <SelectValue placeholder="No camera style" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] max-h-[200px]">
-                            <SelectItem value="none" className="text-[var(--darkroom-text)] text-[11px]">No camera style</SelectItem>
-                            {cameraOptions.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value} className="text-[var(--darkroom-text)] text-[11px]">
-                                {opt.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Lighting */}
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5">
-                          <Sun className="w-3 h-3 text-[var(--darkroom-text-dim)]" />
-                          <span className="text-[10px] text-[var(--darkroom-text-muted)]">Lighting</span>
-                        </div>
-                        <Select
-                          value={proSettings.lighting || "none"}
-                          onValueChange={(v) => handleSettingChange("lighting", v === "none" ? undefined : v)}
-                          disabled={isGenerating}
-                        >
-                          <SelectTrigger className="w-full h-7 bg-[var(--camera-body-deep)] border-white/[0.06] text-[var(--darkroom-text)] text-[10px] rounded">
-                            <SelectValue placeholder="No lighting style" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] max-h-[200px]">
-                            <SelectItem value="none" className="text-[var(--darkroom-text)] text-[11px]">No lighting style</SelectItem>
-                            {lightingOptions.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value} className="text-[var(--darkroom-text)] text-[11px]">
-                                {opt.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Environment */}
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5">
-                          <Globe className="w-3 h-3 text-[var(--darkroom-text-dim)]" />
-                          <span className="text-[10px] text-[var(--darkroom-text-muted)]">Environment</span>
-                        </div>
-                        <Select
-                          value={proSettings.environment || "none"}
-                          onValueChange={(v) => handleSettingChange("environment", v === "none" ? undefined : v)}
-                          disabled={isGenerating}
-                        >
-                          <SelectTrigger className="w-full h-7 bg-[var(--camera-body-deep)] border-white/[0.06] text-[var(--darkroom-text)] text-[10px] rounded">
-                            <SelectValue placeholder="No environment" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] max-h-[200px]">
-                            <SelectItem value="none" className="text-[var(--darkroom-text)] text-[11px]">No environment</SelectItem>
-                            {environmentOptions.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value} className="text-[var(--darkroom-text)] text-[11px]">
-                                {opt.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Visual Style */}
-            <div className="camera-panel p-2.5 space-y-2">
-              <div className="flex items-center gap-1.5">
-                <LEDIndicator state={proSettings.visualSquad ? "active" : "ready"} size="sm" />
-                <Palette className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Visual Style</span>
+                <div className="grid grid-cols-3 gap-1">
+                  {ASPECT_RATIO_OPTIONS.map((option) => {
+                    const isSelected = proSettings.aspectRatio === option.value ||
+                      (!proSettings.aspectRatio && option.value === "1:1");
+                    return (
+                      <button
+                        key={option.value}
+                        onClick={() => handleSettingChange("aspectRatio", option.value)}
+                        disabled={isGenerating}
+                        className={cn(
+                          "py-1.5 px-1 rounded text-center transition-all border",
+                          isSelected
+                            ? "bg-white/[0.06] border-white/[0.12]"
+                            : "bg-[var(--camera-body-deep)] border-white/[0.04] hover:border-white/[0.08]"
+                        )}
+                      >
+                        <span className={cn(
+                          "text-[10px] font-medium block",
+                          isSelected ? "text-[var(--darkroom-text)]" : "text-[var(--darkroom-text-muted)]"
+                        )}>{option.label}</span>
+                        <span className={cn(
+                          "text-[9px] font-mono block",
+                          isSelected ? "text-[var(--darkroom-text-muted)]" : "text-[var(--darkroom-text-dim)]"
+                        )}>{option.value}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-1">
+
+              {/* Pro Controls - Collapsible */}
+              <div className="camera-panel">
                 <button
-                  onClick={() => handleSettingChange("visualSquad", undefined)}
-                  disabled={isGenerating}
-                  className={cn(
-                    "py-1.5 px-1.5 rounded text-[10px] transition-all text-center border",
-                    !proSettings.visualSquad
-                      ? "bg-white/[0.06] border-white/[0.12] text-[var(--darkroom-text)] font-medium"
-                      : "bg-[var(--camera-body-deep)] border-white/[0.04] text-[var(--darkroom-text-muted)] hover:border-white/[0.08]"
-                  )}
+                  onClick={() => setShowHistory(!showHistory)}
+                  className="w-full flex items-center justify-between p-2.5"
                 >
-                  Auto
+                  <div className="flex items-center gap-1.5">
+                    <LEDIndicator
+                      state={proSettings.camera || proSettings.lighting || proSettings.environment ? "active" : "off"}
+                      size="sm"
+                    />
+                    <Camera className="w-3 h-3 text-[var(--darkroom-accent)]" />
+                    <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Pro Controls</span>
+                  </div>
+                  <motion.div
+                    animate={{ rotate: showHistory ? 180 : 0 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <ChevronDown className="w-3.5 h-3.5 text-[var(--darkroom-text-dim)]" />
+                  </motion.div>
                 </button>
-                {VISUAL_SQUADS.map((squad) => (
+
+                <AnimatePresence>
+                  {showHistory && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-2.5 pb-2.5 space-y-2 border-t border-white/[0.04] pt-2">
+                        {/* Camera */}
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <Camera className="w-3 h-3 text-[var(--darkroom-text-dim)]" />
+                            <span className="text-[10px] text-[var(--darkroom-text-muted)]">Camera Style</span>
+                          </div>
+                          <Select
+                            value={proSettings.camera || "none"}
+                            onValueChange={(v) => handleSettingChange("camera", v === "none" ? undefined : v)}
+                            disabled={isGenerating}
+                          >
+                            <SelectTrigger className="w-full h-7 bg-[var(--camera-body-deep)] border-white/[0.06] text-[var(--darkroom-text)] text-[10px] rounded">
+                              <SelectValue placeholder="No camera style" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] max-h-[200px]">
+                              <SelectItem value="none" className="text-[var(--darkroom-text)] text-[11px]">No camera style</SelectItem>
+                              {cameraOptions.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value} className="text-[var(--darkroom-text)] text-[11px]">
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Lighting */}
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <Sun className="w-3 h-3 text-[var(--darkroom-text-dim)]" />
+                            <span className="text-[10px] text-[var(--darkroom-text-muted)]">Lighting</span>
+                          </div>
+                          <Select
+                            value={proSettings.lighting || "none"}
+                            onValueChange={(v) => handleSettingChange("lighting", v === "none" ? undefined : v)}
+                            disabled={isGenerating}
+                          >
+                            <SelectTrigger className="w-full h-7 bg-[var(--camera-body-deep)] border-white/[0.06] text-[var(--darkroom-text)] text-[10px] rounded">
+                              <SelectValue placeholder="No lighting style" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] max-h-[200px]">
+                              <SelectItem value="none" className="text-[var(--darkroom-text)] text-[11px]">No lighting style</SelectItem>
+                              {lightingOptions.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value} className="text-[var(--darkroom-text)] text-[11px]">
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Environment */}
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <Globe className="w-3 h-3 text-[var(--darkroom-text-dim)]" />
+                            <span className="text-[10px] text-[var(--darkroom-text-muted)]">Environment</span>
+                          </div>
+                          <Select
+                            value={proSettings.environment || "none"}
+                            onValueChange={(v) => handleSettingChange("environment", v === "none" ? undefined : v)}
+                            disabled={isGenerating}
+                          >
+                            <SelectTrigger className="w-full h-7 bg-[var(--camera-body-deep)] border-white/[0.06] text-[var(--darkroom-text)] text-[10px] rounded">
+                              <SelectValue placeholder="No environment" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] max-h-[200px]">
+                              <SelectItem value="none" className="text-[var(--darkroom-text)] text-[11px]">No environment</SelectItem>
+                              {environmentOptions.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value} className="text-[var(--darkroom-text)] text-[11px]">
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Visual Style */}
+              <div className="camera-panel p-2.5 space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <LEDIndicator state={proSettings.visualSquad ? "active" : "ready"} size="sm" />
+                  <Palette className="w-3 h-3 text-[var(--darkroom-accent)]" />
+                  <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Visual Style</span>
+                </div>
+                <div className="grid grid-cols-2 gap-1">
                   <button
-                    key={squad.value}
-                    onClick={() => handleSettingChange("visualSquad", squad.value)}
+                    onClick={() => handleSettingChange("visualSquad", undefined)}
                     disabled={isGenerating}
                     className={cn(
                       "py-1.5 px-1.5 rounded text-[10px] transition-all text-center border",
-                      proSettings.visualSquad === squad.value
-                        ? "bg-[var(--led-active)]/10 border-[var(--led-active)]/30 text-[var(--led-active)] font-medium"
+                      !proSettings.visualSquad
+                        ? "bg-white/[0.06] border-white/[0.12] text-[var(--darkroom-text)] font-medium"
                         : "bg-[var(--camera-body-deep)] border-white/[0.04] text-[var(--darkroom-text-muted)] hover:border-white/[0.08]"
                     )}
                   >
-                    {squad.label}
+                    Auto
                   </button>
-                ))}
+                  {VISUAL_SQUADS.map((squad) => (
+                    <button
+                      key={squad.value}
+                      onClick={() => handleSettingChange("visualSquad", squad.value)}
+                      disabled={isGenerating}
+                      className={cn(
+                        "py-1.5 px-1.5 rounded text-[10px] transition-all text-center border",
+                        proSettings.visualSquad === squad.value
+                          ? "bg-[var(--led-active)]/10 border-[var(--led-active)]/30 text-[var(--led-active)] font-medium"
+                          : "bg-[var(--camera-body-deep)] border-white/[0.04] text-[var(--darkroom-text-muted)] hover:border-white/[0.08]"
+                      )}
+                    >
+                      {squad.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* === MADISON TAB - Multi-Product & Aspect Ratio === */}
-        {activeTab === "madison" && (
-          <div className="space-y-2">
-            {/* Multi-Product Upload Grid */}
-            <div className="camera-panel p-2.5 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <LEDIndicator 
-                    state={productSlots?.some(s => s.imageUrl) ? "active" : "ready"} 
-                    size="sm"
-                  />
-                  <Layers className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                  <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Product Slots</span>
+          {/* === MADISON TAB - Multi-Product & Aspect Ratio === */}
+          {activeTab === "madison" && (
+            <div className="space-y-2">
+
+              {/* Context Tips - "Madison's Thoughts" */}
+              {contextTips.length > 0 && (
+                <div className="camera-panel p-2.5 space-y-2 border-l-2 border-l-[var(--darkroom-accent)]">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Wand2 className="w-3 h-3 text-[var(--darkroom-accent)]" />
+                    <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Madison's Notes</span>
+                  </div>
+                  <div className="space-y-1">
+                    {contextTips.map((tip, i) => (
+                      <p key={i} className="text-[10px] text-[var(--darkroom-text-muted)] leading-relaxed">
+                        "{tip}"
+                      </p>
+                    ))}
+                  </div>
                 </div>
-                <span className="text-[9px] font-mono text-[var(--darkroom-text-dim)]">
-                  {productSlots?.filter(s => s.imageUrl).length || 0}/6
-                </span>
-              </div>
-              
-              {/* 3x2 Grid of Drop Zones */}
-              <div className="grid grid-cols-3 gap-1.5">
-                {Array.from({ length: 6 }).map((_, index) => {
-                  const slot = productSlots?.[index];
-                  const hasImage = slot?.imageUrl;
-                  
-                  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                      if (ev.target?.result && onProductSlotsChange) {
-                        const newSlots = [...(productSlots || [])];
-                        // Ensure we have enough slots
-                        while (newSlots.length <= index) {
-                          newSlots.push({ id: `slot-${newSlots.length}`, imageUrl: null });
+              )}
+
+              {/* Generated Suggestions */}
+              {suggestions.length > 0 && (
+                <div className="space-y-2">
+                  <span className="text-[9px] text-[var(--darkroom-text-dim)] uppercase tracking-wider px-1">Creative Suggestions</span>
+                  {suggestions.map((suggestion) => (
+                    <SuggestionCard
+                      key={suggestion.id}
+                      suggestion={suggestion}
+                      onUse={() => onUseSuggestion(suggestion)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Multi-Product Upload Grid */}
+              <div className="camera-panel p-2.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <LEDIndicator
+                      state={productSlots?.some(s => s.imageUrl) ? "active" : "ready"}
+                      size="sm"
+                    />
+                    <Layers className="w-3 h-3 text-[var(--darkroom-accent)]" />
+                    <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Product Slots</span>
+                  </div>
+                  <span className="text-[9px] font-mono text-[var(--darkroom-text-dim)]">
+                    {productSlots?.filter(s => s.imageUrl).length || 0}/6
+                  </span>
+                </div>
+
+                {/* 3x2 Grid of Drop Zones */}
+                <div className="grid grid-cols-3 gap-1.5">
+                  {Array.from({ length: 6 }).map((_, index) => {
+                    const slot = productSlots?.[index];
+                    const hasImage = slot?.imageUrl;
+
+                    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        if (ev.target?.result && onProductSlotsChange) {
+                          const newSlots = [...(productSlots || [])];
+                          // Ensure we have enough slots
+                          while (newSlots.length <= index) {
+                            newSlots.push({ id: `slot-${newSlots.length}`, imageUrl: null });
+                          }
+                          newSlots[index] = {
+                            id: slot?.id || `slot-${index}`,
+                            imageUrl: ev.target.result as string,
+                            name: file.name,
+                          };
+                          onProductSlotsChange(newSlots);
+                          toast.success(`Product ${index + 1} added`);
                         }
-                        newSlots[index] = {
-                          id: slot?.id || `slot-${index}`,
-                          imageUrl: ev.target.result as string,
-                          name: file.name,
-                        };
-                        onProductSlotsChange(newSlots);
-                        toast.success(`Product ${index + 1} added`);
+                      };
+                      reader.readAsDataURL(file);
+                      // Reset input
+                      if (productSlotInputRefs.current[index]) {
+                        productSlotInputRefs.current[index]!.value = '';
                       }
                     };
-                    reader.readAsDataURL(file);
-                    // Reset input
-                    if (productSlotInputRefs.current[index]) {
-                      productSlotInputRefs.current[index]!.value = '';
-                    }
-                  };
-                  
-                  const handleRemove = (e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    if (onProductSlotsChange && productSlots) {
-                      const newSlots = [...productSlots];
-                      newSlots[index] = { id: slot?.id || `slot-${index}`, imageUrl: null };
-                      onProductSlotsChange(newSlots);
-                      toast.success(`Product ${index + 1} removed`);
-                    }
-                  };
-                  
-                  return (
-                    <div key={index} className="relative">
-                      <input
-                        ref={(el) => { productSlotInputRefs.current[index] = el; }}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileSelect}
-                        className="hidden"
-                        id={`product-slot-${index}`}
-                      />
-                      <motion.label
-                        htmlFor={`product-slot-${index}`}
+
+                    const handleRemove = (e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      if (onProductSlotsChange && productSlots) {
+                        const newSlots = [...productSlots];
+                        newSlots[index] = { id: slot?.id || `slot-${index}`, imageUrl: null };
+                        onProductSlotsChange(newSlots);
+                        toast.success(`Product ${index + 1} removed`);
+                      }
+                    };
+
+                    return (
+                      <div key={index} className="relative">
+                        <input
+                          ref={(el) => { productSlotInputRefs.current[index] = el; }}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileSelect}
+                          className="hidden"
+                          id={`product-slot-${index}`}
+                        />
+                        <motion.label
+                          htmlFor={`product-slot-${index}`}
+                          className={cn(
+                            "aspect-square rounded flex items-center justify-center cursor-pointer transition-all border overflow-hidden",
+                            hasImage
+                              ? "border-white/[0.12] bg-black"
+                              : "border-dashed border-white/[0.06] bg-[var(--camera-body-deep)] hover:border-white/[0.12] hover:bg-white/[0.03]"
+                          )}
+                          whileHover={{ scale: 1.01 }}
+                          whileTap={{ scale: 0.99 }}
+                        >
+                          {hasImage ? (
+                            <img
+                              src={slot.imageUrl!}
+                              alt={`Product ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center gap-0.5">
+                              <Plus className="w-3 h-3 text-[var(--darkroom-text-dim)]" />
+                              <span className="text-[8px] font-mono text-[var(--darkroom-text-dim)]">{index + 1}</span>
+                            </div>
+                          )}
+                        </motion.label>
+
+                        {/* Remove button */}
+                        {hasImage && (
+                          <motion.button
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            onClick={handleRemove}
+                            className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[var(--led-error)] text-white flex items-center justify-center hover:bg-red-500 transition-colors z-10"
+                          >
+                            <X className="w-2.5 h-2.5" />
+                          </motion.button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Helper text */}
+                <p className="text-[9px] text-[var(--darkroom-text-dim)]">
+                  Add products to composite into scenes
+                </p>
+              </div>
+
+              {/* Quick Aspect Ratios */}
+              <div className="camera-panel p-2.5 space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <LEDIndicator
+                    state={proSettings?.aspectRatio && proSettings.aspectRatio !== "1:1" ? "active" : "ready"}
+                    size="sm"
+                  />
+                  <Aperture className="w-3 h-3 text-[var(--darkroom-accent)]" />
+                  <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Aspect Ratio</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1">
+                  {[
+                    { label: "Square", value: "1:1", desc: "Products" },
+                    { label: "Landscape", value: "16:9", desc: "Website" },
+                    { label: "Story/Reel", value: "9:16", desc: "TikTok/IG" },
+                    { label: "Social", value: "4:5", desc: "IG Feed" },
+                    { label: "Classic", value: "4:3", desc: "Etsy/Print" },
+                    { label: "Banner", value: "2:1", desc: "Hero/Wide" },
+                  ].map((ratio) => {
+                    const isSelected = proSettings?.aspectRatio === ratio.value ||
+                      (!proSettings?.aspectRatio && ratio.value === "1:1");
+                    return (
+                      <button
+                        key={ratio.value}
+                        onClick={() => onProSettingsChange?.({ ...proSettings, aspectRatio: ratio.value })}
+                        disabled={isGenerating}
                         className={cn(
-                          "aspect-square rounded flex items-center justify-center cursor-pointer transition-all border overflow-hidden",
-                          hasImage
-                            ? "border-white/[0.12] bg-black"
-                            : "border-dashed border-white/[0.06] bg-[var(--camera-body-deep)] hover:border-white/[0.12] hover:bg-white/[0.03]"
+                          "py-1.5 px-1 rounded text-center transition-all border",
+                          isSelected
+                            ? "bg-white/[0.06] border-white/[0.12]"
+                            : "bg-[var(--camera-body-deep)] border-white/[0.04] hover:border-white/[0.08]"
+                        )}
+                      >
+                        <span className={cn(
+                          "text-[10px] font-medium block",
+                          isSelected ? "text-[var(--darkroom-text)]" : "text-[var(--darkroom-text-muted)]"
+                        )}>{ratio.label}</span>
+                        <span className={cn(
+                          "text-[9px] font-mono block",
+                          isSelected ? "text-[var(--darkroom-text-muted)]" : "text-[var(--darkroom-text-dim)]"
+                        )}>{ratio.value}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Background Presets - E-commerce Best Practices */}
+              <div className="camera-panel p-2.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <LEDIndicator
+                      state={selectedBackgroundPreset ? "active" : "ready"}
+                      size="sm"
+                    />
+                    <Sparkles className="w-3 h-3 text-[var(--darkroom-accent)]" />
+                    <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Background Style</span>
+                  </div>
+                  {selectedBackgroundPreset && (
+                    <button
+                      onClick={() => onBackgroundPresetChange?.(null)}
+                      className="text-[9px] text-[var(--darkroom-text-dim)] hover:text-[var(--led-error)] font-medium px-1.5 py-0.5 rounded hover:bg-white/5 transition-colors"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                {/* Preset Grid - 2x3 */}
+                <div className="grid grid-cols-2 gap-1.5">
+                  {BACKGROUND_PRESETS.map((preset) => {
+                    const isSelected = selectedBackgroundPreset === preset.id;
+                    return (
+                      <motion.button
+                        key={preset.id}
+                        onClick={() => onBackgroundPresetChange?.(isSelected ? null : preset.id)}
+                        disabled={isGenerating}
+                        className={cn(
+                          "p-2 rounded text-left transition-all border group relative overflow-hidden",
+                          isSelected
+                            ? "bg-[var(--led-active)]/10 border-[var(--led-active)]/30"
+                            : "bg-[var(--camera-body-deep)] border-white/[0.04] hover:border-white/[0.12] hover:bg-white/[0.03]"
                         )}
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
                       >
-                        {hasImage ? (
-                          <img 
-                            src={slot.imageUrl!} 
-                            alt={`Product ${index + 1}`}
-                            className="w-full h-full object-cover"
+                        {/* Selection indicator */}
+                        {isSelected && (
+                          <motion.div
+                            className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[var(--led-active)]"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
                           />
-                        ) : (
-                          <div className="flex flex-col items-center gap-0.5">
-                            <Plus className="w-3 h-3 text-[var(--darkroom-text-dim)]" />
-                            <span className="text-[8px] font-mono text-[var(--darkroom-text-dim)]">{index + 1}</span>
-                          </div>
                         )}
-                      </motion.label>
-                      
-                      {/* Remove button */}
-                      {hasImage && (
-                        <motion.button
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          onClick={handleRemove}
-                          className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[var(--led-error)] text-white flex items-center justify-center hover:bg-red-500 transition-colors z-10"
-                        >
-                          <X className="w-2.5 h-2.5" />
-                        </motion.button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              
-              {/* Helper text */}
-              <p className="text-[9px] text-[var(--darkroom-text-dim)]">
-                Add products to composite into scenes
-              </p>
-            </div>
 
-            {/* Quick Aspect Ratios */}
-            <div className="camera-panel p-2.5 space-y-2">
-              <div className="flex items-center gap-1.5">
-                <LEDIndicator 
-                  state={proSettings?.aspectRatio && proSettings.aspectRatio !== "1:1" ? "active" : "ready"} 
-                  size="sm"
-                />
-                <Aperture className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Aspect Ratio</span>
-              </div>
-              <div className="grid grid-cols-3 gap-1">
-                {[
-                  { label: "Square", value: "1:1", desc: "Products" },
-                  { label: "Landscape", value: "16:9", desc: "Website" },
-                  { label: "Story/Reel", value: "9:16", desc: "TikTok/IG" },
-                  { label: "Social", value: "4:5", desc: "IG Feed" },
-                  { label: "Classic", value: "4:3", desc: "Etsy/Print" },
-                  { label: "Banner", value: "2:1", desc: "Hero/Wide" },
-                ].map((ratio) => {
-                  const isSelected = proSettings?.aspectRatio === ratio.value ||
-                    (!proSettings?.aspectRatio && ratio.value === "1:1");
-                  return (
-                    <button
-                      key={ratio.value}
-                      onClick={() => onProSettingsChange?.({ ...proSettings, aspectRatio: ratio.value })}
-                      disabled={isGenerating}
-                      className={cn(
-                        "py-1.5 px-1 rounded text-center transition-all border",
-                        isSelected
-                          ? "bg-white/[0.06] border-white/[0.12]"
-                          : "bg-[var(--camera-body-deep)] border-white/[0.04] hover:border-white/[0.08]"
-                      )}
-                    >
-                      <span className={cn(
-                        "text-[10px] font-medium block",
-                        isSelected ? "text-[var(--darkroom-text)]" : "text-[var(--darkroom-text-muted)]"
-                      )}>{ratio.label}</span>
-                      <span className={cn(
-                        "text-[9px] font-mono block",
-                        isSelected ? "text-[var(--darkroom-text-muted)]" : "text-[var(--darkroom-text-dim)]"
-                      )}>{ratio.value}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Background Presets - E-commerce Best Practices */}
-            <div className="camera-panel p-2.5 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <LEDIndicator 
-                    state={selectedBackgroundPreset ? "active" : "ready"} 
-                    size="sm"
-                  />
-                  <Sparkles className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                  <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Background Style</span>
-          </div>
-                {selectedBackgroundPreset && (
-                  <button
-                    onClick={() => onBackgroundPresetChange?.(null)}
-                    className="text-[9px] text-[var(--darkroom-text-dim)] hover:text-[var(--led-error)] font-medium px-1.5 py-0.5 rounded hover:bg-white/5 transition-colors"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-              
-              {/* Preset Grid - 2x3 */}
-              <div className="grid grid-cols-2 gap-1.5">
-                {BACKGROUND_PRESETS.map((preset) => {
-                  const isSelected = selectedBackgroundPreset === preset.id;
-                  return (
-                    <motion.button
-                      key={preset.id}
-                      onClick={() => onBackgroundPresetChange?.(isSelected ? null : preset.id)}
-                      disabled={isGenerating}
-                      className={cn(
-                        "p-2 rounded text-left transition-all border group relative overflow-hidden",
-                        isSelected
-                          ? "bg-[var(--led-active)]/10 border-[var(--led-active)]/30"
-                          : "bg-[var(--camera-body-deep)] border-white/[0.04] hover:border-white/[0.12] hover:bg-white/[0.03]"
-                      )}
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                    >
-                      {/* Selection indicator */}
-                      {isSelected && (
-                        <motion.div 
-                          className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[var(--led-active)]"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                        />
-                      )}
-                      
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="text-sm">{preset.icon}</span>
-                        <span className={cn(
-                          "text-[10px] font-medium",
-                          isSelected ? "text-[var(--led-active)]" : "text-[var(--darkroom-text)]"
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="text-sm">{preset.icon}</span>
+                          <span className={cn(
+                            "text-[10px] font-medium",
+                            isSelected ? "text-[var(--led-active)]" : "text-[var(--darkroom-text)]"
+                          )}>
+                            {preset.label}
+                          </span>
+                        </div>
+                        <p className={cn(
+                          "text-[9px] leading-tight",
+                          isSelected ? "text-[var(--led-active)]/70" : "text-[var(--darkroom-text-dim)]"
                         )}>
-                          {preset.label}
-                        </span>
-                      </div>
-                      <p className={cn(
-                        "text-[9px] leading-tight",
-                        isSelected ? "text-[var(--led-active)]/70" : "text-[var(--darkroom-text-dim)]"
-                      )}>
-                        {preset.description}
-                      </p>
-                    </motion.button>
-                  );
-                })}
-              </div>
-              
-              {/* Helper text */}
-              <p className="text-[9px] text-[var(--darkroom-text-dim)] pt-1 border-t border-white/[0.04]">
-                <span className="text-[var(--darkroom-accent)]">✦</span> Auto-varies each generation for diversity
-              </p>
-            </div>
-
-            {/* Composition Presets - How to arrange products */}
-            <div className="camera-panel p-2.5 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <LEDIndicator 
-                    state={selectedCompositionPreset ? "active" : "ready"} 
-                    size="sm"
-                  />
-                  <Layers className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                  <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Arrangement</span>
+                          {preset.description}
+                        </p>
+                      </motion.button>
+                    );
+                  })}
                 </div>
-                {selectedCompositionPreset && (
-                  <button
-                    onClick={() => onCompositionPresetChange?.(null)}
-                    className="text-[9px] text-[var(--darkroom-text-dim)] hover:text-[var(--led-error)] font-medium px-1.5 py-0.5 rounded hover:bg-white/5 transition-colors"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-              
-              {/* Preset Grid - 2x3 */}
-              <div className="grid grid-cols-2 gap-1.5">
-                {COMPOSITION_PRESETS.map((preset) => {
-                  const isSelected = selectedCompositionPreset === preset.id;
-                  return (
-                    <motion.button
-                      key={preset.id}
-                      onClick={() => onCompositionPresetChange?.(isSelected ? null : preset.id)}
-                      disabled={isGenerating}
-                      className={cn(
-                        "p-2 rounded text-left transition-all border group relative overflow-hidden",
-                        isSelected
-                          ? "bg-[var(--led-active)]/10 border-[var(--led-active)]/30"
-                          : "bg-[var(--camera-body-deep)] border-white/[0.04] hover:border-white/[0.12] hover:bg-white/[0.03]"
-                      )}
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                    >
-                      {/* Selection indicator */}
-                      {isSelected && (
-                        <motion.div 
-                          className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[var(--led-active)]"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                        />
-                      )}
-                      
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="text-sm">{preset.icon}</span>
-                        <span className={cn(
-                          "text-[10px] font-medium",
-                          isSelected ? "text-[var(--led-active)]" : "text-[var(--darkroom-text)]"
-                        )}>
-                          {preset.label}
-                        </span>
-                      </div>
-                      <p className={cn(
-                        "text-[9px] leading-tight",
-                        isSelected ? "text-[var(--led-active)]/70" : "text-[var(--darkroom-text-dim)]"
-                      )}>
-                        {preset.description}
-                      </p>
-                    </motion.button>
-                  );
-                })}
-              </div>
-              
-              {/* Helper text */}
-              <p className="text-[9px] text-[var(--darkroom-text-dim)] pt-1 border-t border-white/[0.04]">
-                <span className="text-[var(--darkroom-accent)]">✦</span> Tells AI how to place products in scene
-              </p>
-            </div>
-          </div>
-        )}
 
-      </div>
-    </motion.aside>
+                {/* Helper text */}
+                <p className="text-[9px] text-[var(--darkroom-text-dim)] pt-1 border-t border-white/[0.04]">
+                  <span className="text-[var(--darkroom-accent)]">✦</span> Auto-varies each generation for diversity
+                </p>
+              </div>
+
+              {/* Composition Presets - How to arrange products */}
+              <div className="camera-panel p-2.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <LEDIndicator
+                      state={selectedCompositionPreset ? "active" : "ready"}
+                      size="sm"
+                    />
+                    <Layers className="w-3 h-3 text-[var(--darkroom-accent)]" />
+                    <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Arrangement</span>
+                  </div>
+                  {selectedCompositionPreset && (
+                    <button
+                      onClick={() => onCompositionPresetChange?.(null)}
+                      className="text-[9px] text-[var(--darkroom-text-dim)] hover:text-[var(--led-error)] font-medium px-1.5 py-0.5 rounded hover:bg-white/5 transition-colors"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                {/* Preset Grid - 2x3 */}
+                <div className="grid grid-cols-2 gap-1.5">
+                  {COMPOSITION_PRESETS.map((preset) => {
+                    const isSelected = selectedCompositionPreset === preset.id;
+                    return (
+                      <motion.button
+                        key={preset.id}
+                        onClick={() => onCompositionPresetChange?.(isSelected ? null : preset.id)}
+                        disabled={isGenerating}
+                        className={cn(
+                          "p-2 rounded text-left transition-all border group relative overflow-hidden",
+                          isSelected
+                            ? "bg-[var(--led-active)]/10 border-[var(--led-active)]/30"
+                            : "bg-[var(--camera-body-deep)] border-white/[0.04] hover:border-white/[0.12] hover:bg-white/[0.03]"
+                        )}
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                      >
+                        {/* Selection indicator */}
+                        {isSelected && (
+                          <motion.div
+                            className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[var(--led-active)]"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                          />
+                        )}
+
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="text-sm">{preset.icon}</span>
+                          <span className={cn(
+                            "text-[10px] font-medium",
+                            isSelected ? "text-[var(--led-active)]" : "text-[var(--darkroom-text)]"
+                          )}>
+                            {preset.label}
+                          </span>
+                        </div>
+                        <p className={cn(
+                          "text-[9px] leading-tight",
+                          isSelected ? "text-[var(--led-active)]/70" : "text-[var(--darkroom-text-dim)]"
+                        )}>
+                          {preset.description}
+                        </p>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                {/* Helper text */}
+                <p className="text-[9px] text-[var(--darkroom-text-dim)] pt-1 border-t border-white/[0.04]">
+                  <span className="text-[var(--darkroom-accent)]">✦</span> Tells AI how to place products in scene
+                </p>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </motion.aside>
     </>
   );
 }

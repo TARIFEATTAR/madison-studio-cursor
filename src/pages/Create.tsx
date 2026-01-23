@@ -1,6 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Lightbulb, FileText, PenTool, X, Send, Loader2, Upload, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Lightbulb, FileText, PenTool, X, Send, Loader2, Upload, Search, ChevronDown, ChevronUp, BookOpen } from "lucide-react";
+import { LibrarianTrigger } from "@/components/librarian";
+import { AgentSuggestion } from "@/components/agent";
+import { useAgentBehavior } from "@/hooks/useAgentBehavior";
 import penNibIcon from "@/assets/pen-nib-icon-new.png";
 import { createRoot } from "react-dom/client";
 import { ThinkMode } from "@/components/create/ThinkMode";
@@ -15,7 +18,7 @@ import { useOnboarding } from "@/hooks/useOnboarding";
 import { useProducts } from "@/hooks/useProducts";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useBrandContext } from "@/hooks/useBrandContext";
-import { useToast } from "@/hooks/use-toast";
+import { madison } from "@/lib/madisonToast";
 import { generateSmartName } from "@/lib/promptNaming";
 import { detectCategory } from "@/lib/promptCategorization";
 import { Button } from "@/components/ui/button";
@@ -48,8 +51,24 @@ export default function Create() {
   const { products, loading: productsLoading } = useProducts();
   const { userName } = useUserProfile();
   const { brandName } = useBrandContext(currentOrganizationId);
-  const { toast } = useToast();
 
+
+  // Madison Agent - proactive suggestions
+  const {
+    currentSuggestion,
+    dismissSuggestion,
+    acceptSuggestion,
+    onGenerationComplete,
+    triggerSuggestion,
+  } = useAgentBehavior({
+    context: 'forge',
+    trackIdle: true,
+    idleThreshold: 10 * 60 * 1000, // 10 minutes
+    enabled: true,
+  });
+
+  // Librarian state
+  const [showLibrarian, setShowLibrarian] = useState(false);
 
   // Form state
   const [product, setProduct] = useState("");
@@ -79,10 +98,10 @@ export default function Create() {
           setAdditionalContext(prompt.prompt_text);
         }
 
-        toast({
-          title: "Template loaded with smart mapping",
-          description: `"${prompt.title}" fields auto-populated`,
-        });
+        madison.info(
+          "Template loaded with smart mapping",
+          `"${prompt.title}" fields auto-populated`
+        );
       } else {
         // Legacy/simple templates: map best-effort and prefill
         // 1) Try full_brief from additional_context
@@ -111,16 +130,15 @@ export default function Create() {
         }
         // Surface it to the user and open Advanced Options so they see the text
         setAdvancedOptionsOpen(true);
-        toast({
-          title: 'Template loaded',
-          description: `"${prompt.title}" applied. Edit details in Advanced Options.`,
-        });
+        madison.info(
+          "Template loaded",
+          `"${prompt.title}" applied. Edit details in Advanced Options.`
+        );
       }
 
-      // Clear the navigation state
       window.history.replaceState({}, document.title);
     }
-  }, [location.state, toast]);
+  }, [location.state]);
 
   // Handle URL param for worksheet upload
   useEffect(() => {
@@ -150,11 +168,10 @@ export default function Create() {
   const handleSubmit = () => {
     // Only format is required
     if (!format) {
-      toast({
-        title: "Format required",
-        description: "Please select a deliverable format to continue.",
-        variant: "destructive",
-      });
+      madison.warning(
+        "Format required",
+        "Please select a deliverable format to continue."
+      );
       return;
     }
 
@@ -476,10 +493,10 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
 
       if (saveError) {
         logger.error('Save failed:', saveError);
-        toast({
-          title: "Content saved locally",
-          description: "We'll retry saving to your library shortly.",
-        });
+        madison.success(
+          "Content saved locally",
+          "We'll retry saving to your library shortly."
+        );
       } else {
         // Success - clear local backup
         localStorage.removeItem('draft-content-backup');
@@ -512,12 +529,10 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
       }
 
       // Show error toast with detailed message
-      toast({
-        title: "Generation failed",
-        description: errorMessage,
-        variant: "destructive",
-        duration: 8000
-      });
+      madison.error(
+        "Generation failed",
+        errorMessage
+      );
 
       // Remove loading overlay
       loaderRoot.unmount();
@@ -587,11 +602,10 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
         }
 
         // Show a gentle notice
-        toast({
-          title: 'Legacy Template loaded',
-          description: 'We mapped the format and inserted the template text into Advanced Options.',
-          variant: 'default'
-        });
+        madison.info(
+          'Legacy Template loaded',
+          'We mapped the format and inserted the template text into Advanced Options.'
+        );
       }
     }
 
@@ -604,10 +618,10 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
       })
       .eq('id', prompt.id);
 
-    toast({
-      title: "✓ Prompt Loaded",
-      description: `Loaded: ${prompt.user_custom_name || prompt.auto_generated_name || prompt.title}`,
-    });
+    madison.success(
+      "✓ Prompt Loaded",
+      `Loaded: ${prompt.user_custom_name || prompt.auto_generated_name || prompt.title}`
+    );
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -622,11 +636,10 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
         .single();
 
       if (error || !data) {
-        toast({
-          title: "Error loading worksheet data",
-          description: "Please try uploading again",
-          variant: "destructive"
-        });
+        madison.error(
+          "Error loading worksheet data",
+          "Please try uploading again"
+        );
         return;
       }
 
@@ -642,18 +655,17 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
 
       setUploadDialogOpen(false);
 
-      toast({
-        title: "Worksheet loaded!",
-        description: "Review and adjust fields as needed, then create your content"
-      });
+      madison.success(
+        "Worksheet loaded!",
+        "Review and adjust fields as needed, then create your content"
+      );
 
     } catch (error) {
       logger.error('Worksheet load error:', error);
-      toast({
-        title: "Error loading worksheet",
-        description: error instanceof Error ? error.message : "Please try again",
-        variant: "destructive"
-      });
+      madison.error(
+        "Error loading worksheet",
+        error instanceof Error ? error.message : "Please try again"
+      );
     }
   };
 
@@ -686,14 +698,46 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 bg-white/50 px-3 py-2 rounded-lg border border-warm-gray/10 flex-shrink-0">
-                <Label htmlFor="think-mode-toggle" className="text-xs md:text-sm text-warm-gray font-medium cursor-pointer select-none whitespace-nowrap">Brainstorming Helper</Label>
-                <Switch
-                  id="think-mode-toggle"
-                  checked={showThinkMode}
-                  onCheckedChange={toggleThinkMode}
-                  className="data-[state=checked]:bg-brass flex-shrink-0"
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Librarian Trigger */}
+                {/* Madison Consult Trigger */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="w-9 h-9 text-brand-brass hover:bg-brand-brass/10 border border-brand-brass/20 rounded-md mr-1"
+                  onClick={() => triggerSuggestion({
+                    type: 'idle_prompt', // Using idle_prompt type for manual consultation
+                    message: "How might I assist you?",
+                    secondaryMessage: "I can recommend a framework or review your current brief."
+                  })}
+                  title="Consult Madison"
+                >
+                  <span className="font-serif font-bold text-lg">M</span>
+                </Button>
+
+                <LibrarianTrigger
+                  variant="icon"
+                  context="forge"
+                  category="copy"
+                  open={showLibrarian}
+                  onOpenChange={setShowLibrarian}
+                  onFrameworkSelect={(framework) => {
+                    // Auto-fill the additional context with the framework
+                    setAdditionalContext(framework.framework_content);
+                    setAdvancedOptionsOpen(true);
+                    madison.frameworkAcquired();
+                  }}
                 />
+
+                <div className="flex items-center gap-2 bg-white/50 px-3 py-2 rounded-lg border border-warm-gray/10">
+                  <Label htmlFor="think-mode-toggle" className="text-xs md:text-sm text-warm-gray font-medium cursor-pointer select-none whitespace-nowrap">Brainstorming Helper</Label>
+                  <Switch
+                    id="think-mode-toggle"
+                    checked={showThinkMode}
+                    onCheckedChange={toggleThinkMode}
+                    className="data-[state=checked]:bg-brass flex-shrink-0"
+                  />
+                </div>
               </div>
             </div>
 
@@ -727,10 +771,10 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                 onClose={() => setThinkModeExpanded(false)}
                 onReadyToFill={() => {
                   setThinkModeExpanded(false);
-                  toast({
-                    title: "Fill out the brief below",
-                    description: "Use the form to finalize your content request"
-                  });
+                  madison.info(
+                    "Fill out the brief below",
+                    "Use the form to finalize your content request"
+                  );
                 }}
               />
             )
@@ -974,6 +1018,25 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Madison Agent Suggestions */}
+      {currentSuggestion && (
+        <AgentSuggestion
+          type={currentSuggestion.type}
+          message={currentSuggestion.message}
+          secondaryMessage={currentSuggestion.secondaryMessage}
+          onAccept={() => {
+            acceptSuggestion();
+            // Open the Librarian if this is an idle or framework suggestion
+            if (currentSuggestion.type === 'idle_prompt' || currentSuggestion.type === 'framework_recommend') {
+              setShowLibrarian(true);
+            }
+          }}
+          onDismiss={dismissSuggestion}
+          acceptLabel="Yes, please"
+          dismissLabel="Not now"
+        />
+      )}
     </div>
   );
 }

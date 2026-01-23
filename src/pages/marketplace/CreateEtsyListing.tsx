@@ -190,7 +190,7 @@ export default function CreateEtsyListing() {
   };
 
   const handleExportCSV = () => {
-    // TODO: Implement CSV export
+    // TODO (Backlog): Implement CSV export
     toast({
       title: "Export CSV",
       description: "CSV export coming soon!"
@@ -198,7 +198,7 @@ export default function CreateEtsyListing() {
   };
 
   const handlePreview = () => {
-    // TODO: Implement preview
+    // TODO (Backlog): Implement preview
     toast({
       title: "Preview",
       description: "Preview feature coming soon!"

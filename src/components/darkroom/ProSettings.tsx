@@ -91,6 +91,7 @@ export interface ProModeSettings {
   aiProvider?: string;
   resolution?: string;
   characterId?: string; // AI Character for consistent faces
+  visualSquad?: string; // Visual Style/Filter
 }
 
 interface ProSettingsProps {
@@ -101,7 +102,7 @@ interface ProSettingsProps {
 
 export function ProSettings({ settings, onChange, disabled = false }: ProSettingsProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   const cameraOptions = getCameraOptions();
   const lightingOptions = getLightingOptions();
   const environmentOptions = getEnvironmentOptions();
@@ -304,9 +305,9 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                   </SelectTrigger>
                   <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] z-50">
                     {ASPECT_RATIO_OPTIONS.map((option) => (
-                      <SelectItem 
-                        key={option.value} 
-                        value={option.value} 
+                      <SelectItem
+                        key={option.value}
+                        value={option.value}
                         className="text-[#f5f0e6] focus:bg-[#2a2520] focus:text-[#f5f0e6] data-[highlighted]:bg-[#2a2520] data-[highlighted]:text-[#f5f0e6]"
                       >
                         <span className="flex items-center justify-between w-full">
@@ -338,7 +339,7 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                       </TooltipTrigger>
                       <TooltipContent side="left" className="max-w-[220px]">
                         <p className="text-xs">
-                          Freepik models require Studio or Signature plan. 
+                          Freepik models require Studio or Signature plan.
                           Seedream 4 4K supports reference images for best product accuracy.
                         </p>
                       </TooltipContent>
@@ -358,12 +359,12 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                       // Add group headers
                       const prevOption = idx > 0 ? AI_PROVIDER_OPTIONS[idx - 1] : null;
                       const showGroupHeader = !prevOption || prevOption.group !== option.group;
-                      
+
                       const groupLabels: Record<string, string> = {
                         "gemini": "Google Gemini",
                         "freepik": "Freepik AI Models",
                       };
-                      
+
                       return (
                         <div key={option.value}>
                           {showGroupHeader && option.group !== "auto" && (
@@ -371,8 +372,8 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                               {groupLabels[option.group] || option.group}
                             </div>
                           )}
-                          <SelectItem 
-                            value={option.value} 
+                          <SelectItem
+                            value={option.value}
                             className="text-[#f5f0e6] focus:bg-[#2a2520] focus:text-[#f5f0e6] data-[highlighted]:bg-[#2a2520] data-[highlighted]:text-[#f5f0e6]"
                           >
                             <span className="flex items-center gap-2 w-full">
@@ -416,7 +417,7 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                       </TooltipTrigger>
                       <TooltipContent side="left" className="max-w-[200px]">
                         <p className="text-xs">
-                          Higher resolution uses more credits. 
+                          Higher resolution uses more credits.
                           4K requires Signature plan and Seedream 4 4K model.
                         </p>
                       </TooltipContent>
@@ -433,9 +434,9 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                   </SelectTrigger>
                   <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] z-50">
                     {RESOLUTION_OPTIONS.map((option) => (
-                      <SelectItem 
-                        key={option.value} 
-                        value={option.value} 
+                      <SelectItem
+                        key={option.value}
+                        value={option.value}
                         className="text-[#f5f0e6] focus:bg-[#2a2520] focus:text-[#f5f0e6] data-[highlighted]:bg-[#2a2520] data-[highlighted]:text-[#f5f0e6]"
                       >
                         <span className="flex items-center gap-2 w-full">
@@ -467,7 +468,7 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                       </TooltipTrigger>
                       <TooltipContent side="left" className="max-w-[220px]">
                         <p className="text-xs">
-                          Select a pre-defined AI character for consistent faces 
+                          Select a pre-defined AI character for consistent faces
                           across multiple images. Great for lifestyle and campaign shots.
                         </p>
                       </TooltipContent>
@@ -483,8 +484,8 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                     <SelectValue placeholder="Select character..." />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1a1816] border-[var(--darkroom-border)] z-50 max-h-[250px]">
-                    <SelectItem 
-                      value="none" 
+                    <SelectItem
+                      value="none"
                       className="text-[#a09080] focus:bg-[#2a2520] focus:text-[#f5f0e6] data-[highlighted]:bg-[#2a2520] data-[highlighted]:text-[#f5f0e6]"
                     >
                       None (no character)
@@ -493,8 +494,8 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
                       AI Characters (consistent faces)
                     </div>
                     {AI_CHARACTERS.map((char) => (
-                      <SelectItem 
-                        key={char.id} 
+                      <SelectItem
+                        key={char.id}
                         value={char.id}
                         className="text-[#f5f0e6] focus:bg-[#2a2520] focus:text-[#f5f0e6] data-[highlighted]:bg-[#2a2520] data-[highlighted]:text-[#f5f0e6]"
                       >

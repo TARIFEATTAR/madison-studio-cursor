@@ -194,10 +194,15 @@ async function transformContentToSanity(
   // If the user selects "Field Journal", we map it to "journalEntry"
   // based on the console warnings seen in Sanity Studio.
   // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // SCHEMA ALIGNMENT FIX:
+  // We map most text-heavy types to "journalEntry" to ensure they appear
+  // in the Tarife Attar "Journal" inbox.
+  // -------------------------------------------------------------------------
   let finalDocumentType = sanityDocumentType;
-  if (sanityDocumentType === "fieldJournal" || sanityDocumentType === "journal") {
-    finalDocumentType = "journalEntry";
-    console.log("[push-to-sanity] Aliasing to 'journalEntry' to match schema.");
+  if (['fieldJournal', 'journal', 'post', 'blog_article', 'article'].includes(sanityDocumentType)) {
+    finalDocumentType = 'journalEntry';
+    console.log(`[push-to-sanity] Aliasing '${sanityDocumentType}' to 'journalEntry' to match schema.`);
   }
 
   const baseDoc: any = {
@@ -218,7 +223,7 @@ async function transformContentToSanity(
   };
 
   // Add content based on document type
-  if (finalDocumentType === "post" || finalDocumentType === "article" || finalDocumentType === "blog_article" || finalDocumentType === "journalEntry") {
+  if (finalDocumentType === "journalEntry" || finalDocumentType === "emailCampaign" /* Fallback for legacy checks */) {
     // RESTORED INBOX METADATA & GENERATION SOURCE:
     mappings.status = 'inbox';
     mappings.state = 'inbox';
@@ -238,13 +243,13 @@ async function transformContentToSanity(
     if (finalDocumentType === "journalEntry") {
       // Use category from request, default to field-notes
       mappings.category = extraMetadata.category || "field-notes";
-      // Content body - restored from ULTRA-SAFE MODE
+
+      // UNIFIED CONTENT MAPPING:
+      // We populate ALL likely content fields to avoid "Unknown Field" errors
+      // or "Missing Content" issues in different schema versions.
       mappings.body = portableText;
-      mappings.description = contentField;
-    } else {
-      // blog_article and others support travelLog
-      mappings.travelLog = portableText;
-      mappings.body = portableText;
+      mappings.travelLog = portableText; // Crucial for Travel Journals
+      mappings.description = contentField; // Plain text fallback
       mappings.content = portableText;
     }
 

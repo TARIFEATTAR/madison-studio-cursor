@@ -41,7 +41,7 @@ export function useTooltipAnalytics() {
                 // For now, we'll just log to console
                 console.log("Syncing tooltip analytics:", events);
 
-                // TODO: Uncomment when table is created
+                // TODO (Backlog): Uncomment when table is created
                 // await supabase.from("tooltip_analytics").insert(events);
 
                 // Clear pending events after successful sync

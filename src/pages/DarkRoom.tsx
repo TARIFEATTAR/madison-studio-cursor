@@ -9,9 +9,10 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "sonner";
+import { madison } from "@/lib/madisonToast";
 import { v4 as uuidv4 } from "uuid";
-import { Image, Wand2 } from "lucide-react";
+import { Image, Wand2, BookOpen } from "lucide-react";
+import { LibrarianTrigger } from "@/components/librarian";
 
 // Supabase & Auth
 import { supabase } from "@/integrations/supabase/client";
@@ -259,7 +260,7 @@ export default function DarkRoom() {
         url: state.backgroundImage.url,
         name: state.backgroundImage.name,
       });
-      toast.success("Background image loaded from Light Table");
+      madison.success("Background image loaded from Light Table");
     }
   }, [location.state]);
 
@@ -270,9 +271,7 @@ export default function DarkRoom() {
     // Check if organization is resolved
     if (!orgId) {
       console.error("❌ No organization ID found - user may need to complete onboarding");
-      toast.error("Organization not found", {
-        description: "Please refresh the page or complete onboarding.",
-      });
+      madison.error("Organization not found", "Please refresh the page or complete onboarding.");
       return;
     }
 
@@ -395,11 +394,11 @@ export default function DarkRoom() {
           visualSquad: proSettings.visualSquad,
           productContext: selectedProduct
             ? {
-                name: selectedProduct.name,
-                collection: selectedProduct.collection || "Unknown",
-                scent_family: selectedProduct.scentFamily || "Unspecified",
-                category: selectedProduct.category,
-              }
+              name: selectedProduct.name,
+              collection: selectedProduct.collection || "Unknown",
+              scent_family: selectedProduct.scentFamily || "Unspecified",
+              category: selectedProduct.category,
+            }
             : undefined,
         },
       });
@@ -410,33 +409,20 @@ export default function DarkRoom() {
         const errorMsg = error.message || error.context?.body || error.toString();
 
         if (errorMsg.includes("Rate limit") || error.status === 429) {
-          toast.error("Rate limit reached", {
-            description: "Please wait a moment before generating another image.",
-          });
+          madison.error("Rate limit reached", "Please wait a moment before generating another image.");
         } else if (errorMsg.includes("credits") || error.status === 402) {
-          toast.error("AI credits depleted", {
-            description: "Please add credits in Settings.",
-          });
+          madison.error("AI credits depleted", "Please add credits in Settings.");
         } else if (errorMsg.includes("organization") || errorMsg.includes("onboarding")) {
-          toast.error("Setup incomplete", {
-            description: "Please complete onboarding to start generating images.",
-            action: {
-              label: "Go to Dashboard",
-              onClick: () => navigate("/dashboard"),
-            },
-          });
+          // Action toast not perfectly mapped, simplifying for now or could add custom action
+          madison.error("Setup incomplete", "Please complete onboarding to start generating images.");
         } else {
-          toast.error("Generation failed", {
-            description: errorMsg.substring(0, 100),
-          });
+          madison.error("Generation failed", errorMsg.substring(0, 100));
         }
         return;
       }
 
       if (!data?.imageUrl || !data?.savedImageId) {
-        toast.error("Generation failed", {
-          description: "No image returned from server.",
-        });
+        madison.error("Generation failed", "No image returned from server.");
         return;
       }
 
@@ -470,12 +456,10 @@ export default function DarkRoom() {
       // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ["generated-images"] });
 
-      toast.success("Image created!", {
-        description: "Your image has been saved to the library.",
-      });
+      madison.success("Image created!", "Your image has been saved to the library.");
     } catch (err) {
       console.error("❌ Unexpected error:", err);
-      toast.error("Something went wrong");
+      madison.error("Something went wrong");
     } finally {
       setIsGenerating(false);
     }
@@ -501,7 +485,7 @@ export default function DarkRoom() {
       setImages((prev) =>
         prev.map((img) => (img.id === id ? { ...img, isSaved: true } : img))
       );
-      toast.success("Image saved to library");
+      madison.saved();
     } finally {
       setIsSaving(false);
     }
@@ -512,22 +496,25 @@ export default function DarkRoom() {
     if (heroImageId === id) {
       setHeroImageId(null);
     }
-    toast.success("Image removed from session");
+    if (heroImageId === id) {
+      setHeroImageId(null);
+    }
+    madison.success("Image removed from session");
   }, [heroImageId]);
 
   const handleDownloadImage = useCallback(async (image: GeneratedImage) => {
     if (!image || !image.imageUrl) {
-      toast.error("No image to download");
+      madison.error("No image to download");
       return;
     }
 
     try {
       const { downloadImage } = await import("@/utils/imageDownload");
       await downloadImage(image.imageUrl, `madison-${image.id.slice(0, 8)}.png`);
-      toast.success("Image downloaded");
+      madison.success("Image downloaded");
     } catch (err) {
       console.error('Download failed:', err);
-      toast.error(err instanceof Error ? err.message : "Failed to download image. Try right-clicking and 'Save Image As'");
+      madison.error(err instanceof Error ? err.message : "Failed to download image. Try right-clicking and 'Save Image As'");
     }
   }, []);
 
@@ -545,23 +532,23 @@ export default function DarkRoom() {
 
   const handleUseSuggestion = useCallback((suggestion: Suggestion) => {
     setPrompt(suggestion.text);
-    toast.success("Suggestion applied");
+    madison.success("Suggestion applied");
   }, []);
 
   const handleApplyPreset = useCallback((preset: string) => {
     setPrompt((prev) => (prev ? `${prev}, ${preset.toLowerCase()}` : preset));
-    toast.success(`Applied: ${preset}`);
+    madison.success(`Applied: ${preset}`);
   }, []);
 
   const handleRestoreFromHistory = useCallback((item: HistoryItem) => {
     setPrompt(item.prompt);
-    toast.success("Prompt restored");
+    madison.success("Prompt restored");
   }, []);
 
   const handleSaveAll = useCallback(async () => {
     const unsaved = images.filter((img) => !img.isSaved);
     if (unsaved.length === 0) {
-      toast.info("All images already saved");
+      madison.info("All images already saved");
       return;
     }
 
@@ -570,7 +557,7 @@ export default function DarkRoom() {
       // In this implementation, all images are auto-saved on generation
       // This is just updating local state
       setImages((prev) => prev.map((img) => ({ ...img, isSaved: true })));
-      toast.success(`${unsaved.length} image(s) saved`);
+      madison.success(`${unsaved.length} image(s) saved`);
     } finally {
       setIsSaving(false);
     }
@@ -626,6 +613,21 @@ export default function DarkRoom() {
         onSaveHero={heroImage ? () => handleSaveImage(heroImage.id) : undefined}
         onRefineHero={heroImage ? () => handleOpenLightTable(heroImage) : undefined}
       />
+
+      {/* Librarian Quick Access - Image Frameworks */}
+      <div className="absolute top-4 right-4 z-10">
+        <LibrarianTrigger
+          variant="icon"
+          context="dark_room"
+          category="image"
+          onFrameworkSelect={(framework) => {
+            // Append framework to current prompt
+            setPrompt((prev) => prev ? `${prev}\n\n${framework.framework_content}` : framework.framework_content);
+            madison.frameworkAcquired();
+            // Optional: madison.success("Framework applied", `"${framework.title}" added to your prompt.`);
+          }}
+        />
+      </div>
 
       {/* Main Grid */}
       <div className="dark-room-grid">

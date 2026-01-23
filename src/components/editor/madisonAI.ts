@@ -609,7 +609,7 @@ export async function runMadisonInlineAction(
  * Check if Madison AI is available and configured
  */
 export async function isMadisonAvailable(): Promise<boolean> {
-  // TODO: Check actual availability
+  // TODO (Backlog): Check actual availability
   // - Verify API keys are configured
   // - Check rate limits
   // - Verify organization has credits

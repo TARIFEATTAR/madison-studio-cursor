@@ -2003,7 +2003,7 @@ export default function ImageEditor() {
         proModeSettings={showProMode ? proModeControls : undefined}
         onSendMessage={async (message) => {
           console.log("Madison message:", message);
-          // TODO: Integrate with Madison AI backend
+          // TODO (Backlog): Integrate with Madison AI backend
         }}
       />
     </div>

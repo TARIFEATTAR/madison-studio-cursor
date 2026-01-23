@@ -25,7 +25,7 @@ export function ImportDialog({ open, onOpenChange, onImport }: ImportDialogProps
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // TODO: Implement CSV/Excel parsing
+    // TODO (Backlog): Implement CSV/Excel parsing
     toast({
       title: "File uploaded",
       description: `Processing ${file.name}...`,
@@ -51,7 +51,7 @@ export function ImportDialog({ open, onOpenChange, onImport }: ImportDialogProps
       return;
     }
 
-    // TODO: Parse pasted spreadsheet data
+    // TODO (Backlog): Parse pasted spreadsheet data
     toast({
       title: "Processing...",
       description: "Parsing pasted data...",
@@ -76,7 +76,7 @@ export function ImportDialog({ open, onOpenChange, onImport }: ImportDialogProps
       return;
     }
 
-    // TODO: Implement Google Sheets import
+    // TODO (Backlog): Implement Google Sheets import
     toast({
       title: "Connecting...",
       description: "Fetching data from Google Sheets...",

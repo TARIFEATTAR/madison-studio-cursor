@@ -20,8 +20,9 @@ import {
   Sparkles, Archive, Mail, MessageSquare, Tag,
   FileText, CheckCircle2, XCircle, ChevronDown, ChevronRight, Copy,
   Calendar, Edit, Loader2, AlertCircle, Video, Bookmark,
-  Briefcase, Share2, ArrowLeft, Image as ImageIcon, Film, Layers
+  Briefcase, Share2, ArrowLeft, Image as ImageIcon, Film, Layers, BookOpen
 } from "lucide-react";
+import { LibrarianTrigger } from "@/components/librarian";
 import { EditorialDirectorSplitScreen } from "@/components/multiply/EditorialDirectorSplitScreen";
 import { SavePromptDialog } from "@/components/prompt-library/SavePromptDialog";
 import { ScheduleButton } from "@/components/forge/ScheduleButton";
@@ -1060,6 +1061,17 @@ export default function Multiply() {
           <div className="flex items-center gap-3 mb-2">
             <h1 className="font-serif text-4xl">Multiply</h1>
             <VideoHelpTrigger videoId="what-is-multiply" variant="icon" />
+            <LibrarianTrigger
+              variant="icon"
+              context="multiply"
+              category="copy"
+              onFrameworkSelect={(framework) => {
+                toast({
+                  title: "Framework acquired",
+                  description: `"${framework.title}" - use this approach for your derivatives.`,
+                });
+              }}
+            />
           </div>
           <p className="text-muted-foreground">Transform master content into multiple formats</p>
         </div>

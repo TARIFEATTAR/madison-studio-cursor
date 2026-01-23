@@ -146,7 +146,7 @@ export function PublishToSanity({
   };
 
   const getSanityStudioUrl = () => {
-    // TODO: Make this configurable per organization via settings
+    // TODO (Backlog): Make this configurable per organization via settings
     // Tarife Attar uses a self-hosted Sanity Studio at their website
     const studioBaseUrl = "https://www.tarifeattar.com/studio";
     if (syncStatus?.sanityDocumentId) {

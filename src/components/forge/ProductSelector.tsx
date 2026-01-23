@@ -58,18 +58,18 @@ export function ProductSelector({
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className={`p-0 bg-studio-charcoal border-studio-border z-[9999] pointer-events-auto backdrop-blur-sm ${className || "w-[300px]"}`}
+          className={`p-0 bg-[#1A1816] border-[#2C2C2C] z-[9999] pointer-events-auto ${className || "w-[300px]"}`}
           align="start"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          <Command className="bg-studio-charcoal">
+          <Command className="bg-[#1A1816]">
             <CommandInput
               placeholder="Search products..."
               value={searchValue}
               onValueChange={setSearchValue}
-              className="bg-studio-charcoal text-studio-text-primary"
+              className="bg-[#1A1816] text-[#EAEAEA]"
             />
-            <CommandList className="bg-studio-charcoal">
+            <CommandList className="bg-[#1A1816]">
               <CommandEmpty className="text-studio-text-muted">
                 {loading ? "Loading products..." : "No products found. Products can be added through your brand settings."}
               </CommandEmpty>
