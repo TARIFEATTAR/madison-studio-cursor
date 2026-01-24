@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 
 // Lazy load the views to keep initial bundle small
 const DarkRoom = lazy(() => import("./DarkRoom"));
-// const CuttingRoomView = lazy(() => import("@/components/cuttingroom").then(m => ({ default: m.CuttingRoomView })));
+const CuttingRoomView = lazy(() => import("@/components/cuttingroom").then(m => ({ default: m.CuttingRoomView })));
 
 type StudioMode = "photo" | "video";
 
@@ -125,7 +125,7 @@ export default function Studio() {
                 {mode === "photo" ? (
                     <DarkRoom />
                 ) : (
-                    <CuttingRoomPlaceholder />
+                    <CuttingRoomView />
                 )}
             </Suspense>
         </div>
