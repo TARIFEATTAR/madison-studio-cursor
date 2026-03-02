@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
+import { DndContext, DragEndEvent, closestCenter } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useAuth } from "@/hooks/useAuth";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useBrandColor } from "@/hooks/useBrandColor";
@@ -27,6 +29,60 @@ import { ArrowLeft, Download, Check, Monitor, Smartphone, FileText, Plus, Undo2,
 import { toast } from "sonner";
 import { embedImagesInHtml } from "@/utils/emailImageEmbedder";
 import { supabase } from "@/integrations/supabase/client";
+
+function SortableBlockItem({
+  block,
+  index,
+  blocksLength,
+  updateBlock,
+  moveBlock,
+  deleteBlock,
+  duplicateBlock,
+}: {
+  block: EmailBlock;
+  index: number;
+  blocksLength: number;
+  updateBlock: (id: string, updated: EmailBlock) => void;
+  moveBlock: (id: string, direction: 'up' | 'down') => void;
+  deleteBlock: (id: string) => void;
+  duplicateBlock: (id: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className={isDragging ? "opacity-50" : ""}
+    >
+      <div className="flex items-start gap-2">
+        <div
+          {...listeners}
+          className="mt-4 cursor-grab active:cursor-grabbing"
+        >
+          <GripVertical className="w-5 h-5 text-muted-foreground" />
+        </div>
+        <div className="flex-1">
+          <BlockEditor
+            block={block}
+            onUpdate={(updated) => updateBlock(block.id, updated)}
+            onMoveUp={() => moveBlock(block.id, 'up')}
+            onMoveDown={() => moveBlock(block.id, 'down')}
+            onDelete={() => deleteBlock(block.id)}
+            onDuplicate={() => duplicateBlock(block.id)}
+            canMoveUp={index > 0}
+            canMoveDown={index < blocksLength - 1}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function EmailBuilderV2() {
   const { user } = useAuth();
@@ -224,19 +280,20 @@ export default function EmailBuilderV2() {
     });
   };
 
-  const handleDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
-    
-    const sourceIndex = result.source.index;
-    const destIndex = result.destination.index;
-    
-    if (sourceIndex === destIndex) return;
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    if (active.id === over.id) return;
 
     setComposition(prev => {
-      const newBlocks = Array.from(prev.blocks);
-      const [removed] = newBlocks.splice(sourceIndex, 1);
-      newBlocks.splice(destIndex, 0, removed);
-      
+      const oldIndex = prev.blocks.findIndex(b => b.id === String(active.id));
+      const newIndex = prev.blocks.findIndex(b => b.id === String(over.id));
+
+      if (oldIndex === -1 || newIndex === -1) return prev;
+
+      const newBlocks = arrayMove(prev.blocks, oldIndex, newIndex);
+
       pushToHistory(newBlocks);
       toast.success("Block reordered");
       return { ...prev, blocks: newBlocks };
@@ -579,51 +636,15 @@ export default function EmailBuilderV2() {
                     </p>
                   </Card>
                 ) : (
-                  <DragDropContext onDragEnd={handleDragEnd}>
-                    <Droppable droppableId="blocks">
-                      {(provided) => (
-                        <div
-                          {...provided.droppableProps}
-                          ref={provided.innerRef}
-                          className="space-y-4"
-                        >
-                          {composition.blocks.map((block, index) => (
-                            <Draggable key={block.id} draggableId={block.id} index={index}>
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  className={snapshot.isDragging ? "opacity-50" : ""}
-                                >
-                                  <div className="flex items-start gap-2">
-                                    <div
-                                      {...provided.dragHandleProps}
-                                      className="mt-4 cursor-grab active:cursor-grabbing"
-                                    >
-                                      <GripVertical className="w-5 h-5 text-muted-foreground" />
-                                    </div>
-                                    <div className="flex-1">
-                                      <BlockEditor
-                                        block={block}
-                                        onUpdate={(updated) => updateBlock(block.id, updated)}
-                                        onMoveUp={() => moveBlock(block.id, 'up')}
-                                        onMoveDown={() => moveBlock(block.id, 'down')}
-                                        onDelete={() => deleteBlock(block.id)}
-                                        onDuplicate={() => duplicateBlock(block.id)}
-                                        canMoveUp={index > 0}
-                                        canMoveDown={index < composition.blocks.length - 1}
-                                      />
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </div>
-                      )}
-                    </Droppable>
-                  </DragDropContext>
+                  <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={composition.blocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
+                      <div className="space-y-4">
+                        {composition.blocks.map((block, index) => (
+                          <SortableBlockItem key={block.id} block={block} index={index} blocksLength={composition.blocks.length} updateBlock={updateBlock} moveBlock={moveBlock} deleteBlock={deleteBlock} duplicateBlock={duplicateBlock} />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
                 )}
 
                 <Button onClick={handleGeneratePreview} className="w-full" size="lg">

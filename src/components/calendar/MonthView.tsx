@@ -1,5 +1,6 @@
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isSameDay, isToday } from "date-fns";
-import { Droppable, Draggable } from "react-beautiful-dnd";
+import { useDroppable, useDraggable } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { GripVertical } from "lucide-react";
@@ -23,6 +24,82 @@ interface MonthViewProps {
   onItemClick: (item: ScheduledItem) => void;
   isDragging?: boolean;
   isMobile?: boolean;
+}
+
+function DroppableDay({
+  dayId,
+  day,
+  isCurrentMonth,
+  isDayToday,
+  isDragging,
+  onDayClick,
+  children,
+}: {
+  dayId: string;
+  day: Date;
+  isCurrentMonth: boolean;
+  isDayToday: boolean;
+  isDragging?: boolean;
+  onDayClick: (date: Date) => void;
+  children: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: dayId });
+
+  return (
+    <div
+      ref={setNodeRef}
+      onClick={() => !isDragging && onDayClick(day)}
+      className={cn(
+        "h-full p-3 border-b border-r border-border/20 transition-all",
+        !isDragging && "cursor-pointer hover:bg-accent/30",
+        !isCurrentMonth && "bg-muted/20",
+        isDayToday && "bg-accent/30 ring-1 ring-primary/40",
+        isOver && "bg-primary/10 ring-2 ring-primary shadow-lg"
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+function DraggableItem({
+  item,
+  onItemClick,
+}: {
+  item: ScheduledItem;
+  onItemClick: (item: ScheduledItem) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: item.id });
+  const style = {
+    transform: CSS.Translate.toString(transform),
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      onClick={(e) => {
+        e.stopPropagation();
+        onItemClick(item);
+      }}
+      className={cn(
+        "text-xs p-2 rounded bg-primary/10 hover:bg-primary/20 transition-all truncate group cursor-grab active:cursor-grabbing select-none",
+        isDragging && "shadow-2xl ring-2 ring-primary opacity-90 scale-105"
+      )}
+    >
+      <div className="flex items-center gap-1.5">
+        <GripVertical className="w-3 h-3 text-muted-foreground/70 flex-shrink-0" />
+        {item.scheduled_time && (
+          <span className="text-[10px] text-muted-foreground">
+            {format(new Date(`2000-01-01T${item.scheduled_time}`), "h:mm a")}
+          </span>
+        )}
+        <span className="truncate font-medium">{item.title}</span>
+      </div>
+    </div>
+  );
 }
 
 export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick, isDragging, isMobile = false }: MonthViewProps) => {
@@ -104,68 +181,38 @@ export const MonthView = ({ currentDate, scheduledItems, onDayClick, onItemClick
             </div>
           ) : (
             // Desktop: Full drag-drop functionality
-            <Droppable key={dayId} droppableId={dayId}>
-              {(provided, snapshot) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  onClick={() => !isDragging && onDayClick(day)}
-                  className={cn(
-                    "h-full p-3 border-b border-r border-border/20 transition-all",
-                    !isDragging && "cursor-pointer hover:bg-accent/30",
-                    !isCurrentMonth && "bg-muted/20",
-                    isDayToday && "bg-accent/30 ring-1 ring-primary/40",
-                    snapshot.isDraggingOver && "bg-primary/10 ring-2 ring-primary shadow-lg"
-                  )}
-                >
-                  <div className={cn(
-                    "text-sm font-medium mb-3",
-                    !isCurrentMonth && "text-muted-foreground/50",
-                    isDayToday && "text-primary font-bold"
-                  )}>
-                    {format(day, "d")}
-                  </div>
+            <DroppableDay
+              key={dayId}
+              dayId={dayId}
+              day={day}
+              isCurrentMonth={isCurrentMonth}
+              isDayToday={isDayToday}
+              isDragging={isDragging}
+              onDayClick={onDayClick}
+            >
+              <div className={cn(
+                "text-sm font-medium mb-3",
+                !isCurrentMonth && "text-muted-foreground/50",
+                isDayToday && "text-primary font-bold"
+              )}>
+                {format(day, "d")}
+              </div>
 
-                  <div className="space-y-1.5 min-h-[80px]">
-                    {dayItems.slice(0, 3).map((item, index) => (
-                      <Draggable key={item.id} draggableId={item.id} index={index}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onItemClick(item);
-                            }}
-                            className={cn(
-                              "text-xs p-2 rounded bg-primary/10 hover:bg-primary/20 transition-all truncate group cursor-grab active:cursor-grabbing select-none",
-                              snapshot.isDragging && "shadow-2xl ring-2 ring-primary opacity-90 scale-105"
-                            )}
-                          >
-                            <div className="flex items-center gap-1.5">
-                              <GripVertical className="w-3 h-3 text-muted-foreground/70 flex-shrink-0" />
-                              {item.scheduled_time && (
-                                <span className="text-[10px] text-muted-foreground">
-                                  {format(new Date(`2000-01-01T${item.scheduled_time}`), "h:mm a")}
-                                </span>
-                              )}
-                              <span className="truncate font-medium">{item.title}</span>
-                            </div>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {dayItems.length > 3 && (
-                      <div className="text-xs text-muted-foreground pl-1.5">
-                        +{dayItems.length - 3} more
-                      </div>
-                    )}
-                    {provided.placeholder}
+              <div className="space-y-1.5 min-h-[80px]">
+                {dayItems.slice(0, 3).map((item) => (
+                  <DraggableItem
+                    key={item.id}
+                    item={item}
+                    onItemClick={onItemClick}
+                  />
+                ))}
+                {dayItems.length > 3 && (
+                  <div className="text-xs text-muted-foreground pl-1.5">
+                    +{dayItems.length - 3} more
                   </div>
-                </div>
-              )}
-            </Droppable>
+                )}
+              </div>
+            </DroppableDay>
           );
         })}
       </div>

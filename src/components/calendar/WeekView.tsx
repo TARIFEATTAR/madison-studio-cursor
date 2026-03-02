@@ -1,10 +1,11 @@
 import { startOfWeek, endOfWeek, eachDayOfInterval, format, isSameDay, isToday } from "date-fns";
-import { Droppable, Draggable } from "react-beautiful-dnd";
+import { useDroppable, useDraggable } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { GripVertical, Calendar } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, forwardRef } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ScheduledItem {
@@ -22,6 +23,158 @@ interface WeekViewProps {
   currentDate: Date;
   scheduledItems: ScheduledItem[];
   onItemClick: (item: ScheduledItem) => void;
+}
+
+function DroppableCard({
+  dayId,
+  isDayToday,
+  children,
+}: {
+  dayId: string;
+  isDayToday: boolean;
+  children: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: dayId });
+
+  return (
+    <Card
+      ref={setNodeRef}
+      className={cn(
+        "p-4 transition-all",
+        isDayToday && "ring-2 ring-primary/40 border-primary/30 bg-accent/30",
+        isOver && "bg-primary/10 ring-2 ring-primary border-primary"
+      )}
+    >
+      {children}
+    </Card>
+  );
+}
+
+function DroppableColumn({
+  dayId,
+  isDayToday,
+  children,
+}: {
+  dayId: string;
+  isDayToday: boolean;
+  children: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: dayId });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "min-h-[250px] p-4 rounded-lg border-2 transition-all",
+        isDayToday && "bg-accent/30 ring-2 ring-primary/40 border-primary/30",
+        !isDayToday && "border-border/20 hover:border-border/40",
+        isOver && "bg-primary/10 ring-2 ring-primary shadow-lg border-primary"
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+function DraggableMobileItem({
+  item,
+  onItemClick,
+}: {
+  item: ScheduledItem;
+  onItemClick: (item: ScheduledItem) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: item.id });
+  const style = {
+    transform: CSS.Translate.toString(transform),
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      onClick={(e) => {
+        e.stopPropagation();
+        onItemClick(item);
+      }}
+      className={cn(
+        "p-4 rounded-md transition-all cursor-grab active:cursor-grabbing",
+        "bg-card hover:bg-accent/50 border border-border/40 hover:border-border/60",
+        isDragging && "shadow-2xl ring-2 ring-primary opacity-90 scale-105 cursor-grabbing"
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <GripVertical className="w-5 h-5 text-muted-foreground/70 flex-shrink-0 mt-0.5" />
+        <div className="flex-1 min-w-0">
+          {item.scheduled_time && (
+            <div className="text-sm text-muted-foreground mb-2 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5" />
+              {format(new Date(`2000-01-01T${item.scheduled_time}`), "h:mm a")}
+            </div>
+          )}
+          <div className="font-medium text-base leading-snug mb-2">
+            {item.title}
+          </div>
+          {item.platform && (
+            <Badge variant="secondary" className="text-xs">
+              {item.platform}
+            </Badge>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DraggableDesktopItem({
+  item,
+  onItemClick,
+}: {
+  item: ScheduledItem;
+  onItemClick: (item: ScheduledItem) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: item.id });
+  const style = {
+    transform: CSS.Translate.toString(transform),
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      onClick={(e) => {
+        e.stopPropagation();
+        onItemClick(item);
+      }}
+      className={cn(
+        "p-3 rounded-md transition-all cursor-grab active:cursor-grabbing group",
+        "bg-card hover:bg-accent/50 border border-border/40 hover:border-border/60",
+        isDragging && "shadow-2xl ring-2 ring-primary opacity-90 scale-105 cursor-grabbing"
+      )}
+    >
+      <div className="flex items-start gap-2">
+        <GripVertical className="w-4 h-4 text-muted-foreground/70 flex-shrink-0 mt-0.5" />
+        <div className="flex-1 min-w-0">
+          {item.scheduled_time && (
+            <div className="text-xs text-muted-foreground mb-1">
+              {format(new Date(`2000-01-01T${item.scheduled_time}`), "h:mm a")}
+            </div>
+          )}
+          <div className="font-medium text-sm leading-snug line-clamp-2">
+            {item.title}
+          </div>
+          {item.platform && (
+            <Badge variant="secondary" className="mt-1.5 text-xs">
+              {item.platform}
+            </Badge>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export const WeekView = ({ currentDate, scheduledItems, onItemClick }: WeekViewProps) => {
@@ -65,86 +218,40 @@ export const WeekView = ({ currentDate, scheduledItems, onItemClick }: WeekViewP
           const isDayToday = isToday(day);
 
           return (
-            <Droppable key={dayId} droppableId={dayId}>
-              {(provided, snapshot) => (
-                <Card
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className={cn(
-                    "p-4 transition-all",
-                    isDayToday && "ring-2 ring-primary/40 border-primary/30 bg-accent/30",
-                    snapshot.isDraggingOver && "bg-primary/10 ring-2 ring-primary border-primary"
-                  )}
-                >
-                  {/* Day Header */}
-                  <div className="flex items-baseline gap-3 mb-4 pb-3 border-b border-border/20">
-                    <div className={cn(
-                      "text-3xl font-bold",
-                      isDayToday && "text-primary"
-                    )}>
-                      {format(day, "d")}
-                    </div>
-                    <div className={cn(
-                      "text-lg uppercase tracking-wide",
-                      isDayToday ? "text-primary font-semibold" : "text-muted-foreground"
-                    )}>
-                      {format(day, "EEEE")}
-                    </div>
-                  </div>
+            <DroppableCard key={dayId} dayId={dayId} isDayToday={isDayToday}>
+              {/* Day Header */}
+              <div className="flex items-baseline gap-3 mb-4 pb-3 border-b border-border/20">
+                <div className={cn(
+                  "text-3xl font-bold",
+                  isDayToday && "text-primary"
+                )}>
+                  {format(day, "d")}
+                </div>
+                <div className={cn(
+                  "text-lg uppercase tracking-wide",
+                  isDayToday ? "text-primary font-semibold" : "text-muted-foreground"
+                )}>
+                  {format(day, "EEEE")}
+                </div>
+              </div>
 
-                  {/* Items */}
-                  {dayItems.length > 0 ? (
-                    <div className="space-y-2">
-                      {dayItems.map((item, index) => (
-                        <Draggable key={item.id} draggableId={item.id} index={index}>
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onItemClick(item);
-                              }}
-                              className={cn(
-                                "p-4 rounded-md transition-all cursor-grab active:cursor-grabbing",
-                                "bg-card hover:bg-accent/50 border border-border/40 hover:border-border/60",
-                                snapshot.isDragging && "shadow-2xl ring-2 ring-primary opacity-90 scale-105 cursor-grabbing"
-                              )}
-                            >
-                              <div className="flex items-start gap-3">
-                                <GripVertical className="w-5 h-5 text-muted-foreground/70 flex-shrink-0 mt-0.5" />
-                                <div className="flex-1 min-w-0">
-                                  {item.scheduled_time && (
-                                    <div className="text-sm text-muted-foreground mb-2 flex items-center gap-1.5">
-                                      <Calendar className="w-3.5 h-3.5" />
-                                      {format(new Date(`2000-01-01T${item.scheduled_time}`), "h:mm a")}
-                                    </div>
-                                  )}
-                                  <div className="font-medium text-base leading-snug mb-2">
-                                    {item.title}
-                                  </div>
-                                  {item.platform && (
-                                    <Badge variant="secondary" className="text-xs">
-                                      {item.platform}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground/60 text-sm">
-                      No items scheduled
-                    </div>
-                  )}
-                </Card>
+              {/* Items */}
+              {dayItems.length > 0 ? (
+                <div className="space-y-2">
+                  {dayItems.map((item) => (
+                    <DraggableMobileItem
+                      key={item.id}
+                      item={item}
+                      onItemClick={onItemClick}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground/60 text-sm">
+                  No items scheduled
+                </div>
               )}
-            </Droppable>
+            </DroppableCard>
           );
         })}
       </div>
@@ -162,86 +269,40 @@ export const WeekView = ({ currentDate, scheduledItems, onItemClick }: WeekViewP
           const isDayToday = isToday(day);
 
           return (
-            <Droppable key={dayId} droppableId={dayId}>
-              {(provided, snapshot) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className={cn(
-                    "min-h-[250px] p-4 rounded-lg border-2 transition-all",
-                    isDayToday && "bg-accent/30 ring-2 ring-primary/40 border-primary/30",
-                    !isDayToday && "border-border/20 hover:border-border/40",
-                    snapshot.isDraggingOver && "bg-primary/10 ring-2 ring-primary shadow-lg border-primary"
-                  )}
-                >
-                  {/* Day Header */}
-                  <div className={cn(
-                    "text-center mb-4 pb-3 border-b",
-                    isDayToday && "border-primary/30",
-                    !isDayToday && "border-border/20"
-                  )}>
-                    <div className={cn(
-                      "text-xs uppercase tracking-wide mb-1",
-                      isDayToday && "text-primary font-semibold",
-                      !isDayToday && "text-muted-foreground"
-                    )}>
-                      {format(day, "EEE")}
-                    </div>
-                    <div className={cn(
-                      "text-2xl font-semibold",
-                      isDayToday && "text-primary",
-                      !isDayToday && "text-foreground"
-                    )}>
-                      {format(day, "d")}
-                    </div>
-                  </div>
-
-                  {/* Items */}
-                  <div className="space-y-2">
-                    {dayItems.map((item, index) => (
-                      <Draggable key={item.id} draggableId={item.id} index={index}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onItemClick(item);
-                            }}
-                            className={cn(
-                              "p-3 rounded-md transition-all cursor-grab active:cursor-grabbing group",
-                              "bg-card hover:bg-accent/50 border border-border/40 hover:border-border/60",
-                              snapshot.isDragging && "shadow-2xl ring-2 ring-primary opacity-90 scale-105 cursor-grabbing"
-                            )}
-                          >
-                            <div className="flex items-start gap-2">
-                              <GripVertical className="w-4 h-4 text-muted-foreground/70 flex-shrink-0 mt-0.5" />
-                              <div className="flex-1 min-w-0">
-                                {item.scheduled_time && (
-                                  <div className="text-xs text-muted-foreground mb-1">
-                                    {format(new Date(`2000-01-01T${item.scheduled_time}`), "h:mm a")}
-                                  </div>
-                                )}
-                                <div className="font-medium text-sm leading-snug line-clamp-2">
-                                  {item.title}
-                                </div>
-                                {item.platform && (
-                                  <Badge variant="secondary" className="mt-1.5 text-xs">
-                                    {item.platform}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
+            <DroppableColumn key={dayId} dayId={dayId} isDayToday={isDayToday}>
+              {/* Day Header */}
+              <div className={cn(
+                "text-center mb-4 pb-3 border-b",
+                isDayToday && "border-primary/30",
+                !isDayToday && "border-border/20"
+              )}>
+                <div className={cn(
+                  "text-xs uppercase tracking-wide mb-1",
+                  isDayToday && "text-primary font-semibold",
+                  !isDayToday && "text-muted-foreground"
+                )}>
+                  {format(day, "EEE")}
                 </div>
-              )}
-            </Droppable>
+                <div className={cn(
+                  "text-2xl font-semibold",
+                  isDayToday && "text-primary",
+                  !isDayToday && "text-foreground"
+                )}>
+                  {format(day, "d")}
+                </div>
+              </div>
+
+              {/* Items */}
+              <div className="space-y-2">
+                {dayItems.map((item) => (
+                  <DraggableDesktopItem
+                    key={item.id}
+                    item={item}
+                    onItemClick={onItemClick}
+                  />
+                ))}
+              </div>
+            </DroppableColumn>
           );
         })}
       </div>

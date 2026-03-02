@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { addMonths, subMonths, format } from "date-fns";
-import { DragDropContext, DropResult } from "react-beautiful-dnd";
+import { DndContext, DragEndEvent, closestCenter } from "@dnd-kit/core";
 import { CalendarHeader } from "@/components/calendar/CalendarHeader";
 import { MonthView } from "@/components/calendar/MonthView";
 import { WeekView } from "@/components/calendar/WeekView";
@@ -98,14 +98,14 @@ const Calendar = () => {
     setScheduleModalOpen(true);
   };
 
-  const handleDragEnd = async (result: DropResult) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     setIsDragging(false);
-    const { draggableId, destination } = result;
+    const { active, over } = event;
 
-    if (!destination) return;
+    if (!over) return;
 
-    const itemId = draggableId;
-    const newDateStr = destination.droppableId;
+    const itemId = String(active.id);
+    const newDateStr = String(over.id);
 
     // Find the item being moved
     const item = scheduledItems.find(i => i.id === itemId);
@@ -209,7 +209,8 @@ const Calendar = () => {
           </div>
         )}
 
-        <DragDropContext
+        <DndContext
+          collisionDetection={closestCenter}
           onDragStart={() => setIsDragging(true)}
           onDragEnd={handleDragEnd}
         >
@@ -248,7 +249,7 @@ const Calendar = () => {
               )}
             </div>
           </div>
-        </DragDropContext>
+        </DndContext>
 
         {/* Mobile FAB */}
         {isMobile && (
