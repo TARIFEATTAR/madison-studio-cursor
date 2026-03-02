@@ -4,7 +4,7 @@ import { Lightbulb, FileText, PenTool, X, Send, Loader2, Upload, Search, Chevron
 import { LibrarianTrigger } from "@/components/librarian";
 import { AgentSuggestion } from "@/components/agent";
 import { useAgentBehavior } from "@/hooks/useAgentBehavior";
-import penNibIcon from "@/assets/pen-nib-icon-new.png";
+import penNibIcon from "@/assets/pen-nib-icon-new.webp";
 import { createRoot } from "react-dom/client";
 import { ThinkMode } from "@/components/create/ThinkMode";
 import { FormatPicker } from "@/components/create/FormatPicker";

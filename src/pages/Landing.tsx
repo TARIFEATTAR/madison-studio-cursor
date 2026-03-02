@@ -6,14 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import archivesIcon from "@/assets/archives-icon-new.png";
+import archivesIcon from "@/assets/archives-icon-new.webp";
 import createIcon from "@/assets/create-icon.png";
 import multiplyIcon from "@/assets/multiply-icon.png";
 import calendarIcon from "@/assets/calendar-icon.png";
 import madisonStudioLogo from "@/assets/scriptora-logo-icon.png";
 import madisonStudioIcon from "@/assets/scriptora-icon-transparent.png";
-import madisonHero from "@/assets/madison-hero.jpg";
-import madisonNibb from "@/assets/madison-nibb.png";
+import madisonHero from "@/assets/madison-hero.webp";
+import madisonNibb from "@/assets/madison-nibb.webp";
 
 const Landing = () => {
   const { user } = useAuth();

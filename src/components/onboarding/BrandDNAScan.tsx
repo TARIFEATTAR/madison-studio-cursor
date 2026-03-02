@@ -6,7 +6,7 @@ import { OnboardingProgressBar } from "./OnboardingProgressBar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
-import madisonLogo from "@/assets/madison-horizontal-logo.png";
+import madisonLogo from "@/assets/madison-horizontal-logo.webp";
 import { motion, AnimatePresence } from "framer-motion";
 import { getOrCreateOrganizationId } from "@/lib/organization";
 import { logger } from "@/lib/logger";

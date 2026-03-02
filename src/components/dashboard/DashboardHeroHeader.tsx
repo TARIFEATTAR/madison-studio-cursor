@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashboardContextPanel } from "./DashboardContextPanel";
-import madisonInsignia from "@/assets/madison-insignia.png";
+import madisonInsignia from "@/assets/madison-insignia.webp";
 import { useBrandColor } from "@/hooks/useBrandColor";
 
 interface DashboardHeroHeaderProps {

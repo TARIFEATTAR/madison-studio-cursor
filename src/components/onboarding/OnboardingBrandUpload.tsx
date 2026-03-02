@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { VideoHelpTrigger } from "@/components/help/VideoHelpTrigger";
-import madisonLogo from "@/assets/madison-horizontal-logo.png";
+import madisonLogo from "@/assets/madison-horizontal-logo.webp";
 import { getOrCreateOrganizationId } from "@/lib/organization";
 import { logger } from "@/lib/logger";
 

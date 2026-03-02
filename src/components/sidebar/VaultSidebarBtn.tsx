@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import "./VaultSidebarBtn.css";
-import brassKnobImg from "@/assets/brass-vault-knob.png";
+import brassKnobImg from "@/assets/brass-vault-knob.webp";
 
 interface VaultSidebarBtnProps {
     isActive?: boolean;

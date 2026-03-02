@@ -42,10 +42,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useOrganization } from "@/hooks/useOrganization";
 import { parseEmailSequence } from "@/lib/emailSequence";
-import fannedPagesImage from "@/assets/fanned-pages-new.jpg";
-import ticketIcon from "@/assets/ticket-icon.png";
-import envelopeIcon from "@/assets/envelope-icon.png";
-import instagramIcon from "@/assets/instagram-icon-clean.png";
+import fannedPagesImage from "@/assets/fanned-pages-new.webp";
+import ticketIcon from "@/assets/ticket-icon.webp";
+import envelopeIcon from "@/assets/envelope-icon.webp";
+import instagramIcon from "@/assets/instagram-icon-clean.webp";
 
 // Visual prompt imports
 import { ImagePackResults } from "@/components/multiply/ImagePackResults";
