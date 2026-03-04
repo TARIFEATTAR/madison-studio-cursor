@@ -18,9 +18,11 @@ interface UploadDropzoneProps {
 
 const ACCEPTED_TYPES = [
   'image/jpeg',
+  'image/jpg',
   'image/png',
   'image/gif',
   'image/webp',
+  'image/heic', // iPhone photos
   'image/svg+xml',
   'video/mp4',
   'video/quicktime',

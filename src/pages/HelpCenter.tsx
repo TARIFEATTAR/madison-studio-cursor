@@ -54,7 +54,7 @@ export default function HelpCenter() {
                     Video guides to master Madison
                   </p>
                   {isAuthenticated && overallProgress.total > 0 && (
-                    <Badge variant="outline" className="border-emerald-400 text-emerald-400 bg-emerald-950/30">
+                    <Badge variant="outline" className="border-muted-sage text-muted-sage bg-muted-sage/20">
                       {overallProgress.completed}/{overallProgress.total} videos completed ({overallProgress.percentage}%)
                     </Badge>
                   )}

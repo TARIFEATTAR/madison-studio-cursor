@@ -451,6 +451,11 @@ export default function DarkRoom() {
       // Clear newly generated after animation completes (3 seconds)
       setTimeout(() => setNewlyGeneratedId(null), 3000);
 
+      // Save to DAM (fire-and-forget — don't block the UI)
+      supabase.functions.invoke("mark-generated-image-saved", {
+        body: { imageId: data.savedImageId, userId: user.id, createRecipe: false },
+      }).catch((err) => console.warn("DAM save failed (non-critical):", err));
+
       // Add to history
       setHistory((prev) => [
         {

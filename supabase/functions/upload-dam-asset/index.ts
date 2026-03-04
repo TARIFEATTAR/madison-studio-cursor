@@ -50,6 +50,7 @@ function getFileExtension(fileName: string, mimeType: string): string {
     'image/png': 'png',
     'image/gif': 'gif',
     'image/webp': 'webp',
+    'image/heic': 'heic',
     'image/svg+xml': 'svg',
     'application/pdf': 'pdf',
     'video/mp4': 'mp4',
@@ -102,7 +103,7 @@ function validateUpload(req: UploadRequest): { valid: boolean; error?: string } 
   
   // Allowed file types
   const allowedTypes = [
-    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/svg+xml',
     'video/mp4', 'video/quicktime', 'video/webm',
     'application/pdf',
     'application/msword',
@@ -224,7 +225,9 @@ serve(async (req) => {
       folderId = inboxFolder?.id || null;
     }
 
-    // Create DAM asset record
+    // For images, set thumbnail and status immediately so they display right away.
+    // process-dam-asset will run async to add AI analysis, dimensions, etc.
+    const isImage = body.fileType.startsWith('image/');
     const assetData = {
       organization_id: body.organizationId,
       folder_id: folderId,
@@ -233,6 +236,7 @@ serve(async (req) => {
       file_extension: extension,
       file_size: body.fileSize,
       file_url: publicUrl,
+      thumbnail_url: isImage ? publicUrl : null, // Images show immediately; video/PDF get icon
       source_type: body.sourceType || 'upload',
       source_ref: body.sourceRef || null,
       tags: body.tags || [],
@@ -242,7 +246,7 @@ serve(async (req) => {
         original_name: body.fileName,
         storage_path: storagePath,
       },
-      status: 'processing', // Will be updated after thumbnail generation
+      status: isImage ? 'active' : 'processing', // Images ready immediately; others process async
       uploaded_by: user.id,
     };
 

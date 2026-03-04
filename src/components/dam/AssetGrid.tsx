@@ -17,6 +17,7 @@ import {
   Clock,
   Sparkles,
 } from "lucide-react";
+import { getSignedAssetUrl } from "./useAssetImageUrl";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -163,6 +164,44 @@ interface AssetGridItemProps extends AssetItemProps {
   size: 'small' | 'medium' | 'large';
 }
 
+function DamAssetImage({
+  asset,
+  className,
+  onErrorFallback,
+}: {
+  asset: DAMAsset;
+  className?: string;
+  onErrorFallback?: () => void;
+}) {
+  const [src, setSrc] = useState(asset.thumbnail_url || asset.file_url);
+  const [errored, setErrored] = useState(false);
+
+  const handleError = useCallback(async () => {
+    if (errored) {
+      onErrorFallback?.();
+      return;
+    }
+    setErrored(true);
+    const signedUrl = await getSignedAssetUrl(asset);
+    if (signedUrl) {
+      setSrc(signedUrl);
+    } else {
+      onErrorFallback?.();
+    }
+  }, [asset, errored, onErrorFallback]);
+
+  if (!src) return null;
+  return (
+    <img
+      src={src}
+      alt={asset.name}
+      className={className}
+      loading="lazy"
+      onError={handleError}
+    />
+  );
+}
+
 function AssetGridItem({
   asset,
   isSelected,
@@ -176,6 +215,7 @@ function AssetGridItem({
   index,
 }: AssetGridItemProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
   const typeCategory = getFileTypeCategory(asset.file_type);
   const IconComponent = FILE_TYPE_ICONS[typeCategory] || File;
   const isImage = typeCategory === 'image';
@@ -207,13 +247,16 @@ function AssetGridItem({
     >
       {/* Thumbnail */}
       <div className="aspect-square bg-muted relative overflow-hidden">
-        {isImage && asset.thumbnail_url ? (
-          <img
-            src={asset.thumbnail_url || asset.file_url}
-            alt={asset.name}
+        {isImage && (asset.thumbnail_url || asset.file_url) && !imageFailed ? (
+          <DamAssetImage
+            asset={asset}
             className="w-full h-full object-cover transition-transform group-hover:scale-105"
-            loading="lazy"
+            onErrorFallback={() => setImageFailed(true)}
           />
+        ) : isImage && imageFailed ? (
+          <div className="w-full h-full flex items-center justify-center bg-muted">
+            <ImageIcon className="w-12 h-12 text-muted-foreground opacity-50" />
+          </div>
         ) : isVideo ? (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-100 to-purple-50">
             <Video className="w-12 h-12 text-purple-400" />
@@ -359,6 +402,7 @@ function AssetListItem({
   onMove,
   index,
 }: AssetItemProps) {
+  const [imageFailed, setImageFailed] = useState(false);
   const typeCategory = getFileTypeCategory(asset.file_type);
   const IconComponent = FILE_TYPE_ICONS[typeCategory] || File;
   const isImage = typeCategory === 'image';
@@ -393,12 +437,16 @@ function AssetListItem({
 
       {/* Thumbnail */}
       <div className="w-12 h-12 rounded bg-muted overflow-hidden flex-shrink-0">
-        {isImage && asset.thumbnail_url ? (
-          <img
-            src={asset.thumbnail_url || asset.file_url}
-            alt={asset.name}
+        {isImage && (asset.thumbnail_url || asset.file_url) && !imageFailed ? (
+          <DamAssetImage
+            asset={asset}
             className="w-full h-full object-cover"
+            onErrorFallback={() => setImageFailed(true)}
           />
+        ) : isImage && imageFailed ? (
+          <div className="w-full h-full flex items-center justify-center bg-muted">
+            <ImageIcon className="w-6 h-6 text-muted-foreground opacity-50" />
+          </div>
         ) : (
           <div className={cn(
             "w-full h-full flex items-center justify-center",

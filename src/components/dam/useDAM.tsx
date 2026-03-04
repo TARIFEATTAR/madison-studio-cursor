@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useOrganization } from "@/hooks/useOrganization";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useToast } from "@/hooks/use-toast";
 import type { DAMFolder, DAMAsset, UploadProgress, DAMSortOption } from "./types";
@@ -12,7 +13,9 @@ interface UseDAMOptions {
 }
 
 export function useDAM(options: UseDAMOptions = {}) {
-  const { currentOrganizationId } = useOnboarding();
+  const { organizationId: orgFromHook } = useOrganization();
+  const { currentOrganizationId: orgFromOnboarding } = useOnboarding();
+  const currentOrganizationId = orgFromHook ?? orgFromOnboarding;
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -64,6 +67,7 @@ export function useDAM(options: UseDAMOptions = {}) {
   const {
     data: assets = [],
     isLoading: assetsLoading,
+    isFetching: assetsFetching,
     refetch: refetchAssets,
   } = useQuery({
     queryKey: ["dam-assets", currentOrganizationId, options.folderId, options.searchQuery, options.sort],
@@ -508,10 +512,11 @@ export function useDAM(options: UseDAMOptions = {}) {
     undoDelete,
 
     // Refetch
-    refetch: () => {
-      refetchFolders();
-      refetchAssets();
+    refetch: async () => {
+      await Promise.all([refetchFolders(), refetchAssets()]);
+      toast({ title: "Refreshed", description: "Library updated", duration: 2000 });
     },
+    isRefetching: assetsFetching,
 
     // Usage tracking
     trackAssetUsage,
@@ -523,7 +528,9 @@ export function useDAM(options: UseDAMOptions = {}) {
 
 // Hook for upload functionality
 export function useDAMUpload() {
-  const { currentOrganizationId } = useOnboarding();
+  const { organizationId: orgFromHook } = useOrganization();
+  const { currentOrganizationId: orgFromOnboarding } = useOnboarding();
+  const currentOrganizationId = orgFromHook ?? orgFromOnboarding;
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -585,15 +592,22 @@ export function useDAMUpload() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      if (!supabaseUrl) {
+        throw new Error('Supabase URL is not configured. Check your environment variables.');
+      }
+
       let response: Response;
       try {
         response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-dam-asset`,
+          `${supabaseUrl}/functions/v1/upload-dam-asset`,
           {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${session.access_token}`,
               'Content-Type': 'application/json',
+              ...(anonKey && { apikey: anonKey }),
             },
             body: JSON.stringify({
               organizationId: currentOrganizationId,
@@ -636,35 +650,30 @@ export function useDAMUpload() {
         throw new Error(result.error || 'Upload failed');
       }
 
-      // Update progress to processing
-      setUploads(prev => prev.map(u =>
-        u.id === uploadId ? { ...u, progress: 90, status: 'processing' } : u
-      ));
-
-      // Wait a moment for processing
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Complete!
+      // Complete immediately - asset is ready (images get thumbnail/status from upload-dam-asset)
       setUploads(prev => prev.map(u =>
         u.id === uploadId ? { ...u, progress: 100, status: 'complete', asset: result.asset } : u
       ));
 
-      // Invalidate cache
-      queryClient.invalidateQueries({ queryKey: ["dam-assets"] });
+      // Invalidate cache so the new asset appears in the grid right away
+      await queryClient.invalidateQueries({ queryKey: ["dam-assets"] });
 
-      // Remove from uploads after animation - FIXED: use functional update for isUploading
+      // Remove from uploads list after brief success display
       setTimeout(() => {
         setUploads(prev => {
           const remaining = prev.filter(u => u.id !== uploadId);
-          // Update isUploading based on remaining uploads
           setIsUploading(remaining.some(u => u.status !== 'complete' && u.status !== 'error'));
           return remaining;
         });
-      }, 2000);
+      }, 1500);
 
       return result.asset;
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error('[DAM Upload] Error:', error);
+      if (error instanceof Error) {
+        console.error('[DAM Upload] Message:', error.message);
+        console.error('[DAM Upload] Stack:', error.stack);
+      }
 
       setUploads(prev => prev.map(u =>
         u.id === uploadId ? {

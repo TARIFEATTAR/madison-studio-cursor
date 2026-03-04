@@ -1240,13 +1240,36 @@ serve(async (req) => {
           referenceImages: freepikReferenceImages,
         });
 
-        imageUrl = freepikResult.imageUrl;
+        // Re-upload Freepik image to Supabase Storage for a permanent URL.
+        // Freepik CDN URLs expire, so we must persist the image ourselves.
+        const freepikFetch = await fetch(freepikResult.imageUrl);
+        if (!freepikFetch.ok) {
+          throw new Error(`Failed to fetch Freepik image for re-upload: ${freepikFetch.status}`);
+        }
+        const freepikBuffer = await freepikFetch.arrayBuffer();
+        const freepikFilename = `${resolvedOrgId}/${Date.now()}-${crypto.randomUUID()}.png`;
+
+        const { error: freepikUploadErr } = await supabase.storage
+          .from("generated-images")
+          .upload(freepikFilename, freepikBuffer, { contentType: "image/png" });
+
+        if (freepikUploadErr) {
+          console.error("Storage upload error for Freepik image", freepikUploadErr);
+          throw freepikUploadErr;
+        }
+
+        const { data: freepikUrlData } = supabase.storage
+          .from("generated-images")
+          .getPublicUrl(freepikFilename);
+
+        imageUrl = freepikUrlData.publicUrl;
         usedProvider = `freepik-${freepikResult.model}`;
 
-        console.log(`✅ Freepik Image Generated:`, {
+        console.log(`✅ Freepik Image Generated & Uploaded to Storage:`, {
           taskId: freepikResult.taskId,
           model: freepikResult.model,
           usedReferences: !!freepikReferenceImages,
+          storedUrl: imageUrl,
         });
       } catch (freepikError) {
         console.error("❌ Freepik generation failed, falling back to Gemini:", freepikError);

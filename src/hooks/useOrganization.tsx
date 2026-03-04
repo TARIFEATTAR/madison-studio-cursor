@@ -36,7 +36,6 @@ export function useOrganization() {
         throw error;
       }
 
-      console.log("[useOrganization] Membership data:", data);
       return data as OrganizationMembership | null;
     },
     enabled: !!user?.id,

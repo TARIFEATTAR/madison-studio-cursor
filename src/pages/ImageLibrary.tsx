@@ -17,8 +17,8 @@ import {
   Eye,
   MoreVertical,
   Camera,
-  Sparkles,
 } from "lucide-react";
+import { MagicWand02 } from "@untitledui/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -382,7 +382,7 @@ export default function ImageLibrary() {
       <div className="container mx-auto px-4 md:px-6 py-4 md:py-8 pb-24 md:pb-8">
         {isLoading ? (
           <div className="flex items-center justify-center py-12 md:py-20">
-            <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-[var(--darkroom-accent)] animate-pulse" />
+            <MagicWand02 className="w-6 h-6 md:w-8 md:h-8 text-[var(--darkroom-accent)] animate-pulse" />
           </div>
         ) : filteredImages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 md:py-20 text-center px-4">

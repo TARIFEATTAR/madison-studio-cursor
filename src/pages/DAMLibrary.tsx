@@ -62,6 +62,7 @@ import {
   type DAMViewMode,
   type DAMSortOption,
 } from "@/components/dam";
+import { TextureOverlay } from "@/components/ui/texture-overlay";
 
 export default function DAMLibrary() {
   // State
@@ -119,6 +120,7 @@ export default function DAMLibrary() {
     bulkUpdateTags,
     bulkMove,
     refetch,
+    isRefetching,
   } = useDAM({
     folderId: selectedFolderId,
     searchQuery: debouncedSearch,
@@ -301,10 +303,11 @@ export default function DAMLibrary() {
       </div>
 
       {/* Main content - full width on mobile */}
-      <div className="flex-1 flex flex-col min-w-0">
-
+      <div className="flex-1 flex flex-col min-w-0 relative bg-[#F5F1E8] overflow-hidden">
+        <TextureOverlay texture="grid" opacity={0.35} gridSize={8} />
+        <div className="relative z-10 flex flex-col flex-1 min-h-0">
         {/* Header */}
-        <div className="border-b border-border bg-card px-6 py-4">
+        <div className="border-b border-border bg-card px-6 py-4 shrink-0">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-serif font-semibold">
@@ -321,10 +324,11 @@ export default function DAMLibrary() {
                 variant="outline"
                 size="sm"
                 className="gap-2"
-                onClick={refetch}
+                onClick={() => refetch()}
+                disabled={isRefetching}
               >
-                <RefreshCw className="w-4 h-4" />
-                Refresh
+                <RefreshCw className={cn("w-4 h-4", isRefetching && "animate-spin")} />
+                {isRefetching ? "Refreshing..." : "Refresh"}
               </Button>
               <Button
                 className="gap-2"
@@ -608,7 +612,7 @@ export default function DAMLibrary() {
         </AnimatePresence>
 
         {/* Asset grid */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 min-h-0">
           <AssetGrid
             assets={filteredAssets}
             viewMode={viewMode}
@@ -634,6 +638,7 @@ export default function DAMLibrary() {
                     : "No assets yet. Upload some files to get started!"
             }
           />
+        </div>
         </div>
       </div>
 
