@@ -15,7 +15,6 @@ import {
   FolderInput,
   CheckCircle2,
   Clock,
-  Sparkles,
 } from "lucide-react";
 import { getSignedAssetUrl } from "./useAssetImageUrl";
 import { Button } from "@/components/ui/button";
@@ -270,13 +269,10 @@ function AssetGridItem({
           </div>
         )}
 
-        {/* Processing overlay */}
-        {isProcessing && (
+        {/* Processing overlay - only for images/videos that get thumbnails; documents show their icon */}
+        {isProcessing && (isImage || isVideo) && (
           <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
-            <div className="flex flex-col items-center">
-              <Sparkles className="w-6 h-6 text-primary animate-pulse" />
-              <span className="text-xs mt-1 text-muted-foreground">Processing...</span>
-            </div>
+            <span className="text-xs text-muted-foreground">Processing...</span>
           </div>
         )}
 
