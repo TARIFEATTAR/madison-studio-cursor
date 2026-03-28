@@ -1,0 +1,19 @@
+{
+  "name": "madison-image-pipeline",
+  "version": "1.0.0",
+  "description": "Standalone hero & product image generation pipeline extracted from Madison Studio",
+  "type": "module",
+  "scripts": {
+    "generate": "npx tsx src/generate.ts",
+    "dry-run": "npx tsx src/generate.ts --dry-run",
+    "auth:drive": "npx tsx src/googleDrive.ts --auth"
+  },
+  "dependencies": {
+    "googleapis": "^144.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "tsx": "^4.19.0",
+    "@types/node": "^22.0.0"
+  }
+}

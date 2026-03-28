@@ -1,0 +1,48 @@
+[
+  {
+    "prompt": "Luxury perfume bottle on pure white background, soft studio lighting, product hero shot",
+    "type": "product_hero",
+    "squad": "THE_MINIMALISTS",
+    "aspect": "1:1",
+    "model": "seedream-4",
+    "client": "acme-fragrance"
+  },
+  {
+    "prompt": "Same perfume bottle on weathered marble surface, warm window light, lifestyle editorial",
+    "type": "hero_banner_standard",
+    "squad": "THE_STORYTELLERS",
+    "aspect": "2:1",
+    "model": "seedream-4",
+    "client": "acme-fragrance"
+  },
+  {
+    "prompt": "Bold product shot, deep blue background, dramatic flash lighting, scroll-stopping",
+    "type": "instagram_feed",
+    "squad": "THE_DISRUPTORS",
+    "aspect": "4:5",
+    "model": "flux-pro-v1-1",
+    "client": "acme-fragrance"
+  },
+  {
+    "prompt": "Product on white background for Amazon listing, sharp detail, 85% frame fill",
+    "type": "amazon_main",
+    "squad": "THE_MINIMALISTS",
+    "aspect": "1:1",
+    "model": "mystic",
+    "resolution": "4k",
+    "client": "acme-fragrance"
+  },
+  {
+    "prompt": "Perfume in natural garden setting with botanicals, golden hour light",
+    "type": "pinterest_pin",
+    "squad": "THE_STORYTELLERS",
+    "aspect": "2:3",
+    "model": "seedream-4",
+    "client": "acme-fragrance",
+    "product": {
+      "name": "Rose Attar Perfume Oil",
+      "bottle_type": "oil",
+      "category": "fragrance"
+    }
+  }
+]
