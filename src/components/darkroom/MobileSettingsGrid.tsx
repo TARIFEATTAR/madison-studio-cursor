@@ -31,6 +31,7 @@ interface SettingOption {
 const AI_MODEL_OPTIONS: SettingOption[] = [
   { value: "auto", label: "Auto", description: "AI picks the best model" },
   { value: "gemini-3-pro-image", label: "Gemini 3.0 Pro", description: "Google's latest" },
+  { value: "openai-image-2", label: "GPT Image 2", description: "OpenAI flagship" },
   { value: "freepik-flux-pro", label: "Flux Pro", description: "High quality" },
   { value: "freepik-seedream-4", label: "Seedream 4", description: "Creative styles" },
   { value: "freepik-hyperflux", label: "HyperFlux", description: "Fast generation" },

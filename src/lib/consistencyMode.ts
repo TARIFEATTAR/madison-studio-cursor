@@ -63,6 +63,12 @@ export interface PipelineGenerationContext {
   capacityMl: number | null;
   threadSize: string | null;
   shapeKey: string;
+  /**
+   * Pipeline row UUIDs covered by this run — every SKU in the shape group.
+   * The edge function emits a `pipeline-group:<uuid>` library_tag for each
+   * so we can join back from an image to the exact tracker rows it serves.
+   */
+  pipelineGroupIds?: string[];
 }
 
 export interface ConsistencySetPayload {
@@ -142,11 +148,13 @@ export function runConsistencySet(
 
   const combinations = expandVariationMatrix(payload.selection);
 
+  // expandVariationMatrix always returns at least one combination (the
+  // empty master-only shot) when a master image is provided, so zero
+  // combinations means a programming error upstream — surface it rather
+  // than silently dropping the run.
   if (combinations.length === 0) {
     callbacks.onError(
-      new Error(
-        "Select at least one option from at least one variation axis before generating.",
-      ),
+      new Error("No variations to generate. This is unexpected — please reload."),
     );
     return {
       setId,
@@ -233,6 +241,22 @@ export function runConsistencySet(
           maybeAddMaterialRef("Cap Finish", item.selection.capColor);
           maybeAddMaterialRef("Fitment", item.selection.fitmentType);
 
+          // Per-variation library_tags — the axes that vary across the set
+          // (applicator, bottle colour, cap colour) get stamped as key:value
+          // tags so the Library view can filter the same way the Pipeline
+          // tracker does. Group-level tags (brand/family/shape) are stamped
+          // server-side from pipelineContext.
+          const extraLibraryTags: string[] = [];
+          if (item.selection.bottleColor) {
+            extraLibraryTags.push(`color:${item.selection.bottleColor.id}`);
+          }
+          if (item.selection.capColor) {
+            extraLibraryTags.push(`cap:${item.selection.capColor.id}`);
+          }
+          if (item.selection.fitmentType) {
+            extraLibraryTags.push(`applicator:${item.selection.fitmentType.id}`);
+          }
+
           const { data, error } = await supabase.functions.invoke(
             "generate-madison-image",
             {
@@ -267,6 +291,11 @@ export function runConsistencySet(
                 // Only present for pipeline-originated runs — drives
                 // library_tags + human-readable storage path server-side.
                 pipelineContext: payload.pipelineContext,
+                // Per-variation library_tags merged into library_tags on
+                // the server. Emitted for every run (not just pipeline)
+                // so Consistency Mode images outside the pipeline are
+                // still searchable by applicator/colour.
+                extraLibraryTags,
               },
             },
           );

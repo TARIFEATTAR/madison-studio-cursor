@@ -889,7 +889,9 @@ export function buildVariationLabel(selection: {
   if (selection.bottleColor) parts.push(selection.bottleColor.label);
   if (selection.capColor) parts.push(selection.capColor.label);
   if (selection.fitmentType) parts.push(selection.fitmentType.label);
-  return parts.join(" · ") || "Variation";
+  // Single-shot mode: no axis selected → render the master reference as-is.
+  // Label reflects that instead of the generic "Variation".
+  return parts.join(" · ") || "Master reference";
 }
 
 /**
@@ -919,8 +921,10 @@ export function expandVariationMatrix(selected: {
   for (const b of bottleAxis) {
     for (const c of capAxis) {
       for (const f of fitmentAxis) {
-        // If the user selected nothing at all, skip (caller should validate).
-        if (!b && !c && !f) continue;
+        // Zero-axis case emits a single master-reference-only combination
+        // so "take one shot of the bottle as-is" is a first-class option.
+        // Previously this was skipped, forcing the operator to tick at
+        // least one chip even when no variation was wanted.
         out.push({
           bottleColor: b,
           capColor: c,

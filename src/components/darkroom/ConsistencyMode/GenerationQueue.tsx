@@ -1,4 +1,4 @@
-import { CheckCircle2, AlertCircle, Loader2, Clock, Ban, Star, Heart } from "lucide-react";
+import { CheckCircle2, AlertCircle, Aperture, Clock, Ban, Star, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LEDIndicator } from "@/components/darkroom/LEDIndicator";
 import type { VariationItem, VariationItemStatus } from "@/lib/consistencyMode";
@@ -41,8 +41,8 @@ const STATUS_META: Record<VariationItemStatus, {
     ledState: "off",
   },
   running: {
-    Icon: Loader2,
-    iconClass: "text-[var(--darkroom-accent)] animate-spin",
+    Icon: Aperture,
+    iconClass: "text-[var(--darkroom-accent)] darkroom-exposing-pulse",
     label: "Exposing",
     ledState: "processing",
   },
@@ -130,7 +130,12 @@ export function GenerationQueue({
               </div>
 
               {/* Thumbnail */}
-              <div className="flex-shrink-0 w-9 h-9 rounded bg-black/60 border border-white/[0.06] overflow-hidden flex items-center justify-center">
+              <div
+                className={cn(
+                  "relative flex-shrink-0 w-9 h-9 rounded bg-black/60 border border-white/[0.06] overflow-hidden flex items-center justify-center",
+                  item.status === "running" && "darkroom-exposing-frame",
+                )}
+              >
                 {item.imageUrl ? (
                   <img
                     src={item.imageUrl}
@@ -157,7 +162,14 @@ export function GenerationQueue({
                     </span>
                   )}
                 </div>
-                <div className={cn("text-[9px] font-mono uppercase tracking-wider", meta.iconClass)}>
+                <div
+                  className={cn(
+                    "text-[9px] font-mono uppercase tracking-wider",
+                    item.status === "running"
+                      ? "darkroom-exposing-text"
+                      : meta.iconClass,
+                  )}
+                >
                   {meta.label}
                   {item.status === "error" && item.error ? ` · ${truncate(item.error, 44)}` : ""}
                 </div>

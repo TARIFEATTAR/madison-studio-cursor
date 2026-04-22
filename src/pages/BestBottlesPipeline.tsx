@@ -9,6 +9,7 @@ import {
   Play,
   Filter,
   ImageDown,
+  Star,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,8 @@ import {
   listPipelineGroups,
   groupByShape,
   importPipelineCsv,
+  setShapeGroupMasterReference,
+  clearShapeGroupMasterReference,
   type PipelineGroup,
   type PipelineStatus,
   type ShapeGroup,
@@ -223,6 +226,46 @@ export default function BestBottlesPipeline() {
     }
   };
 
+  // ─── Pin master reference ─────────────────────────────────────────────────
+  //
+  // One-click toggle on the reference thumbnails. Clicking a non-pinned
+  // thumbnail pins it (unpinning any sibling in the same shape group);
+  // clicking the currently-pinned thumbnail clears the pin. The DB layer
+  // enforces "at most one pinned row per shape group" via a partial
+  // unique index, so the client-side unpin-then-pin is safe even if two
+  // users race — the loser just gets a uniqueness error and re-queries.
+  const handleToggleMasterReference = async (
+    row: PipelineGroup,
+  ): Promise<void> => {
+    if (!organizationId) return;
+    try {
+      if (row.is_master_reference) {
+        await clearShapeGroupMasterReference(row.id);
+        toast.info("Master reference cleared", {
+          description: row.display_name,
+        });
+      } else {
+        await setShapeGroupMasterReference({
+          organizationId,
+          rowId: row.id,
+          family: row.family,
+          capacityMl: row.capacity_ml,
+          threadSize: row.thread_size,
+        });
+        toast.success("Master reference pinned", {
+          description: row.display_name,
+        });
+      }
+      queryClient.invalidateQueries({
+        queryKey: ["best-bottles-pipeline-groups"],
+      });
+    } catch (err) {
+      toast.error("Couldn't update master reference", {
+        description: err instanceof Error ? err.message : String(err),
+      });
+    }
+  };
+
   // ─── Launch ──────────────────────────────────────────────────────────────
   //
   // Build a pre-fill from the shape group: pre-tick every unique
@@ -253,12 +296,17 @@ export default function BestBottlesPipeline() {
       (group.capacityMl != null ? ` · ${group.capacityMl}ml` : "") +
       (group.threadSize ? ` · ${group.threadSize}` : "");
 
-    // Pick a representative reference image for the shape group — first
-    // row with a synced legacy_hero_image_url wins. Consistency Mode
-    // pre-loads this as the master reference so the operator skips the
-    // "find a PSD, flatten, screenshot, upload" loop when a valid
-    // product-page image already covers the shape.
-    const rowWithReference = group.rows.find((r) => r.legacy_hero_image_url);
+    // Pick a representative reference image for the shape group. Priority:
+    //   1. Operator-pinned master reference (is_master_reference === true)
+    //   2. First row with a synced legacy_hero_image_url (back-compat)
+    // Consistency Mode pre-loads the resolved URL as the master reference
+    // so the operator skips the "find a PSD, flatten, screenshot, upload"
+    // loop when a valid product-page image already covers the shape.
+    const pinnedRow = group.rows.find(
+      (r) => r.is_master_reference && r.legacy_hero_image_url,
+    );
+    const rowWithReference =
+      pinnedRow ?? group.rows.find((r) => r.legacy_hero_image_url);
 
     writePipelinePrefill({
       shapeKey: group.key,
@@ -415,6 +463,7 @@ export default function BestBottlesPipeline() {
                 key={group.key}
                 group={group}
                 onLaunch={() => handleLaunchShapeGroup(group)}
+                onToggleMaster={handleToggleMasterReference}
               />
             ))}
           </div>
@@ -480,9 +529,11 @@ function FilterChip({
 function ShapeGroupCard({
   group,
   onLaunch,
+  onToggleMaster,
 }: {
   group: ShapeGroup;
   onLaunch: () => void;
+  onToggleMaster: (row: PipelineGroup) => void | Promise<void>;
 }) {
   const withHero = group.rows.filter(
     (r) => r.legacy_has_hero_image || r.madison_status === "approved" || r.madison_status === "synced",
@@ -494,12 +545,18 @@ function ShapeGroupCard({
 
   // Reference thumbnails synced from bestbottles.com product pages. Cap to
   // 4 so the strip stays compact; the full SKU list below still shows all.
-  const referenceThumbs = group.rows
-    .filter((r) => r.legacy_hero_image_url)
-    .slice(0, 4);
-  const totalWithReference = group.rows.filter(
-    (r) => r.legacy_hero_image_url,
-  ).length;
+  // Pinned row is sorted to position 0 so the operator's chosen master is
+  // always visible even if the group has more than 4 references.
+  const rowsWithReference = group.rows.filter((r) => r.legacy_hero_image_url);
+  const sortedReferenceRows = [...rowsWithReference].sort((a, b) =>
+    a.is_master_reference === b.is_master_reference
+      ? 0
+      : a.is_master_reference
+        ? -1
+        : 1,
+  );
+  const referenceThumbs = sortedReferenceRows.slice(0, 4);
+  const totalWithReference = rowsWithReference.length;
 
   return (
     <Card className="p-4 border-white/[0.06] bg-white/[0.02] text-white space-y-3">
@@ -525,25 +582,54 @@ function ShapeGroupCard({
       </div>
 
       {/* Reference thumbnail strip — rendered only when at least one row
-          has a scraped legacy_hero_image_url. Gives the operator an
-          instant visual answer to "what does this shape look like?" so
-          they can pick a master reference without opening Photoshop. */}
+          has a scraped legacy_hero_image_url. Each thumbnail is a toggle:
+          click to pin this row as the shape group's master reference
+          (click again to un-pin). The pinned thumbnail gets an amber ring
+          + star badge and is preferred by the Launch button. */}
       {referenceThumbs.length > 0 && (
         <div className="flex items-center gap-1.5 -mx-0.5">
-          {referenceThumbs.map((row) => (
-            <div
-              key={`${row.id}-thumb`}
-              className="relative w-10 h-10 rounded border border-white/[0.08] bg-black/30 overflow-hidden flex-shrink-0"
-              title={row.display_name}
-            >
-              <img
-                src={row.legacy_hero_image_url ?? ""}
-                alt=""
-                loading="lazy"
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ))}
+          {referenceThumbs.map((row) => {
+            const isPinned = row.is_master_reference;
+            return (
+              <button
+                type="button"
+                key={`${row.id}-thumb`}
+                onClick={() => onToggleMaster(row)}
+                title={
+                  isPinned
+                    ? `Master reference — ${row.display_name}\nClick to un-pin.`
+                    : `${row.display_name}\nClick to pin as master reference for this shape.`
+                }
+                className={cn(
+                  "relative w-10 h-10 rounded overflow-hidden flex-shrink-0 transition-all",
+                  "border bg-black/30 hover:border-white/30",
+                  "focus:outline-none focus:ring-2 focus:ring-[var(--darkroom-accent,#B8956A)]/50",
+                  isPinned
+                    ? "border-[var(--darkroom-accent,#B8956A)] ring-1 ring-[var(--darkroom-accent,#B8956A)]/60 shadow-[0_0_8px_rgba(184,149,106,0.35)]"
+                    : "border-white/[0.08]",
+                )}
+              >
+                <img
+                  src={row.legacy_hero_image_url ?? ""}
+                  alt=""
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                />
+                {isPinned && (
+                  <span
+                    className={cn(
+                      "absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center",
+                      "bg-[var(--darkroom-accent,#B8956A)] text-black",
+                      "shadow-[0_0_6px_rgba(184,149,106,0.6)]",
+                    )}
+                    aria-label="Master reference"
+                  >
+                    <Star className="w-2.5 h-2.5 fill-current" />
+                  </span>
+                )}
+              </button>
+            );
+          })}
           {totalWithReference > referenceThumbs.length && (
             <span className="text-[10px] font-mono uppercase tracking-wider text-white/40">
               +{totalWithReference - referenceThumbs.length} more

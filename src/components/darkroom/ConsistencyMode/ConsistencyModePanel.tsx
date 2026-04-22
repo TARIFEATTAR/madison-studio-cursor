@@ -442,6 +442,7 @@ export function ConsistencyModePanel({
             capacityMl: pipelinePrefill.capacityMl,
             threadSize: pipelinePrefill.threadSize,
             shapeKey: pipelinePrefill.shapeKey,
+            pipelineGroupIds: pipelinePrefill.pipelineGroupIds,
           }
         : undefined,
     });
@@ -737,7 +738,9 @@ export function ConsistencyModePanel({
           >
             <Aperture size={14} />
             <span className="text-[11px] font-mono uppercase tracking-[0.12em]">
-              {combinations.length > 0
+              {combinations.length === 1
+                ? "Expose"
+                : combinations.length > 1
                 ? `Expose Set · ${combinations.length}`
                 : "Expose Set"}
             </span>
@@ -759,9 +762,9 @@ export function ConsistencyModePanel({
             Upload a master reference to begin
           </p>
         )}
-        {!canGenerate && masterImage && combinations.length === 0 && (
+        {canGenerate && combinations.length === 1 && selectionCount === 0 && (
           <p className="text-[10px] text-[var(--darkroom-text-dim)] text-center mt-2">
-            Tick at least one variation
+            Single shot — master reference as-is. Tick chips below for variations.
           </p>
         )}
       </div>
