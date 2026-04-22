@@ -758,6 +758,98 @@ const stripMarkdown = (text: string): string => {
     .trim();
 };
 
+const countWords = (text: string): number => {
+  return text
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .length;
+};
+
+const parseSequenceEmails = (content: string) => {
+  return content
+    .split(/(?=^EMAIL\s+\d+(?:\s*[:\-–][^\n\r]*)?\s*$)/gim)
+    .map((section: string) => section.trim())
+    .filter(Boolean)
+    .map((section: string) => {
+      const working = section.replace(/^(?:EMAIL)\s+\d+(?:\s*[:\-–][^\n\r]*)?\s*$/im, '').trim();
+      const subjectMatch = working.match(/^SUBJECT:?\s*(.+)$/im);
+      const previewMatch = working.match(/^PREVIEW:?\s*(.+)$/im);
+      const bodyMatch = working.match(/(?:^|\n)BODY:?\s*([\s\S]+)/i);
+
+      return {
+        subject: subjectMatch?.[1]?.trim() || '',
+        preview: previewMatch?.[1]?.trim() || '',
+        body: (bodyMatch?.[1] || '')
+          .replace(/\n\s*---+\s*$/g, '')
+          .trim(),
+      };
+    })
+    .filter((email) => email.subject || email.preview || email.body);
+};
+
+const getGenerationProfile = (derivativeType: string) => {
+  switch (derivativeType) {
+    case 'linkedin':
+      return { maxOutputTokens: 3072, retryMaxOutputTokens: 4096, minWords: 220 };
+    case 'email':
+      return { maxOutputTokens: 2048, retryMaxOutputTokens: 3072, minWords: 180 };
+    case 'facebook':
+      return { maxOutputTokens: 2048, retryMaxOutputTokens: 3072, minWords: 180 };
+    case 'youtube':
+      return { maxOutputTokens: 4096, retryMaxOutputTokens: 6144, minWords: 300 };
+    case 'email_3part':
+      return { maxOutputTokens: 4096, retryMaxOutputTokens: 6144, expectedEmails: 3, minTotalWords: 450 };
+    case 'email_5part':
+      return { maxOutputTokens: 6144, retryMaxOutputTokens: 8192, expectedEmails: 5, minTotalWords: 700 };
+    case 'email_7part':
+      return { maxOutputTokens: 8192, retryMaxOutputTokens: 10000, expectedEmails: 7, minTotalWords: 1000 };
+    default:
+      return { maxOutputTokens: 1200, retryMaxOutputTokens: 2048 };
+  }
+};
+
+const validateDerivativeOutput = (derivativeType: string, cleanedContent: string) => {
+  if (!cleanedContent.trim()) {
+    return { isValid: false, reason: 'empty response' };
+  }
+
+  const profile = getGenerationProfile(derivativeType);
+
+  if ('expectedEmails' in profile && profile.expectedEmails) {
+    const emails = parseSequenceEmails(cleanedContent);
+    const totalWords = emails.reduce((sum, email) => (
+      sum + countWords(`${email.subject} ${email.preview} ${email.body}`)
+    ), 0);
+
+    if (emails.length < profile.expectedEmails) {
+      return {
+        isValid: false,
+        reason: `expected ${profile.expectedEmails} emails but only parsed ${emails.length}`,
+      };
+    }
+
+    if (profile.minTotalWords && totalWords < profile.minTotalWords) {
+      return {
+        isValid: false,
+        reason: `sequence too short (${totalWords} words, expected at least ${profile.minTotalWords})`,
+      };
+    }
+  }
+
+  if ('minWords' in profile && profile.minWords) {
+    const wordCount = countWords(cleanedContent);
+    if (wordCount < profile.minWords) {
+      return {
+        isValid: false,
+        reason: `content too short (${wordCount} words, expected at least ${profile.minWords})`,
+      };
+    }
+  }
+
+  return { isValid: true, reason: 'ok' };
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
@@ -1061,26 +1153,32 @@ INSTRUCTIONS:
 FAILURE TO FOLLOW CODEX V2 PRINCIPLES OR BRAND GUIDELINES IS UNACCEPTABLE.`;
       }
 
+      const generationProfile = getGenerationProfile(derivativeType);
+
       // Call Gemini first (cost-effective), fallback to Anthropic
-      const callGemini = async () => {
-        console.log(`Calling Gemini for ${derivativeType}...`);
+      const callGemini = async (promptText: string, maxOutputTokens: number) => {
+        console.log(`Calling Gemini for ${derivativeType} with maxOutputTokens=${maxOutputTokens}...`);
         try {
           const geminiResponse = await generateGeminiContent({
             model: 'models/gemini-2.5-flash',
             systemPrompt,
-            messages: [{ role: 'user', content: fullPrompt }],
-            maxOutputTokens: 1200,
+            messages: [{ role: 'user', content: promptText }],
+            maxOutputTokens,
             temperature: 0.7,
           });
-          return extractTextFromGeminiResponse(geminiResponse);
+          return {
+            text: extractTextFromGeminiResponse(geminiResponse),
+            finishReason: geminiResponse?.candidates?.[0]?.finishReason || 'unknown',
+            provider: 'gemini',
+          };
         } catch (error) {
           console.error(`Gemini error for ${derivativeType}:`, error);
           throw error;
         }
       };
 
-      const callAnthropic = async (model: string) => {
-        console.log(`Calling Anthropic with model: ${model}`);
+      const callAnthropic = async (model: string, promptText: string, maxTokens: number) => {
+        console.log(`Calling Anthropic with model: ${model}, max_tokens=${maxTokens}`);
         return await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {
@@ -1090,7 +1188,7 @@ FAILURE TO FOLLOW CODEX V2 PRINCIPLES OR BRAND GUIDELINES IS UNACCEPTABLE.`;
           },
           body: JSON.stringify({
             model,
-            max_tokens: 1200,
+            max_tokens: maxTokens,
             system: systemPrompt,
             messages: [
               {
@@ -1098,7 +1196,7 @@ FAILURE TO FOLLOW CODEX V2 PRINCIPLES OR BRAND GUIDELINES IS UNACCEPTABLE.`;
                 content: [
                   {
                     type: 'text',
-                    text: fullPrompt,
+                    text: promptText,
                   },
                 ],
               },
@@ -1107,68 +1205,89 @@ FAILURE TO FOLLOW CODEX V2 PRINCIPLES OR BRAND GUIDELINES IS UNACCEPTABLE.`;
         });
       };
 
-      let generatedContent = '';
-      
-      // Try Gemini first if available
-      if (useGemini) {
-        try {
-          generatedContent = await callGemini();
-          console.log(`✅ Gemini generated ${derivativeType} successfully`);
-        } catch (geminiError) {
-          console.warn(`Gemini failed for ${derivativeType}, falling back to Anthropic:`, geminiError);
-          // Fallback to Anthropic
-          if (!ANTHROPIC_API_KEY) {
-            throw new Error(`Gemini failed and ANTHROPIC_API_KEY not configured: ${geminiError}`);
+      const generateContentWithFallback = async (promptText: string, maxTokens: number) => {
+        // Try Gemini first if available
+        if (useGemini) {
+          try {
+            const geminiResult = await callGemini(promptText, maxTokens);
+            console.log(`✅ Gemini generated ${derivativeType} successfully (finishReason=${geminiResult.finishReason})`);
+            return geminiResult;
+          } catch (geminiError) {
+            console.warn(`Gemini failed for ${derivativeType}, falling back to Anthropic:`, geminiError);
+            if (!ANTHROPIC_API_KEY) {
+              throw new Error(`Gemini failed and ANTHROPIC_API_KEY not configured: ${geminiError}`);
+            }
           }
-          let modelToUse = configuredAnthropicModel;
-          let aiResponse = await callAnthropic(modelToUse);
-
-          // If the configured model isn't available, fall back automatically
-          if (aiResponse.status === 404 && modelToUse !== DEFAULT_ANTHROPIC_MODEL) {
-            console.warn(`Anthropic model ${modelToUse} not found. Falling back to ${DEFAULT_ANTHROPIC_MODEL}.`);
-            modelToUse = DEFAULT_ANTHROPIC_MODEL;
-            aiResponse = await callAnthropic(modelToUse);
-          }
-
-          if (!aiResponse.ok) {
-            const t = await aiResponse.text();
-            console.error(`AI gateway error for ${derivativeType}:`, aiResponse.status, t);
-            if (aiResponse.status === 429) throw new Error('AI rate limits exceeded. Please wait a moment and retry.');
-            if (aiResponse.status === 402) throw new Error('AI billing error: please verify your API account.');
-            throw new Error(`AI gateway error: ${aiResponse.status}`);
-          }
-
-          const aiData = await aiResponse.json();
-          generatedContent = aiData.content?.[0]?.text ?? '';
         }
-      } else {
-        // Use Anthropic directly
+
         if (!ANTHROPIC_API_KEY) {
           throw new Error('ANTHROPIC_API_KEY not configured');
         }
-        let modelToUse = configuredAnthropicModel;
-        let aiResponse = await callAnthropic(modelToUse);
 
-        // If the configured model isn't available, fall back automatically
+        let modelToUse = configuredAnthropicModel;
+        let aiResponse = await callAnthropic(modelToUse, promptText, maxTokens);
+
         if (aiResponse.status === 404 && modelToUse !== DEFAULT_ANTHROPIC_MODEL) {
           console.warn(`Anthropic model ${modelToUse} not found. Falling back to ${DEFAULT_ANTHROPIC_MODEL}.`);
           modelToUse = DEFAULT_ANTHROPIC_MODEL;
-          aiResponse = await callAnthropic(modelToUse);
+          aiResponse = await callAnthropic(modelToUse, promptText, maxTokens);
         }
 
         if (!aiResponse.ok) {
           const t = await aiResponse.text();
           console.error(`AI gateway error for ${derivativeType}:`, aiResponse.status, t);
-          if (aiResponse.status === 429) throw new Error('Anthropic rate limits exceeded. Please wait a moment and retry.');
-          if (aiResponse.status === 402) throw new Error('Anthropic billing error: please verify your Anthropic account.');
+          if (aiResponse.status === 429) throw new Error('AI rate limits exceeded. Please wait a moment and retry.');
+          if (aiResponse.status === 402) throw new Error('AI billing error: please verify your API account.');
           throw new Error(`AI gateway error: ${aiResponse.status}`);
         }
 
         const aiData = await aiResponse.json();
-        generatedContent = aiData.content?.[0]?.text ?? '';
+        return {
+          text: aiData.content?.[0]?.text ?? '',
+          finishReason: aiData.stop_reason || 'unknown',
+          provider: 'anthropic',
+        };
+      };
+
+      let generatedContent = '';
+      let cleanedContent = '';
+      let adequacyResult = { isValid: true, reason: 'ok' };
+      const attemptBudgets = [
+        generationProfile.maxOutputTokens,
+        generationProfile.retryMaxOutputTokens,
+      ].filter((value, index, arr): value is number => typeof value === 'number' && arr.indexOf(value) === index);
+      
+      for (let attemptIndex = 0; attemptIndex < attemptBudgets.length; attemptIndex += 1) {
+        const maxTokens = attemptBudgets[attemptIndex];
+        const retryInstruction = attemptIndex === 0
+          ? ''
+          : `\n\nIMPORTANT: Your previous response was incomplete and cut off early. Return the FULL ${derivativeType} deliverable in a single response. Do not stop after the opening section.`;
+        const attemptPrompt = `${fullPrompt}${retryInstruction}`;
+        const generationResult = await generateContentWithFallback(attemptPrompt, maxTokens);
+
+        generatedContent = generationResult.text;
+        cleanedContent = stripMarkdown(generatedContent);
+        adequacyResult = validateDerivativeOutput(derivativeType, cleanedContent);
+
+        console.log('[repurpose-content] Adequacy check:', {
+          derivativeType,
+          attempt: attemptIndex + 1,
+          provider: generationResult.provider,
+          finishReason: generationResult.finishReason,
+          maxTokens,
+          charCount: cleanedContent.length,
+          wordCount: countWords(cleanedContent),
+          adequacyResult,
+        });
+
+        if (adequacyResult.isValid) {
+          break;
+        }
       }
 
-      const cleanedContent = stripMarkdown(generatedContent);
+      if (!adequacyResult.isValid) {
+        throw new Error(`Generated ${derivativeType} content was incomplete: ${adequacyResult.reason}. Please try again.`);
+      }
 
       // Parse platform-specific specs (from cleaned text to avoid markdown tokens)
       let platformSpecs: any = {};
@@ -1197,28 +1316,7 @@ FAILURE TO FOLLOW CODEX V2 PRINCIPLES OR BRAND GUIDELINES IS UNACCEPTABLE.`;
         const smsOptions = cleanedContent.split('\n').filter((line: string) => line.trim() && !line.startsWith('REQUIREMENTS') && !line.startsWith('FORMAT'));
         platformSpecs = { options: smsOptions.slice(0, 3) };
       } else if (derivativeType === 'email_3part' || derivativeType === 'email_5part' || derivativeType === 'email_7part') {
-        const emailSections = cleanedContent
-          .split(/(?=^EMAIL\s+\d+(?:\s*[:\-–][^\n\r]*)?\s*$)/gim)
-          .map((section: string) => section.trim())
-          .filter(Boolean);
-
-        const emails = emailSections
-          .map((section: string) => {
-            let working = section.replace(/^(?:EMAIL)\s+\d+(?:\s*[:\-–][^\n\r]*)?\s*$/im, '').trim();
-
-            const subjectMatch = working.match(/^SUBJECT:?\s*(.+)$/im);
-            const previewMatch = working.match(/^PREVIEW:?\s*(.+)$/im);
-            const bodyMatch = working.match(/(?:^|\n)BODY:?\s*([\s\S]+)/i);
-
-            return {
-              subject: subjectMatch?.[1]?.trim() || '',
-              preview: previewMatch?.[1]?.trim() || '',
-              body: (bodyMatch?.[1] || '')
-                .replace(/\n\s*---+\s*$/g, '')
-                .trim(),
-            };
-          })
-          .filter((email) => email.subject || email.preview || email.body);
+        const emails = parseSequenceEmails(cleanedContent);
 
         platformSpecs = {
           emailCount: emails.length,
