@@ -399,6 +399,85 @@ export function capsForFitments(
 /** Hard safety cap on set size — keeps a single run under ~5 minutes. */
 export const MAX_VARIATION_SET_SIZE = 50;
 
+// ─── Fitment grouping ────────────────────────────────────────────────────────
+//
+// The fitment axis has 13 options and selecting 2–3 from a long flat list is
+// fatiguing. Grouping by shape family (sprayers, rollers, pumps, droppers,
+// stoppers, caps) lets the operator scan a short section instead of reading
+// every label. IDs below must stay in sync with FITMENT_TYPES.
+//
+// New fitment? Add its id to the map and it renders under the correct header
+// automatically; nothing else to update.
+
+export type FitmentCategory =
+  | "sprayers"
+  | "rollers"
+  | "pumps"
+  | "droppers"
+  | "stoppers"
+  | "caps";
+
+export const FITMENT_CATEGORIES: Array<{
+  id: FitmentCategory;
+  label: string;
+  helper: string;
+}> = [
+  { id: "sprayers", label: "Sprayers", helper: "fine mist + bulb" },
+  { id: "rollers", label: "Roll-ons", helper: "metal + plastic ball" },
+  { id: "pumps", label: "Pumps", helper: "lotion + treatment" },
+  { id: "droppers", label: "Droppers", helper: "dropper + reducer" },
+  { id: "stoppers", label: "Stoppers", helper: "glass stoppers" },
+  { id: "caps", label: "Caps & closures", helper: "cap + overcap" },
+];
+
+const FITMENT_CATEGORY_MAP: Record<string, FitmentCategory> = {
+  "fine-mist-metal": "sprayers",
+  "fine-mist-plastic": "sprayers",
+  "perfume-spray-pump": "sprayers",
+  "vintage-bulb-sprayer": "sprayers",
+  "vintage-bulb-sprayer-tassel": "sprayers",
+  "lotion-pump": "pumps",
+  "roller-ball": "rollers",
+  "roller-ball-plastic": "rollers",
+  dropper: "droppers",
+  reducer: "droppers",
+  "glass-stopper": "stoppers",
+  "cap-closure": "caps",
+  "over-cap": "caps",
+};
+
+export function getFitmentCategory(id: string): FitmentCategory {
+  return FITMENT_CATEGORY_MAP[id] ?? "caps";
+}
+
+/**
+ * Bucket fitment options by category in the canonical display order. Unknown
+ * ids fall into "caps" so new fitments show up somewhere even before the
+ * category map is updated.
+ */
+export function groupFitmentsByCategory(
+  fitments: VariationOption[],
+): Array<{
+  category: FitmentCategory;
+  label: string;
+  helper: string;
+  options: VariationOption[];
+}> {
+  const buckets = new Map<FitmentCategory, VariationOption[]>();
+  for (const opt of fitments) {
+    const cat = getFitmentCategory(opt.id);
+    const arr = buckets.get(cat) ?? [];
+    arr.push(opt);
+    buckets.set(cat, arr);
+  }
+  return FITMENT_CATEGORIES.filter((c) => buckets.has(c.id)).map((c) => ({
+    category: c.id,
+    label: c.label,
+    helper: c.helper,
+    options: buckets.get(c.id)!,
+  }));
+}
+
 // ─── Studio Controls ─────────────────────────────────────────────────────────
 //
 // Parameterised studio settings that feed into every variation's scene anchor.
