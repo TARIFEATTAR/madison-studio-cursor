@@ -69,6 +69,7 @@ ALTER TABLE public.packaging_assets ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for packaging_templates
 -- Templates are viewable by all authenticated users
+DROP POLICY IF EXISTS "Templates are viewable by all authenticated users" ON public.packaging_templates;
 CREATE POLICY "Templates are viewable by all authenticated users"
   ON public.packaging_templates
   FOR SELECT
@@ -77,6 +78,7 @@ CREATE POLICY "Templates are viewable by all authenticated users"
 
 -- RLS Policies for packaging_projects
 -- Users can view their organization's projects
+DROP POLICY IF EXISTS "Users can view their org's projects" ON public.packaging_projects;
 CREATE POLICY "Users can view their org's projects"
   ON public.packaging_projects
   FOR SELECT
@@ -90,6 +92,7 @@ CREATE POLICY "Users can view their org's projects"
   );
 
 -- Users can create projects in their organization
+DROP POLICY IF EXISTS "Users can create projects in their org" ON public.packaging_projects;
 CREATE POLICY "Users can create projects in their org"
   ON public.packaging_projects
   FOR INSERT
@@ -104,6 +107,7 @@ CREATE POLICY "Users can create projects in their org"
   );
 
 -- Users can update their organization's projects
+DROP POLICY IF EXISTS "Users can update their org's projects" ON public.packaging_projects;
 CREATE POLICY "Users can update their org's projects"
   ON public.packaging_projects
   FOR UPDATE
@@ -117,6 +121,7 @@ CREATE POLICY "Users can update their org's projects"
   );
 
 -- Users can delete their organization's projects
+DROP POLICY IF EXISTS "Users can delete their org's projects" ON public.packaging_projects;
 CREATE POLICY "Users can delete their org's projects"
   ON public.packaging_projects
   FOR DELETE
@@ -131,6 +136,7 @@ CREATE POLICY "Users can delete their org's projects"
 
 -- RLS Policies for packaging_assets
 -- Users can manage (CRUD) their organization's assets
+DROP POLICY IF EXISTS "Users can manage their org's assets" ON public.packaging_assets;
 CREATE POLICY "Users can manage their org's assets"
   ON public.packaging_assets
   FOR ALL
@@ -152,6 +158,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_packaging_projects_updated_at ON public.packaging_projects;
 CREATE TRIGGER update_packaging_projects_updated_at
   BEFORE UPDATE ON public.packaging_projects
   FOR EACH ROW

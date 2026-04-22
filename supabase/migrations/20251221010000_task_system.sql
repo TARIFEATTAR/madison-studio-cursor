@@ -284,41 +284,53 @@ CREATE INDEX IF NOT EXISTS idx_notifications_created ON public.notifications(cre
 
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- PART 7: ROW LEVEL SECURITY
+-- Every policy is guarded with DROP POLICY IF EXISTS so this migration is
+-- idempotent — re-runs cleanly after a partial-apply recovery without
+-- tripping on SQLSTATE 42710 (policy already exists).
 -- ═══════════════════════════════════════════════════════════════════════════════
 
 -- Product Stages RLS
 ALTER TABLE public.product_stages ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "product_stages_select" ON public.product_stages;
 CREATE POLICY "product_stages_select" ON public.product_stages
   FOR SELECT USING (organization_id = ANY(public.get_user_organization_ids()));
 
+DROP POLICY IF EXISTS "product_stages_insert" ON public.product_stages;
 CREATE POLICY "product_stages_insert" ON public.product_stages
   FOR INSERT WITH CHECK (organization_id = ANY(public.get_user_organization_ids()));
 
+DROP POLICY IF EXISTS "product_stages_update" ON public.product_stages;
 CREATE POLICY "product_stages_update" ON public.product_stages
   FOR UPDATE USING (organization_id = ANY(public.get_user_organization_ids()));
 
+DROP POLICY IF EXISTS "product_stages_delete" ON public.product_stages;
 CREATE POLICY "product_stages_delete" ON public.product_stages
   FOR DELETE USING (organization_id = ANY(public.get_user_organization_ids()));
 
 -- Product Tasks RLS
 ALTER TABLE public.product_tasks ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "product_tasks_select" ON public.product_tasks;
 CREATE POLICY "product_tasks_select" ON public.product_tasks
   FOR SELECT USING (organization_id = ANY(public.get_user_organization_ids()));
 
+DROP POLICY IF EXISTS "product_tasks_insert" ON public.product_tasks;
 CREATE POLICY "product_tasks_insert" ON public.product_tasks
   FOR INSERT WITH CHECK (organization_id = ANY(public.get_user_organization_ids()));
 
+DROP POLICY IF EXISTS "product_tasks_update" ON public.product_tasks;
 CREATE POLICY "product_tasks_update" ON public.product_tasks
   FOR UPDATE USING (organization_id = ANY(public.get_user_organization_ids()));
 
+DROP POLICY IF EXISTS "product_tasks_delete" ON public.product_tasks;
 CREATE POLICY "product_tasks_delete" ON public.product_tasks
   FOR DELETE USING (organization_id = ANY(public.get_user_organization_ids()));
 
 -- Task Comments RLS
 ALTER TABLE public.task_comments ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "task_comments_select" ON public.task_comments;
 CREATE POLICY "task_comments_select" ON public.task_comments
   FOR SELECT USING (
     EXISTS (
@@ -328,6 +340,7 @@ CREATE POLICY "task_comments_select" ON public.task_comments
     )
   );
 
+DROP POLICY IF EXISTS "task_comments_insert" ON public.task_comments;
 CREATE POLICY "task_comments_insert" ON public.task_comments
   FOR INSERT WITH CHECK (
     EXISTS (
@@ -337,54 +350,66 @@ CREATE POLICY "task_comments_insert" ON public.task_comments
     )
   );
 
+DROP POLICY IF EXISTS "task_comments_update" ON public.task_comments;
 CREATE POLICY "task_comments_update" ON public.task_comments
   FOR UPDATE USING (author_id = auth.uid());
 
+DROP POLICY IF EXISTS "task_comments_delete" ON public.task_comments;
 CREATE POLICY "task_comments_delete" ON public.task_comments
   FOR DELETE USING (author_id = auth.uid());
 
 -- Product Activity RLS
 ALTER TABLE public.product_activity ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "product_activity_select" ON public.product_activity;
 CREATE POLICY "product_activity_select" ON public.product_activity
   FOR SELECT USING (organization_id = ANY(public.get_user_organization_ids()));
 
+DROP POLICY IF EXISTS "product_activity_insert" ON public.product_activity;
 CREATE POLICY "product_activity_insert" ON public.product_activity
   FOR INSERT WITH CHECK (organization_id = ANY(public.get_user_organization_ids()));
 
 -- Notifications RLS (users can only see their own)
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "notifications_select" ON public.notifications;
 CREATE POLICY "notifications_select" ON public.notifications
   FOR SELECT USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "notifications_update" ON public.notifications;
 CREATE POLICY "notifications_update" ON public.notifications
   FOR UPDATE USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "notifications_delete" ON public.notifications;
 CREATE POLICY "notifications_delete" ON public.notifications
   FOR DELETE USING (user_id = auth.uid());
 
 -- System can insert notifications for anyone
+DROP POLICY IF EXISTS "notifications_insert" ON public.notifications;
 CREATE POLICY "notifications_insert" ON public.notifications
   FOR INSERT WITH CHECK (true);
 
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- PART 8: TRIGGERS
+-- Triggers are dropped-then-created so re-runs don't trip on 42710.
 -- ═══════════════════════════════════════════════════════════════════════════════
 
 -- Updated_at trigger for tasks
+DROP TRIGGER IF EXISTS update_product_tasks_updated_at ON public.product_tasks;
 CREATE TRIGGER update_product_tasks_updated_at
   BEFORE UPDATE ON public.product_tasks
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Updated_at trigger for stages
+DROP TRIGGER IF EXISTS update_product_stages_updated_at ON public.product_stages;
 CREATE TRIGGER update_product_stages_updated_at
   BEFORE UPDATE ON public.product_stages
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Updated_at trigger for comments
+DROP TRIGGER IF EXISTS update_task_comments_updated_at ON public.task_comments;
 CREATE TRIGGER update_task_comments_updated_at
   BEFORE UPDATE ON public.task_comments
   FOR EACH ROW

@@ -89,12 +89,17 @@ VALUES (
 -- Path structure: {organization_id}/{template_id}.svg OR madison-library/{template_id}.svg
 -- ═══════════════════════════════════════════════════════════════════════════════
 
+-- All policies below are dropped-then-created so this migration is
+-- idempotent (safe to replay after a partial-apply interruption).
+
 -- Allow public read access (for rendering dielines in canvas)
+DROP POLICY IF EXISTS "press_dielines_public_read" ON storage.objects;
 CREATE POLICY "press_dielines_public_read"
 ON storage.objects FOR SELECT
 USING (bucket_id = 'press-dielines');
 
 -- Allow authenticated users to upload to their organization's folder
+DROP POLICY IF EXISTS "press_dielines_org_insert" ON storage.objects;
 CREATE POLICY "press_dielines_org_insert"
 ON storage.objects FOR INSERT
 WITH CHECK (
@@ -107,6 +112,7 @@ WITH CHECK (
 );
 
 -- Allow authenticated users to update files in their organization's folder
+DROP POLICY IF EXISTS "press_dielines_org_update" ON storage.objects;
 CREATE POLICY "press_dielines_org_update"
 ON storage.objects FOR UPDATE
 USING (
@@ -116,6 +122,7 @@ USING (
 );
 
 -- Allow authenticated users to delete files in their organization's folder
+DROP POLICY IF EXISTS "press_dielines_org_delete" ON storage.objects;
 CREATE POLICY "press_dielines_org_delete"
 ON storage.objects FOR DELETE
 USING (
@@ -130,11 +137,13 @@ USING (
 -- ═══════════════════════════════════════════════════════════════════════════════
 
 -- Allow public read access (for rendering artwork in canvas)
+DROP POLICY IF EXISTS "press_artwork_public_read" ON storage.objects;
 CREATE POLICY "press_artwork_public_read"
 ON storage.objects FOR SELECT
 USING (bucket_id = 'press-artwork');
 
 -- Allow authenticated users to upload to their organization's folder
+DROP POLICY IF EXISTS "press_artwork_org_insert" ON storage.objects;
 CREATE POLICY "press_artwork_org_insert"
 ON storage.objects FOR INSERT
 WITH CHECK (
@@ -144,6 +153,7 @@ WITH CHECK (
 );
 
 -- Allow authenticated users to update files in their organization's folder
+DROP POLICY IF EXISTS "press_artwork_org_update" ON storage.objects;
 CREATE POLICY "press_artwork_org_update"
 ON storage.objects FOR UPDATE
 USING (
@@ -153,6 +163,7 @@ USING (
 );
 
 -- Allow authenticated users to delete files in their organization's folder
+DROP POLICY IF EXISTS "press_artwork_org_delete" ON storage.objects;
 CREATE POLICY "press_artwork_org_delete"
 ON storage.objects FOR DELETE
 USING (
@@ -167,11 +178,13 @@ USING (
 -- ═══════════════════════════════════════════════════════════════════════════════
 
 -- Allow public read access (for downloading exports)
+DROP POLICY IF EXISTS "press_exports_public_read" ON storage.objects;
 CREATE POLICY "press_exports_public_read"
 ON storage.objects FOR SELECT
 USING (bucket_id = 'press-exports');
 
 -- Allow authenticated users to upload to their organization's folder
+DROP POLICY IF EXISTS "press_exports_org_insert" ON storage.objects;
 CREATE POLICY "press_exports_org_insert"
 ON storage.objects FOR INSERT
 WITH CHECK (
@@ -181,6 +194,7 @@ WITH CHECK (
 );
 
 -- Allow authenticated users to delete exports in their organization's folder
+DROP POLICY IF EXISTS "press_exports_org_delete" ON storage.objects;
 CREATE POLICY "press_exports_org_delete"
 ON storage.objects FOR DELETE
 USING (
@@ -195,11 +209,13 @@ USING (
 -- ═══════════════════════════════════════════════════════════════════════════════
 
 -- Allow public read access (for displaying project thumbnails)
+DROP POLICY IF EXISTS "press_thumbnails_public_read" ON storage.objects;
 CREATE POLICY "press_thumbnails_public_read"
 ON storage.objects FOR SELECT
 USING (bucket_id = 'press-thumbnails');
 
 -- Allow service role and org members to insert thumbnails
+DROP POLICY IF EXISTS "press_thumbnails_org_insert" ON storage.objects;
 CREATE POLICY "press_thumbnails_org_insert"
 ON storage.objects FOR INSERT
 WITH CHECK (
@@ -214,6 +230,7 @@ WITH CHECK (
 );
 
 -- Allow service role and org members to update thumbnails
+DROP POLICY IF EXISTS "press_thumbnails_org_update" ON storage.objects;
 CREATE POLICY "press_thumbnails_org_update"
 ON storage.objects FOR UPDATE
 USING (
@@ -228,6 +245,7 @@ USING (
 );
 
 -- Allow deletion by org members
+DROP POLICY IF EXISTS "press_thumbnails_org_delete" ON storage.objects;
 CREATE POLICY "press_thumbnails_org_delete"
 ON storage.objects FOR DELETE
 USING (

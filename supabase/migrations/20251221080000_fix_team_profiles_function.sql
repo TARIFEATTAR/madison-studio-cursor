@@ -10,6 +10,7 @@ DROP POLICY IF EXISTS "Owners and admins can delete invitations" ON public.team_
 DROP POLICY IF EXISTS "team_invitations_select" ON public.team_invitations;
 DROP POLICY IF EXISTS "team_invitations_insert" ON public.team_invitations;
 DROP POLICY IF EXISTS "team_invitations_delete" ON public.team_invitations;
+DROP POLICY IF EXISTS "team_invitations_update" ON public.team_invitations;
 
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- RLS POLICIES

@@ -150,27 +150,33 @@ CREATE INDEX idx_agent_shown ON agent_suggestions_log(shown_at);
 -- Librarian frameworks are public read (curated content)
 ALTER TABLE librarian_frameworks ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can view active frameworks" ON librarian_frameworks;
 CREATE POLICY "Anyone can view active frameworks" ON librarian_frameworks
   FOR SELECT USING (is_active = true);
 
 -- Usage log is per-user
 ALTER TABLE librarian_usage_log ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can log their own usage" ON librarian_usage_log;
 CREATE POLICY "Users can log their own usage" ON librarian_usage_log
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view their own usage" ON librarian_usage_log;
 CREATE POLICY "Users can view their own usage" ON librarian_usage_log
   FOR SELECT USING (auth.uid() = user_id);
 
 -- Agent suggestions are per-user
 ALTER TABLE agent_suggestions_log ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can insert their own suggestions" ON agent_suggestions_log;
 CREATE POLICY "Users can insert their own suggestions" ON agent_suggestions_log
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view their own suggestions" ON agent_suggestions_log;
 CREATE POLICY "Users can view their own suggestions" ON agent_suggestions_log
   FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own suggestions" ON agent_suggestions_log;
 CREATE POLICY "Users can update their own suggestions" ON agent_suggestions_log
   FOR UPDATE USING (auth.uid() = user_id);
 
@@ -229,6 +235,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS librarian_frameworks_updated_at ON librarian_frameworks;
 CREATE TRIGGER librarian_frameworks_updated_at
   BEFORE UPDATE ON librarian_frameworks
   FOR EACH ROW
