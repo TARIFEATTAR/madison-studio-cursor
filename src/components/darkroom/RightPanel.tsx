@@ -55,6 +55,7 @@ import {
   VISUAL_SQUADS,
   type VisualSquad,
 } from "@/config/imageSettings";
+import { ConsistencyModePanel } from "./ConsistencyMode";
 
 interface Suggestion {
   id: string;
@@ -76,9 +77,10 @@ interface ProductSlot {
 
 // AI Model options
 const AI_MODEL_OPTIONS = [
-  { value: "auto", label: "Auto (Gemini 3.0)", description: "Best for beginners", badge: "DEFAULT", group: "auto" },
-  { value: "gemini-3-pro-image", label: "Gemini 3.0 Pro", description: "Google's latest", badge: "BEST", group: "gemini" },
-  { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash", description: "Fast & reliable", badge: "FREE", group: "gemini" },
+  { value: "auto", label: "Auto (Nano Banana 2)", description: "Best for most uses", badge: "DEFAULT", group: "auto" },
+  { value: "gemini-3.1-flash-image-preview", label: "Nano Banana 2", description: "Fast, improved aspect ratio", badge: "NEW", group: "gemini" },
+  { value: "gemini-3-pro-image-preview", label: "Nano Banana Pro", description: "Highest quality — slower", badge: "BEST", group: "gemini" },
+  { value: "gemini-2.5-flash-image", label: "Nano Banana", description: "Stable fallback", badge: "FREE", group: "gemini" },
   { value: "freepik-seedream-4", label: "Seedream 4", description: "4K capable", badge: "4K", group: "freepik" },
   { value: "freepik-flux-pro", label: "Flux Pro v1.1", description: "Premium", badge: "NEW", group: "freepik" },
   { value: "freepik-hyperflux", label: "Hyperflux", description: "Ultra-fast", badge: "FAST", group: "freepik" },
@@ -92,8 +94,7 @@ const RESOLUTION_OPTIONS = [
   { value: "4k", label: "4K Ultra", description: "4K (4096px)", badge: "Signature" },
 ];
 
-// Use centralized aspect ratios from imageSettings.ts
-const ASPECT_RATIO_OPTIONS = COMMON_ASPECT_RATIOS;
+// Aspect ratios are read directly from COMMON_ASPECT_RATIOS where needed.
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // BACKGROUND PRESETS - E-commerce Best Practice Styles
@@ -276,7 +277,7 @@ export function getCompositionPrompt(presetId: string, productCount: number): st
   return productCount === 1 ? preset.singleProduct : preset.multiProduct;
 }
 
-type RightPanelTab = "madison" | "settings";
+type RightPanelTab = "madison" | "settings" | "consistency";
 
 interface RightPanelProps {
   // Suggestions based on context
@@ -314,6 +315,11 @@ interface RightPanelProps {
   // Composition preset selection (how to arrange products)
   selectedCompositionPreset?: string | null;
   onCompositionPresetChange?: (presetId: string | null) => void;
+
+  // Consistency Mode — bulk variation generation from a master reference
+  sessionId?: string;
+  organizationId?: string | null;
+  userId?: string | null;
 }
 
 // Quick Preset Button
@@ -609,6 +615,9 @@ export function RightPanel({
   onBackgroundPresetChange,
   selectedCompositionPreset,
   onCompositionPresetChange,
+  sessionId,
+  organizationId,
+  userId,
 }: RightPanelProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -711,6 +720,19 @@ export function RightPanel({
               >
                 <SlidersHorizontal className="w-3 h-3" />
                 Settings
+              </button>
+              <button
+                onClick={() => setActiveTab("consistency")}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-[11px] font-mono uppercase tracking-wide transition-all",
+                  activeTab === "consistency"
+                    ? "bg-[var(--camera-body)] text-[var(--darkroom-accent)] border border-[var(--darkroom-accent)]/20"
+                    : "text-[var(--darkroom-text-dim)] hover:text-[var(--darkroom-text-muted)] hover:bg-white/[0.03]"
+                )}
+                title="Bulk variation generation — lock background, vary bottle / cap / fitment"
+              >
+                <Layers className="w-3 h-3" />
+                Set
               </button>
             </div>
           </div>
@@ -856,45 +878,9 @@ export function RightPanel({
                 </div>
               </div>
 
-              {/* Aspect Ratio */}
-              <div className="camera-panel p-2.5 space-y-2">
-                <div className="flex items-center gap-1.5">
-                  <LEDIndicator
-                    state={proSettings.aspectRatio && proSettings.aspectRatio !== "1:1" ? "active" : "off"}
-                    size="sm"
-                  />
-                  <Aperture className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                  <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Aspect Ratio</span>
-                </div>
-                <div className="grid grid-cols-3 gap-1">
-                  {ASPECT_RATIO_OPTIONS.map((option) => {
-                    const isSelected = proSettings.aspectRatio === option.value ||
-                      (!proSettings.aspectRatio && option.value === "1:1");
-                    return (
-                      <button
-                        key={option.value}
-                        onClick={() => handleSettingChange("aspectRatio", option.value)}
-                        disabled={isGenerating}
-                        className={cn(
-                          "py-1.5 px-1 rounded text-center transition-all border",
-                          isSelected
-                            ? "bg-white/[0.06] border-white/[0.12]"
-                            : "bg-[var(--camera-body-deep)] border-white/[0.04] hover:border-white/[0.08]"
-                        )}
-                      >
-                        <span className={cn(
-                          "text-[10px] font-medium block",
-                          isSelected ? "text-[var(--darkroom-text)]" : "text-[var(--darkroom-text-muted)]"
-                        )}>{option.label}</span>
-                        <span className={cn(
-                          "text-[9px] font-mono block",
-                          isSelected ? "text-[var(--darkroom-text-muted)]" : "text-[var(--darkroom-text-dim)]"
-                        )}>{option.value}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              {/* Aspect ratio lives in the Madison tab (primary / always-open
+                  view). Duplicating it here previously let users set
+                  different values in two places. */}
 
               {/* Pro Controls - Collapsible */}
               <div className="camera-panel">
@@ -1188,7 +1174,8 @@ export function RightPanel({
                 }}
               />
 
-              {/* Quick Aspect Ratios */}
+              {/* Quick Aspect Ratios — uses the canonical COMMON_ASPECT_RATIOS
+                  list so this is the ONLY picker in the UI. */}
               <div className="camera-panel p-2.5 space-y-2">
                 <div className="flex items-center gap-1.5">
                   <LEDIndicator
@@ -1199,21 +1186,18 @@ export function RightPanel({
                   <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Aspect Ratio</span>
                 </div>
                 <div className="grid grid-cols-3 gap-1">
-                  {[
-                    { label: "Square", value: "1:1", desc: "Products" },
-                    { label: "Landscape", value: "16:9", desc: "Website" },
-                    { label: "Story/Reel", value: "9:16", desc: "TikTok/IG" },
-                    { label: "Social", value: "4:5", desc: "IG Feed" },
-                    { label: "Classic", value: "4:3", desc: "Etsy/Print" },
-                    { label: "Banner", value: "2:1", desc: "Hero/Wide" },
-                  ].map((ratio) => {
+                  {COMMON_ASPECT_RATIOS.map((ratio) => {
                     const isSelected = proSettings?.aspectRatio === ratio.value ||
                       (!proSettings?.aspectRatio && ratio.value === "1:1");
                     return (
                       <button
                         key={ratio.value}
-                        onClick={() => onProSettingsChange?.({ ...proSettings, aspectRatio: ratio.value })}
+                        onClick={() => {
+                          if (!proSettings || !onProSettingsChange) return;
+                          onProSettingsChange({ ...proSettings, aspectRatio: ratio.value });
+                        }}
                         disabled={isGenerating}
+                        title={ratio.description}
                         className={cn(
                           "py-1.5 px-1 rounded text-center transition-all border",
                           isSelected
@@ -1383,6 +1367,16 @@ export function RightPanel({
                 </p>
               </div>
             </div>
+          )}
+
+          {/* === CONSISTENCY MODE TAB - Bulk variation generation === */}
+          {activeTab === "consistency" && proSettings && sessionId && (
+            <ConsistencyModePanel
+              sessionId={sessionId}
+              organizationId={organizationId ?? null}
+              userId={userId ?? null}
+              proSettings={proSettings}
+            />
           )}
 
         </div>

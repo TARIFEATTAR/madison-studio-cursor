@@ -4,7 +4,7 @@ export interface ParsedEmailPart {
   content: string;
 }
 
-const SECTION_SPLIT_REGEX = /(?=^(?:Email|Part)\s*\d+(?:\s*[:\-–][^\n\r]*)?\s*$)/gim;
+const SECTION_SPLIT_REGEX = /(?=^(?:Email|Part)\s*\d+(?:\s*[:\-–.][^\n\r]*)?\s*$)/gim;
 
 export function parseEmailSequence(content: string): ParsedEmailPart[] {
   if (!content) return [];

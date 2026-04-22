@@ -700,6 +700,9 @@ export default function DarkRoom() {
           onBackgroundPresetChange={setSelectedBackgroundPreset}
           selectedCompositionPreset={selectedCompositionPreset}
           onCompositionPresetChange={setSelectedCompositionPreset}
+          sessionId={sessionId}
+          organizationId={orgId}
+          userId={user?.id}
         />
       </div>
 

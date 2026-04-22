@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Camera,
   Loader2,
   ArrowUp,
   Paperclip,
@@ -203,16 +202,25 @@ export function CenterCanvas({
 }: CenterCanvasProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isFocused, setIsFocused] = useState(false);
-  const [activeMode, setActiveMode] = useState<"prompt" | "visual">("prompt");
 
-  // Auto-resize textarea
+  // Auto-resize textarea. Start tall enough to make it obvious this is a
+  // paragraph brief, not a single-line chat input.
+  const PROMPT_MIN_HEIGHT = 96;
+  const PROMPT_MAX_HEIGHT = 220;
   const resizeTextarea = () => {
     const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = "40px";
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
+      textarea.style.height = `${PROMPT_MIN_HEIGHT}px`;
+      textarea.style.height = `${Math.min(
+        Math.max(textarea.scrollHeight, PROMPT_MIN_HEIGHT),
+        PROMPT_MAX_HEIGHT,
+      )}px`;
     }
   };
+
+  useEffect(() => {
+    resizeTextarea();
+  }, [prompt]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -294,48 +302,35 @@ export function CenterCanvas({
         </AnimatePresence>
       </div>
 
-      {/* Film Strip Thumbnail Carousel */}
-      <ThumbnailCarousel
-        images={images}
-        activeId={heroImage?.id || null}
-        onSelect={onSetHero}
-        onSave={onSaveImage}
-        onDelete={onDeleteImage}
-        maxSlots={maxImages}
-      />
-
-      {/* Prompt Bar - Compact Freepik-style */}
+      {/* Prompt Bar — promoted above the filmstrip so it reads as the
+          command center, not a footer. */}
       <div className={cn("prompt-bar", isFocused && "focused")}>
-        {/* Mode Toggle Pills */}
-        <div className="prompt-bar__mode-pills">
-          <button
-            type="button"
-            className={cn("prompt-bar__mode-pill", activeMode === "prompt" && "active")}
-            onClick={() => setActiveMode("prompt")}
-          >
-            Prompt
-          </button>
-          <button
-            type="button"
-            className="prompt-bar__mode-pill"
-            disabled
-            title="Coming soon"
-          >
-            Visual
-          </button>
+        {/* Header row: LCD label + character count */}
+        <div className="prompt-bar__header">
+          <span className="prompt-bar__label">Describe your shot</span>
+          <span className="prompt-bar__meta">
+            <span
+              className={cn(
+                "prompt-bar__counter",
+                prompt.length > 0 && prompt.length < 40 && "prompt-bar__counter--low",
+                prompt.length >= 80 && prompt.length <= 600 && "prompt-bar__counter--good",
+              )}
+            >
+              {prompt.length} chars
+            </span>
+            {proSettingsCount > 0 && (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="prompt-bar__pro-badge"
+              >
+                Pro·{proSettingsCount}
+              </motion.span>
+            )}
+          </span>
         </div>
 
         <div className="prompt-bar__input-container">
-          {/* Attachment icon (placeholder) */}
-          <button
-            type="button"
-            className="prompt-bar__attachment"
-            disabled
-            title="Attach image (coming soon)"
-          >
-            <Paperclip size={15} />
-          </button>
-
           <textarea
             ref={textareaRef}
             value={prompt}
@@ -346,39 +341,50 @@ export function CenterCanvas({
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             onKeyDown={handleKeyDown}
-            placeholder="What do you want to change?"
-            className="prompt-input"
+            placeholder="Describe the shot — lighting, mood, composition, props, style references…"
+            className="prompt-input prompt-input--tall"
             disabled={isGenerating}
-            rows={1}
+            rows={3}
           />
-
-          {/* Inline Pro Badge */}
-          {proSettingsCount > 0 && (
-            <motion.span
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="prompt-bar__pro-badge"
-            >
-              Pro·{proSettingsCount}
-            </motion.span>
-          )}
 
           <motion.button
             type="button"
-            className="prompt-submit"
+            className="prompt-submit prompt-submit--labeled"
             onClick={onGenerate}
             disabled={!canGenerate || isGenerating || images.length >= maxImages}
-            whileHover={canGenerate ? { scale: 1.05 } : {}}
-            whileTap={canGenerate ? { scale: 0.95 } : {}}
+            whileHover={canGenerate ? { scale: 1.02 } : {}}
+            whileTap={canGenerate ? { scale: 0.98 } : {}}
+            title="Expose a new frame (Enter)"
           >
             {isGenerating ? (
-              <Loader2 size={16} className="animate-spin" />
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                <span>Exposing…</span>
+              </>
             ) : (
-              <ArrowUp size={16} />
+              <>
+                <ArrowUp size={14} />
+                <span>Expose</span>
+              </>
             )}
           </motion.button>
         </div>
+
+        <div className="prompt-bar__hint">
+          <Paperclip size={11} className="prompt-bar__hint-icon" />
+          <span>Press Enter to expose · Shift + Enter for a new line</span>
+        </div>
       </div>
+
+      {/* Film Strip Thumbnail Carousel */}
+      <ThumbnailCarousel
+        images={images}
+        activeId={heroImage?.id || null}
+        onSelect={onSetHero}
+        onSave={onSaveImage}
+        onDelete={onDeleteImage}
+        maxSlots={maxImages}
+      />
     </section>
   );
 }

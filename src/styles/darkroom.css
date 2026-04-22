@@ -2492,18 +2492,74 @@
 .prompt-bar {
   position: relative;
   display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px var(--space-md) 10px;
   background: var(--camera-body);
   background-image: var(--camera-body-gloss);
   border-top: 1px solid var(--darkroom-border);
+  border-bottom: 1px solid var(--darkroom-border);
   overflow: hidden;
   transition: all var(--duration-normal) var(--ease-out);
   /* Top plate shadow */
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 -2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Header row: "Describe your shot" label + character counter */
+.prompt-bar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: 0 2px;
+}
+
+.prompt-bar__label {
+  font-family: var(--lcd-font, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--darkroom-accent);
+}
+
+.prompt-bar__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prompt-bar__counter {
+  font-family: var(--lcd-font, monospace);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--darkroom-text-dim);
+}
+
+.prompt-bar__counter--low {
+  color: var(--darkroom-text-muted);
+}
+
+.prompt-bar__counter--good {
+  color: var(--led-ready, #7fbf7f);
+}
+
+.prompt-bar__hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 2px;
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  color: var(--darkroom-text-dim);
+  opacity: 0.75;
+}
+
+.prompt-bar__hint-icon {
+  opacity: 0.6;
 }
 
 .prompt-bar.focused {
@@ -2533,8 +2589,9 @@
 
 .prompt-bar__input-container {
   display: flex;
-  align-items: center;
-  gap: var(--space-sm);
+  align-items: stretch;
+  flex-direction: column;
+  gap: 8px;
   flex: 1;
   min-width: 0;
 }
@@ -2638,6 +2695,16 @@
   min-width: 0;
 }
 
+/* Tall variant — the brief-sized prompt. Shows 3+ lines by default so
+   long creative prompts don't get clipped into a single row. */
+.prompt-input--tall {
+  min-height: 96px;
+  max-height: 220px;
+  padding: 14px var(--space-md);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
 .prompt-bar__input:focus,
 .prompt-input:focus {
   outline: none;
@@ -2676,6 +2743,25 @@
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Labeled variant — replaces the silent arrow with a clear "Expose" CTA
+   so the primary action is unmistakable. Sits bottom-right of the prompt. */
+.prompt-submit--labeled {
+  width: auto;
+  height: 40px;
+  padding: 0 16px;
+  gap: 8px;
+  font-family: var(--lcd-font, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  align-self: flex-end;
+}
+
+.prompt-submit--labeled span {
+  display: inline-block;
 }
 
 .prompt-submit:disabled {

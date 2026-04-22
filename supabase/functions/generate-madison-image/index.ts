@@ -4,6 +4,7 @@ import { encode, decode } from "https://deno.land/std@0.168.0/encoding/base64.ts
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { formatVisualContext } from "../_shared/productFieldFilters.ts";
 import { callGeminiImage } from "../_shared/aiProviders.ts";
+import { conformImageToAspectRatio } from "../_shared/imageAspectRatio.ts";
 import { enhancePromptWithOntology } from "../_shared/photographyOntology.ts";
 import { generateImage as generateFreepikImage, type FreepikImageModel, type FreepikResolution, IMAGE_MODELS } from "../_shared/freepikProvider.ts";
 import { getVisualMasterContext, getVisualStyleDirective, type VisualSquad } from "../_shared/visualMasters.ts";
@@ -668,7 +669,40 @@ serve(async (req) => {
       aiProvider, // "auto" | "gemini" | "freepik-mystic" | "freepik-flux"
       resolution, // "standard" | "high" | "4k"
       visualSquad, // "THE_MINIMALISTS" | "THE_STORYTELLERS" | "THE_DISRUPTORS"
+
+      // Consistency Mode (bulk variation generation) — OPTIONAL.
+      // When fixedSeed is provided, the edge function uses it instead of a
+      // random seed, guaranteeing identical random initialization across
+      // every variation in a set. consistencySetId groups related outputs
+      // in the Library. See migration 20260422000000_consistency_set_columns.
+      fixedSeed, // number | undefined — identical seed across a variation set
+      consistencySetId, // UUID | undefined — groups variations in the Library
+      // variationPrompt: the RICH prompt fragment appended to the AI
+      // instructions (e.g. "BOTTLE BODY: hand-swirled artisan glass …").
+      variationPrompt,
+      // variationLabel: the SHORT human label stored in the DB and shown
+      // in the Library grid (e.g. "Swirl · Polished Gold").
+      variationLabel,
+      // Legacy alias — kept for backward compatibility with any older
+      // client that still passes variationDescriptor instead of the
+      // separated prompt/label fields. Interpreted as "use this for both".
+      variationDescriptor,
+      setPosition, // number | undefined — 0-indexed order within the set
     } = body;
+
+    // Resolve the two separate roles from whatever fields the client sent.
+    const effectiveVariationPrompt: string | undefined =
+      typeof variationPrompt === "string" && variationPrompt.trim()
+        ? variationPrompt.trim()
+        : typeof variationDescriptor === "string" && variationDescriptor.trim()
+          ? variationDescriptor.trim()
+          : undefined;
+    const effectiveVariationLabel: string | undefined =
+      typeof variationLabel === "string" && variationLabel.trim()
+        ? variationLabel.trim()
+        : typeof variationDescriptor === "string" && variationDescriptor.trim()
+          ? variationDescriptor.trim()
+          : undefined;
     
     // Map frontend-friendly names to backend values
     // aiProvider maps to: provider + freepikModel + geminiModel
@@ -676,19 +710,38 @@ serve(async (req) => {
     let effectiveProvider = provider;
     let effectiveFreepikModel = freepikModel;
     let effectiveFreepikResolution = freepikResolution;
-    // Use Gemini 2.5 Flash Image (production) - supports text-to-image and image editing
+    // Default to Gemini 3.1 Flash Image Preview (Nano Banana 2) — Google's
+    // newest image model (Feb 2026). Per the official docs it has
+    // "improved aspect ratio adherence" plus new 1:4/4:1/1:8/8:1 ratios
+    // and native 0.5K/1K/2K/4K output via imageConfig.imageSize.
+    // Users can explicitly pick Gemini 3 Pro (higher quality, slower) via
+    // the AI Model dropdown.
     // See: https://ai.google.dev/gemini-api/docs/image-generation
-    let effectiveGeminiModel: string = "models/gemini-2.5-flash-image";
-    
+    let effectiveGeminiModel: string = "models/gemini-3.1-flash-image-preview";
+
     if (aiProvider) {
       // Gemini image models (must support responseModalities: ["IMAGE"])
-      if (aiProvider === "gemini-3-pro-image" || aiProvider === "gemini-3") {
+      if (
+        aiProvider === "gemini-3.1-flash-image-preview" ||
+        aiProvider === "gemini-3.1-flash" ||
+        aiProvider === "nano-banana-2"
+      ) {
         effectiveProvider = "gemini";
         effectiveGeminiModel = "models/gemini-3.1-flash-image-preview";
+      } else if (
+        aiProvider === "gemini-3-pro-image" ||
+        aiProvider === "gemini-3" ||
+        aiProvider === "gemini-3.1" ||
+        aiProvider === "gemini-3.1-pro-image" ||
+        aiProvider === "gemini-3-pro-image-preview" ||
+        aiProvider === "nano-banana-pro"
+      ) {
+        effectiveProvider = "gemini";
+        effectiveGeminiModel = "models/gemini-3-pro-image-preview";
       } else if (aiProvider === "gemini" || aiProvider === "gemini-2.0-flash" || aiProvider === "gemini-2.0-flash-exp") {
         effectiveProvider = "gemini";
         effectiveGeminiModel = "models/gemini-2.5-flash-image";
-      } 
+      }
       // Freepik models (actual available models from docs.freepik.com)
       else if (aiProvider === "freepik-seedream-4") {
         effectiveProvider = "freepik";
@@ -713,7 +766,7 @@ serve(async (req) => {
         effectiveFreepikModel = "classic-fast";
       } else if (aiProvider === "auto") {
         effectiveProvider = "auto";
-        effectiveGeminiModel = "models/gemini-2.5-flash-image";
+        effectiveGeminiModel = "models/gemini-3.1-flash-image-preview";
       }
     }
     
@@ -973,9 +1026,17 @@ serve(async (req) => {
         }
       }
 
-      if (aspectRatio) {
-        enhancedPrompt += `\n\nAspect Ratio: ${aspectRatio}`;
-      }
+      // Aspect ratio is now applied by the provider (Gemini imageConfig /
+       // Freepik aspect_ratio) — no need to stuff it into the prompt text.
+    }
+
+    // Consistency Mode: append the rich variation prompt as the final line
+    // of the prompt. Placing it last gives the model the strongest "this is
+    // the specific thing that changes" signal while all earlier framing —
+    // scene, lighting, composition, reference image — stays identical
+    // across the entire variation set.
+    if (effectiveVariationPrompt) {
+      enhancedPrompt += `\n\nVARIATION DETAILS: ${effectiveVariationPrompt}`;
     }
 
     // Apply image constraints (rewrite rules, prohibited terms)
@@ -1165,9 +1226,22 @@ serve(async (req) => {
       requestedResolution: effectiveFreepikResolution,
     });
 
-    // Generate a random seed for variety (0-2147483647, max signed 32-bit integer)
-    // Gemini API requires INT32, which is signed and maxes at 2147483647
-    const randomSeed = Math.floor(Math.random() * 2147483647);
+    // Seed selection. Default: random seed per call for variety. Consistency
+    // Mode (bulk variation) overrides with a fixed seed shared by every
+    // variation in the set — combined with the same reference image and
+    // prompt base, this drives Gemini toward pixel-stable output.
+    // Gemini API requires INT32 (0 – 2_147_483_647).
+    const MAX_INT32 = 2147483647;
+    const clampedFixedSeed = typeof fixedSeed === "number" && Number.isFinite(fixedSeed)
+      ? Math.max(0, Math.min(MAX_INT32, Math.floor(fixedSeed)))
+      : null;
+    const randomSeed = clampedFixedSeed ?? Math.floor(Math.random() * MAX_INT32);
+    if (clampedFixedSeed !== null) {
+      console.log("🔒 Consistency Mode active — using fixed seed:", clampedFixedSeed, {
+        consistencySetId: consistencySetId ?? "(none)",
+        setPosition: setPosition ?? "(none)",
+      });
+    }
 
     // Determine which provider to use based on tier and request
     let selectedProvider: "gemini" | "freepik" = "gemini";
@@ -1190,12 +1264,10 @@ serve(async (req) => {
         tierRestrictionApplied = true;
       }
     } else if (effectiveProvider === "auto") {
-      // Auto-selection: Use Gemini by default (better for reference images)
-      // Only use Freepik if explicitly beneficial AND allowed
-      if (freepikAllowed && effectiveFreepikResolution === "4k" && freepik4KAllowed) {
-        selectedProvider = "freepik";
-      }
-      // Otherwise default to Gemini
+      // Gemini 3.1 Flash / 3 Pro produce 2K and 4K natively via
+      // imageConfig.imageSize — no need to route high-res to Freepik.
+      // Only select Freepik when the user explicitly picks a Freepik
+      // model (handled by the branch above).
     }
     // effectiveProvider === "gemini" → stays as gemini
 
@@ -1282,26 +1354,101 @@ serve(async (req) => {
     if (selectedProvider === "gemini") {
       /**
        * GEMINI GENERATION PATH (default)
+       *
+       * We try the requested model first. If that 404s (e.g. preview not
+       * released to this API key), fall through to the stable
+       * gemini-2.5-flash-image so the user never sees a dead-model error.
+       *
+       * Primary is gemini-3-pro-image-preview (verified live on our key
+       * and honors aspect ratio natively). If Google renames the preview
+       * model in the future, override via the GEMINI_IMAGE_MODEL secret
+       * without a redeploy.
        */
+      // Preference order: user's pick → next-best Gemini 3-class model →
+      // stable 2.5. If the requested preview isn't yet released to this
+      // API key, we quietly step down and still generate an image.
+      const GEMINI_PRO_SECONDARY = "models/gemini-3-pro-image-preview";
+      const GEMINI_STABLE_FALLBACK = "models/gemini-2.5-flash-image";
+      const rawChain: string[] = [
+        effectiveGeminiModel,
+        GEMINI_PRO_SECONDARY,
+        GEMINI_STABLE_FALLBACK,
+      ];
+      const seen = new Set<string>();
+      const geminiModelPreference = rawChain.filter((m) => {
+        if (seen.has(m)) return false;
+        seen.add(m);
+        return true;
+      });
+
+      // Map the user's Resolution setting to Gemini's native imageSize
+      // parameter. Gemini 3 Pro / 3.1 Flash can produce 1K/2K/4K directly —
+      // no Freepik detour needed for high-res.
+      const geminiImageSize: "1K" | "2K" | "4K" =
+        resolution === "4k" ? "4K" :
+        resolution === "high" ? "2K" :
+        "1K";
+
       console.log("🎨 Using Gemini for image generation...", {
-        model: effectiveGeminiModel || "default",
+        primaryModel: effectiveGeminiModel || "default",
+        fallbackChain: geminiModelPreference,
+        imageSize: geminiImageSize,
       });
 
-      const geminiImage = await callGeminiImage({
-        prompt: enhancedPrompt,
-        aspectRatio,
-        seed: randomSeed,
-        model: effectiveGeminiModel, // Pass model override if specified
-        referenceImages: referenceImagesPayload.length > 0
-          ? referenceImagesPayload
-          : undefined,
-      });
+      let geminiImage: any = null;
+      let lastError: unknown = null;
+      let modelUsed = effectiveGeminiModel;
 
-      const base64Image = geminiImage?.data ?? geminiImage?.bytesBase64 ?? geminiImage?.base64;
+      for (const candidateModel of geminiModelPreference) {
+        try {
+          geminiImage = await callGeminiImage({
+            prompt: enhancedPrompt,
+            aspectRatio,
+            imageSize: geminiImageSize,
+            seed: randomSeed,
+            model: candidateModel,
+            referenceImages: referenceImagesPayload.length > 0
+              ? referenceImagesPayload
+              : undefined,
+          });
+          modelUsed = candidateModel;
+          break;
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          // Only fall through on "model not found / not supported" style
+          // errors. Any other failure (auth, quota, network) should bubble.
+          const isModelMissing = /\b404\b|not found|not supported|INVALID_ARGUMENT.*model/i.test(msg);
+          if (!isModelMissing) throw err;
+          console.warn(`⚠️ Gemini model ${candidateModel} unavailable, falling back:`, msg);
+          lastError = err;
+        }
+      }
 
-      if (!base64Image) {
+      if (!geminiImage) {
+        throw lastError ?? new Error("All Gemini image models failed");
+      }
+
+      effectiveGeminiModel = modelUsed;
+
+      const rawBase64Image = geminiImage?.data ?? geminiImage?.bytesBase64 ?? geminiImage?.base64;
+
+      if (!rawBase64Image) {
         throw new Error("Gemini returned no image. Check prompt and reference images.");
       }
+
+      // Gemini Nano Banana biases toward square output even when we pass the
+      // requested aspect ratio via imageConfig. Center-crop the returned
+      // image server-side to guarantee the user sees the shape they asked
+      // for, regardless of what the model actually produced.
+      const conformed = await conformImageToAspectRatio(rawBase64Image, aspectRatio);
+      const base64Image = conformed.base64;
+
+      console.log("🖼️ Gemini aspect-ratio conformance:", {
+        requested: aspectRatio,
+        originalDimensions: `${conformed.originalWidth}×${conformed.originalHeight}`,
+        finalDimensions: `${conformed.width}×${conformed.height}`,
+        cropped: conformed.wasModified,
+      });
 
       // Upload Gemini's base64 image to Supabase Storage
       const filename = `${resolvedOrgId}/${Date.now()}-${crypto.randomUUID()}.png`;
@@ -1390,6 +1537,18 @@ serve(async (req) => {
     insertPayload.refinement_instruction = isRefinement
       ? refinementInstruction
       : null;
+
+    // Consistency Mode grouping — set when the caller is part of a bulk
+    // variation set. Columns added in migration 20260422000000.
+    if (typeof consistencySetId === "string" && consistencySetId) {
+      insertPayload.consistency_set_id = consistencySetId;
+    }
+    if (effectiveVariationLabel) {
+      insertPayload.variation_descriptor = effectiveVariationLabel;
+    }
+    if (typeof setPosition === "number" && Number.isFinite(setPosition)) {
+      insertPayload.set_position = Math.max(0, Math.floor(setPosition));
+    }
 
     const savedImage = await insertGeneratedImageRecord(
       supabase,
