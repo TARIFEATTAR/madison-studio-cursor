@@ -51,6 +51,13 @@ export interface PipelineGroup {
 
   legacy_has_hero_image: boolean;
   legacy_hero_image_url: string | null;
+  /**
+   * Operator-pinned master-reference flag. At most one row per shape group
+   * (family + capacity + thread_size) may have this set — enforced by a
+   * partial unique index at the DB layer. When set, Pipeline Launch uses
+   * this row's legacy_hero_image_url as the Consistency Mode master.
+   */
+  is_master_reference: boolean;
 
   madison_status: PipelineStatus;
   madison_consistency_set_id: string | null;
@@ -483,5 +490,64 @@ export async function markShapeGroupGenerated(
     .update({ madison_status: "generated" })
     .eq("madison_consistency_set_id", consistencySetId)
     .eq("madison_status", "queued");
+  if (error) throw error;
+}
+
+/**
+ * Pin a single row as the shape group's master reference. Unpins every
+ * other row in the same shape group (same org + family + capacity_ml +
+ * thread_size) in the same call so the partial unique index
+ * `idx_best_bottles_pipeline_one_master_per_shape` is never violated.
+ *
+ * Done as two sequential updates (unpin siblings, pin target) rather than
+ * a single RPC because the client already has RLS-scoped update rights
+ * and an RPC would add deployment friction for a two-query operation.
+ * The UI optimistically re-queries after this resolves.
+ */
+export async function setShapeGroupMasterReference(params: {
+  organizationId: string;
+  rowId: string;
+  family: string;
+  capacityMl: number | null;
+  threadSize: string | null;
+}): Promise<void> {
+  const { organizationId, rowId, family, capacityMl, threadSize } = params;
+
+  // Unpin any currently-pinned siblings in the shape group. We scope by
+  // the exact same composite key the DB's partial unique index uses.
+  let unpin = supabase
+    .from("best_bottles_pipeline_groups")
+    .update({ is_master_reference: false })
+    .eq("organization_id", organizationId)
+    .eq("family", family)
+    .eq("is_master_reference", true)
+    .neq("id", rowId);
+  unpin = capacityMl == null
+    ? unpin.is("capacity_ml", null)
+    : unpin.eq("capacity_ml", capacityMl);
+  unpin = threadSize == null
+    ? unpin.is("thread_size", null)
+    : unpin.eq("thread_size", threadSize);
+  const { error: unpinErr } = await unpin;
+  if (unpinErr) throw unpinErr;
+
+  const { error: pinErr } = await supabase
+    .from("best_bottles_pipeline_groups")
+    .update({ is_master_reference: true })
+    .eq("id", rowId);
+  if (pinErr) throw pinErr;
+}
+
+/**
+ * Clear the master-reference pin on a single row. Used when the operator
+ * clicks the currently-pinned thumbnail to un-pin (toggle behaviour).
+ */
+export async function clearShapeGroupMasterReference(
+  rowId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("best_bottles_pipeline_groups")
+    .update({ is_master_reference: false })
+    .eq("id", rowId);
   if (error) throw error;
 }

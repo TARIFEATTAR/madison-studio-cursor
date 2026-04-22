@@ -105,9 +105,11 @@ CREATE TRIGGER best_bottles_pipeline_groups_touch_updated_at
   BEFORE UPDATE ON public.best_bottles_pipeline_groups
   FOR EACH ROW EXECUTE FUNCTION public.best_bottles_pipeline_groups_touch_updated_at();
 
--- RLS: organization_members only
+-- RLS: organization_members only. Policies are dropped-then-created so
+-- this migration is idempotent on replay.
 ALTER TABLE public.best_bottles_pipeline_groups ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "pipeline_groups_select_own_org" ON public.best_bottles_pipeline_groups;
 CREATE POLICY "pipeline_groups_select_own_org"
   ON public.best_bottles_pipeline_groups
   FOR SELECT
@@ -118,6 +120,7 @@ CREATE POLICY "pipeline_groups_select_own_org"
     )
   );
 
+DROP POLICY IF EXISTS "pipeline_groups_insert_own_org" ON public.best_bottles_pipeline_groups;
 CREATE POLICY "pipeline_groups_insert_own_org"
   ON public.best_bottles_pipeline_groups
   FOR INSERT
@@ -128,6 +131,7 @@ CREATE POLICY "pipeline_groups_insert_own_org"
     )
   );
 
+DROP POLICY IF EXISTS "pipeline_groups_update_own_org" ON public.best_bottles_pipeline_groups;
 CREATE POLICY "pipeline_groups_update_own_org"
   ON public.best_bottles_pipeline_groups
   FOR UPDATE
@@ -138,6 +142,7 @@ CREATE POLICY "pipeline_groups_update_own_org"
     )
   );
 
+DROP POLICY IF EXISTS "pipeline_groups_delete_own_org" ON public.best_bottles_pipeline_groups;
 CREATE POLICY "pipeline_groups_delete_own_org"
   ON public.best_bottles_pipeline_groups
   FOR DELETE

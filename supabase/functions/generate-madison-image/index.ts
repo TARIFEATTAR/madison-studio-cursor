@@ -7,6 +7,7 @@ import { callGeminiImage } from "../_shared/aiProviders.ts";
 import { conformImageToAspectRatio } from "../_shared/imageAspectRatio.ts";
 import { enhancePromptWithOntology } from "../_shared/photographyOntology.ts";
 import { generateImage as generateFreepikImage, type FreepikImageModel, type FreepikResolution, IMAGE_MODELS } from "../_shared/freepikProvider.ts";
+import { generateImage as generateOpenAIImage, type OpenAIImageModel } from "../_shared/openaiProvider.ts";
 import { getVisualMasterContext, getVisualStyleDirective, type VisualSquad } from "../_shared/visualMasters.ts";
 
 const corsHeaders = {
@@ -694,6 +695,11 @@ serve(async (req) => {
       // human-readable storage filename below so the client's team can
       // locate outputs by family/capacity/thread instead of UUIDs.
       pipelineContext,
+      // Per-call library_tags (e.g. applicator/colour for Consistency
+      // Mode variations) that the client computes because the axis
+      // identifiers aren't part of pipelineContext. Merged into
+      // library_tags alongside the group-level pipelineMeta tags below.
+      extraLibraryTags,
     } = body;
 
     // Resolve the two separate roles from whatever fields the client sent.
@@ -737,6 +743,7 @@ serve(async (req) => {
             capacityMl?: number | null;
             threadSize?: string | null;
             shapeKey?: string;
+            pipelineGroupIds?: string[];
           }
         | undefined;
       if (!ctx || ctx.source !== "best-bottles-pipeline") return null;
@@ -752,11 +759,41 @@ serve(async (req) => {
       const variationSlug =
         slugify(effectiveVariationLabel) ||
         (typeof setPosition === "number" ? `pos-${setPosition}` : "variation");
+
+      // Tag vocabulary mirrors the Pipeline tracker's filter dimensions so
+      // the Library can be filtered the same way the tracker is:
+      //   - Bare slugs ("best-bottles", "pipeline", "cylinder", "cylinder-5ml-13-415")
+      //     kept for back-compat with anything already querying them.
+      //   - Structured key:value tags ("brand:best-bottles", "family:cylinder",
+      //     "capacity:5ml", "thread:13-415", "shape:cylinder-5ml-13-415")
+      //     for precise filtering — avoids "cylinder" the family colliding
+      //     with "cylinder" some other free-text use.
+      //   - "pipeline-group:<uuid>" tags per tracker row this run covers,
+      //     so we can join an image back to the exact SKUs it serves.
+      const structuredTags: string[] = [
+        "brand:best-bottles",
+        `family:${familySlug}`,
+      ];
+      if (capSlug) structuredTags.push(`capacity:${capSlug}`);
+      if (threadSlug) structuredTags.push(`thread:${threadSlug}`);
+      if (shapeSlug) structuredTags.push(`shape:${shapeSlug}`);
+
+      const pipelineRowTags = Array.isArray(ctx.pipelineGroupIds)
+        ? ctx.pipelineGroupIds
+            .filter((id): id is string => typeof id === "string" && id.length > 0)
+            .map((id) => `pipeline-group:${id}`)
+        : [];
+
       const libraryTags = Array.from(
         new Set(
-          ["best-bottles", "pipeline", familySlug, shapeSlug].filter(
-            (t) => t && t.length > 0,
-          ),
+          [
+            "best-bottles",
+            "pipeline",
+            familySlug,
+            shapeSlug,
+            ...structuredTags,
+            ...pipelineRowTags,
+          ].filter((t) => t && t.length > 0),
         ),
       );
       return {
@@ -772,6 +809,13 @@ serve(async (req) => {
     let effectiveProvider = provider;
     let effectiveFreepikModel = freepikModel;
     let effectiveFreepikResolution = freepikResolution;
+    // Default OpenAI model when user picks the "OpenAI" group from the UI.
+    // As of 2026-04-21, OpenAI's current flagship is gpt-image-2 (4× faster
+    // than 1.5, better text rendering, better layout composition). The
+    // OPENAI_IMAGE_MODEL secret overrides the default without a redeploy.
+    const openaiModelSecret = Deno.env.get("OPENAI_IMAGE_MODEL")?.trim();
+    let effectiveOpenAIModel: OpenAIImageModel =
+      (openaiModelSecret || "gpt-image-2") as OpenAIImageModel;
     // Default to Gemini 3.1 Flash Image Preview (Nano Banana 2) — Google's
     // newest image model (Feb 2026). Per the official docs it has
     // "improved aspect ratio adherence" plus new 1:4/4:1/1:8/8:1 ratios
@@ -826,6 +870,33 @@ serve(async (req) => {
       } else if (aiProvider === "freepik-classic") {
         effectiveProvider = "freepik";
         effectiveFreepikModel = "classic-fast";
+      }
+      // OpenAI image models (gpt-image-* family + dall-e-3)
+      // "openai-image-2" is the UI label — as of 2026-04-21 it maps to the
+      // real gpt-image-2 API enum (previously it temporarily mapped to 1.5
+      // while gpt-image-2 wasn't yet exposed on the enum).
+      else if (
+        aiProvider === "openai-image-2" ||
+        aiProvider === "openai-gpt-image-2" ||
+        aiProvider === "gpt-image-2"
+      ) {
+        effectiveProvider = "openai";
+        effectiveOpenAIModel = "gpt-image-2";
+      } else if (
+        aiProvider === "openai-gpt-image-1.5" ||
+        aiProvider === "gpt-image-1.5"
+      ) {
+        effectiveProvider = "openai";
+        effectiveOpenAIModel = "gpt-image-1.5";
+      } else if (aiProvider === "openai-gpt-image-1" || aiProvider === "gpt-image-1") {
+        effectiveProvider = "openai";
+        effectiveOpenAIModel = "gpt-image-1";
+      } else if (aiProvider === "openai-gpt-image-mini" || aiProvider === "gpt-image-1-mini") {
+        effectiveProvider = "openai";
+        effectiveOpenAIModel = "gpt-image-1-mini";
+      } else if (aiProvider === "openai-dalle-3" || aiProvider === "dall-e-3") {
+        effectiveProvider = "openai";
+        effectiveOpenAIModel = "dall-e-3";
       } else if (aiProvider === "auto") {
         effectiveProvider = "auto";
         effectiveGeminiModel = "models/gemini-3.1-flash-image-preview";
@@ -1305,11 +1376,23 @@ serve(async (req) => {
       });
     }
 
-    // Determine which provider to use based on tier and request
-    let selectedProvider: "gemini" | "freepik" = "gemini";
+    // Determine which provider to use based on tier and request.
+    // Default remains Gemini (Nano Banana 2 / gemini-3.1-flash-image-preview)
+    // so the primary path is unchanged for every existing caller.
+    let selectedProvider: "gemini" | "freepik" | "openai" = "gemini";
     let tierRestrictionApplied = false;
-    
-    if (effectiveProvider === "freepik" || effectiveFreepikModel) {
+
+    if (effectiveProvider === "openai") {
+      // OpenAI is selectable from the UI but never the auto-pick — Nano Banana
+      // stays primary. OPENAI_API_KEY must be configured; if it isn't we
+      // transparently fall back to Gemini instead of failing the request.
+      if (Deno.env.get("OPENAI_API_KEY")) {
+        selectedProvider = "openai";
+      } else {
+        console.warn("⚠️ OpenAI requested but OPENAI_API_KEY not set — falling back to Gemini");
+        tierRestrictionApplied = true;
+      }
+    } else if (effectiveProvider === "freepik" || effectiveFreepikModel) {
       // User explicitly requested Freepik
       if (freepikAllowed) {
         // Check if they're requesting 4K (requires higher tier)
@@ -1417,6 +1500,82 @@ serve(async (req) => {
       } catch (freepikError) {
         console.error("❌ Freepik generation failed, falling back to Gemini:", freepikError);
         // Fall back to Gemini
+        selectedProvider = "gemini";
+        didFallback = true;
+      }
+    }
+
+    if (selectedProvider === "openai") {
+      /**
+       * OPENAI GENERATION PATH
+       *
+       * Uses OpenAI's Images API (gpt-image-* family). References, when
+       * present, route to /images/edits so the model conditions on them;
+       * otherwise we hit /images/generations. Output is always returned as
+       * base64 so the upload path mirrors the Gemini branch exactly.
+       *
+       * Default model is gpt-image-2 (Image API). Fallback on any failure is
+       * Gemini, same pattern as the Freepik branch.
+       */
+      console.log("🎨 Using OpenAI for image generation...", {
+        model: effectiveOpenAIModel,
+        resolution,
+        aspectRatio,
+        references: referenceImagesPayload.length,
+      });
+
+      try {
+        const openaiResult = await generateOpenAIImage({
+          prompt: enhancedPrompt,
+          model: effectiveOpenAIModel,
+          aspectRatio,
+          resolution,
+          referenceImages: referenceImagesPayload.length > 0
+            ? referenceImagesPayload
+            : undefined,
+          user: userId ?? undefined,
+        });
+
+        // Write base64 bytes to Supabase Storage. Pipeline-aware filename
+        // when launched from the Grid Pipeline; UUID path otherwise.
+        const openaiShortId = crypto.randomUUID().slice(0, 8);
+        const openaiPosition =
+          typeof setPosition === "number" && Number.isFinite(setPosition)
+            ? Math.max(0, Math.floor(setPosition))
+            : 0;
+        const ext = openaiResult.mimeType === "image/jpeg" ? "jpg"
+          : openaiResult.mimeType === "image/webp" ? "webp"
+          : "png";
+        const openaiFilename = pipelineMeta
+          ? `${resolvedOrgId}/${pipelineMeta.storagePathPrefix}/${pipelineMeta.variationSlug}-pos${openaiPosition}-${openaiShortId}.${ext}`
+          : `${resolvedOrgId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+
+        const { error: openaiUploadErr } = await supabase.storage
+          .from("generated-images")
+          .upload(openaiFilename, decode(openaiResult.imageBase64), {
+            contentType: openaiResult.mimeType,
+          });
+
+        if (openaiUploadErr) {
+          console.error("Storage upload error for OpenAI image", openaiUploadErr);
+          throw openaiUploadErr;
+        }
+
+        const { data: openaiUrlData } = supabase.storage
+          .from("generated-images")
+          .getPublicUrl(openaiFilename);
+
+        imageUrl = openaiUrlData.publicUrl;
+        usedProvider = `openai-${openaiResult.model}`;
+
+        console.log(`✅ OpenAI Image Generated & Uploaded to Storage:`, {
+          model: openaiResult.model,
+          endpoint: openaiResult.endpoint,
+          revisedPrompt: openaiResult.revisedPrompt ? "(rewritten)" : "(as-sent)",
+          storedUrl: imageUrl,
+        });
+      } catch (openaiError) {
+        console.error("❌ OpenAI generation failed, falling back to Gemini:", openaiError);
         selectedProvider = "gemini";
         didFallback = true;
       }
@@ -1631,14 +1790,29 @@ serve(async (req) => {
 
     // Auto-tag pipeline-originated images so the client's team can filter
     // the Library by brand/family/shape without coordinating on tag names.
-    // Merges with any library_tags already on the payload (none today, but
-    // future callers might supply their own).
-    if (pipelineMeta) {
+    // Three sources get merged, de-duped, into library_tags:
+    //   1. Anything already on insertPayload (future-proof — no callers today)
+    //   2. pipelineMeta.libraryTags (brand/family/shape/pipeline-group refs —
+    //      only present for pipeline-originated runs)
+    //   3. extraLibraryTags from the request body (per-variation tags like
+    //      applicator:fine-mist-metal, color:amber — emitted by Consistency
+    //      Mode for every run, not just pipeline ones, so non-pipeline sets
+    //      are still searchable by axis)
+    const callerExtraTags = Array.isArray(extraLibraryTags)
+      ? (extraLibraryTags as unknown[]).filter(
+          (t): t is string => typeof t === "string" && t.length > 0,
+        )
+      : [];
+    if (pipelineMeta || callerExtraTags.length > 0) {
       const existing = Array.isArray(insertPayload.library_tags)
         ? (insertPayload.library_tags as string[])
         : [];
       insertPayload.library_tags = Array.from(
-        new Set([...existing, ...pipelineMeta.libraryTags]),
+        new Set([
+          ...existing,
+          ...(pipelineMeta ? pipelineMeta.libraryTags : []),
+          ...callerExtraTags,
+        ]),
       );
     }
 

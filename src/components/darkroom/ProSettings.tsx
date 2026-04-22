@@ -33,12 +33,19 @@ const ASPECT_RATIO_OPTIONS = [
 ];
 
 // AI Provider/Model options - Updated for Freepik's actual API offerings
+// Default/primary: Google Nano Banana 2 (Gemini 3.1 Flash Image Preview) —
+// selected automatically by the "Auto" option on the edge function side.
+// GPT Image 2 is selectable but never the default.
 const AI_PROVIDER_OPTIONS = [
   // Auto
-  { value: "auto", label: "Auto", description: "AI picks what's best", badge: "SUGGESTED", group: "auto" },
+  { value: "auto", label: "Auto", description: "AI picks what's best (Nano Banana 2)", badge: "SUGGESTED", group: "auto" },
   // Google Gemini Direct (Google's API) - MOVED TO TOP
   { value: "gemini-3-pro-image", label: "Gemini 3.0 Pro", description: "Google's latest - Image gen & editing", badge: "BEST", group: "gemini" },
   { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash", description: "Fast & reliable", badge: "FREE", group: "gemini" },
+  // OpenAI — current flagship gpt-image-2 (April 2026). Older versions
+  // intentionally omitted from the UI; selectable via edge-function alias
+  // for anyone who needs to pin to 1.5 for legacy compatibility.
+  { value: "openai-image-2", label: "GPT Image 2", description: "OpenAI's flagship — 4× faster, better text + layout", badge: "NEW", group: "openai" },
   // Freepik Premium Models
   { value: "freepik-seedream-4", label: "Seedream 4", description: "Best quality, 4K capable", badge: "4K", group: "freepik" },
   { value: "freepik-flux-pro", label: "Flux Pro v1.1", description: "Premium Flux model", badge: "NEW", group: "freepik" },
@@ -362,6 +369,7 @@ export function ProSettings({ settings, onChange, disabled = false }: ProSetting
 
                       const groupLabels: Record<string, string> = {
                         "gemini": "Google Gemini",
+                        "openai": "OpenAI",
                         "freepik": "Freepik AI Models",
                       };
 

@@ -81,6 +81,7 @@ const AI_MODEL_OPTIONS = [
   { value: "gemini-3.1-flash-image-preview", label: "Nano Banana 2", description: "Fast, improved aspect ratio", badge: "NEW", group: "gemini" },
   { value: "gemini-3-pro-image-preview", label: "Nano Banana Pro", description: "Highest quality — slower", badge: "BEST", group: "gemini" },
   { value: "gemini-2.5-flash-image", label: "Nano Banana", description: "Stable fallback", badge: "FREE", group: "gemini" },
+  { value: "openai-image-2", label: "GPT Image 2", description: "OpenAI's flagship — 4× faster, better text + layout", badge: "NEW", group: "openai" },
   { value: "freepik-seedream-4", label: "Seedream 4", description: "4K capable", badge: "4K", group: "freepik" },
   { value: "freepik-flux-pro", label: "Flux Pro v1.1", description: "Premium", badge: "NEW", group: "freepik" },
   { value: "freepik-hyperflux", label: "Hyperflux", description: "Ultra-fast", badge: "FAST", group: "freepik" },
@@ -800,6 +801,7 @@ export function RightPanel({
                       const showGroupHeader = !prevOption || prevOption.group !== option.group;
                       const groupLabels: Record<string, string> = {
                         "gemini": "Google Gemini",
+                        "openai": "OpenAI",
                         "freepik": "Freepik Models",
                       };
 

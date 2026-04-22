@@ -3260,6 +3260,100 @@
   }
 }
 
+/* -----------------------------------------------------------------------------
+   Queue "Exposing" state — replaces a generic spinner with darkroom-themed
+   light-sweep + aperture breathe + label shimmer. No rotation.
+   ----------------------------------------------------------------------------- */
+
+/* Enlarger-style horizontal light sweep across the pending frame thumbnail.
+   Uses the amber darkroom accent so it reads as safelight warmth, not a
+   generic "loading" bar. */
+.darkroom-exposing-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(184, 149, 106, 0.12) 45%,
+    rgba(212, 175, 55, 0.32) 50%,
+    rgba(184, 149, 106, 0.12) 55%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: darkroom-exposing-sweep 1.8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.darkroom-exposing-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 8px rgba(212, 175, 55, 0.15);
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes darkroom-exposing-sweep {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Aperture icon breathes (scale + opacity) instead of spinning. Reads as
+   a shutter holding open during an exposure. */
+.darkroom-exposing-pulse {
+  animation: darkroom-exposing-pulse 1.8s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes darkroom-exposing-pulse {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+/* Shimmer sweep through the "Exposing" label itself. Gradient moves via
+   background-position so the text stays pinned (no layout shift). */
+.darkroom-exposing-text {
+  background: linear-gradient(
+    90deg,
+    rgba(184, 149, 106, 0.55) 0%,
+    rgba(184, 149, 106, 0.55) 40%,
+    rgba(241, 211, 123, 1) 50%,
+    rgba(184, 149, 106, 0.55) 60%,
+    rgba(184, 149, 106, 0.55) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: darkroom-exposing-text-shimmer 2.2s linear infinite;
+}
+
+@keyframes darkroom-exposing-text-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .darkroom-exposing-frame::before,
+  .darkroom-exposing-pulse,
+  .darkroom-exposing-text {
+    animation: none;
+  }
+  .darkroom-exposing-text {
+    -webkit-text-fill-color: rgba(212, 175, 55, 0.9);
+    color: rgba(212, 175, 55, 0.9);
+  }
+}
+
 /* =============================================================================
    CAMERA BODY AESTHETIC - LED Indicators & Glossy Panels
    Professional camera equipment styling for DarkRoom Settings
