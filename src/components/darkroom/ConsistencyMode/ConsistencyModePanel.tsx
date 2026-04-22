@@ -15,6 +15,14 @@ import { useConsistencySet } from "@/hooks/useConsistencySet";
 import type { VariationItem } from "@/lib/consistencyMode";
 import { markImageAsHero, toggleImageHero } from "@/lib/imageLibraryTags";
 import {
+  readAndClearPipelinePrefill,
+  type PipelinePrefill,
+} from "@/lib/bestBottlesPipelineBridge";
+import {
+  markShapeGroupQueued,
+  markShapeGroupGenerated,
+} from "@/lib/bestBottlesPipeline";
+import {
   CONSISTENCY_COMPOSITIONS,
   DEFAULT_COMPOSITION_ID,
   DEFAULT_STUDIO_SETTINGS,
@@ -22,6 +30,8 @@ import {
   type StudioSettings,
 } from "@/config/consistencyVariations";
 import {
+  BOTTLE_COLORS,
+  FITMENT_TYPES,
   MAX_VARIATION_SET_SIZE,
   capsForFitments,
   expandVariationMatrix,
@@ -103,6 +113,12 @@ export function ConsistencyModePanel({
   const [showReview, setShowReview] = useState(false);
   /** Tracks the last status we saw so we only auto-open on edge. */
   const lastAutoOpenedSetIdRef = useRef<string | null>(null);
+  /**
+   * When launched from the Best Bottles Grid Pipeline, the shape group's
+   * pipeline_group ids are captured here. When the run completes, we
+   * flip those rows' status to "generated" for real-time tracking.
+   */
+  const [pipelinePrefill, setPipelinePrefill] = useState<PipelinePrefill | null>(null);
 
   const {
     status,
@@ -126,6 +142,61 @@ export function ConsistencyModePanel({
     lastAutoOpenedSetIdRef.current = setId;
     setShowReview(true);
   }, [status, setId]);
+
+  // On mount, check for a Best Bottles Pipeline pre-fill. If present,
+  // pre-tick the matching bottle-color + fitment chips so the operator
+  // opens Consistency Mode with the right matrix already configured.
+  // Reads + clears the handoff so a refresh doesn't re-apply stale state.
+  useEffect(() => {
+    const prefill = readAndClearPipelinePrefill();
+    if (!prefill) return;
+    setPipelinePrefill(prefill);
+
+    const bottleColors = BOTTLE_COLORS.filter((o) =>
+      prefill.bottleColorIds.includes(o.id),
+    );
+    const fitments = FITMENT_TYPES.filter((o) =>
+      prefill.fitmentIds.includes(o.id),
+    );
+    setSelection({
+      bottleColor: bottleColors,
+      capColor: [],
+      fitmentType: fitments,
+    });
+    toast.success(`Pipeline pre-fill applied: ${prefill.shapeLabel}`, {
+      description: `${bottleColors.length} colors × ${fitments.length} fitments. Upload a master reference and expose.`,
+    });
+  }, []);
+
+  // When a pipeline-launched run starts, tag the pipeline_groups rows
+  // as queued + link them to the consistency set id. Runs once per new
+  // setId while a pipelinePrefill is active.
+  const lastQueuedSetIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (status !== "running") return;
+    if (!setId || !pipelinePrefill) return;
+    if (lastQueuedSetIdRef.current === setId) return;
+    lastQueuedSetIdRef.current = setId;
+    void markShapeGroupQueued(pipelinePrefill.pipelineGroupIds, setId).catch(
+      (err) => {
+        console.warn("[pipeline] Failed to mark shape group queued", err);
+      },
+    );
+  }, [status, setId, pipelinePrefill]);
+
+  // When a pipeline-launched run completes, flip all tagged pipeline_groups
+  // rows to "generated" so the Pipeline page reflects real-time status.
+  // Runs once per setId transition to avoid double-writes on re-renders.
+  const lastTrackedSetIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (status !== "complete") return;
+    if (!setId || !pipelinePrefill) return;
+    if (lastTrackedSetIdRef.current === setId) return;
+    lastTrackedSetIdRef.current = setId;
+    void markShapeGroupGenerated(setId).catch((err) => {
+      console.warn("[pipeline] Failed to mark shape group generated", err);
+    });
+  }, [status, setId, pipelinePrefill]);
 
   const hasCompletedFrame = useMemo(
     () => items.some((i) => i.status === "complete" && !!i.imageUrl),
@@ -317,6 +388,28 @@ export function ConsistencyModePanel({
 
   return (
     <div className="space-y-2">
+      {/* Pipeline-linked banner — only when launched from Best Bottles
+          Pipeline page. Shown at top so operator knows what shape group
+          they're running and that row status will auto-update. */}
+      {pipelinePrefill && (
+        <div className="camera-panel p-2.5 border-[var(--darkroom-accent)]/40 bg-[var(--darkroom-accent)]/5">
+          <div className="flex items-center gap-2">
+            <Layers className="w-3 h-3 text-[var(--darkroom-accent)]" />
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] font-mono uppercase tracking-wider text-[var(--darkroom-accent)]">
+                Pipeline run
+              </div>
+              <div className="text-[11px] text-[var(--darkroom-text)] truncate">
+                {pipelinePrefill.shapeLabel} · {pipelinePrefill.pipelineGroupIds.length} SKUs
+              </div>
+            </div>
+            <span className="text-[9px] font-mono uppercase tracking-wider text-[var(--darkroom-text-dim)]">
+              status auto-syncs
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Status header — mirrors the Settings tab's status panel */}
       <div className="camera-panel">
         <div className="flex items-center justify-between p-2.5">

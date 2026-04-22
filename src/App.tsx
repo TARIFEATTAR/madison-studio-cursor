@@ -45,6 +45,7 @@ const BrandHealth = lazy(() => import("./pages/BrandHealth"));
 const BrandBuilder = lazy(() => import("./pages/BrandBuilder"));
 const ImageEditor = lazy(() => import("./pages/ImageEditor"));
 const DarkRoom = lazy(() => import("./pages/DarkRoom"));
+const BestBottlesPipeline = lazy(() => import("./pages/BestBottlesPipeline"));
 const LightTable = lazy(() => import("./pages/LightTable"));
 // const VideoProject = lazy(() => import("./pages/VideoProject")); // Removed from project
 const ImageLibrary = lazy(() => import("./pages/ImageLibrary"));
@@ -362,6 +363,7 @@ const AppContent = () => {
                     <Route path="/marketplace/shopify" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Shopify Listing"><CreateShopifyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
                     <Route path="/image-editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Editor"><ImageEditor /></RouteErrorBoundary></ProtectedRoute>} />
                     <Route path="/darkroom" element={<ProtectedRoute><RouteErrorBoundary routeName="Dark Room"><DarkRoom /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/best-bottles/pipeline" element={<ProtectedRoute><RouteErrorBoundary routeName="Best Bottles Pipeline"><BestBottlesPipeline /></RouteErrorBoundary></ProtectedRoute>} />
                     <Route path="/light-table" element={<ProtectedRoute><RouteErrorBoundary routeName="Light Table"><LightTable /></RouteErrorBoundary></ProtectedRoute>} />
                     <Route path="/image-library" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Library"><ImageLibrary /></RouteErrorBoundary></ProtectedRoute>} />
                     <Route path="/dam" element={<ProtectedRoute><RouteErrorBoundary routeName="Asset Library"><DAMLibrary /></RouteErrorBoundary></ProtectedRoute>} />
@@ -415,6 +417,7 @@ const AppContent = () => {
                 <Route path="/marketplace/shopify" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Shopify Listing"><CreateShopifyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
                 <Route path="/image-editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Editor"><ImageEditor /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/darkroom" element={<ProtectedRoute><RouteErrorBoundary routeName="Dark Room"><DarkRoom /></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="/best-bottles/pipeline" element={<ProtectedRoute><RouteErrorBoundary routeName="Best Bottles Pipeline"><BestBottlesPipeline /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/light-table" element={<ProtectedRoute><RouteErrorBoundary routeName="Light Table"><LightTable /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/image-library" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Library"><ImageLibrary /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/dam" element={<ProtectedRoute><RouteErrorBoundary routeName="Asset Library"><DAMLibrary /></RouteErrorBoundary></ProtectedRoute>} />
