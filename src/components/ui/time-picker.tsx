@@ -1,7 +1,8 @@
 import * as React from "react";
-import { Clock } from "lucide-react";
+import { Clock, X } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 interface TimePickerProps {
@@ -11,139 +12,148 @@ interface TimePickerProps {
   placeholder?: string;
 }
 
+interface TimeParts {
+  hours: string;
+  minutes: string;
+  period: string;
+}
+
+const EMPTY_TIME_PARTS: TimeParts = {
+  hours: "",
+  minutes: "",
+  period: "",
+};
+
+const HOUR_VALUES = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, "0"));
+const MINUTE_VALUES = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, "0"));
+const PERIOD_VALUES = ["AM", "PM"];
+
+const parseTime = (timeStr?: string): TimeParts => {
+  if (!timeStr) return EMPTY_TIME_PARTS;
+
+  const [hoursStr, minutesStr] = timeStr.split(":");
+  const hours24 = Number.parseInt(hoursStr, 10);
+  const minutes = Number.parseInt(minutesStr, 10);
+
+  if (Number.isNaN(hours24) || Number.isNaN(minutes)) {
+    return EMPTY_TIME_PARTS;
+  }
+
+  const period = hours24 >= 12 ? "PM" : "AM";
+  const normalizedHours = hours24 % 12 || 12;
+
+  return {
+    hours: normalizedHours.toString().padStart(2, "0"),
+    minutes: minutes.toString().padStart(2, "0"),
+    period,
+  };
+};
+
+const serializeTime = ({ hours, minutes, period }: TimeParts) => {
+  const parsedHours = Number.parseInt(hours, 10);
+  const parsedMinutes = Number.parseInt(minutes, 10);
+
+  if (!hours || !minutes || !period || Number.isNaN(parsedHours) || Number.isNaN(parsedMinutes)) {
+    return "";
+  }
+
+  let hours24 = parsedHours;
+  if (period === "PM" && parsedHours !== 12) hours24 = parsedHours + 12;
+  if (period === "AM" && parsedHours === 12) hours24 = 0;
+
+  return `${hours24.toString().padStart(2, "0")}:${minutes}`;
+};
+
 function TimePicker({ value, onChange, className, placeholder = "Select time" }: TimePickerProps) {
-  const [open, setOpen] = React.useState(false);
-  
-  // Parse the value (HH:MM format) into hours, minutes, period
-  const parseTime = (timeStr: string) => {
-    if (!timeStr) return { hours: 12, minutes: 0, period: "PM" };
-    const [hoursStr, minutesStr] = timeStr.split(":");
-    let hours = parseInt(hoursStr, 10);
-    const minutes = parseInt(minutesStr, 10);
-    const period = hours >= 12 ? "PM" : "AM";
-    if (hours === 0) hours = 12;
-    else if (hours > 12) hours -= 12;
-    return { hours, minutes, period };
+  const [parts, setParts] = React.useState<TimeParts>(() => parseTime(value));
+
+  React.useEffect(() => {
+    setParts(parseTime(value));
+  }, [value]);
+
+  const hasAnySelection = Boolean(parts.hours || parts.minutes || parts.period);
+  const hasCompleteValue = Boolean(parts.hours && parts.minutes && parts.period);
+
+  const updatePart = (key: keyof TimeParts, nextValue: string) => {
+    setParts((currentParts) => {
+      const nextParts = { ...currentParts, [key]: nextValue };
+      const serialized = serializeTime(nextParts);
+
+      if (serialized) {
+        onChange(serialized);
+      } else if (!nextParts.hours && !nextParts.minutes && !nextParts.period) {
+        onChange("");
+      }
+
+      return nextParts;
+    });
   };
 
-  const { hours, minutes, period } = parseTime(value || "");
-
-  // Convert back to 24-hour format for storage
-  const updateTime = (newHours: number, newMinutes: number, newPeriod: string) => {
-    let hours24 = newHours;
-    if (newPeriod === "PM" && newHours !== 12) hours24 = newHours + 12;
-    else if (newPeriod === "AM" && newHours === 12) hours24 = 0;
-    
-    const timeString = `${hours24.toString().padStart(2, "0")}:${newMinutes.toString().padStart(2, "0")}`;
-    onChange(timeString);
+  const handleClear = () => {
+    setParts(EMPTY_TIME_PARTS);
+    onChange("");
   };
-
-  const formatDisplayTime = () => {
-    if (!value) return null;
-    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")} ${period}`;
-  };
-
-  const hourValues = Array.from({ length: 12 }, (_, i) => i + 1);
-  const minuteValues = Array.from({ length: 60 }, (_, i) => i);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+    <div className="space-y-2">
+      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.85fr)_auto] gap-2">
+        <Select value={parts.hours || undefined} onValueChange={(nextValue) => updatePart("hours", nextValue)}>
+          <SelectTrigger className={cn("w-full", className)}>
+            <SelectValue placeholder="Hour" />
+          </SelectTrigger>
+          <SelectContent className="z-[1300] max-h-72">
+            {HOUR_VALUES.map((hour) => (
+              <SelectItem key={hour} value={hour}>
+                {hour}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={parts.minutes || undefined} onValueChange={(nextValue) => updatePart("minutes", nextValue)}>
+          <SelectTrigger className={cn("w-full", className)}>
+            <SelectValue placeholder="Min" />
+          </SelectTrigger>
+          <SelectContent className="z-[1300] max-h-72">
+            {MINUTE_VALUES.map((minute) => (
+              <SelectItem key={minute} value={minute}>
+                {minute}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={parts.period || undefined} onValueChange={(nextValue) => updatePart("period", nextValue)}>
+          <SelectTrigger className={cn("w-full", className)}>
+            <SelectValue placeholder="AM/PM" />
+          </SelectTrigger>
+          <SelectContent className="z-[1300]">
+            {PERIOD_VALUES.map((period) => (
+              <SelectItem key={period} value={period}>
+                {period}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <Button
+          type="button"
           variant="outline"
-          className={cn(
-            "w-full justify-start text-left font-normal",
-            !value && "text-muted-foreground",
-            className
-          )}
+          size="icon"
+          onClick={handleClear}
+          disabled={!hasAnySelection}
+          className={cn("shrink-0", className)}
+          aria-label="Clear selected time"
         >
-          <Clock className="mr-2 h-4 w-4" />
-          {formatDisplayTime() || <span>{placeholder}</span>}
+          <X className="h-4 w-4" />
         </Button>
-      </PopoverTrigger>
-      <PopoverContent 
-        className="w-[200px] p-0" 
-        align="start"
-        sideOffset={4}
-      >
-        <div className="flex bg-card rounded-md border border-border shadow-level-3">
-          {/* Hours Column */}
-          <div className="w-16 flex flex-col border-r border-border">
-            <div className="px-2 py-2 text-xs font-medium text-muted-foreground text-center border-b border-border bg-muted/30">
-              Hour
-            </div>
-            <div 
-              className="h-48 overflow-y-auto"
-              style={{ scrollbarWidth: 'thin' }}
-            >
-              {hourValues.map((hour) => (
-                <button
-                  key={hour}
-                  onClick={() => updateTime(hour, minutes, period)}
-                  className={cn(
-                    "w-full py-2 text-center text-sm transition-colors",
-                    hour === hours
-                      ? "bg-primary text-primary-foreground font-medium"
-                      : "text-foreground hover:bg-accent"
-                  )}
-                >
-                  {hour.toString().padStart(2, "0")}
-                </button>
-              ))}
-            </div>
-          </div>
+      </div>
 
-          {/* Minutes Column */}
-          <div className="w-16 flex flex-col border-r border-border">
-            <div className="px-2 py-2 text-xs font-medium text-muted-foreground text-center border-b border-border bg-muted/30">
-              Min
-            </div>
-            <div 
-              className="h-48 overflow-y-auto"
-              style={{ scrollbarWidth: 'thin' }}
-            >
-              {minuteValues.map((minute) => (
-                <button
-                  key={minute}
-                  onClick={() => updateTime(hours, minute, period)}
-                  className={cn(
-                    "w-full py-2 text-center text-sm transition-colors",
-                    minute === minutes
-                      ? "bg-primary text-primary-foreground font-medium"
-                      : "text-foreground hover:bg-accent"
-                  )}
-                >
-                  {minute.toString().padStart(2, "0")}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* AM/PM Column */}
-          <div className="w-14 flex flex-col">
-            <div className="px-2 py-2 text-xs font-medium text-muted-foreground text-center border-b border-border bg-muted/30">
-              &nbsp;
-            </div>
-            <div className="flex flex-col">
-              {["AM", "PM"].map((p) => (
-                <button
-                  key={p}
-                  onClick={() => updateTime(hours, minutes, p)}
-                  className={cn(
-                    "w-full py-2 text-center text-sm transition-colors",
-                    p === period
-                      ? "bg-primary text-primary-foreground font-medium"
-                      : "text-foreground hover:bg-accent"
-                  )}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Clock className="h-3.5 w-3.5" />
+        <span>{hasCompleteValue ? `${parts.hours}:${parts.minutes} ${parts.period}` : placeholder}</span>
+      </div>
+    </div>
   );
 }
 

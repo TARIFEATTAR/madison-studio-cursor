@@ -262,13 +262,28 @@ export const ScheduleModal = ({
         }
       }
 
-      // Delete from database
-      const { error } = await supabase
+      // Try hard delete first
+      const { error: deleteError } = await supabase
         .from("scheduled_content")
         .delete()
-        .eq("id", itemToEdit.id);
+        .eq("id", itemToEdit.id)
+        .eq("user_id", user.id);
 
-      if (error) throw error;
+      if (deleteError) {
+        console.warn("[ScheduleModal] Hard delete failed, falling back to cancelled status:", deleteError);
+
+        const { error: cancelError } = await supabase
+          .from("scheduled_content")
+          .update({
+            status: "cancelled",
+            sync_status: "deleted",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", itemToEdit.id)
+          .eq("user_id", user.id);
+
+        if (cancelError) throw cancelError;
+      }
 
       toast({
         title: "Deleted",

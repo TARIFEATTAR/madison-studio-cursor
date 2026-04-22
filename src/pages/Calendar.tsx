@@ -53,6 +53,7 @@ const Calendar = () => {
         .from("scheduled_content")
         .select("*")
         .eq("organization_id", currentOrganizationId)
+        .neq("status", "cancelled")
         .order("scheduled_date", { ascending: true });
 
       if (error) throw error;
@@ -263,7 +264,13 @@ const Calendar = () => {
 
         <ScheduleModal
           open={scheduleModalOpen}
-          onOpenChange={setScheduleModalOpen}
+          onOpenChange={(open) => {
+            setScheduleModalOpen(open);
+            if (!open) {
+              setSelectedItem(null);
+              setSelectedDate(undefined);
+            }
+          }}
           selectedDate={selectedDate}
           itemToEdit={selectedItem}
           onSuccess={fetchScheduledContent}
