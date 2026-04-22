@@ -196,13 +196,17 @@ export const ALL_ASPECT_RATIOS: AspectRatioOption[] = (() => {
 /**
  * Common aspect ratios for quick selection (most frequently used)
  */
+// Canonical list used by EVERY aspect-ratio picker in the Dark Room. If you
+// change this, the Settings panel and the Madison panel both update in lock
+// step. All values here are natively supported by Gemini Nano Banana and
+// Freepik — no silent snapping happens for the user's selection.
 export const COMMON_ASPECT_RATIOS: AspectRatioOption[] = [
-  { value: "1:1", label: "Square", description: "Instagram, Product" },
-  { value: "16:9", label: "Widescreen", description: "YouTube, Desktop" },
-  { value: "9:16", label: "Story/Reel", description: "TikTok, Reels" },
-  { value: "4:5", label: "Social Post", description: "Instagram Feed" },
-  { value: "2:3", label: "Pinterest", description: "Vertical pins" },
-  { value: "2:1", label: "Hero Banner", description: "Website hero" },
+  { value: "1:1", label: "Square", description: "Products, IG posts" },
+  { value: "16:9", label: "Landscape", description: "Web, YouTube" },
+  { value: "9:16", label: "Story/Reel", description: "TikTok, IG Reels" },
+  { value: "4:5", label: "Social", description: "IG Feed" },
+  { value: "4:3", label: "Classic", description: "Etsy, Print" },
+  { value: "21:9", label: "Banner", description: "Hero / wide" },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════

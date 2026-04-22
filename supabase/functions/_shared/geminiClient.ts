@@ -21,6 +21,10 @@ interface GeminiRequestOptions {
   maxOutputTokens?: number;
   responseMimeType?: string;
   safetySettings?: Record<string, unknown>[];
+  // Gemini 2.5+ thinking models reserve part of maxOutputTokens for internal
+  // chain-of-thought. Pass 0 to disable thinking when the response should be
+  // a direct, structured output (e.g. multi-part email sequences).
+  thinkingBudget?: number;
 }
 
 interface GeminiTextOptions extends GeminiRequestOptions {
@@ -131,14 +135,20 @@ export async function generateGeminiContent(options: GeminiRequestOptions) {
     explicitSystemPrompt,
   );
 
+  const generationConfig: Record<string, unknown> = {
+    temperature: rest.temperature ?? 0.7,
+    topP: rest.topP ?? 0.95,
+    topK: rest.topK,
+    maxOutputTokens: rest.maxOutputTokens ?? 2048,
+  };
+
+  if (typeof rest.thinkingBudget === "number") {
+    generationConfig.thinkingConfig = { thinkingBudget: rest.thinkingBudget };
+  }
+
   const body: Record<string, unknown> = {
     contents: convertMessages(chatMessages),
-    generationConfig: {
-      temperature: rest.temperature ?? 0.7,
-      topP: rest.topP ?? 0.95,
-      topK: rest.topK,
-      maxOutputTokens: rest.maxOutputTokens ?? 2048,
-    },
+    generationConfig,
   };
 
   if (systemPrompt) {

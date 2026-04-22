@@ -7,7 +7,7 @@ const GEMINI_TEXT_MODEL =
   Deno.env.get("GEMINI_TEXT_MODEL") ?? "models/gemini-3-pro-preview";
 const GEMINI_IMAGE_MODEL =
   Deno.env.get("GEMINI_IMAGE_MODEL") ??
-  "models/gemini-2.5-flash-image";
+  "models/gemini-3.1-flash-image-preview";
 const GEMINI_API_ENDPOINT =
   Deno.env.get("GEMINI_API_ENDPOINT") ??
   "https://generativelanguage.googleapis.com/v1beta";
@@ -222,6 +222,9 @@ export async function generateText(
 export interface GeminiImageRequest {
   prompt: string;
   aspectRatio?: string;
+  // Gemini image models accept "512" | "1K" | "2K" | "4K" via
+  // generationConfig.imageConfig.imageSize. Default is 1K.
+  imageSize?: "512" | "1K" | "2K" | "4K";
   negativePrompt?: string;
   seed?: number; // For variety - different seeds produce different variations
   referenceImages?: Array<{
@@ -229,6 +232,84 @@ export interface GeminiImageRequest {
     mimeType: string;
   }>;
   model?: string; // Optional model override (e.g., "models/gemini-2.0-flash-exp")
+}
+
+// Gemini image models accept a fixed set of aspect ratios, per
+// https://ai.google.dev/gemini-api/docs/image-generation. Anything outside
+// the set is silently ignored and the output reverts to square — so map
+// unsupported ratios to the nearest supported one before calling.
+const GEMINI_SUPPORTED_ASPECT_RATIOS = [
+  "1:1",
+  "1:4",
+  "1:8",
+  "2:3",
+  "3:2",
+  "3:4",
+  "4:1",
+  "4:3",
+  "4:5",
+  "5:4",
+  "8:1",
+  "9:16",
+  "16:9",
+  "21:9",
+] as const;
+
+export function normalizeGeminiAspectRatio(raw?: string): string | undefined {
+  if (!raw) return undefined;
+  const trimmed = raw.trim();
+  if (!trimmed) return undefined;
+  if ((GEMINI_SUPPORTED_ASPECT_RATIOS as readonly string[]).includes(trimmed)) {
+    return trimmed;
+  }
+  // Snap anything else to its closest supported neighbor.
+  const parts = trimmed.split(":").map(Number);
+  if (parts.length !== 2 || parts.some((n) => !Number.isFinite(n) || n <= 0)) {
+    return "1:1";
+  }
+  const target = parts[0] / parts[1];
+  let best = "1:1";
+  let bestDelta = Infinity;
+  for (const candidate of GEMINI_SUPPORTED_ASPECT_RATIOS) {
+    const [w, h] = candidate.split(":").map(Number);
+    const delta = Math.abs(w / h - target);
+    if (delta < bestDelta) {
+      bestDelta = delta;
+      best = candidate;
+    }
+  }
+  return best;
+}
+
+// Pixel dimensions the Gemini image model is expected to produce for each
+// supported aspect ratio. Used when we need to reinforce the shape by
+// writing explicit dimensions into the prompt — some API surfaces honor the
+// imageConfig field, others require the prompt to state the dimensions.
+const GEMINI_ASPECT_DIMENSIONS: Record<string, { width: number; height: number; label: string }> = {
+  "1:1": { width: 1024, height: 1024, label: "square" },
+  "2:3": { width: 832, height: 1248, label: "portrait" },
+  "3:2": { width: 1248, height: 832, label: "landscape" },
+  "3:4": { width: 896, height: 1184, label: "portrait" },
+  "4:3": { width: 1184, height: 896, label: "landscape" },
+  "4:5": { width: 912, height: 1136, label: "vertical social" },
+  "5:4": { width: 1136, height: 912, label: "horizontal" },
+  "9:16": { width: 768, height: 1344, label: "vertical story / reel" },
+  "16:9": { width: 1344, height: 768, label: "widescreen landscape" },
+  "21:9": { width: 1536, height: 672, label: "ultrawide banner" },
+};
+
+// Build a short, explicit aspect-ratio directive that we prepend to the
+// prompt. This is the safety net for API versions that ignore imageConfig.
+export function buildAspectRatioDirective(aspectRatio?: string): string {
+  const resolved = normalizeGeminiAspectRatio(aspectRatio);
+  if (!resolved) return "";
+  const dims = GEMINI_ASPECT_DIMENSIONS[resolved];
+  if (!dims) return "";
+  return (
+    `OUTPUT DIMENSIONS (CRITICAL): Generate the image at exactly ${dims.width}×${dims.height} pixels ` +
+    `(${resolved} aspect ratio, ${dims.label} orientation). ` +
+    `The final image MUST be ${resolved} — not square. Compose the scene to fill this ${dims.label} frame.`
+  );
 }
 
 export async function callGeminiImage(
@@ -258,9 +339,25 @@ export async function callGeminiImage(
       });
     }
   }
-  
-  // Add the text prompt AFTER the images
-  parts.push({ text: request.prompt });
+
+  // Resolve and normalize aspect ratio once. It's applied in three places:
+  //   (a) generationConfig.imageConfig.aspectRatio — the canonical Gemini
+  //       API field per https://ai.google.dev/gemini-api/docs/image-generation
+  //   (b) prepended to the prompt text as an explicit dimensions directive
+  //       (belt for older/edge model versions that ignore imageConfig)
+  //   (c) used by the server-side center-crop in imageAspectRatio.ts
+  //       (suspenders — guarantees correct shape even if both above fail)
+  const resolvedAspectRatio = normalizeGeminiAspectRatio(request.aspectRatio);
+  const aspectDirective = buildAspectRatioDirective(request.aspectRatio);
+
+  // Prepend the dimensions directive so it's the first instruction Gemini
+  // reads in the text prompt. This is the most reliable lever — the model
+  // will frame the composition for that shape even if it ignores the config
+  // fields.
+  const finalPrompt = aspectDirective
+    ? `${aspectDirective}\n\n${request.prompt}`
+    : request.prompt;
+  parts.push({ text: finalPrompt });
 
   const body: Record<string, unknown> = {
     contents: [{
@@ -270,20 +367,42 @@ export async function callGeminiImage(
   };
 
   // Add generation config with aspect ratio, seed, and negative prompt if provided
-  body.generationConfig = {
+  const generationConfig: Record<string, unknown> = {
     responseModalities: ["IMAGE"],
   };
-  
-  if (request.negativePrompt) {
-    (body.generationConfig as any).negativePrompt = request.negativePrompt;
+
+  // Gemini's canonical image-generation fields live at
+  // generationConfig.imageConfig. Never put imageConfig at the top level —
+  // that returns 400 "Unknown name imageConfig".
+  const imageConfig: Record<string, unknown> = {};
+  if (resolvedAspectRatio) {
+    imageConfig.aspectRatio = resolvedAspectRatio;
   }
-  
-  // Add seed for variety (if Gemini API supports it)
-  if (request.seed !== undefined) {
-    (body.generationConfig as any).seed = request.seed;
+  if (request.imageSize) {
+    // Valid values: "512" (Flash only), "1K", "2K", "4K"
+    imageConfig.imageSize = request.imageSize;
+  }
+  if (Object.keys(imageConfig).length > 0) {
+    generationConfig.imageConfig = imageConfig;
   }
 
-  console.log(`🤖 Calling Gemini model: ${modelToUse}`);
+  if (request.negativePrompt) {
+    generationConfig.negativePrompt = request.negativePrompt;
+  }
+
+  if (request.seed !== undefined) {
+    generationConfig.seed = request.seed;
+  }
+
+  body.generationConfig = generationConfig;
+
+  console.log(`🤖 Calling Gemini model: ${modelToUse}`, {
+    requestedAspectRatio: request.aspectRatio,
+    resolvedAspectRatio,
+    imageSize: request.imageSize ?? "default(1K)",
+    strategy: "imageConfig + prompt-directive + server-side-crop",
+    promptPreview: finalPrompt.slice(0, 180),
+  });
 
   const response = await withTimeout(
     fetch(

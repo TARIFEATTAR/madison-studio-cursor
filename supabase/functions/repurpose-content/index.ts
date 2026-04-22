@@ -768,19 +768,27 @@ const countWords = (text: string): number => {
 
 const parseSequenceEmails = (content: string) => {
   return content
-    .split(/(?=^EMAIL\s+\d+(?:\s*[:\-–][^\n\r]*)?\s*$)/gim)
+    .split(/(?=^(?:EMAIL|Email|Part|PART)\s*\d+(?:\s*[:\-–.][^\n\r]*)?\s*$)/gim)
     .map((section: string) => section.trim())
     .filter(Boolean)
     .map((section: string) => {
-      const working = section.replace(/^(?:EMAIL)\s+\d+(?:\s*[:\-–][^\n\r]*)?\s*$/im, '').trim();
-      const subjectMatch = working.match(/^SUBJECT:?\s*(.+)$/im);
-      const previewMatch = working.match(/^PREVIEW:?\s*(.+)$/im);
+      let working = section
+        .replace(/^(?:EMAIL|Email|Part|PART)\s*\d+(?:\s*[:\-–.][^\n\r]*)?\s*$/im, '')
+        .trim();
+      const subjectMatch = working.match(/^SUBJECT(?:\s*LINE)?:?\s*(.+)$/im);
+      if (subjectMatch) working = working.replace(subjectMatch[0], '').trim();
+      const previewMatch = working.match(/^PREVIEW(?:\s*TEXT)?:?\s*(.+)$/im);
+      if (previewMatch) working = working.replace(previewMatch[0], '').trim();
       const bodyMatch = working.match(/(?:^|\n)BODY:?\s*([\s\S]+)/i);
+
+      // If the AI omitted the BODY: label, fall back to whatever text remains
+      // after the SUBJECT/PREVIEW lines were consumed.
+      const rawBody = bodyMatch?.[1] ?? working;
 
       return {
         subject: subjectMatch?.[1]?.trim() || '',
         preview: previewMatch?.[1]?.trim() || '',
-        body: (bodyMatch?.[1] || '')
+        body: rawBody
           .replace(/\n\s*---+\s*$/g, '')
           .trim(),
       };
@@ -799,11 +807,11 @@ const getGenerationProfile = (derivativeType: string) => {
     case 'youtube':
       return { maxOutputTokens: 4096, retryMaxOutputTokens: 6144, minWords: 300 };
     case 'email_3part':
-      return { maxOutputTokens: 4096, retryMaxOutputTokens: 6144, expectedEmails: 3, minTotalWords: 450 };
+      return { maxOutputTokens: 8192, retryMaxOutputTokens: 12288, expectedEmails: 3, minTotalWords: 450, disableThinking: true };
     case 'email_5part':
-      return { maxOutputTokens: 6144, retryMaxOutputTokens: 8192, expectedEmails: 5, minTotalWords: 700 };
+      return { maxOutputTokens: 12288, retryMaxOutputTokens: 16384, expectedEmails: 5, minTotalWords: 700, disableThinking: true };
     case 'email_7part':
-      return { maxOutputTokens: 8192, retryMaxOutputTokens: 10000, expectedEmails: 7, minTotalWords: 1000 };
+      return { maxOutputTokens: 16384, retryMaxOutputTokens: 24576, expectedEmails: 7, minTotalWords: 1000, disableThinking: true };
     default:
       return { maxOutputTokens: 1200, retryMaxOutputTokens: 2048 };
   }
@@ -1155,9 +1163,12 @@ FAILURE TO FOLLOW CODEX V2 PRINCIPLES OR BRAND GUIDELINES IS UNACCEPTABLE.`;
 
       const generationProfile = getGenerationProfile(derivativeType);
 
-      // Call Gemini first (cost-effective), fallback to Anthropic
+      // Call Gemini first (cost-effective), fallback to Anthropic.
+      // For structured multi-part outputs (email sequences), disable Gemini's
+      // internal "thinking" so the entire token budget goes to actual content.
+      const disableThinking = (generationProfile as { disableThinking?: boolean }).disableThinking === true;
       const callGemini = async (promptText: string, maxOutputTokens: number) => {
-        console.log(`Calling Gemini for ${derivativeType} with maxOutputTokens=${maxOutputTokens}...`);
+        console.log(`Calling Gemini for ${derivativeType} with maxOutputTokens=${maxOutputTokens}, thinkingBudget=${disableThinking ? 0 : 'default'}...`);
         try {
           const geminiResponse = await generateGeminiContent({
             model: 'models/gemini-2.5-flash',
@@ -1165,6 +1176,7 @@ FAILURE TO FOLLOW CODEX V2 PRINCIPLES OR BRAND GUIDELINES IS UNACCEPTABLE.`;
             messages: [{ role: 'user', content: promptText }],
             maxOutputTokens,
             temperature: 0.7,
+            ...(disableThinking ? { thinkingBudget: 0 } : {}),
           });
           return {
             text: extractTextFromGeminiResponse(geminiResponse),
@@ -1256,18 +1268,60 @@ FAILURE TO FOLLOW CODEX V2 PRINCIPLES OR BRAND GUIDELINES IS UNACCEPTABLE.`;
         generationProfile.maxOutputTokens,
         generationProfile.retryMaxOutputTokens,
       ].filter((value, index, arr): value is number => typeof value === 'number' && arr.indexOf(value) === index);
-      
-      for (let attemptIndex = 0; attemptIndex < attemptBudgets.length; attemptIndex += 1) {
-        const maxTokens = attemptBudgets[attemptIndex];
+
+      // Attempt plan: try Gemini at each budget, then force Anthropic as a final
+      // fallback if Gemini keeps truncating (Anthropic ignores the thinking-budget
+      // quirk and reliably produces the full multi-part sequence).
+      const attempts: Array<{ maxTokens: number; forceAnthropic: boolean }> = [
+        ...attemptBudgets.map((maxTokens) => ({ maxTokens, forceAnthropic: false })),
+      ];
+      if (ANTHROPIC_API_KEY) {
+        attempts.push({
+          maxTokens: attemptBudgets[attemptBudgets.length - 1] ?? 4096,
+          forceAnthropic: true,
+        });
+      }
+
+      for (let attemptIndex = 0; attemptIndex < attempts.length; attemptIndex += 1) {
+        const { maxTokens, forceAnthropic } = attempts[attemptIndex];
         const retryInstruction = attemptIndex === 0
           ? ''
-          : `\n\nIMPORTANT: Your previous response was incomplete and cut off early. Return the FULL ${derivativeType} deliverable in a single response. Do not stop after the opening section.`;
+          : `\n\nIMPORTANT: Your previous response was incomplete and cut off early. Return the FULL ${derivativeType} deliverable in a single response. Every labeled section (EMAIL 1, EMAIL 2, etc.) must be present with SUBJECT, PREVIEW, and complete BODY. Do not stop after the opening section.`;
         const attemptPrompt = `${fullPrompt}${retryInstruction}`;
-        const generationResult = await generateContentWithFallback(attemptPrompt, maxTokens);
+        const generationResult = forceAnthropic
+          ? await (async () => {
+              if (!ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured');
+              let modelToUse = configuredAnthropicModel;
+              let aiResponse = await callAnthropic(modelToUse, attemptPrompt, maxTokens);
+              if (aiResponse.status === 404 && modelToUse !== DEFAULT_ANTHROPIC_MODEL) {
+                modelToUse = DEFAULT_ANTHROPIC_MODEL;
+                aiResponse = await callAnthropic(modelToUse, attemptPrompt, maxTokens);
+              }
+              if (!aiResponse.ok) {
+                const t = await aiResponse.text();
+                throw new Error(`Anthropic fallback error ${aiResponse.status}: ${t}`);
+              }
+              const aiData = await aiResponse.json();
+              return {
+                text: aiData.content?.[0]?.text ?? '',
+                finishReason: aiData.stop_reason || 'unknown',
+                provider: 'anthropic' as const,
+              };
+            })()
+          : await generateContentWithFallback(attemptPrompt, maxTokens);
 
         generatedContent = generationResult.text;
         cleanedContent = stripMarkdown(generatedContent);
         adequacyResult = validateDerivativeOutput(derivativeType, cleanedContent);
+
+        // Treat an explicit max-output truncation signal as a failure even when
+        // the parser happens to find enough sections — the last email's body
+        // is almost certainly cut off.
+        const truncated = generationResult.finishReason === 'MAX_TOKENS'
+          || generationResult.finishReason === 'length';
+        if (adequacyResult.isValid && truncated) {
+          adequacyResult = { isValid: false, reason: `provider reported truncation (${generationResult.finishReason})` };
+        }
 
         console.log('[repurpose-content] Adequacy check:', {
           derivativeType,
@@ -1275,6 +1329,7 @@ FAILURE TO FOLLOW CODEX V2 PRINCIPLES OR BRAND GUIDELINES IS UNACCEPTABLE.`;
           provider: generationResult.provider,
           finishReason: generationResult.finishReason,
           maxTokens,
+          forceAnthropic,
           charCount: cleanedContent.length,
           wordCount: countWords(cleanedContent),
           adequacyResult,
