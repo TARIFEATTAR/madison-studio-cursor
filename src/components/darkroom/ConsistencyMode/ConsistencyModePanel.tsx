@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Layers, Aperture, Loader2, XCircle, Trash2, Camera, Package, Maximize2 } from "lucide-react";
+import { Layers, Aperture, Loader2, XCircle, Trash2, Camera, Package, Maximize2, ChevronDown, Sliders } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +11,11 @@ import { VariationMatrix, type MaterialReferenceMap } from "./VariationMatrix";
 import { GenerationQueue } from "./GenerationQueue";
 import { SetReviewModal } from "./SetReviewModal";
 import { StudioControls } from "./StudioControls";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useConsistencySet } from "@/hooks/useConsistencySet";
 import type { VariationItem } from "@/lib/consistencyMode";
 import { markImageAsHero, toggleImageHero } from "@/lib/imageLibraryTags";
@@ -119,6 +124,13 @@ export function ConsistencyModePanel({
    * flip those rows' status to "generated" for real-time tracking.
    */
   const [pipelinePrefill, setPipelinePrefill] = useState<PipelinePrefill | null>(null);
+  /**
+   * Composition + studio controls collapse into a single "Advanced" drawer
+   * so the default-path operator sees a shorter panel. We auto-open it if
+   * either control is set to a non-default value (e.g. the operator switched
+   * backdrop or composition on an earlier run and we return to the panel).
+   */
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const {
     status,
@@ -212,6 +224,28 @@ export function ConsistencyModePanel({
     selection.bottleColor.length +
     selection.capColor.length +
     selection.fitmentType.length;
+
+  // Whether the Advanced drawer holds any non-default values — used to auto-
+  // expand it on mount if the operator had previously deviated from defaults,
+  // and to dot the collapsed header so a hidden tweak can't silently affect
+  // the run.
+  const advancedIsDirty = useMemo(() => {
+    if (composition !== DEFAULT_COMPOSITION_ID) return true;
+    const d = DEFAULT_STUDIO_SETTINGS;
+    return (
+      studio.backgroundId !== d.backgroundId ||
+      studio.lightDirectionId !== d.lightDirectionId ||
+      studio.shadowDirectionId !== d.shadowDirectionId ||
+      studio.shadowIntensityId !== d.shadowIntensityId
+    );
+  }, [composition, studio]);
+
+  // First-time expand if dirty. Don't force it closed again after that —
+  // user may want to keep it open for their whole session.
+  useEffect(() => {
+    if (advancedIsDirty && !advancedOpen) setAdvancedOpen(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [advancedIsDirty]);
 
   const canGenerate =
     !!masterImage &&
@@ -482,6 +516,28 @@ export function ConsistencyModePanel({
             <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--darkroom-accent)]">
               02 · Variations
             </span>
+            {/* Live combination counter — shows how the matrix expands as
+                chips are ticked. Surfaces set-size growth in real time so
+                the operator never clicks Expose and is surprised by 32
+                frames when they expected 8. */}
+            {combinations.length > 0 && (
+              <span
+                className={cn(
+                  "text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border",
+                  combinations.length > MAX_VARIATION_SET_SIZE
+                    ? "border-[var(--led-error)]/40 text-[var(--led-error)] bg-[var(--led-error)]/10"
+                    : "border-[var(--darkroom-accent)]/30 text-[var(--darkroom-accent)] bg-[var(--darkroom-accent)]/5",
+                )}
+                title={
+                  `${selection.bottleColor.length || 1} × ` +
+                  `${selection.capColor.length || 1} × ` +
+                  `${selection.fitmentType.length || 1}` +
+                  ` = ${combinations.length} variation${combinations.length === 1 ? "" : "s"}`
+                }
+              >
+                {combinations.length} frame{combinations.length === 1 ? "" : "s"}
+              </span>
+            )}
           </div>
           {selectionCount > 0 && (
             <button
@@ -505,75 +561,113 @@ export function ConsistencyModePanel({
         />
       </div>
 
-      {/* 3. Composition selector — assembled vs exploded-uncapped */}
-      <div className="camera-panel p-2.5 space-y-2">
-        <div className="flex items-center gap-1.5">
-          <LEDIndicator
-            state={composition !== DEFAULT_COMPOSITION_ID ? "active" : "ready"}
-            size="sm"
+      {/* 3. Advanced drawer — collapses Composition + Studio Controls into
+          one section so the default path keeps a short, scannable panel.
+          Auto-expands when either sub-control is non-default. A small dot
+          appears on the collapsed header when any advanced value is set
+          so the operator can't forget about a hidden tweak. */}
+      <Collapsible
+        open={advancedOpen}
+        onOpenChange={setAdvancedOpen}
+        className="camera-panel"
+      >
+        <CollapsibleTrigger className="w-full p-2.5 flex items-center justify-between gap-2 group">
+          <div className="flex items-center gap-1.5">
+            <LEDIndicator
+              state={advancedIsDirty ? "active" : "ready"}
+              size="sm"
+            />
+            <Sliders className="w-3 h-3 text-[var(--darkroom-accent)]" />
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--darkroom-accent)]">
+              03 · Advanced
+            </span>
+            <span className="text-[9px] text-[var(--darkroom-text-dim)]">
+              composition · backdrop · light · shadow
+            </span>
+            {advancedIsDirty && !advancedOpen && (
+              <span
+                className="w-1.5 h-1.5 rounded-full bg-[var(--darkroom-accent)]"
+                aria-label="Non-default settings active"
+              />
+            )}
+          </div>
+          <ChevronDown
+            className={cn(
+              "w-3 h-3 text-[var(--darkroom-text-dim)] transition-transform",
+              advancedOpen && "rotate-180",
+            )}
           />
-          <Camera className="w-3 h-3 text-[var(--darkroom-accent)]" />
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--darkroom-accent)]">
-            03 · Composition
-          </span>
-        </div>
-        <div className="grid grid-cols-2 gap-1">
-          {CONSISTENCY_COMPOSITIONS.map((comp) => {
-            const isSelected = composition === comp.id;
-            const Icon = comp.icon === "exploded" ? Package : Camera;
-            return (
-              <button
-                key={comp.id}
-                type="button"
-                onClick={() => setComposition(comp.id)}
-                disabled={status === "running"}
-                className={cn(
-                  "flex items-start gap-2 p-2 rounded border text-left transition-all",
-                  "disabled:opacity-40 disabled:cursor-not-allowed",
-                  isSelected
-                    ? "border-[var(--darkroom-accent)]/50 bg-[var(--darkroom-accent)]/10"
-                    : "border-white/[0.06] bg-[var(--camera-body-deep)] hover:border-white/[0.15]",
-                )}
-              >
-                <Icon
-                  size={12}
-                  className={cn(
-                    "mt-0.5 flex-shrink-0",
-                    isSelected ? "text-[var(--darkroom-accent)]" : "text-[var(--darkroom-text-dim)]",
-                  )}
-                />
-                <div className="flex-1 min-w-0">
-                  <div
+        </CollapsibleTrigger>
+        <CollapsibleContent className="px-2.5 pb-2.5 space-y-2 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
+          {/* Composition — assembled vs exploded-uncapped */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <Camera className="w-3 h-3 text-[var(--darkroom-text-dim)]" />
+              <span className="text-[9px] font-mono uppercase tracking-wider text-[var(--darkroom-text-dim)]">
+                Composition
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-1">
+              {CONSISTENCY_COMPOSITIONS.map((comp) => {
+                const isSelected = composition === comp.id;
+                const Icon = comp.icon === "exploded" ? Package : Camera;
+                return (
+                  <button
+                    key={comp.id}
+                    type="button"
+                    onClick={() => setComposition(comp.id)}
+                    disabled={status === "running"}
                     className={cn(
-                      "text-[10px] font-medium",
-                      isSelected ? "text-[var(--darkroom-text)]" : "text-[var(--darkroom-text-muted)]",
+                      "flex items-start gap-2 p-2 rounded border text-left transition-all",
+                      "disabled:opacity-40 disabled:cursor-not-allowed",
+                      isSelected
+                        ? "border-[var(--darkroom-accent)]/50 bg-[var(--darkroom-accent)]/10"
+                        : "border-white/[0.06] bg-[var(--camera-body-deep)] hover:border-white/[0.15]",
                     )}
                   >
-                    {comp.label}
-                  </div>
-                  <div className="text-[9px] text-[var(--darkroom-text-dim)] leading-tight mt-0.5">
-                    {comp.helper}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+                    <Icon
+                      size={12}
+                      className={cn(
+                        "mt-0.5 flex-shrink-0",
+                        isSelected ? "text-[var(--darkroom-accent)]" : "text-[var(--darkroom-text-dim)]",
+                      )}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div
+                        className={cn(
+                          "text-[10px] font-medium",
+                          isSelected ? "text-[var(--darkroom-text)]" : "text-[var(--darkroom-text-muted)]",
+                        )}
+                      >
+                        {comp.label}
+                      </div>
+                      <div className="text-[9px] text-[var(--darkroom-text-dim)] leading-tight mt-0.5">
+                        {comp.helper}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-      {/* 4. Studio fine-tune — background / light / shadow */}
-      <StudioControls
-        value={studio}
-        onChange={setStudio}
-        disabled={status === "running"}
-      />
+          {/* Studio fine-tune — background / light / shadow. StudioControls
+              has its own camera-panel wrapper; keeping it gives us the
+              right internal padding + background without rewriting it. */}
+          <StudioControls
+            value={studio}
+            onChange={setStudio}
+            disabled={status === "running"}
+          />
+        </CollapsibleContent>
+      </Collapsible>
 
-      {/* 5. Optional prompt */}
+      {/* 4. Optional prompt */}
       <div className="camera-panel p-2.5 space-y-2">
         <div className="flex items-center gap-1.5">
           <LEDIndicator state={userPrompt.trim() ? "active" : "off"} size="sm" />
           <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--darkroom-accent)]">
-            05 · Scene Notes
+            04 · Scene Notes
           </span>
           <span className="text-[9px] text-[var(--darkroom-text-dim)]">optional</span>
         </div>

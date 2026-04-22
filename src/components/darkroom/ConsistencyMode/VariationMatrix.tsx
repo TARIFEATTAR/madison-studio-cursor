@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import {
   VARIATION_AXES,
   capsForFitments,
+  groupFitmentsByCategory,
   type VariationAxis,
   type VariationOption,
 } from "@/config/consistencyVariations";
@@ -85,24 +86,65 @@ export function VariationMatrix({
                   : ""}
               </p>
             </div>
-            <div className="flex flex-wrap gap-1">
-              {options.map((option) => {
-                const isSelected = selection[axis.id].some((o) => o.id === option.id);
-                const attachedRef = materialReferences[option.id];
-                return (
-                  <VariationChip
-                    key={option.id}
-                    option={option}
-                    isSelected={isSelected}
-                    attachedRef={attachedRef}
-                    disabled={disabled}
-                    onToggle={() => onToggle(axis.id, option)}
-                    onAttach={(ref) => onAttachReference(option.id, ref)}
-                    onRemove={() => onRemoveReference(option.id)}
-                  />
-                );
-              })}
-            </div>
+            {axis.id === "fitmentType" ? (
+              // Fitments: bucket by category (Sprayers / Rollers / Pumps /
+              // Droppers / Stoppers / Caps). A flat list of 13 options is
+              // fatiguing to scan; small section headers let the operator
+              // jump straight to the shape family they need.
+              <div className="space-y-2">
+                {groupFitmentsByCategory(options).map((group) => (
+                  <div key={group.category} className="space-y-1">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-[9px] font-mono uppercase tracking-wider text-[var(--darkroom-text-dim)]">
+                        {group.label}
+                      </span>
+                      <span className="text-[8px] text-[var(--darkroom-text-dim)]/70">
+                        · {group.helper}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {group.options.map((option) => {
+                        const isSelected = selection[axis.id].some(
+                          (o) => o.id === option.id,
+                        );
+                        const attachedRef = materialReferences[option.id];
+                        return (
+                          <VariationChip
+                            key={option.id}
+                            option={option}
+                            isSelected={isSelected}
+                            attachedRef={attachedRef}
+                            disabled={disabled}
+                            onToggle={() => onToggle(axis.id, option)}
+                            onAttach={(ref) => onAttachReference(option.id, ref)}
+                            onRemove={() => onRemoveReference(option.id)}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-1">
+                {options.map((option) => {
+                  const isSelected = selection[axis.id].some((o) => o.id === option.id);
+                  const attachedRef = materialReferences[option.id];
+                  return (
+                    <VariationChip
+                      key={option.id}
+                      option={option}
+                      isSelected={isSelected}
+                      attachedRef={attachedRef}
+                      disabled={disabled}
+                      onToggle={() => onToggle(axis.id, option)}
+                      onAttach={(ref) => onAttachReference(option.id, ref)}
+                      onRemove={() => onRemoveReference(option.id)}
+                    />
+                  );
+                })}
+              </div>
+            )}
           </div>
         );
       })}
@@ -186,7 +228,7 @@ function VariationChip({
       >
         {option.swatch ? (
           <span
-            className="inline-block w-2.5 h-2.5 rounded-full border border-white/20 flex-shrink-0"
+            className="inline-block w-3.5 h-3.5 rounded-full border border-white/20 flex-shrink-0 shadow-[inset_0_-1px_2px_rgba(0,0,0,0.35)]"
             style={{ backgroundColor: option.swatch }}
           />
         ) : null}
