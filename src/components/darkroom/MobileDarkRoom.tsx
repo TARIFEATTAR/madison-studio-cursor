@@ -12,7 +12,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Dices, Camera, Loader2, ChevronLeft, X, Save, Trash2, CheckCircle, Wand2 } from "lucide-react";
+import { Plus, Dices, Camera, Loader2, ChevronLeft, X, Save, Trash2, CheckCircle, Wand2, Sparkles, Bookmark } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { MobileSettingsGrid } from "./MobileSettingsGrid";
 import { MobileBottomSheet } from "./MobileBottomSheet";
@@ -20,7 +20,6 @@ import { UploadZone } from "./UploadZone";
 import { ThumbnailCarousel } from "./ThumbnailCarousel";
 import { DevelopingAnimation, useDevelopingAnimation } from "./DevelopingAnimation";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import type { ProModeSettings } from "./ProSettings";
 import { Product } from "@/hooks/useProducts";
 import { ProductSelector } from "@/components/forge/ProductSelector";
@@ -44,6 +43,9 @@ interface MobileDarkRoomProps {
   // Prompt
   prompt: string;
   onPromptChange: (value: string) => void;
+  onOpenMadison: () => void;
+  onSavePrompt: () => void;
+  canSavePrompt: boolean;
   
   // Generation
   onGenerate: () => void;
@@ -80,6 +82,9 @@ interface MobileDarkRoomProps {
 export function MobileDarkRoom({
   prompt,
   onPromptChange,
+  onOpenMadison,
+  onSavePrompt,
+  canSavePrompt,
   onGenerate,
   isGenerating,
   canGenerate,
@@ -106,7 +111,6 @@ export function MobileDarkRoom({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [inputsSheetOpen, setInputsSheetOpen] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState<GeneratedImage | null>(null);
-  const [showDevelopingPreview, setShowDevelopingPreview] = useState(false);
 
   const heroImage = images.find((img) => img.id === heroImageId) || images[0] || null;
   const isNewlyGenerated = heroImage && heroImage.id === newlyGeneratedId;
@@ -122,19 +126,6 @@ export function MobileDarkRoom({
       },
     }
   );
-
-  // Show developing preview when generating or when we have a new image
-  useEffect(() => {
-    if (isGenerating) {
-      setShowDevelopingPreview(true);
-    } else if (isNewlyGenerated && phase === "revealed") {
-      // Keep showing for a moment after reveal
-      const timer = setTimeout(() => {
-        setShowDevelopingPreview(false);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [isGenerating, isNewlyGenerated, phase]);
 
   // Auto-resize textarea
   const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -203,6 +194,25 @@ export function MobileDarkRoom({
             <ChevronLeft className="w-5 h-5" />
           </button>
           <h1 className="mobile-darkroom__title">Dark Room</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onSavePrompt}
+            className="w-9 h-9 flex items-center justify-center rounded-[4px] bg-[var(--darkroom-surface)] border border-[var(--darkroom-border-subtle)] text-[var(--darkroom-text-muted)] disabled:opacity-40 active:bg-[var(--darkroom-surface-elevated)] active:scale-[0.97] transition-all"
+            type="button"
+            disabled={!canSavePrompt}
+            aria-label="Save prompt"
+          >
+            <Bookmark className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onOpenMadison}
+            className="h-9 rounded-[4px] bg-[var(--darkroom-surface)] border border-[var(--darkroom-border-subtle)] px-3 text-[12px] font-medium text-[var(--darkroom-text-muted)] active:bg-[var(--darkroom-surface-elevated)] active:scale-[0.97] transition-all inline-flex items-center gap-1.5"
+            type="button"
+          >
+            <Sparkles className="w-4 h-4" />
+            Madison
+          </button>
         </div>
       </div>
 
@@ -528,4 +538,3 @@ export function MobileDarkRoom({
     </div>
   );
 }
-
