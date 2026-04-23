@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useCurrentOrganizationId } from "@/hooks/useIndustryConfig";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import { contentTypeMapping, getContentTypeDisplayName } from "@/utils/contentTypeMapping";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -49,6 +50,7 @@ export function SavePromptDialog({
   const { currentOrganizationId } = useOnboarding();
   const { orgId: resolvedOrganizationId } = useCurrentOrganizationId();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const organizationId = currentOrganizationId || resolvedOrganizationId || null;
 
@@ -115,6 +117,14 @@ useEffect(() => {
       setTags([]);
       setTagInput("");
       setIsTemplate(true);
+      setEnableFieldMapping(false);
+      setFieldMappings({
+        product: "",
+        format: "",
+        audience: "",
+        goal: "",
+        additionalContext: ""
+      });
       setEditedPromptText(promptText);
       setShowPlaceholderSuggestions(false);
     }
@@ -199,25 +209,41 @@ try {
       : selectedContentType
   ) as "product" | "email" | "social" | "visual" | "blog";
 
+  const trimmedDescription = description.trim();
+  const user = (await supabase.auth.getUser()).data.user;
+
   const { error } = await supabase.from("prompts").insert({
     title: title.trim(),
-    description: description.trim() || null,
     prompt_text: editedPromptText,
     content_type: normalizedContentType,
-    collection: "general" as any, // Default collection value for backward compatibility
+    collection: "General",
+    category: selectedCategory,
     tags: tags.length > 0 ? tags : null,
     is_template: isTemplate,
+    additional_context: trimmedDescription
+      ? {
+          description: trimmedDescription,
+        }
+      : null,
     meta_instructions: {
       category: selectedCategory,
       content_subtype: selectedContentType,
+      description: trimmedDescription || undefined,
       field_mappings: enableFieldMapping ? fieldMappings : undefined,
     },
     organization_id: organizationId,
-    created_by: (await supabase.auth.getUser()).data.user?.id,
+    created_by: user?.id,
     deliverable_format: deliverableFormat ?? null,
   });
 
       if (error) throw error;
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["saved-templates"] }),
+        queryClient.invalidateQueries({ queryKey: ["templates"] }),
+        queryClient.invalidateQueries({ queryKey: ["image-prompt-counts", organizationId] }),
+        queryClient.invalidateQueries({ queryKey: ["prompt-counts", organizationId] }),
+      ]);
 
       toast({
         title: "Success",
@@ -228,9 +254,10 @@ try {
       onOpenChange(false);
     } catch (error) {
       console.error("Error saving prompt:", error);
+      const err = error as { message?: string; details?: string } | null;
       toast({
         title: "Error",
-        description: "Failed to save prompt template",
+        description: err?.message || err?.details || "Failed to save prompt template",
         variant: "destructive",
       });
     } finally {
