@@ -1419,6 +1419,11 @@ serve(async (req) => {
     let imageUrl: string;
     let usedProvider: string = selectedProvider;
     let didFallback = false;
+    // Captured when the requested provider fails and we silently fall back
+    // to Gemini. Surfaced on the success response as `fallbackReason` so the
+    // client can show the user *why* their provider choice was ignored
+    // (instead of just quietly getting a Gemini render).
+    let fallbackReason: string | null = null;
 
     if (selectedProvider === "freepik") {
       /**
@@ -1498,10 +1503,17 @@ serve(async (req) => {
           storedUrl: imageUrl,
         });
       } catch (freepikError) {
-        console.error("❌ Freepik generation failed, falling back to Gemini:", freepikError);
+        const msg = freepikError instanceof Error
+          ? freepikError.message
+          : typeof freepikError === "object" && freepikError !== null &&
+              "message" in (freepikError as Record<string, unknown>)
+            ? String((freepikError as Record<string, unknown>).message)
+            : String(freepikError);
+        console.error("❌ Freepik generation failed, falling back to Gemini:", msg);
         // Fall back to Gemini
         selectedProvider = "gemini";
         didFallback = true;
+        fallbackReason = `Freepik → ${msg}`;
       }
     }
 
@@ -1575,9 +1587,16 @@ serve(async (req) => {
           storedUrl: imageUrl,
         });
       } catch (openaiError) {
-        console.error("❌ OpenAI generation failed, falling back to Gemini:", openaiError);
+        const msg = openaiError instanceof Error
+          ? openaiError.message
+          : typeof openaiError === "object" && openaiError !== null &&
+              "message" in (openaiError as Record<string, unknown>)
+            ? String((openaiError as Record<string, unknown>).message)
+            : String(openaiError);
+        console.error("❌ OpenAI generation failed, falling back to Gemini:", msg);
         selectedProvider = "gemini";
         didFallback = true;
+        fallbackReason = `OpenAI → ${msg}`;
       }
     }
 
@@ -1843,7 +1862,17 @@ serve(async (req) => {
       JSON.stringify({
         imageUrl,
         savedImageId: savedImage?.id,
-        description: "Generated via Gemini",
+        // Dynamic description — reflects the provider that actually ran.
+        // When the requested provider silently fell back to Gemini, usedProvider
+        // is already "gemini (fallback)" so the label stays honest without a
+        // second branch here. The DB record uses the same usedProvider value.
+        description: `Generated via ${usedProvider}`,
+        usedProvider,
+        didFallback,
+        // Only set when the client's requested provider failed and we used
+        // Gemini instead. The client can surface this in a toast so the
+        // operator knows why their model selection was ignored.
+        fallbackReason,
       }),
       {
         headers: {
@@ -1853,13 +1882,34 @@ serve(async (req) => {
       },
     );
   } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    const errMsg = err.message || "Image generation failed.";
-    console.error("❌ generate-madison-image Error:", errMsg, err.stack);
+    // Robust error-message extraction — PostgrestError and other non-Error
+    // objects don't have a `.message` accessible via Error.prototype, so
+    // `String(obj)` returns "[object Object]" and the useful payload is lost.
+    let errMsg = "Image generation failed.";
+    let errStack: string | undefined;
+    if (error instanceof Error) {
+      errMsg = error.message || errMsg;
+      errStack = error.stack;
+    } else if (typeof error === "object" && error !== null) {
+      const e = error as Record<string, unknown>;
+      const parts: string[] = [];
+      if (typeof e.message === "string") parts.push(e.message);
+      if (typeof e.code === "string" || typeof e.code === "number") parts.push(`[${e.code}]`);
+      if (typeof e.details === "string") parts.push(`details: ${e.details}`);
+      if (typeof e.hint === "string") parts.push(`hint: ${e.hint}`);
+      if (parts.length > 0) {
+        errMsg = parts.join(" · ");
+      } else {
+        try { errMsg = JSON.stringify(error); } catch { /* keep default */ }
+      }
+    } else if (error !== undefined && error !== null) {
+      errMsg = String(error);
+    }
+    console.error("❌ generate-madison-image Error:", errMsg, errStack);
     return new Response(
       JSON.stringify({
         error: errMsg,
-        details: Deno.env.get("ENVIRONMENT") === "development" ? err.stack : undefined,
+        details: Deno.env.get("ENVIRONMENT") === "development" ? errStack : undefined,
       }),
       {
         status: 500,
