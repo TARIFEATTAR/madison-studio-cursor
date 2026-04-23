@@ -8,11 +8,12 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
 import { madison } from "@/lib/madisonToast";
 import { v4 as uuidv4 } from "uuid";
-import { Image, Wand2, BookOpen } from "lucide-react";
+import { Bookmark, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { LibrarianTrigger } from "@/components/librarian";
+import { SavePromptDialog } from "@/components/prompt-library/SavePromptDialog";
 import { DEFAULT_IMAGE_AI_PROVIDER } from "@/config/imageSettings";
 
 // Supabase & Auth
@@ -27,6 +28,7 @@ import {
   CenterCanvas,
   RightPanel,
   DarkRoomHeader,
+  DarkRoomMadisonDrawer,
   MobileDarkRoom,
   getRandomBackgroundVariation,
   getCompositionPrompt,
@@ -186,6 +188,10 @@ export default function DarkRoom() {
     const params = new URLSearchParams(location.search);
     return params.get('prompt') || "";
   });
+  const [isMadisonOpen, setIsMadisonOpen] = useState(false);
+  const [isSavePromptOpen, setIsSavePromptOpen] = useState(false);
+  const [promptToSave, setPromptToSave] = useState("");
+  const [suggestedPromptTitle, setSuggestedPromptTitle] = useState("");
 
   // State
   const [isGenerating, setIsGenerating] = useState(false);
@@ -241,6 +247,42 @@ export default function DarkRoom() {
   const suggestions = useMemo(
     () => generateSuggestions(!!productImage, !!backgroundImage, prompt),
     [productImage, backgroundImage, prompt]
+  );
+
+  const referenceAssets = useMemo(
+    () =>
+      [
+        productImage ? { label: "Product", url: productImage.url } : null,
+        backgroundImage ? { label: "Background", url: backgroundImage.url } : null,
+        styleReference ? { label: "Style", url: styleReference.url } : null,
+      ].filter((asset): asset is { label: string; url: string } => Boolean(asset)),
+    [backgroundImage, productImage, styleReference]
+  );
+
+  const madisonSessionContext = useMemo(
+    () => ({
+      sessionId,
+      sessionName: selectedProduct?.name ? `${selectedProduct.name} Dark Room` : "Dark Room Session",
+      imagesGenerated: images.length,
+      maxImages: MAX_IMAGES_PER_SESSION,
+      heroImage: heroImage
+        ? {
+            imageUrl: heroImage.imageUrl,
+            prompt: heroImage.prompt,
+          }
+        : undefined,
+      allPrompts: Array.from(
+        new Set(
+          [prompt, ...history.map((item) => item.prompt)]
+            .map((item) => item.trim())
+            .filter(Boolean)
+        )
+      ),
+      aspectRatio: proSettings.aspectRatio || "1:1",
+      outputFormat: "png",
+      isImageStudio: true,
+    }),
+    [heroImage, history, images.length, proSettings.aspectRatio, prompt, selectedProduct?.name, sessionId]
   );
 
   // Effects
@@ -559,6 +601,30 @@ export default function DarkRoom() {
     madison.success("Prompt restored");
   }, []);
 
+  const openSavePromptDialog = useCallback((promptText: string, suggestedTitle = "") => {
+    const trimmedPrompt = promptText.trim();
+    if (!trimmedPrompt) {
+      madison.info("Write or generate a prompt first");
+      return;
+    }
+
+    setPromptToSave(trimmedPrompt);
+    setSuggestedPromptTitle(suggestedTitle);
+    setIsSavePromptOpen(true);
+  }, []);
+
+  const handleUseMadisonPrompt = useCallback((nextPrompt: string) => {
+    const trimmedPrompt = nextPrompt.trim();
+    if (!trimmedPrompt) {
+      madison.info("Madison did not return a usable prompt");
+      return;
+    }
+
+    setPrompt(trimmedPrompt);
+    setIsMadisonOpen(false);
+    madison.success("Prompt loaded into Dark Room");
+  }, []);
+
   const handleSaveAll = useCallback(async () => {
     const unsaved = images.filter((img) => !img.isSaved);
     if (unsaved.length === 0) {
@@ -585,6 +651,9 @@ export default function DarkRoom() {
         <MobileDarkRoom
           prompt={prompt}
           onPromptChange={setPrompt}
+          onOpenMadison={() => setIsMadisonOpen(true)}
+          onSavePrompt={() => openSavePromptDialog(prompt, selectedProduct?.name ? `${selectedProduct.name} Prompt` : "")}
+          canSavePrompt={prompt.trim().length > 0}
           onGenerate={handleGenerate}
           isGenerating={isGenerating}
           canGenerate={canGenerate}
@@ -607,6 +676,25 @@ export default function DarkRoom() {
           proSettings={proSettings}
           onProSettingsChange={setProSettings}
         />
+        <DarkRoomMadisonDrawer
+          open={isMadisonOpen}
+          onOpenChange={setIsMadisonOpen}
+          isMobile
+          currentPrompt={prompt}
+          sessionContext={madisonSessionContext}
+          referenceAssets={referenceAssets}
+          heroImageUrl={heroImage?.imageUrl}
+          onUsePrompt={handleUseMadisonPrompt}
+          onSavePrompt={openSavePromptDialog}
+        />
+        <SavePromptDialog
+          open={isSavePromptOpen}
+          onOpenChange={setIsSavePromptOpen}
+          promptText={promptToSave}
+          suggestedTitle={suggestedPromptTitle}
+          deliverableFormat="image_prompt"
+          onSaved={() => madison.success("Prompt saved to Librarian")}
+        />
         {/* Camera Flash Overlay for mobile */}
         <FlashOverlay />
       </>
@@ -627,15 +715,40 @@ export default function DarkRoom() {
         onSaveHero={heroImage ? () => handleSaveImage(heroImage.id) : undefined}
         onRefineHero={heroImage ? () => handleOpenLightTable(heroImage) : undefined}
         rightExtra={
-          <LibrarianTrigger
-            variant="icon"
-            context="dark_room"
-            category="image"
-            onFrameworkSelect={(framework) => {
-              setPrompt((prev) => prev ? `${prev}\n\n${framework.framework_content}` : framework.framework_content);
-              madison.frameworkAcquired();
-            }}
-          />
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMadisonOpen(true)}
+              className="h-8 px-3 text-[11px] font-medium text-[var(--darkroom-text-muted)] hover:bg-white/5 hover:text-[var(--darkroom-text)]"
+            >
+              <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+              Madison
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => openSavePromptDialog(prompt, selectedProduct?.name ? `${selectedProduct.name} Prompt` : "")}
+              disabled={!prompt.trim()}
+              className="h-8 px-3 text-[11px] font-medium text-[var(--darkroom-text-muted)] hover:bg-white/5 hover:text-[var(--darkroom-accent)]"
+            >
+              <Bookmark className="mr-1.5 h-3.5 w-3.5" />
+              Save Prompt
+            </Button>
+
+            <LibrarianTrigger
+              variant="icon"
+              context="dark_room"
+              category="image"
+              label="Prompt Library"
+              onFrameworkSelect={(framework) => {
+                setPrompt((prev) => prev ? `${prev}\n\n${framework.framework_content}` : framework.framework_content);
+                madison.frameworkAcquired();
+              }}
+              className="text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-accent)] hover:bg-white/5"
+            />
+          </div>
         }
       />
 
@@ -706,6 +819,26 @@ export default function DarkRoom() {
           userId={user?.id}
         />
       </div>
+
+      <DarkRoomMadisonDrawer
+        open={isMadisonOpen}
+        onOpenChange={setIsMadisonOpen}
+        currentPrompt={prompt}
+        sessionContext={madisonSessionContext}
+        referenceAssets={referenceAssets}
+        heroImageUrl={heroImage?.imageUrl}
+        onUsePrompt={handleUseMadisonPrompt}
+        onSavePrompt={openSavePromptDialog}
+      />
+
+      <SavePromptDialog
+        open={isSavePromptOpen}
+        onOpenChange={setIsSavePromptOpen}
+        promptText={promptToSave}
+        suggestedTitle={suggestedPromptTitle}
+        deliverableFormat="image_prompt"
+        onSaved={() => madison.success("Prompt saved to Librarian")}
+      />
 
       {/* Camera Flash Overlay - triggers on generate */}
       <FlashOverlay />

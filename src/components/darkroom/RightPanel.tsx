@@ -261,7 +261,7 @@ export function getCompositionPrompt(presetId: string, productCount: number): st
   return productCount === 1 ? preset.singleProduct : preset.multiProduct;
 }
 
-type RightPanelTab = "madison" | "settings" | "consistency";
+type RightPanelTab = "compose" | "settings" | "consistency";
 
 interface RightPanelProps {
   // Suggestions based on context
@@ -605,7 +605,7 @@ export function RightPanel({
 }: RightPanelProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [activeTab, setActiveTab] = useState<RightPanelTab>("madison");
+  const [activeTab, setActiveTab] = useState<RightPanelTab>("compose");
   const [activeSlotIndex, setActiveSlotIndex] = useState<number | null>(null);
 
   // Get photography options
@@ -620,7 +620,7 @@ export function RightPanel({
     }
   };
 
-  /** Shown on Madison and Settings so model choice isn’t hidden behind Settings only. */
+  /** Shown on Compose and Settings so model choice isn’t hidden behind Settings only. */
   const aiModelAndResolutionSection =
     proSettings && onProSettingsChange ? (
       <>
@@ -754,10 +754,10 @@ export function RightPanel({
             exit={{ opacity: 0, x: 20 }}
             className="madison-drawer-toggle madison-drawer-toggle--collapsed"
             onClick={() => setIsCollapsed(false)}
-            title="Open Madison Assistant"
+            title="Open Dark Room controls"
           >
             <ChevronLeft className="w-4 h-4" />
-            <span className="madison-drawer-toggle__label">Madison</span>
+            <span className="madison-drawer-toggle__label">Controls</span>
           </motion.button>
         )}
       </AnimatePresence>
@@ -790,16 +790,16 @@ export function RightPanel({
             {/* Tab Buttons - Compact firmware style */}
             <div className="flex-1 flex gap-0.5 p-0.5 rounded bg-black/20 border border-white/[0.04]">
               <button
-                onClick={() => setActiveTab("madison")}
+                onClick={() => setActiveTab("compose")}
                 className={cn(
                   "flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-[11px] font-mono uppercase tracking-wide transition-all",
-                  activeTab === "madison"
+                  activeTab === "compose"
                     ? "bg-[var(--camera-body)] text-[var(--darkroom-accent)] border border-[var(--darkroom-accent)]/20"
                     : "text-[var(--darkroom-text-dim)] hover:text-[var(--darkroom-text-muted)] hover:bg-white/[0.03]"
                 )}
               >
                 <Wand2 className="w-3 h-3" />
-                Madison
+                Compose
               </button>
               <button
                 onClick={() => setActiveTab("settings")}
@@ -870,7 +870,7 @@ export function RightPanel({
 
               {aiModelAndResolutionSection}
 
-              {/* Aspect ratio lives in the Madison tab (primary / always-open
+              {/* Aspect ratio lives in the Compose tab (primary / always-open
                   view). Duplicating it here previously let users set
                   different values in two places. */}
 
@@ -1026,17 +1026,17 @@ export function RightPanel({
             </div>
           )}
 
-          {/* === MADISON TAB - Multi-Product & Aspect Ratio === */}
-          {activeTab === "madison" && (
+          {/* === COMPOSE TAB - Multi-Product & Aspect Ratio === */}
+          {activeTab === "compose" && (
             <div className="space-y-2">
               {aiModelAndResolutionSection}
 
-              {/* Context Tips - "Madison's Thoughts" */}
+              {/* Context Tips */}
               {contextTips.length > 0 && (
                 <div className="camera-panel p-2.5 space-y-2 border-l-2 border-l-[var(--darkroom-accent)]">
                   <div className="flex items-center gap-1.5 mb-1">
                     <Wand2 className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                    <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Madison's Notes</span>
+                    <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Scene Notes</span>
                   </div>
                   <div className="space-y-1">
                     {contextTips.map((tip, i) => (

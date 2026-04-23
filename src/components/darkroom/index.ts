@@ -15,6 +15,7 @@ export {
   type CompositionPreset,
 } from './RightPanel';
 export { DarkRoomHeader } from './DarkRoomHeader';
+export { DarkRoomMadisonDrawer } from './DarkRoomMadisonDrawer';
 export { MobileBottomSheet } from './MobileBottomSheet';
 export { MobileTabBar, type MobileTab } from './MobileTabBar';
 export { LightTable } from './LightTable';

@@ -1,7 +1,8 @@
-import { useRef } from "react";
+import { useState } from "react";
 import { Check, ImagePlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { ImageLibraryModal } from "@/components/image-editor/ImageLibraryModal";
 import {
   VARIATION_AXES,
   capsForFitments,
@@ -173,36 +174,11 @@ function VariationChip({
   onAttach,
   onRemove,
 }: VariationChipProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
-  const openFilePicker = (e: React.MouseEvent) => {
+  const openLibrary = (e: React.MouseEvent) => {
     e.stopPropagation();
-    fileInputRef.current?.click();
-  };
-
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please attach an image file");
-      return;
-    }
-    if (file.size > MAX_REFERENCE_MB * 1024 * 1024) {
-      toast.error(`Reference image too large (max ${MAX_REFERENCE_MB}MB)`);
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      onAttach({
-        url: reader.result as string,
-        name: file.name,
-      });
-      toast.success(`Reference attached to “${option.label}”`);
-    };
-    reader.onerror = () => toast.error("Failed to read image");
-    reader.readAsDataURL(file);
-    // Reset so the same file can be re-picked later
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    setLibraryOpen(true);
   };
 
   const handleRemoveRef = (e: React.MouseEvent) => {
@@ -268,54 +244,80 @@ function VariationChip({
       {/* Overlayed hit targets — the reference +/× control lives on top of
           the trailing span of the parent button so it's independently
           clickable without toggling selection. */}
-      {attachedRef ? (
+      <button
+        type="button"
+        onClick={openLibrary}
+        disabled={disabled}
+        title={
+          attachedRef
+            ? `Replace reference for ${option.label}`
+            : `Attach a material reference for ${option.label}`
+        }
+        className={cn(
+          "absolute top-1/2 -translate-y-1/2 right-1 w-5 h-5 rounded border overflow-hidden",
+          attachedRef
+            ? "border-[var(--darkroom-accent)]/40 bg-black/60 text-white"
+            : "border-white/[0.08] bg-black/30 text-[var(--darkroom-text-dim)]",
+          "hover:border-[var(--darkroom-accent)]/50 hover:text-[var(--darkroom-accent)] hover:bg-black/50",
+          "transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
+          "flex items-center justify-center group/ref",
+        )}
+      >
+        {attachedRef ? (
+          <img
+            src={attachedRef.url}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <ImagePlus size={10} />
+        )}
+      </button>
+
+      {attachedRef && (
         <button
           type="button"
           onClick={handleRemoveRef}
           disabled={disabled}
           title={`Remove reference from ${option.label}`}
           className={cn(
-            "absolute top-1/2 -translate-y-1/2 right-1 w-5 h-5 rounded border overflow-hidden",
-            "border-[var(--darkroom-accent)]/40 bg-black/60 text-white",
+            "absolute -top-1 -right-1 z-10 w-3.5 h-3.5 rounded-full border",
+            "border-[var(--led-error)]/60 bg-black text-white",
             "hover:bg-[var(--led-error)] hover:border-[var(--led-error)]",
-            "transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
-            "flex items-center justify-center group/ref",
-          )}
-        >
-          <img
-            src={attachedRef.url}
-            alt=""
-            className="w-full h-full object-cover group-hover/ref:opacity-0 transition-opacity"
-          />
-          <X
-            size={10}
-            className="absolute opacity-0 group-hover/ref:opacity-100 transition-opacity"
-          />
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={openFilePicker}
-          disabled={disabled}
-          title={`Attach a material reference for ${option.label}`}
-          className={cn(
-            "absolute top-1/2 -translate-y-1/2 right-1 w-5 h-5 rounded border",
-            "border-white/[0.08] bg-black/30 text-[var(--darkroom-text-dim)]",
-            "hover:border-[var(--darkroom-accent)]/50 hover:text-[var(--darkroom-accent)] hover:bg-black/50",
             "transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
             "flex items-center justify-center",
           )}
         >
-          <ImagePlus size={10} />
+          <X size={8} />
         </button>
       )}
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFile}
-        className="hidden"
+      <ImageLibraryModal
+        open={libraryOpen}
+        onOpenChange={setLibraryOpen}
+        title={`Select Reference for ${option.label}`}
+        onSelectImage={(image) => {
+          if (typeof image.url !== "string" || !image.url.startsWith("data:")) {
+            onAttach({
+              url: image.url,
+              name: image.name,
+            });
+            toast.success(`Reference attached to “${option.label}”`);
+            return;
+          }
+
+          const estimatedBytes = (image.url.length * 3) / 4;
+          if (estimatedBytes > MAX_REFERENCE_MB * 1024 * 1024) {
+            toast.error(`Reference image too large (max ${MAX_REFERENCE_MB}MB)`);
+            return;
+          }
+
+          onAttach({
+            url: image.url,
+            name: image.name,
+          });
+          toast.success(`Reference attached to “${option.label}”`);
+        }}
       />
     </div>
   );

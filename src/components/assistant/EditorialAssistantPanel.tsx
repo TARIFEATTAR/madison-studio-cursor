@@ -32,18 +32,37 @@ interface SessionContext {
   brandName?: string; // Added for brand-specific guidelines
 }
 
+interface DraftRequest {
+  nonce: number;
+  text?: string;
+  images?: string[];
+  autoSubmit?: boolean;
+}
+
 interface EditorialAssistantPanelProps {
   onClose: () => void;
   initialContent?: string;
   sessionContext?: SessionContext;
   darkMode?: boolean;
+  topContent?: React.ReactNode;
+  draftRequest?: DraftRequest | null;
+  onUseMessage?: (content: string) => void;
+  useMessageLabel?: string;
+  onSaveMessage?: (content: string) => void;
+  saveMessageLabel?: string;
 }
 
 export function EditorialAssistantPanel({ 
   onClose, 
   initialContent, 
   sessionContext,
-  darkMode = false
+  darkMode = false,
+  topContent,
+  draftRequest,
+  onUseMessage,
+  useMessageLabel = "Use in Prompt",
+  onSaveMessage,
+  saveMessageLabel = "Save Prompt",
 }: EditorialAssistantPanelProps) {
   const { toast } = useToast();
   const { currentOrganizationId } = useOnboarding();
@@ -122,6 +141,19 @@ export function EditorialAssistantPanel({
       textareaRef.current.focus();
     }
   }, []);
+
+  useEffect(() => {
+    if (typeof draftRequest?.text === "string") {
+      setInput(draftRequest.text);
+      textareaRef.current?.focus();
+    }
+    if (Array.isArray(draftRequest?.images)) {
+      setUploadedImages(draftRequest.images);
+    }
+    if (draftRequest?.autoSubmit) {
+      setShouldAutoSubmit(true);
+    }
+  }, [draftRequest]);
 
   // Ensure body scroll is never locked
   useEffect(() => {
@@ -480,6 +512,11 @@ Be conversational, encouraging, and editorial in your tone.
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-6 min-h-0" ref={scrollRef}>
+        {topContent && (
+          <div className="mb-5">
+            {topContent}
+          </div>
+        )}
         <div className="space-y-4">
           {messages.map((message, index) => (
             <div key={index} className="space-y-2">
@@ -537,25 +574,51 @@ Be conversational, encouraging, and editorial in your tone.
               
               {/* Copy Critique Button for assistant messages */}
               {message.role === "assistant" && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleCopy(message.content, index)}
-                  className="text-xs h-8 gap-1"
-                  style={{ color: darkMode ? "#A1A1AA" : "#6B6560" }}
-                >
-                  {copiedIndex === index ? (
-                    <>
-                      <Check className="w-3 h-3" />
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3 h-3" />
-                      Copy Critique
-                    </>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleCopy(message.content, index)}
+                    className="text-xs h-8 gap-1"
+                    style={{ color: darkMode ? "#A1A1AA" : "#6B6560" }}
+                  >
+                    {copiedIndex === index ? (
+                      <>
+                        <Check className="w-3 h-3" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3" />
+                        Copy Critique
+                      </>
+                    )}
+                  </Button>
+                  {onUseMessage && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onUseMessage(message.content)}
+                      className="text-xs h-8 gap-1"
+                      style={{ color: darkMode ? "#D6B68A" : "var(--aged-brass-hex)" }}
+                    >
+                      <Send className="w-3 h-3" />
+                      {useMessageLabel}
+                    </Button>
                   )}
-                </Button>
+                  {onSaveMessage && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onSaveMessage(message.content)}
+                      className="text-xs h-8 gap-1"
+                      style={{ color: darkMode ? "#E5D1A8" : "#B8956A" }}
+                    >
+                      <FileText className="w-3 h-3" />
+                      {saveMessageLabel}
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
           ))}
